@@ -243,8 +243,8 @@
     width: 85%;
     height: 85%;
     background: linear-gradient(180deg, #163A66 0%, #081B36 100%);
-    -webkit-mask-image: url('assets/france-shape.png');
-    mask-image: url('assets/france-shape.png');
+    -webkit-mask-image: url('france-shape.png');
+    mask-image: url('france-shape.png');
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
     -webkit-mask-position: center;

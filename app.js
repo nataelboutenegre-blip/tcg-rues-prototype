@@ -19,29 +19,32 @@ function tierFor(pop){
   return TIERS.find(t => pop >= t.min && pop < t.max) || TIERS[TIERS.length-1];
 }
 
-let CUM_WEIGHTS = [];
-let TOTAL_WEIGHT = 0;
+let TIER_BUCKETS = {};
 
 function buildIndex(){
-  let running = 0;
-  for(const c of COMMUNES){
-    running += c[3]; // nb_voies = poids
-    CUM_WEIGHTS.push(running);
+  TIER_BUCKETS = {};
+  for(const t of TIERS) TIER_BUCKETS[t.id] = [];
+  COMMUNES.forEach((c, i) => {
+    TIER_BUCKETS[tierFor(c[2]).id].push(i);
+  });
+}
+
+function pickTier(){
+  const r = Math.random() * 100;
+  let cum = 0;
+  for(const t of TIERS){
+    cum += t.target;
+    if(r < cum) return t;
   }
-  TOTAL_WEIGHT = running;
+  return TIERS[TIERS.length - 1];
 }
 
 function drawOne(){
-  const r = Math.random() * TOTAL_WEIGHT;
-  // recherche binaire
-  let lo = 0, hi = CUM_WEIGHTS.length - 1;
-  while(lo < hi){
-    const mid = (lo + hi) >> 1;
-    if(CUM_WEIGHTS[mid] < r) lo = mid + 1; else hi = mid;
-  }
-  const c = COMMUNES[lo];
-  const streetNum = 1 + Math.floor(Math.random() * c[3]);
-  return { nom: c[0], dept: c[1], pop: c[2], nbVoies: c[3], lat: c[4], lon: c[5], streetNum, tier: tierFor(c[2]) };
+  const tier = pickTier();
+  const bucket = TIER_BUCKETS[tier.id];
+  const idx = bucket[Math.floor(Math.random() * bucket.length)];
+  const c = COMMUNES[idx];
+  return { nom: c[0], dept: c[1], pop: c[2], nbVoies: c[3], lat: c[4], lon: c[5], tier };
 }
 
 let session = {commun:0, peucommun:0, rare:0, legendaire:0, total:0};
@@ -64,33 +67,40 @@ function renderStats(){
   }
 }
 
-let collectionList = [];
+let collectionMap = new Map();
 
 function addToCollection(draw){
-  collectionList.push(draw);
+  const key = draw.nom + '|' + draw.dept;
+  if(collectionMap.has(key)){
+    collectionMap.get(key).count++;
+  } else {
+    collectionMap.set(key, {...draw, count: 1});
+  }
   renderCollection();
 }
 
 function renderCollection(){
   const countEl = document.getElementById('collectionCount');
   const gridEl = document.getElementById('collectionGrid');
-  countEl.textContent = collectionList.length;
-  if(collectionList.length === 0){
+  const entries = Array.from(collectionMap.values());
+  countEl.textContent = entries.length;
+  if(entries.length === 0){
     gridEl.innerHTML = '<p class="collection-empty">Aucune carte pour le moment — ouvre un paquet.</p>';
     return;
   }
-  const sorted = [...collectionList].sort((a,b) => {
+  const sorted = entries.sort((a,b) => {
     const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
     if(ra !== rb) return ra - rb;
     return b.pop - a.pop;
   });
-  gridEl.innerHTML = sorted.map(draw => `
-    <div class="mini-card ${draw.tier.id}" title="${draw.nom} (${draw.dept}) — ${draw.tier.label}">
+  gridEl.innerHTML = sorted.map(entry => `
+    <div class="mini-card ${entry.tier.id}" title="${entry.nom} (${entry.dept}) — ${entry.tier.label}${entry.count>1 ? ' ×'+entry.count : ''}">
       <div class="stripe"><span class="b"></span><span class="w"></span><span class="r"></span></div>
       <div class="body">
-        <div class="name">${draw.nom}</div>
-        <div class="rarity" style="background:${draw.tier.color}">${draw.tier.label}</div>
+        <div class="name">${entry.nom}</div>
+        <div class="rarity" style="background:${entry.tier.color}">${entry.tier.label}</div>
       </div>
+      ${entry.count>1 ? `<div class="qty">×${entry.count}</div>` : ''}
     </div>
   `).join('');
 }
@@ -105,13 +115,11 @@ function makeCardEl(draw){
         <div class="tricolore"><span class="b"></span><span class="w"></span><span class="r"></span></div>
         <div class="card-body">
           <div class="rarity-tag" style="background:${draw.tier.color}">${draw.tier.label}</div>
-          <div class="stamp" style="border-color:${draw.tier.color};color:${draw.tier.color}">Nº${draw.streetNum}</div>
           <p class="commune-name">${draw.nom}</p>
-          <p class="voie-name">Voie nº${draw.streetNum} de la commune</p>
           <div class="fields">
             <div class="field"><span>Département</span><b>${draw.dept}</b></div>
             <div class="field"><span>Population</span><b>${draw.pop.toLocaleString('fr-FR')}</b></div>
-            <div class="field"><span>Voies recensées</span><b>${draw.nbVoies}</b></div>
+            <div class="field"><span>Rues recensées</span><b>${draw.nbVoies}</b></div>
           </div>
         </div>
       </div>

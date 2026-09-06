@@ -26,10 +26,13 @@
 
 <div class="territory">
   <h2>Mon territoire</h2>
-  <div class="map-wrap">
-    <canvas id="mapCanvas" width="600" height="575"></canvas>
-    <div id="mapOverlay" class="map-overlay"></div>
+  <div class="map-wrap" id="mapWrap">
+    <div class="map-transform" id="mapTransform">
+      <canvas id="mapCanvas" width="600" height="575"></canvas>
+      <div id="mapOverlay" class="map-overlay"></div>
+    </div>
   </div>
+  <p class="map-note">Molette pour zoomer, cliquer-glisser pour te déplacer.</p>
   <p class="map-note">Chaque point gris est une commune de France (34 739 en métropole). Les points colorés sont les rues que tu as tirées, à leur position réelle.</p>
 </div>
 

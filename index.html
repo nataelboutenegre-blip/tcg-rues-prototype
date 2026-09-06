@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -25,7 +26,10 @@
 
 <div class="territory">
   <h2>Mon territoire</h2>
-  <canvas id="mapCanvas" width="600" height="575"></canvas>
+  <div class="map-wrap">
+    <canvas id="mapCanvas" width="600" height="575"></canvas>
+    <div id="mapOverlay" class="map-overlay"></div>
+  </div>
   <p class="map-note">Chaque point gris est une commune de France (34 739 en métropole). Les points colorés sont les rues que tu as tirées, à leur position réelle.</p>
 </div>
 

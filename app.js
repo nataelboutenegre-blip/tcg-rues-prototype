@@ -1,4 +1,3 @@
-
 let COMMUNES = [];
 
 fetch('data/communes.json')
@@ -76,6 +75,7 @@ function addToCollection(draw){
 
 // --- Carte du territoire ---
 const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
+const DEPT_NAMES = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","2A":"Corse-du-Sud","2B":"Haute-Corse","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise"};
 let mapBounds = null;
 
 function computeMapBounds(){
@@ -106,13 +106,62 @@ function initMap(){
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = 'rgba(124,135,152,0.4)';
+  const deptSum = new Map(); // code -> {sx, sy, n}
   for(const c of COMMUNES){
     const dept = c[1], lat = c[4], lon = c[5];
     if(lat==null || lon==null) continue;
     if(!METRO_DEPT_RE.test(dept)) continue;
     const p = project(lat, lon);
     ctx.fillRect(p.x * canvas.width, p.y * canvas.height, 1.4, 1.4);
+    if(!deptSum.has(dept)) deptSum.set(dept, {sx:0, sy:0, n:0});
+    const d = deptSum.get(dept);
+    d.sx += p.x; d.sy += p.y; d.n++;
   }
+  ctx.font = '11px Georgia, serif';
+  ctx.fillStyle = 'rgba(91,102,115,0.75)';
+  ctx.textAlign = 'center';
+  deptSum.forEach((d, code) => {
+    const name = DEPT_NAMES[code];
+    if(!name) return;
+    const x = (d.sx / d.n) * canvas.width;
+    const y = (d.sy / d.n) * canvas.height;
+    ctx.fillText(name, x, y);
+  });
+  setupMapInteraction();
+}
+
+let mapZoom = 1, mapPanX = 0, mapPanY = 0;
+let mapDragging = false, mapDragStart = {x:0, y:0};
+let mapInteractionReady = false;
+
+function applyMapTransform(){
+  const el = document.getElementById('mapTransform');
+  if(el) el.style.transform = `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`;
+}
+
+function setupMapInteraction(){
+  if(mapInteractionReady) return;
+  mapInteractionReady = true;
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap) return;
+  wrap.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.15 : 1/1.15;
+    mapZoom = Math.min(6, Math.max(1, mapZoom * factor));
+    if(mapZoom === 1){ mapPanX = 0; mapPanY = 0; }
+    applyMapTransform();
+  }, { passive: false });
+  wrap.addEventListener('mousedown', (e) => {
+    mapDragging = true;
+    mapDragStart = { x: e.clientX - mapPanX, y: e.clientY - mapPanY };
+  });
+  window.addEventListener('mousemove', (e) => {
+    if(!mapDragging) return;
+    mapPanX = e.clientX - mapDragStart.x;
+    mapPanY = e.clientY - mapDragStart.y;
+    applyMapTransform();
+  });
+  window.addEventListener('mouseup', () => { mapDragging = false; });
 }
 
 function ownedCommunesMap(){

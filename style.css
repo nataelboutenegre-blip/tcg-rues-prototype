@@ -252,9 +252,10 @@
     position: relative;
     max-width: 600px;
     overflow: hidden;
-    border: 1px solid var(--line);
+    border: 2px solid #7A5A22;
     border-radius: 8px;
     cursor: grab;
+    box-shadow: 0 6px 18px rgba(6,20,40,0.35);
   }
   .map-wrap:active{ cursor: grabbing; }
   .map-transform{
@@ -265,7 +266,7 @@
     width: 100%;
     max-width: 600px;
     height: auto;
-    background: var(--paper);
+    background: #0B2A4A;
     display:block;
   }
   .map-overlay{
@@ -279,14 +280,22 @@
     border-radius: 50%;
     background: var(--commun);
     transform: translate(-50%,-50%);
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.75);
+    box-shadow: 0 0 4px 1px rgba(124,135,152,0.65), 0 0 0 1px rgba(255,255,255,0.55);
   }
-  .map-dot.peucommun{ background: var(--peucommun); width:7px; height:7px; }
-  .map-dot.rare{ background: var(--rare); width:8px; height:8px; }
+  .map-dot.peucommun{
+    background: var(--peucommun);
+    width:7px; height:7px;
+    box-shadow: 0 0 5px 1px rgba(46,125,91,0.75), 0 0 0 1px rgba(255,255,255,0.6);
+  }
+  .map-dot.rare{
+    background: var(--rare);
+    width:8px; height:8px;
+    box-shadow: 0 0 6px 2px rgba(42,95,168,0.8), 0 0 0 1px rgba(255,255,255,0.65);
+  }
   .map-dot.legendaire{
     background: var(--legendaire);
-    width:11px; height:11px;
-    box-shadow: 0 0 6px 2px rgba(176,134,44,0.7), 0 0 0 1px #fff;
+    width:12px; height:12px;
+    box-shadow: 0 0 10px 3px rgba(176,134,44,0.9), 0 0 0 1px #fff;
   }
   .map-note{
     font-size: 0.72rem;

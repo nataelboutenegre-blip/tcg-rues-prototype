@@ -1,3 +1,4 @@
+
 let COMMUNES = [];
 
 fetch('data/communes.json')
@@ -6,6 +7,7 @@ fetch('data/communes.json')
     COMMUNES = data;
     buildIndex();
     renderStats();
+    initMap();
   });
 
 const TIERS = [
@@ -19,7 +21,6 @@ function tierFor(pop){
   return TIERS.find(t => pop >= t.min && pop < t.max) || TIERS[TIERS.length-1];
 }
 
-let COMMUNES = [];
 let CUM_WEIGHTS = [];
 let TOTAL_WEIGHT = 0;
 
@@ -70,6 +71,80 @@ let collectionList = [];
 function addToCollection(draw){
   collectionList.push(draw);
   renderCollection();
+  renderMapOverlay();
+}
+
+// --- Carte du territoire ---
+const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
+let mapBounds = null;
+
+function computeMapBounds(){
+  let latMin=90, latMax=-90, lonMin=180, lonMax=-180;
+  for(const c of COMMUNES){
+    const dept = c[1], lat = c[4], lon = c[5];
+    if(lat==null || lon==null) continue;
+    if(!METRO_DEPT_RE.test(dept)) continue;
+    if(lat<latMin) latMin=lat;
+    if(lat>latMax) latMax=lat;
+    if(lon<lonMin) lonMin=lon;
+    if(lon>lonMax) lonMax=lon;
+  }
+  mapBounds = {latMin, latMax, lonMin, lonMax};
+}
+
+function project(lat, lon){
+  const {latMin, latMax, lonMin, lonMax} = mapBounds;
+  const x = (lon - lonMin) / (lonMax - lonMin);
+  const y = (latMax - lat) / (latMax - latMin);
+  return {x, y};
+}
+
+function initMap(){
+  computeMapBounds();
+  const canvas = document.getElementById('mapCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = 'rgba(124,135,152,0.4)';
+  for(const c of COMMUNES){
+    const dept = c[1], lat = c[4], lon = c[5];
+    if(lat==null || lon==null) continue;
+    if(!METRO_DEPT_RE.test(dept)) continue;
+    const p = project(lat, lon);
+    ctx.fillRect(p.x * canvas.width, p.y * canvas.height, 1.4, 1.4);
+  }
+}
+
+function ownedCommunesMap(){
+  const map = new Map();
+  for(const draw of collectionList){
+    const key = draw.nom + '|' + draw.dept;
+    if(!map.has(key)){
+      map.set(key, {nom: draw.nom, dept: draw.dept, lat: draw.lat, lon: draw.lon, tier: draw.tier, count: 1});
+    } else {
+      const entry = map.get(key);
+      entry.count++;
+      if(TIERS.indexOf(draw.tier) < TIERS.indexOf(entry.tier)) entry.tier = draw.tier;
+    }
+  }
+  return map;
+}
+
+function renderMapOverlay(){
+  const overlay = document.getElementById('mapOverlay');
+  if(!overlay || !mapBounds) return;
+  overlay.innerHTML = '';
+  const owned = ownedCommunesMap();
+  owned.forEach(entry => {
+    if(entry.lat == null || entry.lon == null) return;
+    const p = project(entry.lat, entry.lon);
+    const dot = document.createElement('div');
+    dot.className = 'map-dot ' + entry.tier.id;
+    dot.style.left = (p.x * 100) + '%';
+    dot.style.top = (p.y * 100) + '%';
+    dot.title = entry.nom + ' (' + entry.dept + ') — ' + entry.tier.label + (entry.count > 1 ? ' ×' + entry.count : '');
+    overlay.appendChild(dot);
+  });
 }
 
 function renderCollection(){

@@ -251,14 +251,21 @@
   .map-wrap{
     position: relative;
     max-width: 600px;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    cursor: grab;
+  }
+  .map-wrap:active{ cursor: grabbing; }
+  .map-transform{
+    position: relative;
+    transform-origin: 0 0;
   }
   #mapCanvas{
     width: 100%;
     max-width: 600px;
     height: auto;
     background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 8px;
     display:block;
   }
   .map-overlay{

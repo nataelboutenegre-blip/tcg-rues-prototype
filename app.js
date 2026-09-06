@@ -104,27 +104,49 @@ function initMap(){
   const canvas = document.getElementById('mapCanvas');
   if(!canvas) return;
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = 'rgba(124,135,152,0.4)';
+  const w = canvas.width, h = canvas.height;
+
+  // fond degrade bleu nuit
+  const grad = ctx.createRadialGradient(w/2, h*0.4, 30, w/2, h*0.5, w*0.75);
+  grad.addColorStop(0, '#123564');
+  grad.addColorStop(1, '#061A34');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, w, h);
+
+  // grille discrete
+  ctx.strokeStyle = 'rgba(148,177,214,0.08)';
+  ctx.lineWidth = 1;
+  const step = 32;
+  for(let x = 0; x <= w; x += step){
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+  }
+  for(let y = 0; y <= h; y += step){
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+  }
+
+  // points communes
+  ctx.fillStyle = 'rgba(180,201,232,0.55)';
   const deptSum = new Map(); // code -> {sx, sy, n}
   for(const c of COMMUNES){
     const dept = c[1], lat = c[4], lon = c[5];
     if(lat==null || lon==null) continue;
     if(!METRO_DEPT_RE.test(dept)) continue;
     const p = project(lat, lon);
-    ctx.fillRect(p.x * canvas.width, p.y * canvas.height, 1.4, 1.4);
+    ctx.fillRect(p.x * w, p.y * h, 1.3, 1.3);
     if(!deptSum.has(dept)) deptSum.set(dept, {sx:0, sy:0, n:0});
     const d = deptSum.get(dept);
     d.sx += p.x; d.sy += p.y; d.n++;
   }
+
+  // noms des departements
   ctx.font = '11px Georgia, serif';
-  ctx.fillStyle = 'rgba(91,102,115,0.75)';
+  ctx.fillStyle = 'rgba(148,177,214,0.65)';
   ctx.textAlign = 'center';
   deptSum.forEach((d, code) => {
     const name = DEPT_NAMES[code];
     if(!name) return;
-    const x = (d.sx / d.n) * canvas.width;
-    const y = (d.sy / d.n) * canvas.height;
+    const x = (d.sx / d.n) * w;
+    const y = (d.sy / d.n) * h;
     ctx.fillText(name, x, y);
   });
   setupMapInteraction();

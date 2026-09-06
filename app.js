@@ -119,7 +119,6 @@ function makeCardEl(draw){
           <div class="fields">
             <div class="field"><span>Département</span><b>${draw.dept}</b></div>
             <div class="field"><span>Population</span><b>${draw.pop.toLocaleString('fr-FR')}</b></div>
-            <div class="field"><span>Rues recensées</span><b>${draw.nbVoies}</b></div>
           </div>
         </div>
       </div>

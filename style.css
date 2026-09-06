@@ -234,10 +234,32 @@
   .map-wrap{
     width: 100%;
     max-width: 600px;
-    height: 270px;
-    border-radius: 8px;
-    border: 3px solid #123564;
+    height: 400px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .france-shape{
+    width: 85%;
+    height: 85%;
     background: linear-gradient(180deg, #163A66 0%, #081B36 100%);
+    -webkit-mask-image: url('assets/france-shape.png');
+    mask-image: url('assets/france-shape.png');
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    filter:
+      drop-shadow(1px 0 0 #123564)
+      drop-shadow(-1px 0 0 #123564)
+      drop-shadow(0 1px 0 #123564)
+      drop-shadow(0 -1px 0 #123564)
+      drop-shadow(1px 1px 0 #123564)
+      drop-shadow(-1px -1px 0 #123564)
+      drop-shadow(1px -1px 0 #123564)
+      drop-shadow(-1px 1px 0 #123564);
   }
   .collection-grid{
     display:flex;

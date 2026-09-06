@@ -249,58 +249,12 @@
     letter-spacing:0.03em;
   }
   .map-wrap{
-    position: relative;
-    max-width: 600px;
-    overflow: hidden;
-    border: 2px solid #7A5A22;
-    border-radius: 8px;
-    cursor: grab;
-    box-shadow: 0 6px 18px rgba(6,20,40,0.35);
-  }
-  .map-wrap:active{ cursor: grabbing; }
-  .map-transform{
-    position: relative;
-    transform-origin: 0 0;
-  }
-  #mapCanvas{
     width: 100%;
     max-width: 600px;
-    height: auto;
-    background: #0B2A4A;
-    display:block;
-  }
-  .map-overlay{
-    position: absolute;
-    inset: 0;
-  }
-  .map-dot{
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--commun);
-    transform: translate(-50%,-50%);
-    box-shadow: 0 0 4px 1px rgba(124,135,152,0.65), 0 0 0 1px rgba(255,255,255,0.55);
-  }
-  .map-dot.peucommun{
-    background: var(--peucommun);
-    width:7px; height:7px;
-    box-shadow: 0 0 5px 1px rgba(46,125,91,0.75), 0 0 0 1px rgba(255,255,255,0.6);
-  }
-  .map-dot.rare{
-    background: var(--rare);
-    width:8px; height:8px;
-    box-shadow: 0 0 6px 2px rgba(42,95,168,0.8), 0 0 0 1px rgba(255,255,255,0.65);
-  }
-  .map-dot.legendaire{
-    background: var(--legendaire);
-    width:12px; height:12px;
-    box-shadow: 0 0 10px 3px rgba(176,134,44,0.9), 0 0 0 1px #fff;
-  }
-  .map-note{
-    font-size: 0.72rem;
-    color: var(--ink-soft);
-    margin-top: 8px;
+    height: 270px;
+    border-radius: 8px;
+    border: 3px solid #123564;
+    background: linear-gradient(180deg, #163A66 0%, #081B36 100%);
   }
   .collection-grid{
     display:flex;

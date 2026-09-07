@@ -235,7 +235,7 @@
     position: relative;
     width: 100%;
     max-width: 1200px;
-    height: 1050px;
+    aspect-ratio: 1 / 1;
   }
   .france-shape{
     position: absolute;

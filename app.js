@@ -10,6 +10,7 @@ fetch('data/communes.json')
   });
 
 const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
+const MAINLAND_NO_CORSICA_RE = /^(0[1-9]|[1-8][0-9]|9[0-5])$/;
 let mapBounds = null;
 
 function computeMapBounds(){
@@ -17,7 +18,7 @@ function computeMapBounds(){
   for(const c of COMMUNES){
     const dept = c[1], lat = c[4], lon = c[5];
     if(lat == null || lon == null) continue;
-    if(!METRO_DEPT_RE.test(dept)) continue;
+    if(!MAINLAND_NO_CORSICA_RE.test(dept)) continue;
     if(lat<latMin) latMin=lat;
     if(lat>latMax) latMax=lat;
     if(lon<lonMin) lonMin=lon;
@@ -39,6 +40,7 @@ function renderMapOverlay(){
   overlay.innerHTML = '';
   for(const entry of collectionMap.values()){
     if(entry.lat == null || entry.lon == null) continue;
+    if(!MAINLAND_NO_CORSICA_RE.test(entry.dept)) continue;
     const p = project(entry.lat, entry.lon);
     const dot = document.createElement('div');
     dot.className = 'map-dot ' + entry.tier.id;
@@ -149,6 +151,7 @@ function renderContours(){
   if(!svg || !mapBounds) return;
   svg.innerHTML = '';
   for(const entry of collectionMap.values()){
+    if(!MAINLAND_NO_CORSICA_RE.test(entry.dept)) continue;
     const ring = contourCache.get(entry.code);
     if(!ring) continue;
     const pts = ring.map(([lon, lat]) => {

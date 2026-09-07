@@ -6,7 +6,48 @@ fetch('data/communes.json')
     COMMUNES = data;
     buildIndex();
     renderStats();
+    computeMapBounds();
   });
+
+const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
+let mapBounds = null;
+
+function computeMapBounds(){
+  let latMin=90, latMax=-90, lonMin=180, lonMax=-180;
+  for(const c of COMMUNES){
+    const dept = c[1], lat = c[4], lon = c[5];
+    if(lat == null || lon == null) continue;
+    if(!METRO_DEPT_RE.test(dept)) continue;
+    if(lat<latMin) latMin=lat;
+    if(lat>latMax) latMax=lat;
+    if(lon<lonMin) lonMin=lon;
+    if(lon>lonMax) lonMax=lon;
+  }
+  mapBounds = {latMin, latMax, lonMin, lonMax};
+}
+
+function project(lat, lon){
+  const {latMin, latMax, lonMin, lonMax} = mapBounds;
+  const x = (lon - lonMin) / (lonMax - lonMin);
+  const y = (latMax - lat) / (latMax - latMin);
+  return {x, y};
+}
+
+function renderMapOverlay(){
+  const overlay = document.getElementById('mapOverlay');
+  if(!overlay || !mapBounds) return;
+  overlay.innerHTML = '';
+  for(const entry of collectionMap.values()){
+    if(entry.lat == null || entry.lon == null) continue;
+    const p = project(entry.lat, entry.lon);
+    const dot = document.createElement('div');
+    dot.className = 'map-dot ' + entry.tier.id;
+    dot.style.left = (p.x * 100) + '%';
+    dot.style.top = (p.y * 100) + '%';
+    dot.title = entry.nom + ' (' + entry.dept + ') — ' + entry.tier.label + (entry.count > 1 ? ' ×' + entry.count : '');
+    overlay.appendChild(dot);
+  }
+}
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', min:200000, max:Infinity, target:0.83},
@@ -76,6 +117,7 @@ function addToCollection(draw){
   } else {
     collectionMap.set(key, {...draw, count: 1});
   }
+  renderMapOverlay();
   renderCollection();
 }
 

@@ -219,7 +219,7 @@
   .territory{
     margin-top: 40px;
     width: 100%;
-    max-width: 900px;
+    max-width: 1200px;
     border-top: 1px solid var(--line);
     padding-top: 18px;
   }
@@ -234,8 +234,8 @@
   .map-wrap{
     position: relative;
     width: 100%;
-    max-width: 900px;
-    height: 780px;
+    max-width: 1200px;
+    height: 1050px;
   }
   .france-shape{
     position: absolute;
@@ -262,6 +262,13 @@
   .map-overlay{
     position: absolute;
     top: 5%; left: 5%; right: 5%; bottom: 5%;
+  }
+  .map-contours{
+    position: absolute;
+    top: 5%; left: 5%; right: 5%; bottom: 5%;
+    width: 90%;
+    height: 90%;
+    pointer-events: none;
   }
   .map-dot{
     position: absolute;

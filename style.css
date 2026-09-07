@@ -219,7 +219,7 @@
   .territory{
     margin-top: 40px;
     width: 100%;
-    max-width: 610px;
+    max-width: 900px;
     border-top: 1px solid var(--line);
     padding-top: 18px;
   }
@@ -232,16 +232,14 @@
     letter-spacing:0.03em;
   }
   .map-wrap{
+    position: relative;
     width: 100%;
-    max-width: 600px;
-    height: 400px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    max-width: 900px;
+    height: 780px;
   }
   .france-shape{
-    width: 85%;
-    height: 85%;
+    position: absolute;
+    top: 5%; left: 5%; right: 5%; bottom: 5%;
     background: linear-gradient(180deg, #163A66 0%, #081B36 100%);
     -webkit-mask-image: url('france-shape.png');
     mask-image: url('france-shape.png');
@@ -260,6 +258,34 @@
       drop-shadow(-1px -1px 0 #123564)
       drop-shadow(1px -1px 0 #123564)
       drop-shadow(-1px 1px 0 #123564);
+  }
+  .map-overlay{
+    position: absolute;
+    top: 5%; left: 5%; right: 5%; bottom: 5%;
+  }
+  .map-dot{
+    position: absolute;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--commun);
+    transform: translate(-50%,-50%);
+    box-shadow: 0 0 4px 1px rgba(124,135,152,0.65), 0 0 0 1px rgba(255,255,255,0.55);
+  }
+  .map-dot.peucommun{
+    background: var(--peucommun);
+    width:9px; height:9px;
+    box-shadow: 0 0 5px 1px rgba(46,125,91,0.75), 0 0 0 1px rgba(255,255,255,0.6);
+  }
+  .map-dot.rare{
+    background: var(--rare);
+    width:11px; height:11px;
+    box-shadow: 0 0 6px 2px rgba(42,95,168,0.8), 0 0 0 1px rgba(255,255,255,0.65);
+  }
+  .map-dot.legendaire{
+    background: var(--legendaire);
+    width:15px; height:15px;
+    box-shadow: 0 0 10px 3px rgba(176,134,44,0.9), 0 0 0 1px #fff;
   }
   .collection-grid{
     display:flex;

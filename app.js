@@ -25,6 +25,12 @@ function computeMapBounds(){
     if(lon>lonMax) lonMax=lon;
   }
   mapBounds = {latMin, latMax, lonMin, lonMax};
+
+  const meanLat = (latMin + latMax) / 2;
+  const lonSpanCorrected = (lonMax - lonMin) * Math.cos(meanLat * Math.PI / 180);
+  const latSpan = latMax - latMin;
+  const wrap = document.getElementById('mapWrap');
+  if(wrap) wrap.style.aspectRatio = (lonSpanCorrected / latSpan).toFixed(4);
 }
 
 function project(lat, lon){

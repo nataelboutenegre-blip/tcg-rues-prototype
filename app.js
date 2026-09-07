@@ -120,58 +120,6 @@ function renderStats(){
 }
 
 let collectionMap = new Map();
-let contourShardCache = new Map(); // deptCode -> {communeCode: ring} | null
-let contourCache = new Map(); // communeCode -> ring | null
-
-function deptShardCode(code){
-  return code.startsWith('97') ? code.slice(0,3) : code.slice(0,2);
-}
-
-async function ensureContour(code){
-  if(contourCache.has(code)) return contourCache.get(code);
-  const dept = deptShardCode(code);
-  let shard = contourShardCache.get(dept);
-  if(shard === undefined){
-    try{
-      const res = await fetch(`data/contours/${dept}.json`);
-      if(!res.ok) throw new Error('not found');
-      shard = await res.json();
-    } catch(e){
-      shard = null;
-    }
-    contourShardCache.set(dept, shard);
-  }
-  const ring = shard ? (shard[code] || null) : null;
-  contourCache.set(code, ring);
-  return ring;
-}
-
-function renderContours(){
-  const svg = document.getElementById('mapContours');
-  if(!svg || !mapBounds) return;
-  svg.innerHTML = '';
-  for(const entry of collectionMap.values()){
-    if(!MAINLAND_NO_CORSICA_RE.test(entry.dept)) continue;
-    const ring = contourCache.get(entry.code);
-    if(!ring) continue;
-    const pts = ring.map(([lon, lat]) => {
-      const p = project(lat, lon);
-      return (p.x*1000).toFixed(1) + ',' + (p.y*1000).toFixed(1);
-    }).join(' ');
-    const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-    poly.setAttribute('points', pts);
-    poly.setAttribute('fill', entry.tier.color);
-    poly.setAttribute('fill-opacity', '0.55');
-    poly.setAttribute('stroke', entry.tier.color);
-    poly.setAttribute('stroke-width', '1.5');
-    svg.appendChild(poly);
-  }
-}
-
-async function loadContourFor(entry){
-  const ring = await ensureContour(entry.code);
-  if(ring) renderContours();
-}
 
 function addToCollection(draw){
   const key = draw.nom + '|' + draw.dept;
@@ -182,7 +130,6 @@ function addToCollection(draw){
   }
   renderMapOverlay();
   renderCollection();
-  loadContourFor(collectionMap.get(key));
 }
 
 function renderCollection(){

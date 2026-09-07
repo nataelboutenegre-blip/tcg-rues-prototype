@@ -237,31 +237,16 @@
     max-width: 1200px;
     aspect-ratio: 1 / 1;
   }
-  .france-shape{
+  .map-france-svg{
     position: absolute;
-    top: 5%; left: 5%; right: 5%; bottom: 5%;
-    background: linear-gradient(180deg, #163A66 0%, #081B36 100%);
-    -webkit-mask-image: url('france-shape.png');
-    mask-image: url('france-shape.png');
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    mask-position: center;
-    -webkit-mask-size: contain;
-    mask-size: contain;
-    filter:
-      drop-shadow(1px 0 0 #123564)
-      drop-shadow(-1px 0 0 #123564)
-      drop-shadow(0 1px 0 #123564)
-      drop-shadow(0 -1px 0 #123564)
-      drop-shadow(1px 1px 0 #123564)
-      drop-shadow(-1px -1px 0 #123564)
-      drop-shadow(1px -1px 0 #123564)
-      drop-shadow(-1px 1px 0 #123564);
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(4px 6px 10px rgba(6,20,40,0.3));
   }
   .map-overlay{
     position: absolute;
-    top: 5%; left: 5%; right: 5%; bottom: 5%;
+    inset: 0;
   }
   .map-dot{
     position: absolute;

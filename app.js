@@ -1,13 +1,17 @@
 let COMMUNES = [];
+let FRANCE_OUTLINE = null;
 
-fetch('data/communes.json')
-  .then(r => r.json())
-  .then(data => {
-    COMMUNES = data;
-    buildIndex();
-    renderStats();
-    computeMapBounds();
-  });
+Promise.all([
+  fetch('data/communes.json').then(r => r.json()),
+  fetch('data/france-outline.json').then(r => r.json())
+]).then(([communes, outline]) => {
+  COMMUNES = communes;
+  FRANCE_OUTLINE = outline;
+  buildIndex();
+  renderStats();
+  computeMapBounds();
+  renderFranceOutline();
+});
 
 const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
 const MAINLAND_NO_CORSICA_RE = /^(0[1-9]|[1-8][0-9]|9[0-5])$/;
@@ -15,14 +19,13 @@ let mapBounds = null;
 
 function computeMapBounds(){
   let latMin=90, latMax=-90, lonMin=180, lonMax=-180;
-  for(const c of COMMUNES){
-    const dept = c[1], lat = c[4], lon = c[5];
-    if(lat == null || lon == null) continue;
-    if(!MAINLAND_NO_CORSICA_RE.test(dept)) continue;
-    if(lat<latMin) latMin=lat;
-    if(lat>latMax) latMax=lat;
-    if(lon<lonMin) lonMin=lon;
-    if(lon>lonMax) lonMax=lon;
+  for(const ring of FRANCE_OUTLINE){
+    for(const [lon, lat] of ring){
+      if(lat<latMin) latMin=lat;
+      if(lat>latMax) latMax=lat;
+      if(lon<lonMin) lonMin=lon;
+      if(lon>lonMax) lonMax=lon;
+    }
   }
   mapBounds = {latMin, latMax, lonMin, lonMax};
 
@@ -38,6 +41,18 @@ function project(lat, lon){
   const x = (lon - lonMin) / (lonMax - lonMin);
   const y = (latMax - lat) / (latMax - latMin);
   return {x, y};
+}
+
+function renderFranceOutline(){
+  const svg = document.getElementById('mapFranceSvg');
+  const poly = document.getElementById('franceOutlinePoly');
+  if(!svg || !poly || !mapBounds) return;
+  const ring = FRANCE_OUTLINE[0];
+  const pts = ring.map(([lon, lat]) => {
+    const p = project(lat, lon);
+    return (p.x*1000).toFixed(1) + ',' + (p.y*1000).toFixed(1);
+  }).join(' ');
+  poly.setAttribute('points', pts);
 }
 
 function renderMapOverlay(){

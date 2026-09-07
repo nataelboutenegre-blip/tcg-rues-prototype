@@ -27,7 +27,15 @@
 <div class="territory">
   <h2>Mon territoire</h2>
   <div class="map-wrap" id="mapWrap">
-    <div class="france-shape"></div>
+    <svg id="mapFranceSvg" class="map-france-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="franceGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#163A66"/>
+          <stop offset="100%" stop-color="#081B36"/>
+        </linearGradient>
+      </defs>
+      <polygon id="franceOutlinePoly" fill="url(#franceGrad)" stroke="#123564" stroke-width="3"/>
+    </svg>
     <div id="mapOverlay" class="map-overlay"></div>
   </div>
 </div>

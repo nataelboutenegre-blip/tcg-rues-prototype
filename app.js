@@ -11,6 +11,7 @@ Promise.all([
   renderStats();
   computeMapBounds();
   renderFranceOutline();
+  renderMapOverlay();
 });
 
 const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
@@ -141,6 +142,34 @@ function renderStats(){
 }
 
 let collectionMap = new Map();
+const STORAGE_KEY = 'tcgRuesState';
+
+function saveState(){
+  const collectionArr = Array.from(collectionMap.entries()).map(([key, entry]) => {
+    const {tier, ...rest} = entry;
+    return [key, {...rest, tierId: tier.id}];
+  });
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({session, collection: collectionArr}));
+  } catch(e){ /* stockage indisponible, on continue sans sauvegarder */ }
+}
+
+function loadState(){
+  let raw;
+  try{ raw = localStorage.getItem(STORAGE_KEY); } catch(e){ return; }
+  if(!raw) return;
+  try{
+    const data = JSON.parse(raw);
+    if(data.session) Object.assign(session, data.session);
+    if(Array.isArray(data.collection)){
+      for(const [key, entry] of data.collection){
+        const tier = TIERS.find(t => t.id === entry.tierId) || TIERS[TIERS.length - 1];
+        const {tierId, ...rest} = entry;
+        collectionMap.set(key, {...rest, tier});
+      }
+    }
+  } catch(e){ /* sauvegarde corrompue, on repart sans */ }
+}
 
 function addToCollection(draw){
   const key = draw.nom + '|' + draw.dept;
@@ -151,6 +180,7 @@ function addToCollection(draw){
   }
   renderMapOverlay();
   renderCollection();
+  saveState();
 }
 
 function renderCollection(){
@@ -247,5 +277,6 @@ function openPack(){
 }
 
 
-buildIndex();
+loadState();
 renderStats();
+renderCollection();

@@ -198,7 +198,7 @@
   .collection{
     margin-top: 40px;
     width: 100%;
-    max-width: 610px;
+    max-width: 500px;
     border-top: 1px solid var(--line);
     padding-top: 18px;
   }

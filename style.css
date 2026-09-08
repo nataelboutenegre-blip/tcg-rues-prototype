@@ -384,3 +384,89 @@
     margin-top:26px;
     line-height:1.5;
   }
+  .game-screen{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+  }
+  .top-bar{
+    width:100%;
+    max-width:900px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-size:0.78rem;
+    color:var(--ink-soft);
+    margin-bottom:10px;
+  }
+  .link-btn{
+    background:none;
+    border:none;
+    color:var(--bleu);
+    font-family:inherit;
+    font-size:0.78rem;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+  }
+  .auth-screen{
+    width:100%;
+    min-height:60vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .auth-box{
+    width:100%;
+    max-width:360px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:28px 26px;
+    box-shadow:4px 6px 14px rgba(21,27,38,0.15);
+    text-align:center;
+  }
+  .auth-box h1{
+    font-size:1.25rem;
+    margin-bottom:6px;
+  }
+  .auth-box .sub{
+    margin-bottom:20px;
+    font-size:0.82rem;
+  }
+  .auth-box input{
+    width:100%;
+    font-family:inherit;
+    font-size:0.9rem;
+    padding:10px 12px;
+    margin-bottom:10px;
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:#fff;
+    color:var(--ink);
+  }
+  .auth-buttons{
+    display:flex;
+    gap:10px;
+    margin-top:6px;
+  }
+  .auth-buttons .open-btn{
+    flex:1;
+    padding:10px 14px;
+    font-size:0.85rem;
+  }
+  .open-btn.secondary{
+    background:transparent;
+    color:var(--bleu);
+    border:1.5px solid var(--bleu);
+  }
+  .open-btn.secondary:hover{
+    background:rgba(0,38,84,0.06);
+  }
+  .auth-msg{
+    min-height:1.2em;
+    font-size:0.78rem;
+    color:var(--rouge);
+    margin-top:12px;
+  }

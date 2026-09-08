@@ -1,22 +1,73 @@
-let COMMUNES = [];
-let FRANCE_OUTLINE = null;
+// --- Connexion Supabase ---
+const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const CURRENT_SEASON = 'saison-1';
 
-Promise.all([
-  fetch('data/communes.json').then(r => r.json()),
-  fetch('data/france-outline.json').then(r => r.json())
-]).then(([communes, outline]) => {
-  COMMUNES = communes;
-  FRANCE_OUTLINE = outline;
-  buildIndex();
-  renderStats();
-  computeMapBounds();
-  renderFranceOutline();
-  renderMapOverlay();
+const TIERS = [
+  {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
+  {id:'rare', label:'Rare', color:'#2A5FA8', target:11.40},
+  {id:'peucommun', label:'Peu commun', color:'#2E7D5B', target:36.85},
+  {id:'commun', label:'Commun', color:'#7C8798', target:50.92},
+];
+const DEPT_NAMES = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","2A":"Corse-du-Sud","2B":"Haute-Corse","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise"};
+const MAINLAND_NO_CORSICA_RE = /^(0[1-9]|[1-8][0-9]|9[0-5])$/;
+
+let FRANCE_OUTLINE = null;
+let mapBounds = null;
+let collectionMap = new Map();
+let session = {commun:0, peucommun:0, rare:0, legendaire:0, total:0};
+
+// ---------- Authentification ----------
+function showAuth(msg){
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('gameScreen').style.display = 'none';
+  if(msg) document.getElementById('authMsg').textContent = msg;
+}
+
+async function showGame(session_){
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('gameScreen').style.display = 'block';
+  document.getElementById('whoami').textContent = session_.user.email;
+  await loadOutline();
+  await loadMyCollection();
+}
+
+async function initAuth(){
+  const { data: { session: s } } = await sb.auth.getSession();
+  if(s) showGame(s); else showAuth();
+  sb.auth.onAuthStateChange((event, s2) => {
+    if(s2) showGame(s2); else showAuth();
+  });
+}
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if(error) showAuth(error.message);
 });
 
-const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
-const MAINLAND_NO_CORSICA_RE = /^(0[1-9]|[1-8][0-9]|9[0-5])$/;
-let mapBounds = null;
+document.getElementById('signupBtn').addEventListener('click', async () => {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const { error } = await sb.auth.signUp({ email, password });
+  if(error) showAuth(error.message);
+  else showAuth('Compte créé — connecte-toi maintenant.');
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await sb.auth.signOut();
+});
+
+// ---------- Carte (contour reel + points) ----------
+async function loadOutline(){
+  if(FRANCE_OUTLINE) return;
+  const res = await fetch('data/france-outline.json');
+  FRANCE_OUTLINE = await res.json();
+  computeMapBounds();
+  renderFranceOutline();
+}
 
 function computeMapBounds(){
   let latMin=90, latMax=-90, lonMin=180, lonMax=-180;
@@ -29,7 +80,6 @@ function computeMapBounds(){
     }
   }
   mapBounds = {latMin, latMax, lonMin, lonMax};
-
   const meanLat = (latMin + latMax) / 2;
   const lonSpanCorrected = (lonMax - lonMin) * Math.cos(meanLat * Math.PI / 180);
   const latSpan = latMax - latMin;
@@ -45,9 +95,8 @@ function project(lat, lon){
 }
 
 function renderFranceOutline(){
-  const svg = document.getElementById('mapFranceSvg');
   const poly = document.getElementById('franceOutlinePoly');
-  if(!svg || !poly || !mapBounds) return;
+  if(!poly || !mapBounds) return;
   const ring = FRANCE_OUTLINE[0];
   const pts = ring.map(([lon, lat]) => {
     const p = project(lat, lon);
@@ -61,67 +110,43 @@ function renderMapOverlay(){
   if(!overlay || !mapBounds) return;
   overlay.innerHTML = '';
   for(const entry of collectionMap.values()){
-    if(entry.lat == null || entry.lon == null) continue;
     if(!MAINLAND_NO_CORSICA_RE.test(entry.dept)) continue;
     const p = project(entry.lat, entry.lon);
     const dot = document.createElement('div');
     dot.className = 'map-dot ' + entry.tier.id;
     dot.style.left = (p.x * 100) + '%';
     dot.style.top = (p.y * 100) + '%';
-    dot.title = entry.nom + ' (' + entry.dept + ') — ' + entry.tier.label + (entry.count > 1 ? ' ×' + entry.count : '');
+    dot.title = entry.nom + ' (' + entry.dept + ') — ' + entry.tier.label;
     overlay.appendChild(dot);
   }
 }
 
-const TIERS = [
-  {id:'legendaire', label:'Légendaire', color:'#B0862C', min:200000, max:Infinity, target:0.83},
-  {id:'rare', label:'Rare', color:'#2A5FA8', min:20000, max:200000, target:11.40},
-  {id:'peucommun', label:'Peu commun', color:'#2E7D5B', min:2000, max:20000, target:36.85},
-  {id:'commun', label:'Commun', color:'#7C8798', min:0, max:2000, target:50.92},
-];
+// ---------- Collection (depuis la base de donnees) ----------
+async function loadMyCollection(){
+  const { data: userData } = await sb.auth.getUser();
+  const uid = userData.user.id;
+  const { data, error } = await sb
+    .from('possessions')
+    .select('commune_code, communes(code,nom,departement,population,latitude,longitude,tier,rang,palier_total)')
+    .eq('joueur_id', uid);
+  if(error){ console.error(error); return; }
 
-function tierFor(pop){
-  return TIERS.find(t => pop >= t.min && pop < t.max) || TIERS[TIERS.length-1];
-}
-
-let TIER_BUCKETS = {};
-let TIER_RANK = {};
-
-const DEPT_NAMES = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","2A":"Corse-du-Sud","2B":"Haute-Corse","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise"};
-
-function buildIndex(){
-  TIER_BUCKETS = {};
-  TIER_RANK = {};
-  for(const t of TIERS) TIER_BUCKETS[t.id] = [];
-  COMMUNES.forEach((c, i) => {
-    TIER_BUCKETS[tierFor(c[2]).id].push(i);
-  });
-  for(const t of TIERS){
-    const bucket = TIER_BUCKETS[t.id];
-    bucket.sort((a, b) => COMMUNES[b][2] - COMMUNES[a][2]); // population decroissante
-    bucket.forEach((idx, i) => { TIER_RANK[idx] = i + 1; });
+  collectionMap = new Map();
+  session = {commun:0, peucommun:0, rare:0, legendaire:0, total:0};
+  for(const row of data){
+    const c = row.communes;
+    const tier = TIERS.find(t => t.id === c.tier);
+    collectionMap.set(c.code, {
+      code: c.code, nom: c.nom, dept: c.departement, pop: c.population,
+      lat: c.latitude, lon: c.longitude, tier, rank: c.rang, tierSize: c.palier_total
+    });
+    session[c.tier]++;
+    session.total++;
   }
+  renderStats();
+  renderCollection();
+  renderMapOverlay();
 }
-
-function pickTier(){
-  const r = Math.random() * 100;
-  let cum = 0;
-  for(const t of TIERS){
-    cum += t.target;
-    if(r < cum) return t;
-  }
-  return TIERS[TIERS.length - 1];
-}
-
-function drawOne(){
-  const tier = pickTier();
-  const bucket = TIER_BUCKETS[tier.id];
-  const idx = bucket[Math.floor(Math.random() * bucket.length)];
-  const c = COMMUNES[idx];
-  return { nom: c[0], dept: c[1], pop: c[2], nbVoies: c[3], lat: c[4], lon: c[5], code: c[6], tier, rank: TIER_RANK[idx], tierSize: bucket.length };
-}
-
-let session = {commun:0, peucommun:0, rare:0, legendaire:0, total:0};
 
 function renderStats(){
   const rows = document.getElementById('statRows');
@@ -135,52 +160,10 @@ function renderStats(){
       <div class="dot" style="background:${t.color}"></div>
       <div class="label">${t.label}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${t.color}"></div></div>
-      <div class="nums">${n} tirée${n>1?'s':''} (${pct.toFixed(1)}%)</div>
+      <div class="nums">${n} carte${n>1?'s':''} (${pct.toFixed(1)}%)</div>
     `;
     rows.appendChild(row);
   }
-}
-
-let collectionMap = new Map();
-const STORAGE_KEY = 'tcgRuesState';
-
-function saveState(){
-  const collectionArr = Array.from(collectionMap.entries()).map(([key, entry]) => {
-    const {tier, ...rest} = entry;
-    return [key, {...rest, tierId: tier.id}];
-  });
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({session, collection: collectionArr}));
-  } catch(e){ /* stockage indisponible, on continue sans sauvegarder */ }
-}
-
-function loadState(){
-  let raw;
-  try{ raw = localStorage.getItem(STORAGE_KEY); } catch(e){ return; }
-  if(!raw) return;
-  try{
-    const data = JSON.parse(raw);
-    if(data.session) Object.assign(session, data.session);
-    if(Array.isArray(data.collection)){
-      for(const [key, entry] of data.collection){
-        const tier = TIERS.find(t => t.id === entry.tierId) || TIERS[TIERS.length - 1];
-        const {tierId, ...rest} = entry;
-        collectionMap.set(key, {...rest, tier});
-      }
-    }
-  } catch(e){ /* sauvegarde corrompue, on repart sans */ }
-}
-
-function addToCollection(draw){
-  const key = draw.nom + '|' + draw.dept;
-  if(collectionMap.has(key)){
-    collectionMap.get(key).count++;
-  } else {
-    collectionMap.set(key, {...draw, count: 1});
-  }
-  renderMapOverlay();
-  renderCollection();
-  saveState();
 }
 
 function renderCollection(){
@@ -198,18 +181,18 @@ function renderCollection(){
     return b.pop - a.pop;
   });
   gridEl.innerHTML = sorted.map(entry => `
-    <div class="mini-card ${entry.tier.id}" title="${entry.nom} (${entry.dept}) — ${entry.tier.label}${entry.count>1 ? ' ×'+entry.count : ''}">
+    <div class="mini-card ${entry.tier.id}" title="${entry.nom} (${entry.dept}) — ${entry.tier.label}">
       <div class="stripe"><span class="b"></span><span class="w"></span><span class="r"></span></div>
       <div class="body">
         <div class="name">${entry.nom}</div>
         <div class="rarity" style="background:${entry.tier.color}">${entry.tier.label}</div>
       </div>
-      ${entry.count>1 ? `<div class="qty">×${entry.count}</div>` : ''}
     </div>
   `).join('');
 }
 
-function makeCardEl(draw){
+// ---------- Cartes et paquet ----------
+function makeCardEl(draw, onFlip){
   const wrap = document.createElement('div');
   wrap.className = 'card ' + draw.tier.id;
   wrap.innerHTML = `
@@ -232,14 +215,7 @@ function makeCardEl(draw){
   wrap.addEventListener('click', () => {
     if(!wrap.classList.contains('flipped')){
       wrap.classList.add('flipped');
-      session[draw.tier.id]++;
-      session.total++;
-      renderStats();
-      addToCollection(draw);
-      pendingFlips--;
-      if(pendingFlips <= 0){
-        document.getElementById('openBtn').disabled = false;
-      }
+      onFlip();
     }
   });
   return wrap;
@@ -251,7 +227,20 @@ function revealCards(draws){
   const zone = document.getElementById('packZone');
   zone.innerHTML = '';
   pendingFlips = draws.length;
-  draws.forEach(draw => zone.appendChild(makeCardEl(draw)));
+  draws.forEach(draw => {
+    zone.appendChild(makeCardEl(draw, () => {
+      collectionMap.set(draw.code, draw);
+      session[draw.tier.id]++;
+      session.total++;
+      renderStats();
+      renderCollection();
+      renderMapOverlay();
+      pendingFlips--;
+      if(pendingFlips <= 0){
+        document.getElementById('openBtn').disabled = false;
+      }
+    }));
+  });
 }
 
 function makePackEl(){
@@ -262,21 +251,39 @@ function makePackEl(){
   return pack;
 }
 
-function openPack(){
+async function openPack(){
   document.getElementById('openBtn').disabled = true;
   const zone = document.getElementById('packZone');
   zone.innerHTML = '';
-  const draws = [];
-  for(let i=0;i<5;i++) draws.push(drawOne());
   const pack = makePackEl();
   zone.appendChild(pack);
+
   pack.addEventListener('click', () => {
     pack.classList.add('tearing');
-    setTimeout(() => revealCards(draws), 650);
+    setTimeout(async () => {
+      const draws = [];
+      for(let i = 0; i < 5; i++){
+        const { data, error } = await sb.rpc('draw_commune', { p_saison: CURRENT_SEASON });
+        if(error){
+          alert('Tirage impossible : ' + error.message);
+          break;
+        }
+        const row = data[0];
+        const tier = TIERS.find(t => t.id === row.tier);
+        draws.push({
+          code: row.code, nom: row.nom, dept: row.departement, pop: row.population,
+          lat: row.latitude, lon: row.longitude, tier, rank: row.rang, tierSize: row.palier_total
+        });
+      }
+      if(draws.length === 0){
+        document.getElementById('openBtn').disabled = false;
+        return;
+      }
+      revealCards(draws);
+    }, 650);
   }, { once: true });
 }
 
+document.getElementById('openBtn').addEventListener('click', openPack);
 
-loadState();
-renderStats();
-renderCollection();
+initAuth();

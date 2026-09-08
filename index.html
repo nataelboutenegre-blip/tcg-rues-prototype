@@ -6,42 +6,66 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Prototype — Tirage de communes</title>
 <link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
-<h1>Ouverture de paquet — prototype</h1>
-<div class="sub">Tirage sur les 34 888 communes réelles de France (données BAN). Chaque carte tirée est une vraie commune, à sa vraie position géographique. Clique sur le paquet pour le déchirer.</div>
-
-<div class="pack-zone" id="packZone"></div>
-<button class="open-btn" id="openBtn" onclick="openPack()">Ouvrir un paquet (5 cartes)</button>
-
-<div class="stats">
-  <h2>Répartition depuis le début de la session</h2>
-  <div id="statRows"></div>
-</div>
-
-<div class="collection">
-  <h2>Ma collection (<span id="collectionCount">0</span> cartes)</h2>
-  <div class="collection-grid" id="collectionGrid"><p class="collection-empty">Aucune carte pour le moment — ouvre un paquet.</p></div>
-</div>
-
-<div class="territory">
-  <h2>Mon territoire</h2>
-  <div class="map-wrap" id="mapWrap">
-    <svg id="mapFranceSvg" class="map-france-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
-      <defs>
-        <linearGradient id="franceGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#163A66"/>
-          <stop offset="100%" stop-color="#081B36"/>
-        </linearGradient>
-      </defs>
-      <polygon id="franceOutlinePoly" fill="url(#franceGrad)" stroke="#123564" stroke-width="3"/>
-    </svg>
-    <div id="mapOverlay" class="map-overlay"></div>
+<div id="authScreen" class="auth-screen">
+  <div class="auth-box">
+    <h1>Ouverture de paquet — prototype</h1>
+    <p class="sub">Connecte-toi pour tirer des communes réelles de France.</p>
+    <input type="email" id="authEmail" placeholder="Email" autocomplete="email">
+    <input type="password" id="authPassword" placeholder="Mot de passe" autocomplete="current-password">
+    <div class="auth-buttons">
+      <button class="open-btn" id="loginBtn">Se connecter</button>
+      <button class="open-btn secondary" id="signupBtn">Créer un compte</button>
+    </div>
+    <p id="authMsg" class="auth-msg"></p>
   </div>
 </div>
 
-<div class="note">Cible calibrée sur les vraies données : commun 50,9% · peu commun 36,8% · rare 11,4% · légendaire 0,83%.</div>
+<div id="gameScreen" class="game-screen" style="display:none">
+
+  <div class="top-bar">
+    <span id="whoami"></span>
+    <button class="link-btn" id="logoutBtn">Se déconnecter</button>
+  </div>
+
+  <h1>Ouverture de paquet — prototype</h1>
+  <div class="sub">Tirage sur les communes réelles de France (données BAN). Chaque carte tirée est une vraie commune, à sa vraie position géographique — et n'appartient qu'à toi tant que tu la gardes. Clique sur le paquet pour le déchirer.</div>
+
+  <div class="pack-zone" id="packZone"></div>
+  <button class="open-btn" id="openBtn">Ouvrir un paquet (5 cartes)</button>
+
+  <div class="stats">
+    <h2>Répartition depuis le début de la session</h2>
+    <div id="statRows"></div>
+  </div>
+
+  <div class="collection">
+    <h2>Ma collection (<span id="collectionCount">0</span> cartes)</h2>
+    <div class="collection-grid" id="collectionGrid"><p class="collection-empty">Aucune carte pour le moment — ouvre un paquet.</p></div>
+  </div>
+
+  <div class="territory">
+    <h2>Mon territoire</h2>
+    <div class="map-wrap" id="mapWrap">
+      <svg id="mapFranceSvg" class="map-france-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="franceGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#163A66"/>
+            <stop offset="100%" stop-color="#081B36"/>
+          </linearGradient>
+        </defs>
+        <polygon id="franceOutlinePoly" fill="url(#franceGrad)" stroke="#123564" stroke-width="3"/>
+      </svg>
+      <div id="mapOverlay" class="map-overlay"></div>
+    </div>
+  </div>
+
+  <div class="note">Cible calibrée sur les vraies données : commun 50,9% · peu commun 36,8% · rare 11,4% · légendaire 0,83%.</div>
+
+</div>
 
 <script src="app.js"></script>
 </body>

@@ -273,8 +273,8 @@
     box-shadow: 0 0 16px 4px rgba(176,134,44,0.9), 0 0 0 2px #fff;
   }
   .collection-grid{
-    display:flex;
-    flex-wrap: wrap;
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
     gap: 10px;
     max-height: 820px;
     overflow-y: auto;
@@ -282,8 +282,6 @@
   }
   .mini-card{
     position: relative;
-    flex: 0 0 auto;
-    width: 92px;
     min-height: 128px;
     border-radius: 8px;
     background: var(--paper);

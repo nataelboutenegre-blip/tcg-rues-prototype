@@ -16,6 +16,7 @@ const MAINLAND_NO_CORSICA_RE = /^(0[1-9]|[1-8][0-9]|9[0-5])$/;
 let FRANCE_OUTLINE = null;
 let mapBounds = null;
 let collectionMap = new Map();
+let othersMap = new Map();
 let session = {commun:0, peucommun:0, rare:0, legendaire:0, total:0};
 
 // ---------- Authentification ----------
@@ -31,6 +32,7 @@ async function showGame(session_){
   document.getElementById('whoami').textContent = session_.user.email;
   await loadOutline();
   await loadMyCollection();
+  await loadOthersPossessions();
 }
 
 async function initAuth(){
@@ -103,22 +105,92 @@ function renderFranceOutline(){
     return (p.x*1000).toFixed(1) + ',' + (p.y*1000).toFixed(1);
   }).join(' ');
   poly.setAttribute('points', pts);
+  setupMapInteraction();
+}
+
+let mapZoom = 1, mapPanX = 0, mapPanY = 0;
+let mapDragging = false, mapDragStart = {x:0, y:0};
+let mapInteractionReady = false;
+
+function applyMapTransform(){
+  const el = document.getElementById('mapTransform');
+  if(el) el.style.transform = `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`;
+}
+
+function setupMapInteraction(){
+  if(mapInteractionReady) return;
+  mapInteractionReady = true;
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap) return;
+  wrap.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.15 : 1/1.15;
+    mapZoom = Math.min(6, Math.max(1, mapZoom * factor));
+    if(mapZoom === 1){ mapPanX = 0; mapPanY = 0; }
+    applyMapTransform();
+  }, { passive: false });
+  wrap.addEventListener('mousedown', (e) => {
+    mapDragging = true;
+    mapDragStart = { x: e.clientX - mapPanX, y: e.clientY - mapPanY };
+  });
+  window.addEventListener('mousemove', (e) => {
+    if(!mapDragging) return;
+    mapPanX = e.clientX - mapDragStart.x;
+    mapPanY = e.clientY - mapDragStart.y;
+    applyMapTransform();
+  });
+  window.addEventListener('mouseup', () => { mapDragging = false; });
 }
 
 function renderMapOverlay(){
   const overlay = document.getElementById('mapOverlay');
   if(!overlay || !mapBounds) return;
   overlay.innerHTML = '';
+
+  // territoire des autres joueurs, en gris neutre
+  for(const entry of othersMap.values()){
+    if(!MAINLAND_NO_CORSICA_RE.test(entry.dept)) continue;
+    const p = project(entry.lat, entry.lon);
+    const dot = document.createElement('div');
+    dot.className = 'map-dot other ' + entry.tier.id;
+    dot.style.left = (p.x * 100) + '%';
+    dot.style.top = (p.y * 100) + '%';
+    dot.title = entry.nom + ' (' + entry.dept + ') — possédée par ' + entry.pseudo;
+    overlay.appendChild(dot);
+  }
+
+  // mon propre territoire, en couleur vive
   for(const entry of collectionMap.values()){
     if(!MAINLAND_NO_CORSICA_RE.test(entry.dept)) continue;
     const p = project(entry.lat, entry.lon);
     const dot = document.createElement('div');
-    dot.className = 'map-dot ' + entry.tier.id;
+    dot.className = 'map-dot mine ' + entry.tier.id;
     dot.style.left = (p.x * 100) + '%';
     dot.style.top = (p.y * 100) + '%';
     dot.title = entry.nom + ' (' + entry.dept + ') — ' + entry.tier.label;
     overlay.appendChild(dot);
   }
+}
+
+async function loadOthersPossessions(){
+  const { data: userData } = await sb.auth.getUser();
+  const uid = userData.user.id;
+  const { data, error } = await sb
+    .from('possessions')
+    .select('commune_code, joueur_id, communes(code,nom,departement,latitude,longitude,tier), joueurs(pseudo)')
+    .neq('joueur_id', uid);
+  if(error){ console.error(error); return; }
+
+  othersMap = new Map();
+  for(const row of data){
+    const c = row.communes;
+    const tier = TIERS.find(t => t.id === c.tier);
+    othersMap.set(c.code, {
+      nom: c.nom, dept: c.departement, lat: c.latitude, lon: c.longitude, tier,
+      pseudo: row.joueurs ? row.joueurs.pseudo : 'un autre joueur'
+    });
+  }
+  renderMapOverlay();
 }
 
 // ---------- Collection (depuis la base de donnees) ----------
@@ -285,5 +357,15 @@ async function openPack(){
 }
 
 document.getElementById('openBtn').addEventListener('click', openPack);
+
+// ---------- Navigation par onglets ----------
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
 
 initAuth();

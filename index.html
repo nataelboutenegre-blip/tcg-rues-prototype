@@ -24,47 +24,95 @@
   </div>
 </div>
 
-<div id="gameScreen" class="game-screen" style="display:none">
+<div id="gameScreen" class="app-shell" style="display:none">
 
-  <div class="top-bar">
-    <span id="whoami"></span>
-    <button class="link-btn" id="logoutBtn">Se déconnecter</button>
-  </div>
+  <nav class="sidebar">
+    <div class="brand">TerraFront</div>
 
-  <h1>Ouverture de paquet — prototype</h1>
-  <div class="sub">Tirage sur les communes réelles de France (données BAN). Chaque carte tirée est une vraie commune, à sa vraie position géographique — et n'appartient qu'à toi tant que tu la gardes. Clique sur le paquet pour le déchirer.</div>
-
-  <div class="pack-zone" id="packZone"></div>
-  <button class="open-btn" id="openBtn">Ouvrir un paquet (5 cartes)</button>
-
-  <div class="stats">
-    <h2>Répartition depuis le début de la session</h2>
-    <div id="statRows"></div>
-  </div>
-
-  <div class="collection">
-    <h2>Ma collection (<span id="collectionCount">0</span> cartes)</h2>
-    <div class="collection-grid" id="collectionGrid"><p class="collection-empty">Aucune carte pour le moment — ouvre un paquet.</p></div>
-  </div>
-
-  <div class="territory">
-    <h2>Mon territoire</h2>
-    <div class="map-wrap" id="mapWrap">
-      <svg id="mapFranceSvg" class="map-france-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
-        <defs>
-          <linearGradient id="franceGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#163A66"/>
-            <stop offset="100%" stop-color="#081B36"/>
-          </linearGradient>
-        </defs>
-        <polygon id="franceOutlinePoly" fill="url(#franceGrad)" stroke="#123564" stroke-width="3"/>
-      </svg>
-      <div id="mapOverlay" class="map-overlay"></div>
+    <div class="tab active" data-tab="tirage">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none">
+          <rect x="4" y="3" width="16" height="18" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M4 13 L10 9 L10 21" stroke="currentColor" stroke-width="1.4"/>
+        </svg>
+      </div>
+      Tirage
     </div>
-  </div>
 
-  <div class="note">Cible calibrée sur les vraies données : commun 50,9% · peu commun 36,8% · rare 11,4% · légendaire 0,83%.</div>
+    <div class="tab" data-tab="collection">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none">
+          <rect x="7" y="3" width="12" height="16" rx="2" stroke="currentColor" stroke-width="1.5" transform="rotate(8 13 11)"/>
+          <rect x="5" y="5" width="12" height="16" rx="2" fill="#0B2A55" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+      </div>
+      Ma collection
+    </div>
 
+    <div class="tab" data-tab="territoire">
+      <div class="icon">
+        <svg viewBox="0 0 24 24">
+          <polygon points="13.4,22.0 6.5,19.7 7.7,16.7 7.6,14.6 8.1,15.1 8.2,15.7 8.4,15.8 8.1,14.9 7.4,14.3 7.6,12.9 6.5,12.5 5.5,10.2 2.6,9.5 2.0,8.9 2.8,8.4 2.0,7.8 4.3,7.1 5.1,7.9 7.1,7.6 6.3,5.1 9.3,6.0 9.8,5.8 9.6,5.2 11.9,4.1 11.7,2.5 13.2,2.0 15.8,3.9 15.8,4.6 16.8,4.1 16.8,5.0 17.7,5.6 22.0,6.9 21.0,10.0 20.1,10.2 18.5,13.2 19.8,12.8 20.4,15.0 19.5,15.7 20.1,17.7 21.2,17.8 20.9,18.7 18.8,20.4 15.4,19.3 14.1,20.3 14.2,21.8 13.4,22.0" fill="currentColor"/>
+        </svg>
+      </div>
+      Territoire
+    </div>
+
+    <div class="sidebar-footer">
+      <span id="whoami"></span>
+      <button class="link-btn" id="logoutBtn">Se déconnecter</button>
+    </div>
+  </nav>
+
+  <main class="content">
+
+    <section class="tab-panel active" id="panel-tirage">
+      <h1>Ouverture de paquet — prototype</h1>
+      <div class="sub">Tirage sur les communes réelles de France (données BAN). Chaque carte tirée est une vraie commune, à sa vraie position géographique — et n'appartient qu'à toi tant que tu la gardes. Clique sur le paquet pour le déchirer.</div>
+
+      <div class="pack-zone" id="packZone"></div>
+      <button class="open-btn" id="openBtn">Ouvrir un paquet (5 cartes)</button>
+
+      <div class="stats">
+        <h2>Répartition depuis le début de la session</h2>
+        <div id="statRows"></div>
+      </div>
+
+      <div class="note">Cible calibrée sur les vraies données : commun 50,9% · peu commun 36,8% · rare 11,4% · légendaire 0,83%.</div>
+    </section>
+
+    <section class="tab-panel" id="panel-collection">
+      <h1>Ma collection</h1>
+      <div class="sub">Toutes les communes que tu possèdes actuellement.</div>
+      <div class="collection">
+        <h2>Ma collection (<span id="collectionCount">0</span> cartes)</h2>
+        <div class="collection-grid" id="collectionGrid"><p class="collection-empty">Aucune carte pour le moment — ouvre un paquet.</p></div>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="panel-territoire">
+      <h1>Le territoire</h1>
+      <div class="sub">Tes communes en couleur, celles des autres joueurs en gris.</div>
+      <div class="territory">
+        <div class="map-wrap" id="mapWrap">
+          <div class="map-transform" id="mapTransform">
+            <svg id="mapFranceSvg" class="map-france-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="franceGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#163A66"/>
+                  <stop offset="100%" stop-color="#081B36"/>
+                </linearGradient>
+              </defs>
+              <polygon id="franceOutlinePoly" fill="url(#franceGrad)" stroke="#123564" stroke-width="3"/>
+            </svg>
+            <div id="mapOverlay" class="map-overlay"></div>
+          </div>
+        </div>
+        <p class="map-note">Molette pour zoomer, cliquer-glisser pour te déplacer. En couleur : tes communes. En gris : celles des autres joueurs.</p>
+      </div>
+    </section>
+
+  </main>
 </div>
 
 <script src="app.js"></script>

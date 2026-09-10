@@ -257,8 +257,9 @@
     overflow: hidden;
     border-radius: 10px;
     cursor: grab;
-    background: linear-gradient(180deg, #2A5A91 0%, #12335C 100%);
+    background: linear-gradient(180deg, #BFE0F5 0%, #8FC6E8 100%);
     margin: 0 auto;
+    touch-action: none;
   }
   .map-wrap:active{ cursor: grabbing; }
   .map-transform{

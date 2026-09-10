@@ -182,6 +182,20 @@ function setupMapInteraction(){
     applyMapTransform();
   });
   window.addEventListener('mouseup', () => { mapDragging = false; });
+
+  wrap.addEventListener('touchstart', (e) => {
+    if(e.touches.length !== 1) return;
+    mapDragging = true;
+    mapDragStart = { x: e.touches[0].clientX - mapPanX, y: e.touches[0].clientY - mapPanY };
+  }, { passive: true });
+  wrap.addEventListener('touchmove', (e) => {
+    if(!mapDragging || e.touches.length !== 1) return;
+    e.preventDefault();
+    mapPanX = e.touches[0].clientX - mapDragStart.x;
+    mapPanY = e.touches[0].clientY - mapDragStart.y;
+    applyMapTransform();
+  }, { passive: false });
+  wrap.addEventListener('touchend', () => { mapDragging = false; });
 }
 
 let showOthers = true;

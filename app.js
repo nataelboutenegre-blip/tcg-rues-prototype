@@ -450,6 +450,112 @@ document.getElementById('toggleOthersBtn').addEventListener('click', () => {
   renderMapOverlay();
 });
 
+// ---------- Bourse ----------
+const PRIX_RACHAT = {commun: 5, peucommun: 20, rare: 100, legendaire: 1000};
+let myListings = new Map();
+
+async function loadBourse(){
+  const { data: userData } = await sb.auth.getUser();
+  const uid = userData.user.id;
+
+  const { data: joueurRow } = await sb.from('joueurs').select('solde').eq('id', uid).single();
+  document.getElementById('soldeValue').textContent = joueurRow ? joueurRow.solde : '—';
+
+  const { data: mine } = await sb.from('annonces').select('commune_code, prix').eq('joueur_id', uid);
+  myListings = new Map((mine || []).map(a => [a.commune_code, a.prix]));
+
+  renderSellableGrid();
+
+  const { data: market } = await sb
+    .from('annonces')
+    .select('commune_code, prix, joueur_id, communes(nom,departement,tier), joueurs(pseudo)')
+    .neq('joueur_id', uid);
+  renderMarketGrid(market || []);
+}
+
+function renderSellableGrid(){
+  const grid = document.getElementById('sellableGrid');
+  const entries = Array.from(collectionMap.values()).sort((a,b) => {
+    const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
+    if(ra !== rb) return ra - rb;
+    return b.pop - a.pop;
+  });
+  if(entries.length === 0){
+    grid.innerHTML = '<p class="collection-empty">Tu ne possèdes aucune commune pour l\'instant.</p>';
+    return;
+  }
+  grid.innerHTML = entries.map(entry => {
+    const listedPrice = myListings.get(entry.code);
+    const rachat = PRIX_RACHAT[entry.tier.id];
+    const actions = listedPrice
+      ? `<span class="bourse-price">En vente : ${listedPrice} pts</span>
+         <button class="bourse-btn" data-action="retirer" data-code="${entry.code}">Retirer</button>`
+      : `<button class="bourse-btn" data-action="vendre-jeu" data-code="${entry.code}">Vendre au jeu (${rachat} pts)</button>
+         <button class="bourse-btn" data-action="mettre-vente" data-code="${entry.code}">Mettre en vente</button>`;
+    return `
+      <div class="bourse-row">
+        <span class="bourse-dot" style="background:${entry.tier.color}"></span>
+        <span class="bourse-name">${entry.nom} <span class="bourse-dept">(${entry.dept})</span></span>
+        ${actions}
+      </div>`;
+  }).join('');
+}
+
+function renderMarketGrid(market){
+  const grid = document.getElementById('marketGrid');
+  if(market.length === 0){
+    grid.innerHTML = '<p class="collection-empty">Aucune annonce pour le moment.</p>';
+    return;
+  }
+  const tiersById = Object.fromEntries(TIERS.map(t => [t.id, t]));
+  grid.innerHTML = market.map(a => {
+    const c = a.communes;
+    const tier = tiersById[c.tier];
+    const pseudo = a.joueurs ? a.joueurs.pseudo : 'un joueur';
+    return `
+      <div class="bourse-row">
+        <span class="bourse-dot" style="background:${tier.color}"></span>
+        <span class="bourse-name">${c.nom} <span class="bourse-dept">(${c.departement}) — vendu par ${pseudo}</span></span>
+        <span class="bourse-price">${a.prix} pts</span>
+        <button class="bourse-btn" data-action="acheter" data-code="${a.commune_code}">Acheter</button>
+      </div>`;
+  }).join('');
+}
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.bourse-btn');
+  if(!btn) return;
+  const action = btn.dataset.action;
+  const code = btn.dataset.code;
+  btn.disabled = true;
+  try{
+    if(action === 'vendre-jeu'){
+      const { error } = await sb.rpc('vendre_au_jeu', { p_commune_code: code });
+      if(error) throw error;
+      collectionMap.delete(code);
+      renderCollection(); renderStats(); renderMapOverlay();
+    } else if(action === 'mettre-vente'){
+      const prixStr = prompt('À quel prix veux-tu la vendre (en points) ?');
+      const prix = parseInt(prixStr, 10);
+      if(!prix || prix <= 0) { btn.disabled = false; return; }
+      const { error } = await sb.rpc('mettre_en_vente', { p_commune_code: code, p_prix: prix });
+      if(error) throw error;
+    } else if(action === 'retirer'){
+      const { error } = await sb.rpc('retirer_de_la_vente', { p_commune_code: code });
+      if(error) throw error;
+    } else if(action === 'acheter'){
+      const { error } = await sb.rpc('acheter', { p_commune_code: code, p_saison: CURRENT_SEASON });
+      if(error) throw error;
+      await loadMyCollection();
+      await loadOthersPossessions();
+    }
+    await loadBourse();
+  } catch(err){
+    alert('Action impossible : ' + err.message);
+    btn.disabled = false;
+  }
+});
+
 // ---------- Navigation par onglets ----------
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -458,6 +564,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     tab.classList.add('active');
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
     if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
+    if(tab.dataset.tab === 'bourse') loadBourse();
   });
 });
 

@@ -236,6 +236,21 @@
     color: var(--ink-soft);
     margin-top: 8px;
   }
+  .toggle-others-btn{
+    font-family:inherit;
+    font-size:0.76rem;
+    color: var(--bleu);
+    background: none;
+    border: 1.5px solid var(--bleu);
+    border-radius: 16px;
+    padding: 6px 14px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    align-self: flex-start;
+  }
+  .toggle-others-btn:hover{
+    background: rgba(0,38,84,0.06);
+  }
   .map-wrap{
     position: relative;
     width: 100%;
@@ -287,8 +302,8 @@
     box-shadow: 0 0 16px 4px rgba(176,134,44,0.9), 0 0 0 2px #fff;
   }
   .map-dot.other{
-    background: #9AA5B3;
-    box-shadow: 0 0 3px 1px rgba(154,165,179,0.5), 0 0 0 1px rgba(255,255,255,0.45);
+    background: var(--rouge);
+    box-shadow: 0 0 3px 1px rgba(200,49,58,0.5), 0 0 0 1px rgba(255,255,255,0.45);
     opacity: 0.8;
   }
   .collection-grid{

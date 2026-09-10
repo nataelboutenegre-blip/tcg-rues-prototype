@@ -117,7 +117,7 @@ function sizeMapWrap(ratio){
   if(!wrap || !ratio) return;
   const parent = wrap.parentElement;
   const availWidth = Math.min(parent.clientWidth, 1200);
-  const availHeightPx = window.innerHeight * 0.6;
+  const availHeightPx = window.innerHeight * 0.78;
   const widthFromHeight = availHeightPx * ratio;
   const finalWidth = Math.min(availWidth, widthFromHeight);
   wrap.style.width = finalWidth + 'px';

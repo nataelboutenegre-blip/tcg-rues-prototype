@@ -666,6 +666,10 @@ function coutAttaque(tierId){
   return Math.max(1, Math.round(PRIX_RACHAT[tierId] * 0.1));
 }
 
+let combatCibles = [];
+let combatSieges = new Map();
+let combatFilterTier = 'tous';
+
 async function loadCombat(){
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
@@ -684,17 +688,34 @@ async function loadCombat(){
     .from('sieges')
     .select('commune_code, victoires_consecutives, dernier_round')
     .eq('attacker_id', uid);
-  const siegesMap = new Map((mesSieges || []).map(s => [s.commune_code, s]));
 
-  renderCombatGrid(cibles || [], siegesMap);
+  combatCibles = cibles || [];
+  combatSieges = new Map((mesSieges || []).map(s => [s.commune_code, s]));
+  renderCombatGrid();
 }
 
-function renderCombatGrid(cibles, siegesMap){
+function renderCombatGrid(){
   const grid = document.getElementById('combatGrid');
-  if(cibles.length === 0){
+  const searchEl = document.getElementById('combatSearch');
+  const searchText = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+  let cibles = combatCibles;
+  if(combatFilterTier !== 'tous'){
+    cibles = cibles.filter(c => c.communes.tier === combatFilterTier);
+  }
+  if(searchText){
+    cibles = cibles.filter(c => c.communes.nom.toLowerCase().includes(searchText));
+  }
+
+  if(combatCibles.length === 0){
     grid.innerHTML = '<p class="collection-empty">Aucune cible disponible pour le moment.</p>';
     return;
   }
+  if(cibles.length === 0){
+    grid.innerHTML = '<p class="collection-empty">Aucune cible ne correspond à la recherche.</p>';
+    return;
+  }
+
   const tiersById = Object.fromEntries(TIERS.map(t => [t.id, t]));
   const now = Date.now();
 
@@ -703,38 +724,58 @@ function renderCombatGrid(cibles, siegesMap){
     const tier = tiersById[commune.tier];
     const pseudo = c.joueurs ? c.joueurs.pseudo : 'un joueur';
     const acquiredAt = new Date(c.acquired_at).getTime();
-    const immuniteFin = acquiredAt + 48 * 3600 * 1000;
+    const immuniteFin = acquiredAt + 3 * 3600 * 1000;
     const encoreImmune = now < immuniteFin;
 
-    const siege = siegesMap.get(c.commune_code);
+    const siege = combatSieges.get(c.commune_code);
     const victoires = siege ? siege.victoires_consecutives : 0;
     const dernierRound = siege && siege.dernier_round ? new Date(siege.dernier_round).getTime() : 0;
     const dejaAttaqueAujourdhui = dernierRound && (now - dernierRound < 24 * 3600 * 1000);
 
     const cout = coutAttaque(commune.tier);
-    let statusTxt, disabled;
+    let statusTxt, statusClass, disabled;
     if(encoreImmune){
       const heures = Math.ceil((immuniteFin - now) / 3600000);
       statusTxt = `Protégée encore ${heures}h`;
+      statusClass = '';
       disabled = true;
     } else if(dejaAttaqueAujourdhui){
       const heures = Math.ceil((24 * 3600 * 1000 - (now - dernierRound)) / 3600000);
       statusTxt = `Déjà attaquée — réessaie dans ${heures}h`;
+      statusClass = '';
       disabled = true;
     } else {
-      statusTxt = `Siège : ${victoires}/3`;
+      statusTxt = 'Prête à attaquer';
+      statusClass = 'ready';
       disabled = false;
     }
 
+    const dots = [0,1,2].map(i => `<div class="cc-siege-dot ${i < victoires ? 'filled' : ''}"></div>`).join('');
+
     return `
-      <div class="bourse-row">
-        <span class="bourse-dot" style="background:${tier.color}"></span>
-        <span class="bourse-name">${commune.nom} <span class="bourse-dept">(${commune.departement}) — possédée par ${pseudo}</span></span>
-        <span class="bourse-price">${statusTxt}</span>
-        <button class="bourse-btn" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer (${cout} pts)</button>
+      <div class="combat-card ${commune.tier}">
+        <div class="tricolore"><span class="b"></span><span class="w"></span><span class="r"></span></div>
+        <div class="cc-body">
+          <span class="cc-badge">${tier.label}</span>
+          <p class="cc-name">${commune.nom}</p>
+          <p class="cc-owner">Possédée par ${pseudo}</p>
+          <div class="cc-sieges">${dots}</div>
+          <p class="cc-status ${statusClass}">${statusTxt}</p>
+          <button class="bourse-btn cc-btn" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer (${cout} pts)</button>
+        </div>
       </div>`;
   }).join('');
 }
+
+document.getElementById('combatSearch').addEventListener('input', renderCombatGrid);
+document.getElementById('combatFilters').addEventListener('click', (e) => {
+  const pill = e.target.closest('.filter-pill');
+  if(!pill) return;
+  document.querySelectorAll('#combatFilters .filter-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  combatFilterTier = pill.dataset.tier;
+  renderCombatGrid();
+});
 
 // ---------- Navigation par onglets ----------
 document.querySelectorAll('.tab').forEach(tab => {

@@ -627,6 +627,21 @@ document.addEventListener('click', async (e) => {
       if(error) throw error;
       await loadMyCollection();
       await loadOthersPossessions();
+    } else if(action === 'attaquer'){
+      const { data, error } = await sb.rpc('attaquer', { p_commune_code: code });
+      if(error) throw error;
+      const result = data[0];
+      if(result.conquise){
+        alert('Commune conquise ! Tu as gagné le siège et le bonus.');
+        await loadMyCollection();
+        await loadOthersPossessions();
+      } else if(result.gagne){
+        alert(`Victoire ! Série : ${result.victoires_consecutives}/3`);
+      } else {
+        alert('Défaite. La série repart à zéro.');
+      }
+      await loadCombat();
+      return;
     }
     await loadBourse();
   } catch(err){
@@ -646,6 +661,81 @@ document.getElementById('sellFilters').addEventListener('click', (e) => {
   renderSellableGrid();
 });
 
+// ---------- Combat ----------
+function coutAttaque(tierId){
+  return Math.max(1, Math.round(PRIX_RACHAT[tierId] * 0.1));
+}
+
+async function loadCombat(){
+  const { data: userData } = await sb.auth.getUser();
+  const uid = userData.user.id;
+
+  const { data: joueurRow } = await sb.from('joueurs').select('solde').eq('id', uid).single();
+  document.getElementById('soldeValueCombat').textContent = joueurRow ? joueurRow.solde : '—';
+
+  const { data: cibles, error } = await sb
+    .from('possessions')
+    .select('commune_code, joueur_id, acquired_at, communes!inner(nom,departement,tier), joueurs(pseudo)')
+    .neq('joueur_id', uid)
+    .in('communes.tier', ['rare','legendaire']);
+  if(error){ console.error(error); return; }
+
+  const { data: mesSieges } = await sb
+    .from('sieges')
+    .select('commune_code, victoires_consecutives, dernier_round')
+    .eq('attacker_id', uid);
+  const siegesMap = new Map((mesSieges || []).map(s => [s.commune_code, s]));
+
+  renderCombatGrid(cibles || [], siegesMap);
+}
+
+function renderCombatGrid(cibles, siegesMap){
+  const grid = document.getElementById('combatGrid');
+  if(cibles.length === 0){
+    grid.innerHTML = '<p class="collection-empty">Aucune cible disponible pour le moment.</p>';
+    return;
+  }
+  const tiersById = Object.fromEntries(TIERS.map(t => [t.id, t]));
+  const now = Date.now();
+
+  grid.innerHTML = cibles.map(c => {
+    const commune = c.communes;
+    const tier = tiersById[commune.tier];
+    const pseudo = c.joueurs ? c.joueurs.pseudo : 'un joueur';
+    const acquiredAt = new Date(c.acquired_at).getTime();
+    const immuniteFin = acquiredAt + 48 * 3600 * 1000;
+    const encoreImmune = now < immuniteFin;
+
+    const siege = siegesMap.get(c.commune_code);
+    const victoires = siege ? siege.victoires_consecutives : 0;
+    const dernierRound = siege && siege.dernier_round ? new Date(siege.dernier_round).getTime() : 0;
+    const dejaAttaqueAujourdhui = dernierRound && (now - dernierRound < 24 * 3600 * 1000);
+
+    const cout = coutAttaque(commune.tier);
+    let statusTxt, disabled;
+    if(encoreImmune){
+      const heures = Math.ceil((immuniteFin - now) / 3600000);
+      statusTxt = `Protégée encore ${heures}h`;
+      disabled = true;
+    } else if(dejaAttaqueAujourdhui){
+      const heures = Math.ceil((24 * 3600 * 1000 - (now - dernierRound)) / 3600000);
+      statusTxt = `Déjà attaquée — réessaie dans ${heures}h`;
+      disabled = true;
+    } else {
+      statusTxt = `Siège : ${victoires}/3`;
+      disabled = false;
+    }
+
+    return `
+      <div class="bourse-row">
+        <span class="bourse-dot" style="background:${tier.color}"></span>
+        <span class="bourse-name">${commune.nom} <span class="bourse-dept">(${commune.departement}) — possédée par ${pseudo}</span></span>
+        <span class="bourse-price">${statusTxt}</span>
+        <button class="bourse-btn" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer (${cout} pts)</button>
+      </div>`;
+  }).join('');
+}
+
 // ---------- Navigation par onglets ----------
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -655,6 +745,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
     if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
     if(tab.dataset.tab === 'bourse') loadBourse();
+    if(tab.dataset.tab === 'combat') loadCombat();
   });
 });
 

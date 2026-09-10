@@ -470,9 +470,8 @@ async function loadBourse(){
 
   const { data: market } = await sb
     .from('annonces')
-    .select('commune_code, prix, joueur_id, communes(nom,departement,tier), joueurs(pseudo)')
-    .neq('joueur_id', uid);
-  renderMarketGrid(market || []);
+    .select('commune_code, prix, joueur_id, communes(nom,departement,tier), joueurs(pseudo)');
+  renderMarketGrid(market || [], uid);
 }
 
 let sellFilterTier = 'tous';
@@ -520,7 +519,7 @@ function renderSellableGrid(){
   }).join('');
 }
 
-function renderMarketGrid(market){
+function renderMarketGrid(market, myUid){
   const grid = document.getElementById('marketGrid');
   if(market.length === 0){
     grid.innerHTML = '<p class="collection-empty">Aucune annonce pour le moment.</p>';
@@ -530,13 +529,17 @@ function renderMarketGrid(market){
   grid.innerHTML = market.map(a => {
     const c = a.communes;
     const tier = tiersById[c.tier];
-    const pseudo = a.joueurs ? a.joueurs.pseudo : 'un joueur';
+    const isMine = a.joueur_id === myUid;
+    const pseudo = isMine ? 'toi' : (a.joueurs ? a.joueurs.pseudo : 'un joueur');
+    const action = isMine
+      ? `<button class="bourse-btn" data-action="retirer" data-code="${a.commune_code}">Retirer</button>`
+      : `<button class="bourse-btn" data-action="acheter" data-code="${a.commune_code}">Acheter</button>`;
     return `
       <div class="bourse-row">
         <span class="bourse-dot" style="background:${tier.color}"></span>
         <span class="bourse-name">${c.nom} <span class="bourse-dept">(${c.departement}) — vendu par ${pseudo}</span></span>
         <span class="bourse-price">${a.prix} pts</span>
-        <button class="bourse-btn" data-action="acheter" data-code="${a.commune_code}">Acheter</button>
+        ${action}
       </div>`;
   }).join('');
 }

@@ -145,21 +145,25 @@ function setupMapInteraction(){
   window.addEventListener('mouseup', () => { mapDragging = false; });
 }
 
+let showOthers = true;
+
 function renderMapOverlay(){
   const overlay = document.getElementById('mapOverlay');
   if(!overlay || !mapBounds) return;
   overlay.innerHTML = '';
 
   // territoire des autres joueurs, en gris neutre
-  for(const entry of othersMap.values()){
-    if(!MAINLAND_NO_CORSICA_RE.test(entry.dept)) continue;
-    const p = project(entry.lat, entry.lon);
-    const dot = document.createElement('div');
-    dot.className = 'map-dot other ' + entry.tier.id;
-    dot.style.left = (p.x * 100) + '%';
-    dot.style.top = (p.y * 100) + '%';
-    dot.title = entry.nom + ' (' + entry.dept + ') — possédée par ' + entry.pseudo;
-    overlay.appendChild(dot);
+  if(showOthers){
+    for(const entry of othersMap.values()){
+      if(!MAINLAND_NO_CORSICA_RE.test(entry.dept)) continue;
+      const p = project(entry.lat, entry.lon);
+      const dot = document.createElement('div');
+      dot.className = 'map-dot other ' + entry.tier.id;
+      dot.style.left = (p.x * 100) + '%';
+      dot.style.top = (p.y * 100) + '%';
+      dot.title = entry.nom + ' (' + entry.dept + ') — possédée par ' + entry.pseudo;
+      overlay.appendChild(dot);
+    }
   }
 
   // mon propre territoire, en couleur vive
@@ -360,6 +364,14 @@ async function openPack(){
 }
 
 document.getElementById('openBtn').addEventListener('click', openPack);
+
+document.getElementById('toggleOthersBtn').addEventListener('click', () => {
+  showOthers = !showOthers;
+  document.getElementById('toggleOthersBtn').textContent = showOthers
+    ? 'Cacher le territoire des autres'
+    : 'Afficher le territoire des autres';
+  renderMapOverlay();
+});
 
 // ---------- Navigation par onglets ----------
 document.querySelectorAll('.tab').forEach(tab => {

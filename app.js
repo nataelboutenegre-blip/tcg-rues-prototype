@@ -23,6 +23,83 @@ function colorForPlayer(id){
   return OPPONENT_COLORS[hash % OPPONENT_COLORS.length];
 }
 
+// ---------- Direction artistique : courbes de niveau ----------
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Meme texte = meme nombre, donc meme commune = meme dessin a chaque fois
+function hashTexte(str){
+  let h = 2166136261;
+  for(const ch of str){ h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function aleatoireStable(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function courbesDeNiveau(seed, w, h, anneaux){
+  const rnd = aleatoireStable(seed);
+  const cx = w * (0.3 + rnd() * 0.4), cy = h * (0.3 + rnd() * 0.4);
+  const k1 = 2 + Math.floor(rnd() * 3), k2 = 3 + Math.floor(rnd() * 4);
+  const p1 = rnd() * 6.28, p2 = rnd() * 6.28;
+  const a1 = 0.08 + rnd() * 0.12, a2 = 0.04 + rnd() * 0.08;
+  const pas = Math.max(w, h) / anneaux * 0.95;
+  let d = '';
+  for(let i = 1; i <= anneaux; i++){
+    const r = i * pas;
+    const pts = [];
+    for(let k = 0; k < 90; k++){
+      const t = k / 90 * Math.PI * 2;
+      const rr = r * (1 + a1 * Math.sin(k1 * t + p1 + i * 0.35) + a2 * Math.sin(k2 * t + p2 - i * 0.2));
+      pts.push((cx + rr * Math.cos(t)).toFixed(1) + ',' + (cy + rr * Math.sin(t) * 0.82).toFixed(1));
+    }
+    d += 'M' + pts.join('L') + 'Z';
+  }
+  return { d, cx, cy };
+}
+
+const TEINTES_CARTE = {
+  commun:     ['#8D9AAE', '#5F6C80'],
+  peucommun:  ['#35B97E', '#16734C'],
+  rare:       ['#4E92FF', '#1D4FB8'],
+  legendaire: ['#F7C548', '#B7791F'],
+};
+
+function carteArtSvg(code, tierId){
+  const [clair, fonce] = TEINTES_CARTE[tierId];
+  const id = 'cg' + code;
+  const { d, cx, cy } = courbesDeNiveau(hashTexte(String(code)), 200, 120, 9);
+  return `
+    <svg viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <radialGradient id="${id}" cx="${(cx / 200 * 100).toFixed(0)}%" cy="${(cy / 120 * 100).toFixed(0)}%" r="85%">
+          <stop offset="0%" stop-color="${clair}"/>
+          <stop offset="100%" stop-color="${fonce}"/>
+        </radialGradient>
+      </defs>
+      <rect width="200" height="120" fill="url(#${id})"/>
+      <path d="${d}" fill="none" stroke="rgba(255,255,255,0.38)" stroke-width="1"/>
+      <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="5" fill="#fff" stroke="${fonce}" stroke-width="2.5"/>
+    </svg>`;
+}
+
+function dessinerFondTopo(){
+  const svg = document.getElementById('fondTopo');
+  if(!svg) return;
+  const w = 1600, h = 1000;
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+  const a = courbesDeNiveau(hashTexte('fond-a'), w * 0.9, h * 1.1, 16);
+  const b = courbesDeNiveau(hashTexte('fond-b'), w * 0.8, h * 0.9, 12);
+  svg.innerHTML = `
+    <path d="${a.d}" fill="none" stroke="rgba(169,188,212,0.07)" stroke-width="1.2"/>
+    <path d="${b.d}" transform="translate(${w * 0.55} ${h * 0.35})" fill="none" stroke="rgba(169,188,212,0.06)" stroke-width="1.2"/>`;
+}
+dessinerFondTopo();
+
 let FRANCE_OUTLINE = null;
 let mapBounds = null;
 let collectionMap = new Map();
@@ -451,14 +528,22 @@ function makeCardEl(draw, onFlip){
     <div class="card-inner">
       <div class="face face-back"><div class="emblem">RF</div></div>
       <div class="face face-front">
-        <div class="tricolore"><span class="b"></span><span class="w"></span><span class="r"></span></div>
-        <div class="card-body">
-          <div class="rarity-tag" style="background:${draw.tier.color}">${draw.tier.label}</div>
-          <p class="commune-name">${draw.nom}</p>
-          <div class="fields">
-            <div class="field"><span>Département</span><b>${DEPT_NAMES[draw.dept] || draw.dept}</b></div>
-            <div class="field"><span>Population</span><b>${draw.pop.toLocaleString('fr-FR')}</b></div>
-            <div class="field"><span>Numéro</span><b>${draw.rank.toLocaleString('fr-FR')} / ${draw.tierSize.toLocaleString('fr-FR')}</b></div>
+        <div class="carte-cadre">
+          <div class="carte-int">
+            <div class="carte-haut">
+              <span class="carte-rarete">${draw.tier.label}</span>
+              <span class="carte-num">${draw.rank.toLocaleString('fr-FR')} / ${draw.tierSize.toLocaleString('fr-FR')}</span>
+            </div>
+            <div class="carte-art">${carteArtSvg(draw.code, draw.tier.id)}<span class="carte-dept">${draw.dept}</span></div>
+            <div class="carte-infos">
+              <p class="carte-nom">${draw.nom}</p>
+              <p class="carte-departement">${DEPT_NAMES[draw.dept] || draw.dept}</p>
+              <div class="carte-stats">
+                <div><span>Habitants</span><b>${draw.pop.toLocaleString('fr-FR')}</b></div>
+                <div><span>Rang</span><b>${draw.rank.toLocaleString('fr-FR')}</b></div>
+              </div>
+            </div>
+            <div class="carte-lisere"><span></span><span></span><span></span></div>
           </div>
         </div>
       </div>
@@ -470,6 +555,21 @@ function makeCardEl(draw, onFlip){
       onFlip();
     }
   });
+
+  // Inclinaison 3D + reflet des legendaires, a la souris et une fois la carte retournee
+  if(!REDUCED_MOTION){
+    const cadre = wrap.querySelector('.carte-cadre');
+    wrap.addEventListener('pointermove', (e) => {
+      if(e.pointerType !== 'mouse' || !wrap.classList.contains('flipped')) return;
+      const r = wrap.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width;
+      const y = (e.clientY - r.top) / r.height;
+      cadre.style.transform = `rotateY(${(x - 0.5) * 16}deg) rotateX(${(0.5 - y) * 16}deg)`;
+      cadre.style.setProperty('--hx', (x * 100) + '%');
+      cadre.style.setProperty('--hy', (y * 100) + '%');
+    });
+    wrap.addEventListener('pointerleave', () => { cadre.style.transform = ''; });
+  }
   return wrap;
 }
 
@@ -532,13 +632,14 @@ function renderPackStatus(){
   const achetesJour = (packStatusCache.paquets_achetes_date === new Date().toISOString().slice(0,10))
     ? packStatusCache.paquets_achetes_jour : 0;
 
-  let txt = `${dispo} / 3 paquets gratuits disponibles`;
+  const puces = [`<span class="puce"><b>${dispo} sur 3</b> paquets gratuits</span>`];
   if(dispo < 3){
     const minutes = Math.ceil((1 - (live % 1)) * 20);
-    txt += ` — prochain dans ${minutes} min`;
+    puces.push(`<span class="puce">Prochain dans <b>${minutes} min</b></span>`);
   }
-  txt += ` · Achetés aujourd'hui : ${achetesJour} / 5 · Solde : ${packStatusCache.solde} pts`;
-  document.getElementById('packStatus').textContent = txt;
+  puces.push(`<span class="puce">Achetés aujourd'hui <b>${achetesJour} sur 5</b></span>`);
+  puces.push(`<span class="puce solde">Solde <b>${Number(packStatusCache.solde).toLocaleString('fr-FR')}</b></span>`);
+  document.getElementById('packStatus').innerHTML = puces.join('');
 
   document.getElementById('openFreeBtn').disabled = dispo < 1;
   document.getElementById('openBuyBtn').disabled = achetesJour >= 5 || packStatusCache.solde < 200;

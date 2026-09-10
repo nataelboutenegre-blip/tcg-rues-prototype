@@ -311,7 +311,7 @@
     display:grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 10px;
-    max-height: 48vh;
+    max-height: min(818px, 48vh);
     overflow-y: auto;
     padding-right: 4px;
   }

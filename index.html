@@ -102,8 +102,9 @@
 
     <section class="tab-panel" id="panel-territoire">
       <h1>Le territoire</h1>
-      <div class="sub">Tes communes en couleur, celles des autres joueurs en gris.</div>
+      <div class="sub">Tes communes en couleur selon leur rareté, celles des autres joueurs en rouge.</div>
       <div class="territory">
+        <button class="toggle-others-btn" id="toggleOthersBtn">Cacher le territoire des autres</button>
         <div class="map-wrap" id="mapWrap">
           <div class="map-transform" id="mapTransform">
             <svg id="mapFranceSvg" class="map-france-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
@@ -118,7 +119,7 @@
             <div id="mapOverlay" class="map-overlay"></div>
           </div>
         </div>
-        <p class="map-note">Molette pour zoomer, cliquer-glisser pour te déplacer. En couleur : tes communes. En gris : celles des autres joueurs.</p>
+        <p class="map-note">Molette pour zoomer, cliquer-glisser pour te déplacer. En couleur : tes communes. En rouge : celles des autres joueurs.</p>
       </div>
     </section>
 

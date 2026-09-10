@@ -94,6 +94,14 @@ function computeMapBounds(){
       if(lon>lonMax) lonMax=lon;
     }
   }
+  // marge respirante tout autour (meme proportion sur les 4 cotes,
+  // continent et Corse gardent leur position relative exacte)
+  const pad = 0.06;
+  const latPad = (latMax - latMin) * pad;
+  const lonPad = (lonMax - lonMin) * pad;
+  latMin -= latPad; latMax += latPad;
+  lonMin -= lonPad; lonMax += lonPad;
+
   mapBounds = {latMin, latMax, lonMin, lonMax};
   const meanLat = (latMin + latMax) / 2;
   const lonSpanCorrected = (lonMax - lonMin) * Math.cos(meanLat * Math.PI / 180);

@@ -241,6 +241,38 @@
     font-variant: small-caps;
     letter-spacing:0.03em;
   }
+  .bourse-search{
+    width:100%;
+    font-family:inherit;
+    font-size:0.85rem;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background:#fff;
+    color: var(--ink);
+  }
+  .bourse-filters{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom: 10px;
+  }
+  .filter-pill{
+    font-family:inherit;
+    font-size:0.72rem;
+    color: var(--ink-soft);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 4px 12px;
+    cursor:pointer;
+  }
+  .filter-pill.active{
+    background: var(--bleu);
+    color: white;
+    border-color: var(--bleu);
+  }
   .bourse-grid{
     display:flex;
     flex-direction:column;

@@ -11,7 +11,7 @@ const TIERS = [
   {id:'commun', label:'Commun', color:'#7C8798', target:50.92},
 ];
 const DEPT_NAMES = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","2A":"Corse-du-Sud","2B":"Haute-Corse","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise"};
-const MAINLAND_NO_CORSICA_RE = /^(0[1-9]|[1-8][0-9]|9[0-5])$/;
+const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
 
 const OPPONENT_COLORS = ['#C8313A','#8E44AD','#E67E22','#16A085','#D4406A','#6B4226','#7F8C00','#4A4E69'];
 
@@ -110,14 +110,21 @@ function project(lat, lon){
 }
 
 function renderFranceOutline(){
-  const poly = document.getElementById('franceOutlinePoly');
-  if(!poly || !mapBounds) return;
-  const ring = FRANCE_OUTLINE[0];
-  const pts = ring.map(([lon, lat]) => {
-    const p = project(lat, lon);
-    return (p.x*1000).toFixed(1) + ',' + (p.y*1000).toFixed(1);
-  }).join(' ');
-  poly.setAttribute('points', pts);
+  const group = document.getElementById('franceOutlineGroup');
+  if(!group || !mapBounds) return;
+  group.innerHTML = '';
+  for(const ring of FRANCE_OUTLINE){
+    const pts = ring.map(([lon, lat]) => {
+      const p = project(lat, lon);
+      return (p.x*1000).toFixed(1) + ',' + (p.y*1000).toFixed(1);
+    }).join(' ');
+    const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    poly.setAttribute('points', pts);
+    poly.setAttribute('fill', 'url(#franceGrad)');
+    poly.setAttribute('stroke', '#123564');
+    poly.setAttribute('stroke-width', '3');
+    group.appendChild(poly);
+  }
   setupMapInteraction();
 }
 
@@ -165,7 +172,7 @@ function renderMapOverlay(){
   // territoire des autres joueurs, en gris neutre
   if(showOthers){
     for(const entry of othersMap.values()){
-      if(!MAINLAND_NO_CORSICA_RE.test(entry.dept)) continue;
+      if(!METRO_DEPT_RE.test(entry.dept)) continue;
       const p = project(entry.lat, entry.lon);
       const dot = document.createElement('div');
       dot.className = 'map-dot other ' + entry.tier.id;
@@ -179,7 +186,7 @@ function renderMapOverlay(){
 
   // mon propre territoire, en couleur vive
   for(const entry of collectionMap.values()){
-    if(!MAINLAND_NO_CORSICA_RE.test(entry.dept)) continue;
+    if(!METRO_DEPT_RE.test(entry.dept)) continue;
     const p = project(entry.lat, entry.lon);
     const dot = document.createElement('div');
     dot.className = 'map-dot mine ' + entry.tier.id;

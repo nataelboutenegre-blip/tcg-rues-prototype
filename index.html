@@ -77,6 +77,16 @@
         </div>
         Bourse
       </div>
+
+      <div class="tab" data-tab="combat">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M6.5 17.5L17 7M17 7h-4M17 7v4"/>
+            <path d="M17.5 17.5L7 7M7 7h4M7 7v4"/>
+          </svg>
+        </div>
+        Combat
+      </div>
     </div>
 
     <div class="sidebar-footer">
@@ -168,6 +178,13 @@
         <h2>Marché (en vente par d'autres joueurs)</h2>
         <div id="marketGrid" class="bourse-grid"><p class="collection-empty">Aucune annonce pour le moment.</p></div>
       </div>
+    </section>
+
+    <section class="tab-panel" id="panel-combat">
+      <h1>Combat</h1>
+      <div class="sub">Attaque une commune rare ou légendaire appartenant à un autre joueur. 3 victoires d'affilée pour la conquérir — une défaite remet la série à zéro. Un round par jour et par cible.</div>
+      <div class="solde-box">Ton solde : <b id="soldeValueCombat">—</b></div>
+      <div id="combatGrid" class="bourse-grid combat-grid"><p class="collection-empty">Aucune cible disponible pour le moment.</p></div>
     </section>
 
   </main>

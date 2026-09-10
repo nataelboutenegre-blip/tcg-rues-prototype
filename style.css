@@ -255,11 +255,13 @@
     position: relative;
     width: 100%;
     max-width: 1200px;
+    max-height: 62vh;
     aspect-ratio: 1 / 1;
     overflow: hidden;
     border-radius: 10px;
     cursor: grab;
-    background: linear-gradient(180deg, #163A66 0%, #081B36 100%);
+    background: linear-gradient(180deg, #0D2647 0%, #050F22 100%);
+    margin: 0 auto;
   }
   .map-wrap:active{ cursor: grabbing; }
   .map-transform{

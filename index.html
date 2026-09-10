@@ -184,7 +184,13 @@
       <h1>Combat</h1>
       <div class="sub">Attaque une commune rare ou légendaire appartenant à un autre joueur. 3 victoires d'affilée pour la conquérir — une défaite remet la série à zéro. Un round par jour et par cible.</div>
       <div class="solde-box">Ton solde : <b id="soldeValueCombat">—</b></div>
-      <div id="combatGrid" class="bourse-grid combat-grid"><p class="collection-empty">Aucune cible disponible pour le moment.</p></div>
+      <input type="text" id="combatSearch" class="bourse-search" placeholder="Rechercher une commune...">
+      <div class="bourse-filters" id="combatFilters">
+        <button class="filter-pill active" data-tier="tous">Toutes</button>
+        <button class="filter-pill" data-tier="legendaire">Légendaire</button>
+        <button class="filter-pill" data-tier="rare">Rare</button>
+      </div>
+      <div id="combatGrid" class="combat-cards-grid"><p class="collection-empty">Aucune cible disponible pour le moment.</p></div>
     </section>
 
   </main>

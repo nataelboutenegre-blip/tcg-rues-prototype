@@ -475,15 +475,32 @@ async function loadBourse(){
   renderMarketGrid(market || []);
 }
 
+let sellFilterTier = 'tous';
+
 function renderSellableGrid(){
   const grid = document.getElementById('sellableGrid');
-  const entries = Array.from(collectionMap.values()).sort((a,b) => {
+  const searchEl = document.getElementById('sellSearch');
+  const searchText = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+  let entries = Array.from(collectionMap.values()).sort((a,b) => {
     const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
     if(ra !== rb) return ra - rb;
     return b.pop - a.pop;
   });
-  if(entries.length === 0){
+
+  if(sellFilterTier !== 'tous'){
+    entries = entries.filter(e => e.tier.id === sellFilterTier);
+  }
+  if(searchText){
+    entries = entries.filter(e => e.nom.toLowerCase().includes(searchText));
+  }
+
+  if(collectionMap.size === 0){
     grid.innerHTML = '<p class="collection-empty">Tu ne possèdes aucune commune pour l\'instant.</p>';
+    return;
+  }
+  if(entries.length === 0){
+    grid.innerHTML = '<p class="collection-empty">Aucune commune ne correspond à la recherche.</p>';
     return;
   }
   grid.innerHTML = entries.map(entry => {
@@ -556,6 +573,17 @@ document.addEventListener('click', async (e) => {
     alert('Action impossible : ' + err.message);
     btn.disabled = false;
   }
+});
+
+document.getElementById('sellSearch').addEventListener('input', renderSellableGrid);
+
+document.getElementById('sellFilters').addEventListener('click', (e) => {
+  const pill = e.target.closest('.filter-pill');
+  if(!pill) return;
+  document.querySelectorAll('#sellFilters .filter-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  sellFilterTier = pill.dataset.tier;
+  renderSellableGrid();
 });
 
 // ---------- Navigation par onglets ----------

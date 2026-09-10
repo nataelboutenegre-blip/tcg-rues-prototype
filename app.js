@@ -63,7 +63,8 @@ document.getElementById('loginBtn').addEventListener('click', async () => {
 document.getElementById('signupBtn').addEventListener('click', async () => {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
-  const { error } = await sb.auth.signUp({ email, password });
+  const pseudo = document.getElementById('authPseudo').value.trim();
+  const { error } = await sb.auth.signUp({ email, password, options: { data: { pseudo } } });
   if(error) showAuth(error.message);
   else showAuth('Compte créé — connecte-toi maintenant.');
 });

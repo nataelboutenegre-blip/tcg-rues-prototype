@@ -46,7 +46,7 @@
     gap: 18px;
     flex-wrap: wrap;
     justify-content:center;
-    margin-bottom: 28px;
+    margin-bottom: 14px;
     min-height: 240px;
   }
   .card{
@@ -196,11 +196,11 @@
   }
 
   .collection{
-    margin-top: 40px;
+    margin-top: 16px;
     width: 100%;
     max-width: 506px;
     border-top: 1px solid var(--line);
-    padding-top: 18px;
+    padding-top: 12px;
   }
   .collection h2{
     font-size: 0.85rem;
@@ -311,7 +311,7 @@
     display:grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 10px;
-    max-height: 820px;
+    max-height: 48vh;
     overflow-y: auto;
     padding-right: 4px;
   }
@@ -382,11 +382,11 @@
   button.open-btn:disabled{ background: #9AA5B3; cursor:default; }
 
   .stats{
-    margin-top: 40px;
+    margin-top: 18px;
     width: 100%;
     max-width: 460px;
     border-top: 1px solid var(--line);
-    padding-top: 18px;
+    padding-top: 12px;
   }
   .stats h2{
     font-size: 0.85rem;
@@ -501,7 +501,7 @@
   }
   .content{
     flex:1;
-    padding: 32px 24px 60px;
+    padding: 20px 24px 30px;
     display:flex;
     flex-direction:column;
     align-items:center;
@@ -571,7 +571,7 @@
     }
     .tab.active .icon{ background:none; color:#fff; }
     .sidebar-footer{ display:none; }
-    .content{ padding:20px 14px 50px; }
+    .content{ padding:12px 14px 24px; }
   }
   .auth-screen{
     width:100%;

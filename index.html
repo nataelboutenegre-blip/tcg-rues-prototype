@@ -66,6 +66,16 @@
         </div>
         Territoire
       </div>
+
+      <div class="tab" data-tab="bourse">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+            <path d="M4 8h13M17 8l-3-3M17 8l-3 3"/>
+            <path d="M20 16H7M7 16l3-3M7 16l3 3"/>
+          </svg>
+        </div>
+        Bourse
+      </div>
     </div>
 
     <div class="sidebar-footer">
@@ -126,6 +136,23 @@
           </div>
         </div>
         <p class="map-note">Molette pour zoomer, cliquer-glisser pour te déplacer. En couleur vive : tes communes. Chaque autre joueur a sa propre couleur — survole un point pour voir son pseudo.</p>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="panel-bourse">
+      <h1>La Bourse</h1>
+      <div class="sub">Vends tes communes au système ou à d'autres joueurs, ou achète ce qui est en vente.</div>
+
+      <div class="solde-box">Ton solde : <b id="soldeValue">—</b></div>
+
+      <div class="bourse-section">
+        <h2>Vendre une commune</h2>
+        <div id="sellableGrid" class="bourse-grid"><p class="collection-empty">Tu ne possèdes aucune commune pour l'instant.</p></div>
+      </div>
+
+      <div class="bourse-section">
+        <h2>Marché (en vente par d'autres joueurs)</h2>
+        <div id="marketGrid" class="bourse-grid"><p class="collection-empty">Aucune annonce pour le moment.</p></div>
       </div>
     </section>
 

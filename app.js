@@ -124,6 +124,7 @@ function sizeMapWrap(ratio){
   const finalWidth = Math.min(availWidth, widthFromHeight);
   wrap.style.width = finalWidth + 'px';
   wrap.style.height = (finalWidth / ratio) + 'px';
+  applyMapTransform();
 }
 
 function project(lat, lon){
@@ -155,10 +156,39 @@ function renderFranceOutline(){
 let mapZoom = 1, mapPanX = 0, mapPanY = 0;
 let mapDragging = false, mapDragStart = {x:0, y:0};
 let mapInteractionReady = false;
+const MAP_ZOOM_MIN = 1;
+const MAP_ZOOM_MAX = 6;
+
+// Empeche la carte de sortir du cadre (plus de France "perdue" hors ecran)
+function clampMapPan(){
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap) return;
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  mapPanX = Math.min(0, Math.max(w - w * mapZoom, mapPanX));
+  mapPanY = Math.min(0, Math.max(h - h * mapZoom, mapPanY));
+}
 
 function applyMapTransform(){
+  clampMapPan();
   const el = document.getElementById('mapTransform');
   if(el) el.style.transform = `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`;
+}
+
+// Zoome en gardant fixe le point (px, py) du cadre : le curseur ou le centre des deux doigts
+function zoomMapAt(newZoom, px, py){
+  newZoom = Math.min(MAP_ZOOM_MAX, Math.max(MAP_ZOOM_MIN, newZoom));
+  const ratio = newZoom / mapZoom;
+  mapPanX = px - (px - mapPanX) * ratio;
+  mapPanY = py - (py - mapPanY) * ratio;
+  mapZoom = newZoom;
+  applyMapTransform();
+}
+
+function touchDist(t){
+  return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+}
+function touchMid(t, rect){
+  return { x: (t[0].clientX + t[1].clientX) / 2 - rect.left, y: (t[0].clientY + t[1].clientY) / 2 - rect.top };
 }
 
 function setupMapInteraction(){
@@ -166,13 +196,35 @@ function setupMapInteraction(){
   mapInteractionReady = true;
   const wrap = document.getElementById('mapWrap');
   if(!wrap) return;
+
+  // --- Molette souris + trackpad (defilement a deux doigts ou pincement) ---
+  // Zoom proportionnel a l'amplitude du geste : fluide au trackpad, par crans a la souris
   wrap.addEventListener('wheel', (e) => {
     e.preventDefault();
-    const factor = e.deltaY < 0 ? 1.15 : 1/1.15;
-    mapZoom = Math.min(6, Math.max(1, mapZoom * factor));
-    if(mapZoom === 1){ mapPanX = 0; mapPanY = 0; }
-    applyMapTransform();
+    const rect = wrap.getBoundingClientRect();
+    let dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+    dy = Math.max(-150, Math.min(150, dy));
+    // pincement trackpad (Chrome le signale avec ctrlKey) : plus sensible
+    const sensibilite = e.ctrlKey ? 0.012 : 0.002;
+    zoomMapAt(mapZoom * Math.exp(-dy * sensibilite), e.clientX - rect.left, e.clientY - rect.top);
   }, { passive: false });
+
+  // --- Pincement trackpad sur Safari Mac (evenements "gesture" propres a Safari) ---
+  let gestureStartZoom = 1;
+  let touchPinch = null;
+  wrap.addEventListener('gesturestart', (e) => {
+    e.preventDefault();
+    gestureStartZoom = mapZoom;
+  });
+  wrap.addEventListener('gesturechange', (e) => {
+    e.preventDefault();
+    if(touchPinch) return; // sur iPhone le pincement est deja gere par les evenements tactiles
+    const rect = wrap.getBoundingClientRect();
+    zoomMapAt(gestureStartZoom * e.scale, e.clientX - rect.left, e.clientY - rect.top);
+  });
+  wrap.addEventListener('gestureend', (e) => e.preventDefault());
+
+  // --- Souris : cliquer-glisser ---
   wrap.addEventListener('mousedown', (e) => {
     mapDragging = true;
     mapDragStart = { x: e.clientX - mapPanX, y: e.clientY - mapPanY };
@@ -182,22 +234,63 @@ function setupMapInteraction(){
     mapPanX = e.clientX - mapDragStart.x;
     mapPanY = e.clientY - mapDragStart.y;
     applyMapTransform();
+    // recale le point de depart si on a bute sur un bord, pour repartir sans temps mort
+    mapDragStart = { x: e.clientX - mapPanX, y: e.clientY - mapPanY };
   });
   window.addEventListener('mouseup', () => { mapDragging = false; });
 
+  // --- Tactile : un doigt = deplacer, deux doigts = pincer pour zoomer ---
   wrap.addEventListener('touchstart', (e) => {
-    if(e.touches.length !== 1) return;
-    mapDragging = true;
-    mapDragStart = { x: e.touches[0].clientX - mapPanX, y: e.touches[0].clientY - mapPanY };
-  }, { passive: true });
-  wrap.addEventListener('touchmove', (e) => {
-    if(!mapDragging || e.touches.length !== 1) return;
-    e.preventDefault();
-    mapPanX = e.touches[0].clientX - mapDragStart.x;
-    mapPanY = e.touches[0].clientY - mapDragStart.y;
-    applyMapTransform();
+    const rect = wrap.getBoundingClientRect();
+    if(e.touches.length === 2){
+      mapDragging = false;
+      touchPinch = {
+        dist: touchDist(e.touches),
+        zoom: mapZoom,
+        mid: touchMid(e.touches, rect),
+        panX: mapPanX,
+        panY: mapPanY
+      };
+    } else if(e.touches.length === 1){
+      touchPinch = null;
+      mapDragging = true;
+      mapDragStart = { x: e.touches[0].clientX - mapPanX, y: e.touches[0].clientY - mapPanY };
+    }
   }, { passive: false });
-  wrap.addEventListener('touchend', () => { mapDragging = false; });
+
+  wrap.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if(touchPinch && e.touches.length === 2){
+      const rect = wrap.getBoundingClientRect();
+      const newZoom = Math.min(MAP_ZOOM_MAX, Math.max(MAP_ZOOM_MIN,
+        touchPinch.zoom * touchDist(e.touches) / touchPinch.dist));
+      // point de la carte qui etait sous les doigts au debut du pincement
+      const mx = (touchPinch.mid.x - touchPinch.panX) / touchPinch.zoom;
+      const my = (touchPinch.mid.y - touchPinch.panY) / touchPinch.zoom;
+      const mid = touchMid(e.touches, rect);
+      mapZoom = newZoom;
+      mapPanX = mid.x - newZoom * mx;
+      mapPanY = mid.y - newZoom * my;
+      applyMapTransform();
+    } else if(mapDragging && e.touches.length === 1){
+      mapPanX = e.touches[0].clientX - mapDragStart.x;
+      mapPanY = e.touches[0].clientY - mapDragStart.y;
+      applyMapTransform();
+      mapDragStart = { x: e.touches[0].clientX - mapPanX, y: e.touches[0].clientY - mapPanY };
+    }
+  }, { passive: false });
+
+  wrap.addEventListener('touchend', (e) => {
+    if(e.touches.length === 1){
+      // on leve un doigt pendant un pincement : on continue a deplacer sans saut
+      touchPinch = null;
+      mapDragging = true;
+      mapDragStart = { x: e.touches[0].clientX - mapPanX, y: e.touches[0].clientY - mapPanY };
+    } else if(e.touches.length === 0){
+      touchPinch = null;
+      mapDragging = false;
+    }
+  });
 }
 
 let showOthers = true;

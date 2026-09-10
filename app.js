@@ -43,6 +43,7 @@ async function showGame(session_){
   await loadOutline();
   await loadMyCollection();
   await loadOthersPossessions();
+  await loadPackStatus();
 }
 
 async function initAuth(){
@@ -395,7 +396,7 @@ function revealCards(draws){
       renderMapOverlay();
       pendingFlips--;
       if(pendingFlips <= 0){
-        document.getElementById('openBtn').disabled = false;
+        renderPackStatus();
       }
     }));
   });
@@ -409,8 +410,63 @@ function makePackEl(){
   return pack;
 }
 
-async function openPack(){
-  document.getElementById('openBtn').disabled = true;
+// ---------- Jetons de paquets ----------
+let packStatusCache = null;
+let packStatusFetchedAt = 0;
+let packStatusInterval = null;
+
+async function loadPackStatus(){
+  const { data, error } = await sb.rpc('statut_paquets');
+  if(error){ console.error(error); return; }
+  packStatusCache = data[0];
+  packStatusFetchedAt = Date.now();
+  renderPackStatus();
+  if(!packStatusInterval){
+    packStatusInterval = setInterval(renderPackStatus, 5000);
+  }
+}
+
+function liveJetons(){
+  if(!packStatusCache) return 0;
+  const elapsedMin = (Date.now() - packStatusFetchedAt) / 60000;
+  return Math.min(3, packStatusCache.jetons_actuels + elapsedMin / 20);
+}
+
+function renderPackStatus(){
+  if(!packStatusCache) return;
+  const live = liveJetons();
+  const dispo = Math.floor(live);
+  const achetesJour = (packStatusCache.paquets_achetes_date === new Date().toISOString().slice(0,10))
+    ? packStatusCache.paquets_achetes_jour : 0;
+
+  let txt = `${dispo} / 3 paquets gratuits disponibles`;
+  if(dispo < 3){
+    const minutes = Math.ceil((1 - (live % 1)) * 20);
+    txt += ` — prochain dans ${minutes} min`;
+  }
+  txt += ` · Achetés aujourd'hui : ${achetesJour} / 5 · Solde : ${packStatusCache.solde} pts`;
+  document.getElementById('packStatus').textContent = txt;
+
+  document.getElementById('openFreeBtn').disabled = dispo < 1;
+  document.getElementById('openBuyBtn').disabled = achetesJour >= 5 || packStatusCache.solde < 200;
+}
+
+async function openPack(type){
+  document.getElementById('openFreeBtn').disabled = true;
+  document.getElementById('openBuyBtn').disabled = true;
+
+  const { error: startError } = await sb.rpc('demarrer_paquet', { p_type: type });
+  if(startError){
+    alert(startError.message);
+    await loadPackStatus();
+    return;
+  }
+  await loadPackStatus();
+  // on force le re-verrouillage : le paquet en cours n'est pas encore ouvert,
+  // pas question de pouvoir en relancer un avant d'avoir retourne les cartes
+  document.getElementById('openFreeBtn').disabled = true;
+  document.getElementById('openBuyBtn').disabled = true;
+
   const zone = document.getElementById('packZone');
   zone.innerHTML = '';
   const pack = makePackEl();
@@ -434,7 +490,7 @@ async function openPack(){
         });
       }
       if(draws.length === 0){
-        document.getElementById('openBtn').disabled = false;
+        renderPackStatus();
         return;
       }
       revealCards(draws);
@@ -442,7 +498,8 @@ async function openPack(){
   }, { once: true });
 }
 
-document.getElementById('openBtn').addEventListener('click', openPack);
+document.getElementById('openFreeBtn').addEventListener('click', () => openPack('gratuit'));
+document.getElementById('openBuyBtn').addEventListener('click', () => openPack('achete'));
 
 document.getElementById('toggleOthersBtn').addEventListener('click', () => {
   showOthers = !showOthers;

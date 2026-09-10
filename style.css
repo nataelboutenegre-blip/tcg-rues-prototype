@@ -470,6 +470,23 @@
     cursor:pointer;
     letter-spacing:0.01em;
   }
+  button.open-btn:disabled{
+    opacity:0.5;
+    cursor:default;
+  }
+  .pack-status{
+    font-size:0.78rem;
+    color: var(--ink-soft);
+    text-align:center;
+    margin-bottom: 12px;
+    max-width: 460px;
+  }
+  .pack-buttons{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
   button.open-btn:hover{ background: #06356e; }
   button.open-btn:disabled{ background: #9AA5B3; cursor:default; }
 

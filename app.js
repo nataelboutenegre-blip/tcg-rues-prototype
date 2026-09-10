@@ -61,6 +61,9 @@ document.getElementById('signupBtn').addEventListener('click', async () => {
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await sb.auth.signOut();
 });
+document.getElementById('logoutBtnMobile').addEventListener('click', async () => {
+  await sb.auth.signOut();
+});
 
 // ---------- Carte (contour reel + points) ----------
 async function loadOutline(){

@@ -4,11 +4,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <title>Prototype — Tirage de communes</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
+
+<svg id="fondTopo" aria-hidden="true"></svg>
 
 <div id="authScreen" class="auth-screen">
   <div class="auth-box">
@@ -29,7 +34,7 @@
 
   <nav class="sidebar">
     <div class="sidebar-top">
-      <div class="brand">TerraFront</div>
+      <div class="brand">Terra<span>Front</span></div>
       <button class="logout-icon-btn" id="logoutBtnMobile" title="Se déconnecter">
         <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8">
           <path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/>
@@ -53,7 +58,7 @@
         <div class="icon">
           <svg viewBox="0 0 24 24" fill="none">
             <rect x="7" y="3" width="12" height="16" rx="2" stroke="currentColor" stroke-width="1.5" transform="rotate(8 13 11)"/>
-            <rect x="5" y="5" width="12" height="16" rx="2" fill="#0B2A55" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="5" y="5" width="12" height="16" rx="2" style="fill: var(--icon-bg)" stroke="currentColor" stroke-width="1.5"/>
           </svg>
         </div>
         Ma collection
@@ -98,23 +103,23 @@
   <main class="content">
 
     <section class="tab-panel active" id="panel-tirage">
-      <h1>Ouverture de paquet — prototype</h1>
-      <div class="sub">Tirage sur les communes réelles de France (données BAN). Chaque carte tirée est une vraie commune, à sa vraie position géographique — et n'appartient qu'à toi tant que tu la gardes. Clique sur le paquet pour le déchirer.</div>
+      <h1>Tirage</h1>
+      <div class="sub">Chaque carte tirée est une vraie commune de France, à sa vraie position géographique. Elle n'appartient qu'à toi tant que tu la gardes. Clique sur le paquet pour le déchirer.</div>
 
-      <div class="pack-zone" id="packZone"></div>
-
-      <div class="pack-status" id="packStatus">Chargement...</div>
+      <div class="puces" id="packStatus"><span class="puce">Chargement…</span></div>
       <div class="pack-buttons">
         <button class="open-btn" id="openFreeBtn">Ouvrir un paquet gratuit</button>
         <button class="open-btn secondary" id="openBuyBtn">Acheter un paquet (200 pts)</button>
       </div>
 
+      <div class="pack-zone" id="packZone"></div>
+
       <div class="stats">
-        <h2>Répartition depuis le début de la session</h2>
+        <h2>Répartition de ta collection</h2>
         <div id="statRows"></div>
       </div>
 
-      <div class="note">Cible calibrée sur les vraies données : commun 50,9% · peu commun 36,8% · rare 11,4% · légendaire 0,83%.</div>
+      <div class="note">Cible calibrée sur les vraies données : commun 50,9 %, peu commun 36,8 %, rare 11,4 %, légendaire 0,83 %.</div>
     </section>
 
     <section class="tab-panel" id="panel-collection">

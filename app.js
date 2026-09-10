@@ -96,7 +96,7 @@ function computeMapBounds(){
   }
   // marge respirante tout autour (meme proportion sur les 4 cotes,
   // continent et Corse gardent leur position relative exacte)
-  const pad = 0.06;
+  const pad = 0.04;
   const latPad = (latMax - latMin) * pad;
   const lonPad = (lonMax - lonMin) * pad;
   latMin -= latPad; latMax += latPad;
@@ -106,8 +106,22 @@ function computeMapBounds(){
   const meanLat = (latMin + latMax) / 2;
   const lonSpanCorrected = (lonMax - lonMin) * Math.cos(meanLat * Math.PI / 180);
   const latSpan = latMax - latMin;
+  const ratio = lonSpanCorrected / latSpan;
+  window.__mapAspectRatio = ratio;
+  sizeMapWrap(ratio);
+  window.addEventListener('resize', () => sizeMapWrap(ratio));
+}
+
+function sizeMapWrap(ratio){
   const wrap = document.getElementById('mapWrap');
-  if(wrap) wrap.style.aspectRatio = (lonSpanCorrected / latSpan).toFixed(4);
+  if(!wrap || !ratio) return;
+  const parent = wrap.parentElement;
+  const availWidth = Math.min(parent.clientWidth, 1200);
+  const availHeightPx = window.innerHeight * 0.6;
+  const widthFromHeight = availHeightPx * ratio;
+  const finalWidth = Math.min(availWidth, widthFromHeight);
+  wrap.style.width = finalWidth + 'px';
+  wrap.style.height = (finalWidth / ratio) + 'px';
 }
 
 function project(lat, lon){
@@ -407,6 +421,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     tab.classList.add('active');
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
   });
 });
 

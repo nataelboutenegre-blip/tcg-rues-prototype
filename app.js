@@ -238,7 +238,7 @@ function renderMapOverlay(){
     const borderCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     borderCircle.setAttribute('cx', cx);
     borderCircle.setAttribute('cy', cy);
-    borderCircle.setAttribute('r', r + 6);
+    borderCircle.setAttribute('r', r + 4);
     borderCircle.setAttribute('fill', '#0B2A4A');
     mineBorderGroup.appendChild(borderCircle);
 

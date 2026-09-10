@@ -415,12 +415,35 @@
     flex-direction:column;
     gap:10px;
   }
+  .sidebar-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
   .sidebar .brand{
     color:#fff;
     font-size:1.05rem;
     padding:0 6px 18px;
     margin-bottom:6px;
     border-bottom:1px solid rgba(255,255,255,0.15);
+    flex:1;
+  }
+  .logout-icon-btn{
+    display:none;
+    width:30px; height:30px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.1);
+    border:none;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .logout-icon-btn svg{ width:14px; height:14px; }
+  .tabs-row{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
   }
   .tab{
     display:flex;
@@ -491,29 +514,47 @@
     .app-shell{ flex-direction:column; }
     .sidebar{
       width:100%;
-      flex-direction:row;
-      align-items:center;
-      padding:10px 12px;
-      gap:8px;
-      overflow-x:auto;
+      padding:10px 14px 0;
+      gap:0;
     }
-    .sidebar .brand{ display:none; }
+    .sidebar-top{ padding-bottom:8px; }
+    .sidebar .brand{
+      border-bottom:none;
+      margin-bottom:0;
+      padding:0;
+      font-size:0.95rem;
+    }
+    .logout-icon-btn{ display:flex; }
+    .tabs-row{
+      flex-direction:row;
+    }
     .tab{
+      flex:1;
       flex-direction:column;
       gap:4px;
-      padding:8px 12px;
-      font-size:0.68rem;
+      padding:10px 4px 9px;
+      background:transparent;
+      border:none;
+      border-bottom:2.5px solid transparent;
+      border-radius:0;
+      color:rgba(255,255,255,0.55);
+      font-size:0.62rem;
       white-space:nowrap;
     }
-    .sidebar-footer{
-      margin-top:0;
-      margin-left:auto;
-      border-top:none;
-      flex-direction:row;
-      align-items:center;
-      padding:0 4px;
+    .tab .icon{
+      width:auto; height:auto;
+      background:none;
+      color:inherit;
     }
-    .sidebar-footer #whoami{ display:none; }
+    .tab .icon svg{ width:19px; height:19px; }
+    .tab.active{
+      background:transparent;
+      color:#fff;
+      border-bottom-color: var(--legendaire);
+      box-shadow:none;
+    }
+    .tab.active .icon{ background:none; color:#fff; }
+    .sidebar-footer{ display:none; }
     .content{ padding:20px 14px 50px; }
   }
   .auth-screen{

@@ -628,19 +628,25 @@ document.addEventListener('click', async (e) => {
       await loadMyCollection();
       await loadOthersPossessions();
     } else if(action === 'attaquer'){
-      const { data, error } = await sb.rpc('attaquer', { p_commune_code: code });
-      if(error) throw error;
-      const result = data[0];
-      if(result.conquise){
-        alert('Commune conquise ! Tu as gagné le siège et le bonus.');
-        await loadMyCollection();
-        await loadOthersPossessions();
-      } else if(result.gagne){
-        alert(`Victoire ! Série : ${result.victoires_consecutives}/3`);
-      } else {
-        alert('Défaite. La série repart à zéro.');
+      // bloque le rafraichissement auto de la grille pendant l'attaque en cours
+      combatActionEnCours = true;
+      try{
+        const { data, error } = await sb.rpc('attaquer', { p_commune_code: code });
+        if(error) throw error;
+        const result = data[0];
+        if(result.conquise){
+          alert('Commune conquise ! Tu as gagné le siège et le bonus.');
+          await loadMyCollection();
+          await loadOthersPossessions();
+        } else if(result.gagne){
+          alert(`Victoire ! Série : ${result.victoires_consecutives}/3`);
+        } else {
+          alert('Défaite. La série repart à zéro.');
+        }
+        await loadCombat();
+      } finally {
+        combatActionEnCours = false;
       }
-      await loadCombat();
       return;
     }
     await loadBourse();
@@ -662,13 +668,27 @@ document.getElementById('sellFilters').addEventListener('click', (e) => {
 });
 
 // ---------- Combat ----------
+// Ces deux valeurs doivent rester alignees avec le SQL (fonctions attaquer et delai_attaque)
+const IMMUNITE_MS = 3 * 3600 * 1000;
+const DELAI_ATTAQUE_MS = {rare: 10 * 60 * 1000, legendaire: 3 * 3600 * 1000};
+
 function coutAttaque(tierId){
   return Math.max(1, Math.round(PRIX_RACHAT[tierId] * 0.1));
+}
+
+// Affiche une duree lisible : "7 min", "2h", "2h45"
+function formatDuree(ms){
+  const totalMin = Math.max(1, Math.ceil(ms / 60000));
+  if(totalMin < 60) return `${totalMin} min`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
 }
 
 let combatCibles = [];
 let combatSieges = new Map();
 let combatFilterTier = 'tous';
+let combatActionEnCours = false;
 
 async function loadCombat(){
   const { data: userData } = await sb.auth.getUser();
@@ -724,24 +744,23 @@ function renderCombatGrid(){
     const tier = tiersById[commune.tier];
     const pseudo = c.joueurs ? c.joueurs.pseudo : 'un joueur';
     const acquiredAt = new Date(c.acquired_at).getTime();
-    const immuniteFin = acquiredAt + 3 * 3600 * 1000;
+    const immuniteFin = acquiredAt + IMMUNITE_MS;
     const encoreImmune = now < immuniteFin;
 
     const siege = combatSieges.get(c.commune_code);
     const victoires = siege ? siege.victoires_consecutives : 0;
     const dernierRound = siege && siege.dernier_round ? new Date(siege.dernier_round).getTime() : 0;
-    const dejaAttaqueAujourdhui = dernierRound && (now - dernierRound < 24 * 3600 * 1000);
+    const prochainRound = dernierRound ? dernierRound + DELAI_ATTAQUE_MS[commune.tier] : 0;
+    const enAttente = now < prochainRound;
 
     const cout = coutAttaque(commune.tier);
     let statusTxt, statusClass, disabled;
     if(encoreImmune){
-      const heures = Math.ceil((immuniteFin - now) / 3600000);
-      statusTxt = `Protégée encore ${heures}h`;
+      statusTxt = `Protégée encore ${formatDuree(immuniteFin - now)}`;
       statusClass = '';
       disabled = true;
-    } else if(dejaAttaqueAujourdhui){
-      const heures = Math.ceil((24 * 3600 * 1000 - (now - dernierRound)) / 3600000);
-      statusTxt = `Déjà attaquée — réessaie dans ${heures}h`;
+    } else if(enAttente){
+      statusTxt = `Prochain round dans ${formatDuree(prochainRound - now)}`;
       statusClass = '';
       disabled = true;
     } else {
@@ -766,6 +785,15 @@ function renderCombatGrid(){
       </div>`;
   }).join('');
 }
+
+// Rafraichit les decomptes toutes les 30 s quand l'onglet Combat est ouvert,
+// pour que le bouton se debloque tout seul sans avoir a changer d'onglet
+setInterval(() => {
+  const panel = document.getElementById('panel-combat');
+  if(!panel || !panel.classList.contains('active')) return;
+  if(combatActionEnCours || combatCibles.length === 0) return;
+  renderCombatGrid();
+}, 30000);
 
 document.getElementById('combatSearch').addEventListener('input', renderCombatGrid);
 document.getElementById('combatFilters').addEventListener('click', (e) => {

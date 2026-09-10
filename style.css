@@ -280,7 +280,44 @@
     max-height: 40vh;
     overflow-y:auto;
   }
-  .combat-grid{ max-height: 55vh; }
+  .combat-cards-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 12px;
+    max-height: 60vh;
+    overflow-y:auto;
+    width:100%;
+    max-width: 600px;
+    padding-right:4px;
+  }
+  .combat-card{
+    border-radius: 10px;
+    overflow:hidden;
+    background: var(--paper);
+    box-shadow: 3px 5px 10px rgba(21,27,38,0.2);
+  }
+  .combat-card.rare{ background: linear-gradient(180deg, var(--paper) 70%, #EEF3FB 100%); }
+  .combat-card.legendaire{ background: linear-gradient(180deg, var(--paper) 70%, #FBF4E3 100%); }
+  .combat-card .cc-body{ padding:12px 14px 14px; }
+  .combat-card .cc-badge{
+    display:inline-block;
+    font-size:0.62rem;
+    font-variant: small-caps;
+    color:#fff;
+    padding:2px 8px;
+    border-radius:2px;
+    margin-bottom:8px;
+  }
+  .combat-card.rare .cc-badge{ background: var(--rare); }
+  .combat-card.legendaire .cc-badge{ background: var(--legendaire); }
+  .combat-card .cc-name{ font-size:1rem; margin:0 0 2px; color: var(--ink); }
+  .combat-card .cc-owner{ font-size:0.72rem; color: var(--ink-soft); margin:0 0 10px; }
+  .combat-card .cc-sieges{ display:flex; gap:5px; margin-bottom:8px; }
+  .cc-siege-dot{ width:11px; height:11px; border-radius:50%; border:1.5px solid var(--line); }
+  .cc-siege-dot.filled{ background: var(--legendaire); border-color: var(--legendaire); }
+  .combat-card .cc-status{ font-size:0.7rem; color: var(--ink-soft); margin:0 0 10px; }
+  .combat-card .cc-status.ready{ color: var(--peucommun); }
+  .cc-btn{ width:100%; border-radius:16px; padding:8px; font-size:0.8rem; }
   .bourse-row{
     display:flex;
     align-items:center;

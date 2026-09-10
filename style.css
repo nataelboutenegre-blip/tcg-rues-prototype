@@ -216,6 +216,66 @@
     font-style: italic;
   }
 
+  .solde-box{
+    font-size: 1rem;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 18px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+  }
+  .solde-box b{ color: var(--legendaire); }
+  .bourse-section{
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 24px;
+  }
+  .bourse-section h2{
+    font-size: 0.85rem;
+    font-weight:normal;
+    color: var(--ink-soft);
+    margin: 0 0 10px;
+    font-variant: small-caps;
+    letter-spacing:0.03em;
+  }
+  .bourse-grid{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height: 40vh;
+    overflow-y:auto;
+  }
+  .bourse-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 12px;
+    flex-wrap: wrap;
+  }
+  .bourse-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .bourse-name{ flex:1; font-size:0.85rem; min-width:120px; }
+  .bourse-dept{ color: var(--ink-soft); font-size:0.76rem; }
+  .bourse-price{ font-size:0.8rem; color: var(--ink-soft); white-space:nowrap; }
+  .bourse-btn{
+    font-family:inherit;
+    font-size:0.74rem;
+    color: var(--bleu);
+    background: none;
+    border: 1.5px solid var(--bleu);
+    border-radius: 14px;
+    padding: 5px 11px;
+    cursor: pointer;
+    white-space:nowrap;
+  }
+  .bourse-btn:hover{ background: rgba(0,38,84,0.06); }
+  .bourse-btn:disabled{ opacity:0.5; cursor:default; }
+
   .territory{
     margin-top: 40px;
     width: 100%;

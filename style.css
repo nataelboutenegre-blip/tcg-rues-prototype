@@ -663,6 +663,7 @@
     }
     .tab.active .icon{ background:none; color:#fff; }
     .sidebar-footer{ display:none; }
+    body{ padding: 0; }
     .content{ padding:12px 14px 24px; }
   }
   .auth-screen{

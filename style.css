@@ -283,6 +283,8 @@
   .combat-cards-grid{
     display:grid;
     grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    /* empeche les lignes de s'ecraser quand il y a beaucoup de cartes */
+    grid-auto-rows: max-content;
     gap: 12px;
     max-height: 60vh;
     overflow-y:auto;

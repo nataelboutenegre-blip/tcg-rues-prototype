@@ -113,8 +113,13 @@
                   <stop offset="0%" stop-color="#163A66"/>
                   <stop offset="100%" stop-color="#081B36"/>
                 </linearGradient>
+                <filter id="gooeyFilter">
+                  <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+                  <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10" result="goo"/>
+                </filter>
               </defs>
               <g id="franceOutlineGroup"></g>
+              <g id="mineDotsGroup" filter="url(#gooeyFilter)"></g>
             </svg>
             <div id="mapOverlay" class="map-overlay"></div>
           </div>

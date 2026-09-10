@@ -303,6 +303,7 @@ async function loadMyCollection(){
   renderStats();
   renderCollection();
   renderMapOverlay();
+  if(document.getElementById('sellableGrid')) renderSellableGrid();
 }
 
 function renderStats(){

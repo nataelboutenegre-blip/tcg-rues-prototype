@@ -200,12 +200,16 @@ function setupMapInteraction(){
 
 let showOthers = true;
 
+const DOT_RADIUS = {commun: 2.25, peucommun: 4.75, rare: 7.75, legendaire: 11.75};
+
 function renderMapOverlay(){
   const overlay = document.getElementById('mapOverlay');
-  if(!overlay || !mapBounds) return;
+  const mineGroup = document.getElementById('mineDotsGroup');
+  if(!overlay || !mineGroup || !mapBounds) return;
   overlay.innerHTML = '';
+  mineGroup.innerHTML = '';
 
-  // territoire des autres joueurs, en gris neutre
+  // territoire des autres joueurs, en gris neutre (points HTML simples, pas de fusion)
   if(showOthers){
     for(const entry of othersMap.values()){
       if(!METRO_DEPT_RE.test(entry.dept)) continue;
@@ -220,16 +224,19 @@ function renderMapOverlay(){
     }
   }
 
-  // mon propre territoire, en couleur vive
+  // mon propre territoire, en cercles SVG (pour l'effet de fusion organique)
   for(const entry of collectionMap.values()){
     if(!METRO_DEPT_RE.test(entry.dept)) continue;
     const p = project(entry.lat, entry.lon);
-    const dot = document.createElement('div');
-    dot.className = 'map-dot mine ' + entry.tier.id;
-    dot.style.left = (p.x * 100) + '%';
-    dot.style.top = (p.y * 100) + '%';
-    dot.title = entry.nom + ' (' + entry.dept + ') — ' + entry.tier.label;
-    overlay.appendChild(dot);
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', (p.x * 1000).toFixed(1));
+    circle.setAttribute('cy', (p.y * 1000).toFixed(1));
+    circle.setAttribute('r', DOT_RADIUS[entry.tier.id]);
+    circle.setAttribute('fill', entry.tier.color);
+    const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+    title.textContent = entry.nom + ' (' + entry.dept + ') — ' + entry.tier.label;
+    circle.appendChild(title);
+    mineGroup.appendChild(circle);
   }
 }
 

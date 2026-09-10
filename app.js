@@ -205,9 +205,11 @@ const DOT_RADIUS = {commun: 2.25, peucommun: 4.75, rare: 7.75, legendaire: 11.75
 function renderMapOverlay(){
   const overlay = document.getElementById('mapOverlay');
   const mineGroup = document.getElementById('mineDotsGroup');
-  if(!overlay || !mineGroup || !mapBounds) return;
+  const mineBorderGroup = document.getElementById('mineDotsBorderGroup');
+  if(!overlay || !mineGroup || !mineBorderGroup || !mapBounds) return;
   overlay.innerHTML = '';
   mineGroup.innerHTML = '';
+  mineBorderGroup.innerHTML = '';
 
   // territoire des autres joueurs, en gris neutre (points HTML simples, pas de fusion)
   if(showOthers){
@@ -228,10 +230,23 @@ function renderMapOverlay(){
   for(const entry of collectionMap.values()){
     if(!METRO_DEPT_RE.test(entry.dept)) continue;
     const p = project(entry.lat, entry.lon);
+    const cx = (p.x * 1000).toFixed(1);
+    const cy = (p.y * 1000).toFixed(1);
+    const r = DOT_RADIUS[entry.tier.id];
+
+    // couche de contour : legerement plus grande, couleur unie sombre
+    const borderCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    borderCircle.setAttribute('cx', cx);
+    borderCircle.setAttribute('cy', cy);
+    borderCircle.setAttribute('r', r + 3);
+    borderCircle.setAttribute('fill', '#0B2A4A');
+    mineBorderGroup.appendChild(borderCircle);
+
+    // couche coloree, par-dessus
     const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', (p.x * 1000).toFixed(1));
-    circle.setAttribute('cy', (p.y * 1000).toFixed(1));
-    circle.setAttribute('r', DOT_RADIUS[entry.tier.id]);
+    circle.setAttribute('cx', cx);
+    circle.setAttribute('cy', cy);
+    circle.setAttribute('r', r);
     circle.setAttribute('fill', entry.tier.color);
     const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
     title.textContent = entry.nom + ' (' + entry.dept + ') — ' + entry.tier.label;

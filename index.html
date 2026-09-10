@@ -27,35 +27,45 @@
 <div id="gameScreen" class="app-shell" style="display:none">
 
   <nav class="sidebar">
-    <div class="brand">TerraFront</div>
-
-    <div class="tab active" data-tab="tirage">
-      <div class="icon">
-        <svg viewBox="0 0 24 24" fill="none">
-          <rect x="4" y="3" width="16" height="18" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
-          <path d="M4 13 L10 9 L10 21" stroke="currentColor" stroke-width="1.4"/>
+    <div class="sidebar-top">
+      <div class="brand">TerraFront</div>
+      <button class="logout-icon-btn" id="logoutBtnMobile" title="Se déconnecter">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8">
+          <path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/>
+          <path d="M11 12h10m-3-3 3 3-3 3"/>
         </svg>
-      </div>
-      Tirage
+      </button>
     </div>
 
-    <div class="tab" data-tab="collection">
-      <div class="icon">
-        <svg viewBox="0 0 24 24" fill="none">
-          <rect x="7" y="3" width="12" height="16" rx="2" stroke="currentColor" stroke-width="1.5" transform="rotate(8 13 11)"/>
-          <rect x="5" y="5" width="12" height="16" rx="2" fill="#0B2A55" stroke="currentColor" stroke-width="1.5"/>
-        </svg>
+    <div class="tabs-row">
+      <div class="tab active" data-tab="tirage">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="3" width="16" height="18" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M4 13 L10 9 L10 21" stroke="currentColor" stroke-width="1.4"/>
+          </svg>
+        </div>
+        Tirage
       </div>
-      Ma collection
-    </div>
 
-    <div class="tab" data-tab="territoire">
-      <div class="icon">
-        <svg viewBox="0 0 24 24">
-          <polygon points="13.4,22.0 6.5,19.7 7.7,16.7 7.6,14.6 8.1,15.1 8.2,15.7 8.4,15.8 8.1,14.9 7.4,14.3 7.6,12.9 6.5,12.5 5.5,10.2 2.6,9.5 2.0,8.9 2.8,8.4 2.0,7.8 4.3,7.1 5.1,7.9 7.1,7.6 6.3,5.1 9.3,6.0 9.8,5.8 9.6,5.2 11.9,4.1 11.7,2.5 13.2,2.0 15.8,3.9 15.8,4.6 16.8,4.1 16.8,5.0 17.7,5.6 22.0,6.9 21.0,10.0 20.1,10.2 18.5,13.2 19.8,12.8 20.4,15.0 19.5,15.7 20.1,17.7 21.2,17.8 20.9,18.7 18.8,20.4 15.4,19.3 14.1,20.3 14.2,21.8 13.4,22.0" fill="currentColor"/>
-        </svg>
+      <div class="tab" data-tab="collection">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="7" y="3" width="12" height="16" rx="2" stroke="currentColor" stroke-width="1.5" transform="rotate(8 13 11)"/>
+            <rect x="5" y="5" width="12" height="16" rx="2" fill="#0B2A55" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </div>
+        Ma collection
       </div>
-      Territoire
+
+      <div class="tab" data-tab="territoire">
+        <div class="icon">
+          <svg viewBox="0 0 24 24">
+            <polygon points="13.4,22.0 6.5,19.7 7.7,16.7 7.6,14.6 8.1,15.1 8.2,15.7 8.4,15.8 8.1,14.9 7.4,14.3 7.6,12.9 6.5,12.5 5.5,10.2 2.6,9.5 2.0,8.9 2.8,8.4 2.0,7.8 4.3,7.1 5.1,7.9 7.1,7.6 6.3,5.1 9.3,6.0 9.8,5.8 9.6,5.2 11.9,4.1 11.7,2.5 13.2,2.0 15.8,3.9 15.8,4.6 16.8,4.1 16.8,5.0 17.7,5.6 22.0,6.9 21.0,10.0 20.1,10.2 18.5,13.2 19.8,12.8 20.4,15.0 19.5,15.7 20.1,17.7 21.2,17.8 20.9,18.7 18.8,20.4 15.4,19.3 14.1,20.3 14.2,21.8 13.4,22.0" fill="currentColor"/>
+          </svg>
+        </div>
+        Territoire
+      </div>
     </div>
 
     <div class="sidebar-footer">

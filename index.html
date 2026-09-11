@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0F1F38">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="TerraFront">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -66,7 +73,7 @@
             <rect x="5" y="5" width="12" height="16" rx="2" style="fill: var(--icon-bg)" stroke="currentColor" stroke-width="1.5"/>
           </svg>
         </div>
-        Ma collection
+        Collection
       </div>
 
       <div class="tab" data-tab="territoire">
@@ -98,6 +105,17 @@
         Combat
         <span class="tab-badge" id="combatBadge" hidden></span>
       </div>
+
+      <div class="tab" data-tab="regles">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/>
+            <path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/>
+            <path d="M9 8h7M9 11.5h5"/>
+          </svg>
+        </div>
+        Règles
+      </div>
     </div>
 
     <div class="sidebar-footer">
@@ -111,6 +129,7 @@
     <section class="tab-panel active" id="panel-tirage">
       <h1>Tirage</h1>
       <div class="sub">Chaque carte tirée est une vraie commune de France, à sa vraie position géographique. Elle n'appartient qu'à toi tant que tu la gardes. Clique sur le paquet pour le déchirer.</div>
+      <div class="notif-banniere" id="notifBanniere" hidden></div>
 
       <div class="puces" id="packStatus"><span class="puce">Chargement…</span></div>
       <div class="pack-buttons">
@@ -231,6 +250,189 @@
       </div>
       <input type="text" id="combatSearch" class="bourse-search" placeholder="Rechercher une commune…">
       <div id="combatGrid" class="cibles-grille"><p class="collection-empty">Aucune cible disponible pour le moment.</p></div>
+    </section>
+
+    <section class="tab-panel" id="panel-regles">
+      <div class="regles">
+        <h1>Règles du jeu</h1>
+        <div class="sub">Tout ce qu'il faut savoir pour jouer. Collectionne les vraies communes de France, défends-les et agrandis ton territoire.</div>
+        <div class="notif-carte" id="notifCarte"></div>
+        <section class="essentiel" aria-label="L'essentiel">
+          <div class="etape"><div class="etape-num">1</div><h3>Ouvre des paquets</h3><p>Chaque paquet contient 5 vraies communes. Plus une ville est peuplée, plus elle est rare.</p></div>
+          <div class="etape"><div class="etape-num">2</div><h3>Gère ton solde</h3><p>Revends tes cartes au jeu ou aux autres joueurs pour gagner des points.</p></div>
+          <div class="etape"><div class="etape-num">3</div><h3>Conquiers</h3><p>Aligne 3 victoires d'affilée contre une commune rare ou légendaire pour la prendre.</p></div>
+          <div class="etape"><div class="etape-num">4</div><h3>Défends-toi</h3><p>Tente une défense quand on t'attaque, ou pose un bouclier sur tes meilleures cartes.</p></div>
+        </section>
+
+        <nav class="sommaire" aria-label="Sommaire">
+          <a href="#r-cartes">Cartes et rareté</a>
+          <a href="#r-paquets">Paquets</a>
+          <a href="#r-bourse">Solde et bourse</a>
+          <a href="#r-combat">Combat</a>
+          <a href="#r-defense">Défense</a>
+          <a href="#r-boucliers">Boucliers</a>
+          <a href="#r-faq">Questions fréquentes</a>
+        </nav>
+
+        <details class="regle" id="r-cartes" open>
+          <summary>
+            <span class="regle-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M9 8h6M9 12h6"/></svg></span>
+            <h2>Cartes et rareté<small>Une carte = une vraie commune</small></h2>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="regle-corps">
+            <p>Chaque carte est une vraie commune de France, à sa vraie position sur la carte. <b>Une commune n'appartient qu'à un seul joueur à la fois</b> : si tu la tires, personne d'autre ne peut l'avoir tant que tu la gardes.</p>
+            <div class="tableau-defile">
+              <table class="tableau">
+                <thead><tr><th>Rareté</th><th>Population</th><th>Communes</th><th>Chance par carte</th><th>Rachat par le jeu</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="rarete legendaire">Légendaire</span></td><td>100 000 et plus</td><td class="chiffre">48</td><td class="chiffre">0,83 %</td><td class="chiffre or">1 000 pts</td></tr>
+                  <tr><td><span class="rarete rare">Rare</span></td><td>20 000 à 99 999</td><td class="chiffre">468</td><td class="chiffre">11,4 %</td><td class="chiffre or">100 pts</td></tr>
+                  <tr><td><span class="rarete peucommun">Peu commun</span></td><td>2 000 à 19 999</td><td class="chiffre">4 930</td><td class="chiffre">36,8 %</td><td class="chiffre or">20 pts</td></tr>
+                  <tr><td><span class="rarete commun">Commun</span></td><td>Moins de 2 000</td><td class="chiffre">29 318</td><td class="chiffre">50,9 %</td><td class="chiffre or">5 pts</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p>Le numéro d'une carte, par exemple <b>n° 9 / 48</b>, indique son classement parmi les communes de sa rareté, de la plus peuplée à la moins peuplée.</p>
+            <p>Si toutes les communes d'une rareté sont déjà prises, le tirage te donne une carte de la rareté juste en dessous.</p>
+          </div>
+        </details>
+
+        <details class="regle" id="r-paquets">
+          <summary>
+            <span class="regle-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M4 13l6-4v12"/></svg></span>
+            <h2>Paquets<small>Gratuits ou achetés</small></h2>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="regle-corps">
+            <div class="chiffres">
+              <div class="chiffre-bloc"><b>5</b><span>cartes par paquet</span></div>
+              <div class="chiffre-bloc"><b>3</b><span>paquets gratuits en réserve au maximum</span></div>
+              <div class="chiffre-bloc"><b>20 min</b><span>pour recharger un paquet gratuit</span></div>
+            </div>
+            <ul>
+              <li><b>Paquet gratuit :</b> tu en as jusqu'à 3 d'avance, et un nouveau arrive toutes les 20 minutes.</li>
+              <li><b>Paquet acheté :</b> 200 pts, dans la limite de 5 par jour.</li>
+              <li>Clique sur le paquet pour le déchirer, puis retourne les cartes une par une.</li>
+              <li>Si tu fermes la page avant d'ouvrir un paquet payé, <b>il t'attend à ta prochaine connexion</b>.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="regle" id="r-bourse">
+          <summary>
+            <span class="regle-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h13l-3-3M17 8l-3 3M20 16H7l3-3M7 16l3 3"/></svg></span>
+            <h2>Solde et bourse<small>Gagner et dépenser des points</small></h2>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="regle-corps">
+            <p>Tu commences avec <b>100 pts</b>. Les points ne s'achètent pas avec de l'argent réel.</p>
+            <h4>Gagner des points</h4>
+            <ul>
+              <li><b>Vendre au jeu :</b> le jeu rachète ta commune à son prix de rachat (5, 20, 100 ou 1 000 pts). Elle redevient libre et peut ressortir dans les paquets.</li>
+              <li><b>Vendre à un joueur :</b> mets ta commune en vente au prix que tu veux. Tu es payé dès qu'un joueur l'achète, et tu peux retirer ton annonce à tout moment.</li>
+              <li><b>Conquérir :</b> chaque conquête rapporte un bonus (voir Combat).</li>
+            </ul>
+            <h4>Dépenser des points</h4>
+            <ul>
+              <li>Paquets achetés, rounds d'attaque, défenses, boucliers et achats sur le marché.</li>
+            </ul>
+            <div class="encart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7h.01"/></svg><span>Une commune <b>conquise</b> ne peut pas être revendue au jeu pendant <b>12 h</b>. Tu peux quand même la mettre en vente pour les autres joueurs.</span></div>
+          </div>
+        </details>
+
+        <details class="regle" id="r-combat">
+          <summary>
+            <span class="regle-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 17.5L17 7M17 7h-4M17 7v4M17.5 17.5L7 7M7 7h4M7 7v4"/></svg></span>
+            <h2>Combat<small>Prendre les communes des autres</small></h2>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="regle-corps">
+            <p>Tu peux attaquer les communes <b>rares et légendaires</b> qui appartiennent à d'autres joueurs.</p>
+            <ul>
+              <li><b>Un round = pile ou face :</b> 1 chance sur 2 de gagner.</li>
+              <li><b>3 victoires d'affilée</b> et la commune est à toi. <b>Une défaite remet ta série à zéro.</b></li>
+              <li>Chaque round coûte <b>10 % de la valeur</b> de la commune, même si tu perds.</li>
+            </ul>
+            <div class="tableau-defile">
+              <table class="tableau">
+                <thead><tr><th>Cible</th><th>Coût d'un round</th><th>Délai entre deux rounds</th><th>Bonus de conquête</th></tr></thead>
+                <tbody>
+                  <tr><td><span class="rarete rare">Rare</span></td><td class="chiffre">10 pts</td><td class="chiffre">10 min</td><td class="chiffre or">+50 pts</td></tr>
+                  <tr><td><span class="rarete legendaire">Légendaire</span></td><td class="chiffre">100 pts</td><td class="chiffre">3 h</td><td class="chiffre or">+500 pts</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <ul>
+              <li>Le délai s'applique <b>cible par cible</b> : tu peux attaquer plusieurs communes en parallèle.</li>
+              <li>Une commune qui vient de changer de propriétaire (tirage, achat ou conquête) est <b>protégée pendant 3 h</b>.</li>
+              <li>Si la commune que tu attaques change de propriétaire, ta série repart de zéro.</li>
+              <li><b>Combats en cours</b> affiche les cibles où tu as déjà 1 ou 2 victoires. <b>Près de mon territoire</b> affiche les cibles à 10, 20 ou 50 km de tes communes.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="regle" id="r-defense">
+          <summary>
+            <span class="regle-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+            <h2>Défense<small>Quand on t'attaque</small></h2>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="regle-corps">
+            <p>Quand un joueur gagne un round contre une de tes communes, une <b>pastille rouge</b> apparaît sur l'onglet Combat, et la commune s'affiche dans <b>Tes communes attaquées</b>.</p>
+            <ul>
+              <li><b>Défendre</b> coûte le prix d'un round (10 ou 100 pts) et te donne <b>1 chance sur 2 de retirer une victoire</b> à l'attaquant.</li>
+              <li>Tu as droit à <b>une seule défense par attaque</b>. Si la série de l'attaquant retombe à zéro, tu récupères ta défense pour sa prochaine attaque.</li>
+              <li>Tu ne peux pas défendre une commune déjà protégée par un bouclier.</li>
+            </ul>
+            <div class="encart rouge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/><circle cx="12" cy="12" r="9.5"/></svg><span>À 2 victoires, l'attaquant n'a plus qu'un round à gagner. C'est le bon moment pour défendre ou poser un bouclier.</span></div>
+          </div>
+        </details>
+
+        <details class="regle" id="r-boucliers">
+          <summary>
+            <span class="regle-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/></svg></span>
+            <h2>Boucliers<small>Protéger tes meilleures cartes</small></h2>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="regle-corps">
+            <p>Un bouclier se pose dans la <b>Bourse</b>, sur une commune rare ou légendaire. Pendant toute sa durée, <b>personne ne peut l'attaquer</b>.</p>
+            <div class="tableau-defile">
+              <table class="tableau">
+                <thead><tr><th>Durée</th><th>Sur une rare</th><th>Sur une légendaire</th></tr></thead>
+                <tbody>
+                  <tr><td class="chiffre">3 h</td><td class="chiffre or">15 pts</td><td class="chiffre or">150 pts</td></tr>
+                  <tr><td class="chiffre">6 h</td><td class="chiffre or">40 pts</td><td class="chiffre or">400 pts</td></tr>
+                  <tr><td class="chiffre">12 h</td><td class="chiffre or">90 pts</td><td class="chiffre or">900 pts</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <ul>
+              <li>Les séries des attaquants sont <b>mises en pause</b>, pas effacées : elles reprennent à la fin du bouclier.</li>
+              <li>Après un bouclier, il faut attendre <b>12 h</b> avant d'en poser un nouveau sur la même commune.</li>
+              <li>Un bouclier acheté pendant la protection de 3 h démarre à la fin de cette protection.</li>
+              <li>Le bouclier disparaît si la commune change de propriétaire.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="regle" id="r-faq">
+          <summary>
+            <span class="regle-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9.5"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5v.7M12 17h.01"/></svg></span>
+            <h2>Questions fréquentes<small>Les cas qui surprennent</small></h2>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="regle-corps">
+            <h4>Pourquoi le bouton Attaquer est grisé ?</h4>
+            <p>Soit la commune est sous bouclier, soit elle vient de changer de propriétaire (protection de 3 h), soit tu dois attendre le délai avant ton prochain round. La raison est écrite sur la carte.</p>
+            <h4>Pourquoi je ne peux pas acheter de paquet ?</h4>
+            <p>Il te faut au moins 200 pts, et tu ne peux pas en acheter plus de 5 par jour. Tu dois aussi avoir retourné toutes les cartes du paquet en cours.</p>
+            <h4>Pourquoi je ne peux pas attaquer une commune commune ou peu commune ?</h4>
+            <p>Seules les rares et les légendaires sont attaquables. Les autres se récupèrent uniquement dans les paquets ou sur le marché de la bourse.</p>
+          </div>
+        </details>
+
+      </div>
     </section>
 
   </main>

@@ -316,21 +316,41 @@
     .card.entree{ animation:none; }
   }
 
-  .collection{
-    margin-top: 16px;
+  /* ---------- Page Ma collection ---------- */
+  .coll-entete{
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    align-self: stretch;
+    margin: -36px -40px 18px;
+    padding: 28px 40px 14px;
+    background: linear-gradient(180deg, var(--nuit) 78%, rgba(15,31,56,0));
+  }
+  .coll-ligne-titre{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
+  .coll-ligne-titre h1{ margin:0; font-size: clamp(2rem, 4vw, 2.6rem); }
+  .coll-compteur{ color: var(--brume); font-size: 0.95rem; }
+  .coll-compteur b{ color:#fff; font-weight:600; }
+  .coll-filtres{ display:flex; flex-wrap:wrap; gap:8px; }
+  .coll-filtre{
+    display:inline-flex; align-items:center; gap:7px;
+    font-family: inherit; font-size: 0.82rem; font-weight: 500;
+    color: var(--brume); background: var(--nuit-2);
+    border: 1px solid rgba(169,188,212,0.16); border-radius: 999px;
+    padding: 6px 12px; cursor: pointer;
+  }
+  .coll-filtre .point{ width:8px; height:8px; border-radius:50%; }
+  .coll-filtre .nb{ color:#fff; font-variant-numeric: tabular-nums; }
+  .coll-filtre:hover{ border-color: rgba(169,188,212,0.4); }
+  .coll-filtre.actif{ background: var(--papier); color: var(--encre); border-color: var(--papier); }
+  .coll-filtre.actif .nb{ color: var(--encre); font-weight: 600; }
+  .coll-filtre:focus-visible{ outline: 2px solid var(--c-legendaire); outline-offset: 2px; }
+  .coll-grille{
     width: 100%;
-    max-width: 506px;
-    border-top: 1px solid rgba(169,188,212,0.16);
-    padding-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 10px;
   }
-  .collection h2{
-    font-size: 0.85rem;
-    font-weight:normal;
-    color: var(--brume);
-    margin: 0 0 12px;
-    font-variant: small-caps;
-    letter-spacing:0.03em;
-  }
+  .coll-grille > .collection-empty{ grid-column: 1 / -1; }
   .collection-empty{
     color: var(--brume);
     font-size: 0.8rem;
@@ -437,6 +457,23 @@
   .combat-card.legendaire .cc-badge{ background: var(--legendaire); }
   .combat-card .cc-name{ font-size:1rem; margin:0 0 2px; color: var(--ink); }
   .combat-card .cc-owner{ font-size:0.72rem; color: var(--ink-soft); margin:0 0 10px; }
+  .combat-card .cc-distance{ font-size:0.7rem; color: var(--ink-soft); margin:-6px 0 10px; }
+  .combat-proximite{ align-items:center; }
+  .prox-toggle{ display:inline-flex; align-items:center; gap:8px; }
+  .prox-switch{
+    position:relative; width:26px; height:15px; border-radius:999px;
+    background: rgba(91,102,115,0.35); flex-shrink:0;
+    transition: background .15s;
+  }
+  .prox-switch::after{
+    content:""; position:absolute; top:2px; left:2px;
+    width:11px; height:11px; border-radius:50%; background:#fff;
+    transition: transform .15s;
+  }
+  .prox-toggle.active .prox-switch{ background: var(--c-legendaire); }
+  .prox-toggle.active .prox-switch::after{ transform: translateX(11px); }
+  .prox-rayons{ display:flex; gap:6px; }
+  .prox-rayons[hidden]{ display:none; }
   .combat-card .cc-sieges{ display:flex; gap:5px; margin-bottom:8px; }
   .cc-siege-dot{ width:11px; height:11px; border-radius:50%; border:1.5px solid var(--line); }
   .cc-siege-dot.filled{ background: var(--legendaire); border-color: var(--legendaire); }
@@ -563,65 +600,55 @@
     box-shadow: 0 0 0 1px rgba(255,255,255,0.55);
     opacity: 0.85;
   }
-  .collection-grid{
-    display:grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 10px;
-    max-height: min(818px, 48vh);
-    overflow-y: auto;
-    padding-right: 4px;
+  /* ---------- Mini-cartes de la collection ---------- */
+  .mini{
+    display:flex; flex-direction:column;
+    aspect-ratio: 3 / 4;
+    border-radius: 10px; padding: 2px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.35);
+    transition: transform .12s ease-out;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 134px;
   }
-  .mini-card{
-    position: relative;
-    min-height: 128px;
-    border-radius: 8px;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    box-shadow: 2px 4px 8px rgba(21,27,38,0.2);
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
+  @media (hover: hover){ .mini:hover{ transform: translateY(-3px); } }
+  .mini.commun{ background: var(--c-commun); }
+  .mini.peucommun{ background: var(--c-peucommun); }
+  .mini.rare{ background: linear-gradient(160deg, #7FB0FF, var(--c-rare) 45%, #1D4FB8); }
+  .mini.legendaire{
+    background: linear-gradient(135deg, #FFF1B8, var(--c-legendaire) 35%, #B7791F 60%, #FCE38A 85%);
+    padding: 3px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.35), 0 0 16px rgba(240,180,41,0.35);
   }
-  .mini-card .stripe{ height:5px; display:flex; }
-  .mini-card .stripe span{ flex:1; }
-  .mini-card .stripe .b{ background:var(--bleu); }
-  .mini-card .stripe .w{ background:#fff; }
-  .mini-card .stripe .r{ background:var(--rouge); }
-  .mini-card .body{
-    flex:1;
-    padding: 7px 6px 6px;
-    display:flex;
-    flex-direction:column;
+  .mini-int{
+    flex:1; min-height:0;
+    border-radius: 8px; overflow:hidden;
+    background: var(--papier); color: var(--encre);
+    display:flex; flex-direction:column;
   }
-  .mini-card .name{
-    font-size: 0.72rem;
-    line-height:1.22;
-    flex:1;
-    word-break: break-word;
-    color: var(--ink);
+  .mini-art{ position:relative; aspect-ratio: 16 / 10; margin: 4px 4px 0; border-radius: 6px; overflow:hidden; flex-shrink:0; }
+  .mini-art svg{ display:block; width:100%; height:100%; }
+  .mini-dept{
+    position:absolute; right:4px; bottom:-3px;
+    font-family: var(--titre); font-weight:900; font-size: 1.6rem; line-height:1;
+    color: rgba(255,255,255,0.3);
   }
-  .mini-card .rarity{
-    font-size: 0.56rem;
-    font-variant: small-caps;
-    letter-spacing: 0.02em;
-    color: white;
-    align-self:flex-start;
-    padding: 1px 6px;
-    border-radius: 2px;
-    margin-top: 6px;
+  .mini-infos{ flex:1; min-height:0; padding: 5px 6px; display:flex; flex-direction:column; }
+  .mini-nom{
+    font-family: var(--titre); font-weight:800; font-size: 1rem; line-height: 0.95;
+    margin:0; overflow-wrap:anywhere;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
   }
-  .mini-card.peucommun{ background:#F2F8F4; }
-  .mini-card.rare{ background:#EEF3FB; }
-  .mini-card.legendaire{ background:#FBF4E3; box-shadow: inset 0 0 0 1.5px var(--legendaire), 1px 3px 6px rgba(21,27,38,0.18); }
-  .mini-card .qty{
-    position:absolute;
-    top:4px; right:4px;
-    background: rgba(31,39,51,0.75);
-    color:#fff;
-    font-size:0.56rem;
-    padding:1px 5px;
-    border-radius:8px;
-  }
+  .mini-nom.long{ font-size: 0.85rem; }
+  .mini-rarete{ margin-top:auto; font-size: 0.6rem; font-weight:600; white-space:nowrap; }
+  .mini.commun .mini-rarete{ color:#5F6C80; }
+  .mini.peucommun .mini-rarete{ color:#16734C; }
+  .mini.rare .mini-rarete{ color:#1D4FB8; }
+  .mini.legendaire .mini-rarete{ color:#9A6412; }
+  .mini-lisere{ display:flex; height:3px; flex-shrink:0; }
+  .mini-lisere span{ flex:1; }
+  .mini-lisere span:nth-child(1){ background:#1F3F8F; }
+  .mini-lisere span:nth-child(2){ background:#fff; }
+  .mini-lisere span:nth-child(3){ background: var(--c-rouge); }
 
   button.open-btn{
     font-family: var(--titre);
@@ -870,6 +897,16 @@
     .tab.active::before{ display:none; }
     .sidebar-footer{ display:none; }
     .content{ padding: 20px 14px 32px; }
+    .coll-entete{ margin: -20px -14px 12px; padding: 14px 14px 10px; }
+    .coll-filtres{ flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .coll-filtre{ white-space: nowrap; }
+    .coll-grille{ grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+    .mini-art{ margin: 3px 3px 0; }
+    .mini-dept{ font-size: 1.3rem; }
+    .mini-infos{ padding: 4px 5px; }
+    .mini-nom{ font-size: 0.9rem; }
+    .mini-nom.long{ font-size: 0.78rem; }
+    .mini-rarete{ font-size: 0.56rem; }
     .pack-zone{ gap: 12px; justify-content:center; }
     .card{ width: 164px; height: 240px; }
     .carte-haut{ padding: 6px 7px 5px; }

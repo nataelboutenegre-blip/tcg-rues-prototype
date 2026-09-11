@@ -47,6 +47,13 @@
   <nav class="sidebar">
     <div class="sidebar-top">
       <div class="brand">Terra<span>Front</span></div>
+      <button class="regles-btn" id="reglesBtn" title="Règles du jeu" aria-label="Règles du jeu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/>
+          <path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/>
+          <path d="M9 8h7M9 11.5h5"/>
+        </svg>
+      </button>
       <button class="logout-icon-btn" id="logoutBtnMobile" title="Se déconnecter">
         <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8">
           <path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/>
@@ -97,24 +104,24 @@
 
       <div class="tab" data-tab="combat">
         <div class="icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <path d="M6.5 17.5L17 7M17 7h-4M17 7v4"/>
-            <path d="M17.5 17.5L7 7M7 7h4M7 7v4"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 14.5 19.5 19.5a1.5 1.5 0 0 1-2 2L12.5 16.5"/>
+            <path d="M18.5 3.5 8 14M18.5 3.5h-3M18.5 3.5v3"/>
+            <path d="M9.5 14.5 4.5 19.5a1.5 1.5 0 0 0 2 2l5-5"/>
+            <path d="M5.5 3.5 16 14M5.5 3.5h3M5.5 3.5v3"/>
           </svg>
         </div>
         Combat
-        <span class="tab-badge" id="combatBadge" hidden></span>
       </div>
 
-      <div class="tab" data-tab="regles">
+      <div class="tab" data-tab="defense">
         <div class="icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/>
-            <path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/>
-            <path d="M9 8h7M9 11.5h5"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+            <path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/>
           </svg>
         </div>
-        Règles
+        Défense
+        <span class="tab-badge" id="combatBadge" hidden></span>
       </div>
     </div>
 
@@ -207,12 +214,6 @@
       </div>
 
       <div class="bourse-section">
-        <h2>Protéger mes communes</h2>
-        <p class="bouclier-intro">Un bouclier bloque toute attaque sur une commune rare ou légendaire. Les séries des attaquants sont mises en pause, puis 12 h sans protection sont obligatoires avant un nouveau bouclier.</p>
-        <div id="boucliersGrid" class="bourse-grid"><p class="collection-empty">Tu n'as aucune commune rare ou légendaire à protéger.</p></div>
-      </div>
-
-      <div class="bourse-section">
         <h2>Vendre une commune</h2>
         <div class="bourse-filters" id="sellFilters">
           <button class="filter-pill active" data-tier="tous">Toutes</button>
@@ -228,11 +229,7 @@
 
     <section class="tab-panel" id="panel-combat">
       <h1>Combat</h1>
-      <div class="sub">3 victoires d'affilée pour conquérir une commune rare ou légendaire, une défaite remet ta série à zéro. Un round toutes les 10 min sur une rare, toutes les 3 h sur une légendaire. Le défenseur peut tenter une défense par attaque, et une commune conquise ne peut pas être revendue au jeu pendant 12 h.</div>
-      <div class="menaces" id="combatMenaces" hidden>
-        <h2>Tes communes attaquées</h2>
-        <div class="menaces-liste" id="combatMenacesListe"></div>
-      </div>
+      <div class="sub">3 victoires d'affilée pour conquérir une commune rare ou légendaire, une défaite remet ta série à zéro. Un round toutes les 10 min sur une rare, toutes les 3 h sur une légendaire. Une commune conquise ne peut pas être revendue au jeu pendant 12 h.</div>
       <div class="bourse-filters combat-proximite">
         <span class="puce solde">Solde <b id="soldeValueCombat">—</b></span>
         <button class="filter-pill prox-toggle" id="combatEnCoursToggle" aria-pressed="false"><span class="prox-switch"></span>Combats en cours <span class="en-cours-nb" id="combatEnCoursNb">0</span></button>
@@ -252,6 +249,26 @@
       <div id="combatGrid" class="cibles-grille"><p class="collection-empty">Aucune cible disponible pour le moment.</p></div>
     </section>
 
+    <section class="tab-panel" id="panel-defense">
+      <h1>Défense</h1>
+      <div class="sub">Quand un joueur gagne un round contre toi, tente une défense ou pose un bouclier. Une seule défense par attaque, et un bouclier bloque toute attaque pendant sa durée.</div>
+      <div class="puces"><span class="puce solde">Solde <b id="soldeValueDefense">—</b></span></div>
+
+      <div class="menaces" id="combatMenaces" hidden>
+        <h2>Tes communes attaquées</h2>
+        <div class="menaces-liste" id="combatMenacesListe"></div>
+      </div>
+
+      <div class="bourse-section">
+        <h2>Boucliers</h2>
+        <p class="bouclier-intro">Un bouclier bloque toute attaque sur une commune rare ou légendaire. Les séries des attaquants sont mises en pause, puis 12 h sans protection sont obligatoires avant un nouveau bouclier.</p>
+        <div class="bourse-filters">
+          <button class="filter-pill prox-toggle" id="boucliersToutToggle" aria-pressed="false"><span class="prox-switch"></span>Afficher toutes mes rares et légendaires</button>
+        </div>
+        <div id="boucliersGrid" class="bourse-grid"><p class="collection-empty">Tu n'as aucune commune rare ou légendaire à protéger.</p></div>
+      </div>
+    </section>
+
     <section class="tab-panel" id="panel-regles">
       <div class="regles">
         <h1>Règles du jeu</h1>
@@ -261,7 +278,7 @@
           <div class="etape"><div class="etape-num">1</div><h3>Ouvre des paquets</h3><p>Chaque paquet contient 5 vraies communes. Plus une ville est peuplée, plus elle est rare.</p></div>
           <div class="etape"><div class="etape-num">2</div><h3>Gère ton solde</h3><p>Revends tes cartes au jeu ou aux autres joueurs pour gagner des points.</p></div>
           <div class="etape"><div class="etape-num">3</div><h3>Conquiers</h3><p>Aligne 3 victoires d'affilée contre une commune rare ou légendaire pour la prendre.</p></div>
-          <div class="etape"><div class="etape-num">4</div><h3>Défends-toi</h3><p>Tente une défense quand on t'attaque, ou pose un bouclier sur tes meilleures cartes.</p></div>
+          <div class="etape"><div class="etape-num">4</div><h3>Défends-toi</h3><p>Dans l'onglet Défense, tente une défense quand on t'attaque ou pose un bouclier.</p></div>
         </section>
 
         <nav class="sommaire" aria-label="Sommaire">
@@ -379,7 +396,7 @@
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
           </summary>
           <div class="regle-corps">
-            <p>Quand un joueur gagne un round contre une de tes communes, une <b>pastille rouge</b> apparaît sur l'onglet Combat, et la commune s'affiche dans <b>Tes communes attaquées</b>.</p>
+            <p>Quand un joueur gagne un round contre une de tes communes, une <b>pastille rouge</b> apparaît sur l'onglet Défense, et la commune s'affiche dans <b>Tes communes attaquées</b>.</p>
             <ul>
               <li><b>Défendre</b> coûte le prix d'un round (10 ou 100 pts) et te donne <b>1 chance sur 2 de retirer une victoire</b> à l'attaquant.</li>
               <li>Tu as droit à <b>une seule défense par attaque</b>. Si la série de l'attaquant retombe à zéro, tu récupères ta défense pour sa prochaine attaque.</li>
@@ -396,7 +413,7 @@
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
           </summary>
           <div class="regle-corps">
-            <p>Un bouclier se pose dans la <b>Bourse</b>, sur une commune rare ou légendaire. Pendant toute sa durée, <b>personne ne peut l'attaquer</b>.</p>
+            <p>Un bouclier se pose dans l'onglet <b>Défense</b>, sur une commune rare ou légendaire. Pendant toute sa durée, <b>personne ne peut l'attaquer</b>.</p>
             <div class="tableau-defile">
               <table class="tableau">
                 <thead><tr><th>Durée</th><th>Sur une rare</th><th>Sur une légendaire</th></tr></thead>

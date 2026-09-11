@@ -321,6 +321,12 @@ async function showGame(session_){
   await loadPackStatus();
   verifierTiragesEnAttente();
   loadMenaces();
+  renderNotifications();
+  // arrivee depuis une notification : ?onglet=combat ou ?onglet=tirage
+  if(new URLSearchParams(location.search).has('onglet')){
+    ouvrirOngletDepuisUrl(location.href);
+    history.replaceState(null, '', location.pathname);
+  }
   if(!menacesInterval){
     // verifie toutes les minutes si une de mes communes est attaquee (pastille rouge sur l'onglet Combat)
     menacesInterval = setInterval(loadMenaces, 60000);
@@ -1867,6 +1873,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
     if(tab.dataset.tab === 'bourse') loadBourse();
     if(tab.dataset.tab === 'tirage') loadPackStatus();
+    if(tab.dataset.tab === 'regles') renderNotifications();
     if(tab.dataset.tab === 'combat') loadCombat();
   });
 });
@@ -1875,5 +1882,139 @@ document.querySelectorAll('.tab').forEach(tab => {
 document.addEventListener('visibilitychange', () => {
   if(!document.hidden && packStatusCache) loadPackStatus();
 });
+
+// ---------- Notifications sur telephone ----------
+const NOTIF_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const NOTIF_INSTALLEE = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+const NOTIF_SUPPORTEE = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+const ICONE_CLOCHE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>';
+let enregistrementSW = null;
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js')
+    .then(reg => { enregistrementSW = reg; renderNotifications(); })
+    .catch(err => console.error('Service worker :', err));
+  // clic sur une notification alors que le jeu est deja ouvert
+  navigator.serviceWorker.addEventListener('message', (e) => {
+    if(e.data && e.data.type === 'ouvrir') ouvrirOngletDepuisUrl(e.data.url);
+  });
+}
+
+function ouvrirOngletDepuisUrl(url){
+  try{
+    const onglet = new URL(url, location.href).searchParams.get('onglet');
+    const tab = onglet && document.querySelector(`.tab[data-tab="${onglet}"]`);
+    if(tab) tab.click();
+  } catch(e){}
+}
+
+async function etatNotifications(){
+  if(NOTIF_IOS && !NOTIF_INSTALLEE) return 'installer';
+  if(!NOTIF_SUPPORTEE) return 'non-supporte';
+  if(Notification.permission === 'denied') return 'refuse';
+  try{
+    const reg = enregistrementSW || await navigator.serviceWorker.getRegistration();
+    const abo = reg ? await reg.pushManager.getSubscription() : null;
+    return abo ? 'actif' : 'inactif';
+  } catch(e){ return 'inactif'; }
+}
+
+function b64urlVersUint8(s){
+  const b64 = s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4);
+  return Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+}
+
+async function activerNotifications(bouton){
+  if(bouton) bouton.disabled = true;
+  try{
+    // la demande d'autorisation doit partir tout de suite apres le clic (exigence d'Apple)
+    const permission = await Notification.requestPermission();
+    if(permission !== 'granted'){
+      notifier({ type: 'erreur', titre: 'Notifications refusées', texte: 'Tu peux les réautoriser dans les réglages de ton téléphone.' });
+      return;
+    }
+    const { data: cle, error } = await sb.rpc('cle_publique_notifications');
+    if(error || !cle) throw new Error('Les notifications ne sont pas encore configurées sur le serveur.');
+    const reg = enregistrementSW || await navigator.serviceWorker.ready;
+    let abo = await reg.pushManager.getSubscription();
+    if(!abo) abo = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64urlVersUint8(cle) });
+    const cles = abo.toJSON().keys || {};
+    const { error: e2 } = await sb.rpc('enregistrer_abonnement', { p_endpoint: abo.endpoint, p_p256dh: cles.p256dh, p_auth: cles.auth });
+    if(e2) throw e2;
+    notifier({ type: 'succes', titre: 'Notifications activées', texte: 'Tu seras prévenu si une commune est en danger ou si un paquet t\'attend.' });
+  } catch(err){
+    notifier({ type: 'erreur', titre: 'Activation impossible', texte: messageLisible(err.message) });
+  } finally {
+    if(bouton) bouton.disabled = false;
+    renderNotifications();
+  }
+}
+
+async function desactiverNotifications(bouton){
+  if(bouton) bouton.disabled = true;
+  try{
+    const reg = enregistrementSW || await navigator.serviceWorker.getRegistration();
+    const abo = reg ? await reg.pushManager.getSubscription() : null;
+    if(abo){
+      await sb.rpc('supprimer_abonnement', { p_endpoint: abo.endpoint });
+      await abo.unsubscribe();
+    }
+    notifier({ type: 'info', titre: 'Notifications désactivées sur cet appareil' });
+  } catch(err){
+    notifier({ type: 'erreur', titre: 'Désactivation impossible', texte: messageLisible(err.message) });
+  } finally {
+    renderNotifications();
+  }
+}
+
+function contenuNotifications(etat, avecPlusTard){
+  const plusTard = avecPlusTard ? '<button class="btn-p contour" data-notif="plus-tard">Plus tard</button>' : '';
+  const textes = {
+    installer: ['Reçois les alertes sur ton iPhone', 'Ajoute TerraFront à ton écran d\'accueil : touche <strong>Partager</strong>, puis <strong>Sur l\'écran d\'accueil</strong>. Ouvre ensuite le jeu depuis cette icône et active les notifications dans l\'onglet Règles.', plusTard],
+    inactif: ['Ne rate plus aucune attaque', 'Active les notifications pour être prévenu quand une de tes communes est en danger, ou quand un paquet gratuit t\'attend.', '<button class="btn-p or" data-notif="activer">Activer les notifications</button>' + plusTard],
+    actif: ['Notifications activées', 'Cet appareil te prévient quand une commune est à 2 défaites de tomber, et quand un paquet gratuit est prêt.', '<button class="btn-p contour" data-notif="desactiver">Désactiver</button>'],
+    refuse: ['Notifications bloquées', 'Tu les as refusées sur cet appareil. Pour les réactiver, passe par les réglages de ton téléphone, rubrique Notifications.', ''],
+    'non-supporte': ['Notifications indisponibles', 'Ce navigateur ne permet pas de recevoir les notifications du jeu.', ''],
+  };
+  const [titre, texte, actions] = textes[etat];
+  return `<span class="notif-icone-grande">${ICONE_CLOCHE}</span>
+    <div class="notif-corps"><b>${titre}</b><p>${texte}</p></div>
+    ${actions ? `<div class="notif-actions">${actions}</div>` : ''}`;
+}
+
+async function renderNotifications(){
+  const etat = await etatNotifications();
+  const carte = document.getElementById('notifCarte');
+  if(carte){
+    carte.className = 'notif-carte ' + etat;
+    carte.innerHTML = contenuNotifications(etat, false);
+  }
+  const banniere = document.getElementById('notifBanniere');
+  if(banniere){
+    let masquee = false;
+    try{ masquee = Date.now() - Number(localStorage.getItem('tf-banniere-notif') || 0) < 7 * 24 * 3600e3; } catch(e){}
+    const surTelephone = NOTIF_IOS || window.matchMedia('(max-width: 760px)').matches;
+    const utile = etat === 'installer' || etat === 'inactif';
+    banniere.hidden = masquee || !surTelephone || !utile;
+    if(!banniere.hidden) banniere.innerHTML = contenuNotifications(etat, true);
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-notif]');
+  if(!b) return;
+  if(b.dataset.notif === 'activer') activerNotifications(b);
+  if(b.dataset.notif === 'desactiver') desactiverNotifications(b);
+  if(b.dataset.notif === 'plus-tard'){
+    try{ localStorage.setItem('tf-banniere-notif', String(Date.now())); } catch(err){}
+    document.getElementById('notifBanniere').hidden = true;
+  }
+});
+
+// Sommaire des regles : ouvre la section visee
+document.querySelectorAll('#panel-regles .sommaire a').forEach(a => a.addEventListener('click', () => {
+  const cible = document.querySelector(a.getAttribute('href'));
+  if(cible && cible.tagName === 'DETAILS') cible.open = true;
+}));
 
 initAuth();

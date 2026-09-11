@@ -647,7 +647,7 @@ function dessinerTerritoires(){
     rayons = liste.map((c, i) => {
       let dMin = Infinity;
       for(const k of delaunay.neighbors(i)){
-        if(liste[k].joueur !== c.joueur) continue;
+        if(!liste[k] || k === i || liste[k].joueur !== c.joueur) continue;
         dMin = Math.min(dMin, Math.hypot(pts[k][0] - pts[i][0], pts[k][1] - pts[i][1]));
       }
       return dMin <= 22 ? Math.max(RAYON_ZONE[c.tier], dMin * 0.62) : RAYON_ZONE[c.tier];
@@ -662,7 +662,9 @@ function dessinerTerritoires(){
     const cx = x.toFixed(1), cy = y.toFixed(1);
     g.cercles += `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"/>`;
     g.bords += `<circle cx="${cx}" cy="${cy}" r="${(r + 2.2).toFixed(1)}"/>`;
-    g.cellules += voronoi ? `<path d="${voronoi.renderCell(i)}"/>` : `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"/>`;
+    // deux communes aux memes coordonnees n'ont pas de cellule : on dessine alors un simple rond
+    const cellule = voronoi ? voronoi.renderCell(i) : '';
+    g.cellules += cellule ? `<path d="${cellule}"/>` : `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"/>`;
     if(c.tier === 'legendaire'){
       g.marqueurs += `<polygon points="${etoileSvg(x, y, 7)}" fill="#FFF6D6" stroke="#0B1830" stroke-width="1.4" vector-effect="non-scaling-stroke"/>`;
     } else if(c.tier === 'rare'){
@@ -783,10 +785,15 @@ async function loadOthersPossessions(){
 async function loadMyCollection(){
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
-  const { data, error } = await sb
+  const champsCommune = 'communes(code,nom,departement,population,latitude,longitude,tier,rang,palier_total)';
+  let { data, error } = await sb
     .from('possessions')
-    .select('commune_code, communes(code,nom,departement,population,latitude,longitude,tier,rang,palier_total)')
+    .select('commune_code, acquired_at, bouclier_debut, bouclier_jusqua, ' + champsCommune)
     .eq('joueur_id', uid);
+  if(error){
+    // colonnes de bouclier absentes (boucliers.sql pas encore execute) : on charge sans
+    ({ data, error } = await sb.from('possessions').select('commune_code, acquired_at, ' + champsCommune).eq('joueur_id', uid));
+  }
   if(error){ console.error(error); return; }
 
   collectionMap = new Map();
@@ -796,7 +803,10 @@ async function loadMyCollection(){
     const tier = TIERS.find(t => t.id === c.tier);
     collectionMap.set(c.code, {
       code: c.code, nom: c.nom, dept: c.departement, pop: c.population,
-      lat: c.latitude, lon: c.longitude, tier, rank: c.rang, tierSize: c.palier_total
+      lat: c.latitude, lon: c.longitude, tier, rank: c.rang, tierSize: c.palier_total,
+      acquiredAt: row.acquired_at ? new Date(row.acquired_at).getTime() : 0,
+      bouclierDebut: row.bouclier_debut ? new Date(row.bouclier_debut).getTime() : 0,
+      bouclierJusqua: row.bouclier_jusqua ? new Date(row.bouclier_jusqua).getTime() : 0
     });
     session[c.tier]++;
     session.total++;
@@ -805,6 +815,7 @@ async function loadMyCollection(){
   renderCollection();
   renderMapOverlay();
   if(document.getElementById('sellableGrid')) renderSellableGrid();
+  if(document.getElementById('boucliersGrid')) renderBoucliers();
 }
 
 function renderStats(){
@@ -881,9 +892,10 @@ function renderCollection(){
   gridEl.innerHTML = visibles.map(entry => `
     <div class="mini ${entry.tier.id}" title="${entry.nom} (${entry.dept}) — ${entry.tier.label}">
       <div class="mini-int">
-        <div class="mini-art">${miniArtSvg(entry.code, entry.tier.id)}<span class="mini-dept">${entry.dept}</span></div>
+        <div class="mini-art">${miniArtSvg(entry.code, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}</div>
         <div class="mini-infos">
           <p class="mini-nom ${entry.nom.length > 14 ? 'long' : ''}">${entry.nom}</p>
+          ${entry.rank ? `<span class="mini-num">n° ${Number(entry.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(entry.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
           <span class="mini-rarete">${entry.tier.label}</span>
         </div>
         <div class="mini-lisere"><span></span><span></span><span></span></div>
@@ -1111,6 +1123,8 @@ async function loadBourse(){
 
   const { data: joueurRow } = await sb.from('joueurs').select('solde').eq('id', uid).single();
   document.getElementById('soldeValue').textContent = joueurRow ? joueurRow.solde : '—';
+  soldeBourse = joueurRow ? joueurRow.solde : null;
+  renderBoucliers();
 
   const { data: mine } = await sb.from('annonces').select('commune_code, prix').eq('joueur_id', uid);
   myListings = new Map((mine || []).map(a => [a.commune_code, a.prix]));
@@ -1121,6 +1135,104 @@ async function loadBourse(){
     .from('annonces')
     .select('commune_code, prix, joueur_id, communes(nom,departement,tier), joueurs(pseudo)');
   renderMarketGrid(market || [], uid);
+}
+
+// ---------- Boucliers de protection ----------
+const ICONE_BOUCLIER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/></svg>';
+// doit rester aligne avec prix_bouclier() dans boucliers.sql
+const OFFRES_BOUCLIER = [
+  { id: '3h', label: '3 heures', ms: 3 * 3600e3, prix: { rare: 15, legendaire: 150 } },
+  { id: '6h', label: '6 heures', ms: 6 * 3600e3, prix: { rare: 40, legendaire: 400 } },
+  { id: '12h', label: '12 heures', ms: 12 * 3600e3, prix: { rare: 90, legendaire: 900 } },
+];
+const DELAI_ENTRE_BOUCLIERS_MS = 12 * 3600e3;
+let soldeBourse = null;
+
+// etat d'une de mes communes vis-a-vis des boucliers
+function etatBouclier(entry, now = Date.now()){
+  if(entry.bouclierJusqua > now){
+    if(entry.bouclierDebut > now) return { code: 'programme', texte: `Bouclier programmé : démarre dans ${formatDuree(entry.bouclierDebut - now)}`, achetable: false };
+    return { code: 'actif', texte: `Protégée par un bouclier encore ${formatDuree(entry.bouclierJusqua - now)}`, achetable: false };
+  }
+  if(entry.bouclierJusqua && entry.bouclierJusqua + DELAI_ENTRE_BOUCLIERS_MS > now){
+    return { code: 'recharge', texte: `Nouveau bouclier possible dans ${formatDuree(entry.bouclierJusqua + DELAI_ENTRE_BOUCLIERS_MS - now)}`, achetable: false };
+  }
+  if(entry.acquiredAt && entry.acquiredAt + IMMUNITE_MS > now){
+    return { code: 'immunite', texte: `Acquise récemment, protégée encore ${formatDuree(entry.acquiredAt + IMMUNITE_MS - now)}`, achetable: true };
+  }
+  return { code: 'libre', texte: 'Sans protection', achetable: true };
+}
+
+function renderBoucliers(){
+  const grid = document.getElementById('boucliersGrid');
+  if(!grid) return;
+  const now = Date.now();
+  const protegeables = Array.from(collectionMap.values())
+    .filter(e => e.tier.id === 'rare' || e.tier.id === 'legendaire')
+    .sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || b.pop - a.pop);
+  if(protegeables.length === 0){
+    grid.innerHTML = '<p class="collection-empty">Tu n\'as aucune commune rare ou légendaire à protéger.</p>';
+    return;
+  }
+  grid.innerHTML = protegeables.map(e => {
+    const etat = etatBouclier(e, now);
+    const bouton = etat.achetable
+      ? `<button class="bourse-btn" data-action="bouclier" data-code="${e.code}">Protéger</button>`
+      : '';
+    return `
+      <div class="bourse-row bouclier-row ${etat.code}">
+        <span class="bourse-dot" style="background:${e.tier.color}"></span>
+        <span class="bourse-name">${e.nom} <span class="bourse-dept">(${e.dept})</span>
+          <span class="bouclier-etat">${etat.code === 'actif' || etat.code === 'programme' ? ICONE_BOUCLIER : ''}${etat.texte}</span>
+        </span>
+        ${bouton}
+      </div>`;
+  }).join('');
+}
+
+function choisirBouclier(entry){
+  return new Promise((resolve) => {
+    const tier = entry.tier.id;
+    const solde = soldeBourse ?? (packStatusCache ? packStatusCache.solde : null);
+    const etat = etatBouclier(entry);
+    const options = OFFRES_BOUCLIER.map((o, i) => {
+      const prix = o.prix[tier];
+      const tropCher = solde !== null && solde < prix;
+      return `
+        <label class="offre ${tropCher ? 'indisponible' : ''}">
+          <input type="radio" name="offre" value="${o.id}" ${tropCher ? 'disabled' : ''} ${i === 1 && !tropCher ? 'checked' : ''}>
+          <span class="offre-duree">${o.label}</span>
+          <span class="offre-prix">${prix.toLocaleString('fr-FR')} pts</span>
+          ${tropCher ? '<span class="offre-note">Solde insuffisant</span>' : ''}
+        </label>`;
+    }).join('');
+    const fermer = ouvrirFenetre(`
+      <form class="fenetre prix bouclier-fenetre" role="dialog" aria-modal="true" aria-labelledby="bouclierTitre" novalidate>
+        <h2 id="bouclierTitre"><span class="bouclier-titre-icone">${ICONE_BOUCLIER}</span>Bouclier</h2>
+        <p class="prix-commune">${echapperTexte(entry.nom)}, ${entry.tier.label.toLowerCase()}</p>
+        <div class="offres">${options}</div>
+        ${etat.code === 'immunite' ? `<p class="prix-aide">Cette commune est encore protégée ${formatDuree(entry.acquiredAt + IMMUNITE_MS - Date.now())} grâce à son acquisition récente : le bouclier démarrera juste après.</p>` : ''}
+        <p class="prix-aide">${solde !== null ? `Ton solde : ${Number(solde).toLocaleString('fr-FR')} pts. ` : ''}Après ce bouclier, 12 h sans protection possible.</p>
+        <p class="prix-erreur" id="bouclierErreur" role="alert"></p>
+        <div class="prix-boutons">
+          <button type="button" class="open-btn secondary" data-annuler>Annuler</button>
+          <button type="submit" class="open-btn">Activer</button>
+        </div>
+      </form>`, resolve);
+    const form = document.querySelector('#fenetre form');
+    form.querySelector('[data-annuler]').addEventListener('click', () => fermer(null));
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const choix = form.querySelector('input[name="offre"]:checked');
+      if(!choix){
+        document.getElementById('bouclierErreur').textContent = 'Choisis une durée.';
+        return;
+      }
+      fermer(choix.value);
+    });
+    const premier = form.querySelector('input[name="offre"]:checked') || form.querySelector('[data-annuler]');
+    premier.focus();
+  });
 }
 
 let sellFilterTier = 'tous';
@@ -1225,6 +1337,21 @@ document.addEventListener('click', async (e) => {
       await loadOthersPossessions();
       const achetee = collectionMap.get(code);
       notifier({ type: 'succes', titre: achetee ? `${achetee.nom} est à toi` : 'Commune achetée' });
+    } else if(action === 'bouclier'){
+      const entree = collectionMap.get(code);
+      if(!entree){ btn.disabled = false; return; }
+      const duree = await choisirBouclier(entree);
+      if(!duree){ btn.disabled = false; return; }
+      const { data, error } = await sb.rpc('acheter_bouclier', { p_commune_code: code, p_duree: duree });
+      if(error) throw error;
+      const res = data && data[0];
+      const fin = res ? new Date(res.fin) : null;
+      notifier({
+        type: 'succes',
+        titre: `Bouclier activé sur ${entree.nom}`,
+        texte: fin ? `Protégée jusqu'à ${fin.toLocaleString('fr-FR', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} (−${res.prix} pts)` : ''
+      });
+      await loadMyCollection();
     } else if(action === 'attaquer'){
       // bloque le rafraichissement auto de la grille pendant l'attaque en cours
       combatActionEnCours = true;
@@ -1294,6 +1421,7 @@ function formatDuree(ms){
   if(totalMin < 60) return `${totalMin} min`;
   const h = Math.floor(totalMin / 60);
   const m = totalMin % 60;
+  if(h >= 48) return `${Math.floor(h / 24)} j ${h % 24} h`;
   return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
 }
 
@@ -1328,7 +1456,11 @@ function renderMenaces(){
     const v = m.victoires_consecutives;
     const dernier = new Date(m.dernier_round).getTime();
     let statut;
-    if(v > 0){
+    const miennne = collectionMap.get(m.commune_code);
+    const bouclierFin = miennne ? miennne.bouclierJusqua : 0;
+    if(v > 0 && bouclierFin > now){
+      statut = `Protégée par ton bouclier encore ${formatDuree(bouclierFin - now)}. La série de l'attaquant est en pause.`;
+    } else if(v > 0){
       const prochain = dernier + (DELAI_ATTAQUE_MS[m.tier] || 0);
       const quand = now < prochain
         ? `Prochain assaut possible dans ${formatDuree(prochain - now)}.`
@@ -1397,11 +1529,16 @@ async function loadCombat(){
   const { data: joueurRow } = await sb.from('joueurs').select('solde').eq('id', uid).single();
   document.getElementById('soldeValueCombat').textContent = joueurRow ? joueurRow.solde : '—';
 
-  const { data: cibles, error } = await sb
+  const champsCible = 'communes!inner(nom,departement,tier,latitude,longitude), joueurs(pseudo)';
+  let { data: cibles, error } = await sb
     .from('possessions')
-    .select('commune_code, joueur_id, acquired_at, communes!inner(nom,departement,tier,latitude,longitude), joueurs(pseudo)')
+    .select('commune_code, joueur_id, acquired_at, bouclier_jusqua, ' + champsCible)
     .neq('joueur_id', uid)
     .in('communes.tier', ['rare','legendaire']);
+  if(error){
+    ({ data: cibles, error } = await sb.from('possessions').select('commune_code, joueur_id, acquired_at, ' + champsCible)
+      .neq('joueur_id', uid).in('communes.tier', ['rare','legendaire']));
+  }
   if(error){ console.error(error); return; }
 
   const { data: mesSieges } = await sb
@@ -1487,8 +1624,13 @@ function renderCombatGrid(){
     const enAttente = now < prochainRound;
 
     const cout = coutAttaque(commune.tier);
+    const bouclierFin = c.bouclier_jusqua ? new Date(c.bouclier_jusqua).getTime() : 0;
     let statusTxt, statusClass, disabled;
-    if(encoreImmune){
+    if(bouclierFin > now){
+      statusTxt = `Bouclier encore ${formatDuree(bouclierFin - now)}${victoires > 0 ? ' (série en pause)' : ''}`;
+      statusClass = 'bouclier';
+      disabled = true;
+    } else if(encoreImmune){
       statusTxt = `Protégée encore ${formatDuree(immuniteFin - now)}`;
       statusClass = '';
       disabled = true;
@@ -1523,6 +1665,8 @@ function renderCombatGrid(){
 // Rafraichit les decomptes toutes les 30 s quand l'onglet Combat est ouvert,
 // pour que le bouton se debloque tout seul sans avoir a changer d'onglet
 setInterval(() => {
+  const bourse = document.getElementById('panel-bourse');
+  if(bourse && bourse.classList.contains('active')) renderBoucliers();
   const panel = document.getElementById('panel-combat');
   if(!panel || !panel.classList.contains('active')) return;
   renderMenaces();

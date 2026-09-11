@@ -202,7 +202,10 @@
   .carte-nom.long{ font-size: 1.2rem; }
   .carte-nom.tres-long{ font-size: 1rem; }
   .carte-rarete, .carte-num{ white-space: nowrap; }
-  .carte-departement{ font-size: 0.72rem; color:#5A6B82; margin: 3px 0 0; }
+  .carte-departement{ font-size: 0.72rem; color:#5A6B82; margin: 3px 0 0; display:flex; gap:3px; min-width:0; }
+  /* si la place manque, c'est le nom qui est raccourci, jamais le numero */
+  .carte-departement .dep-nom{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+  .carte-departement .dep-num{ flex-shrink:0; white-space:nowrap; }
   .carte-stats{
     margin: auto 0 8px;
     display:flex; gap: 12px;
@@ -974,7 +977,7 @@
     .carte-nom{ font-size: 1.1rem; line-height: 0.95; }
     .carte-nom.long{ font-size: 0.95rem; }
     .carte-nom.tres-long{ font-size: 0.82rem; }
-    .carte-departement{ font-size: 0.66rem; margin-top: 2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .carte-departement{ font-size: 0.66rem; margin-top: 2px; }
     .carte-stats{ gap: 10px; margin-bottom: 6px; padding-top: 4px; }
     .carte-stats span{ font-size: 0.56rem; }
     .carte-stats b{ font-size: 0.9rem; }

@@ -40,7 +40,7 @@ function aleatoireStable(a){
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   };
 }
-function courbesDeNiveau(seed, w, h, anneaux){
+function courbesDeNiveau(seed, w, h, anneaux, points = 90){
   const rnd = aleatoireStable(seed);
   const cx = w * (0.3 + rnd() * 0.4), cy = h * (0.3 + rnd() * 0.4);
   const k1 = 2 + Math.floor(rnd() * 3), k2 = 3 + Math.floor(rnd() * 4);
@@ -51,8 +51,8 @@ function courbesDeNiveau(seed, w, h, anneaux){
   for(let i = 1; i <= anneaux; i++){
     const r = i * pas;
     const pts = [];
-    for(let k = 0; k < 90; k++){
-      const t = k / 90 * Math.PI * 2;
+    for(let k = 0; k < points; k++){
+      const t = k / points * Math.PI * 2;
       const rr = r * (1 + a1 * Math.sin(k1 * t + p1 + i * 0.35) + a2 * Math.sin(k2 * t + p2 - i * 0.2));
       pts.push((cx + rr * Math.cos(t)).toFixed(1) + ',' + (cy + rr * Math.sin(t) * 0.82).toFixed(1));
     }
@@ -522,30 +522,79 @@ function renderStats(){
   }
 }
 
+// ---------- Page Ma collection ----------
+let collectionFilterTier = 'tous';
+const miniArtCache = new Map();
+
+function miniArtSvg(code, tierId){
+  const cle = code + '|' + tierId;
+  if(miniArtCache.has(cle)) return miniArtCache.get(cle);
+  const [clair, fonce] = TEINTES_CARTE[tierId];
+  const id = 'mg' + code;
+  const { d, cx, cy } = courbesDeNiveau(hashTexte(String(code)), 160, 100, 6, 36);
+  const svg = `<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><radialGradient id="${id}" cx="${(cx / 160 * 100).toFixed(0)}%" cy="${cy.toFixed(0)}%" r="85%">
+      <stop offset="0%" stop-color="${clair}"/><stop offset="100%" stop-color="${fonce}"/></radialGradient></defs>
+    <rect width="160" height="100" fill="url(#${id})"/>
+    <path d="${d}" fill="none" stroke="rgba(255,255,255,0.38)" stroke-width="1.2"/>
+    <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4.5" fill="#fff" stroke="${fonce}" stroke-width="2"/>
+  </svg>`;
+  miniArtCache.set(cle, svg);
+  return svg;
+}
+
+function renderCollectionFilters(entries){
+  const el = document.getElementById('collectionFilters');
+  if(!el) return;
+  const compte = Object.fromEntries(TIERS.map(t => [t.id, 0]));
+  entries.forEach(e => compte[e.tier.id]++);
+  const boutons = [`<button class="coll-filtre ${collectionFilterTier === 'tous' ? 'actif' : ''}" data-tier="tous">Toutes <span class="nb">${entries.length}</span></button>`]
+    .concat(TIERS.map(t => `<button class="coll-filtre ${collectionFilterTier === t.id ? 'actif' : ''}" data-tier="${t.id}"><span class="point" style="background:${COULEURS_FILTRE[t.id]}"></span>${t.label} <span class="nb">${compte[t.id]}</span></button>`));
+  el.innerHTML = boutons.join('');
+}
+const COULEURS_FILTRE = {legendaire:'#F0B429', rare:'#2F7CF6', peucommun:'#22A06B', commun:'#7E8BA0'};
+
 function renderCollection(){
   const countEl = document.getElementById('collectionCount');
   const gridEl = document.getElementById('collectionGrid');
   const entries = Array.from(collectionMap.values());
-  countEl.textContent = entries.length;
+  countEl.textContent = entries.length.toLocaleString('fr-FR');
+  renderCollectionFilters(entries);
   if(entries.length === 0){
-    gridEl.innerHTML = '<p class="collection-empty">Aucune carte pour le moment — ouvre un paquet.</p>';
+    gridEl.innerHTML = '<p class="collection-empty">Aucune carte pour le moment. Ouvre un paquet.</p>';
     return;
   }
-  const sorted = entries.sort((a,b) => {
-    const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
-    if(ra !== rb) return ra - rb;
-    return b.pop - a.pop;
-  });
-  gridEl.innerHTML = sorted.map(entry => `
-    <div class="mini-card ${entry.tier.id}" title="${entry.nom} (${entry.dept}) — ${entry.tier.label}">
-      <div class="stripe"><span class="b"></span><span class="w"></span><span class="r"></span></div>
-      <div class="body">
-        <div class="name">${entry.nom}</div>
-        <div class="rarity" style="background:${entry.tier.color}">${entry.tier.label}</div>
+  const visibles = entries
+    .filter(e => collectionFilterTier === 'tous' || e.tier.id === collectionFilterTier)
+    .sort((a,b) => {
+      const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
+      if(ra !== rb) return ra - rb;
+      return b.pop - a.pop;
+    });
+  if(visibles.length === 0){
+    gridEl.innerHTML = '<p class="collection-empty">Aucune carte de cette rareté pour le moment.</p>';
+    return;
+  }
+  gridEl.innerHTML = visibles.map(entry => `
+    <div class="mini ${entry.tier.id}" title="${entry.nom} (${entry.dept}) — ${entry.tier.label}">
+      <div class="mini-int">
+        <div class="mini-art">${miniArtSvg(entry.code, entry.tier.id)}<span class="mini-dept">${entry.dept}</span></div>
+        <div class="mini-infos">
+          <p class="mini-nom ${entry.nom.length > 14 ? 'long' : ''}">${entry.nom}</p>
+          <span class="mini-rarete">${entry.tier.label}</span>
+        </div>
+        <div class="mini-lisere"><span></span><span></span><span></span></div>
       </div>
     </div>
   `).join('');
 }
+
+document.getElementById('collectionFilters').addEventListener('click', (e) => {
+  const b = e.target.closest('.coll-filtre');
+  if(!b) return;
+  collectionFilterTier = b.dataset.tier;
+  renderCollection();
+});
 
 // ---------- Cartes et paquet ----------
 function makeCardEl(draw, onFlip){
@@ -927,6 +976,40 @@ let combatCibles = [];
 let combatSieges = new Map();
 let combatFilterTier = 'tous';
 let combatActionEnCours = false;
+let combatProximite = false;
+let combatRayonKm = 20;
+
+// Distance a vol d'oiseau entre deux points GPS, en km
+function distanceKm(lat1, lon1, lat2, lon2){
+  const R = 6371, rad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * rad, dLon = (lon2 - lon1) * rad;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+// Pour chaque cible : distance a la plus proche de mes communes, et son nom
+function calculerDistancesCibles(){
+  const miennes = Array.from(collectionMap.values()).filter(m => m.lat != null && m.lon != null);
+  for(const c of combatCibles){
+    c._distKm = null;
+    c._procheDe = null;
+    const lat = c.communes.latitude, lon = c.communes.longitude;
+    if(lat == null || lon == null) continue;
+    for(const m of miennes){
+      // pre-filtre rapide : plus d'1 degre d'ecart en latitude = plus de 111 km
+      if(Math.abs(m.lat - lat) > 1) continue;
+      const d = distanceKm(lat, lon, m.lat, m.lon);
+      if(c._distKm === null || d < c._distKm){ c._distKm = d; c._procheDe = m.nom; }
+    }
+    // au-dela de 100 km le pre-filtre peut rater la plus proche : on n'affiche rien
+    if(c._distKm !== null && c._distKm > 100){ c._distKm = null; c._procheDe = null; }
+  }
+}
+
+// "de Genilac" mais "d'Angers"
+function deCommune(nom){
+  return /^[AEIOUYÀÂÄÉÈÊËÎÏÔÖÙÛÜaeiouyàâäéèêëîïôöùûü]/.test(nom) ? "d'" + nom : 'de ' + nom;
+}
 
 async function loadCombat(){
   const { data: userData } = await sb.auth.getUser();
@@ -937,7 +1020,7 @@ async function loadCombat(){
 
   const { data: cibles, error } = await sb
     .from('possessions')
-    .select('commune_code, joueur_id, acquired_at, communes!inner(nom,departement,tier), joueurs(pseudo)')
+    .select('commune_code, joueur_id, acquired_at, communes!inner(nom,departement,tier,latitude,longitude), joueurs(pseudo)')
     .neq('joueur_id', uid)
     .in('communes.tier', ['rare','legendaire']);
   if(error){ console.error(error); return; }
@@ -948,6 +1031,7 @@ async function loadCombat(){
     .eq('attacker_id', uid);
 
   combatCibles = cibles || [];
+  calculerDistancesCibles();
   combatSieges = new Map((mesSieges || []).map(s => [s.commune_code, s]));
   renderCombatGrid();
 }
@@ -964,13 +1048,24 @@ function renderCombatGrid(){
   if(searchText){
     cibles = cibles.filter(c => c.communes.nom.toLowerCase().includes(searchText));
   }
+  if(combatProximite){
+    cibles = cibles
+      .filter(c => c._distKm !== null && c._distKm <= combatRayonKm)
+      .sort((a, b) => a._distKm - b._distKm);
+  }
 
   if(combatCibles.length === 0){
     grid.innerHTML = '<p class="collection-empty">Aucune cible disponible pour le moment.</p>';
     return;
   }
   if(cibles.length === 0){
-    grid.innerHTML = '<p class="collection-empty">Aucune cible ne correspond à la recherche.</p>';
+    let msg = 'Aucune cible ne correspond à la recherche.';
+    if(combatProximite && collectionMap.size === 0){
+      msg = 'Il te faut au moins une commune pour attaquer autour de ton territoire.';
+    } else if(combatProximite){
+      msg = `Aucune commune rare ou légendaire à moins de ${combatRayonKm} km de ton territoire.`;
+    }
+    grid.innerHTML = `<p class="collection-empty">${msg}</p>`;
     return;
   }
 
@@ -1016,6 +1111,7 @@ function renderCombatGrid(){
           <span class="cc-badge">${tier.label}</span>
           <p class="cc-name">${commune.nom}</p>
           <p class="cc-owner">Possédée par ${pseudo}</p>
+          ${c._distKm !== null ? `<p class="cc-distance">À ${c._distKm < 10 ? c._distKm.toFixed(1).replace('.', ',') : Math.round(c._distKm)} km ${deCommune(c._procheDe)}</p>` : ''}
           <div class="cc-sieges">${dots}</div>
           <p class="cc-status ${statusClass}">${statusTxt}</p>
           <button class="bourse-btn cc-btn" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer (${cout} pts)</button>
@@ -1034,6 +1130,23 @@ setInterval(() => {
 }, 30000);
 
 document.getElementById('combatSearch').addEventListener('input', renderCombatGrid);
+document.getElementById('combatProxToggle').addEventListener('click', () => {
+  combatProximite = !combatProximite;
+  const btn = document.getElementById('combatProxToggle');
+  btn.classList.toggle('active', combatProximite);
+  btn.setAttribute('aria-pressed', String(combatProximite));
+  document.getElementById('combatRayons').hidden = !combatProximite;
+  renderCombatGrid();
+});
+document.getElementById('combatRayons').addEventListener('click', (e) => {
+  const pill = e.target.closest('.filter-pill');
+  if(!pill) return;
+  document.querySelectorAll('#combatRayons .filter-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  combatRayonKm = Number(pill.dataset.km);
+  renderCombatGrid();
+});
+
 document.getElementById('combatFilters').addEventListener('click', (e) => {
   const pill = e.target.closest('.filter-pill');
   if(!pill) return;

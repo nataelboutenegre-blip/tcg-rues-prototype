@@ -461,6 +461,8 @@ function renderFranceOutline(){
   }).join('L') + 'Z').join('');
   document.getElementById('clipTerrePath').setAttribute('d', contour);
   document.getElementById('mapTerre').setAttribute('d', contour);
+  document.getElementById('mapOmbre').setAttribute('d', contour);
+  document.getElementById('mapOmbre2').setAttribute('d', contour);
   document.getElementById('mapCote').setAttribute('d', contour);
   const mer = document.getElementById('mapMer');
   mer.setAttribute('width', MAP_W);
@@ -485,10 +487,30 @@ function clampMapPan(){
   mapPanY = Math.min(0, Math.max(h - h * mapZoom, mapPanY));
 }
 
+// Les gestes envoient souvent plus d'evenements que l'ecran n'affiche d'images :
+// on calcule tout de suite, mais on n'ecrit dans la page qu'une fois par image.
+let mapTransformPlanifie = false;
+let mapFinMouvementTimer = null;
 function applyMapTransform(){
   clampMapPan();
-  const el = document.getElementById('mapTransform');
-  if(el) el.style.transform = `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`;
+  signalerMouvementCarte();
+  if(mapTransformPlanifie) return;
+  mapTransformPlanifie = true;
+  requestAnimationFrame(() => {
+    mapTransformPlanifie = false;
+    const el = document.getElementById('mapTransform');
+    if(el) el.style.transform = `translate3d(${mapPanX}px, ${mapPanY}px, 0) scale(${mapZoom})`;
+  });
+}
+
+// Pendant un geste, la carte est deplacee comme une image deja dessinee (fluide).
+// 200 ms apres le dernier mouvement, le navigateur la redessine nette au bon zoom.
+function signalerMouvementCarte(){
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap) return;
+  wrap.classList.add('en-mouvement');
+  clearTimeout(mapFinMouvementTimer);
+  mapFinMouvementTimer = setTimeout(() => wrap.classList.remove('en-mouvement'), 200);
 }
 
 // Zoome en gardant fixe le point (px, py) du cadre : le curseur ou le centre des deux doigts

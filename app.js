@@ -977,6 +977,7 @@ let combatSieges = new Map();
 let combatFilterTier = 'tous';
 let combatActionEnCours = false;
 let combatProximite = false;
+let combatEnCours = false;
 let combatRayonKm = 20;
 
 // Distance a vol d'oiseau entre deux points GPS, en km
@@ -1054,13 +1055,33 @@ function renderCombatGrid(){
       .sort((a, b) => a._distKm - b._distKm);
   }
 
+  // Combats en cours : cibles ou j'ai deja 1 ou 2 victoires d'affilee
+  const victoiresDe = (c) => { const s = combatSieges.get(c.commune_code); return s ? s.victoires_consecutives : 0; };
+  const prochainRoundDe = (c) => {
+    const s = combatSieges.get(c.commune_code);
+    return s && s.dernier_round ? new Date(s.dernier_round).getTime() + DELAI_ATTAQUE_MS[c.communes.tier] : 0;
+  };
+  const nbEnCours = combatCibles.filter(c => victoiresDe(c) > 0).length;
+  const nbEl = document.getElementById('combatEnCoursNb');
+  if(nbEl) nbEl.textContent = nbEnCours;
+  if(combatEnCours){
+    // les plus avancees d'abord, puis celles qu'on peut attaquer le plus tot
+    cibles = cibles
+      .filter(c => victoiresDe(c) > 0)
+      .sort((a, b) => victoiresDe(b) - victoiresDe(a) || prochainRoundDe(a) - prochainRoundDe(b));
+  }
+
   if(combatCibles.length === 0){
     grid.innerHTML = '<p class="collection-empty">Aucune cible disponible pour le moment.</p>';
     return;
   }
   if(cibles.length === 0){
     let msg = 'Aucune cible ne correspond à la recherche.';
-    if(combatProximite && collectionMap.size === 0){
+    if(combatEnCours && nbEnCours === 0){
+      msg = 'Aucun combat en cours. Gagne un premier round sur une cible pour la retrouver ici.';
+    } else if(combatEnCours){
+      msg = 'Aucun combat en cours ne correspond aux autres filtres.';
+    } else if(combatProximite && collectionMap.size === 0){
       msg = 'Il te faut au moins une commune pour attaquer autour de ton territoire.';
     } else if(combatProximite){
       msg = `Aucune commune rare ou légendaire à moins de ${combatRayonKm} km de ton territoire.`;
@@ -1130,6 +1151,13 @@ setInterval(() => {
 }, 30000);
 
 document.getElementById('combatSearch').addEventListener('input', renderCombatGrid);
+document.getElementById('combatEnCoursToggle').addEventListener('click', () => {
+  combatEnCours = !combatEnCours;
+  const btn = document.getElementById('combatEnCoursToggle');
+  btn.classList.toggle('active', combatEnCours);
+  btn.setAttribute('aria-pressed', String(combatEnCours));
+  renderCombatGrid();
+});
 document.getElementById('combatProxToggle').addEventListener('click', () => {
   combatProximite = !combatProximite;
   const btn = document.getElementById('combatProxToggle');

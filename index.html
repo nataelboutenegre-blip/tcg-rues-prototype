@@ -156,14 +156,14 @@
                   <stop offset="0%" stop-color="#20406A"/>
                   <stop offset="100%" stop-color="#172F52"/>
                 </linearGradient>
-                <filter id="ombreTerre" x="-5%" y="-5%" width="110%" height="110%">
-                  <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.45"/>
-                </filter>
                 <clipPath id="clipTerre"><path id="clipTerrePath"/></clipPath>
               </defs>
               <defs id="mapDefsDyn"></defs>
               <rect id="mapMer" width="1000" height="1000" fill="url(#merGrad)"/>
-              <path id="mapTerre" fill="url(#terreGrad)" filter="url(#ombreTerre)"/>
+              <!-- ombre simple (un flou serait recalcule a chaque mouvement de la carte) -->
+              <path id="mapOmbre" fill="#000" fill-opacity="0.28" transform="translate(0 7)"/>
+              <path id="mapOmbre2" fill="#000" fill-opacity="0.18" transform="translate(0 3)"/>
+              <path id="mapTerre" fill="url(#terreGrad)"/>
               <g clip-path="url(#clipTerre)"><path id="mapTopo" fill="none" stroke="rgba(169,188,212,0.09)" stroke-width="1" vector-effect="non-scaling-stroke"/></g>
               <path id="mapCote" fill="none" stroke="rgba(169,188,212,0.45)" stroke-width="1.2" vector-effect="non-scaling-stroke"/>
               <g id="mapTerritoires" clip-path="url(#clipTerre)"></g>

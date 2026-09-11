@@ -517,6 +517,22 @@
   .menace-statut{ font-size:0.76rem; color: var(--brume); }
   .menace.danger .menace-statut{ color:#FFB3B5; }
   .menace-serie{ display:flex; gap:4px; flex-shrink:0; }
+  .menace-note{ font-size:0.72rem; color: var(--brume); font-style: italic; margin-top:2px; }
+  .menace-defendre{
+    align-self:flex-start;
+    display:inline-flex; align-items:center; gap:6px;
+    margin-top:6px;
+    font-family: var(--titre); font-weight:800; font-size:1rem; letter-spacing:.02em;
+    background: var(--c-legendaire); color: var(--encre);
+    border:none; border-radius:10px;
+    padding:6px 12px 7px;
+    box-shadow: 0 3px 0 #B7791F;
+    cursor:pointer;
+  }
+  .menace-defendre svg{ width:15px; height:15px; }
+  .menace-defendre:active:not(:disabled){ transform: translateY(2px); box-shadow: 0 1px 0 #B7791F; }
+  .menace-defendre:disabled{ opacity:.5; cursor:default; }
+  .menace-defendre:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
   .menace-serie i{ width:10px; height:10px; border-radius:50%; border:1.5px solid rgba(169,188,212,0.45); }
   .menace-serie i.pris{ background: var(--c-rouge); border-color: var(--c-rouge); }
   .en-cours-nb{
@@ -533,6 +549,7 @@
   .combat-card .cc-status{ font-size:0.7rem; color: var(--ink-soft); margin:0 0 10px; }
   .combat-card .cc-status.ready{ color: var(--peucommun); }
   .combat-card .cc-status.bouclier{ color: var(--rare); font-weight:600; }
+  .combat-card .cc-defense{ font-size:0.68rem; color: var(--ink-soft); margin:-4px 0 8px; font-style:italic; }
 
   /* ---------- Boucliers (bourse) ---------- */
   .bouclier-intro{ margin: -4px 0 10px; color: var(--brume); font-size: 0.8rem; line-height:1.5; max-width:60ch; }

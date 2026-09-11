@@ -304,6 +304,7 @@ function demanderPrix({ nom, rachat }){
 // ---------- Authentification ----------
 function showAuth(msg, type = 'erreur'){
   document.getElementById('authScreen').style.display = 'flex';
+  dessinerEventailAuth();
   document.getElementById('gameScreen').style.display = 'none';
   const el = document.getElementById('authMsg');
   el.textContent = msg ? messageLisible(msg) : '';
@@ -318,6 +319,7 @@ async function showGame(session_){
   await loadMyCollection();
   await loadOthersPossessions();
   await loadPackStatus();
+  verifierTiragesEnAttente();
   loadMenaces();
   if(!menacesInterval){
     // verifie toutes les minutes si une de mes communes est attaquee (pastille rouge sur l'onglet Combat)
@@ -346,8 +348,42 @@ document.getElementById('signupBtn').addEventListener('click', async () => {
   const pseudo = document.getElementById('authPseudo').value.trim();
   const { error } = await sb.auth.signUp({ email, password, options: { data: { pseudo } } });
   if(error) showAuth(error.message);
-  else showAuth('Compte créé. Tu peux te connecter.', 'succes');
+  else { modeAuth('connexion'); showAuth('Compte créé. Tu peux te connecter.', 'succes'); }
 });
+
+// Onglets Connexion / Creer un compte
+function modeAuth(mode){
+  const inscription = mode === 'inscription';
+  document.querySelectorAll('.auth-onglets button').forEach(b => {
+    const actif = b.dataset.mode === mode;
+    b.classList.toggle('actif', actif);
+    b.setAttribute('aria-selected', String(actif));
+  });
+  document.getElementById('authChampPseudo').hidden = !inscription;
+  document.getElementById('loginBtn').hidden = inscription;
+  document.getElementById('signupBtn').hidden = !inscription;
+  document.getElementById('authPassword').setAttribute('autocomplete', inscription ? 'new-password' : 'current-password');
+  const msg = document.getElementById('authMsg');
+  msg.textContent = ''; msg.className = 'auth-msg';
+}
+document.querySelectorAll('.auth-onglets button').forEach(b => b.addEventListener('click', () => modeAuth(b.dataset.mode)));
+['authEmail', 'authPassword', 'authPseudo'].forEach(id => document.getElementById(id).addEventListener('keydown', (e) => {
+  if(e.key !== 'Enter') return;
+  const visible = document.getElementById('loginBtn').hidden ? 'signupBtn' : 'loginBtn';
+  document.getElementById(visible).click();
+}));
+function dessinerEventailAuth(){
+  const el = document.getElementById('authEventail');
+  if(!el || el.childElementCount) return;
+  const exemples = [['c1', '14333', 'Honfleur', 'Calvados (14)', 'peucommun', 'Peu commun'], ['c2', '68066', 'Colmar', 'Haut-Rhin (68)', 'rare', 'Rare'], ['c3', '33063', 'Bordeaux', 'Gironde (33)', 'legendaire', 'Légendaire']];
+  el.innerHTML = exemples.map(([cls, code, nom, dep, tier, lab]) => `
+    <div class="auth-carte ${cls} ${tier}"><div class="auth-carte-int">
+      <span class="auth-carte-badge">${lab}</span>
+      <div class="auth-carte-art">${miniArtSvg('auth' + code, tier)}</div>
+      <p class="auth-carte-nom">${nom}</p><p class="auth-carte-dep">${dep}</p>
+      <div class="mini-lisere"><span></span><span></span><span></span></div>
+    </div></div>`).join('');
+}
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
   await sb.auth.signOut();
@@ -991,6 +1027,7 @@ function revealCards(draws){
       if(pendingFlips <= 0){
         paquetEnCours = false;
         loadPackStatus();
+        verifierTiragesEnAttente();
       }
     });
     // les cartes arrivent l'une apres l'autre
@@ -1058,11 +1095,29 @@ function renderPackStatus(){
   document.getElementById('openBuyBtn').disabled = paquetEnCours || achetesJour >= 5 || packStatusCache.solde < 200;
 }
 
+// Si securite.sql n'a pas encore ete execute, les nouvelles fonctions n'existent pas : on utilise les anciennes
+function fonctionAbsente(error){
+  return !!error && (error.code === 'PGRST202' || /could not find the function/i.test(error.message || ''));
+}
+async function payerPaquet(type){
+  let { error } = await sb.rpc('ouvrir_paquet', { p_type: type });
+  if(fonctionAbsente(error)) ({ error } = await sb.rpc('demarrer_paquet', { p_type: type }));
+  return error;
+}
+async function tirerUneCarte(){
+  let { data, error } = await sb.rpc('tirer_carte', { p_saison: CURRENT_SEASON });
+  if(fonctionAbsente(error)){
+    ({ data, error } = await sb.rpc('draw_commune', { p_saison: CURRENT_SEASON }));
+    if(!error) data = data && data[0];
+  }
+  return { row: data, error };
+}
+
 async function openPack(type){
   document.getElementById('openFreeBtn').disabled = true;
   document.getElementById('openBuyBtn').disabled = true;
 
-  const { error: startError } = await sb.rpc('demarrer_paquet', { p_type: type });
+  const startError = await payerPaquet(type);
   if(startError){
     notifier({ type: 'erreur', titre: 'Impossible d\'ouvrir le paquet', texte: messageLisible(startError.message) });
     await loadPackStatus();
@@ -1071,7 +1126,10 @@ async function openPack(type){
   // le paquet en cours n'est pas encore ouvert : pas question d'en relancer un avant d'avoir retourne les cartes
   paquetEnCours = true;
   await loadPackStatus();
+  afficherPaquetATirer(type, 5);
+}
 
+function afficherPaquetATirer(type, nbCartes){
   const zone = document.getElementById('packZone');
   zone.innerHTML = '';
   const pack = makePackEl(type);
@@ -1082,13 +1140,12 @@ async function openPack(type){
     // le tirage part tout de suite, pendant l'animation, pour ne pas attendre une fois le paquet disparu
     const animation = new Promise(resolve => setTimeout(resolve, REDUCED_MOTION ? 0 : 720));
     const draws = [];
-    for(let i = 0; i < 5; i++){
-      const { data, error } = await sb.rpc('draw_commune', { p_saison: CURRENT_SEASON });
-      if(error){
-        notifier({ type: 'erreur', titre: 'Tirage interrompu', texte: messageLisible(error.message) });
+    for(let i = 0; i < nbCartes; i++){
+      const { row, error } = await tirerUneCarte();
+      if(error || !row){
+        if(error) notifier({ type: 'erreur', titre: 'Tirage interrompu', texte: messageLisible(error.message) });
         break;
       }
-      const row = data[0];
       const tier = TIERS.find(t => t.id === row.tier);
       draws.push({
         code: row.code, nom: row.nom, dept: row.departement, pop: row.population,
@@ -1104,6 +1161,19 @@ async function openPack(type){
     }
     revealCards(draws);
   }, { once: true });
+}
+
+// Paquet paye mais pas encore ouvert (page fermee ou rechargee) : on le represente
+async function verifierTiragesEnAttente(){
+  if(paquetEnCours) return;
+  const { data: u } = await sb.auth.getUser();
+  if(!u || !u.user) return;
+  const { data, error } = await sb.from('joueurs').select('tirages_restants').eq('id', u.user.id).single();
+  if(error || !data || !(data.tirages_restants > 0)) return;
+  paquetEnCours = true;
+  renderPackStatus();
+  afficherPaquetATirer('gratuit', Math.min(5, data.tirages_restants));
+  notifier({ type: 'info', titre: 'Tu as un paquet non ouvert', texte: 'Clique dessus dans l\'onglet Tirage pour le déchirer.' });
 }
 
 document.getElementById('openFreeBtn').addEventListener('click', () => openPack('gratuit'));
@@ -1184,14 +1254,14 @@ function renderBoucliers(){
   grid.innerHTML = protegeables.map(e => {
     const etat = etatBouclier(e, now);
     const bouton = etat.achetable
-      ? `<button class="bourse-btn" data-action="bouclier" data-code="${e.code}">Protéger</button>`
+      ? `<div class="ligne-actions"><button class="btn-p or" data-action="bouclier" data-code="${e.code}">Protéger</button></div>`
       : '';
     return `
-      <div class="bourse-row bouclier-row ${etat.code}">
-        <span class="bourse-dot" style="background:${e.tier.color}"></span>
-        <span class="bourse-name">${e.nom} <span class="bourse-dept">(${e.dept})</span>
-          <span class="bouclier-etat">${etat.code === 'actif' || etat.code === 'programme' ? ICONE_BOUCLIER : ''}${etat.texte}</span>
-        </span>
+      <div class="ligne ${e.tier.id}">
+        <div class="ligne-texte">
+          <span class="ligne-nom">${e.nom}</span>
+          <span class="ligne-etat ${etat.code === 'actif' || etat.code === 'programme' ? 'bleu' : ''}">${etat.code === 'actif' || etat.code === 'programme' ? ICONE_BOUCLIER : ''}${etat.texte}</span>
+        </div>
         ${bouton}
       </div>`;
   }).join('');
@@ -1274,16 +1344,18 @@ function renderSellableGrid(){
     const listedPrice = myListings.get(entry.code);
     const rachat = PRIX_RACHAT[entry.tier.id];
     const actions = listedPrice
-      ? `<span class="bourse-price">En vente : ${listedPrice} pts</span>
-         <button class="bourse-btn" data-action="retirer" data-code="${entry.code}">Retirer</button>`
-      : `${entry.conquiseLe && entry.conquiseLe + REVENTE_BLOQUEE_MS > Date.now()
-            ? `<button class="bourse-btn" disabled title="Commune conquise récemment">Revente au jeu dans ${formatDuree(entry.conquiseLe + REVENTE_BLOQUEE_MS - Date.now())}</button>`
-            : `<button class="bourse-btn" data-action="vendre-jeu" data-code="${entry.code}">Vendre au jeu (${rachat} pts)</button>`}
-         <button class="bourse-btn" data-action="mettre-vente" data-code="${entry.code}">Mettre en vente</button>`;
+      ? `<span class="chip-vente">En vente à ${Number(listedPrice).toLocaleString('fr-FR')} pts</span>
+         <div class="ligne-actions"><button class="btn-p contour" data-action="retirer" data-code="${entry.code}">Retirer</button></div>`
+      : `<div class="ligne-actions">${entry.conquiseLe && entry.conquiseLe + REVENTE_BLOQUEE_MS > Date.now()
+            ? `<button class="btn-p contour" disabled title="Commune conquise récemment">Revente au jeu dans ${formatDuree(entry.conquiseLe + REVENTE_BLOQUEE_MS - Date.now())}</button>`
+            : `<button class="btn-p contour" data-action="vendre-jeu" data-code="${entry.code}">Vendre au jeu <b>${rachat}</b></button>`}
+         <button class="btn-p or" data-action="mettre-vente" data-code="${entry.code}">Mettre en vente</button></div>`;
     return `
-      <div class="bourse-row">
-        <span class="bourse-dot" style="background:${entry.tier.color}"></span>
-        <span class="bourse-name">${entry.nom} <span class="bourse-dept">(${entry.dept})</span></span>
+      <div class="ligne ${entry.tier.id}">
+        <div class="ligne-texte">
+          <span class="ligne-nom">${entry.nom}</span>
+          <span class="ligne-detail">${DEPT_NAMES[entry.dept] ? DEPT_NAMES[entry.dept] + ' ' : ''}(${entry.dept}), ${entry.tier.label.toLowerCase()}</span>
+        </div>
         ${actions}
       </div>`;
   }).join('');
@@ -1300,23 +1372,29 @@ function renderMarketGrid(market, myUid){
     const c = a.communes;
     const tier = tiersById[c.tier];
     const isMine = a.joueur_id === myUid;
-    const pseudo = isMine ? 'toi' : (a.joueurs ? a.joueurs.pseudo : 'un joueur');
+    const pseudo = a.joueurs ? a.joueurs.pseudo : 'un joueur';
+    const tropCher = !isMine && soldeBourse !== null && soldeBourse < a.prix;
     const action = isMine
-      ? `<button class="bourse-btn" data-action="retirer" data-code="${a.commune_code}">Retirer</button>`
-      : `<button class="bourse-btn" data-action="acheter" data-code="${a.commune_code}">Acheter</button>`;
+      ? `<button class="btn-p contour" data-action="retirer" data-code="${a.commune_code}">Retirer</button>`
+      : `<button class="btn-p or" data-action="acheter" data-code="${a.commune_code}" ${tropCher ? 'disabled title="Solde insuffisant"' : ''}>Acheter</button>`;
+    const vendeur = isMine
+      ? 'ton annonce'
+      : `vendue par <i style="background:${colorForPlayer(a.joueur_id)}"></i>${echapperTexte(pseudo)}`;
     return `
-      <div class="bourse-row">
-        <span class="bourse-dot" style="background:${tier.color}"></span>
-        <span class="bourse-name">${c.nom} <span class="bourse-dept">(${c.departement}) — vendu par ${pseudo}</span></span>
-        <span class="bourse-price">${a.prix} pts</span>
-        ${action}
+      <div class="ligne ${c.tier}">
+        <div class="ligne-texte">
+          <span class="ligne-nom">${c.nom}</span>
+          <span class="ligne-detail">${DEPT_NAMES[c.departement] ? DEPT_NAMES[c.departement] + ' ' : ''}(${c.departement}), ${tier.label.toLowerCase()}, ${vendeur}</span>
+        </div>
+        <span class="ligne-prix">${Number(a.prix).toLocaleString('fr-FR')}<small>pts</small></span>
+        <div class="ligne-actions">${action}</div>
       </div>`;
   }).join('');
 }
 
 document.addEventListener('click', async (e) => {
-  const btn = e.target.closest('.bourse-btn');
-  if(!btn) return;
+  const btn = e.target.closest('button[data-action]');
+  if(!btn || btn.disabled) return;
   const action = btn.dataset.action;
   const code = btn.dataset.code;
   btn.disabled = true;
@@ -1668,41 +1746,46 @@ function renderCombatGrid(){
 
     const cout = coutAttaque(commune.tier);
     const bouclierFin = c.bouclier_jusqua ? new Date(c.bouclier_jusqua).getTime() : 0;
-    let statusTxt, statusClass, disabled;
+    let etatClasse, etatTexte, note = '', noteAlerte = false, disabled = true;
     if(bouclierFin > now){
-      statusTxt = `Bouclier encore ${formatDuree(bouclierFin - now)}${victoires > 0 ? ' (série en pause)' : ''}`;
-      statusClass = 'bouclier';
-      disabled = true;
+      etatClasse = 'bouclier'; etatTexte = `${ICONE_BOUCLIER}${formatDuree(bouclierFin - now)}`;
+      note = victoires > 0 ? 'Bouclier actif : ta série est en pause' : 'Protégée par un bouclier';
     } else if(encoreImmune){
-      statusTxt = `Protégée encore ${formatDuree(immuniteFin - now)}`;
-      statusClass = '';
-      disabled = true;
+      etatClasse = 'protegee'; etatTexte = `Acquise, ${formatDuree(immuniteFin - now)}`;
+      note = 'Protection après acquisition';
     } else if(enAttente){
-      statusTxt = `Prochain round dans ${formatDuree(prochainRound - now)}`;
-      statusClass = '';
-      disabled = true;
+      etatClasse = 'attente'; etatTexte = formatDuree(prochainRound - now);
+      note = `Prochain round dans ${formatDuree(prochainRound - now)}`;
     } else {
-      statusTxt = 'Prête à attaquer';
-      statusClass = 'ready';
+      etatClasse = 'pret'; etatTexte = 'Prête';
       disabled = false;
     }
-
-    const dots = [0,1,2].map(i => `<div class="cc-siege-dot ${i < victoires ? 'filled' : ''}"></div>`).join('');
+    if(victoires > 0 && siege && siege.defense_utilisee){
+      note = 'Le défenseur a déjà utilisé sa défense';
+      noteAlerte = true;
+    }
+    const ronds = [0, 1, 2].map(i => `<i class="${i < victoires ? 'plein' : ''}"></i>`).join('');
+    const distance = c._distKm !== null
+      ? `<p class="cible-distance">À ${c._distKm < 10 ? c._distKm.toFixed(1).replace('.', ',') : Math.round(c._distKm)} km ${deCommune(c._procheDe)}</p>` : '';
 
     return `
-      <div class="combat-card ${commune.tier}">
-        <div class="tricolore"><span class="b"></span><span class="w"></span><span class="r"></span></div>
-        <div class="cc-body">
-          <span class="cc-badge">${tier.label}</span>
-          <p class="cc-name">${commune.nom}</p>
-          <p class="cc-owner">Possédée par ${pseudo}</p>
-          ${c._distKm !== null ? `<p class="cc-distance">À ${c._distKm < 10 ? c._distKm.toFixed(1).replace('.', ',') : Math.round(c._distKm)} km ${deCommune(c._procheDe)}</p>` : ''}
-          <div class="cc-sieges">${dots}</div>
-          ${victoires > 0 && siege && siege.defense_utilisee ? '<p class="cc-defense">Le défenseur a déjà utilisé sa défense</p>' : ''}
-          <p class="cc-status ${statusClass}">${statusTxt}</p>
-          <button class="bourse-btn cc-btn" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer (${cout} pts)</button>
+      <article class="cible ${commune.tier}">
+        <div class="cible-int">
+          <div class="cible-haut">
+            <span class="cible-rarete">${tier.label}</span>
+            <span class="cible-etat ${etatClasse}">${etatTexte}</span>
+          </div>
+          <div class="cible-art">${miniArtSvg(c.commune_code, commune.tier)}<span class="cible-dept">${commune.departement}</span></div>
+          <div class="cible-infos">
+            <h3 class="cible-nom ${commune.nom.length > 16 ? 'long' : ''}">${commune.nom}</h3>
+            <p class="cible-proprio"><i style="background:${colorForPlayer(c.joueur_id)}"></i>à <b>${echapperTexte(pseudo)}</b></p>
+            ${distance}
+          </div>
+          <div class="cible-serie"><span>Ta série</span><span class="cible-ronds">${ronds}</span></div>
+          <p class="cible-note ${noteAlerte ? 'alerte' : ''}">${note}</p>
+          <button class="cible-attaquer" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer <b>${cout} pts</b></button>
         </div>
-      </div>`;
+      </article>`;
   }).join('');
 }
 

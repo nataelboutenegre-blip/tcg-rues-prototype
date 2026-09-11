@@ -16,17 +16,22 @@
 <svg id="fondTopo" aria-hidden="true"></svg>
 
 <div id="authScreen" class="auth-screen">
-  <div class="auth-box">
-    <h1>Ouverture de paquet — prototype</h1>
-    <p class="sub">Connecte-toi pour tirer des communes réelles de France.</p>
-    <input type="email" id="authEmail" placeholder="Email" autocomplete="email">
-    <input type="password" id="authPassword" placeholder="Mot de passe" autocomplete="current-password">
-    <input type="text" id="authPseudo" placeholder="Pseudo (pour créer un compte)" autocomplete="nickname">
-    <div class="auth-buttons">
-      <button class="open-btn" id="loginBtn">Se connecter</button>
-      <button class="open-btn secondary" id="signupBtn">Créer un compte</button>
+  <div class="auth">
+    <div class="auth-visuel" aria-hidden="true"><div class="eventail" id="authEventail"></div></div>
+    <div class="auth-panneau">
+      <p class="auth-marque">Terra<span>Front</span></p>
+      <p class="auth-accroche">Collectionne les vraies communes de France, défends-les et agrandis ton territoire.</p>
+      <div class="auth-onglets" role="tablist">
+        <button class="actif" data-mode="connexion" role="tab" aria-selected="true">Connexion</button>
+        <button data-mode="inscription" role="tab" aria-selected="false">Créer un compte</button>
+      </div>
+      <label class="auth-champ">Email<input type="email" id="authEmail" autocomplete="email" placeholder="toi@exemple.fr"></label>
+      <label class="auth-champ">Mot de passe<input type="password" id="authPassword" autocomplete="current-password" placeholder="••••••••"></label>
+      <label class="auth-champ" id="authChampPseudo" hidden>Pseudo<input type="text" id="authPseudo" autocomplete="nickname" placeholder="Visible par les autres joueurs"><small>C'est le nom affiché sur la carte et en combat.</small></label>
+      <p id="authMsg" class="auth-msg" role="status"></p>
+      <button class="auth-valider" id="loginBtn">Se connecter</button>
+      <button class="auth-valider" id="signupBtn" hidden>Créer mon compte</button>
     </div>
-    <p id="authMsg" class="auth-msg" role="status"></p>
   </div>
 </div>
 
@@ -173,60 +178,59 @@
     </section>
 
     <section class="tab-panel" id="panel-bourse">
-      <h1>La Bourse</h1>
-      <div class="sub">Vends tes communes au système ou à d'autres joueurs, ou achète ce qui est en vente.</div>
-
-      <div class="solde-box">Ton solde : <b id="soldeValue">—</b></div>
+      <h1>Bourse</h1>
+      <div class="sub">Vends tes communes au jeu ou à d'autres joueurs, protège tes plus belles cartes, et achète ce qui est en vente.</div>
+      <div class="puces"><span class="puce solde">Solde <b id="soldeValue">—</b></span></div>
 
       <div class="bourse-section">
-        <h2>Vendre une commune</h2>
-        <input type="text" id="sellSearch" class="bourse-search" placeholder="Rechercher une commune...">
-        <div class="bourse-filters" id="sellFilters">
-          <button class="filter-pill active" data-tier="tous">Tous</button>
-          <button class="filter-pill" data-tier="legendaire">Légendaire</button>
-          <button class="filter-pill" data-tier="rare">Rare</button>
-          <button class="filter-pill" data-tier="peucommun">Peu commun</button>
-          <button class="filter-pill" data-tier="commun">Commun</button>
-        </div>
-        <div id="sellableGrid" class="bourse-grid"><p class="collection-empty">Tu ne possèdes aucune commune pour l'instant.</p></div>
+        <h2>Marché</h2>
+        <div id="marketGrid" class="bourse-grid"><p class="collection-empty">Aucune annonce pour le moment.</p></div>
       </div>
 
       <div class="bourse-section">
         <h2>Protéger mes communes</h2>
-        <p class="bouclier-intro">Un bouclier empêche toute attaque sur une commune rare ou légendaire. Les séries des attaquants sont mises en pause et reprennent à la fin. Après un bouclier, il faut attendre 12 h avant d'en remettre un.</p>
+        <p class="bouclier-intro">Un bouclier bloque toute attaque sur une commune rare ou légendaire. Les séries des attaquants sont mises en pause, puis 12 h sans protection sont obligatoires avant un nouveau bouclier.</p>
         <div id="boucliersGrid" class="bourse-grid"><p class="collection-empty">Tu n'as aucune commune rare ou légendaire à protéger.</p></div>
       </div>
 
       <div class="bourse-section">
-        <h2>Marché (en vente par d'autres joueurs)</h2>
-        <div id="marketGrid" class="bourse-grid"><p class="collection-empty">Aucune annonce pour le moment.</p></div>
+        <h2>Vendre une commune</h2>
+        <div class="bourse-filters" id="sellFilters">
+          <button class="filter-pill active" data-tier="tous">Toutes</button>
+          <button class="filter-pill" data-tier="legendaire"><span class="pill-point" style="background:#F0B429"></span>Légendaire</button>
+          <button class="filter-pill" data-tier="rare"><span class="pill-point" style="background:#2F7CF6"></span>Rare</button>
+          <button class="filter-pill" data-tier="peucommun"><span class="pill-point" style="background:#22A06B"></span>Peu commun</button>
+          <button class="filter-pill" data-tier="commun"><span class="pill-point" style="background:#7E8BA0"></span>Commun</button>
+        </div>
+        <input type="text" id="sellSearch" class="bourse-search" placeholder="Rechercher une commune…">
+        <div id="sellableGrid" class="bourse-grid"><p class="collection-empty">Tu ne possèdes aucune commune pour l'instant.</p></div>
       </div>
     </section>
 
     <section class="tab-panel" id="panel-combat">
       <h1>Combat</h1>
-      <div class="sub">Attaque une commune rare ou légendaire appartenant à un autre joueur. 3 victoires d'affilée pour la conquérir, une défaite remet la série à zéro. Un round toutes les 10 min sur une rare, toutes les 3h sur une légendaire. Le défenseur peut tenter une défense par attaque, et une commune conquise ne peut pas être revendue au jeu pendant 12 h.</div>
+      <div class="sub">3 victoires d'affilée pour conquérir une commune rare ou légendaire, une défaite remet ta série à zéro. Un round toutes les 10 min sur une rare, toutes les 3 h sur une légendaire. Le défenseur peut tenter une défense par attaque, et une commune conquise ne peut pas être revendue au jeu pendant 12 h.</div>
       <div class="menaces" id="combatMenaces" hidden>
         <h2>Tes communes attaquées</h2>
         <div class="menaces-liste" id="combatMenacesListe"></div>
       </div>
-      <div class="solde-box">Ton solde : <b id="soldeValueCombat">—</b></div>
-      <input type="text" id="combatSearch" class="bourse-search" placeholder="Rechercher une commune...">
-      <div class="bourse-filters" id="combatFilters">
-        <button class="filter-pill active" data-tier="tous">Toutes</button>
-        <button class="filter-pill" data-tier="legendaire">Légendaire</button>
-        <button class="filter-pill" data-tier="rare">Rare</button>
-      </div>
       <div class="bourse-filters combat-proximite">
+        <span class="puce solde">Solde <b id="soldeValueCombat">—</b></span>
         <button class="filter-pill prox-toggle" id="combatEnCoursToggle" aria-pressed="false"><span class="prox-switch"></span>Combats en cours <span class="en-cours-nb" id="combatEnCoursNb">0</span></button>
-        <button class="filter-pill prox-toggle" id="combatProxToggle" aria-pressed="false"><span class="prox-switch"></span>Seulement près de mon territoire</button>
+        <button class="filter-pill prox-toggle" id="combatProxToggle" aria-pressed="false"><span class="prox-switch"></span>Près de mon territoire</button>
         <div class="prox-rayons" id="combatRayons" hidden>
           <button class="filter-pill" data-km="10">10 km</button>
           <button class="filter-pill active" data-km="20">20 km</button>
           <button class="filter-pill" data-km="50">50 km</button>
         </div>
       </div>
-      <div id="combatGrid" class="combat-cards-grid"><p class="collection-empty">Aucune cible disponible pour le moment.</p></div>
+      <div class="bourse-filters" id="combatFilters">
+        <button class="filter-pill active" data-tier="tous">Toutes</button>
+        <button class="filter-pill" data-tier="legendaire"><span class="pill-point" style="background:#F0B429"></span>Légendaire</button>
+        <button class="filter-pill" data-tier="rare"><span class="pill-point" style="background:#2F7CF6"></span>Rare</button>
+      </div>
+      <input type="text" id="combatSearch" class="bourse-search" placeholder="Rechercher une commune…">
+      <div id="combatGrid" class="cibles-grille"><p class="collection-empty">Aucune cible disponible pour le moment.</p></div>
     </section>
 
   </main>

@@ -13,7 +13,9 @@ const TIERS = [
 const DEPT_NAMES = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","2A":"Corse-du-Sud","2B":"Haute-Corse","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise"};
 const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
 
-const OPPONENT_COLORS = ['#C8313A','#8E44AD','#E67E22','#16A085','#D4406A','#6B4226','#7F8C00','#4A4E69'];
+// Couleurs des autres joueurs sur la carte (toi = dore). Au-dela de 12 joueurs, des couleurs se repetent.
+const OPPONENT_COLORS = ['#E5484D','#8E7CF6','#2EC4B6','#F76B15','#E93D82','#3DD68C','#5EB1EF','#FF977D','#9EB1FF','#12A594','#D6409F','#C2A383'];
+const COULEUR_MOI = '#F0B429';
 
 function colorForPlayer(id){
   let hash = 0;
@@ -21,6 +23,10 @@ function colorForPlayer(id){
     hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
   }
   return OPPONENT_COLORS[hash % OPPONENT_COLORS.length];
+}
+// meme teinte, en plus sombre (lignes entre communes d'un meme joueur)
+function couleurFoncee(hex){
+  return '#' + [1, 3, 5].map(k => Math.round(parseInt(hex.slice(k, k + 2), 16) * 0.45).toString(16).padStart(2, '0')).join('');
 }
 
 // ---------- Direction artistique : courbes de niveau ----------
@@ -113,31 +119,195 @@ function paquetMotifSvg(type){
   </svg>`;
 }
 
+// d3 sert a la carte (frontieres) et aux courbes de niveau ; si le CDN ne repond pas, on se rabat sur plus simple
+const D3_OK = typeof d3 !== 'undefined' && !!d3.Delaunay && !!d3.contours;
+
+// Relief imaginaire dont on trace les courbes de niveau : deux lignes d'altitudes differentes ne se croisent jamais
+function lignesDeNiveau(seed, w, h, nbLignes, nbBosses){
+  if(!D3_OK) return courbesDeNiveau(seed, w, h, nbLignes).d;
+  const rnd = aleatoireStable(seed);
+  const nx = 110, ny = Math.max(30, Math.round(110 * h / w));
+  const marge = 0.08;
+  const bosses = Array.from({length: nbBosses}, () => ({
+    x: rnd() * nx, y: rnd() * ny,
+    s: (0.1 + rnd() * 0.2) * nx,
+    a: (rnd() < 0.35 ? -1 : 1) * (0.5 + rnd())
+  }));
+  const valeurs = new Float64Array(nx * ny);
+  for(let jy = 0; jy < ny; jy++) for(let ix = 0; ix < nx; ix++){
+    let v = 0.2 * ix / nx;
+    for(const b of bosses){ const dx = ix - b.x, dy = jy - b.y; v += b.a * Math.exp(-(dx*dx + dy*dy) / (2 * b.s * b.s)); }
+    valeurs[jy * nx + ix] = v;
+  }
+  let min = Infinity, max = -Infinity;
+  for(const v of valeurs){ if(v < min) min = v; if(v > max) max = v; }
+  const seuils = Array.from({length: nbLignes}, (_, k) => min + (max - min) * (k + 1) / (nbLignes + 1));
+  const trace = d3.line().curve(d3.curveBasisClosed);
+  const px = (x) => ((x - 0.5) / (nx - 1) * (1 + 2 * marge) - marge) * w;
+  const py = (y) => ((y - 0.5) / (ny - 1) * (1 + 2 * marge) - marge) * h;
+  let d = '';
+  for(const geo of d3.contours().size([nx, ny]).thresholds(seuils)(valeurs)){
+    for(const poly of geo.coordinates) for(const anneau of poly){
+      d += trace(anneau.slice(0, -1).map(([x, y]) => [px(x), py(y)]));
+    }
+  }
+  return d;
+}
+
 function dessinerFondTopo(){
   const svg = document.getElementById('fondTopo');
   if(!svg) return;
-  const w = 1600, h = 1000;
-  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.setAttribute('viewBox', '0 0 1600 1000');
   svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
-  const a = courbesDeNiveau(hashTexte('fond-a'), w * 0.9, h * 1.1, 16);
-  const b = courbesDeNiveau(hashTexte('fond-b'), w * 0.8, h * 0.9, 12);
-  svg.innerHTML = `
-    <path d="${a.d}" fill="none" stroke="rgba(169,188,212,0.07)" stroke-width="1.2"/>
-    <path d="${b.d}" transform="translate(${w * 0.55} ${h * 0.35})" fill="none" stroke="rgba(169,188,212,0.06)" stroke-width="1.2"/>`;
+  svg.innerHTML = `<path d="${lignesDeNiveau(911, 1600, 1000, 9, 6)}" fill="none" stroke="rgba(169,188,212,0.07)" stroke-width="1.2"/>`;
 }
 dessinerFondTopo();
 
 let FRANCE_OUTLINE = null;
+let MAP_W = 1000, MAP_H = 1000;
 let mapBounds = null;
 let collectionMap = new Map();
 let othersMap = new Map();
 let session = {commun:0, peucommun:0, rare:0, legendaire:0, total:0};
 
+// ---------- Notifications (remplacent les fenetres grises du navigateur) ----------
+const ICONES_NOTIF = {
+  victoire: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  defaite: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  erreur: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/><circle cx="12" cy="12" r="9.5"/></svg>',
+  succes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 11v6M12 7h.01"/><circle cx="12" cy="12" r="9.5"/></svg>',
+};
+
+// Les messages d'erreur de Supabase arrivent en anglais : on traduit les plus courants
+function messageLisible(msg){
+  const m = String(msg || '');
+  const table = [
+    [/invalid login credentials/i, 'Email ou mot de passe incorrect.'],
+    [/user already registered/i, 'Un compte existe déjà avec cet email.'],
+    [/password should be at least (\d+)/i, (x) => `Le mot de passe doit faire au moins ${x[1]} caractères.`],
+    [/email not confirmed/i, 'Confirme ton adresse email avant de te connecter (regarde tes mails).'],
+    [/invalid format|unable to validate email/i, 'Adresse email invalide.'],
+    [/failed to fetch|network/i, 'Connexion impossible. Vérifie ta connexion internet.'],
+    [/rate limit|too many requests/i, 'Trop de tentatives. Réessaie dans quelques minutes.'],
+  ];
+  for(const [re, trad] of table){
+    const x = m.match(re);
+    if(x) return typeof trad === 'function' ? trad(x) : trad;
+  }
+  return m;
+}
+
+function notifier({ type = 'info', titre, texte = '', serie = null, duree }){
+  const zone = document.getElementById('notifs');
+  if(!zone) return;
+  const el = document.createElement('div');
+  el.className = 'notif ' + type;
+  el.setAttribute('role', type === 'erreur' ? 'alert' : 'status');
+  const ronds = serie === null ? '' : `<span class="notif-serie">${[0, 1, 2].map(i => `<i class="${i < serie ? 'plein' : ''}"></i>`).join('')}</span>`;
+  el.innerHTML = `
+    <span class="notif-icone">${ICONES_NOTIF[type] || ICONES_NOTIF.info}</span>
+    <span class="notif-texte"><b>${echapperTexte(titre)}</b>${texte ? `<span>${echapperTexte(texte)}</span>` : ''}</span>
+    ${ronds}
+    <button class="notif-fermer" aria-label="Fermer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>
+    </button>`;
+  const fermer = () => {
+    if(el.classList.contains('sortie')) return;
+    el.classList.add('sortie');
+    setTimeout(() => el.remove(), 220);
+  };
+  el.querySelector('.notif-fermer').addEventListener('click', fermer);
+  zone.appendChild(el);
+  // au-dela de 3 notifications, la plus ancienne s'en va
+  const toutes = zone.querySelectorAll('.notif:not(.sortie)');
+  if(toutes.length > 3) toutes[0].querySelector('.notif-fermer').click();
+  requestAnimationFrame(() => el.classList.add('visible'));
+  setTimeout(fermer, duree || (type === 'erreur' ? 6000 : 3500));
+}
+function echapperTexte(s){
+  return String(s == null ? '' : s).replace(/[&<>"]/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[ch]));
+}
+
+// ---------- Fenetres (conquete, prix de vente) ----------
+let fenetreRetourFocus = null;
+function ouvrirFenetre(html, onFermer){
+  const fond = document.getElementById('fenetre');
+  fenetreRetourFocus = document.activeElement;
+  fond.innerHTML = html;
+  fond.hidden = false;
+  requestAnimationFrame(() => fond.classList.add('visible'));
+  const fermer = (valeur) => {
+    fond.classList.remove('visible');
+    document.removeEventListener('keydown', surTouche);
+    setTimeout(() => { fond.hidden = true; fond.innerHTML = ''; }, 180);
+    if(fenetreRetourFocus && fenetreRetourFocus.focus) fenetreRetourFocus.focus();
+    if(onFermer) onFermer(valeur);
+  };
+  const surTouche = (e) => { if(e.key === 'Escape') fermer(null); };
+  document.addEventListener('keydown', surTouche);
+  fond.onclick = (e) => { if(e.target === fond) fermer(null); };
+  return fermer;
+}
+
+function celebrerConquete({ nom, tier, dept, bonus }){
+  const t = TIERS.find(x => x.id === tier);
+  const fermer = ouvrirFenetre(`
+    <div class="fenetre conquete ${tier}" role="dialog" aria-modal="true" aria-labelledby="conqueteTitre">
+      <div class="conquete-eclat" aria-hidden="true"></div>
+      <p class="conquete-sur">Commune conquise</p>
+      <h2 id="conqueteTitre">${echapperTexte(nom)}</h2>
+      <p class="conquete-infos"><span class="conquete-rarete">${t ? t.label : ''}</span>${dept ? ` ${echapperTexte(DEPT_NAMES[dept] || '')} (${dept})` : ''}</p>
+      <p class="conquete-bonus">+${Number(bonus).toLocaleString('fr-FR')} pts de bonus</p>
+      <p class="conquete-note">Elle t'appartient maintenant, et elle est protégée pendant 3 h.</p>
+      <button class="open-btn" data-fermer>Génial !</button>
+    </div>`);
+  const btn = document.querySelector('#fenetre [data-fermer]');
+  btn.addEventListener('click', () => fermer(true));
+  btn.focus();
+}
+
+function demanderPrix({ nom, rachat }){
+  return new Promise((resolve) => {
+    const fermer = ouvrirFenetre(`
+      <form class="fenetre prix" role="dialog" aria-modal="true" aria-labelledby="prixTitre" novalidate>
+        <h2 id="prixTitre">Mettre en vente</h2>
+        <p class="prix-commune">${echapperTexte(nom)}</p>
+        <label class="prix-champ">
+          <span>Ton prix</span>
+          <span class="prix-saisie"><input type="number" inputmode="numeric" min="1" step="1" id="prixValeur" required><em>pts</em></span>
+        </label>
+        <p class="prix-aide">Le jeu te la rachète ${Number(rachat).toLocaleString('fr-FR')} pts si tu préfères vendre tout de suite.</p>
+        <p class="prix-erreur" id="prixErreur" role="alert"></p>
+        <div class="prix-boutons">
+          <button type="button" class="open-btn secondary" data-annuler>Annuler</button>
+          <button type="submit" class="open-btn">Mettre en vente</button>
+        </div>
+      </form>`, resolve);
+    const form = document.querySelector('#fenetre form');
+    const champ = document.getElementById('prixValeur');
+    form.querySelector('[data-annuler]').addEventListener('click', () => fermer(null));
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const prix = parseInt(champ.value, 10);
+      if(!prix || prix <= 0){
+        document.getElementById('prixErreur').textContent = 'Indique un prix supérieur à 0.';
+        champ.focus();
+        return;
+      }
+      fermer(prix);
+    });
+    champ.focus();
+  });
+}
+
 // ---------- Authentification ----------
-function showAuth(msg){
+function showAuth(msg, type = 'erreur'){
   document.getElementById('authScreen').style.display = 'flex';
   document.getElementById('gameScreen').style.display = 'none';
-  if(msg) document.getElementById('authMsg').textContent = msg;
+  const el = document.getElementById('authMsg');
+  el.textContent = msg ? messageLisible(msg) : '';
+  el.className = 'auth-msg' + (msg ? ' ' + type : '');
 }
 
 async function showGame(session_){
@@ -176,7 +346,7 @@ document.getElementById('signupBtn').addEventListener('click', async () => {
   const pseudo = document.getElementById('authPseudo').value.trim();
   const { error } = await sb.auth.signUp({ email, password, options: { data: { pseudo } } });
   if(error) showAuth(error.message);
-  else showAuth('Compte créé — connecte-toi maintenant.');
+  else showAuth('Compte créé. Tu peux te connecter.', 'succes');
 });
 
 document.getElementById('logoutBtn').addEventListener('click', async () => {
@@ -219,6 +389,8 @@ function computeMapBounds(){
   const latSpan = latMax - latMin;
   const ratio = lonSpanCorrected / latSpan;
   window.__mapAspectRatio = ratio;
+  MAP_W = 1000;
+  MAP_H = Math.round(1000 / ratio);
   sizeMapWrap(ratio);
   window.addEventListener('resize', () => sizeMapWrap(ratio));
 }
@@ -244,22 +416,22 @@ function project(lat, lon){
 }
 
 function renderFranceOutline(){
-  const group = document.getElementById('franceOutlineGroup');
-  if(!group || !mapBounds) return;
-  group.innerHTML = '';
-  for(const ring of FRANCE_OUTLINE){
-    const pts = ring.map(([lon, lat]) => {
-      const p = project(lat, lon);
-      return (p.x*1000).toFixed(1) + ',' + (p.y*1000).toFixed(1);
-    }).join(' ');
-    const poly = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
-    poly.setAttribute('points', pts);
-    poly.setAttribute('fill', 'url(#franceGrad)');
-    poly.setAttribute('stroke', '#123564');
-    poly.setAttribute('stroke-width', '3');
-    group.appendChild(poly);
-  }
+  const svg = document.getElementById('mapFranceSvg');
+  if(!svg || !mapBounds) return;
+  svg.setAttribute('viewBox', `0 0 ${MAP_W} ${MAP_H}`);
+  const contour = FRANCE_OUTLINE.map(ring => 'M' + ring.map(([lon, lat]) => {
+    const p = project(lat, lon);
+    return (p.x * MAP_W).toFixed(1) + ',' + (p.y * MAP_H).toFixed(1);
+  }).join('L') + 'Z').join('');
+  document.getElementById('clipTerrePath').setAttribute('d', contour);
+  document.getElementById('mapTerre').setAttribute('d', contour);
+  document.getElementById('mapCote').setAttribute('d', contour);
+  const mer = document.getElementById('mapMer');
+  mer.setAttribute('width', MAP_W);
+  mer.setAttribute('height', MAP_H);
+  document.getElementById('mapTopo').setAttribute('d', lignesDeNiveau(4217, MAP_W, MAP_H, 11, 9));
   setupMapInteraction();
+  renderMapOverlay();
 }
 
 let mapZoom = 1, mapPanX = 0, mapPanY = 0;
@@ -404,60 +576,186 @@ function setupMapInteraction(){
 
 let showOthers = true;
 
-const DOT_RADIUS = {commun: 2.25, peucommun: 4.75, rare: 7.75, legendaire: 11.75};
+// ---------- Territoires sur la carte ----------
+const RAYON_ZONE = {commun: 4.5, peucommun: 6.5, rare: 10, legendaire: 15};
+const LIBELLE_TIER = {commun: 'commun', peucommun: 'peu commun', rare: 'rare', legendaire: 'légendaire'};
+const ID_MOI = '__moi__';
+let joueurSurligne = null;
+let listeJoueursComplete = false;
+let legendeOuverte = (() => {
+  try{
+    const v = localStorage.getItem('tf-legende-ouverte');
+    if(v !== null) return v === '1';
+  } catch(e){}
+  return !window.matchMedia('(max-width: 720px)').matches;
+})();
 
-function renderMapOverlay(){
-  const overlay = document.getElementById('mapOverlay');
-  const mineGroup = document.getElementById('mineDotsGroup');
-  const mineBorderGroup = document.getElementById('mineDotsBorderGroup');
-  if(!overlay || !mineGroup || !mineBorderGroup || !mapBounds) return;
-  overlay.innerHTML = '';
-  mineGroup.innerHTML = '';
-  mineBorderGroup.innerHTML = '';
-
-  // territoire des autres joueurs, en gris neutre (points HTML simples, pas de fusion)
-  if(showOthers){
-    for(const entry of othersMap.values()){
-      if(!METRO_DEPT_RE.test(entry.dept)) continue;
-      const p = project(entry.lat, entry.lon);
-      const dot = document.createElement('div');
-      dot.className = 'map-dot other ' + entry.tier.id;
-      dot.style.left = (p.x * 100) + '%';
-      dot.style.top = (p.y * 100) + '%';
-      dot.style.background = colorForPlayer(entry.joueurId);
-      dot.title = entry.nom + ' (' + entry.dept + ') — possédée par ' + entry.pseudo;
-      overlay.appendChild(dot);
-    }
+function etoileSvg(x, y, r){
+  const pts = [];
+  for(let i = 0; i < 10; i++){
+    const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r;
+    pts.push((x + rr * Math.cos(a)).toFixed(1) + ',' + (y + rr * Math.sin(a)).toFixed(1));
   }
-
-  // mon propre territoire, en cercles SVG (pour l'effet de fusion organique)
-  for(const entry of collectionMap.values()){
-    if(!METRO_DEPT_RE.test(entry.dept)) continue;
-    const p = project(entry.lat, entry.lon);
-    const cx = (p.x * 1000).toFixed(1);
-    const cy = (p.y * 1000).toFixed(1);
-    const r = DOT_RADIUS[entry.tier.id];
-
-    // couche de contour : legerement plus grande, couleur unie sombre
-    const borderCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    borderCircle.setAttribute('cx', cx);
-    borderCircle.setAttribute('cy', cy);
-    borderCircle.setAttribute('r', r + 4);
-    borderCircle.setAttribute('fill', '#0B2A4A');
-    mineBorderGroup.appendChild(borderCircle);
-
-    // couche coloree, par-dessus
-    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-    circle.setAttribute('cx', cx);
-    circle.setAttribute('cy', cy);
-    circle.setAttribute('r', r);
-    circle.setAttribute('fill', entry.tier.color);
-    const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
-    title.textContent = entry.nom + ' (' + entry.dept + ') — ' + entry.tier.label;
-    circle.appendChild(title);
-    mineGroup.appendChild(circle);
-  }
+  return pts.join(' ');
 }
+const echapperHtml = (s) => String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[ch]));
+
+let carteRenduPlanifie = false;
+function renderMapOverlay(){
+  // plusieurs appels rapproches (cartes retournees une par une) = un seul dessin
+  if(carteRenduPlanifie) return;
+  carteRenduPlanifie = true;
+  requestAnimationFrame(() => { carteRenduPlanifie = false; dessinerTerritoires(); });
+}
+
+function dessinerTerritoires(){
+  const couche = document.getElementById('mapTerritoires');
+  const defs = document.getElementById('mapDefsDyn');
+  const marq = document.getElementById('mapMarqueurs');
+  const survol = document.getElementById('mapSurvol');
+  if(!couche || !defs || !mapBounds) return;
+
+  // joueurs presents : toi d'abord, puis les autres
+  const joueurs = new Map();
+  joueurs.set(ID_MOI, { id: ID_MOI, pseudo: 'Toi', couleur: COULEUR_MOI, fonce: couleurFoncee(COULEUR_MOI), moi: true, nb: 0 });
+  const liste = [];
+  for(const e of collectionMap.values()){
+    if(!METRO_DEPT_RE.test(e.dept) || e.lat == null) continue;
+    liste.push({ nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: ID_MOI });
+    joueurs.get(ID_MOI).nb++;
+  }
+  for(const e of othersMap.values()){
+    if(!METRO_DEPT_RE.test(e.dept) || e.lat == null) continue;
+    if(!joueurs.has(e.joueurId)){
+      const couleur = colorForPlayer(e.joueurId);
+      joueurs.set(e.joueurId, { id: e.joueurId, pseudo: e.pseudo, couleur, fonce: couleurFoncee(couleur), moi: false, nb: 0 });
+    }
+    joueurs.get(e.joueurId).nb++;
+    if(showOthers) liste.push({ nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: e.joueurId });
+  }
+
+  const pts = liste.map(c => { const p = project(c.lat, c.lon); return [p.x * MAP_W, p.y * MAP_H]; });
+  const parJoueur = new Map();
+  const groupe = (id) => parJoueur.get(id) || parJoueur.set(id, { cercles: '', bords: '', cellules: '', marqueurs: '' }).get(id);
+  let zonesSurvol = '';
+
+  let voronoi = null, rayons = liste.map(c => RAYON_ZONE[c.tier]);
+  if(D3_OK && liste.length > 0){
+    const delaunay = d3.Delaunay.from(pts);
+    voronoi = delaunay.voronoi([0, 0, MAP_W, MAP_H]);
+    // une zone grandit jusqu'a ses voisines proches du meme joueur, pour former un territoire plein
+    rayons = liste.map((c, i) => {
+      let dMin = Infinity;
+      for(const k of delaunay.neighbors(i)){
+        if(liste[k].joueur !== c.joueur) continue;
+        dMin = Math.min(dMin, Math.hypot(pts[k][0] - pts[i][0], pts[k][1] - pts[i][1]));
+      }
+      return dMin <= 22 ? Math.max(RAYON_ZONE[c.tier], dMin * 0.62) : RAYON_ZONE[c.tier];
+    });
+  }
+
+  liste.forEach((c, i) => {
+    const [x, y] = pts[i];
+    const r = rayons[i];
+    const j = joueurs.get(c.joueur);
+    const g = groupe(c.joueur);
+    const cx = x.toFixed(1), cy = y.toFixed(1);
+    g.cercles += `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"/>`;
+    g.bords += `<circle cx="${cx}" cy="${cy}" r="${(r + 2.2).toFixed(1)}"/>`;
+    g.cellules += voronoi ? `<path d="${voronoi.renderCell(i)}"/>` : `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"/>`;
+    if(c.tier === 'legendaire'){
+      g.marqueurs += `<polygon points="${etoileSvg(x, y, 7)}" fill="#FFF6D6" stroke="#0B1830" stroke-width="1.4" vector-effect="non-scaling-stroke"/>`;
+    } else if(c.tier === 'rare'){
+      g.marqueurs += `<circle cx="${cx}" cy="${cy}" r="2.2" fill="#fff" stroke="#0B1830" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+    }
+    zonesSurvol += `<circle cx="${cx}" cy="${cy}" r="${Math.max(RAYON_ZONE[c.tier], 6)}" fill="transparent"><title>${echapperHtml(c.nom)} (${c.dept}), ${LIBELLE_TIER[c.tier]}, ${j.moi ? 'à toi' : 'à ' + echapperHtml(j.pseudo)}</title></circle>`;
+  });
+
+  // les autres joueurs d'abord, toi par-dessus
+  const ordre = [...parJoueur.keys()].sort((a, b) => (a === ID_MOI ? 1 : 0) - (b === ID_MOI ? 1 : 0));
+  const idSvg = (id) => 'j' + String(id).replace(/[^a-zA-Z0-9_-]/g, '');
+  defs.innerHTML = ordre.map(id => `<clipPath id="zone-${idSvg(id)}">${parJoueur.get(id).cercles}</clipPath><clipPath id="bord-${idSvg(id)}">${parJoueur.get(id).bords}</clipPath>`).join('');
+  couche.innerHTML =
+    ordre.map(id => `<g data-joueur="${idSvg(id)}" clip-path="url(#bord-${idSvg(id)})"><g fill="#07111F" fill-opacity="0.9">${parJoueur.get(id).cellules}</g></g>`).join('') +
+    ordre.map(id => {
+      const j = joueurs.get(id);
+      return `<g data-joueur="${idSvg(id)}" clip-path="url(#zone-${idSvg(id)})"><g fill="${j.couleur}" fill-opacity="${j.moi ? 0.95 : 0.8}" stroke="${j.fonce}" stroke-opacity="0.6" stroke-width="0.7" vector-effect="non-scaling-stroke">${parJoueur.get(id).cellules}</g></g>`;
+    }).join('');
+  marq.innerHTML = ordre.map(id => `<g data-joueur="${idSvg(id)}">${parJoueur.get(id).marqueurs}</g>`).join('');
+  survol.innerHTML = zonesSurvol;
+
+  if(joueurSurligne && !joueurs.has(joueurSurligne)) joueurSurligne = null;
+  if(!showOthers && joueurSurligne !== ID_MOI) joueurSurligne = null;
+  appliquerSurlignageCarte(idSvg);
+  renderLegendeCarte(joueurs, idSvg);
+}
+
+function appliquerSurlignageCarte(idSvg){
+  const svg = document.getElementById('mapFranceSvg');
+  if(!svg) return;
+  const cible = joueurSurligne ? idSvg(joueurSurligne) : null;
+  svg.classList.toggle('surlignage', !!cible);
+  svg.querySelectorAll('g[data-joueur]').forEach(g => g.classList.toggle('actif', g.dataset.joueur === cible));
+}
+
+function renderLegendeCarte(joueurs, idSvg){
+  const leg = document.getElementById('mapLegende');
+  if(!leg) return;
+  const moi = joueurs.get(ID_MOI);
+  const autres = [...joueurs.values()].filter(j => !j.moi && j.nb > 0).sort((a, b) => b.nb - a.nb);
+  const NB_VISIBLES = 5;
+  const affiches = showOthers ? (listeJoueursComplete ? autres : autres.slice(0, NB_VISIBLES)) : [];
+  const reste = showOthers ? autres.length - affiches.length : 0;
+  const ligne = (j) => `<button class="leg-joueur ${joueurSurligne === j.id ? 'actif' : ''}" data-joueur-id="${echapperHtml(j.id)}" aria-pressed="${joueurSurligne === j.id}">
+      <span class="leg-pastille" style="background:${j.couleur}"></span>
+      <span class="leg-pseudo">${j.moi ? '<b>Toi</b>' : echapperHtml(j.pseudo)}</span><span class="leg-nb">${j.nb.toLocaleString('fr-FR')}</span></button>`;
+  leg.classList.toggle('repliee', !legendeOuverte);
+  leg.innerHTML = `
+    <div class="leg-tete">
+      <h3>${legendeOuverte ? 'Joueurs' : 'Légende'}</h3>
+      <button class="leg-bouton" data-leg="basculer" aria-expanded="${legendeOuverte}" aria-label="${legendeOuverte ? 'Replier la légende' : 'Afficher la légende'}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+      </button>
+    </div>
+    <div class="leg-corps">
+      ${ligne(moi)}
+      ${affiches.map(ligne).join('')}
+      ${reste > 0 ? `<button class="leg-plus" data-leg="plus">+ ${reste} autre${reste > 1 ? 's' : ''} joueur${reste > 1 ? 's' : ''}</button>` : ''}
+      ${listeJoueursComplete && autres.length > NB_VISIBLES && showOthers ? '<button class="leg-plus" data-leg="moins">Réduire la liste</button>' : ''}
+      <p class="leg-indice">Clique sur un joueur pour mettre son territoire en évidence.</p>
+      <div class="leg-tailles">
+        <div><svg width="10" height="10"><circle cx="5" cy="5" r="2.5" fill="#A9BCD4"/></svg>Commun</div>
+        <div><svg width="14" height="14"><circle cx="7" cy="7" r="4" fill="#A9BCD4"/></svg>Peu c.</div>
+        <div><svg width="20" height="20"><circle cx="10" cy="10" r="6.5" fill="#A9BCD4"/><circle cx="10" cy="10" r="2" fill="#fff" stroke="#0B1830"/></svg>Rare</div>
+        <div><svg width="26" height="26"><circle cx="13" cy="13" r="10" fill="#A9BCD4"/><polygon points="${etoileSvg(13, 13, 6)}" fill="#FFF6D6" stroke="#0B1830"/></svg>Légend.</div>
+      </div>
+    </div>`;
+}
+
+(function brancherLegende(){
+  const leg = document.getElementById('mapLegende');
+  if(!leg) return;
+  leg.addEventListener('click', (e) => {
+    const action = e.target.closest('[data-leg]');
+    if(action){
+      if(action.dataset.leg === 'basculer'){
+        legendeOuverte = !legendeOuverte;
+        try{ localStorage.setItem('tf-legende-ouverte', legendeOuverte ? '1' : '0'); } catch(err){}
+      }
+      if(action.dataset.leg === 'plus') listeJoueursComplete = true;
+      if(action.dataset.leg === 'moins') listeJoueursComplete = false;
+      renderMapOverlay();
+      return;
+    }
+    const ligne = e.target.closest('.leg-joueur');
+    if(ligne){
+      joueurSurligne = joueurSurligne === ligne.dataset.joueurId ? null : ligne.dataset.joueurId;
+      renderMapOverlay();
+    }
+  });
+  // la legende ne doit pas deplacer ni zoomer la carte en dessous
+  ['mousedown', 'touchstart', 'wheel'].forEach(ev => leg.addEventListener(ev, (e) => e.stopPropagation(), { passive: true }));
+})();
 
 async function loadOthersPossessions(){
   const { data: userData } = await sb.auth.getUser();
@@ -750,7 +1048,7 @@ async function openPack(type){
 
   const { error: startError } = await sb.rpc('demarrer_paquet', { p_type: type });
   if(startError){
-    alert(startError.message);
+    notifier({ type: 'erreur', titre: 'Impossible d\'ouvrir le paquet', texte: messageLisible(startError.message) });
     await loadPackStatus();
     return;
   }
@@ -771,7 +1069,7 @@ async function openPack(type){
     for(let i = 0; i < 5; i++){
       const { data, error } = await sb.rpc('draw_commune', { p_saison: CURRENT_SEASON });
       if(error){
-        alert('Tirage impossible : ' + error.message);
+        notifier({ type: 'erreur', titre: 'Tirage interrompu', texte: messageLisible(error.message) });
         break;
       }
       const row = data[0];
@@ -903,24 +1201,30 @@ document.addEventListener('click', async (e) => {
   btn.disabled = true;
   try{
     if(action === 'vendre-jeu'){
+      const vendue = collectionMap.get(code);
       const { error } = await sb.rpc('vendre_au_jeu', { p_commune_code: code });
       if(error) throw error;
       collectionMap.delete(code);
       renderCollection(); renderStats(); renderMapOverlay();
+      if(vendue) notifier({ type: 'succes', titre: `${vendue.nom} vendue au jeu`, texte: `+${PRIX_RACHAT[vendue.tier.id]} pts` });
     } else if(action === 'mettre-vente'){
-      const prixStr = prompt('À quel prix veux-tu la vendre (en points) ?');
-      const prix = parseInt(prixStr, 10);
-      if(!prix || prix <= 0) { btn.disabled = false; return; }
+      const entree = collectionMap.get(code);
+      const prix = await demanderPrix({ nom: entree ? entree.nom : 'Cette commune', rachat: entree ? PRIX_RACHAT[entree.tier.id] : 0 });
+      if(!prix){ btn.disabled = false; return; }
       const { error } = await sb.rpc('mettre_en_vente', { p_commune_code: code, p_prix: prix });
       if(error) throw error;
+      notifier({ type: 'succes', titre: 'Annonce publiée', texte: `${entree ? entree.nom + ' est' : 'La commune est'} en vente à ${prix.toLocaleString('fr-FR')} pts` });
     } else if(action === 'retirer'){
       const { error } = await sb.rpc('retirer_de_la_vente', { p_commune_code: code });
       if(error) throw error;
+      notifier({ type: 'info', titre: 'Annonce retirée' });
     } else if(action === 'acheter'){
       const { error } = await sb.rpc('acheter', { p_commune_code: code, p_saison: CURRENT_SEASON });
       if(error) throw error;
       await loadMyCollection();
       await loadOthersPossessions();
+      const achetee = collectionMap.get(code);
+      notifier({ type: 'succes', titre: achetee ? `${achetee.nom} est à toi` : 'Commune achetée' });
     } else if(action === 'attaquer'){
       // bloque le rafraichissement auto de la grille pendant l'attaque en cours
       combatActionEnCours = true;
@@ -928,14 +1232,26 @@ document.addEventListener('click', async (e) => {
         const { data, error } = await sb.rpc('attaquer', { p_commune_code: code });
         if(error) throw error;
         const result = data[0];
+        const cible = combatCibles.find(x => x.commune_code === code);
+        const nomCible = cible ? cible.communes.nom : 'la commune';
         if(result.conquise){
-          alert('Commune conquise ! Tu as gagné le siège et le bonus.');
           await loadMyCollection();
           await loadOthersPossessions();
+          celebrerConquete({
+            nom: nomCible,
+            tier: cible ? cible.communes.tier : '',
+            dept: cible ? cible.communes.departement : '',
+            bonus: cible ? PRIX_RACHAT[cible.communes.tier] : 0
+          });
         } else if(result.gagne){
-          alert(`Victoire ! Série : ${result.victoires_consecutives}/3`);
+          notifier({
+            type: 'victoire',
+            titre: `Victoire contre ${nomCible}`,
+            texte: result.victoires_consecutives >= 2 ? 'Encore une victoire pour la conquérir.' : `Série : ${result.victoires_consecutives} sur 3`,
+            serie: result.victoires_consecutives
+          });
         } else {
-          alert('Défaite. La série repart à zéro.');
+          notifier({ type: 'defaite', titre: `Défaite contre ${nomCible}`, texte: 'La série repart à zéro.', serie: 0 });
         }
         await loadCombat();
         loadPackStatus();
@@ -947,7 +1263,7 @@ document.addEventListener('click', async (e) => {
     await loadBourse();
     loadPackStatus();
   } catch(err){
-    alert('Action impossible : ' + err.message);
+    notifier({ type: 'erreur', titre: 'Action impossible', texte: messageLisible(err.message) });
     btn.disabled = false;
   }
 });

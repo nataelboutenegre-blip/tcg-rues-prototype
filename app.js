@@ -622,7 +622,7 @@ function makeCardEl(draw, onFlip){
             <div class="carte-art">${carteArtSvg(draw.code, draw.tier.id)}<span class="carte-dept">${draw.dept}</span></div>
             <div class="carte-infos">
               <p class="carte-nom ${draw.nom.length > 26 ? 'tres-long' : draw.nom.length > 16 ? 'long' : ''}" title="${draw.nom}">${draw.nom}</p>
-              <p class="carte-departement">${DEPT_NAMES[draw.dept] || draw.dept}</p>
+              <p class="carte-departement">${DEPT_NAMES[draw.dept] ? `<span class="dep-nom">${DEPT_NAMES[draw.dept]}</span> <span class="dep-num">(${draw.dept})</span>` : `<span class="dep-num">${draw.dept}</span>`}</p>
               <div class="carte-stats">
                 <div><span>Habitants</span><b>${draw.pop.toLocaleString('fr-FR')}</b></div>
                 <div><span>Rang</span><b>${draw.rank.toLocaleString('fr-FR')}</b></div>
@@ -659,6 +659,7 @@ function makeCardEl(draw, onFlip){
 }
 
 let pendingFlips = 0;
+let paquetEnCours = false;
 
 function revealCards(draws){
   const zone = document.getElementById('packZone');
@@ -674,7 +675,8 @@ function revealCards(draws){
       renderMapOverlay();
       pendingFlips--;
       if(pendingFlips <= 0){
-        renderPackStatus();
+        paquetEnCours = false;
+        loadPackStatus();
       }
     });
     // les cartes arrivent l'une apres l'autre
@@ -737,8 +739,9 @@ function renderPackStatus(){
   puces.push(`<span class="puce solde">Solde <b>${Number(packStatusCache.solde).toLocaleString('fr-FR')}</b></span>`);
   document.getElementById('packStatus').innerHTML = puces.join('');
 
-  document.getElementById('openFreeBtn').disabled = dispo < 1;
-  document.getElementById('openBuyBtn').disabled = achetesJour >= 5 || packStatusCache.solde < 200;
+  // pendant l'ouverture d'un paquet, on ne peut pas en relancer un autre
+  document.getElementById('openFreeBtn').disabled = paquetEnCours || dispo < 1;
+  document.getElementById('openBuyBtn').disabled = paquetEnCours || achetesJour >= 5 || packStatusCache.solde < 200;
 }
 
 async function openPack(type){
@@ -751,11 +754,9 @@ async function openPack(type){
     await loadPackStatus();
     return;
   }
+  // le paquet en cours n'est pas encore ouvert : pas question d'en relancer un avant d'avoir retourne les cartes
+  paquetEnCours = true;
   await loadPackStatus();
-  // on force le re-verrouillage : le paquet en cours n'est pas encore ouvert,
-  // pas question de pouvoir en relancer un avant d'avoir retourne les cartes
-  document.getElementById('openFreeBtn').disabled = true;
-  document.getElementById('openBuyBtn').disabled = true;
 
   const zone = document.getElementById('packZone');
   zone.innerHTML = '';
@@ -783,7 +784,8 @@ async function openPack(type){
     await animation;
     if(draws.length === 0){
       zone.innerHTML = '';
-      renderPackStatus();
+      paquetEnCours = false;
+      loadPackStatus();
       return;
     }
     revealCards(draws);
@@ -936,12 +938,14 @@ document.addEventListener('click', async (e) => {
           alert('Défaite. La série repart à zéro.');
         }
         await loadCombat();
+        loadPackStatus();
       } finally {
         combatActionEnCours = false;
       }
       return;
     }
     await loadBourse();
+    loadPackStatus();
   } catch(err){
     alert('Action impossible : ' + err.message);
     btn.disabled = false;
@@ -1253,8 +1257,14 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
     if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
     if(tab.dataset.tab === 'bourse') loadBourse();
+    if(tab.dataset.tab === 'tirage') loadPackStatus();
     if(tab.dataset.tab === 'combat') loadCombat();
   });
+});
+
+// en revenant sur le site (autre appli, autre onglet), on relit jetons et solde
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && packStatusCache) loadPackStatus();
 });
 
 initAuth();

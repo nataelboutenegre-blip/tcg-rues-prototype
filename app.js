@@ -567,7 +567,7 @@ function makeCardEl(draw, onFlip){
             </div>
             <div class="carte-art">${carteArtSvg(draw.code, draw.tier.id)}<span class="carte-dept">${draw.dept}</span></div>
             <div class="carte-infos">
-              <p class="carte-nom">${draw.nom}</p>
+              <p class="carte-nom ${draw.nom.length > 26 ? 'tres-long' : draw.nom.length > 16 ? 'long' : ''}" title="${draw.nom}">${draw.nom}</p>
               <p class="carte-departement">${DEPT_NAMES[draw.dept] || draw.dept}</p>
               <div class="carte-stats">
                 <div><span>Habitants</span><b>${draw.pop.toLocaleString('fr-FR')}</b></div>

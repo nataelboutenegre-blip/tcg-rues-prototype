@@ -123,12 +123,14 @@
     </section>
 
     <section class="tab-panel" id="panel-collection">
-      <h1>Ma collection</h1>
-      <div class="sub">Toutes les communes que tu possèdes actuellement.</div>
-      <div class="collection">
-        <h2>Ma collection (<span id="collectionCount">0</span> cartes)</h2>
-        <div class="collection-grid" id="collectionGrid"><p class="collection-empty">Aucune carte pour le moment — ouvre un paquet.</p></div>
+      <div class="coll-entete">
+        <div class="coll-ligne-titre">
+          <h1>Ma collection</h1>
+          <span class="coll-compteur"><b id="collectionCount">0</b> cartes</span>
+        </div>
+        <div class="coll-filtres" id="collectionFilters"></div>
       </div>
+      <div class="coll-grille" id="collectionGrid"><p class="collection-empty">Aucune carte pour le moment. Ouvre un paquet.</p></div>
     </section>
 
     <section class="tab-panel" id="panel-territoire">
@@ -194,6 +196,14 @@
         <button class="filter-pill active" data-tier="tous">Toutes</button>
         <button class="filter-pill" data-tier="legendaire">Légendaire</button>
         <button class="filter-pill" data-tier="rare">Rare</button>
+      </div>
+      <div class="bourse-filters combat-proximite">
+        <button class="filter-pill prox-toggle" id="combatProxToggle" aria-pressed="false"><span class="prox-switch"></span>Seulement près de mon territoire</button>
+        <div class="prox-rayons" id="combatRayons" hidden>
+          <button class="filter-pill" data-km="10">10 km</button>
+          <button class="filter-pill active" data-km="20">20 km</button>
+          <button class="filter-pill" data-km="50">50 km</button>
+        </div>
       </div>
       <div id="combatGrid" class="combat-cards-grid"><p class="collection-empty">Aucune cible disponible pour le moment.</p></div>
     </section>

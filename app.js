@@ -259,7 +259,7 @@ function celebrerConquete({ nom, tier, dept, bonus }){
       <h2 id="conqueteTitre">${echapperTexte(nom)}</h2>
       <p class="conquete-infos"><span class="conquete-rarete">${t ? t.label : ''}</span>${dept ? ` ${echapperTexte(DEPT_NAMES[dept] || '')} (${dept})` : ''}</p>
       <p class="conquete-bonus">+${Number(bonus).toLocaleString('fr-FR')} pts de bonus</p>
-      <p class="conquete-note">Elle t'appartient maintenant, et elle est protégée pendant 3 h.</p>
+      <p class="conquete-note">Elle t'appartient maintenant et elle est protégée pendant 3 h. Revente au jeu possible dans 12 h.</p>
       <button class="open-btn" data-fermer>Génial !</button>
     </div>`);
   const btn = document.querySelector('#fenetre [data-fermer]');
@@ -786,13 +786,16 @@ async function loadMyCollection(){
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
   const champsCommune = 'communes(code,nom,departement,population,latitude,longitude,tier,rang,palier_total)';
-  let { data, error } = await sb
-    .from('possessions')
-    .select('commune_code, acquired_at, bouclier_debut, bouclier_jusqua, ' + champsCommune)
-    .eq('joueur_id', uid);
-  if(error){
-    // colonnes de bouclier absentes (boucliers.sql pas encore execute) : on charge sans
-    ({ data, error } = await sb.from('possessions').select('commune_code, acquired_at, ' + champsCommune).eq('joueur_id', uid));
+  // du plus complet au plus simple : si un fichier SQL n'a pas encore ete execute, le site se charge quand meme
+  const variantes = [
+    'commune_code, acquired_at, bouclier_debut, bouclier_jusqua, conquise_le, ',
+    'commune_code, acquired_at, bouclier_debut, bouclier_jusqua, ',
+    'commune_code, acquired_at, ',
+  ];
+  let data = null, error = null;
+  for(const champs of variantes){
+    ({ data, error } = await sb.from('possessions').select(champs + champsCommune).eq('joueur_id', uid));
+    if(!error) break;
   }
   if(error){ console.error(error); return; }
 
@@ -806,7 +809,8 @@ async function loadMyCollection(){
       lat: c.latitude, lon: c.longitude, tier, rank: c.rang, tierSize: c.palier_total,
       acquiredAt: row.acquired_at ? new Date(row.acquired_at).getTime() : 0,
       bouclierDebut: row.bouclier_debut ? new Date(row.bouclier_debut).getTime() : 0,
-      bouclierJusqua: row.bouclier_jusqua ? new Date(row.bouclier_jusqua).getTime() : 0
+      bouclierJusqua: row.bouclier_jusqua ? new Date(row.bouclier_jusqua).getTime() : 0,
+      conquiseLe: row.conquise_le ? new Date(row.conquise_le).getTime() : 0
     });
     session[c.tier]++;
     session.total++;
@@ -1146,6 +1150,9 @@ const OFFRES_BOUCLIER = [
   { id: '12h', label: '12 heures', ms: 12 * 3600e3, prix: { rare: 90, legendaire: 900 } },
 ];
 const DELAI_ENTRE_BOUCLIERS_MS = 12 * 3600e3;
+// doivent rester alignes avec defense_equilibrage.sql
+const REVENTE_BLOQUEE_MS = 12 * 3600e3;
+const BONUS_CONQUETE_PART = 0.5;
 let soldeBourse = null;
 
 // etat d'une de mes communes vis-a-vis des boucliers
@@ -1269,7 +1276,9 @@ function renderSellableGrid(){
     const actions = listedPrice
       ? `<span class="bourse-price">En vente : ${listedPrice} pts</span>
          <button class="bourse-btn" data-action="retirer" data-code="${entry.code}">Retirer</button>`
-      : `<button class="bourse-btn" data-action="vendre-jeu" data-code="${entry.code}">Vendre au jeu (${rachat} pts)</button>
+      : `${entry.conquiseLe && entry.conquiseLe + REVENTE_BLOQUEE_MS > Date.now()
+            ? `<button class="bourse-btn" disabled title="Commune conquise récemment">Revente au jeu dans ${formatDuree(entry.conquiseLe + REVENTE_BLOQUEE_MS - Date.now())}</button>`
+            : `<button class="bourse-btn" data-action="vendre-jeu" data-code="${entry.code}">Vendre au jeu (${rachat} pts)</button>`}
          <button class="bourse-btn" data-action="mettre-vente" data-code="${entry.code}">Mettre en vente</button>`;
     return `
       <div class="bourse-row">
@@ -1368,7 +1377,7 @@ document.addEventListener('click', async (e) => {
             nom: nomCible,
             tier: cible ? cible.communes.tier : '',
             dept: cible ? cible.communes.departement : '',
-            bonus: cible ? PRIX_RACHAT[cible.communes.tier] : 0
+            bonus: cible ? Math.floor(PRIX_RACHAT[cible.communes.tier] * BONUS_CONQUETE_PART) : 0
           });
         } else if(result.gagne){
           notifier({
@@ -1476,11 +1485,42 @@ function renderMenaces(){
         <div class="menace-texte">
           <span class="menace-titre"><b>${m.nom}</b> <span>${tier ? '(' + tier.label.toLowerCase() + ')' : ''}, attaquée par ${m.attaquant_pseudo}</span></span>
           <span class="menace-statut">${statut}</span>
+          ${v > 0 && !(bouclierFin > now) ? (m.defense_utilisee
+            ? '<span class="menace-note">Défense déjà utilisée contre cette attaque</span>'
+            : (m.attaquant_id ? `<button class="menace-defendre" data-commune="${m.commune_code}" data-attaquant="${m.attaquant_id}" data-nom="${echapperTexte(m.nom)}">${ICONE_BOUCLIER}Défendre (${coutAttaque(m.tier)} pts, 1 chance sur 2)</button>` : '')) : ''}
         </div>
         <div class="menace-serie" title="${v} victoire${v > 1 ? 's' : ''} d'affilée sur 3">${serie}</div>
       </div>`;
   }).join('');
 }
+
+document.getElementById('combatMenacesListe').addEventListener('click', async (e) => {
+  const btn = e.target.closest('.menace-defendre');
+  if(!btn || btn.disabled) return;
+  btn.disabled = true;
+  try{
+    const { data, error } = await sb.rpc('defendre', { p_commune_code: btn.dataset.commune, p_attaquant: btn.dataset.attaquant });
+    if(error) throw error;
+    const r = data && data[0];
+    if(r && r.reussie){
+      notifier({
+        type: 'victoire',
+        titre: `Défense réussie à ${btn.dataset.nom}`,
+        texte: r.victoires_restantes > 0 ? `L'attaquant perd une victoire (plus que ${r.victoires_restantes} sur 3).` : 'L\'attaquant perd sa victoire : son attaque repart de zéro.',
+        serie: r.victoires_restantes
+      });
+    } else {
+      notifier({ type: 'defaite', titre: `Défense ratée à ${btn.dataset.nom}`, texte: `L'attaquant garde ses victoires. (−${r ? r.cout : ''} pts)` });
+    }
+    await loadMenaces();
+    loadPackStatus();
+    const soldeEl = document.getElementById('soldeValueCombat');
+    if(soldeEl && packStatusCache) soldeEl.textContent = packStatusCache.solde;
+  } catch(err){
+    notifier({ type: 'erreur', titre: 'Défense impossible', texte: messageLisible(err.message) });
+    btn.disabled = false;
+  }
+});
 
 let combatCibles = [];
 let combatSieges = new Map();
@@ -1543,8 +1583,11 @@ async function loadCombat(){
 
   const { data: mesSieges } = await sb
     .from('sieges')
-    .select('commune_code, victoires_consecutives, dernier_round')
-    .eq('attacker_id', uid);
+    .select('commune_code, victoires_consecutives, dernier_round, defense_utilisee')
+    .eq('attacker_id', uid)
+    .then(r => r.error
+      ? sb.from('sieges').select('commune_code, victoires_consecutives, dernier_round').eq('attacker_id', uid)
+      : r);
 
   combatCibles = cibles || [];
   calculerDistancesCibles();
@@ -1655,6 +1698,7 @@ function renderCombatGrid(){
           <p class="cc-owner">Possédée par ${pseudo}</p>
           ${c._distKm !== null ? `<p class="cc-distance">À ${c._distKm < 10 ? c._distKm.toFixed(1).replace('.', ',') : Math.round(c._distKm)} km ${deCommune(c._procheDe)}</p>` : ''}
           <div class="cc-sieges">${dots}</div>
+          ${victoires > 0 && siege && siege.defense_utilisee ? '<p class="cc-defense">Le défenseur a déjà utilisé sa défense</p>' : ''}
           <p class="cc-status ${statusClass}">${statusTxt}</p>
           <button class="bourse-btn cc-btn" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer (${cout} pts)</button>
         </div>

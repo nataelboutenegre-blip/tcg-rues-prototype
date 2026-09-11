@@ -1,1219 +1,1730 @@
-  :root{
-    --paper: #FBFAF6;
-    --bg: #E7EBF0;
-    --ink: #1F2733;
-    --ink-soft: #5B6673;
-    --line: #C7CEDA;
-    --bleu: #002654;
-    --rouge: #C8313A;
-    --commun: #7C8798;
-    --peucommun: #2E7D5B;
-    --rare: #2A5FA8;
-    --legendaire: #B0862C;
-    /* nouvelle direction artistique */
-    --nuit: #0F1F38;
-    --nuit-2: #162C4B;
-    --nuit-3: #1F3A60;
-    --brume: #A9BCD4;
-    --papier: #EEF2F6;
-    --encre: #13233B;
-    --c-commun: #7E8BA0;
-    --c-peucommun: #22A06B;
-    --c-rare: #2F7CF6;
-    --c-legendaire: #F0B429;
-    --c-rouge: #E5484D;
-    --titre: 'Big Shoulders Display', Impact, sans-serif;
-    --texte: 'Instrument Sans', system-ui, sans-serif;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    min-height:100vh;
-    background: var(--nuit);
-    font-family: var(--texte);
-    color: #fff;
-    -webkit-font-smoothing: antialiased;
-  }
-  #fondTopo{
-    position:fixed; inset:0;
-    width:100%; height:100%;
-    pointer-events:none;
-    z-index:0;
-  }
-  h1{
-    font-family: var(--titre);
-    font-weight: 900;
-    font-size: clamp(2.4rem, 5vw, 3.4rem);
-    line-height: 0.95;
-    letter-spacing: 0.01em;
-    margin: 0 0 10px;
-  }
-  .sub{
-    color: var(--brume);
-    font-size: 0.95rem;
-    line-height: 1.55;
-    margin-bottom: 20px;
-    max-width: 60ch;
-  }
-  .pack-zone{
-    display:flex;
-    gap: 22px;
-    flex-wrap: wrap;
-    justify-content:flex-start;
-    margin-bottom: 14px;
-    min-height: 290px;
-    width: 100%;
-  }
-  .pack-zone:empty{ min-height: 0; margin-bottom: 0; }
+// --- Connexion Supabase ---
+const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const CURRENT_SEASON = 'saison-1';
 
-  /* ---------- Cartes du tirage (retournement) ---------- */
-  .card{
-    width: 188px;
-    height: 263px;
-    perspective: 1000px;
-    cursor:pointer;
-  }
-  .card.flipped{ cursor: default; }
-  .card-inner{
-    position:relative;
-    width:100%;
-    height:100%;
-    transition: transform 0.55s cubic-bezier(.4,.2,.2,1);
-    transform-style: preserve-3d;
-  }
-  .card.flipped .card-inner{ transform: rotateY(180deg); }
-  .face{
-    position:absolute;
-    inset:0;
-    backface-visibility:hidden;
-    -webkit-backface-visibility:hidden;
-    border-radius: 14px;
-  }
-  /* ---------- Dos de carte ---------- */
-  .face-back{
-    overflow:hidden;
-    background: radial-gradient(circle at 50% 42%, #24446F 0%, #13284A 55%, #0B1830 100%);
-    border: 1px solid rgba(169,188,212,0.22);
-    box-shadow: 0 14px 28px rgba(0,0,0,0.45);
-  }
-  .face-back .dos-motif{ position:absolute; inset:0; width:100%; height:100%; }
-  .face-back::before{
-    content:""; position:absolute; inset:9px;
-    border: 1.5px solid rgba(240,180,41,0.55);
-    border-radius: 9px;
-  }
-  .face-back .dos-embleme{
-    position:absolute; left:50%; top:50%;
-    width:70px; height:70px; margin:-35px 0 0 -35px;
-    border-radius:50%;
-    background: var(--nuit);
-    box-shadow: 0 0 0 2px var(--c-legendaire), 0 0 0 7px rgba(15,31,56,0.9), 0 0 0 8.5px rgba(240,180,41,0.4);
-    display:flex; align-items:center; justify-content:center;
-  }
-  .face-back .dos-embleme svg{ width:32px; height:32px; stroke: var(--c-legendaire); }
-  .face-back .dos-coin{
-    position:absolute; width:7px; height:7px;
-    background: var(--c-legendaire);
-    transform: rotate(45deg);
-    opacity:.8;
-  }
-  .dos-coin.hg{ top:16px; left:16px; }
-  .dos-coin.hd{ top:16px; right:16px; }
-  .dos-coin.bg{ bottom:16px; left:16px; }
-  .dos-coin.bd{ bottom:16px; right:16px; }
+const TIERS = [
+  {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
+  {id:'rare', label:'Rare', color:'#2A5FA8', target:11.40},
+  {id:'peucommun', label:'Peu commun', color:'#2E7D5B', target:36.85},
+  {id:'commun', label:'Commun', color:'#7C8798', target:50.92},
+];
+const DEPT_NAMES = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","2A":"Corse-du-Sud","2B":"Haute-Corse","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise"};
+const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
 
-  /* arrivee des cartes une par une, et leger soulevement avant retournement */
-  .card.entree{ animation: carteEntree .45s cubic-bezier(.2,.8,.3,1.2) backwards; }
-  @keyframes carteEntree{
-    from{ transform: translateY(60px) scale(.85) rotate(-4deg); opacity:0; }
-    to{ transform:none; opacity:1; }
-  }
-  @media (hover: hover){
-    .card:not(.flipped):hover .card-inner{ transform: translateY(-5px); }
-  }
-  .face-front{ transform: rotateY(180deg); }
+// Couleurs des autres joueurs sur la carte (toi = dore). Au-dela de 12 joueurs, des couleurs se repetent.
+const OPPONENT_COLORS = ['#E5484D','#8E7CF6','#2EC4B6','#F76B15','#E93D82','#3DD68C','#5EB1EF','#FF977D','#9EB1FF','#12A594','#D6409F','#C2A383'];
+const COULEUR_MOI = '#F0B429';
 
-  /* ---------- Recto : nouvelle carte ---------- */
-  .carte-cadre{
-    position:relative;
-    width:100%; height:100%;
-    border-radius: 14px;
-    padding: 3px;
-    transition: transform .15s ease-out;
-    box-shadow: 0 14px 28px rgba(0,0,0,0.45);
+function colorForPlayer(id){
+  let hash = 0;
+  for(let i = 0; i < id.length; i++){
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
   }
-  .card.commun .carte-cadre{ background: var(--c-commun); padding: 2px; }
-  .card.peucommun .carte-cadre{ background: var(--c-peucommun); }
-  .card.rare .carte-cadre{ background: linear-gradient(160deg, #7FB0FF, var(--c-rare) 45%, #1D4FB8); }
-  .card.legendaire .carte-cadre{
-    background: linear-gradient(135deg, #FFF1B8, var(--c-legendaire) 35%, #B7791F 60%, #FCE38A 85%);
-    padding: 4px;
-    box-shadow: 0 14px 28px rgba(0,0,0,0.45), 0 0 26px rgba(240,180,41,0.35);
-  }
-  .carte-int{
-    height:100%;
-    border-radius: 11px;
-    background: var(--papier);
-    color: var(--encre);
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
-  }
-  .carte-haut{
-    display:flex; justify-content:space-between; align-items:center;
-    padding: 7px 9px 6px;
-  }
-  .carte-rarete{
-    font-size: 0.68rem; font-weight:600;
-    padding: 2px 8px; border-radius: 999px;
-    color:#fff;
-  }
-  .card.commun .carte-rarete{ background: var(--c-commun); }
-  .card.peucommun .carte-rarete{ background: var(--c-peucommun); }
-  .card.rare .carte-rarete{ background: var(--c-rare); }
-  .card.legendaire .carte-rarete{ background: var(--c-legendaire); color: var(--encre); }
-  .carte-num{ font-size: 0.68rem; color:#5A6B82; font-variant-numeric: tabular-nums; }
-  .carte-art{
-    position:relative;
-    margin: 0 7px;
-    border-radius: 8px;
-    overflow:hidden;
-    height: 44%;
-  }
-  .carte-art svg{ display:block; width:100%; height:100%; }
-  .carte-dept{
-    position:absolute; right:7px; bottom:-6px;
-    font-family: var(--titre); font-weight:900;
-    font-size: 3.4rem; line-height:1;
-    color: rgba(255,255,255,0.28);
-  }
-  .carte-infos{ padding: 8px 10px 0; flex:1; display:flex; flex-direction:column; min-height:0; }
-  .carte-nom{
-    font-family: var(--titre); font-weight:800;
-    font-size: 1.45rem; line-height:0.98;
-    margin:0;
-    overflow-wrap:anywhere;
-    display:-webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow:hidden;
-    flex-shrink:0;
-  }
-  .carte-nom.long{ font-size: 1.2rem; }
-  .carte-nom.tres-long{ font-size: 1rem; }
-  .carte-rarete, .carte-num{ white-space: nowrap; }
-  .carte-departement{ font-size: 0.72rem; color:#5A6B82; margin: 3px 0 0; display:flex; gap:3px; min-width:0; }
-  /* si la place manque, c'est le nom qui est raccourci, jamais le numero */
-  .carte-departement .dep-nom{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
-  .carte-departement .dep-num{ flex-shrink:0; white-space:nowrap; }
-  .carte-stats{
-    margin: auto 0 8px;
-    display:flex; gap: 12px;
-    border-top: 1px solid #D5DDE7;
-    padding-top: 6px;
-  }
-  .carte-stats div{ display:flex; flex-direction:column; }
-  .carte-stats span{ font-size: 0.6rem; color:#5A6B82; }
-  .carte-stats b{ font-family: var(--titre); font-weight:800; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
-  .carte-lisere{ display:flex; height:4px; flex-shrink:0; }
-  .carte-lisere span{ flex:1; }
-  .carte-lisere span:nth-child(1){ background:#1F3F8F; }
-  .carte-lisere span:nth-child(2){ background:#fff; }
-  .carte-lisere span:nth-child(3){ background: var(--c-rouge); }
-  .card.legendaire .carte-cadre::after{
-    content:""; position:absolute; inset:4px; border-radius: 11px;
-    background: linear-gradient(115deg, transparent 25%, rgba(255,255,255,0.7) 42%, rgba(255,214,102,0.45) 50%, rgba(140,200,255,0.35) 58%, transparent 75%);
-    background-size: 260% 260%;
-    background-position: var(--hx, 50%) var(--hy, 50%);
-    mix-blend-mode: soft-light;
-    opacity: 0;
-    transition: opacity .2s;
-    pointer-events:none;
-  }
-  .card.legendaire.flipped:hover .carte-cadre::after{ opacity: 1; }
+  return OPPONENT_COLORS[hash % OPPONENT_COLORS.length];
+}
+// meme teinte, en plus sombre (lignes entre communes d'un meme joueur)
+function couleurFoncee(hex){
+  return '#' + [1, 3, 5].map(k => Math.round(parseInt(hex.slice(k, k + 2), 16) * 0.45).toString(16).padStart(2, '0')).join('');
+}
 
-  /* utilise par les cartes de combat */
-  .tricolore{
-    height: 6px;
-    display:flex;
-  }
-  .tricolore span{flex:1;}
-  .tricolore .b{background:var(--bleu);}
-  .tricolore .w{background:#fff;}
-  .tricolore .r{background:var(--rouge);}
+// ---------- Direction artistique : courbes de niveau ----------
+const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---------- Paquet a dechirer ---------- */
-  .paquet{
-    --h-languette: 36px;
-    position:relative;
-    width: 200px; height: 280px;
-    cursor:pointer;
-    border:none; padding:0; background:none;
-    font: inherit;
-    filter: drop-shadow(0 18px 24px rgba(0,0,0,0.5));
-    transition: transform .15s ease-out;
-  }
-  .paquet:focus-visible{ outline: 2px solid var(--c-legendaire); outline-offset: 6px; border-radius: 6px; }
-  .paquet .paquet-languette, .paquet .paquet-corps{
-    position:absolute; left:0; right:0;
-    overflow:hidden;
-  }
-  .paquet .paquet-languette{
-    top:0; height: var(--h-languette);
-    clip-path: polygon(0 6px, 5% 0, 10% 6px, 15% 0, 20% 6px, 25% 0, 30% 6px, 35% 0, 40% 6px, 45% 0, 50% 6px, 55% 0, 60% 6px, 65% 0, 70% 6px, 75% 0, 80% 6px, 85% 0, 90% 6px, 95% 0, 100% 6px, 100% 100%, 0 100%);
-    transition: transform .45s cubic-bezier(.5,0,.8,.4), opacity .4s ease-in;
-    transform-origin: 20% 100%;
-  }
-  .paquet .paquet-corps{
-    top: var(--h-languette); bottom:0;
-    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), 95% 100%, 90% calc(100% - 6px), 85% 100%, 80% calc(100% - 6px), 75% 100%, 70% calc(100% - 6px), 65% 100%, 60% calc(100% - 6px), 55% 100%, 50% calc(100% - 6px), 45% 100%, 40% calc(100% - 6px), 35% 100%, 30% calc(100% - 6px), 25% 100%, 20% calc(100% - 6px), 15% 100%, 10% calc(100% - 6px), 5% 100%, 0 calc(100% - 6px));
-    transition: transform .5s ease-in .2s, opacity .45s ease-in .25s;
-  }
-  .paquet .paquet-motif{ position:absolute; left:0; width:200px; height:280px; }
-  .paquet .paquet-languette .paquet-motif{ top:0; }
-  .paquet .paquet-corps .paquet-motif{ top: calc(var(--h-languette) * -1); }
-  .paquet .paquet-pointilles{
-    position:absolute; left:10px; right:10px; bottom:0;
-    border-top: 2px dashed rgba(255,255,255,0.35);
-  }
-  .paquet .paquet-corps::after{
-    content:""; position:absolute; inset:0;
-    background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.22) 48%, transparent 60%);
-    background-size: 250% 100%;
-    background-position: 110% 0;
-    transition: background-position .6s ease;
-    pointer-events:none;
-  }
-  @media (hover: hover){
-    .paquet:hover{ transform: translateY(-4px) rotate(-1deg); }
-    .paquet:hover .paquet-corps::after{ background-position: -10% 0; }
-  }
-  .paquet .paquet-etiquette{
-    position:absolute; left:0; right:0; top: 38px;
-    display:flex; flex-direction:column; align-items:center; gap: 6px;
-  }
-  .paquet .paquet-etiquette svg{ width:34px; height:34px; }
-  .paquet .paquet-titre{
-    font-family: var(--titre); font-weight:900;
-    font-size: 2.6rem; line-height:.9;
-  }
-  .paquet .paquet-bande{
-    position:absolute; left:0; right:0; bottom: 46px;
-    height: 44px;
-    display:flex; align-items:center; justify-content:center;
-    font-family: var(--titre); font-weight:800; font-size: 1.25rem; letter-spacing:.02em;
-  }
-  .paquet.gratuit .paquet-etiquette{ color:#fff; }
-  .paquet.gratuit .paquet-etiquette svg{ stroke: var(--c-legendaire); }
-  .paquet.gratuit .paquet-bande{ background: linear-gradient(90deg, #B7791F, #FCE38A 30%, var(--c-legendaire) 55%, #B7791F); color: var(--encre); }
-  .paquet.achete .paquet-etiquette{ color: var(--encre); }
-  .paquet.achete .paquet-etiquette svg{ stroke: var(--encre); }
-  .paquet.achete .paquet-bande{ background: var(--nuit); color: var(--c-legendaire); }
-  .paquet.dechire{ pointer-events:none; transform:none; }
-  .paquet.dechire .paquet-languette{ transform: translate(60px, -80px) rotate(24deg); opacity:0; }
-  .paquet.dechire .paquet-corps{ transform: translateY(40px) scale(.94); opacity:0; }
-  .paquet.dechire .paquet-pointilles{ display:none; }
-
-  @media (prefers-reduced-motion: reduce){
-    .paquet, .paquet .paquet-languette, .paquet .paquet-corps, .card-inner, .carte-cadre{ transition:none; }
-    .card.entree{ animation:none; }
-  }
-
-  /* ---------- Page Ma collection ---------- */
-  .coll-entete{
-    position: sticky;
-    top: 0;
-    z-index: 3;
-    align-self: stretch;
-    margin: -36px -40px 18px;
-    padding: 28px 40px 14px;
-    background: linear-gradient(180deg, var(--nuit) 78%, rgba(15,31,56,0));
-  }
-  .coll-ligne-titre{ display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
-  .coll-ligne-titre h1{ margin:0; font-size: clamp(2rem, 4vw, 2.6rem); }
-  .coll-compteur{ color: var(--brume); font-size: 0.95rem; }
-  .coll-compteur b{ color:#fff; font-weight:600; }
-  .coll-filtres{ display:flex; flex-wrap:wrap; gap:8px; }
-  .coll-filtre{
-    display:inline-flex; align-items:center; gap:7px;
-    font-family: inherit; font-size: 0.82rem; font-weight: 500;
-    color: var(--brume); background: var(--nuit-2);
-    border: 1px solid rgba(169,188,212,0.16); border-radius: 999px;
-    padding: 6px 12px; cursor: pointer;
-  }
-  .coll-filtre .point{ width:8px; height:8px; border-radius:50%; }
-  .coll-filtre .nb{ color:#fff; font-variant-numeric: tabular-nums; }
-  .coll-filtre:hover{ border-color: rgba(169,188,212,0.4); }
-  .coll-filtre.actif{ background: var(--papier); color: var(--encre); border-color: var(--papier); }
-  .coll-filtre.actif .nb{ color: var(--encre); font-weight: 600; }
-  .coll-filtre:focus-visible{ outline: 2px solid var(--c-legendaire); outline-offset: 2px; }
-  .coll-grille{
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    gap: 10px;
-  }
-  .coll-grille > .collection-empty{ grid-column: 1 / -1; }
-  .collection-empty{
-    color: var(--brume);
-    font-size: 0.8rem;
-    font-style: italic;
-  }
-
-  .solde-box{
-    font-size: 1rem;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 12px 18px;
-    margin-bottom: 20px;
-    width: 100%;
-    max-width: 600px;
-    text-align: center;
-    color: var(--ink);
-  }
-  .solde-box b{ color: var(--legendaire); }
-  .bourse-section{
-    width: 100%;
-    max-width: 600px;
-    margin-bottom: 24px;
-  }
-  .bourse-section h2{
-    font-size: 0.85rem;
-    font-weight:normal;
-    color: var(--brume);
-    margin: 0 0 10px;
-    font-variant: small-caps;
-    letter-spacing:0.03em;
-  }
-  .bourse-search{
-    width:100%;
-    font-family:inherit;
-    font-size:0.85rem;
-    padding: 8px 12px;
-    margin-bottom: 8px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    background:#fff;
-    color: var(--ink);
-  }
-  .bourse-filters{
-    display:flex;
-    flex-wrap:wrap;
-    gap:6px;
-    margin-bottom: 10px;
-  }
-  .filter-pill{
-    font-family:inherit;
-    font-size:0.72rem;
-    color: var(--ink-soft);
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 4px 12px;
-    cursor:pointer;
-  }
-  .filter-pill.active{
-    background: var(--bleu);
-    color: white;
-    border-color: var(--bleu);
-  }
-  .bourse-grid{
-    display:flex;
-    flex-direction:column;
-    gap:8px;
-    max-height: 40vh;
-    overflow-y:auto;
-  }
-  .combat-cards-grid{
-    display:grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-    /* empeche les lignes de s'ecraser quand il y a beaucoup de cartes */
-    grid-auto-rows: max-content;
-    gap: 12px;
-    max-height: 60vh;
-    overflow-y:auto;
-    width:100%;
-    max-width: 600px;
-    padding-right:4px;
-  }
-  .combat-card{
-    color: var(--ink);
-    border-radius: 10px;
-    overflow:hidden;
-    background: var(--paper);
-    box-shadow: 3px 5px 10px rgba(21,27,38,0.2);
-  }
-  .combat-card.rare{ background: linear-gradient(180deg, var(--paper) 70%, #EEF3FB 100%); }
-  .combat-card.legendaire{ background: linear-gradient(180deg, var(--paper) 70%, #FBF4E3 100%); }
-  .combat-card .cc-body{ padding:12px 14px 14px; }
-  .combat-card .cc-badge{
-    display:inline-block;
-    font-size:0.62rem;
-    font-variant: small-caps;
-    color:#fff;
-    padding:2px 8px;
-    border-radius:2px;
-    margin-bottom:8px;
-  }
-  .combat-card.rare .cc-badge{ background: var(--rare); }
-  .combat-card.legendaire .cc-badge{ background: var(--legendaire); }
-  .combat-card .cc-name{ font-size:1rem; margin:0 0 2px; color: var(--ink); }
-  .combat-card .cc-owner{ font-size:0.72rem; color: var(--ink-soft); margin:0 0 10px; }
-  .combat-card .cc-distance{ font-size:0.7rem; color: var(--ink-soft); margin:-6px 0 10px; }
-  .combat-proximite{ align-items:center; }
-  .prox-toggle{ display:inline-flex; align-items:center; gap:8px; }
-  .prox-switch{
-    position:relative; width:26px; height:15px; border-radius:999px;
-    background: rgba(91,102,115,0.35); flex-shrink:0;
-    transition: background .15s;
-  }
-  .prox-switch::after{
-    content:""; position:absolute; top:2px; left:2px;
-    width:11px; height:11px; border-radius:50%; background:#fff;
-    transition: transform .15s;
-  }
-  .prox-toggle.active .prox-switch{ background: var(--c-legendaire); }
-  .prox-toggle.active .prox-switch::after{ transform: translateX(11px); }
-  .prox-rayons{ display:flex; gap:6px; }
-
-  /* ---------- Mes communes attaquees ---------- */
-  .tab-badge{
-    margin-left:auto;
-    min-width:20px; height:20px; padding:0 6px;
-    border-radius:999px;
-    background: var(--c-rouge); color:#fff;
-    font-size:0.72rem; font-weight:600;
-    display:inline-flex; align-items:center; justify-content:center;
-    font-variant-numeric: tabular-nums;
-  }
-  .tab-badge[hidden]{ display:none; }
-  .menaces{ width:100%; max-width:600px; margin-bottom:22px; }
-  .menaces[hidden]{ display:none; }
-  .menaces h2{
-    font-family: var(--titre); font-weight:800; font-size:1.35rem;
-    margin:0 0 10px; color:#fff;
-    display:flex; align-items:center; gap:10px;
-  }
-  .menaces h2::before{
-    content:""; width:8px; height:8px; border-radius:50%;
-    background: var(--c-rouge);
-    box-shadow: 0 0 0 4px rgba(229,72,77,0.25);
-  }
-  .menaces-liste{ display:flex; flex-direction:column; gap:8px; }
-  .menace{
-    display:flex; align-items:center; gap:12px;
-    background: var(--nuit-2);
-    border:1px solid rgba(169,188,212,0.16);
-    border-radius:10px;
-    padding:10px 14px;
-  }
-  .menace.danger{ border-left: 3px solid var(--c-rouge); }
-  .menace-point{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
-  .menace-texte{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
-  .menace-titre{ font-size:0.92rem; }
-  .menace-titre b{ font-weight:600; }
-  .menace-titre span{ color: var(--brume); }
-  .menace-statut{ font-size:0.76rem; color: var(--brume); }
-  .menace.danger .menace-statut{ color:#FFB3B5; }
-  .menace-serie{ display:flex; gap:4px; flex-shrink:0; }
-  .menace-serie i{ width:10px; height:10px; border-radius:50%; border:1.5px solid rgba(169,188,212,0.45); }
-  .menace-serie i.pris{ background: var(--c-rouge); border-color: var(--c-rouge); }
-  .en-cours-nb{
-    min-width: 18px; padding: 0 5px; border-radius: 999px;
-    background: rgba(91,102,115,0.2);
-    font-size: 0.68rem; font-weight: 600; text-align:center;
-    font-variant-numeric: tabular-nums;
-  }
-  .prox-toggle.active .en-cours-nb{ background: rgba(255,255,255,0.25); }
-  .prox-rayons[hidden]{ display:none; }
-  .combat-card .cc-sieges{ display:flex; gap:5px; margin-bottom:8px; }
-  .cc-siege-dot{ width:11px; height:11px; border-radius:50%; border:1.5px solid var(--line); }
-  .cc-siege-dot.filled{ background: var(--legendaire); border-color: var(--legendaire); }
-  .combat-card .cc-status{ font-size:0.7rem; color: var(--ink-soft); margin:0 0 10px; }
-  .combat-card .cc-status.ready{ color: var(--peucommun); }
-  .combat-card .cc-status.bouclier{ color: var(--rare); font-weight:600; }
-
-  /* ---------- Boucliers (bourse) ---------- */
-  .bouclier-intro{ margin: -4px 0 10px; color: var(--brume); font-size: 0.8rem; line-height:1.5; max-width:60ch; }
-  .bouclier-etat{ display:flex; align-items:center; gap:5px; margin-top:2px; font-size:0.74rem; color: var(--ink-soft); }
-  .bouclier-etat svg{ width:13px; height:13px; flex-shrink:0; }
-  .bouclier-row.actif .bouclier-etat, .bouclier-row.programme .bouclier-etat{ color: var(--rare); font-weight:600; }
-  .bouclier-row .bourse-name{ display:flex; flex-wrap:wrap; column-gap:4px; }
-  .bouclier-row .bouclier-etat{ flex-basis:100%; }
-  .bouclier-titre-icone{ display:inline-flex; width:28px; height:28px; margin-right:8px; vertical-align:-3px; color: var(--c-legendaire); }
-  .bouclier-titre-icone svg{ width:100%; height:100%; }
-  .offres{ display:flex; flex-direction:column; gap:8px; margin-bottom:6px; }
-  .offre{
-    display:flex; align-items:center; gap:10px;
-    padding:11px 14px; border-radius:12px;
-    background: rgba(169,188,212,0.08);
-    border:1.5px solid rgba(169,188,212,0.2);
-    cursor:pointer;
-  }
-  .offre:hover{ border-color: rgba(169,188,212,0.45); }
-  .offre:has(input:checked){ border-color: var(--c-legendaire); background: rgba(240,180,41,0.1); }
-  .offre input{ accent-color: var(--c-legendaire); margin:0; }
-  .offre-duree{ flex:1; font-weight:600; }
-  .offre-prix{ font-family: var(--titre); font-weight:800; font-size:1.25rem; color: var(--c-legendaire); }
-  .offre-note{ flex-basis:100%; margin-left:26px; font-size:0.72rem; color:#FF8F92; }
-  .offre.indisponible{ opacity:0.55; cursor:not-allowed; flex-wrap:wrap; }
-  .cc-btn{ width:100%; border-radius:16px; padding:8px; font-size:0.8rem; }
-  .bourse-row{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    background: var(--paper);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 8px 12px;
-    flex-wrap: wrap;
-    color: var(--ink);
-  }
-  .bourse-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-  .bourse-name{ flex:1; font-size:0.85rem; min-width:120px; }
-  .bourse-dept{ color: var(--ink-soft); font-size:0.76rem; }
-  .bourse-price{ font-size:0.8rem; color: var(--ink-soft); white-space:nowrap; }
-  .bourse-btn{
-    font-family:inherit;
-    font-size:0.74rem;
-    color: var(--bleu);
-    background: none;
-    border: 1.5px solid var(--bleu);
-    border-radius: 14px;
-    padding: 5px 11px;
-    cursor: pointer;
-    white-space:nowrap;
-  }
-  .bourse-btn:hover{ background: rgba(0,38,84,0.06); }
-  .bourse-btn:disabled{ opacity:0.5; cursor:default; }
-
-  .territory{
-    margin-top: 40px;
-    width: 100%;
-    max-width: 1200px;
-    border-top: 1px solid rgba(169,188,212,0.16);
-    padding-top: 18px;
-  }
-  .territory h2{
-    font-size: 0.85rem;
-    font-weight:normal;
-    color: var(--brume);
-    margin: 0 0 12px;
-    font-variant: small-caps;
-    letter-spacing:0.03em;
-  }
-  .map-note{
-    font-size: 0.72rem;
-    color: var(--brume);
-    margin-top: 8px;
-  }
-  .toggle-others-btn{
-    font-family:inherit;
-    font-size:0.76rem;
-    color: #fff;
-    background: none;
-    border: 1.5px solid rgba(169,188,212,0.45);
-    border-radius: 16px;
-    padding: 6px 14px;
-    margin-bottom: 12px;
-    cursor: pointer;
-    align-self: flex-start;
-  }
-  .toggle-others-btn:hover{
-    background: rgba(169,188,212,0.1);
-  }
-  .map-wrap{
-    position: relative;
-    max-width: 1200px;
-    overflow: hidden;
-    border-radius: 14px;
-    border: 1px solid rgba(169,188,212,0.18);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-    cursor: grab;
-    background: #0A1629;
-    margin: 0 auto;
-    touch-action: none;
-  }
-  .map-wrap:active{ cursor: grabbing; }
-  .map-transform{
-    position: absolute;
-    inset: 0;
-    transform-origin: 0 0;
-  }
-  .map-france-svg{
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  }
-  #mapFranceSvg g[data-joueur]{ transition: opacity .2s; }
-  #mapFranceSvg.surlignage g[data-joueur]{ opacity: .15; }
-  #mapFranceSvg.surlignage g[data-joueur].actif{ opacity: 1; }
-
-  /* ---------- Legende de la carte ---------- */
-  .map-legende{
-    position:absolute; left:14px; top:14px; z-index:2;
-    background: rgba(10,22,40,0.85);
-    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-    border: 1px solid rgba(169,188,212,0.18);
-    border-radius: 12px;
-    font-size: 0.8rem;
-    width: 210px;
-    max-height: calc(100% - 28px);
-    display:flex; flex-direction:column;
-    cursor: default;
-  }
-  .map-legende:empty{ display:none; }
-  .map-legende.repliee{ width:auto; }
-  .leg-tete{ display:flex; align-items:center; gap:8px; padding: 10px 10px 10px 14px; }
-  .map-legende.repliee .leg-tete{ padding: 6px 6px 6px 12px; }
-  .leg-tete h3{ margin:0; flex:1; font-family: var(--titre); font-weight:800; font-size:1.05rem; letter-spacing:.01em; color:#fff; }
-  .map-legende.repliee .leg-tete h3{ font-size: .95rem; }
-  .leg-bouton{
-    width:28px; height:28px; border-radius:8px; flex-shrink:0;
-    border:none; background: rgba(169,188,212,0.12); color:#fff;
-    display:flex; align-items:center; justify-content:center; cursor:pointer;
-  }
-  .leg-bouton:hover{ background: rgba(169,188,212,0.22); }
-  .leg-bouton svg{ width:14px; height:14px; transition: transform .15s; }
-  .map-legende.repliee .leg-bouton svg{ transform: rotate(180deg); }
-  .leg-bouton:focus-visible, .leg-joueur:focus-visible, .leg-plus:focus-visible{ outline: 2px solid var(--c-legendaire); outline-offset: 1px; }
-  .leg-corps{ padding: 0 8px 12px; overflow-y:auto; min-height:0; }
-  .map-legende.repliee .leg-corps{ display:none; }
-  .leg-joueur{
-    display:flex; align-items:center; gap:8px;
-    width:100%; margin:1px 0; padding:5px 6px;
-    border:none; border-radius:7px; background:none;
-    color: var(--brume); font: inherit; text-align:left; cursor:pointer;
-  }
-  .leg-joueur:hover{ background: rgba(169,188,212,0.1); }
-  .leg-joueur.actif{ background: rgba(169,188,212,0.18); color:#fff; }
-  .leg-joueur b{ color:#fff; font-weight:600; }
-  .leg-pseudo{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .leg-nb{ margin-left:auto; padding-left:6px; font-variant-numeric: tabular-nums; }
-  .leg-pastille{ width:12px; height:12px; border-radius:4px; flex-shrink:0; }
-  .leg-plus{
-    display:block; width:100%; margin-top:4px; padding:5px 6px;
-    border:none; border-radius:7px; background:none;
-    color: var(--c-legendaire); font: inherit; font-size: .76rem; text-align:left; cursor:pointer;
-  }
-  .leg-plus:hover{ background: rgba(240,180,41,0.1); }
-  .leg-indice{ margin: 6px 6px 0; color: var(--brume); font-size: .7rem; line-height:1.4; }
-  .leg-tailles{ display:flex; align-items:flex-end; gap:10px; margin: 10px 6px 0; padding-top:10px; border-top: 1px solid rgba(169,188,212,0.16); color: var(--brume); font-size: .7rem; }
-  .leg-tailles div{ display:flex; flex-direction:column; align-items:center; gap:4px; }
-
-  /* ---------- Mini-cartes de la collection ---------- */
-  .mini{
-    display:flex; flex-direction:column;
-    aspect-ratio: 2 / 3;
-    border-radius: 10px; padding: 2px;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.35);
-    transition: transform .12s ease-out;
-    content-visibility: auto;
-    contain-intrinsic-size: auto 150px;
-  }
-  @media (hover: hover){ .mini:hover{ transform: translateY(-3px); } }
-  .mini.commun{ background: var(--c-commun); }
-  .mini.peucommun{ background: var(--c-peucommun); }
-  .mini.rare{ background: linear-gradient(160deg, #7FB0FF, var(--c-rare) 45%, #1D4FB8); }
-  .mini.legendaire{
-    background: linear-gradient(135deg, #FFF1B8, var(--c-legendaire) 35%, #B7791F 60%, #FCE38A 85%);
-    padding: 3px;
-    box-shadow: 0 8px 16px rgba(0,0,0,0.35), 0 0 16px rgba(240,180,41,0.35);
-  }
-  .mini-int{
-    flex:1; min-height:0;
-    border-radius: 8px; overflow:hidden;
-    background: var(--papier); color: var(--encre);
-    display:flex; flex-direction:column;
-  }
-  .mini-art{ position:relative; aspect-ratio: 16 / 10; margin: 4px 4px 0; border-radius: 6px; overflow:hidden; flex-shrink:0; }
-  .mini-art svg{ display:block; width:100%; height:100%; }
-  .mini-dept{
-    position:absolute; right:4px; bottom:-3px;
-    font-family: var(--titre); font-weight:900; font-size: 1.6rem; line-height:1;
-    color: rgba(255,255,255,0.3);
-  }
-  .mini-infos{ flex:1; min-height:0; padding: 5px 6px; display:flex; flex-direction:column; }
-  .mini-nom{
-    font-family: var(--titre); font-weight:800; font-size: 1rem; line-height: 0.95;
-    margin:0; overflow-wrap:anywhere;
-    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
-  }
-  .mini-nom.long{ font-size: 0.85rem; }
-  .mini-num{ margin-top: 3px; font-size: 0.62rem; color:#5A6B82; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric: tabular-nums; }
-  .mini-rarete{ margin-top:auto; font-size: 0.6rem; font-weight:600; white-space:nowrap; }
-  .mini-bouclier{
-    position:absolute; left:4px; top:4px;
-    width:20px; height:20px; border-radius:50%;
-    background: rgba(11,24,48,0.8); color:#fff;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .mini-bouclier svg{ width:12px; height:12px; }
-  .mini.commun .mini-rarete{ color:#5F6C80; }
-  .mini.peucommun .mini-rarete{ color:#16734C; }
-  .mini.rare .mini-rarete{ color:#1D4FB8; }
-  .mini.legendaire .mini-rarete{ color:#9A6412; }
-  .mini-lisere{ display:flex; height:3px; flex-shrink:0; }
-  .mini-lisere span{ flex:1; }
-  .mini-lisere span:nth-child(1){ background:#1F3F8F; }
-  .mini-lisere span:nth-child(2){ background:#fff; }
-  .mini-lisere span:nth-child(3){ background: var(--c-rouge); }
-
-  button.open-btn{
-    font-family: var(--titre);
-    font-weight: 800;
-    font-size: 1.2rem;
-    letter-spacing: 0.02em;
-    background: var(--c-legendaire);
-    color: var(--encre);
-    border: none;
-    border-radius: 12px;
-    padding: 11px 22px 13px;
-    cursor: pointer;
-    box-shadow: 0 5px 0 #B7791F;
-    transition: transform .08s ease, box-shadow .08s ease;
-  }
-  button.open-btn:hover{ filter: brightness(1.05); }
-  button.open-btn:active:not(:disabled){ transform: translateY(4px); box-shadow: 0 1px 0 #B7791F; }
-  button.open-btn:disabled{ opacity: 0.45; cursor: default; filter: none; }
-  button.open-btn:focus-visible{ outline: 2px solid var(--c-legendaire); outline-offset: 3px; }
-  .open-btn.secondary{
-    background: transparent;
-    color: #fff;
-    box-shadow: inset 0 0 0 2px rgba(169,188,212,0.35), 0 5px 0 rgba(0,0,0,0.25);
-  }
-  .open-btn.secondary:active:not(:disabled){
-    box-shadow: inset 0 0 0 2px rgba(169,188,212,0.35), 0 1px 0 rgba(0,0,0,0.25);
-  }
-
-  .puces{
-    display:flex;
-    flex-wrap:wrap;
-    gap: 8px;
-    margin-bottom: 18px;
-  }
-  .puce{
-    background: var(--nuit-2);
-    border: 1px solid rgba(169,188,212,0.16);
-    border-radius: 999px;
-    padding: 7px 14px;
-    font-size: 0.85rem;
-    color: var(--brume);
-  }
-  .puce b{ color:#fff; font-weight:600; }
-  .puce.solde b{ color: var(--c-legendaire); }
-  .pack-buttons{
-    display:flex;
-    gap:12px;
-    flex-wrap:wrap;
-    margin-bottom: 30px;
-  }
-
-  .stats{
-    margin-top: 18px;
-    width: 100%;
-    max-width: 460px;
-    border-top: 1px solid rgba(169,188,212,0.16);
-    padding-top: 14px;
-  }
-  .stats h2{
-    font-size: 0.85rem;
-    font-weight: 500;
-    color: var(--brume);
-    margin: 0 0 10px;
-  }
-  .stat-row{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-size: 0.78rem;
-    margin-bottom: 6px;
-  }
-  .stat-row .dot{ width:9px;height:9px;border-radius:50%; flex-shrink:0; }
-  .stat-row .label{ width: 88px; color: var(--brume); }
-  .bar-track{ flex:1; height:7px; background: rgba(169,188,212,0.18); border-radius:4px; overflow:hidden; }
-  .bar-fill{ height:100%; }
-  .stat-row .nums{ width: 118px; text-align:right; color: var(--brume); font-size:0.72rem; }
-
-  .note{
-    max-width: 60ch;
-    font-size: 0.78rem;
-    color: var(--brume);
-    margin-top: 22px;
-    line-height: 1.5;
-  }
-  .app-shell{
-    position: relative;
-    z-index: 1;
-    display:flex;
-    width:100%;
-    min-height:100vh;
-  }
-  .sidebar{
-    width: 220px;
-    flex-shrink: 0;
-    background: rgba(10,22,40,0.72);
-    -webkit-backdrop-filter: blur(6px);
-    backdrop-filter: blur(6px);
-    border-right: 1px solid rgba(169,188,212,0.12);
-    padding: 24px 14px;
-    display:flex;
-    flex-direction:column;
-    gap: 6px;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-  }
-  .sidebar-top{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-  }
-  .sidebar .brand{
-    font-family: var(--titre);
-    font-weight: 900;
-    font-size: 1.9rem;
-    line-height: 1;
-    letter-spacing: 0.01em;
-    color:#fff;
-    padding: 0 10px 22px;
-    flex:1;
-  }
-  .sidebar .brand span{ color: var(--c-legendaire); }
-  .logout-icon-btn{
-    display:none;
-    width:32px; height:32px;
-    border-radius:50%;
-    background: rgba(169,188,212,0.12);
-    border:none;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-    flex-shrink:0;
-  }
-  .logout-icon-btn svg{ width:15px; height:15px; }
-  .tabs-row{
-    display:flex;
-    flex-direction:column;
-    gap: 6px;
-  }
-  .tab{
-    --icon-bg: #0B182C;
-    position: relative;
-    display:flex;
-    align-items:center;
-    gap: 12px;
-    padding: 11px 12px;
-    border-radius: 10px;
-    color: var(--brume);
-    font-weight: 500;
-    font-size: 0.95rem;
-    cursor:pointer;
-    user-select: none;
-  }
-  .tab:hover{ background: rgba(169,188,212,0.08); color:#fff; }
-  .tab .icon{
-    width:20px; height:20px;
-    display:flex; align-items:center; justify-content:center;
-    flex-shrink:0;
-    color: inherit;
-  }
-  .tab .icon svg{ width:20px; height:20px; }
-  .tab.active{
-    --icon-bg: var(--nuit-3);
-    background: var(--nuit-3);
-    color:#fff;
-  }
-  .tab.active::before{
-    content:"";
-    position:absolute;
-    left:-14px; top:8px; bottom:8px;
-    width:4px;
-    border-radius: 0 4px 4px 0;
-    background: var(--c-legendaire);
-  }
-  .sidebar-footer{
-    margin-top:auto;
-    padding: 14px 10px 2px;
-    border-top: 1px solid rgba(169,188,212,0.14);
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-    font-size: 0.75rem;
-    color: var(--brume);
-    overflow-wrap: anywhere;
-  }
-  .content{
-    flex:1;
-    padding: 36px 40px 60px;
-    display:flex;
-    flex-direction:column;
-    align-items:flex-start;
-    min-width:0;
-  }
-  .tab-panel{
-    display:none;
-    width:100%;
-    flex-direction:column;
-    align-items:flex-start;
-  }
-  .tab-panel.active{ display:flex; }
-  .link-btn{
-    background:none;
-    border:none;
-    color:#fff;
-    text-decoration:underline;
-    font-family:inherit;
-    font-size:0.72rem;
-    cursor:pointer;
-    padding:0;
-    text-align:left;
-    opacity:0.8;
-  }
-  @media (max-width: 720px){
-    .app-shell{ flex-direction:column; }
-    .sidebar{
-      width:100%;
-      height:auto;
-      position: relative;
-      padding: 10px 14px 0;
-      gap: 0;
-      border-right: none;
-      border-bottom: 1px solid rgba(169,188,212,0.12);
+// Meme texte = meme nombre, donc meme commune = meme dessin a chaque fois
+function hashTexte(str){
+  let h = 2166136261;
+  for(const ch of str){ h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function aleatoireStable(a){
+  return function(){
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function courbesDeNiveau(seed, w, h, anneaux, points = 90){
+  const rnd = aleatoireStable(seed);
+  const cx = w * (0.3 + rnd() * 0.4), cy = h * (0.3 + rnd() * 0.4);
+  const k1 = 2 + Math.floor(rnd() * 3), k2 = 3 + Math.floor(rnd() * 4);
+  const p1 = rnd() * 6.28, p2 = rnd() * 6.28;
+  const a1 = 0.08 + rnd() * 0.12, a2 = 0.04 + rnd() * 0.08;
+  const pas = Math.max(w, h) / anneaux * 0.95;
+  let d = '';
+  for(let i = 1; i <= anneaux; i++){
+    const r = i * pas;
+    const pts = [];
+    for(let k = 0; k < points; k++){
+      const t = k / points * Math.PI * 2;
+      const rr = r * (1 + a1 * Math.sin(k1 * t + p1 + i * 0.35) + a2 * Math.sin(k2 * t + p2 - i * 0.2));
+      pts.push((cx + rr * Math.cos(t)).toFixed(1) + ',' + (cy + rr * Math.sin(t) * 0.82).toFixed(1));
     }
-    .sidebar-top{ padding-bottom:8px; }
-    .sidebar .brand{ padding:0; font-size: 1.45rem; }
-    .logout-icon-btn{ display:flex; }
-    .tabs-row{ flex-direction:row; gap:0; }
-    .tab{
-      --icon-bg: #0B182C;
-      flex:1;
-      flex-direction:column;
-      gap:4px;
-      padding: 10px 4px 9px;
-      border-radius: 0;
-      border-bottom: 2.5px solid transparent;
-      font-size: 0.66rem;
-      white-space: nowrap;
-    }
-    .tab:hover{ background: transparent; }
-    .tab .icon, .tab .icon svg{ width:19px; height:19px; }
-    .tab.active{
-      --icon-bg: #0B182C;
-      background: transparent;
-      border-bottom-color: var(--c-legendaire);
-    }
-    .tab.active::before{ display:none; }
-    .tab-badge{
-      position:absolute; top:5px; left:calc(50% + 5px);
-      margin:0; min-width:16px; height:16px; padding:0 4px;
-      font-size:0.6rem;
-    }
-    .sidebar-footer{ display:none; }
-    .content{ padding: 20px 14px 32px; }
-    .map-legende{ left:8px; top:8px; width:180px; font-size:.74rem; }
-    .leg-tailles{ display:none; }
-    .coll-entete{ margin: -20px -14px 12px; padding: 14px 14px 10px; }
-    .coll-filtres{ flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
-    .coll-filtre{ white-space: nowrap; }
-    .coll-grille{ grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
-    .mini-art{ margin: 3px 3px 0; }
-    .mini-dept{ font-size: 1.3rem; }
-    .mini-infos{ padding: 4px 5px; }
-    .mini-nom{ font-size: 0.9rem; }
-    .mini-nom.long{ font-size: 0.78rem; }
-    .mini-rarete{ font-size: 0.56rem; }
-    .mini-num{ font-size: 0.58rem; margin-top:2px; }
-    .mini-total{ display:none; }
-    .pack-zone{ gap: 12px; justify-content:center; }
-    .card{ width: 164px; height: 240px; }
-    .carte-haut{ padding: 6px 7px 5px; }
-    .carte-rarete{ font-size: 0.6rem; padding: 2px 6px; }
-    /* le rang reste affiche en bas de la carte */
-    .carte-num{ display:none; }
-    .carte-art{ height: 38%; margin: 0 6px; }
-    .carte-dept{ font-size: 2.4rem; right:5px; bottom:-5px; }
-    .carte-infos{ padding: 7px 8px 0; }
-    .carte-nom{ font-size: 1.1rem; line-height: 0.95; }
-    .carte-nom.long{ font-size: 0.95rem; }
-    .carte-nom.tres-long{ font-size: 0.82rem; }
-    .carte-departement{ font-size: 0.66rem; margin-top: 2px; }
-    .carte-stats{ gap: 10px; margin-bottom: 6px; padding-top: 4px; }
-    .carte-stats span{ font-size: 0.56rem; }
-    .carte-stats b{ font-size: 0.9rem; }
+    d += 'M' + pts.join('L') + 'Z';
   }
-  .auth-screen{
-    position: relative;
-    z-index: 1;
-    padding: 16px;
-    width:100%;
-    min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-  .auth-box{
-    width:100%;
-    max-width:360px;
-    background:var(--paper);
-    border:1px solid var(--line);
-    border-radius:10px;
-    padding:28px 26px;
-    box-shadow: 0 14px 28px rgba(0,0,0,0.4);
-    text-align:center;
-    color: var(--ink);
-  }
-  .auth-box h1{
-    font-size:1.25rem;
-    margin-bottom:6px;
-  }
-  .auth-box .sub{
-    margin-bottom:20px;
-    font-size:0.82rem;
-    color: var(--ink-soft);
-  }
-  .auth-box input{
-    width:100%;
-    font-family:inherit;
-    font-size:0.9rem;
-    padding:10px 12px;
-    margin-bottom:10px;
-    border:1px solid var(--line);
-    border-radius:6px;
-    background:#fff;
-    color:var(--ink);
-  }
-  .auth-buttons{
-    display:flex;
-    gap:10px;
-    margin-top:6px;
-  }
-  .auth-buttons .open-btn{
-    flex:1;
-    padding:10px 14px 12px;
-    font-size:1.05rem;
-  }
-  .auth-box .open-btn.secondary{
-    color: var(--encre);
-    box-shadow: inset 0 0 0 2px var(--line), 0 5px 0 rgba(0,0,0,0.12);
-  }
-  .auth-msg{
-    min-height:1.2em;
-    font-size:0.82rem;
-    margin:12px 0 0;
-    border-radius:8px;
-    line-height:1.4;
-  }
-  .auth-msg.erreur, .auth-msg.succes{ padding:8px 12px; }
-  .auth-msg.erreur{ background:#FDECEC; color:#A32227; }
-  .auth-msg.succes{ background:#E6F5EE; color:#12664A; }
+  return { d, cx, cy };
+}
 
-  /* ---------- Notifications ---------- */
-  .notifs{
-    position:fixed; z-index:50;
-    top:16px; left:50%; transform:translateX(-50%);
-    width:min(420px, calc(100vw - 24px));
-    display:flex; flex-direction:column; gap:8px;
-    pointer-events:none;
-  }
-  .notif{
-    pointer-events:auto;
-    display:flex; align-items:center; gap:12px;
-    background: rgba(16,32,56,0.96);
-    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
-    border:1px solid rgba(169,188,212,0.2);
-    border-left:4px solid var(--brume);
-    border-radius:12px;
-    padding:11px 10px 11px 12px;
-    color:#fff;
-    box-shadow:0 14px 30px rgba(0,0,0,0.45);
-    font-family: var(--texte);
-    opacity:0; transform:translateY(-12px);
-    transition: opacity .2s ease, transform .2s ease;
-  }
-  .notif.visible{ opacity:1; transform:none; }
-  .notif.sortie{ opacity:0; transform:translateY(-8px); }
-  .notif.victoire, .notif.succes{ border-left-color: var(--c-peucommun); }
-  .notif.defaite, .notif.erreur{ border-left-color: var(--c-rouge); }
-  .notif.info{ border-left-color: var(--c-rare); }
-  .notif-icone{
-    width:30px; height:30px; border-radius:50%; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center;
-    background: rgba(169,188,212,0.14); color:#fff;
-  }
-  .notif.victoire .notif-icone, .notif.succes .notif-icone{ background: rgba(34,160,107,0.22); color:#5EE0A8; }
-  .notif.defaite .notif-icone, .notif.erreur .notif-icone{ background: rgba(229,72,77,0.2); color:#FF8F92; }
-  .notif.info .notif-icone{ background: rgba(47,124,246,0.22); color:#8DB8FF; }
-  .notif-icone svg{ width:16px; height:16px; }
-  .notif-texte{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
-  .notif-texte b{ font-weight:600; font-size:0.9rem; }
-  .notif-texte span{ color: var(--brume); font-size:0.8rem; }
-  .notif-serie{ display:flex; gap:4px; flex-shrink:0; }
-  .notif-serie i{ width:11px; height:11px; border-radius:50%; border:1.5px solid rgba(169,188,212,0.45); }
-  .notif.victoire .notif-serie i.plein{ background: var(--c-legendaire); border-color: var(--c-legendaire); }
-  .notif-fermer{
-    width:28px; height:28px; border-radius:8px; flex-shrink:0;
-    border:none; background:none; color: var(--brume); cursor:pointer;
-    display:flex; align-items:center; justify-content:center;
-  }
-  .notif-fermer:hover{ background: rgba(169,188,212,0.12); color:#fff; }
-  .notif-fermer svg{ width:14px; height:14px; }
+const TEINTES_CARTE = {
+  commun:     ['#8D9AAE', '#5F6C80'],
+  peucommun:  ['#35B97E', '#16734C'],
+  rare:       ['#4E92FF', '#1D4FB8'],
+  legendaire: ['#F7C548', '#B7791F'],
+};
 
-  /* ---------- Fenetres : conquete et prix de vente ---------- */
-  .fenetre-fond{
-    position:fixed; inset:0; z-index:60;
-    background: rgba(5,12,24,0.72);
-    display:flex; align-items:center; justify-content:center;
-    padding:16px;
-    opacity:0; transition: opacity .18s ease;
-  }
-  .fenetre-fond[hidden]{ display:none; }
-  .fenetre-fond.visible{ opacity:1; }
-  .fenetre{
-    position:relative; overflow:hidden;
-    width:min(380px, 100%);
-    background: var(--nuit-2);
-    border:1px solid rgba(169,188,212,0.2);
-    border-radius:18px;
-    padding:26px 24px 22px;
-    color:#fff; text-align:center;
-    box-shadow:0 30px 60px rgba(0,0,0,0.5);
-    transform: scale(.94); transition: transform .2s cubic-bezier(.2,.8,.3,1.2);
-  }
-  .fenetre-fond.visible .fenetre{ transform:none; }
-  .fenetre h2{ font-family: var(--titre); font-weight:900; font-size:2.2rem; line-height:.95; margin:0 0 8px; position:relative; }
-  .conquete{ border:2px solid var(--c-legendaire); }
-  .conquete.rare{ border-color: var(--c-rare); }
-  .conquete-eclat{
-    position:absolute; left:50%; top:-120px; width:360px; height:360px; margin-left:-180px;
-    background: radial-gradient(circle, rgba(240,180,41,0.35), transparent 65%);
-    pointer-events:none;
-  }
-  .conquete.rare .conquete-eclat{ background: radial-gradient(circle, rgba(47,124,246,0.35), transparent 65%); }
-  .conquete-sur{ position:relative; margin:0 0 6px; color: var(--c-legendaire); font-weight:600; font-size:.85rem; letter-spacing:.04em; }
-  .conquete.rare .conquete-sur{ color:#8DB8FF; }
-  .conquete-infos{ position:relative; margin:0 0 16px; color: var(--brume); font-size:.88rem; }
-  .conquete-rarete{ display:inline-block; padding:2px 9px; border-radius:999px; background: var(--c-legendaire); color: var(--encre); font-weight:600; font-size:.72rem; margin-right:4px; }
-  .conquete.rare .conquete-rarete{ background: var(--c-rare); color:#fff; }
-  .conquete-bonus{ position:relative; margin:0 0 6px; font-family: var(--titre); font-weight:800; font-size:1.7rem; color: var(--c-legendaire); }
-  .conquete-note{ position:relative; margin:0 0 20px; color: var(--brume); font-size:.8rem; }
-  .fenetre .open-btn{ position:relative; }
-  .fenetre.prix{ text-align:left; }
-  .fenetre.prix h2{ font-size:1.9rem; }
-  .prix-commune{ margin:0 0 16px; color: var(--brume); }
-  .prix-champ{ display:flex; flex-direction:column; gap:6px; font-size:.82rem; color: var(--brume); }
-  .prix-saisie{ display:flex; align-items:center; gap:8px; background: var(--papier); border-radius:10px; padding:4px 12px; }
-  .prix-saisie input{ flex:1; min-width:0; border:none; background:none; font-family: var(--titre); font-weight:800; font-size:1.6rem; color: var(--encre); padding:4px 0; }
-  .prix-saisie input:focus{ outline:none; }
-  .prix-saisie:focus-within{ box-shadow: 0 0 0 2px var(--c-legendaire); }
-  .prix-saisie em{ font-style:normal; color:#5A6B82; font-weight:600; }
-  .prix-aide{ margin:8px 0 0; font-size:.78rem; color: var(--brume); }
-  .prix-erreur{ margin:6px 0 0; min-height:1.1em; font-size:.8rem; color:#FF8F92; }
-  .prix-boutons{ display:flex; gap:10px; justify-content:flex-end; margin-top:14px; flex-wrap:wrap; }
-  .prix-boutons .open-btn{ font-size:1.05rem; padding:9px 18px 11px; }
+function carteArtSvg(code, tierId){
+  const [clair, fonce] = TEINTES_CARTE[tierId];
+  const id = 'cg' + code;
+  const { d, cx, cy } = courbesDeNiveau(hashTexte(String(code)), 200, 120, 9);
+  return `
+    <svg viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <radialGradient id="${id}" cx="${(cx / 200 * 100).toFixed(0)}%" cy="${(cy / 120 * 100).toFixed(0)}%" r="85%">
+          <stop offset="0%" stop-color="${clair}"/>
+          <stop offset="100%" stop-color="${fonce}"/>
+        </radialGradient>
+      </defs>
+      <rect width="200" height="120" fill="url(#${id})"/>
+      <path d="${d}" fill="none" stroke="rgba(255,255,255,0.38)" stroke-width="1"/>
+      <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="5" fill="#fff" stroke="${fonce}" stroke-width="2.5"/>
+    </svg>`;
+}
 
-  @media (prefers-reduced-motion: reduce){
-    .notif, .fenetre-fond, .fenetre{ transition:none; }
+// Epingle de carte, utilisee sur le dos des cartes et sur le paquet
+const ICONE_EPINGLE = '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+
+// Le motif du dos est le meme pour toutes les cartes : on le calcule une seule fois
+const DOS_MOTIF_SVG = (() => {
+  const { d } = courbesDeNiveau(hashTexte('dos-de-carte'), 188, 263, 10);
+  return `<svg class="dos-motif" viewBox="0 0 188 263" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <path d="${d}" fill="none" stroke="rgba(169,188,212,0.16)" stroke-width="1"/>
+  </svg>`;
+})();
+
+function paquetMotifSvg(type){
+  const achete = type === 'achete';
+  const clair = achete ? '#FCE38A' : '#3B6FB8';
+  const moyen = achete ? '#F0B429' : '#1D3F72';
+  const fonce = achete ? '#9A6412' : '#0B1D38';
+  const trait = achete ? 'rgba(90,55,5,0.28)' : 'rgba(169,210,255,0.22)';
+  const { d } = courbesDeNiveau(hashTexte('paquet-' + type), 200, 280, 12);
+  return `<svg class="paquet-motif" viewBox="0 0 200 280" aria-hidden="true">
+    <defs><linearGradient id="pg-${type}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="${clair}"/><stop offset="55%" stop-color="${moyen}"/><stop offset="100%" stop-color="${fonce}"/>
+    </linearGradient></defs>
+    <rect width="200" height="280" fill="url(#pg-${type})"/>
+    <path d="${d}" fill="none" stroke="${trait}" stroke-width="1.2"/>
+  </svg>`;
+}
+
+// d3 sert a la carte (frontieres) et aux courbes de niveau ; si le CDN ne repond pas, on se rabat sur plus simple
+const D3_OK = typeof d3 !== 'undefined' && !!d3.Delaunay && !!d3.contours;
+
+// Relief imaginaire dont on trace les courbes de niveau : deux lignes d'altitudes differentes ne se croisent jamais
+function lignesDeNiveau(seed, w, h, nbLignes, nbBosses){
+  if(!D3_OK) return courbesDeNiveau(seed, w, h, nbLignes).d;
+  const rnd = aleatoireStable(seed);
+  const nx = 110, ny = Math.max(30, Math.round(110 * h / w));
+  const marge = 0.08;
+  const bosses = Array.from({length: nbBosses}, () => ({
+    x: rnd() * nx, y: rnd() * ny,
+    s: (0.1 + rnd() * 0.2) * nx,
+    a: (rnd() < 0.35 ? -1 : 1) * (0.5 + rnd())
+  }));
+  const valeurs = new Float64Array(nx * ny);
+  for(let jy = 0; jy < ny; jy++) for(let ix = 0; ix < nx; ix++){
+    let v = 0.2 * ix / nx;
+    for(const b of bosses){ const dx = ix - b.x, dy = jy - b.y; v += b.a * Math.exp(-(dx*dx + dy*dy) / (2 * b.s * b.s)); }
+    valeurs[jy * nx + ix] = v;
   }
+  let min = Infinity, max = -Infinity;
+  for(const v of valeurs){ if(v < min) min = v; if(v > max) max = v; }
+  const seuils = Array.from({length: nbLignes}, (_, k) => min + (max - min) * (k + 1) / (nbLignes + 1));
+  const trace = d3.line().curve(d3.curveBasisClosed);
+  const px = (x) => ((x - 0.5) / (nx - 1) * (1 + 2 * marge) - marge) * w;
+  const py = (y) => ((y - 0.5) / (ny - 1) * (1 + 2 * marge) - marge) * h;
+  let d = '';
+  for(const geo of d3.contours().size([nx, ny]).thresholds(seuils)(valeurs)){
+    for(const poly of geo.coordinates) for(const anneau of poly){
+      d += trace(anneau.slice(0, -1).map(([x, y]) => [px(x), py(y)]));
+    }
+  }
+  return d;
+}
+
+function dessinerFondTopo(){
+  const svg = document.getElementById('fondTopo');
+  if(!svg) return;
+  svg.setAttribute('viewBox', '0 0 1600 1000');
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+  svg.innerHTML = `<path d="${lignesDeNiveau(911, 1600, 1000, 9, 6)}" fill="none" stroke="rgba(169,188,212,0.07)" stroke-width="1.2"/>`;
+}
+dessinerFondTopo();
+
+let FRANCE_OUTLINE = null;
+let MAP_W = 1000, MAP_H = 1000;
+let mapBounds = null;
+let collectionMap = new Map();
+let othersMap = new Map();
+let session = {commun:0, peucommun:0, rare:0, legendaire:0, total:0};
+
+// ---------- Notifications (remplacent les fenetres grises du navigateur) ----------
+const ICONES_NOTIF = {
+  victoire: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  defaite: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  erreur: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/><circle cx="12" cy="12" r="9.5"/></svg>',
+  succes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 11v6M12 7h.01"/><circle cx="12" cy="12" r="9.5"/></svg>',
+};
+
+// Les messages d'erreur de Supabase arrivent en anglais : on traduit les plus courants
+function messageLisible(msg){
+  const m = String(msg || '');
+  const table = [
+    [/invalid login credentials/i, 'Email ou mot de passe incorrect.'],
+    [/user already registered/i, 'Un compte existe déjà avec cet email.'],
+    [/password should be at least (\d+)/i, (x) => `Le mot de passe doit faire au moins ${x[1]} caractères.`],
+    [/email not confirmed/i, 'Confirme ton adresse email avant de te connecter (regarde tes mails).'],
+    [/invalid format|unable to validate email/i, 'Adresse email invalide.'],
+    [/failed to fetch|network/i, 'Connexion impossible. Vérifie ta connexion internet.'],
+    [/rate limit|too many requests/i, 'Trop de tentatives. Réessaie dans quelques minutes.'],
+  ];
+  for(const [re, trad] of table){
+    const x = m.match(re);
+    if(x) return typeof trad === 'function' ? trad(x) : trad;
+  }
+  return m;
+}
+
+function notifier({ type = 'info', titre, texte = '', serie = null, duree }){
+  const zone = document.getElementById('notifs');
+  if(!zone) return;
+  const el = document.createElement('div');
+  el.className = 'notif ' + type;
+  el.setAttribute('role', type === 'erreur' ? 'alert' : 'status');
+  const ronds = serie === null ? '' : `<span class="notif-serie">${[0, 1, 2].map(i => `<i class="${i < serie ? 'plein' : ''}"></i>`).join('')}</span>`;
+  el.innerHTML = `
+    <span class="notif-icone">${ICONES_NOTIF[type] || ICONES_NOTIF.info}</span>
+    <span class="notif-texte"><b>${echapperTexte(titre)}</b>${texte ? `<span>${echapperTexte(texte)}</span>` : ''}</span>
+    ${ronds}
+    <button class="notif-fermer" aria-label="Fermer">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>
+    </button>`;
+  const fermer = () => {
+    if(el.classList.contains('sortie')) return;
+    el.classList.add('sortie');
+    setTimeout(() => el.remove(), 220);
+  };
+  el.querySelector('.notif-fermer').addEventListener('click', fermer);
+  zone.appendChild(el);
+  // au-dela de 3 notifications, la plus ancienne s'en va
+  const toutes = zone.querySelectorAll('.notif:not(.sortie)');
+  if(toutes.length > 3) toutes[0].querySelector('.notif-fermer').click();
+  requestAnimationFrame(() => el.classList.add('visible'));
+  setTimeout(fermer, duree || (type === 'erreur' ? 6000 : 3500));
+}
+function echapperTexte(s){
+  return String(s == null ? '' : s).replace(/[&<>"]/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[ch]));
+}
+
+// ---------- Fenetres (conquete, prix de vente) ----------
+let fenetreRetourFocus = null;
+function ouvrirFenetre(html, onFermer){
+  const fond = document.getElementById('fenetre');
+  fenetreRetourFocus = document.activeElement;
+  fond.innerHTML = html;
+  fond.hidden = false;
+  requestAnimationFrame(() => fond.classList.add('visible'));
+  const fermer = (valeur) => {
+    fond.classList.remove('visible');
+    document.removeEventListener('keydown', surTouche);
+    setTimeout(() => { fond.hidden = true; fond.innerHTML = ''; }, 180);
+    if(fenetreRetourFocus && fenetreRetourFocus.focus) fenetreRetourFocus.focus();
+    if(onFermer) onFermer(valeur);
+  };
+  const surTouche = (e) => { if(e.key === 'Escape') fermer(null); };
+  document.addEventListener('keydown', surTouche);
+  fond.onclick = (e) => { if(e.target === fond) fermer(null); };
+  return fermer;
+}
+
+function celebrerConquete({ nom, tier, dept, bonus }){
+  const t = TIERS.find(x => x.id === tier);
+  const fermer = ouvrirFenetre(`
+    <div class="fenetre conquete ${tier}" role="dialog" aria-modal="true" aria-labelledby="conqueteTitre">
+      <div class="conquete-eclat" aria-hidden="true"></div>
+      <p class="conquete-sur">Commune conquise</p>
+      <h2 id="conqueteTitre">${echapperTexte(nom)}</h2>
+      <p class="conquete-infos"><span class="conquete-rarete">${t ? t.label : ''}</span>${dept ? ` ${echapperTexte(DEPT_NAMES[dept] || '')} (${dept})` : ''}</p>
+      <p class="conquete-bonus">+${Number(bonus).toLocaleString('fr-FR')} pts de bonus</p>
+      <p class="conquete-note">Elle t'appartient maintenant, et elle est protégée pendant 3 h.</p>
+      <button class="open-btn" data-fermer>Génial !</button>
+    </div>`);
+  const btn = document.querySelector('#fenetre [data-fermer]');
+  btn.addEventListener('click', () => fermer(true));
+  btn.focus();
+}
+
+function demanderPrix({ nom, rachat }){
+  return new Promise((resolve) => {
+    const fermer = ouvrirFenetre(`
+      <form class="fenetre prix" role="dialog" aria-modal="true" aria-labelledby="prixTitre" novalidate>
+        <h2 id="prixTitre">Mettre en vente</h2>
+        <p class="prix-commune">${echapperTexte(nom)}</p>
+        <label class="prix-champ">
+          <span>Ton prix</span>
+          <span class="prix-saisie"><input type="number" inputmode="numeric" min="1" step="1" id="prixValeur" required><em>pts</em></span>
+        </label>
+        <p class="prix-aide">Le jeu te la rachète ${Number(rachat).toLocaleString('fr-FR')} pts si tu préfères vendre tout de suite.</p>
+        <p class="prix-erreur" id="prixErreur" role="alert"></p>
+        <div class="prix-boutons">
+          <button type="button" class="open-btn secondary" data-annuler>Annuler</button>
+          <button type="submit" class="open-btn">Mettre en vente</button>
+        </div>
+      </form>`, resolve);
+    const form = document.querySelector('#fenetre form');
+    const champ = document.getElementById('prixValeur');
+    form.querySelector('[data-annuler]').addEventListener('click', () => fermer(null));
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const prix = parseInt(champ.value, 10);
+      if(!prix || prix <= 0){
+        document.getElementById('prixErreur').textContent = 'Indique un prix supérieur à 0.';
+        champ.focus();
+        return;
+      }
+      fermer(prix);
+    });
+    champ.focus();
+  });
+}
+
+// ---------- Authentification ----------
+function showAuth(msg, type = 'erreur'){
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('gameScreen').style.display = 'none';
+  const el = document.getElementById('authMsg');
+  el.textContent = msg ? messageLisible(msg) : '';
+  el.className = 'auth-msg' + (msg ? ' ' + type : '');
+}
+
+async function showGame(session_){
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('gameScreen').style.display = 'flex';
+  document.getElementById('whoami').textContent = session_.user.email;
+  await loadOutline();
+  await loadMyCollection();
+  await loadOthersPossessions();
+  await loadPackStatus();
+  loadMenaces();
+  if(!menacesInterval){
+    // verifie toutes les minutes si une de mes communes est attaquee (pastille rouge sur l'onglet Combat)
+    menacesInterval = setInterval(loadMenaces, 60000);
+  }
+}
+
+async function initAuth(){
+  const { data: { session: s } } = await sb.auth.getSession();
+  if(s) showGame(s); else showAuth();
+  sb.auth.onAuthStateChange((event, s2) => {
+    if(s2) showGame(s2); else showAuth();
+  });
+}
+
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if(error) showAuth(error.message);
+});
+
+document.getElementById('signupBtn').addEventListener('click', async () => {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const pseudo = document.getElementById('authPseudo').value.trim();
+  const { error } = await sb.auth.signUp({ email, password, options: { data: { pseudo } } });
+  if(error) showAuth(error.message);
+  else showAuth('Compte créé. Tu peux te connecter.', 'succes');
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await sb.auth.signOut();
+});
+document.getElementById('logoutBtnMobile').addEventListener('click', async () => {
+  await sb.auth.signOut();
+});
+
+// ---------- Carte (contour reel + points) ----------
+async function loadOutline(){
+  if(FRANCE_OUTLINE) return;
+  const res = await fetch('data/france-outline.json');
+  FRANCE_OUTLINE = await res.json();
+  computeMapBounds();
+  renderFranceOutline();
+}
+
+function computeMapBounds(){
+  let latMin=90, latMax=-90, lonMin=180, lonMax=-180;
+  for(const ring of FRANCE_OUTLINE){
+    for(const [lon, lat] of ring){
+      if(lat<latMin) latMin=lat;
+      if(lat>latMax) latMax=lat;
+      if(lon<lonMin) lonMin=lon;
+      if(lon>lonMax) lonMax=lon;
+    }
+  }
+  // marge respirante tout autour (meme proportion sur les 4 cotes,
+  // continent et Corse gardent leur position relative exacte)
+  const pad = 0.04;
+  const latPad = (latMax - latMin) * pad;
+  const lonPad = (lonMax - lonMin) * pad;
+  latMin -= latPad; latMax += latPad;
+  lonMin -= lonPad; lonMax += lonPad;
+
+  mapBounds = {latMin, latMax, lonMin, lonMax};
+  const meanLat = (latMin + latMax) / 2;
+  const lonSpanCorrected = (lonMax - lonMin) * Math.cos(meanLat * Math.PI / 180);
+  const latSpan = latMax - latMin;
+  const ratio = lonSpanCorrected / latSpan;
+  window.__mapAspectRatio = ratio;
+  MAP_W = 1000;
+  MAP_H = Math.round(1000 / ratio);
+  sizeMapWrap(ratio);
+  window.addEventListener('resize', () => sizeMapWrap(ratio));
+}
+
+function sizeMapWrap(ratio){
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap || !ratio) return;
+  const parent = wrap.parentElement;
+  const availWidth = Math.min(parent.clientWidth, 1200);
+  const availHeightPx = window.innerHeight * 0.78;
+  const widthFromHeight = availHeightPx * ratio;
+  const finalWidth = Math.min(availWidth, widthFromHeight);
+  wrap.style.width = finalWidth + 'px';
+  wrap.style.height = (finalWidth / ratio) + 'px';
+  applyMapTransform();
+}
+
+function project(lat, lon){
+  const {latMin, latMax, lonMin, lonMax} = mapBounds;
+  const x = (lon - lonMin) / (lonMax - lonMin);
+  const y = (latMax - lat) / (latMax - latMin);
+  return {x, y};
+}
+
+function renderFranceOutline(){
+  const svg = document.getElementById('mapFranceSvg');
+  if(!svg || !mapBounds) return;
+  svg.setAttribute('viewBox', `0 0 ${MAP_W} ${MAP_H}`);
+  const contour = FRANCE_OUTLINE.map(ring => 'M' + ring.map(([lon, lat]) => {
+    const p = project(lat, lon);
+    return (p.x * MAP_W).toFixed(1) + ',' + (p.y * MAP_H).toFixed(1);
+  }).join('L') + 'Z').join('');
+  document.getElementById('clipTerrePath').setAttribute('d', contour);
+  document.getElementById('mapTerre').setAttribute('d', contour);
+  document.getElementById('mapCote').setAttribute('d', contour);
+  const mer = document.getElementById('mapMer');
+  mer.setAttribute('width', MAP_W);
+  mer.setAttribute('height', MAP_H);
+  document.getElementById('mapTopo').setAttribute('d', lignesDeNiveau(4217, MAP_W, MAP_H, 11, 9));
+  setupMapInteraction();
+  renderMapOverlay();
+}
+
+let mapZoom = 1, mapPanX = 0, mapPanY = 0;
+let mapDragging = false, mapDragStart = {x:0, y:0};
+let mapInteractionReady = false;
+const MAP_ZOOM_MIN = 1;
+const MAP_ZOOM_MAX = 6;
+
+// Empeche la carte de sortir du cadre (plus de France "perdue" hors ecran)
+function clampMapPan(){
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap) return;
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  mapPanX = Math.min(0, Math.max(w - w * mapZoom, mapPanX));
+  mapPanY = Math.min(0, Math.max(h - h * mapZoom, mapPanY));
+}
+
+function applyMapTransform(){
+  clampMapPan();
+  const el = document.getElementById('mapTransform');
+  if(el) el.style.transform = `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`;
+}
+
+// Zoome en gardant fixe le point (px, py) du cadre : le curseur ou le centre des deux doigts
+function zoomMapAt(newZoom, px, py){
+  newZoom = Math.min(MAP_ZOOM_MAX, Math.max(MAP_ZOOM_MIN, newZoom));
+  const ratio = newZoom / mapZoom;
+  mapPanX = px - (px - mapPanX) * ratio;
+  mapPanY = py - (py - mapPanY) * ratio;
+  mapZoom = newZoom;
+  applyMapTransform();
+}
+
+function touchDist(t){
+  return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+}
+function touchMid(t, rect){
+  return { x: (t[0].clientX + t[1].clientX) / 2 - rect.left, y: (t[0].clientY + t[1].clientY) / 2 - rect.top };
+}
+
+function setupMapInteraction(){
+  if(mapInteractionReady) return;
+  mapInteractionReady = true;
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap) return;
+
+  // --- Molette souris + trackpad (defilement a deux doigts ou pincement) ---
+  // Zoom proportionnel a l'amplitude du geste : fluide au trackpad, par crans a la souris
+  wrap.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const rect = wrap.getBoundingClientRect();
+    let dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+    dy = Math.max(-150, Math.min(150, dy));
+    // pincement trackpad (Chrome le signale avec ctrlKey) : plus sensible
+    const sensibilite = e.ctrlKey ? 0.012 : 0.002;
+    zoomMapAt(mapZoom * Math.exp(-dy * sensibilite), e.clientX - rect.left, e.clientY - rect.top);
+  }, { passive: false });
+
+  // --- Pincement trackpad sur Safari Mac (evenements "gesture" propres a Safari) ---
+  let gestureStartZoom = 1;
+  let touchPinch = null;
+  wrap.addEventListener('gesturestart', (e) => {
+    e.preventDefault();
+    gestureStartZoom = mapZoom;
+  });
+  wrap.addEventListener('gesturechange', (e) => {
+    e.preventDefault();
+    if(touchPinch) return; // sur iPhone le pincement est deja gere par les evenements tactiles
+    const rect = wrap.getBoundingClientRect();
+    zoomMapAt(gestureStartZoom * e.scale, e.clientX - rect.left, e.clientY - rect.top);
+  });
+  wrap.addEventListener('gestureend', (e) => e.preventDefault());
+
+  // --- Souris : cliquer-glisser ---
+  wrap.addEventListener('mousedown', (e) => {
+    mapDragging = true;
+    mapDragStart = { x: e.clientX - mapPanX, y: e.clientY - mapPanY };
+  });
+  window.addEventListener('mousemove', (e) => {
+    if(!mapDragging) return;
+    mapPanX = e.clientX - mapDragStart.x;
+    mapPanY = e.clientY - mapDragStart.y;
+    applyMapTransform();
+    // recale le point de depart si on a bute sur un bord, pour repartir sans temps mort
+    mapDragStart = { x: e.clientX - mapPanX, y: e.clientY - mapPanY };
+  });
+  window.addEventListener('mouseup', () => { mapDragging = false; });
+
+  // --- Tactile : un doigt = deplacer, deux doigts = pincer pour zoomer ---
+  wrap.addEventListener('touchstart', (e) => {
+    const rect = wrap.getBoundingClientRect();
+    if(e.touches.length === 2){
+      mapDragging = false;
+      touchPinch = {
+        dist: touchDist(e.touches),
+        zoom: mapZoom,
+        mid: touchMid(e.touches, rect),
+        panX: mapPanX,
+        panY: mapPanY
+      };
+    } else if(e.touches.length === 1){
+      touchPinch = null;
+      mapDragging = true;
+      mapDragStart = { x: e.touches[0].clientX - mapPanX, y: e.touches[0].clientY - mapPanY };
+    }
+  }, { passive: false });
+
+  wrap.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if(touchPinch && e.touches.length === 2){
+      const rect = wrap.getBoundingClientRect();
+      const newZoom = Math.min(MAP_ZOOM_MAX, Math.max(MAP_ZOOM_MIN,
+        touchPinch.zoom * touchDist(e.touches) / touchPinch.dist));
+      // point de la carte qui etait sous les doigts au debut du pincement
+      const mx = (touchPinch.mid.x - touchPinch.panX) / touchPinch.zoom;
+      const my = (touchPinch.mid.y - touchPinch.panY) / touchPinch.zoom;
+      const mid = touchMid(e.touches, rect);
+      mapZoom = newZoom;
+      mapPanX = mid.x - newZoom * mx;
+      mapPanY = mid.y - newZoom * my;
+      applyMapTransform();
+    } else if(mapDragging && e.touches.length === 1){
+      mapPanX = e.touches[0].clientX - mapDragStart.x;
+      mapPanY = e.touches[0].clientY - mapDragStart.y;
+      applyMapTransform();
+      mapDragStart = { x: e.touches[0].clientX - mapPanX, y: e.touches[0].clientY - mapPanY };
+    }
+  }, { passive: false });
+
+  wrap.addEventListener('touchend', (e) => {
+    if(e.touches.length === 1){
+      // on leve un doigt pendant un pincement : on continue a deplacer sans saut
+      touchPinch = null;
+      mapDragging = true;
+      mapDragStart = { x: e.touches[0].clientX - mapPanX, y: e.touches[0].clientY - mapPanY };
+    } else if(e.touches.length === 0){
+      touchPinch = null;
+      mapDragging = false;
+    }
+  });
+}
+
+let showOthers = true;
+
+// ---------- Territoires sur la carte ----------
+const RAYON_ZONE = {commun: 4.5, peucommun: 6.5, rare: 10, legendaire: 15};
+const LIBELLE_TIER = {commun: 'commun', peucommun: 'peu commun', rare: 'rare', legendaire: 'légendaire'};
+const ID_MOI = '__moi__';
+let joueurSurligne = null;
+let listeJoueursComplete = false;
+let legendeOuverte = (() => {
+  try{
+    const v = localStorage.getItem('tf-legende-ouverte');
+    if(v !== null) return v === '1';
+  } catch(e){}
+  return !window.matchMedia('(max-width: 720px)').matches;
+})();
+
+function etoileSvg(x, y, r){
+  const pts = [];
+  for(let i = 0; i < 10; i++){
+    const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.45 : r;
+    pts.push((x + rr * Math.cos(a)).toFixed(1) + ',' + (y + rr * Math.sin(a)).toFixed(1));
+  }
+  return pts.join(' ');
+}
+const echapperHtml = (s) => String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[ch]));
+
+let carteRenduPlanifie = false;
+function renderMapOverlay(){
+  // plusieurs appels rapproches (cartes retournees une par une) = un seul dessin
+  if(carteRenduPlanifie) return;
+  carteRenduPlanifie = true;
+  requestAnimationFrame(() => { carteRenduPlanifie = false; dessinerTerritoires(); });
+}
+
+function dessinerTerritoires(){
+  const couche = document.getElementById('mapTerritoires');
+  const defs = document.getElementById('mapDefsDyn');
+  const marq = document.getElementById('mapMarqueurs');
+  const survol = document.getElementById('mapSurvol');
+  if(!couche || !defs || !mapBounds) return;
+
+  // joueurs presents : toi d'abord, puis les autres
+  const joueurs = new Map();
+  joueurs.set(ID_MOI, { id: ID_MOI, pseudo: 'Toi', couleur: COULEUR_MOI, fonce: couleurFoncee(COULEUR_MOI), moi: true, nb: 0 });
+  const liste = [];
+  for(const e of collectionMap.values()){
+    if(!METRO_DEPT_RE.test(e.dept) || e.lat == null) continue;
+    liste.push({ nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: ID_MOI });
+    joueurs.get(ID_MOI).nb++;
+  }
+  for(const e of othersMap.values()){
+    if(!METRO_DEPT_RE.test(e.dept) || e.lat == null) continue;
+    if(!joueurs.has(e.joueurId)){
+      const couleur = colorForPlayer(e.joueurId);
+      joueurs.set(e.joueurId, { id: e.joueurId, pseudo: e.pseudo, couleur, fonce: couleurFoncee(couleur), moi: false, nb: 0 });
+    }
+    joueurs.get(e.joueurId).nb++;
+    if(showOthers) liste.push({ nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: e.joueurId });
+  }
+
+  const pts = liste.map(c => { const p = project(c.lat, c.lon); return [p.x * MAP_W, p.y * MAP_H]; });
+  const parJoueur = new Map();
+  const groupe = (id) => parJoueur.get(id) || parJoueur.set(id, { cercles: '', bords: '', cellules: '', marqueurs: '' }).get(id);
+  let zonesSurvol = '';
+
+  let voronoi = null, rayons = liste.map(c => RAYON_ZONE[c.tier]);
+  if(D3_OK && liste.length > 0){
+    const delaunay = d3.Delaunay.from(pts);
+    voronoi = delaunay.voronoi([0, 0, MAP_W, MAP_H]);
+    // une zone grandit jusqu'a ses voisines proches du meme joueur, pour former un territoire plein
+    rayons = liste.map((c, i) => {
+      let dMin = Infinity;
+      for(const k of delaunay.neighbors(i)){
+        if(!liste[k] || k === i || liste[k].joueur !== c.joueur) continue;
+        dMin = Math.min(dMin, Math.hypot(pts[k][0] - pts[i][0], pts[k][1] - pts[i][1]));
+      }
+      return dMin <= 22 ? Math.max(RAYON_ZONE[c.tier], dMin * 0.62) : RAYON_ZONE[c.tier];
+    });
+  }
+
+  liste.forEach((c, i) => {
+    const [x, y] = pts[i];
+    const r = rayons[i];
+    const j = joueurs.get(c.joueur);
+    const g = groupe(c.joueur);
+    const cx = x.toFixed(1), cy = y.toFixed(1);
+    g.cercles += `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"/>`;
+    g.bords += `<circle cx="${cx}" cy="${cy}" r="${(r + 2.2).toFixed(1)}"/>`;
+    // deux communes aux memes coordonnees n'ont pas de cellule : on dessine alors un simple rond
+    const cellule = voronoi ? voronoi.renderCell(i) : '';
+    g.cellules += cellule ? `<path d="${cellule}"/>` : `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"/>`;
+    if(c.tier === 'legendaire'){
+      g.marqueurs += `<polygon points="${etoileSvg(x, y, 7)}" fill="#FFF6D6" stroke="#0B1830" stroke-width="1.4" vector-effect="non-scaling-stroke"/>`;
+    } else if(c.tier === 'rare'){
+      g.marqueurs += `<circle cx="${cx}" cy="${cy}" r="2.2" fill="#fff" stroke="#0B1830" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+    }
+    zonesSurvol += `<circle cx="${cx}" cy="${cy}" r="${Math.max(RAYON_ZONE[c.tier], 6)}" fill="transparent"><title>${echapperHtml(c.nom)} (${c.dept}), ${LIBELLE_TIER[c.tier]}, ${j.moi ? 'à toi' : 'à ' + echapperHtml(j.pseudo)}</title></circle>`;
+  });
+
+  // les autres joueurs d'abord, toi par-dessus
+  const ordre = [...parJoueur.keys()].sort((a, b) => (a === ID_MOI ? 1 : 0) - (b === ID_MOI ? 1 : 0));
+  const idSvg = (id) => 'j' + String(id).replace(/[^a-zA-Z0-9_-]/g, '');
+  defs.innerHTML = ordre.map(id => `<clipPath id="zone-${idSvg(id)}">${parJoueur.get(id).cercles}</clipPath><clipPath id="bord-${idSvg(id)}">${parJoueur.get(id).bords}</clipPath>`).join('');
+  couche.innerHTML =
+    ordre.map(id => `<g data-joueur="${idSvg(id)}" clip-path="url(#bord-${idSvg(id)})"><g fill="#07111F" fill-opacity="0.9">${parJoueur.get(id).cellules}</g></g>`).join('') +
+    ordre.map(id => {
+      const j = joueurs.get(id);
+      return `<g data-joueur="${idSvg(id)}" clip-path="url(#zone-${idSvg(id)})"><g fill="${j.couleur}" fill-opacity="${j.moi ? 0.95 : 0.8}" stroke="${j.fonce}" stroke-opacity="0.6" stroke-width="0.7" vector-effect="non-scaling-stroke">${parJoueur.get(id).cellules}</g></g>`;
+    }).join('');
+  marq.innerHTML = ordre.map(id => `<g data-joueur="${idSvg(id)}">${parJoueur.get(id).marqueurs}</g>`).join('');
+  survol.innerHTML = zonesSurvol;
+
+  if(joueurSurligne && !joueurs.has(joueurSurligne)) joueurSurligne = null;
+  if(!showOthers && joueurSurligne !== ID_MOI) joueurSurligne = null;
+  appliquerSurlignageCarte(idSvg);
+  renderLegendeCarte(joueurs, idSvg);
+}
+
+function appliquerSurlignageCarte(idSvg){
+  const svg = document.getElementById('mapFranceSvg');
+  if(!svg) return;
+  const cible = joueurSurligne ? idSvg(joueurSurligne) : null;
+  svg.classList.toggle('surlignage', !!cible);
+  svg.querySelectorAll('g[data-joueur]').forEach(g => g.classList.toggle('actif', g.dataset.joueur === cible));
+}
+
+function renderLegendeCarte(joueurs, idSvg){
+  const leg = document.getElementById('mapLegende');
+  if(!leg) return;
+  const moi = joueurs.get(ID_MOI);
+  const autres = [...joueurs.values()].filter(j => !j.moi && j.nb > 0).sort((a, b) => b.nb - a.nb);
+  const NB_VISIBLES = 5;
+  const affiches = showOthers ? (listeJoueursComplete ? autres : autres.slice(0, NB_VISIBLES)) : [];
+  const reste = showOthers ? autres.length - affiches.length : 0;
+  const ligne = (j) => `<button class="leg-joueur ${joueurSurligne === j.id ? 'actif' : ''}" data-joueur-id="${echapperHtml(j.id)}" aria-pressed="${joueurSurligne === j.id}">
+      <span class="leg-pastille" style="background:${j.couleur}"></span>
+      <span class="leg-pseudo">${j.moi ? '<b>Toi</b>' : echapperHtml(j.pseudo)}</span><span class="leg-nb">${j.nb.toLocaleString('fr-FR')}</span></button>`;
+  leg.classList.toggle('repliee', !legendeOuverte);
+  leg.innerHTML = `
+    <div class="leg-tete">
+      <h3>${legendeOuverte ? 'Joueurs' : 'Légende'}</h3>
+      <button class="leg-bouton" data-leg="basculer" aria-expanded="${legendeOuverte}" aria-label="${legendeOuverte ? 'Replier la légende' : 'Afficher la légende'}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+      </button>
+    </div>
+    <div class="leg-corps">
+      ${ligne(moi)}
+      ${affiches.map(ligne).join('')}
+      ${reste > 0 ? `<button class="leg-plus" data-leg="plus">+ ${reste} autre${reste > 1 ? 's' : ''} joueur${reste > 1 ? 's' : ''}</button>` : ''}
+      ${listeJoueursComplete && autres.length > NB_VISIBLES && showOthers ? '<button class="leg-plus" data-leg="moins">Réduire la liste</button>' : ''}
+      <p class="leg-indice">Clique sur un joueur pour mettre son territoire en évidence.</p>
+      <div class="leg-tailles">
+        <div><svg width="10" height="10"><circle cx="5" cy="5" r="2.5" fill="#A9BCD4"/></svg>Commun</div>
+        <div><svg width="14" height="14"><circle cx="7" cy="7" r="4" fill="#A9BCD4"/></svg>Peu c.</div>
+        <div><svg width="20" height="20"><circle cx="10" cy="10" r="6.5" fill="#A9BCD4"/><circle cx="10" cy="10" r="2" fill="#fff" stroke="#0B1830"/></svg>Rare</div>
+        <div><svg width="26" height="26"><circle cx="13" cy="13" r="10" fill="#A9BCD4"/><polygon points="${etoileSvg(13, 13, 6)}" fill="#FFF6D6" stroke="#0B1830"/></svg>Légend.</div>
+      </div>
+    </div>`;
+}
+
+(function brancherLegende(){
+  const leg = document.getElementById('mapLegende');
+  if(!leg) return;
+  leg.addEventListener('click', (e) => {
+    const action = e.target.closest('[data-leg]');
+    if(action){
+      if(action.dataset.leg === 'basculer'){
+        legendeOuverte = !legendeOuverte;
+        try{ localStorage.setItem('tf-legende-ouverte', legendeOuverte ? '1' : '0'); } catch(err){}
+      }
+      if(action.dataset.leg === 'plus') listeJoueursComplete = true;
+      if(action.dataset.leg === 'moins') listeJoueursComplete = false;
+      renderMapOverlay();
+      return;
+    }
+    const ligne = e.target.closest('.leg-joueur');
+    if(ligne){
+      joueurSurligne = joueurSurligne === ligne.dataset.joueurId ? null : ligne.dataset.joueurId;
+      renderMapOverlay();
+    }
+  });
+  // la legende ne doit pas deplacer ni zoomer la carte en dessous
+  ['mousedown', 'touchstart', 'wheel'].forEach(ev => leg.addEventListener(ev, (e) => e.stopPropagation(), { passive: true }));
+})();
+
+async function loadOthersPossessions(){
+  const { data: userData } = await sb.auth.getUser();
+  const uid = userData.user.id;
+  const { data, error } = await sb
+    .from('possessions')
+    .select('commune_code, joueur_id, communes(code,nom,departement,latitude,longitude,tier), joueurs(pseudo)')
+    .neq('joueur_id', uid);
+  if(error){ console.error(error); return; }
+
+  othersMap = new Map();
+  for(const row of data){
+    const c = row.communes;
+    const tier = TIERS.find(t => t.id === c.tier);
+    othersMap.set(c.code, {
+      nom: c.nom, dept: c.departement, lat: c.latitude, lon: c.longitude, tier,
+      pseudo: row.joueurs ? row.joueurs.pseudo : 'un autre joueur',
+      joueurId: row.joueur_id
+    });
+  }
+  renderMapOverlay();
+}
+
+// ---------- Collection (depuis la base de donnees) ----------
+async function loadMyCollection(){
+  const { data: userData } = await sb.auth.getUser();
+  const uid = userData.user.id;
+  const champsCommune = 'communes(code,nom,departement,population,latitude,longitude,tier,rang,palier_total)';
+  let { data, error } = await sb
+    .from('possessions')
+    .select('commune_code, acquired_at, bouclier_debut, bouclier_jusqua, ' + champsCommune)
+    .eq('joueur_id', uid);
+  if(error){
+    // colonnes de bouclier absentes (boucliers.sql pas encore execute) : on charge sans
+    ({ data, error } = await sb.from('possessions').select('commune_code, acquired_at, ' + champsCommune).eq('joueur_id', uid));
+  }
+  if(error){ console.error(error); return; }
+
+  collectionMap = new Map();
+  session = {commun:0, peucommun:0, rare:0, legendaire:0, total:0};
+  for(const row of data){
+    const c = row.communes;
+    const tier = TIERS.find(t => t.id === c.tier);
+    collectionMap.set(c.code, {
+      code: c.code, nom: c.nom, dept: c.departement, pop: c.population,
+      lat: c.latitude, lon: c.longitude, tier, rank: c.rang, tierSize: c.palier_total,
+      acquiredAt: row.acquired_at ? new Date(row.acquired_at).getTime() : 0,
+      bouclierDebut: row.bouclier_debut ? new Date(row.bouclier_debut).getTime() : 0,
+      bouclierJusqua: row.bouclier_jusqua ? new Date(row.bouclier_jusqua).getTime() : 0
+    });
+    session[c.tier]++;
+    session.total++;
+  }
+  renderStats();
+  renderCollection();
+  renderMapOverlay();
+  if(document.getElementById('sellableGrid')) renderSellableGrid();
+  if(document.getElementById('boucliersGrid')) renderBoucliers();
+}
+
+function renderStats(){
+  const rows = document.getElementById('statRows');
+  rows.innerHTML = '';
+  for(const t of TIERS){
+    const n = session[t.id];
+    const pct = session.total ? (n/session.total*100) : 0;
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.innerHTML = `
+      <div class="dot" style="background:${t.color}"></div>
+      <div class="label">${t.label}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${t.color}"></div></div>
+      <div class="nums">${n} carte${n>1?'s':''} (${pct.toFixed(1)}%)</div>
+    `;
+    rows.appendChild(row);
+  }
+}
+
+// ---------- Page Ma collection ----------
+let collectionFilterTier = 'tous';
+const miniArtCache = new Map();
+
+function miniArtSvg(code, tierId){
+  const cle = code + '|' + tierId;
+  if(miniArtCache.has(cle)) return miniArtCache.get(cle);
+  const [clair, fonce] = TEINTES_CARTE[tierId];
+  const id = 'mg' + code;
+  const { d, cx, cy } = courbesDeNiveau(hashTexte(String(code)), 160, 100, 6, 36);
+  const svg = `<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><radialGradient id="${id}" cx="${(cx / 160 * 100).toFixed(0)}%" cy="${cy.toFixed(0)}%" r="85%">
+      <stop offset="0%" stop-color="${clair}"/><stop offset="100%" stop-color="${fonce}"/></radialGradient></defs>
+    <rect width="160" height="100" fill="url(#${id})"/>
+    <path d="${d}" fill="none" stroke="rgba(255,255,255,0.38)" stroke-width="1.2"/>
+    <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="4.5" fill="#fff" stroke="${fonce}" stroke-width="2"/>
+  </svg>`;
+  miniArtCache.set(cle, svg);
+  return svg;
+}
+
+function renderCollectionFilters(entries){
+  const el = document.getElementById('collectionFilters');
+  if(!el) return;
+  const compte = Object.fromEntries(TIERS.map(t => [t.id, 0]));
+  entries.forEach(e => compte[e.tier.id]++);
+  const boutons = [`<button class="coll-filtre ${collectionFilterTier === 'tous' ? 'actif' : ''}" data-tier="tous">Toutes <span class="nb">${entries.length}</span></button>`]
+    .concat(TIERS.map(t => `<button class="coll-filtre ${collectionFilterTier === t.id ? 'actif' : ''}" data-tier="${t.id}"><span class="point" style="background:${COULEURS_FILTRE[t.id]}"></span>${t.label} <span class="nb">${compte[t.id]}</span></button>`));
+  el.innerHTML = boutons.join('');
+}
+const COULEURS_FILTRE = {legendaire:'#F0B429', rare:'#2F7CF6', peucommun:'#22A06B', commun:'#7E8BA0'};
+
+function renderCollection(){
+  const countEl = document.getElementById('collectionCount');
+  const gridEl = document.getElementById('collectionGrid');
+  const entries = Array.from(collectionMap.values());
+  countEl.textContent = entries.length.toLocaleString('fr-FR');
+  renderCollectionFilters(entries);
+  if(entries.length === 0){
+    gridEl.innerHTML = '<p class="collection-empty">Aucune carte pour le moment. Ouvre un paquet.</p>';
+    return;
+  }
+  const visibles = entries
+    .filter(e => collectionFilterTier === 'tous' || e.tier.id === collectionFilterTier)
+    .sort((a,b) => {
+      const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
+      if(ra !== rb) return ra - rb;
+      return b.pop - a.pop;
+    });
+  if(visibles.length === 0){
+    gridEl.innerHTML = '<p class="collection-empty">Aucune carte de cette rareté pour le moment.</p>';
+    return;
+  }
+  gridEl.innerHTML = visibles.map(entry => `
+    <div class="mini ${entry.tier.id}" title="${entry.nom} (${entry.dept}) — ${entry.tier.label}">
+      <div class="mini-int">
+        <div class="mini-art">${miniArtSvg(entry.code, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}</div>
+        <div class="mini-infos">
+          <p class="mini-nom ${entry.nom.length > 14 ? 'long' : ''}">${entry.nom}</p>
+          ${entry.rank ? `<span class="mini-num">n° ${Number(entry.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(entry.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
+          <span class="mini-rarete">${entry.tier.label}</span>
+        </div>
+        <div class="mini-lisere"><span></span><span></span><span></span></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('collectionFilters').addEventListener('click', (e) => {
+  const b = e.target.closest('.coll-filtre');
+  if(!b) return;
+  collectionFilterTier = b.dataset.tier;
+  renderCollection();
+});
+
+// ---------- Cartes et paquet ----------
+function makeCardEl(draw, onFlip){
+  const wrap = document.createElement('div');
+  wrap.className = 'card ' + draw.tier.id;
+  wrap.innerHTML = `
+    <div class="card-inner">
+      <div class="face face-back">
+        ${DOS_MOTIF_SVG}
+        <span class="dos-coin hg"></span><span class="dos-coin hd"></span><span class="dos-coin bg"></span><span class="dos-coin bd"></span>
+        <div class="dos-embleme">${ICONE_EPINGLE}</div>
+      </div>
+      <div class="face face-front">
+        <div class="carte-cadre">
+          <div class="carte-int">
+            <div class="carte-haut">
+              <span class="carte-rarete">${draw.tier.label}</span>
+              <span class="carte-num">${draw.rank.toLocaleString('fr-FR')} / ${draw.tierSize.toLocaleString('fr-FR')}</span>
+            </div>
+            <div class="carte-art">${carteArtSvg(draw.code, draw.tier.id)}<span class="carte-dept">${draw.dept}</span></div>
+            <div class="carte-infos">
+              <p class="carte-nom ${draw.nom.length > 26 ? 'tres-long' : draw.nom.length > 16 ? 'long' : ''}" title="${draw.nom}">${draw.nom}</p>
+              <p class="carte-departement">${DEPT_NAMES[draw.dept] ? `<span class="dep-nom">${DEPT_NAMES[draw.dept]}</span> <span class="dep-num">(${draw.dept})</span>` : `<span class="dep-num">${draw.dept}</span>`}</p>
+              <div class="carte-stats">
+                <div><span>Habitants</span><b>${draw.pop.toLocaleString('fr-FR')}</b></div>
+                <div><span>Rang</span><b>${draw.rank.toLocaleString('fr-FR')}</b></div>
+              </div>
+            </div>
+            <div class="carte-lisere"><span></span><span></span><span></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  wrap.addEventListener('click', () => {
+    if(!wrap.classList.contains('flipped')){
+      wrap.classList.add('flipped');
+      onFlip();
+    }
+  });
+
+  // Inclinaison 3D + reflet des legendaires, a la souris et une fois la carte retournee
+  if(!REDUCED_MOTION){
+    const cadre = wrap.querySelector('.carte-cadre');
+    wrap.addEventListener('pointermove', (e) => {
+      if(e.pointerType !== 'mouse' || !wrap.classList.contains('flipped')) return;
+      const r = wrap.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width;
+      const y = (e.clientY - r.top) / r.height;
+      cadre.style.transform = `rotateY(${(x - 0.5) * 16}deg) rotateX(${(0.5 - y) * 16}deg)`;
+      cadre.style.setProperty('--hx', (x * 100) + '%');
+      cadre.style.setProperty('--hy', (y * 100) + '%');
+    });
+    wrap.addEventListener('pointerleave', () => { cadre.style.transform = ''; });
+  }
+  return wrap;
+}
+
+let pendingFlips = 0;
+let paquetEnCours = false;
+
+function revealCards(draws){
+  const zone = document.getElementById('packZone');
+  zone.innerHTML = '';
+  pendingFlips = draws.length;
+  draws.forEach((draw, index) => {
+    const carte = makeCardEl(draw, () => {
+      collectionMap.set(draw.code, draw);
+      session[draw.tier.id]++;
+      session.total++;
+      renderStats();
+      renderCollection();
+      renderMapOverlay();
+      pendingFlips--;
+      if(pendingFlips <= 0){
+        paquetEnCours = false;
+        loadPackStatus();
+      }
+    });
+    // les cartes arrivent l'une apres l'autre
+    carte.classList.add('entree');
+    carte.style.animationDelay = (index * 90) + 'ms';
+    zone.appendChild(carte);
+  });
+}
+
+// Paquet bleu pour le gratuit, dore pour celui achete
+function makePackEl(type){
+  const motif = paquetMotifSvg(type);
+  const pack = document.createElement('button');
+  pack.className = 'paquet ' + (type === 'achete' ? 'achete' : 'gratuit');
+  pack.setAttribute('aria-label', 'Déchirer le paquet');
+  pack.innerHTML = `
+    <div class="paquet-languette">${motif}<div class="paquet-pointilles"></div></div>
+    <div class="paquet-corps">${motif}
+      <div class="paquet-etiquette">${ICONE_EPINGLE}<span class="paquet-titre">Paquet</span></div>
+      <div class="paquet-bande">5 communes</div>
+    </div>`;
+  return pack;
+}
+
+// ---------- Jetons de paquets ----------
+let packStatusCache = null;
+let packStatusFetchedAt = 0;
+let packStatusInterval = null;
+
+async function loadPackStatus(){
+  const { data, error } = await sb.rpc('statut_paquets');
+  if(error){ console.error(error); return; }
+  packStatusCache = data[0];
+  packStatusFetchedAt = Date.now();
+  renderPackStatus();
+  if(!packStatusInterval){
+    packStatusInterval = setInterval(renderPackStatus, 5000);
+  }
+}
+
+function liveJetons(){
+  if(!packStatusCache) return 0;
+  const elapsedMin = (Date.now() - packStatusFetchedAt) / 60000;
+  return Math.min(3, packStatusCache.jetons_actuels + elapsedMin / 20);
+}
+
+function renderPackStatus(){
+  if(!packStatusCache) return;
+  const live = liveJetons();
+  const dispo = Math.floor(live);
+  const achetesJour = (packStatusCache.paquets_achetes_date === new Date().toISOString().slice(0,10))
+    ? packStatusCache.paquets_achetes_jour : 0;
+
+  const puces = [`<span class="puce"><b>${dispo} sur 3</b> paquets gratuits</span>`];
+  if(dispo < 3){
+    const minutes = Math.ceil((1 - (live % 1)) * 20);
+    puces.push(`<span class="puce">Prochain dans <b>${minutes} min</b></span>`);
+  }
+  puces.push(`<span class="puce">Achetés aujourd'hui <b>${achetesJour} sur 5</b></span>`);
+  puces.push(`<span class="puce solde">Solde <b>${Number(packStatusCache.solde).toLocaleString('fr-FR')}</b></span>`);
+  document.getElementById('packStatus').innerHTML = puces.join('');
+
+  // pendant l'ouverture d'un paquet, on ne peut pas en relancer un autre
+  document.getElementById('openFreeBtn').disabled = paquetEnCours || dispo < 1;
+  document.getElementById('openBuyBtn').disabled = paquetEnCours || achetesJour >= 5 || packStatusCache.solde < 200;
+}
+
+async function openPack(type){
+  document.getElementById('openFreeBtn').disabled = true;
+  document.getElementById('openBuyBtn').disabled = true;
+
+  const { error: startError } = await sb.rpc('demarrer_paquet', { p_type: type });
+  if(startError){
+    notifier({ type: 'erreur', titre: 'Impossible d\'ouvrir le paquet', texte: messageLisible(startError.message) });
+    await loadPackStatus();
+    return;
+  }
+  // le paquet en cours n'est pas encore ouvert : pas question d'en relancer un avant d'avoir retourne les cartes
+  paquetEnCours = true;
+  await loadPackStatus();
+
+  const zone = document.getElementById('packZone');
+  zone.innerHTML = '';
+  const pack = makePackEl(type);
+  zone.appendChild(pack);
+
+  pack.addEventListener('click', async () => {
+    pack.classList.add('dechire');
+    // le tirage part tout de suite, pendant l'animation, pour ne pas attendre une fois le paquet disparu
+    const animation = new Promise(resolve => setTimeout(resolve, REDUCED_MOTION ? 0 : 720));
+    const draws = [];
+    for(let i = 0; i < 5; i++){
+      const { data, error } = await sb.rpc('draw_commune', { p_saison: CURRENT_SEASON });
+      if(error){
+        notifier({ type: 'erreur', titre: 'Tirage interrompu', texte: messageLisible(error.message) });
+        break;
+      }
+      const row = data[0];
+      const tier = TIERS.find(t => t.id === row.tier);
+      draws.push({
+        code: row.code, nom: row.nom, dept: row.departement, pop: row.population,
+        lat: row.latitude, lon: row.longitude, tier, rank: row.rang, tierSize: row.palier_total
+      });
+    }
+    await animation;
+    if(draws.length === 0){
+      zone.innerHTML = '';
+      paquetEnCours = false;
+      loadPackStatus();
+      return;
+    }
+    revealCards(draws);
+  }, { once: true });
+}
+
+document.getElementById('openFreeBtn').addEventListener('click', () => openPack('gratuit'));
+document.getElementById('openBuyBtn').addEventListener('click', () => openPack('achete'));
+
+document.getElementById('toggleOthersBtn').addEventListener('click', () => {
+  showOthers = !showOthers;
+  document.getElementById('toggleOthersBtn').textContent = showOthers
+    ? 'Cacher le territoire des autres'
+    : 'Afficher le territoire des autres';
+  renderMapOverlay();
+});
+
+// ---------- Bourse ----------
+const PRIX_RACHAT = {commun: 5, peucommun: 20, rare: 100, legendaire: 1000};
+let myListings = new Map();
+
+async function loadBourse(){
+  const { data: userData } = await sb.auth.getUser();
+  const uid = userData.user.id;
+
+  const { data: joueurRow } = await sb.from('joueurs').select('solde').eq('id', uid).single();
+  document.getElementById('soldeValue').textContent = joueurRow ? joueurRow.solde : '—';
+  soldeBourse = joueurRow ? joueurRow.solde : null;
+  renderBoucliers();
+
+  const { data: mine } = await sb.from('annonces').select('commune_code, prix').eq('joueur_id', uid);
+  myListings = new Map((mine || []).map(a => [a.commune_code, a.prix]));
+
+  renderSellableGrid();
+
+  const { data: market } = await sb
+    .from('annonces')
+    .select('commune_code, prix, joueur_id, communes(nom,departement,tier), joueurs(pseudo)');
+  renderMarketGrid(market || [], uid);
+}
+
+// ---------- Boucliers de protection ----------
+const ICONE_BOUCLIER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/></svg>';
+// doit rester aligne avec prix_bouclier() dans boucliers.sql
+const OFFRES_BOUCLIER = [
+  { id: '3h', label: '3 heures', ms: 3 * 3600e3, prix: { rare: 15, legendaire: 150 } },
+  { id: '6h', label: '6 heures', ms: 6 * 3600e3, prix: { rare: 40, legendaire: 400 } },
+  { id: '12h', label: '12 heures', ms: 12 * 3600e3, prix: { rare: 90, legendaire: 900 } },
+];
+const DELAI_ENTRE_BOUCLIERS_MS = 12 * 3600e3;
+let soldeBourse = null;
+
+// etat d'une de mes communes vis-a-vis des boucliers
+function etatBouclier(entry, now = Date.now()){
+  if(entry.bouclierJusqua > now){
+    if(entry.bouclierDebut > now) return { code: 'programme', texte: `Bouclier programmé : démarre dans ${formatDuree(entry.bouclierDebut - now)}`, achetable: false };
+    return { code: 'actif', texte: `Protégée par un bouclier encore ${formatDuree(entry.bouclierJusqua - now)}`, achetable: false };
+  }
+  if(entry.bouclierJusqua && entry.bouclierJusqua + DELAI_ENTRE_BOUCLIERS_MS > now){
+    return { code: 'recharge', texte: `Nouveau bouclier possible dans ${formatDuree(entry.bouclierJusqua + DELAI_ENTRE_BOUCLIERS_MS - now)}`, achetable: false };
+  }
+  if(entry.acquiredAt && entry.acquiredAt + IMMUNITE_MS > now){
+    return { code: 'immunite', texte: `Acquise récemment, protégée encore ${formatDuree(entry.acquiredAt + IMMUNITE_MS - now)}`, achetable: true };
+  }
+  return { code: 'libre', texte: 'Sans protection', achetable: true };
+}
+
+function renderBoucliers(){
+  const grid = document.getElementById('boucliersGrid');
+  if(!grid) return;
+  const now = Date.now();
+  const protegeables = Array.from(collectionMap.values())
+    .filter(e => e.tier.id === 'rare' || e.tier.id === 'legendaire')
+    .sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || b.pop - a.pop);
+  if(protegeables.length === 0){
+    grid.innerHTML = '<p class="collection-empty">Tu n\'as aucune commune rare ou légendaire à protéger.</p>';
+    return;
+  }
+  grid.innerHTML = protegeables.map(e => {
+    const etat = etatBouclier(e, now);
+    const bouton = etat.achetable
+      ? `<button class="bourse-btn" data-action="bouclier" data-code="${e.code}">Protéger</button>`
+      : '';
+    return `
+      <div class="bourse-row bouclier-row ${etat.code}">
+        <span class="bourse-dot" style="background:${e.tier.color}"></span>
+        <span class="bourse-name">${e.nom} <span class="bourse-dept">(${e.dept})</span>
+          <span class="bouclier-etat">${etat.code === 'actif' || etat.code === 'programme' ? ICONE_BOUCLIER : ''}${etat.texte}</span>
+        </span>
+        ${bouton}
+      </div>`;
+  }).join('');
+}
+
+function choisirBouclier(entry){
+  return new Promise((resolve) => {
+    const tier = entry.tier.id;
+    const solde = soldeBourse ?? (packStatusCache ? packStatusCache.solde : null);
+    const etat = etatBouclier(entry);
+    const options = OFFRES_BOUCLIER.map((o, i) => {
+      const prix = o.prix[tier];
+      const tropCher = solde !== null && solde < prix;
+      return `
+        <label class="offre ${tropCher ? 'indisponible' : ''}">
+          <input type="radio" name="offre" value="${o.id}" ${tropCher ? 'disabled' : ''} ${i === 1 && !tropCher ? 'checked' : ''}>
+          <span class="offre-duree">${o.label}</span>
+          <span class="offre-prix">${prix.toLocaleString('fr-FR')} pts</span>
+          ${tropCher ? '<span class="offre-note">Solde insuffisant</span>' : ''}
+        </label>`;
+    }).join('');
+    const fermer = ouvrirFenetre(`
+      <form class="fenetre prix bouclier-fenetre" role="dialog" aria-modal="true" aria-labelledby="bouclierTitre" novalidate>
+        <h2 id="bouclierTitre"><span class="bouclier-titre-icone">${ICONE_BOUCLIER}</span>Bouclier</h2>
+        <p class="prix-commune">${echapperTexte(entry.nom)}, ${entry.tier.label.toLowerCase()}</p>
+        <div class="offres">${options}</div>
+        ${etat.code === 'immunite' ? `<p class="prix-aide">Cette commune est encore protégée ${formatDuree(entry.acquiredAt + IMMUNITE_MS - Date.now())} grâce à son acquisition récente : le bouclier démarrera juste après.</p>` : ''}
+        <p class="prix-aide">${solde !== null ? `Ton solde : ${Number(solde).toLocaleString('fr-FR')} pts. ` : ''}Après ce bouclier, 12 h sans protection possible.</p>
+        <p class="prix-erreur" id="bouclierErreur" role="alert"></p>
+        <div class="prix-boutons">
+          <button type="button" class="open-btn secondary" data-annuler>Annuler</button>
+          <button type="submit" class="open-btn">Activer</button>
+        </div>
+      </form>`, resolve);
+    const form = document.querySelector('#fenetre form');
+    form.querySelector('[data-annuler]').addEventListener('click', () => fermer(null));
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const choix = form.querySelector('input[name="offre"]:checked');
+      if(!choix){
+        document.getElementById('bouclierErreur').textContent = 'Choisis une durée.';
+        return;
+      }
+      fermer(choix.value);
+    });
+    const premier = form.querySelector('input[name="offre"]:checked') || form.querySelector('[data-annuler]');
+    premier.focus();
+  });
+}
+
+let sellFilterTier = 'tous';
+
+function renderSellableGrid(){
+  const grid = document.getElementById('sellableGrid');
+  const searchEl = document.getElementById('sellSearch');
+  const searchText = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+  let entries = Array.from(collectionMap.values()).sort((a,b) => {
+    const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
+    if(ra !== rb) return ra - rb;
+    return b.pop - a.pop;
+  });
+
+  if(sellFilterTier !== 'tous'){
+    entries = entries.filter(e => e.tier.id === sellFilterTier);
+  }
+  if(searchText){
+    entries = entries.filter(e => e.nom.toLowerCase().includes(searchText));
+  }
+
+  if(collectionMap.size === 0){
+    grid.innerHTML = '<p class="collection-empty">Tu ne possèdes aucune commune pour l\'instant.</p>';
+    return;
+  }
+  if(entries.length === 0){
+    grid.innerHTML = '<p class="collection-empty">Aucune commune ne correspond à la recherche.</p>';
+    return;
+  }
+  grid.innerHTML = entries.map(entry => {
+    const listedPrice = myListings.get(entry.code);
+    const rachat = PRIX_RACHAT[entry.tier.id];
+    const actions = listedPrice
+      ? `<span class="bourse-price">En vente : ${listedPrice} pts</span>
+         <button class="bourse-btn" data-action="retirer" data-code="${entry.code}">Retirer</button>`
+      : `<button class="bourse-btn" data-action="vendre-jeu" data-code="${entry.code}">Vendre au jeu (${rachat} pts)</button>
+         <button class="bourse-btn" data-action="mettre-vente" data-code="${entry.code}">Mettre en vente</button>`;
+    return `
+      <div class="bourse-row">
+        <span class="bourse-dot" style="background:${entry.tier.color}"></span>
+        <span class="bourse-name">${entry.nom} <span class="bourse-dept">(${entry.dept})</span></span>
+        ${actions}
+      </div>`;
+  }).join('');
+}
+
+function renderMarketGrid(market, myUid){
+  const grid = document.getElementById('marketGrid');
+  if(market.length === 0){
+    grid.innerHTML = '<p class="collection-empty">Aucune annonce pour le moment.</p>';
+    return;
+  }
+  const tiersById = Object.fromEntries(TIERS.map(t => [t.id, t]));
+  grid.innerHTML = market.map(a => {
+    const c = a.communes;
+    const tier = tiersById[c.tier];
+    const isMine = a.joueur_id === myUid;
+    const pseudo = isMine ? 'toi' : (a.joueurs ? a.joueurs.pseudo : 'un joueur');
+    const action = isMine
+      ? `<button class="bourse-btn" data-action="retirer" data-code="${a.commune_code}">Retirer</button>`
+      : `<button class="bourse-btn" data-action="acheter" data-code="${a.commune_code}">Acheter</button>`;
+    return `
+      <div class="bourse-row">
+        <span class="bourse-dot" style="background:${tier.color}"></span>
+        <span class="bourse-name">${c.nom} <span class="bourse-dept">(${c.departement}) — vendu par ${pseudo}</span></span>
+        <span class="bourse-price">${a.prix} pts</span>
+        ${action}
+      </div>`;
+  }).join('');
+}
+
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.bourse-btn');
+  if(!btn) return;
+  const action = btn.dataset.action;
+  const code = btn.dataset.code;
+  btn.disabled = true;
+  try{
+    if(action === 'vendre-jeu'){
+      const vendue = collectionMap.get(code);
+      const { error } = await sb.rpc('vendre_au_jeu', { p_commune_code: code });
+      if(error) throw error;
+      collectionMap.delete(code);
+      renderCollection(); renderStats(); renderMapOverlay();
+      if(vendue) notifier({ type: 'succes', titre: `${vendue.nom} vendue au jeu`, texte: `+${PRIX_RACHAT[vendue.tier.id]} pts` });
+    } else if(action === 'mettre-vente'){
+      const entree = collectionMap.get(code);
+      const prix = await demanderPrix({ nom: entree ? entree.nom : 'Cette commune', rachat: entree ? PRIX_RACHAT[entree.tier.id] : 0 });
+      if(!prix){ btn.disabled = false; return; }
+      const { error } = await sb.rpc('mettre_en_vente', { p_commune_code: code, p_prix: prix });
+      if(error) throw error;
+      notifier({ type: 'succes', titre: 'Annonce publiée', texte: `${entree ? entree.nom + ' est' : 'La commune est'} en vente à ${prix.toLocaleString('fr-FR')} pts` });
+    } else if(action === 'retirer'){
+      const { error } = await sb.rpc('retirer_de_la_vente', { p_commune_code: code });
+      if(error) throw error;
+      notifier({ type: 'info', titre: 'Annonce retirée' });
+    } else if(action === 'acheter'){
+      const { error } = await sb.rpc('acheter', { p_commune_code: code, p_saison: CURRENT_SEASON });
+      if(error) throw error;
+      await loadMyCollection();
+      await loadOthersPossessions();
+      const achetee = collectionMap.get(code);
+      notifier({ type: 'succes', titre: achetee ? `${achetee.nom} est à toi` : 'Commune achetée' });
+    } else if(action === 'bouclier'){
+      const entree = collectionMap.get(code);
+      if(!entree){ btn.disabled = false; return; }
+      const duree = await choisirBouclier(entree);
+      if(!duree){ btn.disabled = false; return; }
+      const { data, error } = await sb.rpc('acheter_bouclier', { p_commune_code: code, p_duree: duree });
+      if(error) throw error;
+      const res = data && data[0];
+      const fin = res ? new Date(res.fin) : null;
+      notifier({
+        type: 'succes',
+        titre: `Bouclier activé sur ${entree.nom}`,
+        texte: fin ? `Protégée jusqu'à ${fin.toLocaleString('fr-FR', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} (−${res.prix} pts)` : ''
+      });
+      await loadMyCollection();
+    } else if(action === 'attaquer'){
+      // bloque le rafraichissement auto de la grille pendant l'attaque en cours
+      combatActionEnCours = true;
+      try{
+        const { data, error } = await sb.rpc('attaquer', { p_commune_code: code });
+        if(error) throw error;
+        const result = data[0];
+        const cible = combatCibles.find(x => x.commune_code === code);
+        const nomCible = cible ? cible.communes.nom : 'la commune';
+        if(result.conquise){
+          await loadMyCollection();
+          await loadOthersPossessions();
+          celebrerConquete({
+            nom: nomCible,
+            tier: cible ? cible.communes.tier : '',
+            dept: cible ? cible.communes.departement : '',
+            bonus: cible ? PRIX_RACHAT[cible.communes.tier] : 0
+          });
+        } else if(result.gagne){
+          notifier({
+            type: 'victoire',
+            titre: `Victoire contre ${nomCible}`,
+            texte: result.victoires_consecutives >= 2 ? 'Encore une victoire pour la conquérir.' : `Série : ${result.victoires_consecutives} sur 3`,
+            serie: result.victoires_consecutives
+          });
+        } else {
+          notifier({ type: 'defaite', titre: `Défaite contre ${nomCible}`, texte: 'La série repart à zéro.', serie: 0 });
+        }
+        await loadCombat();
+        loadPackStatus();
+      } finally {
+        combatActionEnCours = false;
+      }
+      return;
+    }
+    await loadBourse();
+    loadPackStatus();
+  } catch(err){
+    notifier({ type: 'erreur', titre: 'Action impossible', texte: messageLisible(err.message) });
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('sellSearch').addEventListener('input', renderSellableGrid);
+
+document.getElementById('sellFilters').addEventListener('click', (e) => {
+  const pill = e.target.closest('.filter-pill');
+  if(!pill) return;
+  document.querySelectorAll('#sellFilters .filter-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  sellFilterTier = pill.dataset.tier;
+  renderSellableGrid();
+});
+
+// ---------- Combat ----------
+// Ces deux valeurs doivent rester alignees avec le SQL (fonctions attaquer et delai_attaque)
+const IMMUNITE_MS = 3 * 3600 * 1000;
+const DELAI_ATTAQUE_MS = {rare: 10 * 60 * 1000, legendaire: 3 * 3600 * 1000};
+
+function coutAttaque(tierId){
+  return Math.max(1, Math.round(PRIX_RACHAT[tierId] * 0.1));
+}
+
+// Affiche une duree lisible : "7 min", "2h", "2h45"
+function formatDuree(ms){
+  const totalMin = Math.max(1, Math.ceil(ms / 60000));
+  if(totalMin < 60) return `${totalMin} min`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if(h >= 48) return `${Math.floor(h / 24)} j ${h % 24} h`;
+  return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
+}
+
+// ---------- Mes communes attaquees ----------
+let menaces = [];
+let menacesInterval = null;
+
+async function loadMenaces(){
+  const { data, error } = await sb.rpc('sieges_contre_moi');
+  if(error){ console.error(error); return; }
+  menaces = data || [];
+  renderMenaces();
+}
+
+function renderMenaces(){
+  const enDanger = menaces.filter(m => m.victoires_consecutives > 0);
+  const badge = document.getElementById('combatBadge');
+  if(badge){
+    badge.hidden = enDanger.length === 0;
+    badge.textContent = enDanger.length;
+    badge.title = enDanger.length > 1 ? `${enDanger.length} communes attaquées` : 'Une commune attaquée';
+  }
+  const bloc = document.getElementById('combatMenaces');
+  const liste = document.getElementById('combatMenacesListe');
+  if(!bloc || !liste) return;
+  bloc.hidden = menaces.length === 0;
+  if(menaces.length === 0){ liste.innerHTML = ''; return; }
+
+  const now = Date.now();
+  liste.innerHTML = menaces.map(m => {
+    const tier = TIERS.find(t => t.id === m.tier);
+    const v = m.victoires_consecutives;
+    const dernier = new Date(m.dernier_round).getTime();
+    let statut;
+    const miennne = collectionMap.get(m.commune_code);
+    const bouclierFin = miennne ? miennne.bouclierJusqua : 0;
+    if(v > 0 && bouclierFin > now){
+      statut = `Protégée par ton bouclier encore ${formatDuree(bouclierFin - now)}. La série de l'attaquant est en pause.`;
+    } else if(v > 0){
+      const prochain = dernier + (DELAI_ATTAQUE_MS[m.tier] || 0);
+      const quand = now < prochain
+        ? `Prochain assaut possible dans ${formatDuree(prochain - now)}.`
+        : 'Peut repasser à l\'assaut à tout moment.';
+      statut = (v >= 2 ? 'Plus qu\'une victoire avant de la perdre. ' : '') + quand;
+    } else {
+      statut = `Attaque repoussée il y a ${formatDuree(now - dernier)}.`;
+    }
+    const serie = [0, 1, 2].map(i => `<i class="${i < v ? 'pris' : ''}"></i>`).join('');
+    return `
+      <div class="menace ${v > 0 ? 'danger' : ''}">
+        <span class="menace-point" style="background:${COULEURS_FILTRE[m.tier] || '#7E8BA0'}"></span>
+        <div class="menace-texte">
+          <span class="menace-titre"><b>${m.nom}</b> <span>${tier ? '(' + tier.label.toLowerCase() + ')' : ''}, attaquée par ${m.attaquant_pseudo}</span></span>
+          <span class="menace-statut">${statut}</span>
+        </div>
+        <div class="menace-serie" title="${v} victoire${v > 1 ? 's' : ''} d'affilée sur 3">${serie}</div>
+      </div>`;
+  }).join('');
+}
+
+let combatCibles = [];
+let combatSieges = new Map();
+let combatFilterTier = 'tous';
+let combatActionEnCours = false;
+let combatProximite = false;
+let combatEnCours = false;
+let combatRayonKm = 20;
+
+// Distance a vol d'oiseau entre deux points GPS, en km
+function distanceKm(lat1, lon1, lat2, lon2){
+  const R = 6371, rad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * rad, dLon = (lon2 - lon1) * rad;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * rad) * Math.cos(lat2 * rad) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+// Pour chaque cible : distance a la plus proche de mes communes, et son nom
+function calculerDistancesCibles(){
+  const miennes = Array.from(collectionMap.values()).filter(m => m.lat != null && m.lon != null);
+  for(const c of combatCibles){
+    c._distKm = null;
+    c._procheDe = null;
+    const lat = c.communes.latitude, lon = c.communes.longitude;
+    if(lat == null || lon == null) continue;
+    for(const m of miennes){
+      // pre-filtre rapide : plus d'1 degre d'ecart en latitude = plus de 111 km
+      if(Math.abs(m.lat - lat) > 1) continue;
+      const d = distanceKm(lat, lon, m.lat, m.lon);
+      if(c._distKm === null || d < c._distKm){ c._distKm = d; c._procheDe = m.nom; }
+    }
+    // au-dela de 100 km le pre-filtre peut rater la plus proche : on n'affiche rien
+    if(c._distKm !== null && c._distKm > 100){ c._distKm = null; c._procheDe = null; }
+  }
+}
+
+// "de Genilac" mais "d'Angers"
+function deCommune(nom){
+  return /^[AEIOUYÀÂÄÉÈÊËÎÏÔÖÙÛÜaeiouyàâäéèêëîïôöùûü]/.test(nom) ? "d'" + nom : 'de ' + nom;
+}
+
+async function loadCombat(){
+  const { data: userData } = await sb.auth.getUser();
+  const uid = userData.user.id;
+
+  const { data: joueurRow } = await sb.from('joueurs').select('solde').eq('id', uid).single();
+  document.getElementById('soldeValueCombat').textContent = joueurRow ? joueurRow.solde : '—';
+
+  const champsCible = 'communes!inner(nom,departement,tier,latitude,longitude), joueurs(pseudo)';
+  let { data: cibles, error } = await sb
+    .from('possessions')
+    .select('commune_code, joueur_id, acquired_at, bouclier_jusqua, ' + champsCible)
+    .neq('joueur_id', uid)
+    .in('communes.tier', ['rare','legendaire']);
+  if(error){
+    ({ data: cibles, error } = await sb.from('possessions').select('commune_code, joueur_id, acquired_at, ' + champsCible)
+      .neq('joueur_id', uid).in('communes.tier', ['rare','legendaire']));
+  }
+  if(error){ console.error(error); return; }
+
+  const { data: mesSieges } = await sb
+    .from('sieges')
+    .select('commune_code, victoires_consecutives, dernier_round')
+    .eq('attacker_id', uid);
+
+  combatCibles = cibles || [];
+  calculerDistancesCibles();
+  loadMenaces();
+  combatSieges = new Map((mesSieges || []).map(s => [s.commune_code, s]));
+  renderCombatGrid();
+}
+
+function renderCombatGrid(){
+  const grid = document.getElementById('combatGrid');
+  const searchEl = document.getElementById('combatSearch');
+  const searchText = searchEl ? searchEl.value.trim().toLowerCase() : '';
+
+  let cibles = combatCibles;
+  if(combatFilterTier !== 'tous'){
+    cibles = cibles.filter(c => c.communes.tier === combatFilterTier);
+  }
+  if(searchText){
+    cibles = cibles.filter(c => c.communes.nom.toLowerCase().includes(searchText));
+  }
+  if(combatProximite){
+    cibles = cibles
+      .filter(c => c._distKm !== null && c._distKm <= combatRayonKm)
+      .sort((a, b) => a._distKm - b._distKm);
+  }
+
+  // Combats en cours : cibles ou j'ai deja 1 ou 2 victoires d'affilee
+  const victoiresDe = (c) => { const s = combatSieges.get(c.commune_code); return s ? s.victoires_consecutives : 0; };
+  const prochainRoundDe = (c) => {
+    const s = combatSieges.get(c.commune_code);
+    return s && s.dernier_round ? new Date(s.dernier_round).getTime() + DELAI_ATTAQUE_MS[c.communes.tier] : 0;
+  };
+  const nbEnCours = combatCibles.filter(c => victoiresDe(c) > 0).length;
+  const nbEl = document.getElementById('combatEnCoursNb');
+  if(nbEl) nbEl.textContent = nbEnCours;
+  if(combatEnCours){
+    // les plus avancees d'abord, puis celles qu'on peut attaquer le plus tot
+    cibles = cibles
+      .filter(c => victoiresDe(c) > 0)
+      .sort((a, b) => victoiresDe(b) - victoiresDe(a) || prochainRoundDe(a) - prochainRoundDe(b));
+  }
+
+  if(combatCibles.length === 0){
+    grid.innerHTML = '<p class="collection-empty">Aucune cible disponible pour le moment.</p>';
+    return;
+  }
+  if(cibles.length === 0){
+    let msg = 'Aucune cible ne correspond à la recherche.';
+    if(combatEnCours && nbEnCours === 0){
+      msg = 'Aucun combat en cours. Gagne un premier round sur une cible pour la retrouver ici.';
+    } else if(combatEnCours){
+      msg = 'Aucun combat en cours ne correspond aux autres filtres.';
+    } else if(combatProximite && collectionMap.size === 0){
+      msg = 'Il te faut au moins une commune pour attaquer autour de ton territoire.';
+    } else if(combatProximite){
+      msg = `Aucune commune rare ou légendaire à moins de ${combatRayonKm} km de ton territoire.`;
+    }
+    grid.innerHTML = `<p class="collection-empty">${msg}</p>`;
+    return;
+  }
+
+  const tiersById = Object.fromEntries(TIERS.map(t => [t.id, t]));
+  const now = Date.now();
+
+  grid.innerHTML = cibles.map(c => {
+    const commune = c.communes;
+    const tier = tiersById[commune.tier];
+    const pseudo = c.joueurs ? c.joueurs.pseudo : 'un joueur';
+    const acquiredAt = new Date(c.acquired_at).getTime();
+    const immuniteFin = acquiredAt + IMMUNITE_MS;
+    const encoreImmune = now < immuniteFin;
+
+    const siege = combatSieges.get(c.commune_code);
+    const victoires = siege ? siege.victoires_consecutives : 0;
+    const dernierRound = siege && siege.dernier_round ? new Date(siege.dernier_round).getTime() : 0;
+    const prochainRound = dernierRound ? dernierRound + DELAI_ATTAQUE_MS[commune.tier] : 0;
+    const enAttente = now < prochainRound;
+
+    const cout = coutAttaque(commune.tier);
+    const bouclierFin = c.bouclier_jusqua ? new Date(c.bouclier_jusqua).getTime() : 0;
+    let statusTxt, statusClass, disabled;
+    if(bouclierFin > now){
+      statusTxt = `Bouclier encore ${formatDuree(bouclierFin - now)}${victoires > 0 ? ' (série en pause)' : ''}`;
+      statusClass = 'bouclier';
+      disabled = true;
+    } else if(encoreImmune){
+      statusTxt = `Protégée encore ${formatDuree(immuniteFin - now)}`;
+      statusClass = '';
+      disabled = true;
+    } else if(enAttente){
+      statusTxt = `Prochain round dans ${formatDuree(prochainRound - now)}`;
+      statusClass = '';
+      disabled = true;
+    } else {
+      statusTxt = 'Prête à attaquer';
+      statusClass = 'ready';
+      disabled = false;
+    }
+
+    const dots = [0,1,2].map(i => `<div class="cc-siege-dot ${i < victoires ? 'filled' : ''}"></div>`).join('');
+
+    return `
+      <div class="combat-card ${commune.tier}">
+        <div class="tricolore"><span class="b"></span><span class="w"></span><span class="r"></span></div>
+        <div class="cc-body">
+          <span class="cc-badge">${tier.label}</span>
+          <p class="cc-name">${commune.nom}</p>
+          <p class="cc-owner">Possédée par ${pseudo}</p>
+          ${c._distKm !== null ? `<p class="cc-distance">À ${c._distKm < 10 ? c._distKm.toFixed(1).replace('.', ',') : Math.round(c._distKm)} km ${deCommune(c._procheDe)}</p>` : ''}
+          <div class="cc-sieges">${dots}</div>
+          <p class="cc-status ${statusClass}">${statusTxt}</p>
+          <button class="bourse-btn cc-btn" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer (${cout} pts)</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// Rafraichit les decomptes toutes les 30 s quand l'onglet Combat est ouvert,
+// pour que le bouton se debloque tout seul sans avoir a changer d'onglet
+setInterval(() => {
+  const bourse = document.getElementById('panel-bourse');
+  if(bourse && bourse.classList.contains('active')) renderBoucliers();
+  const panel = document.getElementById('panel-combat');
+  if(!panel || !panel.classList.contains('active')) return;
+  renderMenaces();
+  if(combatActionEnCours || combatCibles.length === 0) return;
+  renderCombatGrid();
+}, 30000);
+
+document.getElementById('combatSearch').addEventListener('input', renderCombatGrid);
+document.getElementById('combatEnCoursToggle').addEventListener('click', () => {
+  combatEnCours = !combatEnCours;
+  const btn = document.getElementById('combatEnCoursToggle');
+  btn.classList.toggle('active', combatEnCours);
+  btn.setAttribute('aria-pressed', String(combatEnCours));
+  renderCombatGrid();
+});
+document.getElementById('combatProxToggle').addEventListener('click', () => {
+  combatProximite = !combatProximite;
+  const btn = document.getElementById('combatProxToggle');
+  btn.classList.toggle('active', combatProximite);
+  btn.setAttribute('aria-pressed', String(combatProximite));
+  document.getElementById('combatRayons').hidden = !combatProximite;
+  renderCombatGrid();
+});
+document.getElementById('combatRayons').addEventListener('click', (e) => {
+  const pill = e.target.closest('.filter-pill');
+  if(!pill) return;
+  document.querySelectorAll('#combatRayons .filter-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  combatRayonKm = Number(pill.dataset.km);
+  renderCombatGrid();
+});
+
+document.getElementById('combatFilters').addEventListener('click', (e) => {
+  const pill = e.target.closest('.filter-pill');
+  if(!pill) return;
+  document.querySelectorAll('#combatFilters .filter-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  combatFilterTier = pill.dataset.tier;
+  renderCombatGrid();
+});
+
+// ---------- Navigation par onglets ----------
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
+    if(tab.dataset.tab === 'bourse') loadBourse();
+    if(tab.dataset.tab === 'tirage') loadPackStatus();
+    if(tab.dataset.tab === 'combat') loadCombat();
+  });
+});
+
+// en revenant sur le site (autre appli, autre onglet), on relit jetons et solde
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && packStatusCache) loadPackStatus();
+});
+
+initAuth();

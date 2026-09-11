@@ -148,6 +148,11 @@ async function showGame(session_){
   await loadMyCollection();
   await loadOthersPossessions();
   await loadPackStatus();
+  loadMenaces();
+  if(!menacesInterval){
+    // verifie toutes les minutes si une de mes communes est attaquee (pastille rouge sur l'onglet Combat)
+    menacesInterval = setInterval(loadMenaces, 60000);
+  }
 }
 
 async function initAuth(){
@@ -972,6 +977,59 @@ function formatDuree(ms){
   return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
 }
 
+// ---------- Mes communes attaquees ----------
+let menaces = [];
+let menacesInterval = null;
+
+async function loadMenaces(){
+  const { data, error } = await sb.rpc('sieges_contre_moi');
+  if(error){ console.error(error); return; }
+  menaces = data || [];
+  renderMenaces();
+}
+
+function renderMenaces(){
+  const enDanger = menaces.filter(m => m.victoires_consecutives > 0);
+  const badge = document.getElementById('combatBadge');
+  if(badge){
+    badge.hidden = enDanger.length === 0;
+    badge.textContent = enDanger.length;
+    badge.title = enDanger.length > 1 ? `${enDanger.length} communes attaquées` : 'Une commune attaquée';
+  }
+  const bloc = document.getElementById('combatMenaces');
+  const liste = document.getElementById('combatMenacesListe');
+  if(!bloc || !liste) return;
+  bloc.hidden = menaces.length === 0;
+  if(menaces.length === 0){ liste.innerHTML = ''; return; }
+
+  const now = Date.now();
+  liste.innerHTML = menaces.map(m => {
+    const tier = TIERS.find(t => t.id === m.tier);
+    const v = m.victoires_consecutives;
+    const dernier = new Date(m.dernier_round).getTime();
+    let statut;
+    if(v > 0){
+      const prochain = dernier + (DELAI_ATTAQUE_MS[m.tier] || 0);
+      const quand = now < prochain
+        ? `Prochain assaut possible dans ${formatDuree(prochain - now)}.`
+        : 'Peut repasser à l\'assaut à tout moment.';
+      statut = (v >= 2 ? 'Plus qu\'une victoire avant de la perdre. ' : '') + quand;
+    } else {
+      statut = `Attaque repoussée il y a ${formatDuree(now - dernier)}.`;
+    }
+    const serie = [0, 1, 2].map(i => `<i class="${i < v ? 'pris' : ''}"></i>`).join('');
+    return `
+      <div class="menace ${v > 0 ? 'danger' : ''}">
+        <span class="menace-point" style="background:${COULEURS_FILTRE[m.tier] || '#7E8BA0'}"></span>
+        <div class="menace-texte">
+          <span class="menace-titre"><b>${m.nom}</b> <span>${tier ? '(' + tier.label.toLowerCase() + ')' : ''}, attaquée par ${m.attaquant_pseudo}</span></span>
+          <span class="menace-statut">${statut}</span>
+        </div>
+        <div class="menace-serie" title="${v} victoire${v > 1 ? 's' : ''} d'affilée sur 3">${serie}</div>
+      </div>`;
+  }).join('');
+}
+
 let combatCibles = [];
 let combatSieges = new Map();
 let combatFilterTier = 'tous';
@@ -1033,6 +1091,7 @@ async function loadCombat(){
 
   combatCibles = cibles || [];
   calculerDistancesCibles();
+  loadMenaces();
   combatSieges = new Map((mesSieges || []).map(s => [s.commune_code, s]));
   renderCombatGrid();
 }
@@ -1146,6 +1205,7 @@ function renderCombatGrid(){
 setInterval(() => {
   const panel = document.getElementById('panel-combat');
   if(!panel || !panel.classList.contains('active')) return;
+  renderMenaces();
   if(combatActionEnCours || combatCibles.length === 0) return;
   renderCombatGrid();
 }, 30000);

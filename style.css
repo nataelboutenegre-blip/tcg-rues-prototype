@@ -601,9 +601,11 @@
     position: relative;
     max-width: 1200px;
     overflow: hidden;
-    border-radius: 10px;
+    border-radius: 14px;
+    border: 1px solid rgba(169,188,212,0.18);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4);
     cursor: grab;
-    background: linear-gradient(180deg, #BFE0F5 0%, #8FC6E8 100%);
+    background: #0A1629;
     margin: 0 auto;
     touch-action: none;
   }
@@ -618,41 +620,63 @@
     inset: 0;
     width: 100%;
     height: 100%;
-    filter: drop-shadow(4px 6px 10px rgba(6,20,40,0.3));
   }
-  .map-overlay{
-    position: absolute;
-    inset: 0;
+  #mapFranceSvg g[data-joueur]{ transition: opacity .2s; }
+  #mapFranceSvg.surlignage g[data-joueur]{ opacity: .15; }
+  #mapFranceSvg.surlignage g[data-joueur].actif{ opacity: 1; }
+
+  /* ---------- Legende de la carte ---------- */
+  .map-legende{
+    position:absolute; left:14px; top:14px; z-index:2;
+    background: rgba(10,22,40,0.85);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    border: 1px solid rgba(169,188,212,0.18);
+    border-radius: 12px;
+    font-size: 0.8rem;
+    width: 210px;
+    max-height: calc(100% - 28px);
+    display:flex; flex-direction:column;
+    cursor: default;
   }
-  .map-dot{
-    position: absolute;
-    width: 0.45%;
-    height: 0.45%;
-    border-radius: 50%;
-    background: var(--commun);
-    transform: translate(-50%,-50%);
-    box-shadow: 0 0 2px 1px rgba(124,135,152,0.6), 0 0 0 1px rgba(255,255,255,0.5);
+  .map-legende:empty{ display:none; }
+  .map-legende.repliee{ width:auto; }
+  .leg-tete{ display:flex; align-items:center; gap:8px; padding: 10px 10px 10px 14px; }
+  .map-legende.repliee .leg-tete{ padding: 6px 6px 6px 12px; }
+  .leg-tete h3{ margin:0; flex:1; font-family: var(--titre); font-weight:800; font-size:1.05rem; letter-spacing:.01em; color:#fff; }
+  .map-legende.repliee .leg-tete h3{ font-size: .95rem; }
+  .leg-bouton{
+    width:28px; height:28px; border-radius:8px; flex-shrink:0;
+    border:none; background: rgba(169,188,212,0.12); color:#fff;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
   }
-  .map-dot.peucommun{
-    background: var(--peucommun);
-    width:0.95%; height:0.95%;
-    box-shadow: 0 0 3px 1px rgba(46,125,91,0.75), 0 0 0 1px rgba(255,255,255,0.6);
+  .leg-bouton:hover{ background: rgba(169,188,212,0.22); }
+  .leg-bouton svg{ width:14px; height:14px; transition: transform .15s; }
+  .map-legende.repliee .leg-bouton svg{ transform: rotate(180deg); }
+  .leg-bouton:focus-visible, .leg-joueur:focus-visible, .leg-plus:focus-visible{ outline: 2px solid var(--c-legendaire); outline-offset: 1px; }
+  .leg-corps{ padding: 0 8px 12px; overflow-y:auto; min-height:0; }
+  .map-legende.repliee .leg-corps{ display:none; }
+  .leg-joueur{
+    display:flex; align-items:center; gap:8px;
+    width:100%; margin:1px 0; padding:5px 6px;
+    border:none; border-radius:7px; background:none;
+    color: var(--brume); font: inherit; text-align:left; cursor:pointer;
   }
-  .map-dot.rare{
-    background: var(--rare);
-    width:1.55%; height:1.55%;
-    box-shadow: 0 0 5px 1px rgba(42,95,168,0.8), 0 0 0 1.5px rgba(255,255,255,0.7);
+  .leg-joueur:hover{ background: rgba(169,188,212,0.1); }
+  .leg-joueur.actif{ background: rgba(169,188,212,0.18); color:#fff; }
+  .leg-joueur b{ color:#fff; font-weight:600; }
+  .leg-pseudo{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .leg-nb{ margin-left:auto; padding-left:6px; font-variant-numeric: tabular-nums; }
+  .leg-pastille{ width:12px; height:12px; border-radius:4px; flex-shrink:0; }
+  .leg-plus{
+    display:block; width:100%; margin-top:4px; padding:5px 6px;
+    border:none; border-radius:7px; background:none;
+    color: var(--c-legendaire); font: inherit; font-size: .76rem; text-align:left; cursor:pointer;
   }
-  .map-dot.legendaire{
-    background: var(--legendaire);
-    width:2.35%; height:2.35%;
-    box-shadow: 0 0 8px 2px rgba(176,134,44,0.9), 0 0 0 2px #fff;
-  }
-  .map-dot.other{
-    background: var(--rouge);
-    box-shadow: 0 0 0 1px rgba(255,255,255,0.55);
-    opacity: 0.85;
-  }
+  .leg-plus:hover{ background: rgba(240,180,41,0.1); }
+  .leg-indice{ margin: 6px 6px 0; color: var(--brume); font-size: .7rem; line-height:1.4; }
+  .leg-tailles{ display:flex; align-items:flex-end; gap:10px; margin: 10px 6px 0; padding-top:10px; border-top: 1px solid rgba(169,188,212,0.16); color: var(--brume); font-size: .7rem; }
+  .leg-tailles div{ display:flex; flex-direction:column; align-items:center; gap:4px; }
+
   /* ---------- Mini-cartes de la collection ---------- */
   .mini{
     display:flex; flex-direction:column;
@@ -955,6 +979,8 @@
     }
     .sidebar-footer{ display:none; }
     .content{ padding: 20px 14px 32px; }
+    .map-legende{ left:8px; top:8px; width:180px; font-size:.74rem; }
+    .leg-tailles{ display:none; }
     .coll-entete{ margin: -20px -14px 12px; padding: 14px 14px 10px; }
     .coll-filtres{ flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
     .coll-filtre{ white-space: nowrap; }
@@ -1039,7 +1065,119 @@
   }
   .auth-msg{
     min-height:1.2em;
-    font-size:0.78rem;
-    color:var(--rouge);
-    margin-top:12px;
+    font-size:0.82rem;
+    margin:12px 0 0;
+    border-radius:8px;
+    line-height:1.4;
+  }
+  .auth-msg.erreur, .auth-msg.succes{ padding:8px 12px; }
+  .auth-msg.erreur{ background:#FDECEC; color:#A32227; }
+  .auth-msg.succes{ background:#E6F5EE; color:#12664A; }
+
+  /* ---------- Notifications ---------- */
+  .notifs{
+    position:fixed; z-index:50;
+    top:16px; left:50%; transform:translateX(-50%);
+    width:min(420px, calc(100vw - 24px));
+    display:flex; flex-direction:column; gap:8px;
+    pointer-events:none;
+  }
+  .notif{
+    pointer-events:auto;
+    display:flex; align-items:center; gap:12px;
+    background: rgba(16,32,56,0.96);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    border:1px solid rgba(169,188,212,0.2);
+    border-left:4px solid var(--brume);
+    border-radius:12px;
+    padding:11px 10px 11px 12px;
+    color:#fff;
+    box-shadow:0 14px 30px rgba(0,0,0,0.45);
+    font-family: var(--texte);
+    opacity:0; transform:translateY(-12px);
+    transition: opacity .2s ease, transform .2s ease;
+  }
+  .notif.visible{ opacity:1; transform:none; }
+  .notif.sortie{ opacity:0; transform:translateY(-8px); }
+  .notif.victoire, .notif.succes{ border-left-color: var(--c-peucommun); }
+  .notif.defaite, .notif.erreur{ border-left-color: var(--c-rouge); }
+  .notif.info{ border-left-color: var(--c-rare); }
+  .notif-icone{
+    width:30px; height:30px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background: rgba(169,188,212,0.14); color:#fff;
+  }
+  .notif.victoire .notif-icone, .notif.succes .notif-icone{ background: rgba(34,160,107,0.22); color:#5EE0A8; }
+  .notif.defaite .notif-icone, .notif.erreur .notif-icone{ background: rgba(229,72,77,0.2); color:#FF8F92; }
+  .notif.info .notif-icone{ background: rgba(47,124,246,0.22); color:#8DB8FF; }
+  .notif-icone svg{ width:16px; height:16px; }
+  .notif-texte{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+  .notif-texte b{ font-weight:600; font-size:0.9rem; }
+  .notif-texte span{ color: var(--brume); font-size:0.8rem; }
+  .notif-serie{ display:flex; gap:4px; flex-shrink:0; }
+  .notif-serie i{ width:11px; height:11px; border-radius:50%; border:1.5px solid rgba(169,188,212,0.45); }
+  .notif.victoire .notif-serie i.plein{ background: var(--c-legendaire); border-color: var(--c-legendaire); }
+  .notif-fermer{
+    width:28px; height:28px; border-radius:8px; flex-shrink:0;
+    border:none; background:none; color: var(--brume); cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .notif-fermer:hover{ background: rgba(169,188,212,0.12); color:#fff; }
+  .notif-fermer svg{ width:14px; height:14px; }
+
+  /* ---------- Fenetres : conquete et prix de vente ---------- */
+  .fenetre-fond{
+    position:fixed; inset:0; z-index:60;
+    background: rgba(5,12,24,0.72);
+    display:flex; align-items:center; justify-content:center;
+    padding:16px;
+    opacity:0; transition: opacity .18s ease;
+  }
+  .fenetre-fond[hidden]{ display:none; }
+  .fenetre-fond.visible{ opacity:1; }
+  .fenetre{
+    position:relative; overflow:hidden;
+    width:min(380px, 100%);
+    background: var(--nuit-2);
+    border:1px solid rgba(169,188,212,0.2);
+    border-radius:18px;
+    padding:26px 24px 22px;
+    color:#fff; text-align:center;
+    box-shadow:0 30px 60px rgba(0,0,0,0.5);
+    transform: scale(.94); transition: transform .2s cubic-bezier(.2,.8,.3,1.2);
+  }
+  .fenetre-fond.visible .fenetre{ transform:none; }
+  .fenetre h2{ font-family: var(--titre); font-weight:900; font-size:2.2rem; line-height:.95; margin:0 0 8px; position:relative; }
+  .conquete{ border:2px solid var(--c-legendaire); }
+  .conquete.rare{ border-color: var(--c-rare); }
+  .conquete-eclat{
+    position:absolute; left:50%; top:-120px; width:360px; height:360px; margin-left:-180px;
+    background: radial-gradient(circle, rgba(240,180,41,0.35), transparent 65%);
+    pointer-events:none;
+  }
+  .conquete.rare .conquete-eclat{ background: radial-gradient(circle, rgba(47,124,246,0.35), transparent 65%); }
+  .conquete-sur{ position:relative; margin:0 0 6px; color: var(--c-legendaire); font-weight:600; font-size:.85rem; letter-spacing:.04em; }
+  .conquete.rare .conquete-sur{ color:#8DB8FF; }
+  .conquete-infos{ position:relative; margin:0 0 16px; color: var(--brume); font-size:.88rem; }
+  .conquete-rarete{ display:inline-block; padding:2px 9px; border-radius:999px; background: var(--c-legendaire); color: var(--encre); font-weight:600; font-size:.72rem; margin-right:4px; }
+  .conquete.rare .conquete-rarete{ background: var(--c-rare); color:#fff; }
+  .conquete-bonus{ position:relative; margin:0 0 6px; font-family: var(--titre); font-weight:800; font-size:1.7rem; color: var(--c-legendaire); }
+  .conquete-note{ position:relative; margin:0 0 20px; color: var(--brume); font-size:.8rem; }
+  .fenetre .open-btn{ position:relative; }
+  .fenetre.prix{ text-align:left; }
+  .fenetre.prix h2{ font-size:1.9rem; }
+  .prix-commune{ margin:0 0 16px; color: var(--brume); }
+  .prix-champ{ display:flex; flex-direction:column; gap:6px; font-size:.82rem; color: var(--brume); }
+  .prix-saisie{ display:flex; align-items:center; gap:8px; background: var(--papier); border-radius:10px; padding:4px 12px; }
+  .prix-saisie input{ flex:1; min-width:0; border:none; background:none; font-family: var(--titre); font-weight:800; font-size:1.6rem; color: var(--encre); padding:4px 0; }
+  .prix-saisie input:focus{ outline:none; }
+  .prix-saisie:focus-within{ box-shadow: 0 0 0 2px var(--c-legendaire); }
+  .prix-saisie em{ font-style:normal; color:#5A6B82; font-weight:600; }
+  .prix-aide{ margin:8px 0 0; font-size:.78rem; color: var(--brume); }
+  .prix-erreur{ margin:6px 0 0; min-height:1.1em; font-size:.8rem; color:#FF8F92; }
+  .prix-boutons{ display:flex; gap:10px; justify-content:flex-end; margin-top:14px; flex-wrap:wrap; }
+  .prix-boutons .open-btn{ font-size:1.05rem; padding:9px 18px 11px; }
+
+  @media (prefers-reduced-motion: reduce){
+    .notif, .fenetre-fond, .fenetre{ transition:none; }
   }

@@ -1252,6 +1252,7 @@ const DELAI_ENTRE_BOUCLIERS_MS = 12 * 3600e3;
 const REVENTE_BLOQUEE_MS = 12 * 3600e3;
 const BONUS_CONQUETE_PART = 0.5;
 let soldeBourse = null;
+let boucliersTout = false;
 
 // etat d'une de mes communes vis-a-vis des boucliers
 function etatBouclier(entry, now = Date.now()){
@@ -1272,11 +1273,29 @@ function renderBoucliers(){
   const grid = document.getElementById('boucliersGrid');
   if(!grid) return;
   const now = Date.now();
-  const protegeables = Array.from(collectionMap.values())
+  const toutes = Array.from(collectionMap.values())
     .filter(e => e.tier.id === 'rare' || e.tier.id === 'legendaire')
     .sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || b.pop - a.pop);
-  if(protegeables.length === 0){
+  if(toutes.length === 0){
     grid.innerHTML = '<p class="collection-empty">Tu n\'as aucune commune rare ou légendaire à protéger.</p>';
+    return;
+  }
+  // par defaut : celles qu'on attaque en ce moment, ou qui sont attaquables tout de suite
+  const attaquees = new Set(menaces.filter(m => m.victoires_consecutives > 0).map(m => m.commune_code));
+  const protegeables = boucliersTout
+    ? toutes
+    : toutes.filter(e => attaquees.has(e.code) || ['libre', 'recharge'].includes(etatBouclier(e, now).code));
+  const bouton = document.getElementById('boucliersToutToggle');
+  if(bouton){
+    const masquees = toutes.length - protegeables.length;
+    bouton.hidden = boucliersTout ? false : masquees === 0;
+    bouton.querySelector('.compte-masquees')?.remove();
+    if(!boucliersTout && masquees > 0){
+      bouton.insertAdjacentHTML('beforeend', `<span class="en-cours-nb compte-masquees">+${masquees}</span>`);
+    }
+  }
+  if(protegeables.length === 0){
+    grid.innerHTML = '<p class="collection-empty">Aucune de tes communes n\'a besoin d\'un bouclier pour le moment.</p>';
     return;
   }
   grid.innerHTML = protegeables.map(e => {
@@ -1549,6 +1568,7 @@ async function loadMenaces(){
   if(error){ console.error(error); return; }
   menaces = data || [];
   renderMenaces();
+  renderBoucliers();
 }
 
 function renderMenaces(){
@@ -1600,6 +1620,25 @@ function renderMenaces(){
   }).join('');
 }
 
+document.getElementById('boucliersToutToggle').addEventListener('click', (e) => {
+  boucliersTout = !boucliersTout;
+  const b = e.currentTarget;
+  b.classList.toggle('active', boucliersTout);
+  b.setAttribute('aria-pressed', String(boucliersTout));
+  renderBoucliers();
+});
+
+document.getElementById('reglesBtn').addEventListener('click', () => {
+  const tab = document.querySelector('.tab[data-tab="regles"]');
+  if(tab){ tab.click(); return; }
+  // l'onglet Regles n'est plus dans la barre : on l'ouvre a la main
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-regles'));
+  document.getElementById('reglesBtn').classList.add('actif');
+  renderNotifications();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
 document.getElementById('combatMenacesListe').addEventListener('click', async (e) => {
   const btn = e.target.closest('.menace-defendre');
   if(!btn || btn.disabled) return;
@@ -1620,8 +1659,12 @@ document.getElementById('combatMenacesListe').addEventListener('click', async (e
     }
     await loadMenaces();
     loadPackStatus();
-    const soldeEl = document.getElementById('soldeValueCombat');
-    if(soldeEl && packStatusCache) soldeEl.textContent = packStatusCache.solde;
+    if(packStatusCache){
+      ['soldeValueCombat', 'soldeValueDefense'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.textContent = packStatusCache.solde;
+      });
+    }
   } catch(err){
     notifier({ type: 'erreur', titre: 'Défense impossible', texte: messageLisible(err.message) });
     btn.disabled = false;
@@ -1673,7 +1716,10 @@ async function loadCombat(){
   const uid = userData.user.id;
 
   const { data: joueurRow } = await sb.from('joueurs').select('solde').eq('id', uid).single();
-  document.getElementById('soldeValueCombat').textContent = joueurRow ? joueurRow.solde : '—';
+  const solde = joueurRow ? joueurRow.solde : '—';
+  document.getElementById('soldeValueCombat').textContent = solde;
+  const soldeDef = document.getElementById('soldeValueDefense');
+  if(soldeDef) soldeDef.textContent = solde;
 
   const champsCible = 'communes!inner(nom,departement,tier,latitude,longitude), joueurs(pseudo)';
   let { data: cibles, error } = await sb
@@ -1820,11 +1866,10 @@ function renderCombatGrid(){
 // Rafraichit les decomptes toutes les 30 s quand l'onglet Combat est ouvert,
 // pour que le bouton se debloque tout seul sans avoir a changer d'onglet
 setInterval(() => {
-  const bourse = document.getElementById('panel-bourse');
-  if(bourse && bourse.classList.contains('active')) renderBoucliers();
+  const defense = document.getElementById('panel-defense');
+  if(defense && defense.classList.contains('active')){ renderMenaces(); renderBoucliers(); }
   const panel = document.getElementById('panel-combat');
   if(!panel || !panel.classList.contains('active')) return;
-  renderMenaces();
   if(combatActionEnCours || combatCibles.length === 0) return;
   renderCombatGrid();
 }, 30000);
@@ -1868,12 +1913,13 @@ document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('reglesBtn').classList.remove('actif');
     tab.classList.add('active');
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
     if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
     if(tab.dataset.tab === 'bourse') loadBourse();
     if(tab.dataset.tab === 'tirage') loadPackStatus();
-    if(tab.dataset.tab === 'regles') renderNotifications();
+    if(tab.dataset.tab === 'defense'){ loadMenaces(); loadCombat(); }
     if(tab.dataset.tab === 'combat') loadCombat();
   });
 });

@@ -61,7 +61,7 @@
     flex-wrap: wrap;
     justify-content:flex-start;
     margin-bottom: 14px;
-    min-height: 275px;
+    min-height: 290px;
     width: 100%;
   }
   .pack-zone:empty{ min-height: 0; margin-bottom: 0; }
@@ -89,22 +89,47 @@
     -webkit-backface-visibility:hidden;
     border-radius: 14px;
   }
+  /* ---------- Dos de carte ---------- */
   .face-back{
     overflow:hidden;
+    background: radial-gradient(circle at 50% 42%, #24446F 0%, #13284A 55%, #0B1830 100%);
+    border: 1px solid rgba(169,188,212,0.22);
     box-shadow: 0 14px 28px rgba(0,0,0,0.45);
-    background:
-      repeating-linear-gradient(135deg, #0B2A55, #0B2A55 8px, #0F3364 8px, #0F3364 16px);
-    border: 1px solid #041225;
-    display:flex;
-    align-items:center;
-    justify-content:center;
   }
-  .face-back .emblem{
-    width:52px;height:52px;border-radius:50%;
-    border: 2px solid rgba(255,255,255,0.5);
-    display:flex;align-items:center;justify-content:center;
-    color: rgba(255,255,255,0.75);
-    font-size: 1.4rem;
+  .face-back .dos-motif{ position:absolute; inset:0; width:100%; height:100%; }
+  .face-back::before{
+    content:""; position:absolute; inset:9px;
+    border: 1.5px solid rgba(240,180,41,0.55);
+    border-radius: 9px;
+  }
+  .face-back .dos-embleme{
+    position:absolute; left:50%; top:50%;
+    width:70px; height:70px; margin:-35px 0 0 -35px;
+    border-radius:50%;
+    background: var(--nuit);
+    box-shadow: 0 0 0 2px var(--c-legendaire), 0 0 0 7px rgba(15,31,56,0.9), 0 0 0 8.5px rgba(240,180,41,0.4);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .face-back .dos-embleme svg{ width:32px; height:32px; stroke: var(--c-legendaire); }
+  .face-back .dos-coin{
+    position:absolute; width:7px; height:7px;
+    background: var(--c-legendaire);
+    transform: rotate(45deg);
+    opacity:.8;
+  }
+  .dos-coin.hg{ top:16px; left:16px; }
+  .dos-coin.hd{ top:16px; right:16px; }
+  .dos-coin.bg{ bottom:16px; left:16px; }
+  .dos-coin.bd{ bottom:16px; right:16px; }
+
+  /* arrivee des cartes une par une, et leger soulevement avant retournement */
+  .card.entree{ animation: carteEntree .45s cubic-bezier(.2,.8,.3,1.2) backwards; }
+  @keyframes carteEntree{
+    from{ transform: translateY(60px) scale(.85) rotate(-4deg); opacity:0; }
+    to{ transform:none; opacity:1; }
+  }
+  @media (hover: hover){
+    .card:not(.flipped):hover .card-inner{ transform: translateY(-5px); }
   }
   .face-front{ transform: rotateY(180deg); }
 
@@ -206,52 +231,81 @@
   .tricolore .w{background:#fff;}
   .tricolore .r{background:var(--rouge);}
 
-  .foilpack{
-    width: 190px;
-    height: 260px;
-    position: relative;
-    cursor: pointer;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 4px 6px 14px rgba(21,27,38,0.3);
-  }
-  .foilpack .body{
-    position:absolute; inset:0;
-    background: linear-gradient(135deg, var(--foil-color, #7C8798), #2B3542 75%);
-    display:flex; align-items:center; justify-content:center;
-    transition: transform 0.6s ease-in, opacity 0.55s ease-in;
-  }
-  .foilpack .body::after{
-    content:"";
-    position:absolute; inset:0;
-    background: linear-gradient(115deg, transparent 42%, rgba(255,255,255,0.16) 50%, transparent 58%);
-  }
-  .foilpack .mark{
+  /* ---------- Paquet a dechirer ---------- */
+  .paquet{
+    --h-languette: 36px;
     position:relative;
-    color: rgba(255,255,255,0.9);
-    font-size: 0.8rem;
-    letter-spacing: 0.05em;
-    font-variant: small-caps;
-    border: 1px solid rgba(255,255,255,0.45);
-    padding: 6px 16px;
-    border-radius: 3px;
+    width: 200px; height: 280px;
+    cursor:pointer;
+    border:none; padding:0; background:none;
+    font: inherit;
+    filter: drop-shadow(0 18px 24px rgba(0,0,0,0.5));
+    transition: transform .15s ease-out;
   }
-  .foilpack .strip{
-    position:absolute;
-    top:0; bottom:0; left:0;
-    width: 18%;
-    background: linear-gradient(135deg, var(--foil-color, #7C8798), #2B3542 75%);
-    clip-path: polygon(100% 0%, 78% 8%, 100% 15%, 74% 24%, 100% 33%, 80% 42%, 100% 50%, 76% 60%, 100% 68%, 78% 78%, 100% 87%, 90% 100%, 0% 100%, 0% 0%);
-    transition: transform 0.5s ease-in, opacity 0.45s ease-in;
+  .paquet:focus-visible{ outline: 2px solid var(--c-legendaire); outline-offset: 6px; border-radius: 6px; }
+  .paquet .paquet-languette, .paquet .paquet-corps{
+    position:absolute; left:0; right:0;
+    overflow:hidden;
   }
-  .foilpack.tearing .strip{
-    transform: translateX(-70px) rotate(-40deg);
-    opacity: 0;
+  .paquet .paquet-languette{
+    top:0; height: var(--h-languette);
+    clip-path: polygon(0 6px, 5% 0, 10% 6px, 15% 0, 20% 6px, 25% 0, 30% 6px, 35% 0, 40% 6px, 45% 0, 50% 6px, 55% 0, 60% 6px, 65% 0, 70% 6px, 75% 0, 80% 6px, 85% 0, 90% 6px, 95% 0, 100% 6px, 100% 100%, 0 100%);
+    transition: transform .45s cubic-bezier(.5,0,.8,.4), opacity .4s ease-in;
+    transform-origin: 20% 100%;
   }
-  .foilpack.tearing .body{
-    transform: translateY(-26px) scale(0.95);
-    opacity: 0;
-    transition-delay: 0.08s;
+  .paquet .paquet-corps{
+    top: var(--h-languette); bottom:0;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 6px), 95% 100%, 90% calc(100% - 6px), 85% 100%, 80% calc(100% - 6px), 75% 100%, 70% calc(100% - 6px), 65% 100%, 60% calc(100% - 6px), 55% 100%, 50% calc(100% - 6px), 45% 100%, 40% calc(100% - 6px), 35% 100%, 30% calc(100% - 6px), 25% 100%, 20% calc(100% - 6px), 15% 100%, 10% calc(100% - 6px), 5% 100%, 0 calc(100% - 6px));
+    transition: transform .5s ease-in .2s, opacity .45s ease-in .25s;
+  }
+  .paquet .paquet-motif{ position:absolute; left:0; width:200px; height:280px; }
+  .paquet .paquet-languette .paquet-motif{ top:0; }
+  .paquet .paquet-corps .paquet-motif{ top: calc(var(--h-languette) * -1); }
+  .paquet .paquet-pointilles{
+    position:absolute; left:10px; right:10px; bottom:0;
+    border-top: 2px dashed rgba(255,255,255,0.35);
+  }
+  .paquet .paquet-corps::after{
+    content:""; position:absolute; inset:0;
+    background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.22) 48%, transparent 60%);
+    background-size: 250% 100%;
+    background-position: 110% 0;
+    transition: background-position .6s ease;
+    pointer-events:none;
+  }
+  @media (hover: hover){
+    .paquet:hover{ transform: translateY(-4px) rotate(-1deg); }
+    .paquet:hover .paquet-corps::after{ background-position: -10% 0; }
+  }
+  .paquet .paquet-etiquette{
+    position:absolute; left:0; right:0; top: 38px;
+    display:flex; flex-direction:column; align-items:center; gap: 6px;
+  }
+  .paquet .paquet-etiquette svg{ width:34px; height:34px; }
+  .paquet .paquet-titre{
+    font-family: var(--titre); font-weight:900;
+    font-size: 2.6rem; line-height:.9;
+  }
+  .paquet .paquet-bande{
+    position:absolute; left:0; right:0; bottom: 46px;
+    height: 44px;
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--titre); font-weight:800; font-size: 1.25rem; letter-spacing:.02em;
+  }
+  .paquet.gratuit .paquet-etiquette{ color:#fff; }
+  .paquet.gratuit .paquet-etiquette svg{ stroke: var(--c-legendaire); }
+  .paquet.gratuit .paquet-bande{ background: linear-gradient(90deg, #B7791F, #FCE38A 30%, var(--c-legendaire) 55%, #B7791F); color: var(--encre); }
+  .paquet.achete .paquet-etiquette{ color: var(--encre); }
+  .paquet.achete .paquet-etiquette svg{ stroke: var(--encre); }
+  .paquet.achete .paquet-bande{ background: var(--nuit); color: var(--c-legendaire); }
+  .paquet.dechire{ pointer-events:none; transform:none; }
+  .paquet.dechire .paquet-languette{ transform: translate(60px, -80px) rotate(24deg); opacity:0; }
+  .paquet.dechire .paquet-corps{ transform: translateY(40px) scale(.94); opacity:0; }
+  .paquet.dechire .paquet-pointilles{ display:none; }
+
+  @media (prefers-reduced-motion: reduce){
+    .paquet, .paquet .paquet-languette, .paquet .paquet-corps, .card-inner, .carte-cadre{ transition:none; }
+    .card.entree{ animation:none; }
   }
 
   .collection{

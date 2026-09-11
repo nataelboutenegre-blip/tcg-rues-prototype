@@ -473,6 +473,49 @@
   .prox-toggle.active .prox-switch{ background: var(--c-legendaire); }
   .prox-toggle.active .prox-switch::after{ transform: translateX(11px); }
   .prox-rayons{ display:flex; gap:6px; }
+
+  /* ---------- Mes communes attaquees ---------- */
+  .tab-badge{
+    margin-left:auto;
+    min-width:20px; height:20px; padding:0 6px;
+    border-radius:999px;
+    background: var(--c-rouge); color:#fff;
+    font-size:0.72rem; font-weight:600;
+    display:inline-flex; align-items:center; justify-content:center;
+    font-variant-numeric: tabular-nums;
+  }
+  .tab-badge[hidden]{ display:none; }
+  .menaces{ width:100%; max-width:600px; margin-bottom:22px; }
+  .menaces[hidden]{ display:none; }
+  .menaces h2{
+    font-family: var(--titre); font-weight:800; font-size:1.35rem;
+    margin:0 0 10px; color:#fff;
+    display:flex; align-items:center; gap:10px;
+  }
+  .menaces h2::before{
+    content:""; width:8px; height:8px; border-radius:50%;
+    background: var(--c-rouge);
+    box-shadow: 0 0 0 4px rgba(229,72,77,0.25);
+  }
+  .menaces-liste{ display:flex; flex-direction:column; gap:8px; }
+  .menace{
+    display:flex; align-items:center; gap:12px;
+    background: var(--nuit-2);
+    border:1px solid rgba(169,188,212,0.16);
+    border-radius:10px;
+    padding:10px 14px;
+  }
+  .menace.danger{ border-left: 3px solid var(--c-rouge); }
+  .menace-point{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .menace-texte{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .menace-titre{ font-size:0.92rem; }
+  .menace-titre b{ font-weight:600; }
+  .menace-titre span{ color: var(--brume); }
+  .menace-statut{ font-size:0.76rem; color: var(--brume); }
+  .menace.danger .menace-statut{ color:#FFB3B5; }
+  .menace-serie{ display:flex; gap:4px; flex-shrink:0; }
+  .menace-serie i{ width:10px; height:10px; border-radius:50%; border:1.5px solid rgba(169,188,212,0.45); }
+  .menace-serie i.pris{ background: var(--c-rouge); border-color: var(--c-rouge); }
   .en-cours-nb{
     min-width: 18px; padding: 0 5px; border-radius: 999px;
     background: rgba(91,102,115,0.2);
@@ -902,6 +945,11 @@
       border-bottom-color: var(--c-legendaire);
     }
     .tab.active::before{ display:none; }
+    .tab-badge{
+      position:absolute; top:5px; left:calc(50% + 5px);
+      margin:0; min-width:16px; height:16px; padding:0 4px;
+      font-size:0.6rem;
+    }
     .sidebar-footer{ display:none; }
     .content{ padding: 20px 14px 32px; }
     .coll-entete{ margin: -20px -14px 12px; padding: 14px 14px 10px; }

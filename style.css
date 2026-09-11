@@ -1524,3 +1524,24 @@
     .notif-actions{ width:100%; }
     .tab{ font-size:0.62rem; }
   }
+
+
+  /* ---------- Bouton RÃ¨gles, en haut Ã  cÃ´tÃ© du titre ---------- */
+  .regles-btn{
+    width:32px; height:32px; border-radius:9px; flex-shrink:0;
+    border:none; background: rgba(169,188,212,0.12); color: var(--brume);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    margin-right:6px;
+  }
+  .regles-btn svg{ width:17px; height:17px; }
+  .regles-btn:hover{ background: rgba(169,188,212,0.22); color:#fff; }
+  .regles-btn.actif{ background: var(--c-legendaire); color: var(--encre); }
+  .regles-btn:focus-visible{ outline:2px solid var(--c-legendaire); outline-offset:2px; }
+  .sidebar-top{ gap:6px; }
+  .sidebar .brand{ padding-bottom:0; }
+  .tabs-row{ margin-top:16px; }
+  #boucliersToutToggle[hidden]{ display:none; }
+  @media (max-width: 720px){
+    .tabs-row{ margin-top:0; }
+    .regles-btn{ width:30px; height:30px; margin-right:0; }
+  }

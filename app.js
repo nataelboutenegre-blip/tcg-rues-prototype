@@ -86,6 +86,33 @@ function carteArtSvg(code, tierId){
     </svg>`;
 }
 
+// Epingle de carte, utilisee sur le dos des cartes et sur le paquet
+const ICONE_EPINGLE = '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+
+// Le motif du dos est le meme pour toutes les cartes : on le calcule une seule fois
+const DOS_MOTIF_SVG = (() => {
+  const { d } = courbesDeNiveau(hashTexte('dos-de-carte'), 188, 263, 10);
+  return `<svg class="dos-motif" viewBox="0 0 188 263" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <path d="${d}" fill="none" stroke="rgba(169,188,212,0.16)" stroke-width="1"/>
+  </svg>`;
+})();
+
+function paquetMotifSvg(type){
+  const achete = type === 'achete';
+  const clair = achete ? '#FCE38A' : '#3B6FB8';
+  const moyen = achete ? '#F0B429' : '#1D3F72';
+  const fonce = achete ? '#9A6412' : '#0B1D38';
+  const trait = achete ? 'rgba(90,55,5,0.28)' : 'rgba(169,210,255,0.22)';
+  const { d } = courbesDeNiveau(hashTexte('paquet-' + type), 200, 280, 12);
+  return `<svg class="paquet-motif" viewBox="0 0 200 280" aria-hidden="true">
+    <defs><linearGradient id="pg-${type}" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="${clair}"/><stop offset="55%" stop-color="${moyen}"/><stop offset="100%" stop-color="${fonce}"/>
+    </linearGradient></defs>
+    <rect width="200" height="280" fill="url(#pg-${type})"/>
+    <path d="${d}" fill="none" stroke="${trait}" stroke-width="1.2"/>
+  </svg>`;
+}
+
 function dessinerFondTopo(){
   const svg = document.getElementById('fondTopo');
   if(!svg) return;
@@ -526,7 +553,11 @@ function makeCardEl(draw, onFlip){
   wrap.className = 'card ' + draw.tier.id;
   wrap.innerHTML = `
     <div class="card-inner">
-      <div class="face face-back"><div class="emblem">RF</div></div>
+      <div class="face face-back">
+        ${DOS_MOTIF_SVG}
+        <span class="dos-coin hg"></span><span class="dos-coin hd"></span><span class="dos-coin bg"></span><span class="dos-coin bd"></span>
+        <div class="dos-embleme">${ICONE_EPINGLE}</div>
+      </div>
       <div class="face face-front">
         <div class="carte-cadre">
           <div class="carte-int">
@@ -579,8 +610,8 @@ function revealCards(draws){
   const zone = document.getElementById('packZone');
   zone.innerHTML = '';
   pendingFlips = draws.length;
-  draws.forEach(draw => {
-    zone.appendChild(makeCardEl(draw, () => {
+  draws.forEach((draw, index) => {
+    const carte = makeCardEl(draw, () => {
       collectionMap.set(draw.code, draw);
       session[draw.tier.id]++;
       session.total++;
@@ -591,15 +622,26 @@ function revealCards(draws){
       if(pendingFlips <= 0){
         renderPackStatus();
       }
-    }));
+    });
+    // les cartes arrivent l'une apres l'autre
+    carte.classList.add('entree');
+    carte.style.animationDelay = (index * 90) + 'ms';
+    zone.appendChild(carte);
   });
 }
 
-function makePackEl(){
-  const pack = document.createElement('div');
-  pack.className = 'foilpack';
-  pack.style.setProperty('--foil-color', '#0B2A55');
-  pack.innerHTML = `<div class="body"><div class="mark">Paquet</div></div><div class="strip"></div>`;
+// Paquet bleu pour le gratuit, dore pour celui achete
+function makePackEl(type){
+  const motif = paquetMotifSvg(type);
+  const pack = document.createElement('button');
+  pack.className = 'paquet ' + (type === 'achete' ? 'achete' : 'gratuit');
+  pack.setAttribute('aria-label', 'Déchirer le paquet');
+  pack.innerHTML = `
+    <div class="paquet-languette">${motif}<div class="paquet-pointilles"></div></div>
+    <div class="paquet-corps">${motif}
+      <div class="paquet-etiquette">${ICONE_EPINGLE}<span class="paquet-titre">Paquet</span></div>
+      <div class="paquet-bande">5 communes</div>
+    </div>`;
   return pack;
 }
 
@@ -663,32 +705,34 @@ async function openPack(type){
 
   const zone = document.getElementById('packZone');
   zone.innerHTML = '';
-  const pack = makePackEl();
+  const pack = makePackEl(type);
   zone.appendChild(pack);
 
-  pack.addEventListener('click', () => {
-    pack.classList.add('tearing');
-    setTimeout(async () => {
-      const draws = [];
-      for(let i = 0; i < 5; i++){
-        const { data, error } = await sb.rpc('draw_commune', { p_saison: CURRENT_SEASON });
-        if(error){
-          alert('Tirage impossible : ' + error.message);
-          break;
-        }
-        const row = data[0];
-        const tier = TIERS.find(t => t.id === row.tier);
-        draws.push({
-          code: row.code, nom: row.nom, dept: row.departement, pop: row.population,
-          lat: row.latitude, lon: row.longitude, tier, rank: row.rang, tierSize: row.palier_total
-        });
+  pack.addEventListener('click', async () => {
+    pack.classList.add('dechire');
+    // le tirage part tout de suite, pendant l'animation, pour ne pas attendre une fois le paquet disparu
+    const animation = new Promise(resolve => setTimeout(resolve, REDUCED_MOTION ? 0 : 720));
+    const draws = [];
+    for(let i = 0; i < 5; i++){
+      const { data, error } = await sb.rpc('draw_commune', { p_saison: CURRENT_SEASON });
+      if(error){
+        alert('Tirage impossible : ' + error.message);
+        break;
       }
-      if(draws.length === 0){
-        renderPackStatus();
-        return;
-      }
-      revealCards(draws);
-    }, 650);
+      const row = data[0];
+      const tier = TIERS.find(t => t.id === row.tier);
+      draws.push({
+        code: row.code, nom: row.nom, dept: row.departement, pop: row.population,
+        lat: row.latitude, lon: row.longitude, tier, rank: row.rang, tierSize: row.palier_total
+      });
+    }
+    await animation;
+    if(draws.length === 0){
+      zone.innerHTML = '';
+      renderPackStatus();
+      return;
+    }
+    revealCards(draws);
   }, { once: true });
 }
 

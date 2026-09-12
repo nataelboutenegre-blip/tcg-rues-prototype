@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '9085c98255d8';
+const VERSION_JEU = '23142a4116dc';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -325,6 +325,7 @@ async function showGame(session_){
   renderNotifications();
   loadObjectifs();
   loadClassement();
+  loadJournal();
   verifierVersion();
   // arrivee depuis une notification : ?onglet=combat ou ?onglet=tirage
   if(new URLSearchParams(location.search).has('onglet')){
@@ -650,6 +651,68 @@ function setupMapInteraction(){
 }
 
 let showOthers = true;
+
+// ---------- Journal d'activite ----------
+let journalMode = 'tous';
+const ICONES_JOURNAL = {
+  conquete: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 17.5L17 7M17 7h-4M17 7v4M17.5 17.5L7 7M7 7h4M7 7v4"/></svg>',
+  defense: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/><path d="M9 12l2 2 4-4"/></svg>',
+  achat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h13l-3-3M17 8l-3 3M20 16H7l3-3M7 16l3 3"/></svg>',
+  tirage: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M5 14l5-3v9"/></svg>',
+};
+
+function ilYA(date){
+  const s = Math.max(0, Math.round((Date.now() - new Date(date).getTime()) / 1000));
+  if(s < 60) return "à l'instant";
+  if(s < 3600) return `il y a ${Math.floor(s / 60)} min`;
+  if(s < 86400) return `il y a ${formatDuree(s * 1000)}`;
+  const jours = Math.floor(s / 86400);
+  return jours === 1 ? 'hier' : `il y a ${jours} jours`;
+}
+
+function ligneJournal(e){
+  const moi = (p) => p ? `<b>${echapperTexte(p)}</b>` : 'un joueur';
+  // "Tu as conquis" quand c'est moi, "ROBOI a conquis" sinon
+  const acteur = e.je_suis_acteur ? '<b>Tu</b>' : moi(e.acteur_pseudo);
+  const a = e.je_suis_acteur ? 'as' : 'a';
+  const cible = e.je_suis_cible ? '<b>toi</b>' : moi(e.cible_pseudo);
+  const commune = `<b class="jr-commune ${e.tier || ''}">${echapperTexte(e.commune_nom || 'une commune')}</b>`;
+  let texte;
+  if(e.type === 'conquete') texte = `${acteur} ${a} conquis ${commune}${e.cible_pseudo ? ` sur ${cible}` : ''}`;
+  else if(e.type === 'defense') texte = `${acteur} ${a} repoussé une attaque de ${cible} sur ${commune}`;
+  else if(e.type === 'achat') texte = `${acteur} ${a} acheté ${commune}${e.cible_pseudo ? ` à ${cible}` : ''}`;
+  else texte = `${acteur} ${a} tiré ${e.tier === 'legendaire' ? 'une légendaire' : 'une rare'} : ${commune}`;
+  const perso = e.je_suis_cible && (e.type === 'conquete' || e.type === 'achat');
+  return `
+    <div class="jr-ligne ${e.type} ${perso ? 'perdu' : ''} ${e.je_suis_acteur ? 'moi' : ''}">
+      <span class="jr-icone">${ICONES_JOURNAL[e.type] || ICONES_JOURNAL.tirage}</span>
+      <span class="jr-texte">${texte}</span>
+      <span class="jr-date">${ilYA(e.cree_le)}</span>
+    </div>`;
+}
+
+async function loadJournal(){
+  const bloc = document.getElementById('journal');
+  const { data, error } = await sb.rpc('journal', { p_mode: journalMode, p_limite: 30 });
+  if(error){
+    if(bloc) bloc.hidden = true;
+    return;
+  }
+  if(bloc) bloc.hidden = false;
+  const liste = document.getElementById('journalListe');
+  if(!liste) return;
+  liste.innerHTML = (data || []).length
+    ? data.map(ligneJournal).join('')
+    : `<p class="collection-empty">${journalMode === 'moi' ? "Rien ne te concerne pour l'instant : ouvre des paquets et pars à l'attaque." : 'Aucune activité pour le moment.'}</p>`;
+}
+
+document.getElementById('journal').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-journal]');
+  if(!b) return;
+  journalMode = b.dataset.journal;
+  document.querySelectorAll('#journal [data-journal]').forEach(x => x.classList.toggle('active', x === b));
+  loadJournal();
+});
 
 // ---------- Classement ----------
 let classementMode = 'general';
@@ -2111,7 +2174,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('reglesBtn').classList.remove('actif');
     tab.classList.add('active');
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
-    if(tab.dataset.tab === 'territoire'){ sizeMapWrap(window.__mapAspectRatio); loadClassement(); }
+    if(tab.dataset.tab === 'territoire'){ sizeMapWrap(window.__mapAspectRatio); loadClassement(); loadJournal(); }
     if(tab.dataset.tab === 'bourse') loadBourse();
     if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); }
     if(tab.dataset.tab === 'defense'){ loadMenaces(); loadCombat(); renderIntensite('defense'); }
@@ -2304,6 +2367,7 @@ setInterval(() => verifierVersion(), 30 * 60 * 1000);
 async function rafraichirDonnees(){
   await loadObjectifs();
   await loadClassement();
+  await loadJournal();
   await loadMyCollection();
   await loadOthersPossessions();
   await loadPackStatus();

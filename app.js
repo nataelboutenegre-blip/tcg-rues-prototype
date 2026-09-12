@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '7a895c5963dd';
+const VERSION_JEU = 'ad886bd3f09a';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -960,7 +960,7 @@ function renderCollection(){
     return;
   }
   gridEl.innerHTML = visibles.map(entry => `
-    <div class="mini ${entry.tier.id}" title="${entry.nom} (${entry.dept}) — ${entry.tier.label}">
+    <div class="mini ${entry.tier.id}" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}">
       <div class="mini-int">
         <div class="mini-art">${miniArtSvg(entry.code, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}</div>
         <div class="mini-infos">
@@ -1001,7 +1001,7 @@ function makeCardEl(draw, onFlip){
             </div>
             <div class="carte-art">${carteArtSvg(draw.code, draw.tier.id)}<span class="carte-dept">${draw.dept}</span></div>
             <div class="carte-infos">
-              <p class="carte-nom ${draw.nom.length > 26 ? 'tres-long' : draw.nom.length > 16 ? 'long' : ''}" title="${draw.nom}">${draw.nom}</p>
+              <p class="carte-nom ${draw.nom.length > 26 ? 'tres-long' : draw.nom.length > 16 ? 'long' : ''}" title="${echapperTexte(draw.nom)}">${draw.nom}</p>
               <p class="carte-departement">${DEPT_NAMES[draw.dept] ? `<span class="dep-nom">${DEPT_NAMES[draw.dept]}</span> <span class="dep-num">(${draw.dept})</span>` : `<span class="dep-num">${draw.dept}</span>`}</p>
               <div class="carte-stats">
                 <div><span>Habitants</span><b>${draw.pop.toLocaleString('fr-FR')}</b></div>
@@ -1611,7 +1611,7 @@ function renderMenaces(){
       <div class="menace ${v > 0 ? 'danger' : ''}">
         <span class="menace-point" style="background:${COULEURS_FILTRE[m.tier] || '#7E8BA0'}"></span>
         <div class="menace-texte">
-          <span class="menace-titre"><b>${m.nom}</b> <span>${tier ? '(' + tier.label.toLowerCase() + ')' : ''}, attaquée par ${m.attaquant_pseudo}</span></span>
+          <span class="menace-titre"><b>${m.nom}</b> <span>${tier ? '(' + tier.label.toLowerCase() + ')' : ''}, attaquée par ${echapperTexte(m.attaquant_pseudo)}</span></span>
           <span class="menace-statut">${statut}</span>
           ${v > 0 && !(bouclierFin > now) ? (m.defense_utilisee
             ? '<span class="menace-note">Défense déjà utilisée contre cette attaque</span>'
@@ -2044,10 +2044,13 @@ if('serviceWorker' in navigator){
   });
 }
 
+const ONGLETS_CONNUS = ['tirage', 'collection', 'territoire', 'bourse', 'combat', 'defense', 'regles'];
 function ouvrirOngletDepuisUrl(url){
   try{
     const onglet = new URL(url, location.href).searchParams.get('onglet');
-    const tab = onglet && document.querySelector(`.tab[data-tab="${onglet}"]`);
+    if(!ONGLETS_CONNUS.includes(onglet)) return;
+    if(onglet === 'regles'){ document.getElementById('reglesBtn').click(); return; }
+    const tab = document.querySelector('.tab[data-tab="' + onglet + '"]');
     if(tab) tab.click();
   } catch(e){}
 }

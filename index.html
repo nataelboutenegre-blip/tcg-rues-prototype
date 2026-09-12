@@ -151,6 +151,16 @@
         <div id="statRows"></div>
       </div>
 
+      <div class="objectifs" id="objectifs" hidden>
+        <div class="obj-tete">
+          <h2>Objectifs</h2>
+          <span class="obj-pret" id="objPret" hidden></span>
+        </div>
+        <div class="obj-groupe" id="objJour"></div>
+        <div class="obj-groupe" id="objUnique"></div>
+        <button class="cl-plus" id="objPlus" hidden>Voir tous les objectifs</button>
+      </div>
+
       <div class="note">Cible calibrée sur les vraies données : commun 50,9 %, peu commun 36,8 %, rare 11,4 %, légendaire 0,83 %.</div>
     </section>
 
@@ -295,7 +305,7 @@
           <div class="etape"><div class="etape-num">1</div><h3>Ouvre des paquets</h3><p>Chaque paquet contient 5 vraies communes. Plus une ville est peuplée, plus elle est rare.</p></div>
           <div class="etape"><div class="etape-num">2</div><h3>Gère ton solde</h3><p>Revends tes cartes au jeu ou aux autres joueurs pour gagner des points.</p></div>
           <div class="etape"><div class="etape-num">3</div><h3>Conquiers</h3><p>Aligne 3 victoires d'affilée contre une commune rare ou légendaire pour la prendre.</p></div>
-          <div class="etape"><div class="etape-num">4</div><h3>Défends-toi</h3><p>Dans l'onglet Défense, tente une défense quand on t'attaque ou pose un bouclier.</p></div>
+          <div class="etape"><div class="etape-num">4</div><h3>Défends-toi</h3><p>Dans l'onglet Défense, tente une défense ou pose un bouclier. Et complète des objectifs pour des récompenses.</p></div>
         </section>
 
         <nav class="sommaire" aria-label="Sommaire">
@@ -305,6 +315,7 @@
           <a href="#r-combat">Combat</a>
           <a href="#r-defense">Défense</a>
           <a href="#r-boucliers">Boucliers</a>
+          <a href="#r-objectifs">Objectifs</a>
           <a href="#r-faq">Questions fréquentes</a>
         </nav>
 
@@ -456,6 +467,22 @@
               <li>Après un bouclier, il faut attendre <b>12 h</b> avant d'en poser un nouveau sur la même commune.</li>
               <li>Un bouclier acheté pendant la protection de 3 h démarre à la fin de cette protection.</li>
               <li>Le bouclier disparaît si la commune change de propriétaire.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="regle" id="r-objectifs">
+          <summary>
+            <span class="regle-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg></span>
+            <h2>Objectifs<small>Des défis et des récompenses</small></h2>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="regle-corps">
+            <p>Les objectifs s'affichent dans l'onglet <b>Tirage</b>. Dès qu'un objectif est atteint, un bouton <b>Récupérer</b> apparaît : la récompense n'est versée que si tu la réclames.</p>
+            <ul>
+              <li><b>Aujourd'hui :</b> cinq défis qui se renouvellent chaque jour (ouvrir des paquets, tirer des cartes, gagner des rounds, conquérir, défendre).</li>
+              <li><b>Défis :</b> des objectifs à réussir une seule fois, comme collectionner 25 communes, dominer un département avec 5 communes, ou être présent dans 10 départements.</li>
+              <li><b>Récompenses :</b> des points, ou des paquets qui t'attendent dans l'onglet Tirage.</li>
             </ul>
           </div>
         </details>

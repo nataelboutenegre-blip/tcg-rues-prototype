@@ -225,7 +225,18 @@
           </div>
           <div class="map-legende" id="mapLegende"></div>
         </div>
-        <p class="map-note">Molette ou pincement pour zoomer, cliquer-glisser pour te déplacer. Survole une zone pour voir la commune et son propriétaire.</p>
+        <p class="map-note" style="margin-bottom:24px">Molette ou pincement pour zoomer, cliquer-glisser pour te déplacer. Survole une zone pour voir la commune et son propriétaire.</p>
+      </div>
+
+      <div class="journal" id="journal" hidden>
+        <div class="jr-tete">
+          <h2>Journal</h2>
+          <div class="jr-modes">
+            <button class="filter-pill active" data-journal="tous">Tout le jeu</button>
+            <button class="filter-pill" data-journal="moi">Ce qui me concerne</button>
+          </div>
+        </div>
+        <div class="jr-liste" id="journalListe"></div>
       </div>
     </section>
 
@@ -319,6 +330,7 @@
           <a href="#r-defense">Défense</a>
           <a href="#r-boucliers">Boucliers</a>
           <a href="#r-objectifs">Objectifs</a>
+          <a href="#r-journal">Journal</a>
           <a href="#r-faq">Questions fréquentes</a>
         </nav>
 
@@ -487,6 +499,22 @@
               <li><b>Défis :</b> des objectifs à réussir une seule fois, comme collectionner 25 communes, dominer un département avec 5 communes, ou être présent dans 10 départements.</li>
               <li><b>Récompenses :</b> des points, ou des paquets qui t'attendent dans l'onglet Tirage.</li>
             </ul>
+          </div>
+        </details>
+
+        <details class="regle" id="r-journal">
+          <summary>
+            <span class="regle-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 4h14v16H5z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></span>
+            <h2>Journal<small>Qui a pris quoi, et à qui</small></h2>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="regle-corps">
+            <p>En bas de l'onglet <b>Territoire</b>, le journal retrace les 30 derniers jours d'activité : conquêtes, défenses réussies, achats en bourse, et tirages de communes rares ou légendaires.</p>
+            <ul>
+              <li><b>Tout le jeu :</b> ce que font tous les joueurs.</li>
+              <li><b>Ce qui me concerne :</b> uniquement tes actions et celles subies. C'est là que tu vois qui t'a pris une commune, et quelles attaques tu as repoussées.</li>
+            </ul>
+            <p>Les lignes où tu perds une commune apparaissent en rouge, les tiennes en doré.</p>
           </div>
         </details>
 

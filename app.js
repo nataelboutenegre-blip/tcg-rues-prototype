@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '52775095b00f';
+const VERSION_JEU = '9085c98255d8';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -655,12 +655,22 @@ let showOthers = true;
 let classementMode = 'general';
 let classementComplet = false;
 let classementDonnees = [];
+let classementOuvert = (() => {
+  try{
+    const v = localStorage.getItem('tf-classement-ouvert');
+    if(v !== null) return v === '1';
+  } catch(e){}
+  // replie par defaut sur telephone, pour laisser la place a la carte
+  return !window.matchMedia('(max-width: 760px)').matches;
+})();
 
 async function loadClassement(){
+  const bloc = document.getElementById('classement');
   const { data, error } = await sb.rpc('classement', { p_mode: classementMode, p_limite: classementComplet ? 50 : 10 });
   if(error){
-    const liste = document.getElementById('clListe');
-    if(liste && /could not find the function/i.test(error.message || '')) liste.innerHTML = '';
+    // classement.sql pas encore execute : on masque le bloc au lieu d'afficher un titre vide
+    if(bloc) bloc.hidden = true;
+    console.error('Classement :', error.message);
     return;
   }
   classementDonnees = data || [];
@@ -671,7 +681,30 @@ function renderClassement(){
   const podium = document.getElementById('clPodium');
   const liste = document.getElementById('clListe');
   const plus = document.getElementById('clPlus');
-  if(!podium || !liste) return;
+  const bloc = document.getElementById('classement');
+  if(!podium || !liste || !bloc) return;
+  bloc.hidden = false;
+  bloc.classList.toggle('replie', !classementOuvert);
+  const bouton = document.getElementById('clReplier');
+  if(bouton){
+    bouton.setAttribute('aria-expanded', String(classementOuvert));
+    bouton.setAttribute('aria-label', classementOuvert ? 'Replier le classement' : 'Afficher le classement');
+  }
+  if(!classementOuvert){
+    // replie : on ne garde que ma position, en une ligne
+    const moi = classementDonnees.find(l => l.est_moi);
+    podium.innerHTML = '';
+    liste.innerHTML = moi
+      ? `<button class="cl-ligne moi" data-joueur-id="${echapperTexte(moi.joueur_id)}">
+           <span class="cl-rang">${moi.rang}</span>
+           <span class="cl-pastille" style="background:${COULEUR_MOI}"></span>
+           <span class="cl-pseudo"><b>Toi</b></span>
+           <span class="cl-detail">${Number(moi.communes).toLocaleString('fr-FR')}</span>
+           <span class="cl-score">${Number(moi.score).toLocaleString('fr-FR')}<small>pts</small></span>
+         </button>` : '';
+    if(plus) plus.hidden = true;
+    return;
+  }
   if(classementDonnees.length === 0){
     podium.innerHTML = '';
     liste.innerHTML = `<p class="collection-empty">${classementMode === 'mois' ? 'Aucune commune prise ce mois-ci pour le moment.' : 'Le classement apparaîtra dès que des communes seront possédées.'}</p>`;
@@ -709,6 +742,12 @@ function renderClassement(){
 }
 
 document.getElementById('classement').addEventListener('click', (e) => {
+  if(e.target.closest('#clReplier')){
+    classementOuvert = !classementOuvert;
+    try{ localStorage.setItem('tf-classement-ouvert', classementOuvert ? '1' : '0'); } catch(err){}
+    renderClassement();
+    return;
+  }
   const mode = e.target.closest('[data-mode]');
   if(mode){
     classementMode = mode.dataset.mode;

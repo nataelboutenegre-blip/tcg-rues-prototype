@@ -1545,3 +1545,25 @@
     .tabs-row{ margin-top:0; }
     .regles-btn{ width:30px; height:30px; margin-right:0; }
   }
+
+
+  /* ---------- Tirer la page vers le bas pour rafraÃ®chir ---------- */
+  .tirer-rafraichir{
+    position: fixed; left: 50%; top: 8px; z-index: 45;
+    width: 38px; height: 38px; margin-left: -19px;
+    border-radius: 50%;
+    background: var(--nuit-2);
+    border: 1px solid rgba(169,188,212,0.25);
+    color: var(--brume);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transform: translate(-50%, 0);
+    transition: opacity .15s;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.4);
+  }
+  .tirer-rafraichir.visible{ opacity: 1; }
+  .tirer-rafraichir.pret{ color: var(--c-legendaire); border-color: var(--c-legendaire); }
+  .tirer-rafraichir svg{ width: 18px; height: 18px; }
+  .tirer-rafraichir.tourne{ animation: tourneRafraichir .8s linear infinite; }
+  @keyframes tourneRafraichir{ to{ transform: translate(-50%, 30px) rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce){ .tirer-rafraichir.tourne{ animation: none; } }

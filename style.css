@@ -1723,3 +1723,44 @@
   .classement.replie{ margin-bottom:14px; }
   .classement.replie .cl-modes{ display:none; }
   .classement.replie .cl-tete{ margin-bottom:8px; }
+
+
+  /* ---------- Journal d'activité ---------- */
+  .journal{ width:100%; max-width:1200px; margin: 26px auto 0; }
+  .journal[hidden]{ display:none; }
+  .jr-tete{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
+  .jr-tete h2{ font-family: var(--titre); font-weight:800; font-size:1.5rem; margin:0; flex:1; color:#fff; }
+  .jr-modes{ display:flex; gap:8px; }
+  .jr-liste{ display:flex; flex-direction:column; gap:6px; }
+  .jr-ligne{
+    display:flex; align-items:center; gap:12px;
+    background: var(--nuit-2); border:1px solid rgba(169,188,212,0.12);
+    border-left:3px solid rgba(169,188,212,0.25);
+    border-radius:10px; padding:9px 13px;
+    font-size:0.88rem; color: var(--brume);
+  }
+  .jr-ligne b{ color:#fff; font-weight:600; }
+  .jr-ligne.conquete{ border-left-color: var(--c-rouge); }
+  .jr-ligne.defense{ border-left-color: var(--c-peucommun); }
+  .jr-ligne.achat{ border-left-color: var(--c-rare); }
+  .jr-ligne.tirage{ border-left-color: var(--c-legendaire); }
+  .jr-ligne.moi{ background: rgba(240,180,41,0.07); }
+  .jr-ligne.perdu{ background: rgba(229,72,77,0.08); }
+  .jr-icone{
+    width:28px; height:28px; border-radius:8px; flex-shrink:0;
+    background: rgba(169,188,212,0.12);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .jr-icone svg{ width:15px; height:15px; }
+  .jr-ligne.conquete .jr-icone{ color:#FF8F92; background: rgba(229,72,77,0.15); }
+  .jr-ligne.defense .jr-icone{ color:#5EE0A8; background: rgba(34,160,107,0.15); }
+  .jr-ligne.achat .jr-icone{ color:#8DB8FF; background: rgba(47,124,246,0.15); }
+  .jr-ligne.tirage .jr-icone{ color: var(--c-legendaire); background: rgba(240,180,41,0.15); }
+  .jr-texte{ flex:1; min-width:0; line-height:1.4; }
+  .jr-commune.legendaire{ color: var(--c-legendaire); }
+  .jr-commune.rare{ color:#8DB8FF; }
+  .jr-date{ font-size:0.76rem; white-space:nowrap; flex-shrink:0; opacity:0.8; }
+  @media (max-width: 760px){
+    .jr-ligne{ flex-wrap:wrap; gap:8px 10px; font-size:0.82rem; padding:8px 11px; }
+    .jr-date{ width:100%; padding-left:40px; }
+  }

@@ -1569,3 +1569,65 @@
   @media (prefers-reduced-motion: reduce){ .tirer-rafraichir.tourne{ animation: none; } }
 
   .leg-zoom{ color: var(--c-legendaire); }
+
+
+  /* ---------- Classement ---------- */
+  .classement{ width:100%; max-width:1200px; margin: 0 auto 22px; }
+  .cl-tete{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
+  .cl-tete h2{ font-family: var(--titre); font-weight:800; font-size:1.5rem; margin:0; flex:1; color:#fff; }
+  .cl-modes{ display:flex; gap:8px; }
+  .cl-podium{ display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; align-items:end; margin-bottom:10px; }
+  .cl-podium:empty{ display:none; }
+  .cl-marche{
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    background: var(--nuit-2); border:1px solid rgba(169,188,212,0.16);
+    border-radius:14px; padding:14px 10px 12px; cursor:pointer;
+    font-family: inherit; color:#fff; text-align:center;
+  }
+  .cl-marche:hover{ border-color: rgba(169,188,212,0.45); }
+  .cl-marche.r1{ padding-top:22px; border-color: rgba(240,180,41,0.55); background: linear-gradient(180deg, rgba(240,180,41,0.14), var(--nuit-2) 70%); }
+  .cl-marche.r2{ border-color: rgba(200,214,230,0.35); }
+  .cl-marche.r3{ border-color: rgba(194,163,131,0.4); }
+  .cl-marche.moi{ box-shadow: inset 0 0 0 1.5px var(--c-legendaire); }
+  .cl-marche .cl-rang{ font-family: var(--titre); font-weight:900; font-size:1.6rem; line-height:1; color: var(--brume); }
+  .cl-marche.r1 .cl-rang{ color: var(--c-legendaire); font-size:2rem; }
+  .cl-marche .cl-pastille{ width:14px; height:14px; border-radius:5px; }
+  .cl-marche .cl-pseudo{ font-weight:600; font-size:0.92rem; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cl-marche .cl-score{ font-family: var(--titre); font-weight:800; font-size:1.4rem; color: var(--c-legendaire); }
+  .cl-marche.r1 .cl-score{ font-size:1.7rem; }
+  .cl-score small{ font-family: var(--texte); font-size:0.62rem; font-weight:500; color: var(--brume); margin-left:3px; }
+  .cl-detail{ font-size:0.74rem; color: var(--brume); }
+  .cl-liste{ display:flex; flex-direction:column; gap:6px; }
+  .cl-ligne{
+    display:flex; align-items:center; gap:10px;
+    background: var(--nuit-2); border:1px solid rgba(169,188,212,0.12);
+    border-radius:10px; padding:8px 12px; cursor:pointer;
+    font-family: inherit; color:#fff; text-align:left; font-size:0.88rem;
+  }
+  .cl-ligne:hover{ border-color: rgba(169,188,212,0.4); }
+  .cl-ligne.moi{ border-color: rgba(240,180,41,0.5); background: rgba(240,180,41,0.07); }
+  .cl-ligne .cl-rang{ width:26px; color: var(--brume); font-variant-numeric: tabular-nums; }
+  .cl-ligne .cl-pastille{ width:11px; height:11px; border-radius:4px; flex-shrink:0; }
+  .cl-ligne .cl-pseudo{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .cl-mini{ display:flex; align-items:center; gap:4px; color: var(--brume); font-size:0.78rem; }
+  .cl-mini .cl-etoile{ color: var(--c-legendaire); font-style:normal; }
+  .cl-mini .cl-rond{ width:8px; height:8px; border-radius:50%; background: var(--c-rare); display:inline-block; }
+  .cl-ligne .cl-detail{ width:46px; text-align:right; }
+  .cl-ligne .cl-score{ font-family: var(--titre); font-weight:800; font-size:1.05rem; color: var(--c-legendaire); width:74px; text-align:right; }
+  .cl-plus{
+    margin-top:8px; width:100%;
+    background:none; border:1px dashed rgba(169,188,212,0.3); border-radius:10px;
+    color: var(--brume); font-family: inherit; font-size:0.82rem; padding:8px; cursor:pointer;
+  }
+  .cl-plus:hover{ color:#fff; border-color: rgba(169,188,212,0.55); }
+  .cl-plus[hidden]{ display:none; }
+  @media (max-width: 760px){
+    .cl-podium{ gap:6px; }
+    .cl-marche{ padding:10px 6px 9px; }
+    .cl-marche.r1{ padding-top:14px; }
+    .cl-marche .cl-pseudo{ font-size:0.78rem; }
+    .cl-marche .cl-score{ font-size:1.15rem; }
+    .cl-marche.r1 .cl-score{ font-size:1.35rem; }
+    .cl-ligne{ font-size:0.82rem; gap:8px; padding:7px 10px; }
+    .cl-mini{ display:none; }
+  }

@@ -3,6 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
+const VERSION_JEU = '7a895c5963dd';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -322,6 +323,7 @@ async function showGame(session_){
   verifierTiragesEnAttente();
   loadMenaces();
   renderNotifications();
+  verifierVersion();
   // arrivee depuis une notification : ?onglet=combat ou ?onglet=tirage
   if(new URLSearchParams(location.search).has('onglet')){
     ouvrirOngletDepuisUrl(location.href);
@@ -1928,6 +1930,102 @@ document.querySelectorAll('.tab').forEach(tab => {
 document.addEventListener('visibilitychange', () => {
   if(!document.hidden && packStatusCache) loadPackStatus();
 });
+
+// ---------- Mise a jour automatique ----------
+// Sur l'ecran d'accueil d'un iPhone, il n'y a pas de bouton "recharger" : le jeu verifie
+// lui-meme s'il existe une version plus recente, et se recharge tout seul.
+let majEnCours = false;
+
+async function verifierVersion({ silencieux = true } = {}){
+  if(majEnCours) return false;
+  try{
+    const rep = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+    if(!rep.ok) return false;
+    const info = await rep.json();
+    if(!info.version || info.version === VERSION_JEU) return false;
+    majEnCours = true;
+    if(!silencieux) notifier({ type: 'info', titre: 'Mise à jour du jeu', texte: 'Nouvelle version, un instant…', duree: 4000 });
+    await appliquerMiseAJour();
+    return true;
+  } catch(e){
+    return false;
+  }
+}
+
+async function appliquerMiseAJour(){
+  try{
+    // on vide les fichiers gardes en memoire par le navigateur, puis on repart a neuf
+    if('caches' in window){
+      const noms = await caches.keys();
+      await Promise.all(noms.map(n => caches.delete(n)));
+    }
+    const reg = enregistrementSW || (('serviceWorker' in navigator) ? await navigator.serviceWorker.getRegistration() : null);
+    if(reg) await reg.update();
+  } catch(e){}
+  // l'adresse change a chaque version : le cache de la page ne peut pas resservir
+  const url = new URL(location.href);
+  url.searchParams.set('v', String(Date.now()));
+  location.replace(url.toString());
+}
+
+// au demarrage, puis a chaque retour dans le jeu et toutes les 30 min
+document.addEventListener('visibilitychange', () => { if(!document.hidden) verifierVersion(); });
+setInterval(() => verifierVersion(), 30 * 60 * 1000);
+
+// Tirer la page vers le bas pour rafraichir (comme dans une vraie application)
+(function tirerPourRafraichir(){
+  const seuil = 70;
+  let depart = null, actif = false;
+  const indicateur = document.createElement('div');
+  indicateur.className = 'tirer-rafraichir';
+  indicateur.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 1 3 6.7"/><path d="M3 20v-6h6"/></svg>';
+  document.body.appendChild(indicateur);
+
+  document.addEventListener('touchstart', (e) => {
+    if(e.touches.length !== 1) return;
+    // seulement si on est deja tout en haut, et pas sur la carte (qui gere ses propres gestes)
+    const surCarte = e.target.closest('#mapWrap');
+    depart = (!surCarte && window.scrollY <= 0) ? e.touches[0].clientY : null;
+    actif = false;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', (e) => {
+    if(depart === null || e.touches.length !== 1) return;
+    const dy = e.touches[0].clientY - depart;
+    if(dy <= 0){ indicateur.style.transform = ''; indicateur.classList.remove('visible', 'pret'); actif = false; return; }
+    actif = true;
+    const tire = Math.min(dy * 0.5, 90);
+    indicateur.classList.add('visible');
+    indicateur.classList.toggle('pret', dy >= seuil);
+    indicateur.style.transform = `translate(-50%, ${tire}px) rotate(${dy * 2}deg)`;
+  }, { passive: true });
+
+  document.addEventListener('touchend', async () => {
+    if(depart === null || !actif){ depart = null; return; }
+    const pret = indicateur.classList.contains('pret');
+    indicateur.classList.remove('visible', 'pret');
+    indicateur.style.transform = '';
+    depart = null;
+    if(!pret) return;
+    indicateur.classList.add('visible', 'tourne');
+    // si une nouvelle version existe, elle est appliquee ; sinon on recharge simplement les donnees
+    const misAJour = await verifierVersion({ silencieux: false });
+    if(misAJour) return;
+    await rafraichirDonnees();
+    indicateur.classList.remove('visible', 'tourne');
+    notifier({ type: 'succes', titre: 'Données à jour', duree: 1800 });
+  }, { passive: true });
+})();
+
+async function rafraichirDonnees(){
+  await loadMyCollection();
+  await loadOthersPossessions();
+  await loadPackStatus();
+  await loadMenaces();
+  const actif = document.querySelector('.tab-panel.active');
+  if(actif && actif.id === 'panel-bourse') await loadBourse();
+  if(actif && (actif.id === 'panel-combat' || actif.id === 'panel-defense')) await loadCombat();
+}
 
 // ---------- Notifications sur telephone ----------
 const NOTIF_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);

@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '3aafee745fb5';
+const VERSION_JEU = '52775095b00f';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -323,6 +323,7 @@ async function showGame(session_){
   verifierTiragesEnAttente();
   loadMenaces();
   renderNotifications();
+  loadObjectifs();
   loadClassement();
   verifierVersion();
   // arrivee depuis une notification : ?onglet=combat ou ?onglet=tirage
@@ -1162,6 +1163,7 @@ function revealCards(draws){
       if(pendingFlips <= 0){
         paquetEnCours = false;
         loadPackStatus();
+        loadObjectifs();
         verifierTiragesEnAttente();
       }
     });
@@ -1627,6 +1629,7 @@ document.addEventListener('click', async (e) => {
         }
         await loadCombat();
         loadPackStatus();
+        loadObjectifs();
       } finally {
         combatActionEnCours = false;
       }
@@ -2071,7 +2074,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
     if(tab.dataset.tab === 'territoire'){ sizeMapWrap(window.__mapAspectRatio); loadClassement(); }
     if(tab.dataset.tab === 'bourse') loadBourse();
-    if(tab.dataset.tab === 'tirage') loadPackStatus();
+    if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); }
     if(tab.dataset.tab === 'defense'){ loadMenaces(); loadCombat(); renderIntensite('defense'); }
     if(tab.dataset.tab === 'combat') loadCombat();
   });
@@ -2080,6 +2083,97 @@ document.querySelectorAll('.tab').forEach(tab => {
 // en revenant sur le site (autre appli, autre onglet), on relit jetons et solde
 document.addEventListener('visibilitychange', () => {
   if(!document.hidden && packStatusCache) loadPackStatus();
+});
+
+// ---------- Objectifs ----------
+let objectifsListe = [];
+let objectifsTout = false;
+
+async function loadObjectifs(){
+  const { data, error } = await sb.rpc('objectifs');
+  const bloc = document.getElementById('objectifs');
+  if(error){
+    if(bloc) bloc.hidden = true;
+    return;
+  }
+  objectifsListe = data || [];
+  renderObjectifs();
+}
+
+function carteObjectif(o){
+  const pct = Math.min(100, Math.round(100 * o.avancement / o.cible));
+  const recompense = o.recompense === 'points'
+    ? `${Number(o.valeur).toLocaleString('fr-FR')} pts`
+    : (o.valeur > 1 ? `${o.valeur} paquets` : '1 paquet');
+  const etat = o.reclame
+    ? '<span class="obj-fait">Récupéré</span>'
+    : (o.reclamable ? `<button class="obj-btn" data-objectif="${echapperTexte(o.id)}">Récupérer</button>` : '');
+  return `
+    <div class="obj ${o.reclamable ? 'pret' : ''} ${o.reclame ? 'fait' : ''}">
+      <div class="obj-texte">
+        <b>${echapperTexte(o.titre)}</b>
+        <span>${echapperTexte(o.detail)}</span>
+        <span class="obj-barre"><i style="width:${pct}%"></i></span>
+      </div>
+      <div class="obj-droite">
+        <span class="obj-chiffres">${Number(o.avancement).toLocaleString('fr-FR')} / ${Number(o.cible).toLocaleString('fr-FR')}</span>
+        <span class="obj-gain ${o.recompense}">${recompense}</span>
+        ${etat}
+      </div>
+    </div>`;
+}
+
+function renderObjectifs(){
+  const bloc = document.getElementById('objectifs');
+  if(!bloc) return;
+  bloc.hidden = objectifsListe.length === 0;
+  if(objectifsListe.length === 0) return;
+
+  const jour = objectifsListe.filter(o => o.categorie === 'jour');
+  let uniques = objectifsListe.filter(o => o.categorie !== 'jour');
+  // par defaut : ceux a récupérer, puis les plus proches du but
+  const enCours = uniques.filter(o => !o.reclame)
+    .sort((a, b) => (b.reclamable - a.reclamable) || (b.avancement / b.cible - a.avancement / a.cible));
+  const visibles = objectifsTout ? uniques : enCours.slice(0, 3);
+
+  const prets = objectifsListe.filter(o => o.reclamable).length;
+  const pastille = document.getElementById('objPret');
+  if(pastille){
+    pastille.hidden = prets === 0;
+    pastille.textContent = prets > 1 ? `${prets} récompenses à récupérer` : '1 récompense à récupérer';
+  }
+  document.getElementById('objJour').innerHTML =
+    `<h3>Aujourd'hui</h3>` + jour.map(carteObjectif).join('');
+  document.getElementById('objUnique').innerHTML =
+    `<h3>${objectifsTout ? 'Tous les défis' : 'Tes prochains défis'}</h3>` + visibles.map(carteObjectif).join('');
+  const plus = document.getElementById('objPlus');
+  if(plus){
+    plus.hidden = objectifsTout || uniques.length <= visibles.length;
+    plus.textContent = `Voir les ${uniques.length} défis`;
+  }
+}
+
+document.getElementById('objectifs').addEventListener('click', async (e) => {
+  if(e.target.closest('#objPlus')){
+    objectifsTout = true;
+    renderObjectifs();
+    return;
+  }
+  const btn = e.target.closest('[data-objectif]');
+  if(!btn) return;
+  btn.disabled = true;
+  try{
+    const { data, error } = await sb.rpc('reclamer_objectif', { p_id: btn.dataset.objectif });
+    if(error) throw error;
+    const r = data && data[0];
+    notifier({ type: 'succes', titre: 'Objectif atteint', texte: r ? r.message : 'Récompense récupérée' });
+    await loadObjectifs();
+    await loadPackStatus();
+    if(r && r.recompense === 'paquet') verifierTiragesEnAttente();
+  } catch(err){
+    notifier({ type: 'erreur', titre: 'Impossible de récupérer', texte: messageLisible(err.message) });
+    btn.disabled = false;
+  }
 });
 
 // ---------- Mise a jour automatique ----------
@@ -2169,6 +2263,7 @@ setInterval(() => verifierVersion(), 30 * 60 * 1000);
 })();
 
 async function rafraichirDonnees(){
+  await loadObjectifs();
   await loadClassement();
   await loadMyCollection();
   await loadOthersPossessions();

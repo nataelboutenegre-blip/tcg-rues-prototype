@@ -1631,3 +1631,30 @@
     .cl-ligne{ font-size:0.82rem; gap:8px; padding:7px 10px; }
     .cl-mini{ display:none; }
   }
+
+
+  /* ---------- Choix de l'engagement ---------- */
+  .intensite-bloc{ width:100%; max-width:860px; margin-bottom:14px; }
+  .intensite-bloc h2{ font-family: var(--titre); font-weight:800; font-size:1.2rem; margin:0 0 8px; color:#fff; }
+  .intensites{ display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; }
+  .intensite{
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    background: var(--nuit-2); border:1.5px solid rgba(169,188,212,0.16);
+    border-radius:12px; padding:10px 8px 9px; cursor:pointer;
+    font-family: inherit; color: var(--brume);
+  }
+  .intensite:hover{ border-color: rgba(169,188,212,0.45); }
+  .intensite.actif{ border-color: var(--c-legendaire); background: rgba(240,180,41,0.1); color:#fff; }
+  .int-label{ font-weight:600; font-size:0.88rem; }
+  .int-chances{ font-family: var(--titre); font-weight:800; font-size:1.5rem; line-height:1.05; color:#fff; }
+  .intensite.actif .int-chances{ color: var(--c-legendaire); }
+  .int-cout{ font-size:0.72rem; }
+  .int-aide{ grid-column: 1 / -1; margin:6px 0 0; font-size:0.78rem; color: var(--brume); }
+  .cible-attaquer i{ font-style:normal; font-family: var(--texte); font-size:0.7rem; font-weight:600; opacity:0.85; }
+  @media (max-width: 760px){
+    .intensites{ gap:6px; }
+    .intensite{ padding:8px 4px; }
+    .int-label{ font-size:0.76rem; }
+    .int-chances{ font-size:1.2rem; }
+    .int-cout{ font-size:0.64rem; }
+  }

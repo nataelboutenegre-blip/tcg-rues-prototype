@@ -1,6 +1,15 @@
 // Service worker TerraFront : recoit les notifications, meme quand le jeu est ferme.
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+self.addEventListener('activate', (event) => event.waitUntil((async () => {
+  // a chaque nouvelle version, on vide ce que le navigateur avait garde
+  const noms = await caches.keys();
+  await Promise.all(noms.map(n => caches.delete(n)));
+  await self.clients.claim();
+})()));
+
+self.addEventListener('message', (event) => {
+  if(event.data && event.data.type === 'maj-maintenant') self.skipWaiting();
+});
 
 self.addEventListener('push', (event) => {
   let d = {};

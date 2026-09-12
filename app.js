@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'd8d39a81f884';
+const VERSION_JEU = '6da87ec8b0c1';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -323,6 +323,7 @@ async function showGame(session_){
   verifierTiragesEnAttente();
   loadMenaces();
   renderNotifications();
+  loadClassement();
   verifierVersion();
   // arrivee depuis une notification : ?onglet=combat ou ?onglet=tirage
   if(new URLSearchParams(location.search).has('onglet')){
@@ -649,6 +650,88 @@ function setupMapInteraction(){
 
 let showOthers = true;
 
+// ---------- Classement ----------
+let classementMode = 'general';
+let classementComplet = false;
+let classementDonnees = [];
+
+async function loadClassement(){
+  const { data, error } = await sb.rpc('classement', { p_mode: classementMode, p_limite: classementComplet ? 50 : 10 });
+  if(error){
+    const liste = document.getElementById('clListe');
+    if(liste && /could not find the function/i.test(error.message || '')) liste.innerHTML = '';
+    return;
+  }
+  classementDonnees = data || [];
+  renderClassement();
+}
+
+function renderClassement(){
+  const podium = document.getElementById('clPodium');
+  const liste = document.getElementById('clListe');
+  const plus = document.getElementById('clPlus');
+  if(!podium || !liste) return;
+  if(classementDonnees.length === 0){
+    podium.innerHTML = '';
+    liste.innerHTML = `<p class="collection-empty">${classementMode === 'mois' ? 'Aucune commune prise ce mois-ci pour le moment.' : 'Le classement apparaîtra dès que des communes seront possédées.'}</p>`;
+    if(plus) plus.hidden = true;
+    return;
+  }
+  const couleur = (l) => l.est_moi ? COULEUR_MOI : colorForPlayer(l.joueur_id);
+  const nb = (n) => Number(n).toLocaleString('fr-FR');
+
+  const trois = classementDonnees.filter(l => l.rang <= 3);
+  const ordre = [trois.find(l => l.rang === 2), trois.find(l => l.rang === 1), trois.find(l => l.rang === 3)].filter(Boolean);
+  podium.innerHTML = ordre.map(l => `
+    <button class="cl-marche r${l.rang} ${l.est_moi ? 'moi' : ''}" data-joueur-id="${echapperTexte(l.joueur_id)}" title="Mettre son territoire en évidence">
+      <span class="cl-rang">${l.rang}</span>
+      <span class="cl-pastille" style="background:${couleur(l)}"></span>
+      <span class="cl-pseudo">${l.est_moi ? 'Toi' : echapperTexte(l.pseudo)}</span>
+      <span class="cl-score">${nb(l.score)}<small>pts</small></span>
+      <span class="cl-detail">${nb(l.communes)} commune${l.communes > 1 ? 's' : ''}</span>
+    </button>`).join('');
+
+  const suite = classementDonnees.filter(l => l.rang > 3);
+  liste.innerHTML = suite.map(l => `
+    <button class="cl-ligne ${l.est_moi ? 'moi' : ''}" data-joueur-id="${echapperTexte(l.joueur_id)}" title="Mettre son territoire en évidence">
+      <span class="cl-rang">${l.rang}</span>
+      <span class="cl-pastille" style="background:${couleur(l)}"></span>
+      <span class="cl-pseudo">${l.est_moi ? '<b>Toi</b>' : echapperTexte(l.pseudo)}</span>
+      <span class="cl-mini">${l.legendaires > 0 ? `<i class="cl-etoile">★</i>${nb(l.legendaires)}` : ''}${l.rares > 0 ? `<i class="cl-rond"></i>${nb(l.rares)}` : ''}</span>
+      <span class="cl-detail">${nb(l.communes)}</span>
+      <span class="cl-score">${nb(l.score)}<small>pts</small></span>
+    </button>`).join('');
+
+  if(plus){
+    plus.hidden = classementComplet || classementDonnees.length < 10;
+  }
+}
+
+document.getElementById('classement').addEventListener('click', (e) => {
+  const mode = e.target.closest('[data-mode]');
+  if(mode){
+    classementMode = mode.dataset.mode;
+    classementComplet = false;
+    document.querySelectorAll('#classement [data-mode]').forEach(b => b.classList.toggle('active', b === mode));
+    loadClassement();
+    return;
+  }
+  if(e.target.closest('#clPlus')){
+    classementComplet = true;
+    document.getElementById('clPlus').hidden = true;
+    loadClassement();
+    return;
+  }
+  const ligne = e.target.closest('[data-joueur-id]');
+  if(ligne){
+    const id = ligne.dataset.joueurId;
+    joueurSurligne = (joueurSurligne === id) ? null : (id === (window.__monId || '') ? ID_MOI : id);
+    renderMapOverlay();
+    const carte = document.getElementById('mapWrap');
+    if(carte && carte.scrollIntoView) carte.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+
 // ---------- Territoires sur la carte ----------
 const RAYON_ZONE = {commun: 4.5, peucommun: 6.5, rare: 10, legendaire: 15};
 // De loin, les petites communes des autres joueurs ne sont que du bruit : on les revele en zoomant.
@@ -849,6 +932,7 @@ function renderLegendeCarte(joueurs, idSvg){
 async function loadOthersPossessions(){
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
+  window.__monId = uid;
   const { data, error } = await sb
     .from('possessions')
     .select('commune_code, joueur_id, communes(code,nom,departement,latitude,longitude,tier), joueurs(pseudo)')
@@ -1939,7 +2023,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.getElementById('reglesBtn').classList.remove('actif');
     tab.classList.add('active');
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
-    if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
+    if(tab.dataset.tab === 'territoire'){ sizeMapWrap(window.__mapAspectRatio); loadClassement(); }
     if(tab.dataset.tab === 'bourse') loadBourse();
     if(tab.dataset.tab === 'tirage') loadPackStatus();
     if(tab.dataset.tab === 'defense'){ loadMenaces(); loadCombat(); }
@@ -2039,6 +2123,7 @@ setInterval(() => verifierVersion(), 30 * 60 * 1000);
 })();
 
 async function rafraichirDonnees(){
+  await loadClassement();
   await loadMyCollection();
   await loadOthersPossessions();
   await loadPackStatus();

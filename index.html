@@ -178,9 +178,12 @@
     <section class="tab-panel" id="panel-territoire">
       <h1>Le territoire</h1>
       <div class="sub">Chaque commune possédée devient une zone. Les zones voisines d'un même joueur se rejoignent, et une frontière apparaît entre deux joueurs.</div>
-      <div class="classement" id="classement">
+      <div class="classement" id="classement" hidden>
         <div class="cl-tete">
           <h2>Classement</h2>
+          <button class="cl-replier" id="clReplier" aria-expanded="true" aria-label="Replier le classement">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+          </button>
           <div class="cl-modes">
             <button class="filter-pill active" data-mode="general">Général</button>
             <button class="filter-pill" data-mode="mois">Ce mois-ci</button>

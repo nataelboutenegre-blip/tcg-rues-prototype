@@ -1706,3 +1706,20 @@
     .obj-droite{ width:100%; justify-content:space-between; }
     .obj-texte b{ font-size:0.88rem; }
   }
+
+
+  /* ---------- Classement repliable ---------- */
+  .classement[hidden]{ display:none; }
+  .cl-replier{
+    width:30px; height:30px; border-radius:9px; flex-shrink:0;
+    border:none; background: rgba(169,188,212,0.12); color: var(--brume);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    order:3;
+  }
+  .cl-replier:hover{ background: rgba(169,188,212,0.24); color:#fff; }
+  .cl-replier svg{ width:15px; height:15px; transition: transform .15s; }
+  .classement.replie .cl-replier svg{ transform: rotate(180deg); }
+  .cl-replier:focus-visible{ outline:2px solid var(--c-legendaire); outline-offset:2px; }
+  .classement.replie{ margin-bottom:14px; }
+  .classement.replie .cl-modes{ display:none; }
+  .classement.replie .cl-tete{ margin-bottom:8px; }

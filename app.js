@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '6da87ec8b0c1';
+const VERSION_JEU = '3aafee745fb5';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -1597,7 +1597,11 @@ document.addEventListener('click', async (e) => {
       // bloque le rafraichissement auto de la grille pendant l'attaque en cours
       combatActionEnCours = true;
       try{
-        const { data, error } = await sb.rpc('attaquer', { p_commune_code: code });
+        let { data, error } = await sb.rpc('attaquer', { p_commune_code: code, p_intensite: intensiteChoisie });
+        // si intensite.sql n'a pas encore ete execute, on attaque comme avant
+        if(error && /p_intensite|does not exist|could not find/i.test(error.message || '')){
+          ({ data, error } = await sb.rpc('attaquer', { p_commune_code: code }));
+        }
         if(error) throw error;
         const result = data[0];
         const cible = combatCibles.find(x => x.commune_code === code);
@@ -1614,12 +1618,12 @@ document.addEventListener('click', async (e) => {
         } else if(result.gagne){
           notifier({
             type: 'victoire',
-            titre: `Victoire contre ${nomCible}`,
+            titre: `Victoire contre ${nomCible}${result.cout ? ` (−${result.cout} pts)` : ''}`,
             texte: result.victoires_consecutives >= 2 ? 'Encore une victoire pour la conquérir.' : `Série : ${result.victoires_consecutives} sur 3`,
             serie: result.victoires_consecutives
           });
         } else {
-          notifier({ type: 'defaite', titre: `Défaite contre ${nomCible}`, texte: 'La série repart à zéro.', serie: 0 });
+          notifier({ type: 'defaite', titre: `Défaite contre ${nomCible}${result.cout ? ` (−${result.cout} pts)` : ''}`, texte: `Attaque ${intensite().label.toLowerCase()} à ${intensite().chances} % : la série repart à zéro.`, serie: 0 });
         }
         await loadCombat();
         loadPackStatus();
@@ -1651,6 +1655,23 @@ document.getElementById('sellFilters').addEventListener('click', (e) => {
 // Ces deux valeurs doivent rester alignees avec le SQL (fonctions attaquer et delai_attaque)
 const IMMUNITE_MS = 3 * 3600 * 1000;
 const DELAI_ATTAQUE_MS = {rare: 10 * 60 * 1000, legendaire: 3 * 3600 * 1000};
+
+// doit rester aligne avec intensite.sql
+const INTENSITES = [
+  { id: 'prudente', label: 'Prudente', chances: 35, facteur: 0.35, aide: 'Le moins cher, mais il faudra souvent recommencer.' },
+  { id: 'normale', label: 'Normale', chances: 50, facteur: 1, aide: 'Le bon compromis entre coût et rapidité.' },
+  { id: 'offensive', label: 'Offensive', chances: 65, facteur: 2, aide: 'Deux fois plus rapide pour conclure, mais ça coûte.' },
+];
+let intensiteChoisie = 'normale';
+try{
+  const v = localStorage.getItem('tf-intensite');
+  if(v && INTENSITES.some(i => i.id === v)) intensiteChoisie = v;
+} catch(e){}
+const intensite = (id) => INTENSITES.find(i => i.id === (id || intensiteChoisie)) || INTENSITES[1];
+
+function coutIntensite(tierId, id){
+  return Math.max(1, Math.round(coutAttaque(tierId) * intensite(id).facteur));
+}
 
 function coutAttaque(tierId){
   return Math.max(1, Math.round(PRIX_RACHAT[tierId] * 0.1));
@@ -1720,7 +1741,7 @@ function renderMenaces(){
           <span class="menace-statut">${statut}</span>
           ${v > 0 && !(bouclierFin > now) ? (m.defense_utilisee
             ? '<span class="menace-note">Défense déjà utilisée contre cette attaque</span>'
-            : (m.attaquant_id ? `<button class="menace-defendre" data-commune="${m.commune_code}" data-attaquant="${m.attaquant_id}" data-nom="${echapperTexte(m.nom)}">${ICONE_BOUCLIER}Défendre (${coutAttaque(m.tier)} pts, 1 chance sur 2)</button>` : '')) : ''}
+            : (m.attaquant_id ? `<button class="menace-defendre" data-commune="${m.commune_code}" data-attaquant="${m.attaquant_id}" data-nom="${echapperTexte(m.nom)}">${ICONE_BOUCLIER}Défendre (${coutIntensite(m.tier)} pts, ${intensite().chances} %)</button>` : '')) : ''}
         </div>
         <div class="menace-serie" title="${v} victoire${v > 1 ? 's' : ''} d'affilée sur 3">${serie}</div>
       </div>`;
@@ -1751,7 +1772,10 @@ document.getElementById('combatMenacesListe').addEventListener('click', async (e
   if(!btn || btn.disabled) return;
   btn.disabled = true;
   try{
-    const { data, error } = await sb.rpc('defendre', { p_commune_code: btn.dataset.commune, p_attaquant: btn.dataset.attaquant });
+    let { data, error } = await sb.rpc('defendre', { p_commune_code: btn.dataset.commune, p_attaquant: btn.dataset.attaquant, p_intensite: intensiteChoisie });
+    if(error && /p_intensite|does not exist|could not find/i.test(error.message || '')){
+      ({ data, error } = await sb.rpc('defendre', { p_commune_code: btn.dataset.commune, p_attaquant: btn.dataset.attaquant }));
+    }
     if(error) throw error;
     const r = data && data[0];
     if(r && r.reussie){
@@ -1762,7 +1786,7 @@ document.getElementById('combatMenacesListe').addEventListener('click', async (e
         serie: r.victoires_restantes
       });
     } else {
-      notifier({ type: 'defaite', titre: `Défense ratée à ${btn.dataset.nom}`, texte: `L'attaquant garde ses victoires. (−${r ? r.cout : ''} pts)` });
+      notifier({ type: 'defaite', titre: `Défense ratée à ${btn.dataset.nom}`, texte: `L'attaquant garde ses victoires (−${r ? r.cout : ''} pts).` });
     }
     await loadMenaces();
     loadPackStatus();
@@ -1855,7 +1879,29 @@ async function loadCombat(){
   renderCombatGrid();
 }
 
+function renderIntensite(){
+  const zone = document.getElementById('combatIntensite');
+  if(!zone) return;
+  zone.innerHTML = INTENSITES.map(i => `
+    <button class="intensite ${i.id === intensiteChoisie ? 'actif' : ''}" data-intensite="${i.id}" aria-pressed="${i.id === intensiteChoisie}">
+      <span class="int-label">${i.label}</span>
+      <span class="int-chances">${i.chances} %</span>
+      <span class="int-cout">${i.facteur === 1 ? 'prix normal' : (i.facteur < 1 ? 'un tiers du prix' : 'prix doublé')}</span>
+    </button>`).join('') + `<p class="int-aide">${intensite().aide}</p>`;
+}
+
+document.getElementById('combatIntensite').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-intensite]');
+  if(!b) return;
+  intensiteChoisie = b.dataset.intensite;
+  try{ localStorage.setItem('tf-intensite', intensiteChoisie); } catch(err){}
+  renderIntensite();
+  renderCombatGrid();
+  renderMenaces();
+});
+
 function renderCombatGrid(){
+  renderIntensite();
   const grid = document.getElementById('combatGrid');
   const searchEl = document.getElementById('combatSearch');
   const searchText = searchEl ? searchEl.value.trim().toLowerCase() : '';
@@ -1925,7 +1971,7 @@ function renderCombatGrid(){
     const prochainRound = dernierRound ? dernierRound + DELAI_ATTAQUE_MS[commune.tier] : 0;
     const enAttente = now < prochainRound;
 
-    const cout = coutAttaque(commune.tier);
+    const cout = coutIntensite(commune.tier);
     const bouclierFin = c.bouclier_jusqua ? new Date(c.bouclier_jusqua).getTime() : 0;
     let etatClasse, etatTexte, note = '', noteAlerte = false, disabled = true;
     if(bouclierFin > now){
@@ -1964,7 +2010,7 @@ function renderCombatGrid(){
           </div>
           <div class="cible-serie"><span>Ta série</span><span class="cible-ronds">${ronds}</span></div>
           <p class="cible-note ${noteAlerte ? 'alerte' : ''}">${note}</p>
-          <button class="cible-attaquer" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer <b>${cout} pts</b></button>
+          <button class="cible-attaquer" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer <b>${cout} pts</b><i>${intensite().chances} %</i></button>
         </div>
       </article>`;
   }).join('');
@@ -2026,7 +2072,7 @@ document.querySelectorAll('.tab').forEach(tab => {
     if(tab.dataset.tab === 'territoire'){ sizeMapWrap(window.__mapAspectRatio); loadClassement(); }
     if(tab.dataset.tab === 'bourse') loadBourse();
     if(tab.dataset.tab === 'tirage') loadPackStatus();
-    if(tab.dataset.tab === 'defense'){ loadMenaces(); loadCombat(); }
+    if(tab.dataset.tab === 'defense'){ loadMenaces(); loadCombat(); renderIntensite('defense'); }
     if(tab.dataset.tab === 'combat') loadCombat();
   });
 });

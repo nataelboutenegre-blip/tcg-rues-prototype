@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'ad886bd3f09a';
+const VERSION_JEU = 'd8d39a81f884';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -522,8 +522,14 @@ function signalerMouvementCarte(){
 }
 
 // Zoome en gardant fixe le point (px, py) du cadre : le curseur ou le centre des deux doigts
+// vrai quand le changement de zoom fait apparaitre ou disparaitre des communes
+function franchitUnSeuil(avant, apres){
+  return Object.values(ZOOM_MINI).some(s => (avant < s) !== (apres < s));
+}
+
 function zoomMapAt(newZoom, px, py){
   newZoom = Math.min(MAP_ZOOM_MAX, Math.max(MAP_ZOOM_MIN, newZoom));
+  if(franchitUnSeuil(mapZoom, newZoom)) setTimeout(renderMapOverlay, 0);
   const ratio = newZoom / mapZoom;
   mapPanX = px - (px - mapPanX) * ratio;
   mapPanY = py - (py - mapPanY) * ratio;
@@ -615,6 +621,7 @@ function setupMapInteraction(){
       const mx = (touchPinch.mid.x - touchPinch.panX) / touchPinch.zoom;
       const my = (touchPinch.mid.y - touchPinch.panY) / touchPinch.zoom;
       const mid = touchMid(e.touches, rect);
+      if(franchitUnSeuil(mapZoom, newZoom)) setTimeout(renderMapOverlay, 0);
       mapZoom = newZoom;
       mapPanX = mid.x - newZoom * mx;
       mapPanY = mid.y - newZoom * my;
@@ -644,6 +651,9 @@ let showOthers = true;
 
 // ---------- Territoires sur la carte ----------
 const RAYON_ZONE = {commun: 4.5, peucommun: 6.5, rare: 10, legendaire: 15};
+// De loin, les petites communes des autres joueurs ne sont que du bruit : on les revele en zoomant.
+const ZOOM_MINI = {commun: 2.6, peucommun: 1.8, rare: 1, legendaire: 1};
+const MASQUEES_PAR_ZOOM = {commun: 0, peucommun: 0};
 const LIBELLE_TIER = {commun: 'commun', peucommun: 'peu commun', rare: 'rare', legendaire: 'légendaire'};
 const ID_MOI = '__moi__';
 let joueurSurligne = null;
@@ -690,14 +700,18 @@ function dessinerTerritoires(){
     liste.push({ nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: ID_MOI });
     joueurs.get(ID_MOI).nb++;
   }
+  MASQUEES_PAR_ZOOM.commun = 0;
+  MASQUEES_PAR_ZOOM.peucommun = 0;
   for(const e of othersMap.values()){
     if(!METRO_DEPT_RE.test(e.dept) || e.lat == null) continue;
+    const visibleAuZoom = mapZoom >= (ZOOM_MINI[e.tier.id] || 1);
+    if(showOthers && !visibleAuZoom && MASQUEES_PAR_ZOOM[e.tier.id] !== undefined) MASQUEES_PAR_ZOOM[e.tier.id]++;
     if(!joueurs.has(e.joueurId)){
       const couleur = colorForPlayer(e.joueurId);
       joueurs.set(e.joueurId, { id: e.joueurId, pseudo: e.pseudo, couleur, fonce: couleurFoncee(couleur), moi: false, nb: 0 });
     }
     joueurs.get(e.joueurId).nb++;
-    if(showOthers) liste.push({ nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: e.joueurId });
+    if(showOthers && visibleAuZoom) liste.push({ nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: e.joueurId });
   }
 
   const pts = liste.map(c => { const p = project(c.lat, c.lon); return [p.x * MAP_W, p.y * MAP_H]; });
@@ -727,14 +741,14 @@ function dessinerTerritoires(){
     const g = groupe(c.joueur);
     const cx = x.toFixed(1), cy = y.toFixed(1);
     g.cercles += `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"/>`;
-    g.bords += `<circle cx="${cx}" cy="${cy}" r="${(r + 2.2).toFixed(1)}"/>`;
+    g.bords += `<circle cx="${cx}" cy="${cy}" r="${(r + (j.moi ? 2.2 : 1.1)).toFixed(1)}"/>`;
     // deux communes aux memes coordonnees n'ont pas de cellule : on dessine alors un simple rond
     const cellule = voronoi ? voronoi.renderCell(i) : '';
     g.cellules += cellule ? `<path d="${cellule}"/>` : `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"/>`;
     if(c.tier === 'legendaire'){
-      g.marqueurs += `<polygon points="${etoileSvg(x, y, 7)}" fill="#FFF6D6" stroke="#0B1830" stroke-width="1.4" vector-effect="non-scaling-stroke"/>`;
+      g.marqueurs += `<polygon points="${etoileSvg(x, y, j.moi ? 7 : 6)}" fill="${j.moi ? '#FFF6D6' : 'rgba(255,246,214,0.75)'}" stroke="#0B1830" stroke-width="${j.moi ? 1.4 : 1}" stroke-opacity="${j.moi ? 1 : 0.5}" vector-effect="non-scaling-stroke"/>`;
     } else if(c.tier === 'rare'){
-      g.marqueurs += `<circle cx="${cx}" cy="${cy}" r="2.2" fill="#fff" stroke="#0B1830" stroke-width="1" vector-effect="non-scaling-stroke"/>`;
+      g.marqueurs += `<circle cx="${cx}" cy="${cy}" r="2.2" fill="${j.moi ? '#fff' : 'rgba(255,255,255,0.7)'}" stroke="#0B1830" stroke-width="1" stroke-opacity="${j.moi ? 1 : 0.45}" vector-effect="non-scaling-stroke"/>`;
     }
     zonesSurvol += `<circle cx="${cx}" cy="${cy}" r="${Math.max(RAYON_ZONE[c.tier], 6)}" fill="transparent"><title>${echapperHtml(c.nom)} (${c.dept}), ${LIBELLE_TIER[c.tier]}, ${j.moi ? 'à toi' : 'à ' + echapperHtml(j.pseudo)}</title></circle>`;
   });
@@ -744,10 +758,13 @@ function dessinerTerritoires(){
   const idSvg = (id) => 'j' + String(id).replace(/[^a-zA-Z0-9_-]/g, '');
   defs.innerHTML = ordre.map(id => `<clipPath id="zone-${idSvg(id)}">${parJoueur.get(id).cercles}</clipPath><clipPath id="bord-${idSvg(id)}">${parJoueur.get(id).bords}</clipPath>`).join('');
   couche.innerHTML =
-    ordre.map(id => `<g data-joueur="${idSvg(id)}" clip-path="url(#bord-${idSvg(id)})"><g fill="#07111F" fill-opacity="0.9">${parJoueur.get(id).cellules}</g></g>`).join('') +
+    ordre.map(id => `<g data-joueur="${idSvg(id)}" clip-path="url(#bord-${idSvg(id)})"><g fill="#07111F" fill-opacity="${joueurs.get(id).moi ? 0.9 : 0.55}">${parJoueur.get(id).cellules}</g></g>`).join('') +
     ordre.map(id => {
       const j = joueurs.get(id);
-      return `<g data-joueur="${idSvg(id)}" clip-path="url(#zone-${idSvg(id)})"><g fill="${j.couleur}" fill-opacity="${j.moi ? 0.95 : 0.8}" stroke="${j.fonce}" stroke-opacity="0.6" stroke-width="0.7" vector-effect="non-scaling-stroke">${parJoueur.get(id).cellules}</g></g>`;
+      // les autres joueurs : plus transparents et sans lignes internes, pour ne pas saturer la carte
+      return j.moi
+        ? `<g data-joueur="${idSvg(id)}" clip-path="url(#zone-${idSvg(id)})"><g fill="${j.couleur}" fill-opacity="0.95" stroke="${j.fonce}" stroke-opacity="0.6" stroke-width="0.7" vector-effect="non-scaling-stroke">${parJoueur.get(id).cellules}</g></g>`
+        : `<g data-joueur="${idSvg(id)}" clip-path="url(#zone-${idSvg(id)})"><g fill="${j.couleur}" fill-opacity="0.62" stroke="${j.fonce}" stroke-opacity="0.25" stroke-width="0.5" vector-effect="non-scaling-stroke">${parJoueur.get(id).cellules}</g></g>`;
     }).join('');
   marq.innerHTML = ordre.map(id => `<g data-joueur="${idSvg(id)}">${parJoueur.get(id).marqueurs}</g>`).join('');
   survol.innerHTML = zonesSurvol;
@@ -790,6 +807,10 @@ function renderLegendeCarte(joueurs, idSvg){
       ${affiches.map(ligne).join('')}
       ${reste > 0 ? `<button class="leg-plus" data-leg="plus">+ ${reste} autre${reste > 1 ? 's' : ''} joueur${reste > 1 ? 's' : ''}</button>` : ''}
       ${listeJoueursComplete && autres.length > NB_VISIBLES && showOthers ? '<button class="leg-plus" data-leg="moins">Réduire la liste</button>' : ''}
+      ${(() => {
+        const n = MASQUEES_PAR_ZOOM.commun + MASQUEES_PAR_ZOOM.peucommun;
+        return n > 0 ? `<p class="leg-indice leg-zoom">${n.toLocaleString('fr-FR')} petite${n > 1 ? 's' : ''} commune${n > 1 ? 's' : ''} masquée${n > 1 ? 's' : ''} : zoome pour les voir.</p>` : '';
+      })()}
       <p class="leg-indice">Clique sur un joueur pour mettre son territoire en évidence.</p>
       <div class="leg-tailles">
         <div><svg width="10" height="10"><circle cx="5" cy="5" r="2.5" fill="#A9BCD4"/></svg>Commun</div>

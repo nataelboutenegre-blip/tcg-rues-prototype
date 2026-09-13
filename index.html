@@ -62,7 +62,7 @@
       </button>
     </div>
 
-    <div class="tabs-row">
+    <div class="tabs-row" id="tabsRow">
       <div class="tab active" data-tab="tirage">
         <div class="icon">
           <svg viewBox="0 0 24 24" fill="none">
@@ -123,6 +123,12 @@
         Défense
         <span class="tab-badge" id="combatBadge" hidden></span>
       </div>
+
+      <button class="tab tab-plus" id="btnPlus" aria-expanded="false" aria-haspopup="true">
+        <span class="icon"><span class="points"><i></i><i></i><i></i></span></span>
+        Plus
+        <span class="tab-badge" id="plusBadge" hidden></span>
+      </button>
     </div>
 
     <div class="sidebar-footer">
@@ -132,6 +138,18 @@
   </nav>
 
   <main class="content">
+
+    <div class="entete-mobile">
+      <span class="brand">Terra<span>Front</span></span>
+      <button class="regles-btn" id="reglesBtnMobile" title="Règles du jeu" aria-label="Règles du jeu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/>
+          <path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/>
+          <path d="M9 8h7M9 11.5h5"/>
+        </svg>
+      </button>
+    </div>
+
 
     <section class="tab-panel active" id="panel-tirage">
       <h1>Tirage</h1>
@@ -539,6 +557,34 @@
 
   </main>
 </div>
+
+<div class="voile-accueil" id="voileAccueil" hidden>
+  <div class="accueil" id="accueil" role="dialog" aria-modal="true" aria-labelledby="accueilTitre">
+    <div class="acc-eclat" aria-hidden="true"></div>
+    <p class="acc-marque" id="accueilTitre">Terra<span>Front</span></p>
+    <p class="acc-accroche">Les 35 000 communes de France sont des cartes à collectionner.<br>Une commune n'appartient qu'à un seul joueur à la fois.</p>
+    <div class="acc-etapes">
+      <div class="acc-etape"><span class="acc-num">1</span><div><b>Ouvre des paquets</b><span>5 vraies communes à chaque fois. Plus une ville est peuplée, plus elle est rare.</span></div></div>
+      <div class="acc-etape"><span class="acc-num">2</span><div><b>Construis ton territoire</b><span>Tes communes s'affichent sur la carte de France et se rejoignent quand elles sont voisines.</span></div></div>
+      <div class="acc-etape"><span class="acc-num">3</span><div><b>Attaque et défends</b><span>Prends les grandes villes des autres joueurs, et protège les tiennes.</span></div></div>
+    </div>
+    <div class="acc-cadeau">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h18v10H3zM3 6h18v4H3zM12 6v14"/><path d="M12 6S9.5 2.5 7.5 4s1 2 4.5 2 6.5 0 4.5-2S12 6 12 6z"/></svg>
+      <span>Tu commences avec <b>100 points</b> et <b>3 paquets gratuits</b>. Un nouveau paquet arrive toutes les 20 minutes.</span>
+    </div>
+    <button class="acc-go" id="accueilGo">Ouvrir mon premier paquet</button>
+    <div class="acc-liens">
+      <button id="accueilRegles">Voir les règles</button>
+      <button id="accueilPasser">Passer</button>
+    </div>
+  </div>
+</div>
+
+<div class="voile-menu" id="voileMenu" hidden></div>
+<nav class="feuille-plus" id="feuillePlus" hidden aria-label="Plus d'options">
+  <div class="feuille-poignee"></div>
+  <div class="feuille-liste" id="feuilleListe"></div>
+</nav>
 
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>

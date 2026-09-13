@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '4a2809a820e5';
+const VERSION_JEU = '419c44b8152a';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -2481,9 +2481,13 @@ function fermerAccueil(versTirage){
 }
 
 async function peutEtreAfficherAccueil(){
-  if(accueilDejaVu()) return;
-  // un joueur qui a deja des cartes n'est pas un nouveau : on ne l'embete pas
-  if(collectionMap.size > 0){ marquerAccueilVu(); return; }
+  // ?accueil=1 dans l'adresse force l'affichage, pour le tester ou le montrer
+  const force = new URLSearchParams(location.search).get('accueil') === '1';
+  if(!force){
+    if(accueilDejaVu()) return;
+    // un joueur qui a deja des cartes n'est pas un nouveau : on ne l'embete pas
+    if(collectionMap.size > 0){ marquerAccueilVu(); return; }
+  }
   const voile = document.getElementById('voileAccueil');
   if(!voile) return;
   voile.hidden = false;

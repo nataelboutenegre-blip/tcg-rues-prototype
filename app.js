@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '23142a4116dc';
+const VERSION_JEU = '4a2809a820e5';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -323,6 +323,7 @@ async function showGame(session_){
   verifierTiragesEnAttente();
   loadMenaces();
   renderNotifications();
+  peutEtreAfficherAccueil();
   loadObjectifs();
   loadClassement();
   loadJournal();
@@ -1810,6 +1811,7 @@ function renderMenaces(){
   if(badge){
     badge.hidden = enDanger.length === 0;
     badge.textContent = enDanger.length;
+    majBadgePlus();
     badge.title = enDanger.length > 1 ? `${enDanger.length} communes attaquées` : 'Une commune attaquée';
   }
   const bloc = document.getElementById('combatMenaces');
@@ -1861,6 +1863,8 @@ document.getElementById('boucliersToutToggle').addEventListener('click', (e) => 
   renderBoucliers();
 });
 
+document.getElementById('reglesBtnMobile').addEventListener('click', () => document.getElementById('reglesBtn').click());
+
 document.getElementById('reglesBtn').addEventListener('click', () => {
   const tab = document.querySelector('.tab[data-tab="regles"]');
   if(tab){ tab.click(); return; }
@@ -1868,6 +1872,7 @@ document.getElementById('reglesBtn').addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-regles'));
   document.getElementById('reglesBtn').classList.add('actif');
+  document.getElementById('reglesBtnMobile').classList.add('actif');
   renderNotifications();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
@@ -2166,13 +2171,90 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
   renderCombatGrid();
 });
 
+// ---------- Navigation : barre du bas et menu "Plus" sur telephone ----------
+// Les 4 onglets principaux restent dans la barre, les autres passent dans le menu.
+const ONGLETS_BARRE = ['tirage', 'collection', 'combat', 'defense'];
+const ONGLETS_MENU = ['territoire', 'bourse'];
+const ICONE_REGLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
+const ICONE_SORTIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M11 12h10m-3-3 3 3-3 3"/></svg>';
+const surTelephone = () => window.matchMedia('(max-width: 720px)').matches;
+
+function construireMenuPlus(){
+  const liste = document.getElementById('feuilleListe');
+  if(!liste) return;
+  const entrees = ONGLETS_MENU.map(id => {
+    const tab = document.querySelector(`.tab[data-tab="${id}"]`);
+    if(!tab) return '';
+    const icone = tab.querySelector('.icon').innerHTML;
+    const nom = tab.childNodes[2] ? tab.childNodes[2].textContent.trim() : id;
+    const badge = tab.querySelector('.tab-badge');
+    const nb = badge && !badge.hidden ? `<span class="fp-badge">${badge.textContent}</span>` : '';
+    return `<button class="fp-item" data-aller="${id}">${icone}${nom}${nb}</button>`;
+  }).join('');
+  liste.innerHTML = entrees + `
+    <div class="fp-sep"></div>
+    <button class="fp-item" data-aller="regles">${ICONE_REGLES}Règles du jeu</button>
+    <button class="fp-item sortie" data-deconnexion>${ICONE_SORTIE}Se déconnecter</button>`;
+}
+
+function ouvrirMenuPlus(ouvert){
+  const feuille = document.getElementById('feuillePlus');
+  const voile = document.getElementById('voileMenu');
+  const bouton = document.getElementById('btnPlus');
+  if(!feuille || !voile) return;
+  if(ouvert) construireMenuPlus();
+  feuille.hidden = false;
+  voile.hidden = false;
+  requestAnimationFrame(() => {
+    feuille.classList.toggle('ouvert', ouvert);
+    voile.classList.toggle('ouvert', ouvert);
+  });
+  bouton.setAttribute('aria-expanded', String(ouvert));
+  bouton.classList.toggle('actif', ouvert);
+  if(!ouvert){
+    setTimeout(() => { feuille.hidden = true; voile.hidden = true; }, 220);
+  }
+}
+
+// La pastille des attaques suit l'onglet Defense : sur la barre, ou sur "Plus" s'il est dans le menu
+function majBadgePlus(){
+  const source = document.getElementById('combatBadge');
+  const cible = document.getElementById('plusBadge');
+  if(!source || !cible) return;
+  const dansLeMenu = surTelephone() && ONGLETS_MENU.includes('defense');
+  cible.hidden = !dansLeMenu || source.hidden;
+  cible.textContent = source.textContent;
+}
+
+document.getElementById('btnPlus').addEventListener('click', (e) => {
+  e.stopPropagation();
+  ouvrirMenuPlus(!document.getElementById('feuillePlus').classList.contains('ouvert'));
+});
+document.getElementById('voileMenu').addEventListener('click', () => ouvrirMenuPlus(false));
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && document.getElementById('feuillePlus').classList.contains('ouvert')) ouvrirMenuPlus(false);
+});
+document.getElementById('feuilleListe').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-aller], [data-deconnexion]');
+  if(!b) return;
+  ouvrirMenuPlus(false);
+  if(b.hasAttribute('data-deconnexion')){ sb.auth.signOut(); return; }
+  if(b.dataset.aller === 'regles'){ document.getElementById('reglesBtn').click(); return; }
+  const tab = document.querySelector(`.tab[data-tab="${b.dataset.aller}"]`);
+  if(tab) tab.click();
+});
+
 // ---------- Navigation par onglets ----------
-document.querySelectorAll('.tab').forEach(tab => {
+document.querySelectorAll('.tab[data-tab]').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('reglesBtn').classList.remove('actif');
+    document.getElementById('reglesBtnMobile').classList.remove('actif');
+    document.getElementById('btnPlus').classList.remove('actif');
     tab.classList.add('active');
+    majBadgePlus();
+    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
     if(tab.dataset.tab === 'territoire'){ sizeMapWrap(window.__mapAspectRatio); loadClassement(); loadJournal(); }
     if(tab.dataset.tab === 'bourse') loadBourse();
@@ -2376,6 +2458,49 @@ async function rafraichirDonnees(){
   if(actif && actif.id === 'panel-bourse') await loadBourse();
   if(actif && (actif.id === 'panel-combat' || actif.id === 'panel-defense')) await loadCombat();
 }
+
+// ---------- Mot d'accueil, au tout premier lancement ----------
+const CLE_ACCUEIL = 'tf-accueil-vu';
+
+function accueilDejaVu(){
+  try{ return localStorage.getItem(CLE_ACCUEIL) === '1'; } catch(e){ return false; }
+}
+function marquerAccueilVu(){
+  try{ localStorage.setItem(CLE_ACCUEIL, '1'); } catch(e){}
+}
+function fermerAccueil(versTirage){
+  const voile = document.getElementById('voileAccueil');
+  if(!voile || voile.hidden) return;
+  marquerAccueilVu();
+  voile.classList.remove('ouvert');
+  setTimeout(() => { voile.hidden = true; }, 200);
+  if(versTirage){
+    const tab = document.querySelector('.tab[data-tab="tirage"]');
+    if(tab) tab.click();
+  }
+}
+
+async function peutEtreAfficherAccueil(){
+  if(accueilDejaVu()) return;
+  // un joueur qui a deja des cartes n'est pas un nouveau : on ne l'embete pas
+  if(collectionMap.size > 0){ marquerAccueilVu(); return; }
+  const voile = document.getElementById('voileAccueil');
+  if(!voile) return;
+  voile.hidden = false;
+  requestAnimationFrame(() => voile.classList.add('ouvert'));
+  const go = document.getElementById('accueilGo');
+  if(go) go.focus();
+}
+
+document.getElementById('accueilGo').addEventListener('click', () => fermerAccueil(true));
+document.getElementById('accueilPasser').addEventListener('click', () => fermerAccueil(false));
+document.getElementById('accueilRegles').addEventListener('click', () => {
+  fermerAccueil(false);
+  document.getElementById('reglesBtn').click();
+});
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') fermerAccueil(false);
+});
 
 // ---------- Notifications sur telephone ----------
 const NOTIF_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);

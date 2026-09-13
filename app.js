@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '419c44b8152a';
+const VERSION_JEU = '5b7a6c684203';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -522,18 +522,23 @@ function signalerMouvementCarte(){
   if(!wrap) return;
   wrap.classList.add('en-mouvement');
   clearTimeout(mapFinMouvementTimer);
-  mapFinMouvementTimer = setTimeout(() => wrap.classList.remove('en-mouvement'), 200);
+  mapFinMouvementTimer = setTimeout(() => {
+    wrap.classList.remove('en-mouvement');
+    // apres un deplacement, de nouveaux departements peuvent etre entres dans l'ecran
+    if(mapZoom >= SEUIL_CONTOURS) renderMapOverlay();
+  }, 200);
 }
 
 // Zoome en gardant fixe le point (px, py) du cadre : le curseur ou le centre des deux doigts
 // vrai quand le changement de zoom fait apparaitre ou disparaitre des communes
 function franchitUnSeuil(avant, apres){
-  return Object.values(ZOOM_MINI).some(s => (avant < s) !== (apres < s));
+  const seuils = Object.values(ZOOM_MINI).concat([SEUIL_CONTOURS]);
+  return seuils.some(s => (avant < s) !== (apres < s));
 }
 
 function zoomMapAt(newZoom, px, py){
   newZoom = Math.min(MAP_ZOOM_MAX, Math.max(MAP_ZOOM_MIN, newZoom));
-  if(franchitUnSeuil(mapZoom, newZoom)) setTimeout(renderMapOverlay, 0);
+  if(franchitUnSeuil(mapZoom, newZoom) || newZoom >= SEUIL_CONTOURS) setTimeout(renderMapOverlay, 0);
   const ratio = newZoom / mapZoom;
   mapPanX = px - (px - mapPanX) * ratio;
   mapPanY = py - (py - mapPanY) * ratio;
@@ -836,6 +841,57 @@ document.getElementById('classement').addEventListener('click', (e) => {
   }
 });
 
+// ---------- Contours reels des communes ----------
+// Fichiers statiques (dossier contours/), charges par departement seulement en zoomant.
+// Ils viennent de GitHub, pas de Supabase : ils ne consomment rien du quota.
+const SEUIL_CONTOURS = 2.2;       // en dessous, on garde l'affichage simplifie
+const CONTOURS = new Map();        // departement -> { communes } ou 'charge' / 'erreur'
+let contoursEnCours = 0;
+
+async function chargerContours(dep){
+  if(CONTOURS.has(dep)) return CONTOURS.get(dep);
+  CONTOURS.set(dep, null); // evite de demander deux fois le meme
+  contoursEnCours++;
+  try{
+    const rep = await fetch(`contours/${dep}.json`, { cache: 'force-cache' });
+    if(!rep.ok) throw new Error('introuvable');
+    const data = await rep.json();
+    CONTOURS.set(dep, data);
+    return data;
+  } catch(e){
+    CONTOURS.set(dep, 'erreur');
+    return 'erreur';
+  } finally {
+    contoursEnCours--;
+    if(contoursEnCours === 0) renderMapOverlay();
+  }
+}
+
+// departements actuellement visibles a l'ecran
+function departementsVisibles(liste){
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap) return new Set();
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  const vus = new Set();
+  for(const c of liste){
+    const p = project(c.lat, c.lon);
+    const x = p.x * w * mapZoom + mapPanX, y = p.y * h * mapZoom + mapPanY;
+    if(x > -60 && x < w + 60 && y > -60 && y < h + 60) vus.add(c.dept);
+  }
+  return vus;
+}
+
+function cheminContour(poly){
+  let d = '';
+  for(const anneau of poly){
+    d += 'M' + anneau.map(([lon, lat]) => {
+      const p = project(lat, lon);
+      return (p.x * MAP_W).toFixed(1) + ',' + (p.y * MAP_H).toFixed(1);
+    }).join('L') + 'Z';
+  }
+  return d;
+}
+
 // ---------- Territoires sur la carte ----------
 const RAYON_ZONE = {commun: 4.5, peucommun: 6.5, rare: 10, legendaire: 15};
 // De loin, les petites communes des autres joueurs ne sont que du bruit : on les revele en zoomant.
@@ -884,7 +940,7 @@ function dessinerTerritoires(){
   const liste = [];
   for(const e of collectionMap.values()){
     if(!METRO_DEPT_RE.test(e.dept) || e.lat == null) continue;
-    liste.push({ nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: ID_MOI });
+    liste.push({ code: e.code, nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: ID_MOI });
     joueurs.get(ID_MOI).nb++;
   }
   MASQUEES_PAR_ZOOM.commun = 0;
@@ -898,7 +954,23 @@ function dessinerTerritoires(){
       joueurs.set(e.joueurId, { id: e.joueurId, pseudo: e.pseudo, couleur, fonce: couleurFoncee(couleur), moi: false, nb: 0 });
     }
     joueurs.get(e.joueurId).nb++;
-    if(showOthers && visibleAuZoom) liste.push({ nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: e.joueurId });
+    if(showOthers && visibleAuZoom) liste.push({ code: e.code, nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: e.joueurId });
+  }
+
+  // Au-dela du seuil de zoom, on dessine les vraies communes au lieu des zones rondes
+  const avecContours = mapZoom >= SEUIL_CONTOURS && liste.length > 0;
+  if(avecContours){
+    const deps = departementsVisibles(liste);
+    let pretes = 0;
+    for(const dep of deps){
+      const c = CONTOURS.get(dep);
+      if(c === undefined){ chargerContours(dep); }
+      else if(c && c !== 'erreur') pretes++;
+    }
+    if(pretes > 0){
+      dessinerContours(liste, joueurs, deps);
+      return;
+    }
   }
 
   const pts = liste.map(c => { const p = project(c.lat, c.lon); return [p.x * MAP_W, p.y * MAP_H]; });
@@ -954,6 +1026,72 @@ function dessinerTerritoires(){
         : `<g data-joueur="${idSvg(id)}" clip-path="url(#zone-${idSvg(id)})"><g fill="${j.couleur}" fill-opacity="0.62" stroke="${j.fonce}" stroke-opacity="0.25" stroke-width="0.5" vector-effect="non-scaling-stroke">${parJoueur.get(id).cellules}</g></g>`;
     }).join('');
   marq.innerHTML = ordre.map(id => `<g data-joueur="${idSvg(id)}">${parJoueur.get(id).marqueurs}</g>`).join('');
+  survol.innerHTML = zonesSurvol;
+
+  if(joueurSurligne && !joueurs.has(joueurSurligne)) joueurSurligne = null;
+  if(!showOthers && joueurSurligne !== ID_MOI) joueurSurligne = null;
+  appliquerSurlignageCarte(idSvg);
+  renderLegendeCarte(joueurs, idSvg);
+}
+
+// Dessin des vraies communes : un bloc de couleur par joueur, frontieres reelles
+function dessinerContours(liste, joueurs, deps){
+  const couche = document.getElementById('mapTerritoires');
+  const defs = document.getElementById('mapDefsDyn');
+  const marq = document.getElementById('mapMarqueurs');
+  const survol = document.getElementById('mapSurvol');
+  const idSvg = (id) => 'j' + String(id).replace(/[^a-zA-Z0-9_-]/g, '');
+
+  // tout ce qui est dessine par-dessus la carte garde la meme taille a l'ecran quel que soit le zoom
+  const e = 1 / Math.max(1, mapZoom);
+  const possedees = new Map(liste.map(c => [c.code, c]));
+  const parJoueur = new Map();
+  let libres = '', pastilles = '', zonesSurvol = '';
+
+  for(const dep of deps){
+    const contours = CONTOURS.get(dep);
+    if(!contours || contours === 'erreur') continue;
+    for(const code in contours){
+      const d = cheminContour(contours[code]);
+      const c = possedees.get(code);
+      if(!c){ libres += `<path d="${d}"/>`; continue; }
+      if(!parJoueur.has(c.joueur)) parJoueur.set(c.joueur, { d: '', marqueurs: '' });
+      const g = parJoueur.get(c.joueur);
+      g.d += d;
+      const p = project(c.lat, c.lon);
+      const x = p.x * MAP_W, y = p.y * MAP_H;
+      const j = joueurs.get(c.joueur);
+      if(c.tier === 'legendaire'){
+        g.marqueurs += `<polygon points="${etoileSvg(x, y, (j.moi ? 7 : 6) * e)}" fill="${j.moi ? '#FFF6D6' : 'rgba(255,246,214,0.75)'}" stroke="#0B1830" stroke-width="${(1.2 * e).toFixed(2)}"/>`;
+      } else if(c.tier === 'rare'){
+        g.marqueurs += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(2.2 * e).toFixed(2)}" fill="${j.moi ? '#fff' : 'rgba(255,255,255,0.7)'}" stroke="#0B1830" stroke-width="${(1 * e).toFixed(2)}"/>`;
+      }
+      zonesSurvol += `<path d="${d}" fill="transparent"><title>${echapperHtml(c.nom)} (${c.dept}), ${LIBELLE_TIER[c.tier]}, ${j.moi ? 'à toi' : 'à ' + echapperHtml(j.pseudo)}</title></path>`;
+    }
+  }
+
+  // communes possedees dont le departement n'est pas encore charge : pastille simple
+  for(const c of liste){
+    const etat = CONTOURS.get(c.dept);
+    if(etat && etat !== 'erreur') continue;
+    const p = project(c.lat, c.lon);
+    const j = joueurs.get(c.joueur);
+    pastilles += `<circle cx="${(p.x * MAP_W).toFixed(1)}" cy="${(p.y * MAP_H).toFixed(1)}" r="${(RAYON_ZONE[c.tier] * e).toFixed(2)}" fill="${j.couleur}" fill-opacity="${j.moi ? 0.95 : 0.7}" stroke="#07111F" stroke-width="${(2 * e).toFixed(2)}"/>`;
+  }
+
+  const ordre = [...parJoueur.keys()].sort((a, b) => (a === ID_MOI ? 1 : 0) - (b === ID_MOI ? 1 : 0));
+  defs.innerHTML = '';
+  couche.innerHTML =
+    `<g class="communes-libres" fill="#16304F" fill-opacity="0.75" stroke="#20406A" stroke-width="${(0.6 * e).toFixed(2)}">${libres}</g>` +
+    ordre.map(id => {
+      const j = joueurs.get(id);
+      const g = parJoueur.get(id);
+      return `<g data-joueur="${idSvg(id)}">
+        <path d="${g.d}" fill="none" stroke="#07111F" stroke-width="${(3.4 * e).toFixed(2)}" stroke-linejoin="round"/>
+        <path d="${g.d}" fill="${j.couleur}" fill-opacity="${j.moi ? 0.95 : 0.78}" stroke="${j.fonce}" stroke-opacity="0.55" stroke-width="${(0.7 * e).toFixed(2)}"/>
+      </g>`;
+    }).join('');
+  marq.innerHTML = ordre.map(id => `<g data-joueur="${idSvg(id)}">${parJoueur.get(id).marqueurs}</g>`).join('') + `<g>${pastilles}</g>`;
   survol.innerHTML = zonesSurvol;
 
   if(joueurSurligne && !joueurs.has(joueurSurligne)) joueurSurligne = null;
@@ -1048,6 +1186,7 @@ async function loadOthersPossessions(){
     const c = row.communes;
     const tier = TIERS.find(t => t.id === c.tier);
     othersMap.set(c.code, {
+      code: c.code,
       nom: c.nom, dept: c.departement, lat: c.latitude, lon: c.longitude, tier,
       pseudo: row.joueurs ? row.joueurs.pseudo : 'un autre joueur',
       joueurId: row.joueur_id

@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<title>Prototype — Tirage de communes</title>
+<title>TerraFront — Collectionne les communes de France</title>
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
@@ -28,17 +28,43 @@
     <div class="auth-visuel" aria-hidden="true"><div class="eventail" id="authEventail"></div></div>
     <div class="auth-panneau">
       <p class="auth-marque">Terra<span>Front</span></p>
-      <p class="auth-accroche">Collectionne les vraies communes de France, défends-les et agrandis ton territoire.</p>
-      <div class="auth-onglets" role="tablist">
-        <button class="actif" data-mode="connexion" role="tab" aria-selected="true">Connexion</button>
-        <button data-mode="inscription" role="tab" aria-selected="false">Créer un compte</button>
+
+      <div id="authBlocPrincipal">
+        <p class="auth-accroche">Collectionne les vraies communes de France, défends-les et agrandis ton territoire.</p>
+        <div class="auth-onglets" role="tablist">
+          <button class="actif" data-mode="connexion" role="tab" aria-selected="true">Connexion</button>
+          <button data-mode="inscription" role="tab" aria-selected="false">Créer un compte</button>
+        </div>
+        <label class="auth-champ">Email<input type="email" id="authEmail" autocomplete="email" placeholder="toi@exemple.fr"></label>
+        <div class="auth-champ">
+          <div class="auth-champ-tete">
+            <span>Mot de passe</span>
+            <button type="button" class="auth-lien" id="authOubliBtn">Mot de passe oublié ?</button>
+          </div>
+          <input type="password" id="authPassword" autocomplete="current-password" placeholder="••••••••">
+        </div>
+        <label class="auth-champ" id="authChampPseudo" hidden>Pseudo<input type="text" id="authPseudo" autocomplete="nickname" placeholder="Visible par les autres joueurs"><small>C'est le nom affiché sur la carte et en combat.</small></label>
       </div>
-      <label class="auth-champ">Email<input type="email" id="authEmail" autocomplete="email" placeholder="toi@exemple.fr"></label>
-      <label class="auth-champ">Mot de passe<input type="password" id="authPassword" autocomplete="current-password" placeholder="••••••••"></label>
-      <label class="auth-champ" id="authChampPseudo" hidden>Pseudo<input type="text" id="authPseudo" autocomplete="nickname" placeholder="Visible par les autres joueurs"><small>C'est le nom affiché sur la carte et en combat.</small></label>
+
+      <div id="authBlocOubli" hidden>
+        <p class="auth-titre">Mot de passe oublié</p>
+        <p class="auth-accroche">Indique ton adresse email, on t'envoie un lien pour choisir un nouveau mot de passe.</p>
+        <label class="auth-champ">Email<input type="email" id="authOubliEmail" autocomplete="email" placeholder="toi@exemple.fr"></label>
+      </div>
+
+      <div id="authBlocNouveau" hidden>
+        <p class="auth-titre">Nouveau mot de passe</p>
+        <p class="auth-accroche">Choisis un mot de passe d'au moins 8 caractères.</p>
+        <label class="auth-champ">Mot de passe<input type="password" id="authNouveau1" autocomplete="new-password" placeholder="••••••••"></label>
+        <label class="auth-champ">Confirmation<input type="password" id="authNouveau2" autocomplete="new-password" placeholder="••••••••"></label>
+      </div>
+
       <p id="authMsg" class="auth-msg" role="status"></p>
       <button class="auth-valider" id="loginBtn">Se connecter</button>
       <button class="auth-valider" id="signupBtn" hidden>Créer mon compte</button>
+      <button class="auth-valider" id="authOubliEnvoyer" hidden>Envoyer le lien</button>
+      <button class="auth-valider" id="authNouveauValider" hidden>Enregistrer</button>
+      <button class="auth-retour" id="authOubliRetour" hidden>Retour à la connexion</button>
     </div>
   </div>
 </div>

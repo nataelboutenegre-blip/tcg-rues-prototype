@@ -339,11 +339,26 @@ async function showGame(session_){
   }
 }
 
+// true si on arrive depuis un lien de réinitialisation reçu par email
+let recuperationEnCours = /type=recovery/.test(location.hash)
+  || new URLSearchParams(location.search).get('type') === 'recovery';
+
 async function initAuth(){
   const { data: { session: s } } = await sb.auth.getSession();
-  if(s) showGame(s); else showAuth();
+  if(recuperationEnCours){ showAuth(); ecranAuth('nouveau'); }
+  else if(s) showGame(s);
+  else showAuth();
   sb.auth.onAuthStateChange((event, s2) => {
-    if(s2) showGame(s2); else showAuth();
+    if(event === 'PASSWORD_RECOVERY'){
+      recuperationEnCours = true;
+      showAuth();
+      ecranAuth('nouveau');
+      return;
+    }
+    // pendant une réinitialisation Supabase ouvre une session : on n'entre pas dans le jeu pour autant
+    if(recuperationEnCours && event !== 'SIGNED_OUT') return;
+    if(s2) showGame(s2);
+    else { showAuth(); ecranAuth('principal'); }
   });
 }
 
@@ -362,7 +377,77 @@ document.getElementById('signupBtn').addEventListener('click', async () => {
   if(error) showAuth(error.message);
   else { modeAuth('connexion'); showAuth('Compte créé. Tu peux te connecter.', 'succes'); }
 });
+// ---------- Mot de passe oublié ----------
+// Trois écrans dans le même panneau : connexion, demande de lien, nouveau mot de passe
+function ecranAuth(ecran){
+  const q = (id) => document.getElementById(id);
+  q('authBlocPrincipal').hidden = ecran !== 'principal';
+  q('authBlocOubli').hidden = ecran !== 'oubli';
+  q('authBlocNouveau').hidden = ecran !== 'nouveau';
+  q('authOubliEnvoyer').hidden = ecran !== 'oubli';
+  q('authNouveauValider').hidden = ecran !== 'nouveau';
+  q('authOubliRetour').hidden = ecran === 'principal';
+  const msg = q('authMsg');
+  msg.textContent = ''; msg.className = 'auth-msg';
+  if(ecran === 'principal'){
+    const onglet = document.querySelector('.auth-onglets button.actif');
+    modeAuth(onglet ? onglet.dataset.mode : 'connexion');
+  } else {
+    q('loginBtn').hidden = true;
+    q('signupBtn').hidden = true;
+    const premier = q(ecran === 'oubli' ? 'authOubliEmail' : 'authNouveau1');
+    if(premier) premier.focus();
+  }
+}
 
+document.getElementById('authOubliBtn').addEventListener('click', () => {
+  document.getElementById('authOubliEmail').value = document.getElementById('authEmail').value.trim();
+  ecranAuth('oubli');
+});
+
+document.getElementById('authOubliRetour').addEventListener('click', () => {
+  recuperationEnCours = false;
+  history.replaceState(null, '', location.pathname);
+  ecranAuth('principal');
+});
+
+document.getElementById('authOubliEnvoyer').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  const email = document.getElementById('authOubliEmail').value.trim();
+  if(!email){ showAuth('Indique ton adresse email.'); return; }
+  btn.disabled = true;
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  btn.disabled = false;
+  // message volontairement neutre : il ne révèle pas quelles adresses sont inscrites
+  if(error && /rate limit|too many/i.test(error.message || '')) showAuth(error.message);
+  else showAuth('Si un compte existe avec cette adresse, un lien vient de partir. Regarde aussi tes indésirables.', 'succes');
+});
+
+document.getElementById('authNouveauValider').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  const a = document.getElementById('authNouveau1').value;
+  const b = document.getElementById('authNouveau2').value;
+  if(a.length < 8){ showAuth('Le mot de passe doit faire au moins 8 caractères.'); return; }
+  if(a !== b){ showAuth('Les deux mots de passe ne sont pas identiques.'); return; }
+  btn.disabled = true;
+  const { error } = await sb.auth.updateUser({ password: a });
+  btn.disabled = false;
+  if(error){ showAuth(error.message); return; }
+  recuperationEnCours = false;
+  history.replaceState(null, '', location.pathname);
+  const { data: { session: s } } = await sb.auth.getSession();
+  ecranAuth('principal');
+  if(s){ showGame(s); notifier({ type: 'succes', titre: 'Mot de passe modifié' }); }
+  else showAuth('Mot de passe modifié. Tu peux te connecter.', 'succes');
+});
+
+['authOubliEmail', 'authNouveau1', 'authNouveau2'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', (e) => {
+    if(e.key !== 'Enter') return;
+    const btn = document.getElementById(id === 'authOubliEmail' ? 'authOubliEnvoyer' : 'authNouveauValider');
+    if(btn && !btn.hidden) btn.click();
+  });
+});
 // Onglets Connexion / Creer un compte
 function modeAuth(mode){
   const inscription = mode === 'inscription';

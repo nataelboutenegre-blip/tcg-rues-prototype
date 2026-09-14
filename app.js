@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '5b7a6c684203';
+const VERSION_JEU = '5c88c02d1ffe';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -892,6 +892,82 @@ function cheminContour(poly){
   return d;
 }
 
+// ---------- Vue d'ensemble : la France par departements ----------
+// De loin, on colorie chaque departement selon le joueur qui y domine.
+let CONTOURS_DEPTS = null;   // null = pas encore demande, 'erreur' si indisponible
+async function chargerDepartements(){
+  if(CONTOURS_DEPTS) return CONTOURS_DEPTS;
+  CONTOURS_DEPTS = 'attente';
+  try{
+    const rep = await fetch('contours-departements.json', { cache: 'force-cache' });
+    if(!rep.ok) throw new Error('introuvable');
+    CONTOURS_DEPTS = await rep.json();
+  } catch(e){
+    CONTOURS_DEPTS = 'erreur';
+  }
+  renderMapOverlay();
+  return CONTOURS_DEPTS;
+}
+
+function dessinerDepartements(liste, joueurs){
+  const couche = document.getElementById('mapTerritoires');
+  const defs = document.getElementById('mapDefsDyn');
+  const marq = document.getElementById('mapMarqueurs');
+  const survol = document.getElementById('mapSurvol');
+  const idSvg = (id) => 'j' + String(id).replace(/[^a-zA-Z0-9_-]/g, '');
+  const e = 1 / Math.max(1, mapZoom);
+
+  // qui domine chaque departement, et avec quelle avance
+  const parDept = new Map();
+  for(const c of liste){
+    if(!parDept.has(c.dept)) parDept.set(c.dept, { total: 0, joueurs: new Map(), legendaires: [] });
+    const d = parDept.get(c.dept);
+    d.total++;
+    d.joueurs.set(c.joueur, (d.joueurs.get(c.joueur) || 0) + 1);
+    if(c.tier === 'legendaire') d.legendaires.push(c);
+  }
+
+  const parJoueur = new Map();
+  let fond = '', marqueurs = '', zonesSurvol = '';
+  for(const [dep, info] of parDept){
+    const poly = CONTOURS_DEPTS[dep];
+    if(!poly) continue;
+    const d = cheminContour(poly);
+    let chef = null, meilleur = 0;
+    for(const [j, n] of info.joueurs){ if(n > meilleur){ meilleur = n; chef = j; } }
+    const part = meilleur / info.total;
+    if(!parJoueur.has(chef)) parJoueur.set(chef, '');
+    const jo = joueurs.get(chef);
+    // plus la domination est nette, plus la couleur est franche
+    const force = (0.3 + 0.55 * part) * (jo.moi ? 1 : 0.8);
+    parJoueur.set(chef, parJoueur.get(chef) + `<path d="${d}" fill="${jo.couleur}" fill-opacity="${force.toFixed(2)}"/>`);
+    const nom = DEPT_NAMES[dep] || dep;
+    const detail = [...info.joueurs.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3)
+      .map(([j, n]) => `${joueurs.get(j).moi ? 'toi' : joueurs.get(j).pseudo} : ${n}`).join(', ');
+    zonesSurvol += `<path d="${d}" fill="transparent"><title>${echapperHtml(nom)} (${dep}) — ${info.total} commune${info.total > 1 ? 's' : ''} possédée${info.total > 1 ? 's' : ''}\n${echapperHtml(detail)}</title></path>`;
+    for(const c of info.legendaires){
+      const p = project(c.lat, c.lon);
+      const j = joueurs.get(c.joueur);
+      marqueurs += `<polygon points="${etoileSvg(p.x * MAP_W, p.y * MAP_H, (j.moi ? 7 : 6) * e)}" fill="${j.moi ? '#FFF6D6' : 'rgba(255,246,214,0.8)'}" stroke="#0B1830" stroke-width="${(1.2 * e).toFixed(2)}"/>`;
+    }
+  }
+
+  defs.innerHTML = '';
+  couche.innerHTML =
+    [...parJoueur.entries()]
+      .sort((a, b) => (a[0] === ID_MOI ? 1 : 0) - (b[0] === ID_MOI ? 1 : 0))
+      .map(([id, d]) => `<g data-joueur="${idSvg(id)}">${d}</g>`).join('') +
+    `<g fill="none" stroke="rgba(169,188,212,0.28)" stroke-width="${(0.9 * e).toFixed(2)}">${
+      Object.keys(CONTOURS_DEPTS).map(dep => `<path d="${cheminContour(CONTOURS_DEPTS[dep])}"/>`).join('')}</g>`;
+  marq.innerHTML = marqueurs;
+  survol.innerHTML = zonesSurvol;
+
+  if(joueurSurligne && !joueurs.has(joueurSurligne)) joueurSurligne = null;
+  if(!showOthers && joueurSurligne !== ID_MOI) joueurSurligne = null;
+  appliquerSurlignageCarte(idSvg);
+  renderLegendeCarte(joueurs, idSvg);
+}
+
 // ---------- Territoires sur la carte ----------
 const RAYON_ZONE = {commun: 4.5, peucommun: 6.5, rare: 10, legendaire: 15};
 // De loin, les petites communes des autres joueurs ne sont que du bruit : on les revele en zoomant.
@@ -947,7 +1023,7 @@ function dessinerTerritoires(){
   MASQUEES_PAR_ZOOM.peucommun = 0;
   for(const e of othersMap.values()){
     if(!METRO_DEPT_RE.test(e.dept) || e.lat == null) continue;
-    const visibleAuZoom = mapZoom >= (ZOOM_MINI[e.tier.id] || 1);
+    const visibleAuZoom = mapZoom < SEUIL_CONTOURS || mapZoom >= (ZOOM_MINI[e.tier.id] || 1);
     if(showOthers && !visibleAuZoom && MASQUEES_PAR_ZOOM[e.tier.id] !== undefined) MASQUEES_PAR_ZOOM[e.tier.id]++;
     if(!joueurs.has(e.joueurId)){
       const couleur = colorForPlayer(e.joueurId);
@@ -957,7 +1033,14 @@ function dessinerTerritoires(){
     if(showOthers && visibleAuZoom) liste.push({ code: e.code, nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: e.joueurId });
   }
 
-  // Au-dela du seuil de zoom, on dessine les vraies communes au lieu des zones rondes
+  // De loin : la France par departements. De pres : les vraies communes.
+  if(mapZoom < SEUIL_CONTOURS && liste.length > 0){
+    if(!CONTOURS_DEPTS) chargerDepartements();
+    else if(CONTOURS_DEPTS !== 'erreur' && CONTOURS_DEPTS !== 'attente'){
+      dessinerDepartements(liste, joueurs);
+      return;
+    }
+  }
   const avecContours = mapZoom >= SEUIL_CONTOURS && liste.length > 0;
   if(avecContours){
     const deps = departementsVisibles(liste);

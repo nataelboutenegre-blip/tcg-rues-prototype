@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '2026-09-17-a';
+const VERSION_JEU = '6152fcd615b8';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -304,6 +304,9 @@ function demanderPrix({ nom, rachat }){
 
 // ---------- Authentification ----------
 function showAuth(msg, type = 'erreur'){
+  if(menacesInterval){ clearInterval(menacesInterval); menacesInterval = null; }
+  if(packStatusInterval){ clearInterval(packStatusInterval); packStatusInterval = null; }
+  packStatusCache = null;
   document.getElementById('authScreen').style.display = 'flex';
   dessinerEventailAuth();
   document.getElementById('gameScreen').style.display = 'none';

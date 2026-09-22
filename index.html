@@ -151,6 +151,17 @@
         <span class="tab-badge" id="combatBadge" hidden></span>
       </div>
 
+      <div class="tab" data-tab="succes">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M8 3.5h8V9a4 4 0 0 1-8 0z"/>
+            <path d="M8 5H5.2v1.3A3.6 3.6 0 0 0 8.6 10M16 5h2.8v1.3A3.6 3.6 0 0 1 15.4 10"/>
+            <path d="M12 13v3.2M9 20.5h6M10.1 20.5l.5-4.3h2.8l.5 4.3"/>
+          </svg>
+        </div>
+        Succès
+      </div>
+
       <button class="tab tab-plus" id="btnPlus" aria-expanded="false" aria-haspopup="true">
         <span class="icon"><span class="points"><i></i><i></i><i></i></span></span>
         Plus
@@ -353,6 +364,17 @@
         </div>
         <div id="boucliersGrid" class="bourse-grid"><p class="collection-empty">Tu n'as aucune commune rare ou légendaire à protéger.</p></div>
       </div>
+    </section>
+
+    <section class="tab-panel" id="panel-succes">
+      <h1>Succès</h1>
+      <div class="sub">Toute commune possédée au moins une fois reste acquise, même si tu la revends ou qu'on te la prend. Termine un département pour toucher sa récompense.</div>
+      <div class="sc-entete">
+        <span class="puce" id="scTotal">—</span>
+        <span class="puce sc-prets" id="scPrets" hidden></span>
+      </div>
+      <div class="sc-liste" id="scListe"><p class="collection-empty">Chargement…</p></div>
+      <button class="cl-plus" id="scPlus" hidden>Voir tous les départements</button>
     </section>
 
     <section class="tab-panel" id="panel-regles">

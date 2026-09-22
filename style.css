@@ -1944,3 +1944,12 @@
   .auth-retour[hidden]{ display:none; }
   .auth-retour:hover{ color:#fff; }
   #authBlocOubli[hidden], #authBlocNouveau[hidden], #authBlocPrincipal[hidden]{ display:none; }
+
+  /* ---------- Succès : complétion par département ---------- */
+  .sc-entete{ display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px; }
+  .sc-liste{ width:100%; max-width:860px; }
+  .sc-liste .obj-texte{ gap:5px; }
+  .sc-num{ color: var(--brume); font-weight:400; }
+  .sc-prets{ background: var(--c-legendaire); border-color: transparent; color: var(--encre); font-weight:600; }
+  .sc-prets[hidden]{ display:none; }
+  #scPlus{ margin-top:10px; }

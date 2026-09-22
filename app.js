@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '9648d83cfba1';
+const VERSION_JEU = 'ea31419bc57e';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -11,7 +11,7 @@ const TIERS = [
   {id:'peucommun', label:'Peu commun', color:'#2E7D5B', target:36.85},
   {id:'commun', label:'Commun', color:'#7C8798', target:50.92},
 ];
-const DEPT_NAMES = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","2A":"Corse-du-Sud","2B":"Haute-Corse","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise"};
+const DEPT_NAMES = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","2A":"Corse-du-Sud","2B":"Haute-Corse","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise","971":"Guadeloupe","972":"Martinique","973":"Guyane","974":"La Réunion","975":"Saint-Pierre-et-Miquelon","976":"Mayotte"};
 const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
 
 // Couleurs des autres joueurs sur la carte (toi = dore). Au-dela de 12 joueurs, des couleurs se repetent.
@@ -2497,7 +2497,7 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // ---------- Navigation : barre du bas et menu "Plus" sur telephone ----------
 // Les 4 onglets principaux restent dans la barre, les autres passent dans le menu.
 const ONGLETS_BARRE = ['tirage', 'collection', 'combat', 'defense'];
-const ONGLETS_MENU = ['territoire', 'bourse'];
+const ONGLETS_MENU = ['territoire', 'bourse', 'succes'];
 const ICONE_REGLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const ICONE_SORTIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M11 12h10m-3-3 3 3-3 3"/></svg>';
 const surTelephone = () => window.matchMedia('(max-width: 720px)').matches;
@@ -2584,6 +2584,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); }
     if(tab.dataset.tab === 'defense'){ loadMenaces(); loadCombat(); renderIntensite('defense'); }
     if(tab.dataset.tab === 'combat') loadCombat();
+    if(tab.dataset.tab === 'succes') loadSucces();
   });
 });
 
@@ -2677,6 +2678,120 @@ document.getElementById('objectifs').addEventListener('click', async (e) => {
     await loadObjectifs();
     await loadPackStatus();
     if(r && r.recompense === 'paquet') verifierTiragesEnAttente();
+  } catch(err){
+    notifier({ type: 'erreur', titre: 'Impossible de récupérer', texte: messageLisible(err.message) });
+    btn.disabled = false;
+  }
+});
+
+// ---------- Succes : completion par departement ----------
+// Une commune possedee au moins une fois reste acquise pour toujours : la progression
+// ne se perd jamais, meme si la commune est revendue ou conquise par quelqu'un d'autre.
+let succesListe = [];
+let succesTout = false;
+
+async function loadSucces(){
+  const liste = document.getElementById('scListe');
+  if(!liste) return;
+  const { data, error } = await sb.rpc('succes');
+  if(error){
+    console.error(error);
+    liste.innerHTML = '<p class="collection-empty">Impossible de charger tes succès pour le moment.</p>';
+    return;
+  }
+  succesListe = (data || []).filter(d => Number(d.total) > 0);
+  renderSucces();
+}
+
+function ligneSucces(d){
+  const possedees = Number(d.possedees);
+  const total = Number(d.total);
+  const pct = total ? Math.min(100, Math.round(100 * possedees / total)) : 0;
+  const fini = possedees >= total;
+  const nom = DEPT_NAMES[d.departement] || d.departement;
+  const etat = d.reclame
+    ? '<span class="obj-fait">Récupéré</span>'
+    : (fini ? `<button class="obj-btn" data-departement="${echapperTexte(d.departement)}">Récupérer</button>` : '');
+  return `
+    <div class="obj ${fini && !d.reclame ? 'pret' : ''} ${d.reclame ? 'fait' : ''}">
+      <div class="obj-texte">
+        <b>${echapperTexte(nom)} <span class="sc-num">(${echapperTexte(d.departement)})</span></b>
+        <span class="obj-barre"><i style="width:${pct}%"></i></span>
+      </div>
+      <div class="obj-droite">
+        <span class="obj-chiffres">${possedees.toLocaleString('fr-FR')} / ${total.toLocaleString('fr-FR')}</span>
+        <span class="obj-gain points">${Number(d.recompense).toLocaleString('fr-FR')} pts</span>
+        ${etat}
+      </div>
+    </div>`;
+}
+
+function renderSucces(){
+  const liste = document.getElementById('scListe');
+  if(!liste) return;
+
+  const vues = succesListe.reduce((n, d) => n + Number(d.possedees), 0);
+  const total = succesListe.reduce((n, d) => n + Number(d.total), 0);
+  const elTotal = document.getElementById('scTotal');
+  if(elTotal) elTotal.textContent = `${vues.toLocaleString('fr-FR')} / ${total.toLocaleString('fr-FR')} communes découvertes`;
+
+  const prets = succesListe.filter(d => Number(d.possedees) >= Number(d.total) && !d.reclame).length;
+  const elPrets = document.getElementById('scPrets');
+  if(elPrets){
+    elPrets.hidden = prets === 0;
+    elPrets.textContent = prets > 1 ? `${prets} récompenses à récupérer` : '1 récompense à récupérer';
+  }
+
+  if(succesListe.length === 0){
+    liste.innerHTML = '<p class="collection-empty">Ouvre un paquet pour commencer ta collection.</p>';
+    return;
+  }
+
+  // ceux a recuperer d'abord, puis les plus avances
+  const tri = [...succesListe].sort((a, b) => {
+    const pa = Number(a.possedees) >= Number(a.total) && !a.reclame;
+    const pb = Number(b.possedees) >= Number(b.total) && !b.reclame;
+    if(pa !== pb) return pb - pa;
+    return (Number(b.possedees) / Number(b.total)) - (Number(a.possedees) / Number(a.total));
+  });
+  const visibles = succesTout ? tri : tri.slice(0, 8);
+  liste.innerHTML = visibles.map(ligneSucces).join('');
+
+  const plus = document.getElementById('scPlus');
+  if(plus){
+    plus.hidden = succesTout || tri.length <= visibles.length;
+    plus.textContent = `Voir les ${tri.length} départements`;
+  }
+}
+
+// le solde s'affiche a trois endroits : on les remet a jour ensemble
+async function rafraichirSoldes(){
+  const { data: userData } = await sb.auth.getUser();
+  if(!userData || !userData.user) return;
+  const { data: row } = await sb.from('joueurs').select('solde').eq('id', userData.user.id).single();
+  if(!row) return;
+  ['soldeValue', 'soldeValueCombat', 'soldeValueDefense'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = row.solde;
+  });
+}
+
+document.getElementById('panel-succes').addEventListener('click', async (e) => {
+  if(e.target.closest('#scPlus')){
+    succesTout = true;
+    renderSucces();
+    return;
+  }
+  const btn = e.target.closest('[data-departement]');
+  if(!btn) return;
+  btn.disabled = true;
+  try{
+    const { data, error } = await sb.rpc('reclamer_departement', { p_departement: btn.dataset.departement });
+    if(error) throw error;
+    const r = data && data[0];
+    notifier({ type: 'succes', titre: 'Département terminé', texte: r ? r.message : 'Récompense récupérée' });
+    await loadSucces();
+    await rafraichirSoldes();
   } catch(err){
     notifier({ type: 'erreur', titre: 'Impossible de récupérer', texte: messageLisible(err.message) });
     btn.disabled = false;

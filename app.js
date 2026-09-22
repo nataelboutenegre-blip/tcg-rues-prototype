@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '6152fcd615b8';
+const VERSION_JEU = '9648d83cfba1';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -1341,6 +1341,18 @@ function renderLegendeCarte(joueurs, idSvg){
   // la legende ne doit pas deplacer ni zoomer la carte en dessous
   ['mousedown', 'touchstart', 'wheel'].forEach(ev => leg.addEventListener(ev, (e) => e.stopPropagation(), { passive: true }));
 })();
+// Supabase plafonne chaque requete a 1000 lignes : on demande par tranches
+async function toutesLesLignes(construireRequete){
+  const TAILLE = 1000;
+  let tout = [], debut = 0;
+  for(;;){
+    const { data, error } = await construireRequete().range(debut, debut + TAILLE - 1);
+    if(error) return { data: null, error };
+    tout = tout.concat(data || []);
+    if(!data || data.length < TAILLE) return { data: tout, error: null };
+    debut += TAILLE;
+  }
+}
 
 async function loadOthersPossessions(){
   const { data: userData } = await sb.auth.getUser();
@@ -1379,7 +1391,8 @@ async function loadMyCollection(){
   ];
   let data = null, error = null;
   for(const champs of variantes){
-    ({ data, error } = await sb.from('possessions').select(champs + champsCommune).eq('joueur_id', uid));
+        ({ data, error } = await toutesLesLignes(() => sb
+      .from('possessions').select(champs + champsCommune).eq('joueur_id', uid)));
     if(!error) break;
   }
   if(error){ console.error(error); return; }

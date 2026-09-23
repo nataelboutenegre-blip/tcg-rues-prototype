@@ -2021,3 +2021,56 @@
 
   /* Paquet suivant : le bouton passe sous les cartes deja tirees */
   .suivant-ligne{ flex-basis:100%; margin-top:4px; }
+
+  /* ---------- Ouverture du paquet : tension, eclat, morceaux ---------- */
+  .paquet.tension{ animation: paquet-secousse .2s ease-in-out both; }
+  @keyframes paquet-secousse{
+    0%{ transform: translateY(-2px) rotate(0deg); }
+    30%{ transform: translateY(-5px) rotate(-2.4deg); }
+    60%{ transform: translateY(-3px) rotate(2deg); }
+    100%{ transform: translateY(-4px) rotate(-.6deg); }
+  }
+
+  /* la dechirure part plus franchement qu'avant */
+  .paquet .paquet-languette{ transition: transform .5s cubic-bezier(.3,.85,.45,1), opacity .42s ease-in .12s; }
+  .paquet .paquet-corps{ transition: transform .52s ease-in .2s, opacity .46s ease-in .24s; }
+  .paquet.dechire .paquet-languette{ transform: translate(86px, -124px) rotate(40deg); opacity:0; }
+  .paquet.dechire .paquet-corps{ transform: translateY(54px) scale(.9); opacity:0; }
+
+  /* la lumiere qui s'echappe par la fente */
+  .paquet-eclat{
+    position:absolute; left:2px; right:2px;
+    top: calc(var(--h-languette) - 10px);
+    height:20px; border-radius:50%;
+    background: radial-gradient(ellipse at center,
+      rgba(255,255,255,0.95) 0%, rgba(240,180,41,0.75) 40%, rgba(240,180,41,0) 72%);
+    opacity:0; pointer-events:none;
+  }
+  .paquet.dechire .paquet-eclat{ animation: paquet-eclat .5s ease-out .1s; }
+  @keyframes paquet-eclat{
+    0%{ opacity:0; transform: scale(.35,.2); }
+    35%{ opacity:1; transform: scale(1.15,1.5); }
+    100%{ opacity:0; transform: scale(1.8,2.8); }
+  }
+
+  /* les bouts de papier arraches */
+  .paquet-bouts{ position:absolute; left:0; right:0; top: var(--h-languette); height:0; pointer-events:none; }
+  .paquet-bouts i{
+    position:absolute; left:50%; top:0;
+    width:7px; height:10px; border-radius:1px;
+    background: var(--c-legendaire); opacity:0;
+  }
+  .paquet.dechire .paquet-bouts i{
+    animation: paquet-bout .66s cubic-bezier(.2,.7,.4,1) forwards;
+    animation-delay: var(--d);
+  }
+  @keyframes paquet-bout{
+    0%{ opacity:1; transform: translate(0,0) rotate(0deg) scale(1); }
+    100%{ opacity:0; transform: translate(var(--tx), var(--ty)) rotate(var(--r)) scale(.55); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .paquet.tension{ animation:none; }
+    .paquet.dechire .paquet-eclat,
+    .paquet.dechire .paquet-bouts i{ animation:none; opacity:0; }
+  }

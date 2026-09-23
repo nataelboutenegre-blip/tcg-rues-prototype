@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '161bfc9189d6';
+const VERSION_JEU = 'cef93037bd4a';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -626,7 +626,9 @@ function franchitUnSeuil(avant, apres){
 
 function zoomMapAt(newZoom, px, py){
   newZoom = Math.min(MAP_ZOOM_MAX, Math.max(MAP_ZOOM_MIN, newZoom));
-  if(franchitUnSeuil(mapZoom, newZoom) || newZoom >= SEUIL_CONTOURS) setTimeout(renderMapOverlay, 0);
+  // On ne redessine qu'au franchissement d'un seuil : sinon chaque cran de molette
+  // reconstruisait toute la carte. Le redessin de fin de geste est fait par signalerMouvementCarte.
+  if(franchitUnSeuil(mapZoom, newZoom)) setTimeout(renderMapOverlay, 0);
   const ratio = newZoom / mapZoom;
   mapPanX = px - (px - mapPanX) * ratio;
   mapPanY = py - (py - mapPanY) * ratio;
@@ -1613,7 +1615,9 @@ function makePackEl(type){
     <div class="paquet-corps">${motif}
       <div class="paquet-etiquette">${ICONE_EPINGLE}<span class="paquet-titre">Paquet</span></div>
       <div class="paquet-bande">5 communes</div>
-    </div>`;
+    </div>
+    <div class="paquet-eclat"></div>
+    <div class="paquet-bouts">${MORCEAUX_PAQUET}</div>`;
   return pack;
 }
 
@@ -1621,6 +1625,14 @@ function makePackEl(type){
 let packStatusCache = null;
 let packStatusFetchedAt = 0;
 let packStatusInterval = null;
+let dispoPrecedente = null;   // pour reperer le moment ou un jeton se recharge
+
+// Morceaux de papier projetes a la dechirure : positions figees, calculees une fois
+const MORCEAUX_PAQUET = [
+  [-64, -78, -150], [-38, -96, 110], [-12, -104, -60], [14, -100, 140],
+  [42, -88, -110], [66, -66, 70], [-52, -44, 40], [54, -38, -80], [4, -58, 190],
+].map(([tx, ty, r], i) =>
+  `<i style="--tx:${tx}px;--ty:${ty}px;--r:${r}deg;--d:${i * 22}ms"></i>`).join('');
 
 async function loadPackStatus(){
   const { data, error } = await sb.rpc('statut_paquets');
@@ -1658,6 +1670,17 @@ function renderPackStatus(){
   // pendant l'ouverture d'un paquet, on ne peut pas en relancer un autre
   document.getElementById('openFreeBtn').disabled = paquetEnCours || dispo < 1;
   document.getElementById('openBuyBtn').disabled = paquetEnCours || achetesJour >= 5 || packStatusCache.solde < 200;
+
+  // un jeton vient de se recharger pendant que le joueur est sur le jeu
+  if(dispoPrecedente !== null && dispo > dispoPrecedente && !paquetEnCours){
+    notifier({
+      type: 'succes',
+      titre: 'Un paquet gratuit t\'attend',
+      texte: dispo > 1 ? `Tu en as ${dispo} en réserve.` : 'Clique dessus pour le déchirer.'
+    });
+  }
+  dispoPrecedente = dispo;
+  majPaquetPret(dispo);
 }
 
 // Si securite.sql n'a pas encore ete execute, les nouvelles fonctions n'existent pas : on utilise les anciennes
@@ -1694,38 +1717,78 @@ async function openPack(type){
   afficherPaquetATirer(type, 5);
 }
 
+// Le paquet se tend, puis se dechire. Le tirage part pendant l'animation,
+// pour ne pas laisser le joueur attendre une fois le paquet disparu.
+async function dechirerPaquet(pack, nbCartes){
+  const zone = document.getElementById('packZone');
+  pack.classList.add('tension');
+  if(!REDUCED_MOTION) await new Promise(r => setTimeout(r, 200));
+  pack.classList.add('dechire');
+  const animation = new Promise(resolve => setTimeout(resolve, REDUCED_MOTION ? 0 : 660));
+  const draws = [];
+  for(let i = 0; i < nbCartes; i++){
+    const { row, error } = await tirerUneCarte();
+    if(error || !row){
+      if(error) notifier({ type: 'erreur', titre: 'Tirage interrompu', texte: messageLisible(error.message) });
+      break;
+    }
+    const tier = TIERS.find(t => t.id === row.tier);
+    draws.push({
+      code: row.code, nom: row.nom, dept: row.departement, pop: row.population,
+      lat: row.latitude, lon: row.longitude, tier, rank: row.rang, tierSize: row.palier_total
+    });
+  }
+  await animation;
+  if(draws.length === 0){
+    if(zone) zone.innerHTML = '';
+    paquetEnCours = false;
+    loadPackStatus();
+    return;
+  }
+  revealCards(draws);
+}
+
 function afficherPaquetATirer(type, nbCartes){
   const zone = document.getElementById('packZone');
   zone.innerHTML = '';
   const pack = makePackEl(type);
   zone.appendChild(pack);
+  pack.addEventListener('click', () => dechirerPaquet(pack, nbCartes), { once: true });
+}
 
+// Paquet pose sur l'ecran d'arrivee : un seul clic le paie et le dechire.
+function afficherPaquetPret(type){
+  const zone = document.getElementById('packZone');
+  if(!zone) return;
+  zone.innerHTML = '';
+  const pack = makePackEl(type);
+  pack.dataset.pret = '1';
+  pack.setAttribute('aria-label', 'Ouvrir un paquet gratuit');
+  zone.appendChild(pack);
   pack.addEventListener('click', async () => {
-    pack.classList.add('dechire');
-    // le tirage part tout de suite, pendant l'animation, pour ne pas attendre une fois le paquet disparu
-    const animation = new Promise(resolve => setTimeout(resolve, REDUCED_MOTION ? 0 : 720));
-    const draws = [];
-    for(let i = 0; i < nbCartes; i++){
-      const { row, error } = await tirerUneCarte();
-      if(error || !row){
-        if(error) notifier({ type: 'erreur', titre: 'Tirage interrompu', texte: messageLisible(error.message) });
-        break;
-      }
-      const tier = TIERS.find(t => t.id === row.tier);
-      draws.push({
-        code: row.code, nom: row.nom, dept: row.departement, pop: row.population,
-        lat: row.latitude, lon: row.longitude, tier, rank: row.rang, tierSize: row.palier_total
-      });
-    }
-    await animation;
-    if(draws.length === 0){
-      zone.innerHTML = '';
+    if(paquetEnCours) return;
+    paquetEnCours = true;
+    renderPackStatus();
+    const err = await payerPaquet(type);
+    if(err){
       paquetEnCours = false;
+      notifier({ type: 'erreur', titre: 'Impossible d\'ouvrir le paquet', texte: messageLisible(err.message) });
       loadPackStatus();
       return;
     }
-    revealCards(draws);
+    delete pack.dataset.pret;
+    loadPackStatus();
+    dechirerPaquet(pack, 5);
   }, { once: true });
+}
+
+// Tant qu'un paquet gratuit attend, il est visible sans qu'on ait a cliquer sur un bouton.
+function majPaquetPret(dispo){
+  const zone = document.getElementById('packZone');
+  if(!zone || paquetEnCours) return;
+  const pret = zone.querySelector('.paquet[data-pret]');
+  if(dispo >= 1 && zone.children.length === 0) afficherPaquetPret('gratuit');
+  else if(dispo < 1 && pret) zone.innerHTML = '';
 }
 
 // Paquet paye mais pas encore ouvert (page fermee ou rechargee) : on le represente

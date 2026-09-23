@@ -2018,3 +2018,6 @@
   }
   .ech-refus:hover{ color:#fff; border-color: rgba(169,188,212,0.55); }
   .ech-refus:disabled{ opacity:0.5; cursor:default; }
+
+  /* Paquet suivant : le bouton passe sous les cartes deja tirees */
+  .suivant-ligne{ flex-basis:100%; margin-top:4px; }

@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'bd50ba53ef76';
+const VERSION_JEU = '161bfc9189d6';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -1590,9 +1590,9 @@ function revealCards(draws){
       pendingFlips--;
       if(pendingFlips <= 0){
         paquetEnCours = false;
-        loadPackStatus();
         loadObjectifs();
-        verifierTiragesEnAttente();
+        // les cartes restent affichees : c'est le joueur qui decide de passer au suivant
+        loadPackStatus().then(proposerPaquetSuivant);
       }
     });
     // les cartes arrivent l'une apres l'autre
@@ -1739,6 +1739,36 @@ async function verifierTiragesEnAttente(){
   renderPackStatus();
   afficherPaquetATirer('gratuit', Math.min(5, data.tirages_restants));
   notifier({ type: 'info', titre: 'Tu as un paquet non ouvert', texte: 'Clique dessus dans l\'onglet Tirage pour le déchirer.' });
+}
+
+// Un paquet attend encore : on propose un bouton sous les cartes, sans les effacer.
+async function proposerPaquetSuivant(){
+  if(paquetEnCours) return;
+  const zone = document.getElementById('packZone');
+  if(!zone || zone.querySelector('.suivant-ligne')) return;
+  const { data: u } = await sb.auth.getUser();
+  if(!u || !u.user) return;
+  const { data } = await sb.from('joueurs').select('tirages_restants').eq('id', u.user.id).single();
+  const restants = data && data.tirages_restants > 0 ? data.tirages_restants : 0;
+  if(restants <= 0) return;
+
+  // tant qu'il reste des tirages, on ne peut pas en lancer un nouveau par-dessus
+  paquetEnCours = true;
+  renderPackStatus();
+
+  const paquets = Math.ceil(restants / 5);
+  const ligne = document.createElement('div');
+  ligne.className = 'suivant-ligne';
+  const btn = document.createElement('button');
+  btn.className = 'open-btn';
+  btn.textContent = paquets > 1
+    ? `Ouvrir le paquet suivant (${paquets} en attente)`
+    : 'Ouvrir le paquet suivant';
+  btn.addEventListener('click', () => {
+    afficherPaquetATirer('gratuit', Math.min(5, restants));
+  }, { once: true });
+  ligne.appendChild(btn);
+  zone.appendChild(ligne);
 }
 
 document.getElementById('openFreeBtn').addEventListener('click', () => openPack('gratuit'));

@@ -151,6 +151,17 @@
         <span class="tab-badge" id="combatBadge" hidden></span>
       </div>
 
+      <div class="tab" data-tab="echange">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 8h13l-3.5-3.5M17 8l-3.5 3.5"/>
+            <path d="M20 16H7l3.5-3.5M7 16l3.5 3.5"/>
+          </svg>
+        </div>
+        Échange
+        <span class="tab-badge" id="echangeBadge" hidden></span>
+      </div>
+
       <div class="tab" data-tab="succes">
         <div class="icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round">
@@ -363,6 +374,37 @@
           <button class="filter-pill prox-toggle" id="boucliersToutToggle" aria-pressed="false"><span class="prox-switch"></span>Afficher toutes mes rares et légendaires</button>
         </div>
         <div id="boucliersGrid" class="bourse-grid"><p class="collection-empty">Tu n'as aucune commune rare ou légendaire à protéger.</p></div>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="panel-echange">
+      <h1>Échange</h1>
+      <div class="sub">Propose un troc à un autre joueur : une commune contre une autre de la même rareté. Les deux cartes changent de main en même temps, personne ne peut te doubler.</div>
+      <div class="puces"><span class="puce solde">Solde <b id="soldeValueEchange">—</b></span></div>
+
+      <div class="bourse-section" id="echPropositions" hidden>
+        <h2>Propositions en cours</h2>
+        <div class="ech-liste" id="echListe"></div>
+      </div>
+
+      <div class="bourse-section">
+        <h2>Proposer un échange</h2>
+        <div class="bourse-filters" id="echTiers">
+          <button class="filter-pill active" data-tier="commun"><span class="pill-point" style="background:#7E8BA0"></span>Commun</button>
+          <button class="filter-pill" data-tier="peucommun"><span class="pill-point" style="background:#22A06B"></span>Peu commun</button>
+          <button class="filter-pill" data-tier="rare"><span class="pill-point" style="background:#2F7CF6"></span>Rare</button>
+          <button class="filter-pill" data-tier="legendaire"><span class="pill-point" style="background:#F0B429"></span>Légendaire</button>
+        </div>
+
+        <p class="ech-label">Tu donnes</p>
+        <div class="ech-choix" id="echMien"></div>
+
+        <p class="ech-label">Tu reçois</p>
+        <input type="text" id="echSearch" class="bourse-search" placeholder="Rechercher une commune…">
+        <div class="ech-choix" id="echCibles"></div>
+
+        <div class="ech-resume" id="echResume" hidden></div>
+        <button class="open-btn" id="echEnvoyer" disabled>Choisis deux communes</button>
       </div>
     </section>
 

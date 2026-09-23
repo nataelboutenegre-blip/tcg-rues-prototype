@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '6a69bd9bf9c9';
+const VERSION_JEU = 'f32639f08bc4';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -753,6 +753,7 @@ const ICONES_JOURNAL = {
   defense: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/><path d="M9 12l2 2 4-4"/></svg>',
   achat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h13l-3-3M17 8l-3 3M20 16H7l3-3M7 16l3 3"/></svg>',
   tirage: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M5 14l5-3v9"/></svg>',
+  echange: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3.5-3.5M17 8l-3.5 3.5"/><path d="M20 16H7l3.5-3.5M7 16l3.5 3.5"/></svg>',
 };
 
 function ilYA(date){
@@ -775,6 +776,7 @@ function ligneJournal(e){
   if(e.type === 'conquete') texte = `${acteur} ${a} conquis ${commune}${e.cible_pseudo ? ` sur ${cible}` : ''}`;
   else if(e.type === 'defense') texte = `${acteur} ${a} repoussé une attaque de ${cible} sur ${commune}`;
   else if(e.type === 'achat') texte = `${acteur} ${a} acheté ${commune}${e.cible_pseudo ? ` à ${cible}` : ''}`;
+  else if(e.type === 'echange') texte = `${acteur} ${a} reçu ${commune}${e.cible_pseudo ? ` de ${cible}` : ''} en échange`;
   else texte = `${acteur} ${a} tiré ${e.tier === 'legendaire' ? 'une légendaire' : 'une rare'} : ${commune}`;
   const perso = e.je_suis_cible && (e.type === 'conquete' || e.type === 'achat');
   return `
@@ -2497,7 +2499,7 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // ---------- Navigation : barre du bas et menu "Plus" sur telephone ----------
 // Les 4 onglets principaux restent dans la barre, les autres passent dans le menu.
 const ONGLETS_BARRE = ['tirage', 'collection', 'combat', 'defense'];
-const ONGLETS_MENU = ['territoire', 'bourse', 'succes'];
+const ONGLETS_MENU = ['territoire', 'bourse', 'echange', 'succes'];
 const ICONE_REGLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const ICONE_SORTIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M11 12h10m-3-3 3 3-3 3"/></svg>';
 const surTelephone = () => window.matchMedia('(max-width: 720px)').matches;
@@ -2585,6 +2587,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'defense'){ loadMenaces(); loadCombat(); renderIntensite('defense'); }
     if(tab.dataset.tab === 'combat') loadCombat();
     if(tab.dataset.tab === 'succes') loadSucces();
+    if(tab.dataset.tab === 'echange') loadEchanges();
   });
 });
 
@@ -2794,6 +2797,246 @@ document.getElementById('panel-succes').addEventListener('click', async (e) => {
     await rafraichirSoldes();
   } catch(err){
     notifier({ type: 'erreur', titre: 'Impossible de récupérer', texte: messageLisible(err.message) });
+    btn.disabled = false;
+  }
+});
+
+// ---------- Echange de communes entre joueurs ----------
+// Meme rarete des deux cotes, et une commission prelevee a chacun : sans cette
+// friction, un joueur pourrait faire remonter les bonnes cartes de comptes secondaires.
+const COMMISSION_ECHANGE = { commun: 1, peucommun: 4, rare: 20, legendaire: 200 };
+
+let echangesEnCours = [];
+let echangeTier = 'commun';
+let echangeMien = null;    // code de ma commune
+let echangeCible = null;   // { commune_code, nom, departement, pseudo }
+let echangeCibles = [];
+let echangeRecherche = '';
+let echangeMinuteur = null;
+
+async function loadEchanges(){
+  const { data, error } = await sb.rpc('mes_echanges');
+  if(error) console.error(error);
+  echangesEnCours = error ? [] : (data || []);
+  renderEchangePropositions();
+  majBadgeEchange();
+  renderEchangeMien();
+  await chargerCiblesEchange();
+  const { data: userData } = await sb.auth.getUser();
+  if(userData && userData.user){
+    const { data: row } = await sb.from('joueurs').select('solde').eq('id', userData.user.id).single();
+    const el = document.getElementById('soldeValueEchange');
+    if(el && row) el.textContent = row.solde;
+  }
+}
+
+function majBadgeEchange(){
+  const recues = echangesEnCours.filter(e => e.sens === 'recu').length;
+  const badge = document.getElementById('echangeBadge');
+  if(!badge) return;
+  badge.hidden = recues === 0;
+  badge.textContent = recues;
+}
+
+function ligneEchange(e){
+  const recu = e.sens === 'recu';
+  const reste = new Date(e.expire_le).getTime() - Date.now();
+  const boutons = recu
+    ? `<button class="obj-btn" data-accepter="${e.id}">Accepter</button>
+       <button class="ech-refus" data-refuser="${e.id}">Refuser</button>`
+    : `<button class="ech-refus" data-refuser="${e.id}">Annuler</button>`;
+  return `
+    <div class="ech-prop ${recu ? 'recu' : ''}">
+      <div class="ech-prop-tete">
+        <span>${recu
+          ? `<b>${echapperTexte(e.autre_pseudo || 'Un joueur')}</b> te propose`
+          : `Proposé à <b>${echapperTexte(e.autre_pseudo || 'un joueur')}</b>`}</span>
+        <span class="ech-expire">${reste > 0 ? 'expire dans ' + formatDuree(reste) : 'expiré'}</span>
+      </div>
+      <div class="ech-prop-corps">
+        <div class="ech-face recoit">
+          <span>Tu reçois</span>
+          <b>${echapperTexte(e.je_recois_nom)}</b>
+          <small>(${echapperTexte(e.je_recois_dept)})</small>
+        </div>
+        <div class="ech-face donne">
+          <span>Tu donnes</span>
+          <b>${echapperTexte(e.je_donne_nom)}</b>
+          <small>(${echapperTexte(e.je_donne_dept)})</small>
+        </div>
+      </div>
+      <div class="ech-prop-pied">
+        <span class="ech-commission">Commission ${e.commission} pts</span>
+        <div class="ech-actions">${boutons}</div>
+      </div>
+    </div>`;
+}
+
+function renderEchangePropositions(){
+  const bloc = document.getElementById('echPropositions');
+  const liste = document.getElementById('echListe');
+  if(!bloc || !liste) return;
+  bloc.hidden = echangesEnCours.length === 0;
+  liste.innerHTML = echangesEnCours.map(ligneEchange).join('');
+}
+
+// mes communes de la rarete choisie, hors boucliers et hors annonces en cours
+function renderEchangeMien(){
+  const zone = document.getElementById('echMien');
+  if(!zone) return;
+  const maintenant = Date.now();
+  const miennes = [...collectionMap.values()]
+    .filter(c => c.tier && c.tier.id === echangeTier)
+    .filter(c => !(c.bouclierJusqua > maintenant))
+    .filter(c => !myListings.has(c.code))
+    .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+
+  if(miennes.length === 0){
+    zone.innerHTML = '<p class="collection-empty">Tu n\'as aucune commune échangeable de cette rareté.</p>';
+    echangeMien = null;
+    majResumeEchange();
+    return;
+  }
+  if(echangeMien && !miennes.some(c => c.code === echangeMien)) echangeMien = null;
+
+  zone.innerHTML = miennes.map(c => `
+    <button class="ech-item ${echangeTier} ${echangeMien === c.code ? 'choisi' : ''}" data-mien="${echapperTexte(c.code)}">
+      <b>${echapperTexte(c.nom)}</b>
+      <small>${echapperTexte(DEPT_NAMES[c.dept] || '')} (${echapperTexte(c.dept)})</small>
+    </button>`).join('');
+  majResumeEchange();
+}
+
+async function chargerCiblesEchange(){
+  const zone = document.getElementById('echCibles');
+  if(!zone) return;
+  zone.innerHTML = '<p class="collection-empty">Chargement…</p>';
+  const { data, error } = await sb.rpc('cibles_echange', {
+    p_tier: echangeTier, p_recherche: echangeRecherche
+  });
+  if(error){
+    console.error(error);
+    zone.innerHTML = '<p class="collection-empty">Impossible de charger les communes des autres joueurs.</p>';
+    return;
+  }
+  echangeCibles = data || [];
+  renderEchangeCibles();
+}
+
+function renderEchangeCibles(){
+  const zone = document.getElementById('echCibles');
+  if(!zone) return;
+  if(echangeCibles.length === 0){
+    zone.innerHTML = '<p class="collection-empty">Aucune commune disponible de cette rareté.</p>';
+    echangeCible = null;
+    majResumeEchange();
+    return;
+  }
+  if(echangeCible && !echangeCibles.some(c => c.commune_code === echangeCible.commune_code)) echangeCible = null;
+
+  zone.innerHTML = echangeCibles.map(c => `
+    <button class="ech-item ${echangeTier} ${echangeCible && echangeCible.commune_code === c.commune_code ? 'choisi' : ''}" data-cible="${echapperTexte(c.commune_code)}">
+      <b>${echapperTexte(c.nom)}</b>
+      <small>${echapperTexte(c.departement)} · ${echapperTexte(c.pseudo || 'un joueur')}</small>
+    </button>`).join('');
+  majResumeEchange();
+}
+
+function majResumeEchange(){
+  const resume = document.getElementById('echResume');
+  const bouton = document.getElementById('echEnvoyer');
+  if(!resume || !bouton) return;
+  const pret = echangeMien && echangeCible;
+  resume.hidden = !pret;
+  bouton.disabled = !pret;
+  if(!pret){
+    bouton.textContent = 'Choisis deux communes';
+    return;
+  }
+  const mienne = collectionMap.get(echangeMien);
+  const commission = COMMISSION_ECHANGE[echangeTier] || 1;
+  resume.innerHTML = `
+    <span><b>${echapperTexte(mienne ? mienne.nom : echangeMien)}</b> contre <b>${echapperTexte(echangeCible.nom)}</b></span>
+    <span class="ech-commission">${commission} pts de commission pour chacun</span>`;
+  bouton.textContent = 'Envoyer la proposition';
+}
+
+document.getElementById('echTiers').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-tier]');
+  if(!b) return;
+  document.querySelectorAll('#echTiers .filter-pill').forEach(p => p.classList.remove('active'));
+  b.classList.add('active');
+  echangeTier = b.dataset.tier;
+  echangeMien = null;
+  echangeCible = null;
+  renderEchangeMien();
+  await chargerCiblesEchange();
+});
+
+document.getElementById('echSearch').addEventListener('input', (e) => {
+  echangeRecherche = e.target.value.trim();
+  clearTimeout(echangeMinuteur);
+  echangeMinuteur = setTimeout(chargerCiblesEchange, 300);
+});
+
+document.getElementById('echMien').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-mien]');
+  if(!b) return;
+  echangeMien = echangeMien === b.dataset.mien ? null : b.dataset.mien;
+  renderEchangeMien();
+});
+
+document.getElementById('echCibles').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-cible]');
+  if(!b) return;
+  const c = echangeCibles.find(x => x.commune_code === b.dataset.cible);
+  echangeCible = (echangeCible && echangeCible.commune_code === b.dataset.cible) ? null : c;
+  renderEchangeCibles();
+});
+
+document.getElementById('echEnvoyer').addEventListener('click', async (e) => {
+  if(!echangeMien || !echangeCible) return;
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  try{
+    const { data, error } = await sb.rpc('proposer_echange', {
+      p_ma_commune: echangeMien, p_sa_commune: echangeCible.commune_code
+    });
+    if(error) throw error;
+    const r = data && data[0];
+    notifier({ type: 'succes', titre: 'Proposition envoyée', texte: r ? r.message : '' });
+    echangeMien = null;
+    echangeCible = null;
+    await loadEchanges();
+  } catch(err){
+    notifier({ type: 'erreur', titre: 'Échange impossible', texte: messageLisible(err.message) });
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('echListe').addEventListener('click', async (e) => {
+  const accepter = e.target.closest('[data-accepter]');
+  const refuser = e.target.closest('[data-refuser]');
+  const btn = accepter || refuser;
+  if(!btn) return;
+  btn.disabled = true;
+  try{
+    if(accepter){
+      const { data, error } = await sb.rpc('accepter_echange', { p_id: Number(accepter.dataset.accepter) });
+      if(error) throw error;
+      const r = data && data[0];
+      notifier({ type: 'succes', titre: 'Échange conclu', texte: r ? r.message : '' });
+      await loadMyCollection();
+      await loadOthersPossessions();
+    } else {
+      const { data, error } = await sb.rpc('refuser_echange', { p_id: Number(refuser.dataset.refuser) });
+      if(error) throw error;
+      const r = data && data[0];
+      notifier({ type: 'info', titre: r ? r.message : 'Proposition retirée' });
+    }
+    await loadEchanges();
+  } catch(err){
+    notifier({ type: 'erreur', titre: 'Action impossible', texte: messageLisible(err.message) });
     btn.disabled = false;
   }
 });

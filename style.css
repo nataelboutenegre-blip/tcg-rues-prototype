@@ -1823,7 +1823,8 @@
       gap:0;
     }
     /* les onglets qui passent dans le menu "Plus" */
-    .tab[data-tab="territoire"], .tab[data-tab="bourse"], .tab[data-tab="succes"]{ display:none; }
+    .tab[data-tab="territoire"], .tab[data-tab="bourse"],
+    .tab[data-tab="echange"], .tab[data-tab="succes"]{ display:none; }
     .tab-plus{ display:flex; }
     .tab{
       flex-direction:column; align-items:center; justify-content:flex-start; gap:4px;
@@ -1953,3 +1954,63 @@
   .sc-prets{ background: var(--c-legendaire); border-color: transparent; color: var(--encre); font-weight:600; }
   .sc-prets[hidden]{ display:none; }
   #scPlus{ margin-top:10px; }
+
+  /* ---------- Échange entre joueurs ---------- */
+  .ech-label{ font-size:0.78rem; color: var(--brume); margin:16px 0 7px; }
+  .ech-choix{
+    display:flex; flex-wrap:wrap; gap:7px;
+    max-height:190px; overflow-y:auto; padding:2px;
+  }
+  .ech-item{
+    display:flex; flex-direction:column; align-items:flex-start; gap:2px;
+    background: var(--nuit-2); border:1px solid rgba(169,188,212,0.14);
+    border-left:3px solid var(--c-commun); border-radius:0 9px 9px 0;
+    padding:7px 11px; font:inherit; color:#fff; text-align:left; cursor:pointer;
+  }
+  .ech-item.peucommun{ border-left-color: var(--c-peucommun); }
+  .ech-item.rare{ border-left-color: var(--c-rare); }
+  .ech-item.legendaire{ border-left-color: var(--c-legendaire); }
+  .ech-item b{ font-size:0.88rem; font-weight:600; }
+  .ech-item small{ font-size:0.7rem; color: var(--brume); }
+  .ech-item:hover{ border-color: rgba(169,188,212,0.34); }
+  .ech-item.choisi{ background: rgba(240,180,41,0.12); border-color: rgba(240,180,41,0.55); }
+  .ech-resume{
+    display:flex; flex-wrap:wrap; align-items:baseline; gap:10px;
+    background: rgba(240,180,41,0.09); border:1px solid rgba(240,180,41,0.28);
+    border-radius:9px; padding:10px 13px; margin:16px 0 12px; font-size:0.86rem;
+  }
+  .ech-resume[hidden]{ display:none; }
+  .ech-commission{ font-size:0.74rem; color: var(--c-legendaire); white-space:nowrap; }
+  .ech-liste{ display:flex; flex-direction:column; gap:9px; }
+  .ech-prop{
+    background: var(--nuit-2); border:1px solid rgba(169,188,212,0.14);
+    border-radius:12px; padding:12px 14px;
+  }
+  .ech-prop.recu{ border-color: rgba(240,180,41,0.45); background: rgba(240,180,41,0.07); }
+  .ech-prop-tete{
+    display:flex; justify-content:space-between; align-items:baseline;
+    gap:10px; font-size:0.86rem; margin-bottom:9px;
+  }
+  .ech-expire{ font-size:0.72rem; color: var(--brume); white-space:nowrap; }
+  .ech-prop-corps{ display:flex; flex-wrap:wrap; gap:8px; }
+  .ech-face{
+    flex:1; min-width:130px; display:flex; flex-direction:column; gap:1px;
+    background: rgba(15,31,56,0.55); border-radius:9px; padding:7px 11px;
+    border-left:3px solid var(--c-peucommun);
+  }
+  .ech-face.donne{ border-left-color: var(--c-rouge, #E5484D); }
+  .ech-face > span{ font-size:0.68rem; color: var(--c-peucommun); }
+  .ech-face.donne > span{ color: var(--c-rouge, #E5484D); }
+  .ech-face b{ font-size:0.92rem; font-weight:600; }
+  .ech-face small{ font-size:0.7rem; color: var(--brume); }
+  .ech-prop-pied{
+    display:flex; justify-content:space-between; align-items:center;
+    gap:10px; flex-wrap:wrap; margin-top:10px;
+  }
+  .ech-actions{ display:flex; gap:8px; }
+  .ech-refus{
+    background:none; border:1px solid rgba(169,188,212,0.3); border-radius:8px;
+    padding:6px 14px; font:inherit; font-size:0.8rem; color: var(--brume); cursor:pointer;
+  }
+  .ech-refus:hover{ color:#fff; border-color: rgba(169,188,212,0.55); }
+  .ech-refus:disabled{ opacity:0.5; cursor:default; }

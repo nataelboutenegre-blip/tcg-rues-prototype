@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '0829ad889a13';
+const VERSION_JEU = '332ce20754fe';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -1455,6 +1455,25 @@ let menacesSignature = '';
 // "cote" doit trouver "Côte-d'Or"
 const sansAccents = (s) => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
+// Nom de departement saisi en entier, ou sans ambiguite : on renvoie son numero
+function codeDepartement(texte){
+  const t = sansAccents(texte || '');
+  if(t.length < 3) return null;
+  const codes = Object.keys(DEPT_NAMES);
+  const exact = codes.find(c => sansAccents(DEPT_NAMES[c]) === t);
+  if(exact) return exact;
+  const debuts = codes.filter(c => sansAccents(DEPT_NAMES[c]).startsWith(t));
+  return debuts.length === 1 ? debuts[0] : null;
+}
+
+// Une recherche peut viser un nom de commune, un numero de departement ou son nom
+function correspondRecherche(nom, dept, recherche){
+  if(!recherche) return true;
+  return sansAccents(nom).includes(recherche)
+      || String(dept).toLowerCase().includes(recherche)
+      || sansAccents(DEPT_NAMES[dept] || '').includes(recherche);
+}
+
 // Sieges en cours sur mes communes, regroupes : combien d'attaquants, meilleure serie
 function siegesParCommune(){
   const par = new Map();
@@ -1512,10 +1531,7 @@ function renderCollection(){
   const sieges = siegesParCommune();
   const visibles = entries
     .filter(e => collectionFilterTier === 'tous' || e.tier.id === collectionFilterTier)
-    .filter(e => !recherche
-      || sansAccents(e.nom).includes(recherche)
-      || String(e.dept).toLowerCase().includes(recherche)
-      || sansAccents(DEPT_NAMES[e.dept] || '').includes(recherche))
+    .filter(e => correspondRecherche(e.nom, e.dept, recherche))
     .sort((a,b) => {
       const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
       if(ra !== rb) return ra - rb;
@@ -1548,6 +1564,8 @@ function renderCollection(){
 }
 
 document.getElementById('collectionSearch').addEventListener('input', renderCollection);
+document.getElementById('boucliersSearch').addEventListener('input', renderBoucliers);
+document.getElementById('echSearchMien').addEventListener('input', renderEchangeMien);
 
 document.getElementById('collectionFilters').addEventListener('click', (e) => {
   const b = e.target.closest('.coll-filtre');
@@ -1942,11 +1960,16 @@ function renderBoucliers(){
   const grid = document.getElementById('boucliersGrid');
   if(!grid) return;
   const now = Date.now();
+  const champB = document.getElementById('boucliersSearch');
+  const rechercheB = sansAccents(champB ? champB.value.trim() : '');
   const toutes = Array.from(collectionMap.values())
     .filter(e => e.tier.id === 'rare' || e.tier.id === 'legendaire')
+    .filter(e => correspondRecherche(e.nom, e.dept, rechercheB))
     .sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || b.pop - a.pop);
   if(toutes.length === 0){
-    grid.innerHTML = '<p class="collection-empty">Tu n\'as aucune commune rare ou légendaire à protéger.</p>';
+    grid.innerHTML = rechercheB
+      ? '<p class="collection-empty">Aucune commune ne correspond à cette recherche.</p>'
+      : '<p class="collection-empty">Tu n\'as aucune commune rare ou légendaire à protéger.</p>';
     return;
   }
   // par defaut : celles qu'on attaque en ce moment, ou qui sont attaquables tout de suite
@@ -2033,7 +2056,7 @@ let sellFilterTier = 'tous';
 function renderSellableGrid(){
   const grid = document.getElementById('sellableGrid');
   const searchEl = document.getElementById('sellSearch');
-  const searchText = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  const searchText = sansAccents(searchEl ? searchEl.value.trim() : '');
 
   let entries = Array.from(collectionMap.values()).sort((a,b) => {
     const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
@@ -2045,7 +2068,7 @@ function renderSellableGrid(){
     entries = entries.filter(e => e.tier.id === sellFilterTier);
   }
   if(searchText){
-    entries = entries.filter(e => e.nom.toLowerCase().includes(searchText));
+    entries = entries.filter(e => correspondRecherche(e.nom, e.dept, searchText));
   }
 
   if(collectionMap.size === 0){
@@ -2477,14 +2500,14 @@ function renderCombatGrid(){
   renderIntensite();
   const grid = document.getElementById('combatGrid');
   const searchEl = document.getElementById('combatSearch');
-  const searchText = searchEl ? searchEl.value.trim().toLowerCase() : '';
+  const searchText = sansAccents(searchEl ? searchEl.value.trim() : '');
 
   let cibles = combatCibles;
   if(combatFilterTier !== 'tous'){
     cibles = cibles.filter(c => c.communes.tier === combatFilterTier);
   }
   if(searchText){
-    cibles = cibles.filter(c => c.communes.nom.toLowerCase().includes(searchText));
+    cibles = cibles.filter(c => correspondRecherche(c.communes.nom, c.communes.departement, searchText));
   }
   if(combatProximite){
     cibles = cibles
@@ -3028,14 +3051,19 @@ function renderEchangeMien(){
   const zone = document.getElementById('echMien');
   if(!zone) return;
   const maintenant = Date.now();
+  const champM = document.getElementById('echSearchMien');
+  const rechercheM = sansAccents(champM ? champM.value.trim() : '');
   const miennes = [...collectionMap.values()]
     .filter(c => c.tier && c.tier.id === echangeTier)
     .filter(c => !(c.bouclierJusqua > maintenant))
     .filter(c => !myListings.has(c.code))
+    .filter(c => correspondRecherche(c.nom, c.dept, rechercheM))
     .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
 
   if(miennes.length === 0){
-    zone.innerHTML = '<p class="collection-empty">Tu n\'as aucune commune échangeable de cette rareté.</p>';
+    zone.innerHTML = rechercheM
+      ? '<p class="collection-empty">Aucune de tes communes ne correspond à cette recherche.</p>'
+      : '<p class="collection-empty">Tu n\'as aucune commune échangeable de cette rareté.</p>';
     echangeMien = null;
     majResumeEchange();
     return;
@@ -3054,8 +3082,9 @@ async function chargerCiblesEchange(){
   const zone = document.getElementById('echCibles');
   if(!zone) return;
   zone.innerHTML = '<p class="collection-empty">Chargement…</p>';
+  // le serveur ne connait que les numeros de departement : "charente" devient "16"
   const { data, error } = await sb.rpc('cibles_echange', {
-    p_tier: echangeTier, p_recherche: echangeRecherche
+    p_tier: echangeTier, p_recherche: codeDepartement(echangeRecherche) || echangeRecherche
   });
   if(error){
     console.error(error);

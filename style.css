@@ -660,6 +660,11 @@
   }
   /* pendant un geste : couche deplacee par la carte graphique, sans redessin */
   .map-wrap.en-mouvement .map-transform{ will-change: transform; }
+  /* Sur ecran tactile, la couche promue restait rasterisee au zoom du debut du geste :
+     on renonce a la promotion, le rendu reste net pendant le pincement. */
+  @media (hover: none){
+    .map-wrap.en-mouvement .map-transform{ will-change: auto; }
+  }
   .map-wrap.en-mouvement #mapSurvol{ pointer-events: none; }
   .map-wrap{ contain: layout paint; }
   .map-france-svg{

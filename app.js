@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '3763d7115b44';
+const VERSION_JEU = 'a1dc0f06f091';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -612,6 +612,13 @@ function signalerMouvementCarte(){
   clearTimeout(mapFinMouvementTimer);
   mapFinMouvementTimer = setTimeout(() => {
     wrap.classList.remove('en-mouvement');
+    // Safari iOS garde la rasterisation du zoom precedent : un changement de taille
+    // infime force le navigateur a redessiner le SVG net.
+    const svg = document.getElementById('mapFranceSvg');
+    if(svg){
+      svg.style.width = 'calc(100% + 0.01px)';
+      requestAnimationFrame(() => { svg.style.width = ''; });
+    }
     // apres un deplacement, de nouveaux departements peuvent etre entres dans l'ecran
     if(mapZoom >= SEUIL_CONTOURS) renderMapOverlay();
   }, 200);

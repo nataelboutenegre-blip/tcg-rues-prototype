@@ -181,6 +181,7 @@
     </div>
 
     <div class="sidebar-footer">
+      <a class="lien-discord" href="https://discord.gg/T6suSy6xa7" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.6 9.6 0 0 1-2.8-.4L4 21l1.5-4.1A8.2 8.2 0 0 1 3 11.5 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/></svg>Rejoindre le Discord</a>
       <span id="whoami"></span>
       <button class="link-btn" id="logoutBtn">Se déconnecter</button>
     </div>
@@ -425,6 +426,7 @@
         <h1>Règles du jeu</h1>
         <div class="sub">Tout ce qu'il faut savoir pour jouer. Collectionne les vraies communes de France, défends-les et agrandis ton territoire.</div>
         <div class="notif-carte" id="notifCarte"></div>
+        <button class="regles-guide" id="revoirGuide">Revoir le guide de démarrage</button>
         <section class="essentiel" aria-label="L'essentiel">
           <div class="etape"><div class="etape-num">1</div><h3>Ouvre des paquets</h3><p>Chaque paquet contient 5 vraies communes. Plus une ville est peuplée, plus elle est rare.</p></div>
           <div class="etape"><div class="etape-num">2</div><h3>Gère ton solde</h3><p>Revends tes cartes au jeu ou aux autres joueurs pour gagner des points.</p></div>
@@ -677,6 +679,17 @@
   <div class="feuille-poignee"></div>
   <div class="feuille-liste" id="feuilleListe"></div>
 </nav>
+
+<div class="guide-voile" id="guideVoile" hidden></div>
+<div class="guide-bulle" id="guideBulle" hidden role="dialog" aria-modal="true" aria-labelledby="guideTitre">
+  <p class="guide-compteur" id="guideCompteur"></p>
+  <p class="guide-titre" id="guideTitre"></p>
+  <p class="guide-texte" id="guideTexte"></p>
+  <div class="guide-actions">
+    <button class="guide-passer" id="guidePasser">Passer</button>
+    <button class="guide-suivant" id="guideSuivant">Suivant</button>
+  </div>
+</div>
 
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>

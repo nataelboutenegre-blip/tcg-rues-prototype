@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '4c3b96fee72c';
+const VERSION_JEU = '3763d7115b44';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -1444,6 +1444,23 @@ function renderStats(){
 
 // ---------- Page Ma collection ----------
 let collectionFilterTier = 'tous';
+let menacesSignature = '';
+
+// "cote" doit trouver "Côte-d'Or"
+const sansAccents = (s) => String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+// Sieges en cours sur mes communes, regroupes : combien d'attaquants, meilleure serie
+function siegesParCommune(){
+  const par = new Map();
+  for(const s of menaces){
+    if(!(s.victoires_consecutives > 0)) continue;
+    const e = par.get(s.commune_code) || { nb: 0, max: 0 };
+    e.nb++;
+    if(s.victoires_consecutives > e.max) e.max = s.victoires_consecutives;
+    par.set(s.commune_code, e);
+  }
+  return par;
+}
 const miniArtCache = new Map();
 
 function miniArtSvg(code, tierId){
@@ -1484,21 +1501,35 @@ function renderCollection(){
     gridEl.innerHTML = '<p class="collection-empty">Aucune carte pour le moment. Ouvre un paquet.</p>';
     return;
   }
+  const champ = document.getElementById('collectionSearch');
+  const recherche = sansAccents(champ ? champ.value.trim() : '');
+  const sieges = siegesParCommune();
   const visibles = entries
     .filter(e => collectionFilterTier === 'tous' || e.tier.id === collectionFilterTier)
+    .filter(e => !recherche
+      || sansAccents(e.nom).includes(recherche)
+      || String(e.dept).toLowerCase().includes(recherche)
+      || sansAccents(DEPT_NAMES[e.dept] || '').includes(recherche))
     .sort((a,b) => {
       const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
       if(ra !== rb) return ra - rb;
       return b.pop - a.pop;
     });
   if(visibles.length === 0){
-    gridEl.innerHTML = '<p class="collection-empty">Aucune carte de cette rareté pour le moment.</p>';
+    gridEl.innerHTML = recherche
+      ? '<p class="collection-empty">Aucune commune ne correspond à cette recherche.</p>'
+      : '<p class="collection-empty">Aucune carte de cette rareté pour le moment.</p>';
     return;
   }
-  gridEl.innerHTML = visibles.map(entry => `
+  gridEl.innerHTML = visibles.map(entry => {
+    const s = sieges.get(entry.code);
+    const badgeSiege = s
+      ? `<span class="mini-siege" title="${s.nb > 1 ? s.nb + ' joueurs attaquent cette commune' : 'Un joueur attaque cette commune'} — meilleure série ${s.max} sur 3">${s.max}/3${s.nb > 1 ? ' ×' + s.nb : ''}</span>`
+      : '';
+    return `
     <div class="mini ${entry.tier.id}" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}">
       <div class="mini-int">
-        <div class="mini-art">${miniArtSvg(entry.code, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}</div>
+        <div class="mini-art">${miniArtSvg(entry.code, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}</div>
         <div class="mini-infos">
           <p class="mini-nom ${entry.nom.length > 14 ? 'long' : ''}">${entry.nom}</p>
           ${entry.rank ? `<span class="mini-num">n° ${Number(entry.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(entry.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
@@ -1506,9 +1537,11 @@ function renderCollection(){
         </div>
         <div class="mini-lisere"><span></span><span></span><span></span></div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
+
+document.getElementById('collectionSearch').addEventListener('input', renderCollection);
 
 document.getElementById('collectionFilters').addEventListener('click', (e) => {
   const b = e.target.closest('.coll-filtre');
@@ -2221,6 +2254,12 @@ async function loadMenaces(){
   menaces = data || [];
   renderMenaces();
   renderBoucliers();
+  // la collection affiche les sieges : on ne la redessine que s'ils ont change
+  const signature = menaces.map(m => m.commune_code + ':' + m.victoires_consecutives).sort().join('|');
+  if(signature !== menacesSignature){
+    menacesSignature = signature;
+    if(document.getElementById('collectionGrid')) renderCollection();
+  }
 }
 
 function renderMenaces(){
@@ -2596,6 +2635,8 @@ const ONGLETS_MENU = ['territoire', 'bourse', 'echange', 'succes'];
 const ICONE_REGLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const ICONE_SORTIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M11 12h10m-3-3 3 3-3 3"/></svg>';
 const surTelephone = () => window.matchMedia('(max-width: 720px)').matches;
+const LIEN_DISCORD = 'https://discord.gg/T6suSy6xa7';
+const ICONE_DISCORD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.6 9.6 0 0 1-2.8-.4L4 21l1.5-4.1A8.2 8.2 0 0 1 3 11.5 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/></svg>';
 
 function construireMenuPlus(){
   const liste = document.getElementById('feuilleListe');
@@ -2612,6 +2653,7 @@ function construireMenuPlus(){
   liste.innerHTML = entrees + `
     <div class="fp-sep"></div>
     <button class="fp-item" data-aller="regles">${ICONE_REGLES}Règles du jeu</button>
+    <a class="fp-item fp-lien" href="${LIEN_DISCORD}" target="_blank" rel="noopener">${ICONE_DISCORD}Rejoindre le Discord</a>
     <button class="fp-item sortie" data-deconnexion>${ICONE_SORTIE}Se déconnecter</button>`;
 }
 
@@ -2653,6 +2695,8 @@ document.addEventListener('keydown', (e) => {
   if(e.key === 'Escape' && document.getElementById('feuillePlus').classList.contains('ouvert')) ouvrirMenuPlus(false);
 });
 document.getElementById('feuilleListe').addEventListener('click', (e) => {
+  // un lien externe ouvre son onglet tout seul : on se contente de refermer le menu
+  if(e.target.closest('.fp-lien')){ ouvrirMenuPlus(false); return; }
   const b = e.target.closest('[data-aller], [data-deconnexion]');
   if(!b) return;
   ouvrirMenuPlus(false);
@@ -3242,6 +3286,128 @@ function accueilDejaVu(){
 function marquerAccueilVu(){
   try{ localStorage.setItem(CLE_ACCUEIL, '1'); } catch(e){}
 }
+
+// ---------- Guidage des nouveaux joueurs ----------
+// Quatre bulles ancrees sur de vrais elements. Sur telephone, ou si la cible est
+// masquee (onglet range dans le menu "Plus"), la bulle se pose en bas de l'ecran.
+const CLE_GUIDE = 'terrafront-guide-vu';
+const ETAPES_GUIDE = [
+  {
+    cible: '#packZone .paquet, #openFreeBtn',
+    titre: 'Ouvre ton premier paquet',
+    texte: 'Chaque paquet contient 5 vraies communes de France, à leur vraie place sur la carte. Tu en reçois un gratuit toutes les 20 minutes, et tu peux en garder 3 d\'avance.'
+  },
+  {
+    cible: '.tab[data-tab="collection"]',
+    titre: 'Ta collection',
+    texte: 'Tes communes s\'accumulent ici. Une commune n\'appartient qu\'à un seul joueur à la fois : tant que tu la gardes, personne d\'autre au monde ne peut l\'avoir.'
+  },
+  {
+    cible: '.tab[data-tab="territoire"]',
+    titre: 'Ton territoire',
+    texte: 'Tes communes se colorent sur la carte de France. Deux voisines se rejoignent en un seul territoire, et une frontière apparaît face aux autres joueurs.'
+  },
+  {
+    cible: '.tab[data-tab="combat"]',
+    titre: 'Attaque, et défends-toi',
+    texte: 'Les communes rares et légendaires des autres joueurs se prennent par la force : trois victoires d\'affilée. Et les tiennes peuvent partir pareil, alors garde un œil sur l\'onglet Défense.'
+  },
+];
+
+let guideIndex = -1;
+let guideCibleActuelle = null;
+
+function guideDejaVu(){
+  try { return localStorage.getItem(CLE_GUIDE) === '1'; } catch(e){ return false; }
+}
+function marquerGuideVu(){
+  try { localStorage.setItem(CLE_GUIDE, '1'); } catch(e){}
+}
+
+function trouverCibleGuide(selecteur){
+  for(const sel of selecteur.split(',')){
+    const el = document.querySelector(sel.trim());
+    if(el && el.getBoundingClientRect().width > 0) return el;
+  }
+  return null;
+}
+
+function placerBulleGuide(cible){
+  const bulle = document.getElementById('guideBulle');
+  if(!bulle) return;
+  bulle.classList.remove('en-bas');
+  if(!cible || surTelephone()){
+    bulle.classList.add('en-bas');
+    bulle.style.left = '';
+    bulle.style.top = '';
+    return;
+  }
+  const r = cible.getBoundingClientRect();
+  const b = bulle.getBoundingClientRect();
+  let gauche = r.left + r.width / 2 - b.width / 2;
+  let haut = r.bottom + 14;
+  if(haut + b.height > window.innerHeight - 12) haut = Math.max(12, r.top - b.height - 14);
+  gauche = Math.max(12, Math.min(gauche, window.innerWidth - b.width - 12));
+  bulle.style.left = Math.round(gauche) + 'px';
+  bulle.style.top = Math.round(haut) + 'px';
+}
+
+function afficherEtapeGuide(){
+  const etape = ETAPES_GUIDE[guideIndex];
+  if(!etape){ fermerGuide(); return; }
+  const voile = document.getElementById('guideVoile');
+  const bulle = document.getElementById('guideBulle');
+  if(!voile || !bulle) return;
+
+  if(guideCibleActuelle) guideCibleActuelle.classList.remove('guide-cible');
+  const cible = trouverCibleGuide(etape.cible);
+  guideCibleActuelle = cible;
+  if(cible) cible.classList.add('guide-cible');
+
+  voile.hidden = false;
+  bulle.hidden = false;
+  document.getElementById('guideCompteur').textContent = `Étape ${guideIndex + 1} sur ${ETAPES_GUIDE.length}`;
+  document.getElementById('guideTitre').textContent = etape.titre;
+  document.getElementById('guideTexte').textContent = etape.texte;
+  document.getElementById('guideSuivant').textContent =
+    guideIndex === ETAPES_GUIDE.length - 1 ? 'C\'est parti' : 'Suivant';
+  placerBulleGuide(cible);
+  document.getElementById('guideSuivant').focus();
+}
+
+function demarrerGuide(){
+  guideIndex = 0;
+  afficherEtapeGuide();
+}
+
+function fermerGuide(){
+  const voile = document.getElementById('guideVoile');
+  const bulle = document.getElementById('guideBulle');
+  if(guideCibleActuelle){ guideCibleActuelle.classList.remove('guide-cible'); guideCibleActuelle = null; }
+  if(voile) voile.hidden = true;
+  if(bulle) bulle.hidden = true;
+  guideIndex = -1;
+  marquerGuideVu();
+}
+
+document.getElementById('guideSuivant').addEventListener('click', () => {
+  guideIndex++;
+  afficherEtapeGuide();
+});
+document.getElementById('guidePasser').addEventListener('click', fermerGuide);
+document.getElementById('guideVoile').addEventListener('click', fermerGuide);
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && guideIndex >= 0) fermerGuide();
+});
+window.addEventListener('resize', () => {
+  if(guideIndex >= 0) placerBulleGuide(guideCibleActuelle);
+});
+document.getElementById('revoirGuide').addEventListener('click', () => {
+  const tab = document.querySelector('.tab[data-tab="tirage"]');
+  if(tab) tab.click();
+  setTimeout(demarrerGuide, 120);
+});
+
 function fermerAccueil(versTirage){
   const voile = document.getElementById('voileAccueil');
   if(!voile || voile.hidden) return;
@@ -3270,10 +3436,18 @@ async function peutEtreAfficherAccueil(){
   if(go) go.focus();
 }
 
-document.getElementById('accueilGo').addEventListener('click', () => fermerAccueil(true));
-document.getElementById('accueilPasser').addEventListener('click', () => fermerAccueil(false));
+// "Ouvrir mon premier paquet" enchaine sur le guide ; "Passer" et "Voir les regles" non
+document.getElementById('accueilGo').addEventListener('click', () => {
+  fermerAccueil(true);
+  if(!guideDejaVu()) setTimeout(demarrerGuide, 280);
+});
+document.getElementById('accueilPasser').addEventListener('click', () => {
+  fermerAccueil(false);
+  marquerGuideVu();
+});
 document.getElementById('accueilRegles').addEventListener('click', () => {
   fermerAccueil(false);
+  marquerGuideVu();
   document.getElementById('reglesBtn').click();
 });
 document.addEventListener('keydown', (e) => {

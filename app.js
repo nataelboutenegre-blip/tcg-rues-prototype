@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '2f5961985487';
+const VERSION_JEU = 'bd50ba53ef76';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -2628,7 +2628,7 @@ function carteObjectif(o){
       </div>
       <div class="obj-droite">
         <span class="obj-chiffres">${Number(o.avancement).toLocaleString('fr-FR')} / ${Number(o.cible).toLocaleString('fr-FR')}</span>
-        <span class="obj-gain ${o.recompense}">${recompense}</span>
+        <span class="obj-gain gain-${o.recompense}">${recompense}</span>
         ${etat}
       </div>
     </div>`;
@@ -2723,7 +2723,7 @@ function ligneSucces(d){
       </div>
       <div class="obj-droite">
         <span class="obj-chiffres">${possedees.toLocaleString('fr-FR')} / ${total.toLocaleString('fr-FR')}</span>
-        <span class="obj-gain points">${Number(d.recompense).toLocaleString('fr-FR')} pts</span>
+        <span class="obj-gain gain-points">${Number(d.recompense).toLocaleString('fr-FR')} pts</span>
         ${etat}
       </div>
     </div>`;

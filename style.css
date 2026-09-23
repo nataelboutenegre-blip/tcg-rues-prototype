@@ -971,15 +971,19 @@
     padding: 36px 40px 60px;
     display:flex;
     flex-direction:column;
-    align-items:flex-start;
+    align-items:center;
     min-width:0;
   }
+  /* la colonne est centree, mais son contenu reste aligne a gauche */
   .tab-panel{
     display:none;
     width:100%;
+    max-width: 980px;
     flex-direction:column;
     align-items:flex-start;
   }
+  /* la carte merite plus de large que le reste */
+  #panel-territoire{ max-width: 1180px; }
   .tab-panel.active{ display:flex; }
   .link-btn{
     background:none;
@@ -1690,8 +1694,8 @@
   .obj-droite{ display:flex; align-items:center; gap:12px; flex-shrink:0; }
   .obj-chiffres{ font-size:0.8rem; color: var(--brume); font-variant-numeric: tabular-nums; white-space:nowrap; }
   .obj-gain{ font-family: var(--titre); font-weight:800; font-size:1.05rem; white-space:nowrap; }
-  .obj-gain.points{ color: var(--c-legendaire); }
-  .obj-gain.paquet{ color:#8DB8FF; }
+  .obj-gain.gain-points{ color: var(--c-legendaire); }
+  .obj-gain.gain-paquet{ color:#8DB8FF; }
   .obj-btn{
     font-family: var(--titre); font-weight:800; font-size:0.95rem;
     background: var(--c-legendaire); color: var(--encre);

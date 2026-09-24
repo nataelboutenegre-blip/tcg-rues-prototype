@@ -3,13 +3,15 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'f8d4be6d28c7';
+const VERSION_JEU = '8578a3a7027a';
 
+// les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
+// et se lisent avec taux_actuels(), cote base
 const TIERS = [
-  {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
-  {id:'rare', label:'Rare', color:'#2A5FA8', target:11.40},
-  {id:'peucommun', label:'Peu commun', color:'#2E7D5B', target:36.85},
-  {id:'commun', label:'Commun', color:'#7C8798', target:50.92},
+  {id:'legendaire', label:'Légendaire', color:'#B0862C'},
+  {id:'rare', label:'Rare', color:'#2A5FA8'},
+  {id:'peucommun', label:'Peu commun', color:'#2E7D5B'},
+  {id:'commun', label:'Commun', color:'#7C8798'},
 ];
 const DEPT_NAMES = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","2A":"Corse-du-Sud","2B":"Haute-Corse","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise","971":"Guadeloupe","972":"Martinique","973":"Guyane","974":"La Réunion","975":"Saint-Pierre-et-Miquelon","976":"Mayotte"};
 const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
@@ -3560,11 +3562,61 @@ document.getElementById('boucliersToutToggle').addEventListener('click', (e) => 
   renderBoucliers();
 });
 
+// ---------- Les chances du moment, dans l'onglet Regles ----------
+// Le serveur pondere chaque palier par ce qu'il lui reste de communes libres :
+// les pourcentages bougent donc tout seuls au fil de la saison. On les relit a
+// chaque ouverture de l'onglet plutot que de les figer dans la page.
+const COULEUR_TIER = {
+  legendaire: 'var(--c-legendaire)', rare: 'var(--c-rare)',
+  peucommun: 'var(--c-peucommun)', commun: 'var(--c-commun)'
+};
+let tauxEnCours = false;
+
+async function loadTauxTirage(){
+  if(tauxEnCours) return;
+  tauxEnCours = true;
+  try{
+    const { data, error } = await sb.rpc('taux_actuels');
+    if(error || !Array.isArray(data)) return;   // on laisse le tiret, sans bruit
+    for(const ligne of data){
+      const cell = document.querySelector('#panel-regles [data-taux="' + ligne.tier + '"]');
+      if(!cell) continue;
+      const total = parseInt(
+        (document.querySelector('#panel-regles [data-total="' + ligne.tier + '"]')?.textContent || '0')
+          .replace(/[^0-9]/g, ''), 10) || 0;
+      const libres = Number(ligne.libres) || 0;
+      const part = total > 0 ? Math.round(100 * libres / total) : 0;
+      const chance = Number(ligne.chance) || 0;
+      cell.style.color = COULEUR_TIER[ligne.tier] || '';
+      cell.innerHTML =
+        fmtTaux(chance) + '\u00A0%' +
+        '<span class="jauge"><i style="width:' + part + '%;background:' +
+          (COULEUR_TIER[ligne.tier] || 'var(--brume)') + '"></i></span>' +
+        // le total est deja dans la colonne Communes : le repeter ici
+        // n'apporte rien et elargit la colonne sur mobile
+        '<span class="sous">' + (libres === 0
+          ? 'palier épuisé'
+          : fmtNombre(libres) + (libres > 1 ? ' libres' : ' libre')) +
+        '</span>';
+    }
+  } finally {
+    tauxEnCours = false;
+  }
+}
+
+// toujours deux decimales : une legendaire a 0,05 % a besoin des deux, et une
+// precision qui change d'une ligne a l'autre dans la meme colonne fait bancal
+function fmtTaux(x){
+  return x.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function fmtNombre(n){ return n.toLocaleString('fr-FR'); }
+
 document.getElementById('reglesBtnMobile').addEventListener('click', () => document.getElementById('reglesBtn').click());
 
 document.getElementById('reglesBtn').addEventListener('click', () => {
   const tab = document.querySelector('.tab[data-tab="regles"]');
   if(tab){ tab.click(); return; }
+  loadTauxTirage();
   // l'onglet Regles n'est plus dans la barre : on l'ouvre a la main
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-regles'));
@@ -3966,6 +4018,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'combat') loadCombat();
     if(tab.dataset.tab === 'succes') loadSucces();
     if(tab.dataset.tab === 'echange') loadEchanges();
+    if(tab.dataset.tab === 'regles') loadTauxTirage();
   });
 });
 

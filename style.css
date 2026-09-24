@@ -1484,6 +1484,21 @@
   #panel-regles .rarete.peucommun{ background:var(--c-peucommun); }
   #panel-regles .rarete.commun{ background:var(--c-commun); }
   #panel-regles .tableau-defile{ overflow-x:auto; }
+  /* la colonne des chances est vivante : elle vient de taux_actuels() */
+  #panel-regles .tableau td.taux{ line-height:1.15; }
+  #panel-regles .jauge{ display:block; width:74px; height:5px; border-radius:999px; background:rgba(169,188,212,.18); overflow:hidden; margin-top:5px; }
+  #panel-regles .jauge i{ display:block; height:100%; border-radius:999px; transition:width .5s ease; }
+  #panel-regles .sous{ display:block; font-family:var(--texte); font-weight:500; font-size:.66rem; color:var(--brume); margin-top:3px; letter-spacing:.01em; }
+  #panel-regles .vivant{ display:inline-flex; align-items:center; gap:6px; }
+  #panel-regles .pastille{ width:6px; height:6px; border-radius:50%; background:#5FD3A0; animation:pulseTaux 2.4s infinite; }
+  @keyframes pulseTaux{
+    0%{ box-shadow:0 0 0 0 rgba(95,211,160,.5); }
+    70%{ box-shadow:0 0 0 7px rgba(95,211,160,0); }
+    100%{ box-shadow:0 0 0 0 rgba(95,211,160,0); }
+  }
+  @media (prefers-reduced-motion: reduce){ #panel-regles .pastille{ animation:none; } }
+  #panel-regles .taux-vivants{ font-size:.82rem; color:var(--brume); line-height:1.55; padding-top:10px; border-top:1px solid rgba(169,188,212,.12); }
+  #panel-regles .taux-vivants b{ color:#fff; font-weight:600; }
   #panel-regles .encart{ display:flex; gap:10px; background:rgba(240,180,41,.08); border:1px solid rgba(240,180,41,.25); border-radius:10px; padding:10px 12px; font-size:.86rem; margin:6px 0 12px; }
   #panel-regles .encart svg{ width:18px; height:18px; flex-shrink:0; color:var(--c-legendaire); margin-top:2px; }
   #panel-regles .encart.rouge{ background:rgba(229,72,77,.08); border-color:rgba(229,72,77,.3); }
@@ -1501,6 +1516,7 @@
     #panel-regles .chiffre-bloc{ padding:8px; }
     #panel-regles .chiffre-bloc b{ font-size:1.35rem; }
     #panel-regles .tableau{ font-size:.8rem; }
+    #panel-regles .jauge{ width:56px; }
   }
 
   /* ---------- Carte et bandeau des notifications ---------- */

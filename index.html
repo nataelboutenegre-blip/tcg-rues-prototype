@@ -345,7 +345,7 @@
         <button class="cl-plus" id="objPlus" hidden>Voir tous les objectifs</button>
       </div>
 
-      <div class="note">Cible calibrée sur les vraies données : commun 50,9 %, peu commun 36,8 %, rare 11,4 %, légendaire 0,83 %.</div>
+      <div class="note">Les chances de tirage suivent ce qu'il reste à découvrir : plus un palier se vide, plus il devient rare. Le détail est dans l'onglet Règles.</div>
     </section>
 
     <section class="tab-panel" id="panel-collection">
@@ -586,15 +586,16 @@
             <p>Chaque carte est une vraie commune de France, à sa vraie position sur la carte. <b>Une commune n'appartient qu'à un seul joueur à la fois</b> : si tu la tires, personne d'autre ne peut l'avoir tant que tu la gardes.</p>
             <div class="tableau-defile">
               <table class="tableau">
-                <thead><tr><th>Rareté</th><th>Population</th><th>Communes</th><th>Chance par carte</th><th>Rachat par le jeu</th></tr></thead>
+                <thead><tr><th>Rareté</th><th>Population</th><th>Communes</th><th><span class="vivant"><span class="pastille"></span>Chance en ce moment</span></th><th>Rachat par le jeu</th></tr></thead>
                 <tbody>
-                  <tr><td><span class="rarete legendaire">Légendaire</span></td><td>100 000 et plus</td><td class="chiffre">48</td><td class="chiffre">0,83 %</td><td class="chiffre or">1 000 pts</td></tr>
-                  <tr><td><span class="rarete rare">Rare</span></td><td>20 000 à 99 999</td><td class="chiffre">468</td><td class="chiffre">11,4 %</td><td class="chiffre or">100 pts</td></tr>
-                  <tr><td><span class="rarete peucommun">Peu commun</span></td><td>2 000 à 19 999</td><td class="chiffre">4 930</td><td class="chiffre">36,8 %</td><td class="chiffre or">20 pts</td></tr>
-                  <tr><td><span class="rarete commun">Commun</span></td><td>Moins de 2 000</td><td class="chiffre">29 318</td><td class="chiffre">50,9 %</td><td class="chiffre or">5 pts</td></tr>
+                  <tr><td><span class="rarete legendaire">Légendaire</span></td><td>100 000 et plus</td><td class="chiffre" data-total="legendaire">48</td><td class="chiffre taux" data-taux="legendaire">—</td><td class="chiffre or">1 000 pts</td></tr>
+                  <tr><td><span class="rarete rare">Rare</span></td><td>10 000 à 99 999</td><td class="chiffre" data-total="rare">981</td><td class="chiffre taux" data-taux="rare">—</td><td class="chiffre or">100 pts</td></tr>
+                  <tr><td><span class="rarete peucommun">Peu commun</span></td><td>2 000 à 9 999</td><td class="chiffre" data-total="peucommun">4 392</td><td class="chiffre taux" data-taux="peucommun">—</td><td class="chiffre or">20 pts</td></tr>
+                  <tr><td><span class="rarete commun">Commun</span></td><td>Moins de 2 000</td><td class="chiffre" data-total="commun">29 318</td><td class="chiffre taux" data-taux="commun">—</td><td class="chiffre or">5 pts</td></tr>
                 </tbody>
               </table>
             </div>
+            <p class="taux-vivants"><b>Les chances bougent avec le stock.</b> Plus un palier se vide, moins il sort — et il remonte dès que des communes reviennent en jeu. Personne ne peut vider les légendaires et laisser le jeu sans rien à trouver.</p>
             <p>Le numéro d'une carte, par exemple <b>n° 9 / 48</b>, indique son classement parmi les communes de sa rareté, de la plus peuplée à la moins peuplée.</p>
             <p>Si toutes les communes d'une rareté sont déjà prises, le tirage te donne une carte de la rareté juste en dessous.</p>
           </div>

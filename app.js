@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '5f4f90c51072';
+const VERSION_JEU = 'f8d4be6d28c7';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -3467,8 +3467,11 @@ function coutIntensite(tierId, id){
   return Math.max(1, Math.round(coutAttaque(tierId) * intensite(id).facteur));
 }
 
+// doit rester aligne avec cout_attaque() en base : le serveur ne suit plus
+// le prix de rachat, il a sa propre echelle
+const COUT_ATTAQUE = { commun: 3, peucommun: 5, rare: 10, legendaire: 100 };
 function coutAttaque(tierId){
-  return Math.max(1, Math.round(PRIX_RACHAT[tierId] * 0.1));
+  return COUT_ATTAQUE[tierId] || 3;
 }
 
 // Affiche une duree lisible : "7 min", "2h", "2h45"

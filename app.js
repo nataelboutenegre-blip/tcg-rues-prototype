@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '332ce20754fe';
+const VERSION_JEU = 'c244a55f9fe0';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -933,6 +933,12 @@ document.getElementById('classement').addEventListener('click', (e) => {
   if(ligne){
     const id = ligne.dataset.joueurId;
     joueurSurligne = (joueurSurligne === id) ? null : (id === (window.__monId || '') ? ID_MOI : id);
+    // la carte vit dans l'onglet Territoire : on y bascule, sinon le clic ne montre rien
+    const panneauCarte = document.getElementById('panel-territoire');
+    if(panneauCarte && !panneauCarte.classList.contains('active')){
+      const ongletCarte = document.querySelector('.tab[data-tab="territoire"]');
+      if(ongletCarte) ongletCarte.click();
+    }
     renderMapOverlay();
     const carte = document.getElementById('mapWrap');
     if(carte && carte.scrollIntoView) carte.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -2660,7 +2666,7 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // ---------- Navigation : barre du bas et menu "Plus" sur telephone ----------
 // Les 4 onglets principaux restent dans la barre, les autres passent dans le menu.
 const ONGLETS_BARRE = ['tirage', 'collection', 'combat', 'defense'];
-const ONGLETS_MENU = ['territoire', 'bourse', 'echange', 'succes'];
+const ONGLETS_MENU = ['territoire', 'communaute', 'bourse', 'echange', 'succes'];
 const ICONE_REGLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const ICONE_SORTIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M11 12h10m-3-3 3 3-3 3"/></svg>';
 const surTelephone = () => window.matchMedia('(max-width: 720px)').matches;
@@ -2747,7 +2753,8 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     majBadgePlus();
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
-    if(tab.dataset.tab === 'territoire'){ sizeMapWrap(window.__mapAspectRatio); loadClassement(); loadJournal(); }
+    if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
+    if(tab.dataset.tab === 'communaute'){ loadClassement(); loadJournal(); }
     if(tab.dataset.tab === 'bourse') loadBourse();
     if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); }
     if(tab.dataset.tab === 'defense'){ loadMenaces(); loadCombat(); renderIntensite('defense'); }

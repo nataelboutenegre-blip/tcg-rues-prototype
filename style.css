@@ -1832,7 +1832,7 @@
       gap:0;
     }
     /* les onglets qui passent dans le menu "Plus" */
-    .tab[data-tab="territoire"], .tab[data-tab="bourse"],
+    .tab[data-tab="territoire"], .tab[data-tab="communaute"], .tab[data-tab="bourse"],
     .tab[data-tab="echange"], .tab[data-tab="succes"]{ display:none; }
     .tab-plus{ display:flex; }
     .tab{

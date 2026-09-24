@@ -119,6 +119,18 @@
         Territoire
       </div>
 
+      <div class="tab" data-tab="communaute">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="7.8" r="3.3"/>
+            <path d="M3.4 19.6a5.6 5.6 0 0 1 11.2 0"/>
+            <path d="M16.2 5.3a3.3 3.3 0 0 1 0 5"/>
+            <path d="M17.4 14.2a5.6 5.6 0 0 1 3.2 5.4"/>
+          </svg>
+        </div>
+        Communauté
+      </div>
+
       <div class="tab" data-tab="bourse">
         <div class="icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
@@ -247,22 +259,6 @@
     <section class="tab-panel" id="panel-territoire">
       <h1>Le territoire</h1>
       <div class="sub">Chaque commune possédée devient une zone. Les zones voisines d'un même joueur se rejoignent, et une frontière apparaît entre deux joueurs.</div>
-      <div class="classement" id="classement" hidden>
-        <div class="cl-tete">
-          <h2>Classement</h2>
-          <button class="cl-replier" id="clReplier" aria-expanded="true" aria-label="Replier le classement">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
-          </button>
-          <div class="cl-modes">
-            <button class="filter-pill active" data-mode="general">Général</button>
-            <button class="filter-pill" data-mode="mois">Ce mois-ci</button>
-          </div>
-        </div>
-        <div class="cl-podium" id="clPodium"></div>
-        <div class="cl-liste" id="clListe"></div>
-        <button class="cl-plus" id="clPlus" hidden>Voir le classement complet</button>
-      </div>
-
       <div class="territory">
         <button class="toggle-others-btn" id="toggleOthersBtn">Cacher le territoire des autres</button>
         <div class="map-wrap" id="mapWrap">
@@ -295,6 +291,27 @@
           <div class="map-legende" id="mapLegende"></div>
         </div>
         <p class="map-note" style="margin-bottom:24px">Molette ou pincement pour zoomer, cliquer-glisser pour te déplacer. Survole une zone pour voir la commune et son propriétaire.</p>
+      </div>
+
+    </section>
+
+    <section class="tab-panel" id="panel-communaute">
+      <h1>Communauté</h1>
+      <div class="sub">Qui possède quoi, et ce qui vient de se passer sur la carte de France.</div>
+      <div class="classement" id="classement" hidden>
+        <div class="cl-tete">
+          <h2>Classement</h2>
+          <button class="cl-replier" id="clReplier" aria-expanded="true" aria-label="Replier le classement">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+          </button>
+          <div class="cl-modes">
+            <button class="filter-pill active" data-mode="general">Général</button>
+            <button class="filter-pill" data-mode="mois">Ce mois-ci</button>
+          </div>
+        </div>
+        <div class="cl-podium" id="clPodium"></div>
+        <div class="cl-liste" id="clListe"></div>
+        <button class="cl-plus" id="clPlus" hidden>Voir le classement complet</button>
       </div>
 
       <div class="journal" id="journal" hidden>

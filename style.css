@@ -2422,3 +2422,52 @@
     width:9px; height:9px; border-radius:50%; flex:0 0 9px;
     border:1.5px solid #5B7B9E; background:transparent;
   }
+
+  /* ---------- Attaque depuis le panneau ---------- */
+  .pc-chargement{ margin:14px 0 4px; font-size:0.8rem; color:#8FA4BF; }
+  .pc-prox{
+    margin:11px 0 0; padding:8px 10px; border-radius:8px;
+    background: rgba(47,124,246,0.12); border:1px solid rgba(47,124,246,0.28);
+    font-size:0.77rem; color:#BBD4F8;
+  }
+  .pc-prox b{ color:#fff; font-weight:600; }
+  .pc-prox.loin{
+    background: rgba(229,72,77,0.12); border-color: rgba(229,72,77,0.3); color:#FFB3B6;
+  }
+  .pc-serie{
+    display:flex; align-items:center; gap:8px;
+    margin:10px 0 0; font-size:0.77rem; color:#8FA4BF;
+  }
+  .pc-serie b{ margin-left:auto; color:#DCE6F2; font-weight:600; }
+  .pc-points{ display:flex; gap:4px; }
+  .pc-points i{
+    width:14px; height:5px; border-radius:9px;
+    background: rgba(169,188,212,0.22); display:block;
+  }
+  .pc-points i.pris{ background: var(--c-legendaire); }
+  .pc-ints{ display:flex; gap:5px; margin-top:11px; }
+  .pc-int{
+    flex:1; min-width:0; background: var(--nuit-3);
+    border:1px solid rgba(169,188,212,0.16); border-radius:8px;
+    padding:6px 4px; cursor:pointer; font:inherit; color: var(--brume);
+    display:flex; flex-direction:column; align-items:center; gap:1px;
+  }
+  .pc-int span{ font-size:0.74rem; font-weight:500; color:#fff; }
+  .pc-int small{ font-size:0.58rem; color:#7B8FAB; white-space:nowrap; }
+  .pc-int.actif{
+    border-color: rgba(240,180,41,0.55); background: rgba(240,180,41,0.12);
+  }
+  .pc-int.actif span{ color: var(--c-legendaire); }
+  .pc-jauge{ margin-top:11px; }
+  .pc-jauge-tete{ display:flex; justify-content:space-between; font-size:0.77rem; color:#8FA4BF; }
+  .pc-jauge-tete b{ color:#fff; font-weight:600; }
+  .pc-jauge-barre{
+    height:6px; border-radius:9px; margin-top:5px; overflow:hidden;
+    background: rgba(169,188,212,0.16);
+  }
+  .pc-jauge-barre i{
+    display:block; height:100%; border-radius:9px;
+    background: linear-gradient(90deg, #E5484D, #F0B429);
+    transition: width .25s;
+  }
+  .pc-action[disabled]{ opacity:.45; pointer-events:none; }

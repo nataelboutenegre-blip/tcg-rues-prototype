@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'bc83dfd9df13';
+const VERSION_JEU = 'b352ed5f3d0e';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -1921,7 +1921,10 @@ function ouvrirPanneau(code, xCss, yCss){
 
   const maintenant = Date.now();
   const protegee = c.bouclierJusqua > maintenant;
-  const attaquable = !mienne && !protegee && (c.tier.id === 'rare' || c.tier.id === 'legendaire');
+  // toutes les raretes sont attaquables depuis la carte ; l'onglet Combat
+  // reste le tableau des grosses cibles, il ne liste que rares et legendaires
+  const attaquable = !mienne && !protegee;
+  const immunisee = !mienne && c.acquiredAt && c.acquiredAt > maintenant - 3 * 3600e3;
   const enVente = mienne ? myListings.get(code) : null;
 
   // sieges en cours, uniquement connus pour mes communes
@@ -1943,7 +1946,7 @@ function ouvrirPanneau(code, xCss, yCss){
   if(c.acquiredAt) lignes.push([mienne ? 'Possédée depuis' : 'Prise le', new Date(c.acquiredAt).toLocaleDateString('fr-FR')]);
 
   const actions = [];
-  if(attaquable) actions.push(['attaque', 'attaque', 'Attaquer', 'Attaquer ' + c.nom]);
+  if(attaquable && !immunisee) actions.push(['attaque', 'attaque', 'Attaquer', 'Attaquer ' + c.nom]);
   if(!mienne) actions.push(['', 'echange', 'Proposer un échange', 'Échanger contre ' + c.nom]);
   if(mienne && (c.tier.id === 'rare' || c.tier.id === 'legendaire') && !protegee)
     actions.push(['', 'bouclier', 'Poser un bouclier', 'Protéger ' + c.nom]);
@@ -1951,7 +1954,7 @@ function ouvrirPanneau(code, xCss, yCss){
 
   let note = '';
   if(!mienne && protegee) note = 'Protégée par un bouclier : impossible de l’attaquer pour l’instant.';
-  else if(!mienne && !attaquable) note = 'Seules les communes rares et légendaires se prennent par la force.';
+  else if(immunisee) note = 'Prise il y a moins de 3 heures : encore immunisée.';
 
   el.innerHTML = `
     <div class="pc-tete">
@@ -1959,7 +1962,7 @@ function ouvrirPanneau(code, xCss, yCss){
         <b>${echapperHtml(c.nom)}</b>
         <span class="pc-dep">${echapperHtml(DEPT_NAMES[c.dept] || '')} (${echapperHtml(c.dept)})</span>
       </div>
-      <span class="pc-rarete ${c.tier.id}">${c.tier.label}</span>
+      <span class="pc-rarete ${c.tier.id}">${c.tier.label || LIBELLE_TIER[c.tier.id]}</span>
       <button class="pc-fermer" data-pc="fermer" aria-label="Fermer">&times;</button>
     </div>
     ${alerte}
@@ -1973,6 +1976,134 @@ function ouvrirPanneau(code, xCss, yCss){
   if(wrap) wrap.classList.add('panneau-ouvert');
   el.scrollTop = 0;
   placerPanneau(el, xCss, yCss);
+}
+
+
+// ---------- Attaquer depuis le panneau ----------
+// L'onglet Combat ne peut pas lister les 30 000 communes du pays : la guerre
+// locale se mene sur la carte, la ou le joueur voit son front.
+let attaqueEnCours = false;
+
+async function ouvrirAttaque(code){
+  const el = document.getElementById('mapPanneau');
+  const c = othersMap.get(code);
+  if(!el || !c) return;
+  panneauCommune = code;
+
+  el.innerHTML = `
+    <div class="pc-tete">
+      <div class="pc-titre">
+        <b>Attaquer ${echapperHtml(c.nom)}</b>
+        <span class="pc-dep">à ${echapperHtml(c.pseudo)}</span>
+      </div>
+      <button class="pc-fermer" data-pc="retour" aria-label="Retour">&larr;</button>
+    </div>
+    <p class="pc-chargement">Calcul de tes chances…</p>`;
+  el.hidden = false;
+
+  const { data: userData } = await sb.auth.getUser();
+  const uid = userData.user.id;
+  const [apercu, siege] = await Promise.all([
+    sb.rpc('apercu_attaque', { p_commune_code: code, p_intensite: intensiteChoisie }),
+    sb.from('sieges').select('victoires_consecutives, dernier_round')
+      .eq('attacker_id', uid).eq('commune_code', code).maybeSingle(),
+  ]);
+  if(panneauCommune !== code) return;          // le joueur est passe a autre chose
+
+  if(apercu.error){
+    el.querySelector('.pc-chargement').outerHTML =
+      `<p class="pc-note">Impossible de calculer tes chances : ${echapperHtml(apercu.error.message)}</p>`;
+    return;
+  }
+  rendreAttaque(code, apercu.data[0], siege.data || null);
+}
+
+function rendreAttaque(code, a, siege){
+  const el = document.getElementById('mapPanneau');
+  const c = othersMap.get(code);
+  if(!el || !c) return;
+
+  const serie = siege ? siege.victoires_consecutives : 0;
+  const dernier = siege && siege.dernier_round ? new Date(siege.dernier_round).getTime() : 0;
+  const prochain = dernier + (DELAI_ATTAQUE_MS[c.tier.id] || 0);
+  const attente = Math.max(0, prochain - Date.now());
+
+  const pastilles = INTENSITES.map(i => `
+    <button class="pc-int ${i.id === intensiteChoisie ? 'actif' : ''}" data-pc="intensite" data-int="${i.id}">
+      <span>${i.label}</span><small>${i.facteur === 1 ? 'prix normal' : (i.facteur < 1 ? '⅓ du prix' : 'prix doublé')}</small>
+    </button>`).join('');
+
+  el.innerHTML = `
+    <div class="pc-tete">
+      <div class="pc-titre">
+        <b>Attaquer ${echapperHtml(c.nom)}</b>
+        <span class="pc-dep">${c.tier.label || LIBELLE_TIER[c.tier.id]} · à ${echapperHtml(c.pseudo)}</span>
+      </div>
+      <button class="pc-fermer" data-pc="retour" aria-label="Retour">&larr;</button>
+    </div>
+
+    <div class="pc-prox ${a.a_distance ? 'loin' : ''}">
+      ${a.a_distance
+        ? 'Aucune de tes communes à moins de 20 km : <b>attaque à distance</b>, tes chances baissent.'
+        : `<b>${a.proches}</b> de tes communes à moins de 20 km`}
+    </div>
+
+    <div class="pc-serie">
+      <span>Série en cours</span>
+      <span class="pc-points">${[0,1,2].map(i => `<i class="${i < serie ? 'pris' : ''}"></i>`).join('')}</span>
+      <b>${serie} / 3</b>
+    </div>
+
+    <div class="pc-ints">${pastilles}</div>
+
+    <div class="pc-jauge">
+      <div class="pc-jauge-tete"><span>Chances de victoire</span><b>${a.chances} %</b></div>
+      <div class="pc-jauge-barre"><i style="width:${a.chances}%"></i></div>
+    </div>
+
+    <div class="pc-actions">
+      <button class="pc-action attaque" data-pc="assaut" ${attente > 0 || attaqueEnCours ? 'disabled' : ''}>
+        ${attente > 0 ? 'Encore ' + formatDuree(attente) + ' à attendre' : `Lancer l’assaut — ${a.cout} pts`}
+      </button>
+    </div>`;
+  placerPanneau(el, parseFloat(el.style.left) || 40, parseFloat(el.style.top) || 40);
+}
+
+async function lancerAssaut(code){
+  if(attaqueEnCours) return;
+  const c = othersMap.get(code);
+  if(!c) return;
+  attaqueEnCours = true;
+  const bouton = document.querySelector('#mapPanneau [data-pc="assaut"]');
+  if(bouton){ bouton.disabled = true; bouton.textContent = 'Assaut en cours…'; }
+  try{
+    const nom = c.nom, tier = c.tier.id, dept = c.dept;
+    const { data, error } = await sb.rpc('attaquer', { p_commune_code: code, p_intensite: intensiteChoisie });
+    if(error) throw error;
+    const r = data[0];
+    if(r.conquise){
+      await loadMyCollection();
+      await loadOthersPossessions();
+      fermerPanneau();
+      celebrerConquete({ nom, tier, dept, bonus: Math.floor(PRIX_RACHAT[tier] * BONUS_CONQUETE_PART) });
+    } else if(r.gagne){
+      notifier({ type: 'victoire', titre: `Victoire contre ${nom} (−${r.cout} pts)`,
+        texte: r.victoires_consecutives >= 2 ? 'Encore une victoire pour la conquérir.' : `Série : ${r.victoires_consecutives} sur 3`,
+        serie: r.victoires_consecutives });
+    } else {
+      notifier({ type: 'defaite', titre: `Défaite contre ${nom} (−${r.cout} pts)`,
+        texte: `À ${r.chances} % : la série repart à zéro.`, serie: 0 });
+    }
+    loadPackStatus();
+    loadObjectifs();
+    renderMapOverlay();
+    if(!r.conquise && panneauCommune === code) ouvrirAttaque(code);
+  } catch(e){
+    notifier({ type: 'erreur', titre: 'Attaque impossible', texte: messageLisible(e.message || String(e)) });
+    if(panneauCommune === code) ouvrirAttaque(code);
+  } finally {
+    attaqueEnCours = false;
+  }
 }
 
 // Sur telephone le panneau est colle en bas par la feuille de style ; sur
@@ -2016,9 +2147,19 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
   const code = panneauCommune;
   const c = code ? (collectionMap.get(code) || othersMap.get(code)) : null;
   if(quoi === 'fermer' || !c){ fermerPanneau(); return; }
+  if(quoi === 'retour'){ ouvrirPanneau(code, parseFloat(e.currentTarget.style.left) || 40, parseFloat(e.currentTarget.style.top) || 40); return; }
+  if(quoi === 'assaut'){ lancerAssaut(code); return; }
+  if(quoi === 'intensite'){
+    intensiteChoisie = b.dataset.int;
+    try{ localStorage.setItem('tf-intensite', intensiteChoisie); } catch(err){}
+    renderIntensite();
+    ouvrirAttaque(code);
+    return;
+  }
+  if(quoi === 'attaque'){ ouvrirAttaque(code); return; }
+  // les actions restantes quittent la carte pour l'onglet concerne
   fermerPanneau();
-  if(quoi === 'attaque') allerVers('combat', 'combatSearch', c.nom);
-  else if(quoi === 'echange') allerVers('echange', 'echSearch', c.nom, () => {
+  if(quoi === 'echange') allerVers('echange', 'echSearch', c.nom, () => {
     // l'echange se fait a rarete egale : on se place d'emblee sur la bonne
     const onglet = document.querySelector('#echTiers [data-tier="' + c.tier.id + '"]');
     if(onglet) onglet.click();
@@ -3285,7 +3426,13 @@ document.getElementById('sellFilters').addEventListener('click', (e) => {
 // ---------- Combat ----------
 // Ces deux valeurs doivent rester alignees avec le SQL (fonctions attaquer et delai_attaque)
 const IMMUNITE_MS = 3 * 3600 * 1000;
-const DELAI_ATTAQUE_MS = {rare: 10 * 60 * 1000, legendaire: 3 * 3600 * 1000};
+// doit rester aligne avec delai_attaque() dans combat-proximite.sql
+const DELAI_ATTAQUE_MS = {
+  commun: 2 * 60 * 1000,
+  peucommun: 5 * 60 * 1000,
+  rare: 10 * 60 * 1000,
+  legendaire: 3 * 3600 * 1000,
+};
 
 // doit rester aligne avec intensite.sql
 const INTENSITES = [

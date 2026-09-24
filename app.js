@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'db19b1b97d15';
+const VERSION_JEU = '83e27f11608c';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -2165,10 +2165,12 @@ async function loadOthersPossessions(){
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
   window.__monId = uid;
-  const { data, error } = await sb
+  // Sans pagination, l'API s'arrete a 1000 lignes et une partie du territoire
+  // des autres joueurs n'apparait jamais sur la carte.
+  const { data, error } = await toutesLesLignes(() => sb
     .from('possessions')
-    .select('commune_code, joueur_id, communes(code,nom,departement,latitude,longitude,tier), joueurs(pseudo)')
-    .neq('joueur_id', uid);
+    .select('commune_code, joueur_id, bouclier_jusqua, acquired_at, communes(code,nom,departement,population,latitude,longitude,tier), joueurs(pseudo)')
+    .neq('joueur_id', uid));
   if(error){ console.error(error); return; }
 
   othersMap = new Map();
@@ -2177,9 +2179,12 @@ async function loadOthersPossessions(){
     const tier = TIERS.find(t => t.id === c.tier);
     othersMap.set(c.code, {
       code: c.code,
-      nom: c.nom, dept: c.departement, lat: c.latitude, lon: c.longitude, tier,
+      nom: c.nom, dept: c.departement, pop: c.population,
+      lat: c.latitude, lon: c.longitude, tier,
       pseudo: row.joueurs ? row.joueurs.pseudo : 'un autre joueur',
-      joueurId: row.joueur_id
+      joueurId: row.joueur_id,
+      acquiredAt: row.acquired_at ? new Date(row.acquired_at).getTime() : 0,
+      bouclierJusqua: row.bouclier_jusqua ? new Date(row.bouclier_jusqua).getTime() : 0
     });
   }
   renderMapOverlay();

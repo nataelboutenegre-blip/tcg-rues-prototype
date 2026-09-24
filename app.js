@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '8578a3a7027a';
+const VERSION_JEU = '0db3bbd221a6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -609,8 +609,20 @@ document.getElementById('logoutBtnMobile').addEventListener('click', async () =>
 });
 
 // ---------- Carte (contour reel + points) ----------
-async function loadOutline(){
-  if(FRANCE_OUTLINE) return;
+// showGame() est appelee deux fois au demarrage : une fois par getSession(),
+// une fois par onAuthStateChange que Supabase emet dans la foulee. Le test
+// FRANCE_OUTLINE ne suffisait pas : les deux appels le franchissent pendant le
+// fetch, et tout ce qui suit etait branche en double — dont les calques, dont
+// les deux ecouteurs inversaient le meme reglage et s'annulaient au clic.
+// On retient donc la promesse en cours plutot que le resultat.
+let outlineEnCours = null;
+function loadOutline(){
+  if(FRANCE_OUTLINE) return Promise.resolve();
+  if(!outlineEnCours) outlineEnCours = chargerContourFrance();
+  return outlineEnCours;
+}
+
+async function chargerContourFrance(){
   const res = await fetch('data/france-outline.json');
   FRANCE_OUTLINE = await res.json();
   computeMapBounds();

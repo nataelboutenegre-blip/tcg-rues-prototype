@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '305cc9fccd0c';
+const VERSION_JEU = 'bc83dfd9df13';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -432,6 +432,7 @@ async function showGame(session_){
   document.getElementById('gameScreen').style.display = 'flex';
   document.getElementById('whoami').textContent = session_.user.email;
   await loadOutline();
+  chargerTotalCommunes();
   await loadMyCollection();
   await loadOthersPossessions();
   await loadPackStatus();
@@ -1555,7 +1556,14 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
 // la redessiner a chaque image coutait plus cher que toute la carte.
 let legendeSignature = '';
 function majLegendeSiBesoin(joueurs){
-  const sig = [...joueurs.values()].map(j => j.id + ':' + j.nb).join(',') + '|' + (joueurSurligne || '');
+  // sans l'etat replie ni la liste complete, les boutons de la legende
+  // changeaient la variable sans jamais redessiner
+  const sig = [...joueurs.values()].map(j => j.id + ':' + j.nb).join(',')
+    + '|' + (joueurSurligne || '')
+    + '|' + (legendeOuverte ? 1 : 0)
+    + '|' + (listeJoueursComplete ? 1 : 0)
+    + '|' + (showOthers ? 1 : 0)
+    + '|' + TOTAL_COMMUNES;
   if(sig === legendeSignature) return;
   legendeSignature = sig;
   renderLegendeCarte(joueurs, (x) => 'j' + x);
@@ -1863,6 +1871,20 @@ function communeSousLePoint(xCss, yCss){
   return { commune: c, joueur: r.joueurs.get(c.joueur) };
 }
 
+
+// Combien de communes existe-t-il ? Sert au compteur de communes libres.
+// Une seule requete, sans ramener la moindre ligne.
+let TOTAL_COMMUNES = 0;
+async function chargerTotalCommunes(){
+  if(TOTAL_COMMUNES) return TOTAL_COMMUNES;
+  const { count, error } = await sb.from('communes').select('*', { count: 'exact', head: true });
+  if(!error && count){
+    TOTAL_COMMUNES = count;
+    legendeSignature = '';        // la legende peut maintenant afficher le pot
+    if(canvasActif()) demanderDessin();
+  }
+  return TOTAL_COMMUNES;
+}
 
 // ---------- Panneau contextuel de la carte ----------
 // Cliquer une commune ouvre sa fiche sur place. Les actions ne rejouent pas
@@ -2249,6 +2271,27 @@ function appliquerSurlignageCarte(idSvg){
   svg.querySelectorAll('g[data-joueur]').forEach(g => g.classList.toggle('actif', g.dataset.joueur === cible));
 }
 
+// Qui domine chaque departement : deja calcule pour colorier la carte de loin,
+// on le reutilise tel quel pour la legende.
+function departementsDomines(){
+  const parDept = new Map();
+  const compter = (e, id) => {
+    if(!METRO_DEPT_RE.test(e.dept)) return;
+    if(!parDept.has(e.dept)) parDept.set(e.dept, new Map());
+    const m = parDept.get(e.dept);
+    m.set(id, (m.get(id) || 0) + 1);
+  };
+  for(const e of collectionMap.values()) compter(e, ID_MOI);
+  for(const e of othersMap.values()) compter(e, e.joueurId);
+  const domines = new Map();
+  for(const m of parDept.values()){
+    let chef = null, meilleur = 0;
+    for(const [id, n] of m){ if(n > meilleur){ meilleur = n; chef = id; } }
+    if(chef) domines.set(chef, (domines.get(chef) || 0) + 1);
+  }
+  return domines;
+}
+
 function renderLegendeCarte(joueurs, idSvg){
   const leg = document.getElementById('mapLegende');
   if(!leg) return;
@@ -2257,9 +2300,41 @@ function renderLegendeCarte(joueurs, idSvg){
   const NB_VISIBLES = 5;
   const affiches = showOthers ? (listeJoueursComplete ? autres : autres.slice(0, NB_VISIBLES)) : [];
   const reste = showOthers ? autres.length - affiches.length : 0;
-  const ligne = (j) => `<button class="leg-joueur ${joueurSurligne === j.id ? 'actif' : ''}" data-joueur-id="${echapperHtml(j.id)}" aria-pressed="${joueurSurligne === j.id}">
+  const domines = departementsDomines();
+  const meilleurScore = Math.max(1, moi.nb, ...autres.map(j => j.nb));
+  const pct = (n) => TOTAL_COMMUNES ? (100 * n / TOTAL_COMMUNES) : 0;
+  const rangs = new Map([moi, ...autres].sort((a, b) => b.nb - a.nb).map((j, i) => [j.id, i + 1]));
+
+  const ligne = (j) => {
+    const d = domines.get(j.id) || 0;
+    // a l'echelle de la France toutes les barres seraient invisibles :
+    // elles comparent les joueurs entre eux, le pourcentage exact est a cote
+    const largeur = Math.max(3, 100 * j.nb / meilleurScore);
+    return `<button class="leg-joueur ${joueurSurligne === j.id ? 'actif' : ''} ${j.moi ? 'moi' : ''}" data-joueur-id="${echapperHtml(j.id)}" aria-pressed="${joueurSurligne === j.id}">
+      <span class="leg-rang">${rangs.get(j.id) || ''}</span>
       <span class="leg-pastille" style="background:${j.couleur}"></span>
-      <span class="leg-pseudo">${j.moi ? '<b>Toi</b>' : echapperHtml(j.pseudo)}</span><span class="leg-nb">${j.nb.toLocaleString('fr-FR')}</span></button>`;
+      <span class="leg-mid">
+        <span class="leg-pseudo">${j.moi ? '<b>Toi</b>' : echapperHtml(j.pseudo)}</span>
+        <span class="leg-sous">${d > 0 ? d + ' dép. dominé' + (d > 1 ? 's' : '') : 'aucun département'}</span>
+        <span class="leg-barre"><i style="width:${largeur.toFixed(1)}%;background:${j.couleur}"></i></span>
+      </span>
+      <span class="leg-chiffres"><b>${j.nb.toLocaleString('fr-FR')}</b>${TOTAL_COMMUNES ? `<small>${pct(j.nb).toFixed(1)} %</small>` : ''}</span>
+    </button>`;
+  };
+
+  // Le pot commun : ce qui reste a prendre. Visible de tous, et c'est aussi
+  // notre tableau de bord sur l'epuisement des communes.
+  const prises = collectionMap.size + othersMap.size;
+  const libres = TOTAL_COMMUNES ? Math.max(0, TOTAL_COMMUNES - prises) : 0;
+  const ligneLibres = TOTAL_COMMUNES ? `
+      <div class="leg-libres">
+        <span class="leg-pastille libre"></span>
+        <span class="leg-mid">
+          <span class="leg-pseudo">Communes libres</span>
+          <span class="leg-sous">encore à prendre</span>
+        </span>
+        <span class="leg-chiffres"><b>${libres.toLocaleString('fr-FR')}</b><small>${pct(libres).toFixed(1)} %</small></span>
+      </div>` : '';
   leg.classList.toggle('repliee', !legendeOuverte);
   leg.innerHTML = `
     <div class="leg-tete">
@@ -2273,6 +2348,7 @@ function renderLegendeCarte(joueurs, idSvg){
       ${affiches.map(ligne).join('')}
       ${reste > 0 ? `<button class="leg-plus" data-leg="plus">+ ${reste} autre${reste > 1 ? 's' : ''} joueur${reste > 1 ? 's' : ''}</button>` : ''}
       ${listeJoueursComplete && autres.length > NB_VISIBLES && showOthers ? '<button class="leg-plus" data-leg="moins">Réduire la liste</button>' : ''}
+      ${ligneLibres}
       ${(() => {
         const n = MASQUEES_PAR_ZOOM.commun + MASQUEES_PAR_ZOOM.peucommun;
         return n > 0 ? `<p class="leg-indice leg-zoom">${n.toLocaleString('fr-FR')} petite${n > 1 ? 's' : ''} commune${n > 1 ? 's' : ''} masquée${n > 1 ? 's' : ''} : zoome pour les voir.</p>` : '';

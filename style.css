@@ -685,7 +685,7 @@
     border: 1px solid rgba(169,188,212,0.18);
     border-radius: 12px;
     font-size: 0.8rem;
-    width: 210px;
+    width: 232px;
     max-height: calc(100% - 28px);
     display:flex; flex-direction:column;
     cursor: default;
@@ -2383,4 +2383,42 @@
       top:auto; bottom:8px;
       max-height: calc(100% - 16px);
     }
+  }
+
+  /* ---------- Legende refaite ---------- */
+  .leg-joueur{ align-items:center; gap:8px; padding:5px 6px; }
+  .leg-joueur.moi{ background: rgba(240,180,41,0.09); }
+  .leg-joueur.moi.actif{ background: rgba(240,180,41,0.18); }
+  .leg-rang{
+    width:12px; flex:none; text-align:right;
+    font-size:0.68rem; font-weight:600; color:#7B8FAB;
+    font-variant-numeric: tabular-nums;
+  }
+  .leg-joueur .leg-pastille{ width:9px; height:9px; border-radius:50%; flex:0 0 9px; }
+  .leg-mid{ flex:1; min-width:0; }
+  .leg-mid .leg-pseudo{ display:block; font-size:0.78rem; }
+  .leg-sous{
+    display:block; font-size:0.65rem; color:#7B8FAB; margin-top:1px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .leg-barre{
+    display:block; height:3px; border-radius:9px; margin-top:4px; overflow:hidden;
+    background: rgba(169,188,212,0.16);
+  }
+  .leg-barre i{ display:block; height:100%; border-radius:9px; }
+  .leg-chiffres{ flex:none; text-align:right; padding-left:6px; }
+  .leg-chiffres b{
+    display:block; font-family: var(--titre); font-weight:800;
+    font-size:1rem; line-height:1; color:#fff; font-variant-numeric: tabular-nums;
+  }
+  .leg-chiffres small{ display:block; font-size:0.62rem; color:#7B8FAB; margin-top:2px; }
+
+  .leg-libres{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 6px 2px; margin-top:6px;
+    border-top:1px solid rgba(169,188,212,0.14);
+  }
+  .leg-libres .leg-pastille{
+    width:9px; height:9px; border-radius:50%; flex:0 0 9px;
+    border:1.5px solid #5B7B9E; background:transparent;
   }

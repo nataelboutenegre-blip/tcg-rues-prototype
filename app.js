@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'c244a55f9fe0';
+const VERSION_JEU = '331974e97486';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -303,6 +303,116 @@ function demanderPrix({ nom, rachat }){
 }
 
 // ---------- Authentification ----------
+
+// ---------- Page de presentation ----------
+// Affichee seulement a qui n'a jamais ouvert de session sur cet appareil.
+// Le drapeau est pose a la premiere entree reelle dans le jeu, pas a la premiere
+// visite : un curieux qui passe sans s'inscrire la revoit la fois suivante.
+const CLE_DEJA_JOUE = 'terrafront-deja-joue';
+
+// quelques departements colories, pour montrer a quoi ressemble une partie
+const ZONES_LANDING = {
+  '16':'#F0B429','17':'#F0B429','24':'#F0B429','87':'#F0B429',
+  '33':'#2F7CF6','40':'#2F7CF6','47':'#2F7CF6',
+  '13':'#E5484D','83':'#E5484D','84':'#E5484D','04':'#E5484D',
+  '35':'#22A06B','22':'#22A06B','56':'#22A06B','44':'#22A06B',
+  '59':'#8B5CF6','62':'#8B5CF6','02':'#8B5CF6',
+  '67':'#00B4D8','68':'#00B4D8','57':'#00B4D8','88':'#00B4D8',
+  '69':'#FF7A1A','42':'#FF7A1A','01':'#FF7A1A',
+  '31':'#C026D3','81':'#C026D3','82':'#C026D3',
+};
+
+function dejaJoue(){
+  try { return localStorage.getItem(CLE_DEJA_JOUE) === '1'; } catch(e){ return false; }
+}
+function marquerDejaJoue(){
+  try { localStorage.setItem(CLE_DEJA_JOUE, '1'); } catch(e){}
+}
+
+// La carte reprend les contours deja utilises par le jeu : aucun fichier de plus
+// a telecharger, et les bornes se calculent depuis ces memes contours.
+async function dessinerCarteLanding(){
+  const svg = document.getElementById('lpCarte');
+  if(!svg || svg.dataset.pret) return;
+  let deps;
+  try {
+    const rep = await fetch('contours-departements.json', { cache: 'force-cache' });
+    if(!rep.ok) return;
+    deps = await rep.json();
+  } catch(e){ return; }   // sans carte la page reste lisible, on n'insiste pas
+
+  let latMin = 90, latMax = -90, lonMin = 180, lonMax = -180;
+  for(const poly of Object.values(deps)){
+    for(const anneau of poly){
+      for(const point of anneau){
+        const lon = point[0], lat = point[1];
+        if(lat < latMin) latMin = lat;
+        if(lat > latMax) latMax = lat;
+        if(lon < lonMin) lonMin = lon;
+        if(lon > lonMax) lonMax = lon;
+      }
+    }
+  }
+  const marge = 0.04;
+  const dLat = (latMax - latMin) * marge, dLon = (lonMax - lonMin) * marge;
+  latMin -= dLat; latMax += dLat; lonMin -= dLon; lonMax += dLon;
+  const latMoy = (latMin + latMax) / 2;
+  const ratio = ((lonMax - lonMin) * Math.cos(latMoy * Math.PI / 180)) / (latMax - latMin);
+  const L = 1000, H = Math.round(1000 / ratio);
+
+  const chemin = (poly) => poly.map(anneau => 'M' + anneau.map(point => {
+    const x = (point[0] - lonMin) / (lonMax - lonMin) * L;
+    const y = (latMax - point[1]) / (latMax - latMin) * H;
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  }).join('L') + 'Z').join('');
+
+  const socle = Object.values(deps).map(p => '<path d="' + chemin(p) + '"/>').join('');
+  const zones = Object.keys(ZONES_LANDING).filter(c => deps[c]).map(c => {
+    const couleur = ZONES_LANDING[c];
+    const opacite = couleur === '#F0B429' ? '0.8' : '0.62';
+    return '<path d="' + chemin(deps[c]) + '" fill="' + couleur + '" fill-opacity="' + opacite + '"/>';
+  }).join('');
+
+  svg.setAttribute('viewBox', '0 0 ' + L + ' ' + H);
+  svg.innerHTML =
+    '<defs><linearGradient id="lpTerre" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="#20406A"/><stop offset="100%" stop-color="#16294A"/>' +
+    '</linearGradient></defs>' +
+    '<g fill="url(#lpTerre)" stroke="rgba(169,188,212,0.26)" stroke-width="0.9" ' +
+    'stroke-linejoin="round" vector-effect="non-scaling-stroke">' + socle + '</g>' +
+    '<g stroke="rgba(15,31,56,0.35)" stroke-width="0.6">' + zones + '</g>';
+  svg.dataset.pret = '1';
+}
+
+function montrerLanding(){
+  const page = document.getElementById('landing');
+  if(!page) return;
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('gameScreen').style.display = 'none';
+  page.hidden = false;
+  window.scrollTo(0, 0);
+  dessinerCarteLanding();
+}
+
+function cacherLanding(){
+  const page = document.getElementById('landing');
+  if(page) page.hidden = true;
+}
+
+function quitterLanding(mode){
+  cacherLanding();
+  showAuth();
+  ecranAuth('principal');
+  modeAuth(mode);
+  const champ = document.getElementById('authEmail');
+  if(champ && !surTelephone()) champ.focus();
+}
+
+document.querySelectorAll('#landing [data-jouer]').forEach(b =>
+  b.addEventListener('click', () => quitterLanding('inscription')));
+document.getElementById('lpConnexion').addEventListener('click', () => quitterLanding('connexion'));
+document.getElementById('authRetourLanding').addEventListener('click', montrerLanding);
+
 function showAuth(msg, type = 'erreur'){
   if(menacesInterval){ clearInterval(menacesInterval); menacesInterval = null; }
   if(packStatusInterval){ clearInterval(packStatusInterval); packStatusInterval = null; }
@@ -316,6 +426,8 @@ function showAuth(msg, type = 'erreur'){
 }
 
 async function showGame(session_){
+  cacherLanding();
+  marquerDejaJoue();
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('gameScreen').style.display = 'flex';
   document.getElementById('whoami').textContent = session_.user.email;
@@ -350,7 +462,8 @@ async function initAuth(){
   const { data: { session: s } } = await sb.auth.getSession();
   if(recuperationEnCours){ showAuth(); ecranAuth('nouveau'); }
   else if(s) showGame(s);
-  else showAuth();
+  else if(dejaJoue()) showAuth();
+  else montrerLanding();
   sb.auth.onAuthStateChange((event, s2) => {
     if(event === 'PASSWORD_RECOVERY'){
       recuperationEnCours = true;

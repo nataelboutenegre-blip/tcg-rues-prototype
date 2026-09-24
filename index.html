@@ -15,6 +15,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@700;800;900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <title>TerraFront — Collectionne les communes de France</title>
+<meta name="description" content="Chaque commune de France est une carte unique, et une seule personne peut la posséder à la fois. Ouvre des paquets, colore ton territoire, prends celles des autres.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="TerraFront">
+<meta property="og:title" content="Ta ville n'appartient qu'à une seule personne.">
+<meta property="og:description" content="Jeu de collection sur la carte de France : 35 000 communes, une seule personne peut posséder chacune. Gratuit, dans le navigateur.">
+<meta property="og:url" content="https://terrafront.fr/">
+<meta property="og:image" content="https://terrafront.fr/icon-512.png">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
@@ -23,11 +32,106 @@
 
 <svg id="fondTopo" aria-hidden="true"></svg>
 
+<div id="landing" class="lp" hidden>
+  <div class="lp-wrap">
+    <div class="lp-barre">
+      <p class="lp-marque">Terra<span>Front</span></p>
+      <button class="lp-connexion" id="lpConnexion">J'ai déjà un compte</button>
+    </div>
+
+    <div class="lp-hero">
+      <div>
+        <h1 class="lp-h1">Ta ville n'appartient qu'à <em>une seule personne</em>.</h1>
+        <p class="lp-accroche">TerraFront est un jeu de collection sur la carte de France. Chaque commune du pays est une carte unique — et une seule personne peut la posséder à la fois.</p>
+        <p class="lp-precis">Ouvre des paquets, colore ton territoire, prends celles des autres. Gratuit, dans le navigateur, sans rien installer.</p>
+        <div class="lp-actions">
+          <button class="lp-cta" data-jouer>Commencer à jouer</button>
+          <span class="lp-gratuit">Gratuit · aucune carte bancaire</span>
+        </div>
+        <div class="lp-chiffres">
+          <div class="lp-chiffre"><b>35 000</b><small>COMMUNES</small></div>
+          <div class="lp-chiffre"><b>1</b><small>PROPRIÉTAIRE CHACUNE</small></div>
+          <div class="lp-chiffre"><b>20 min</b><small>ENTRE DEUX PAQUETS</small></div>
+        </div>
+      </div>
+      <div class="lp-carte-boite">
+        <svg class="lp-carte" id="lpCarte" viewBox="0 0 1000 979" aria-hidden="true"></svg>
+        <span class="lp-carte-note">Illustration d'une partie en cours</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="lp-sec">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">Comment ça marche</h2>
+      <p class="lp-sous">Trois gestes, et c'est tout le jeu.</p>
+      <div class="lp-etapes">
+        <div class="lp-etape">
+          <span class="lp-num">1</span>
+          <b>Tire</b>
+          <p>Un paquet gratuit toutes les 20 minutes. Cinq communes réelles à l'intérieur, à leur vraie place sur la carte.</p>
+        </div>
+        <div class="lp-etape">
+          <span class="lp-num">2</span>
+          <b>Possède</b>
+          <p>Une commune n'appartient qu'à un seul joueur. Tant qu'elle est à toi, personne d'autre au monde ne peut l'avoir.</p>
+        </div>
+        <div class="lp-etape">
+          <span class="lp-num">3</span>
+          <b>Conquiers</b>
+          <p>Les communes rares des autres se prennent par la force : trois victoires d'affilée. Les tiennes partent pareil.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lp-sec">
+    <div class="lp-wrap">
+      <h2 class="lp-h2">Toutes les communes ne se valent pas</h2>
+      <p class="lp-sous">La rareté d'une carte suit la population réelle de la commune. Angoulême n'a pas le même poids que Bordeaux.</p>
+      <div class="lp-rares">
+        <div class="lp-rar" style="--c:#7E8BA0">
+          <span class="lp-rar-pastille"></span><b>Commune</b>
+          <small>moins de 15 000 hab.</small>
+          <p>La masse. C'est avec elles qu'on remplit une région.</p>
+        </div>
+        <div class="lp-rar" style="--c:#22A06B">
+          <span class="lp-rar-pastille"></span><b>Peu commune</b>
+          <small>à partir de 15 000</small>
+          <p>Les sous-préfectures, les villes moyennes.</p>
+        </div>
+        <div class="lp-rar" style="--c:#2F7CF6">
+          <span class="lp-rar-pastille"></span><b>Rare</b>
+          <small>à partir de 50 000</small>
+          <p>Convoitées. Elles s'attaquent et se défendent.</p>
+        </div>
+        <div class="lp-rar" style="--c:#F0B429">
+          <span class="lp-rar-pastille"></span><b>Légendaire</b>
+          <small>à partir de 200 000</small>
+          <p>Une quarantaine en France. Lyon, Nantes, Lille…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lp-wrap">
+    <div class="lp-fin">
+      <h2 class="lp-h2">Prends ta ville avant quelqu'un d'autre.</h2>
+      <p class="lp-sous">Une fois qu'elle est prise, il faudra aller la chercher.</p>
+      <button class="lp-cta" data-jouer>Commencer à jouer</button>
+    </div>
+    <div class="lp-pied">
+      <span>TerraFront — un jeu indépendant, fait en France.</span>
+      <a href="https://discord.gg/T6suSy6xa7" target="_blank" rel="noopener">Rejoindre le Discord</a>
+    </div>
+  </div>
+</div>
+
 <div id="authScreen" class="auth-screen">
   <div class="auth">
     <div class="auth-visuel" aria-hidden="true"><div class="eventail" id="authEventail"></div></div>
     <div class="auth-panneau">
-      <p class="auth-marque">Terra<span>Front</span></p>
+      <button class="auth-marque" id="authRetourLanding" title="Revenir à la présentation">Terra<span>Front</span></button>
 
       <div id="authBlocPrincipal">
         <p class="auth-accroche">Collectionne les vraies communes de France, défends-les et agrandis ton territoire.</p>

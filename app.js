@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '331974e97486';
+const VERSION_JEU = '0973c09a9e30';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -612,6 +612,12 @@ async function loadOutline(){
   FRANCE_OUTLINE = await res.json();
   computeMapBounds();
   renderFranceOutline();
+  if(MODE_CANVAS){
+    CV.fond = null;
+    initCanvas();
+    brancherSurvolCanvas();
+    demanderDessin();
+  }
 }
 
 function computeMapBounds(){
@@ -654,6 +660,7 @@ function sizeMapWrap(ratio){
   const finalWidth = Math.min(availWidth, widthFromHeight);
   wrap.style.width = finalWidth + 'px';
   wrap.style.height = (finalWidth / ratio) + 'px';
+  if(MODE_CANVAS){ redimensionnerCanvas(); demanderDessin(); }
   applyMapTransform();
 }
 
@@ -706,6 +713,9 @@ let mapTransformPlanifie = false;
 let mapFinMouvementTimer = null;
 function applyMapTransform(){
   clampMapPan();
+  // en canvas le deplacement est un simple changement de repere : pas de couche
+  // promue par le navigateur, donc pas de flou et aucun redessin differe
+  if(canvasActif()){ demanderDessin(); return; }
   signalerMouvementCarte();
   if(mapTransformPlanifie) return;
   mapTransformPlanifie = true;
@@ -1213,7 +1223,478 @@ function etoileSvg(x, y, r){
 const echapperHtml = (s) => String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[ch]));
 
 let carteRenduPlanifie = false;
+
+// ============================================================
+//  Rendu de la carte sur canvas  (?canvas=1)
+// ============================================================
+// Le SVG construit des milliers de noeuds a chaque redessin. Ici on peint
+// directement : les chemins sont calcules une fois en Path2D, et le deplacement
+// n'est plus une transformation CSS mais un changement de repere du contexte.
+// Consequence : plus de couche promue par le navigateur, donc plus de flou.
+const MODE_CANVAS = new URLSearchParams(location.search).has('canvas');
+
+const CV = {
+  ctx: null,
+  dpr: 1,
+  largeur: 0, hauteur: 0,      // en pixels CSS
+  dessinPlanifie: false,
+  fond: null,                  // { terre, cote, topo, ombre } en Path2D
+  cheminsCommunes: new Map(),  // code commune -> Path2D
+  cheminsDepts: new Map(),     // numero departement -> Path2D
+  cellules: null,              // { cles, cellules, cercles } pour la vue de repli
+  cellulesSignature: '',
+  donnees: null,               // liste des territoires, recalculee seulement si besoin
+  donneesSignature: '',
+  survol: null,                // commune sous le curseur
+  reperage: null,              // { delaunay, liste } pour retrouver une commune
+};
+
+function canvasActif(){
+  return MODE_CANVAS && CV.ctx;
+}
+
+// L'echelle entre les coordonnees de la carte et les pixels du cadre.
+// Le SVG utilise un viewBox 0 0 MAP_W MAP_H etire sur toute la largeur du cadre :
+// on reproduit exactement le meme rapport pour que les deux rendus coincident.
+function echelleCarte(){
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap || !MAP_W) return 1;
+  return wrap.clientWidth / MAP_W;
+}
+
+function initCanvas(){
+  const cv = document.getElementById('mapCanvas');
+  const wrap = document.getElementById('mapWrap');
+  if(!cv || !wrap || !MODE_CANVAS) return;
+  wrap.classList.add('en-canvas');
+  CV.ctx = cv.getContext('2d');
+  redimensionnerCanvas();
+  window.addEventListener('resize', () => { redimensionnerCanvas(); demanderDessin(); });
+}
+
+function redimensionnerCanvas(){
+  const cv = document.getElementById('mapCanvas');
+  const wrap = document.getElementById('mapWrap');
+  if(!cv || !wrap || !CV.ctx) return;
+  // au-dela de 2 le gain est invisible et le cout de remplissage double
+  CV.dpr = Math.min(window.devicePixelRatio || 1, 2);
+  CV.largeur = wrap.clientWidth;
+  CV.hauteur = wrap.clientHeight;
+  cv.width = Math.round(CV.largeur * CV.dpr);
+  cv.height = Math.round(CV.hauteur * CV.dpr);
+}
+
+function demanderDessin(){
+  if(!canvasActif() || CV.dessinPlanifie) return;
+  CV.dessinPlanifie = true;
+  requestAnimationFrame(() => { CV.dessinPlanifie = false; dessinerCanvas(); });
+}
+
+// Le decor vient des chemins deja calcules dans le SVG : aucune geometrie a refaire.
+function cheminsDuFond(){
+  if(CV.fond) return CV.fond;
+  const d = (id) => {
+    const el = document.getElementById(id);
+    const s = el && el.getAttribute('d');
+    return s ? new Path2D(s) : null;
+  };
+  const terre = d('mapTerre');
+  if(!terre) return null;              // le contour n'est pas encore charge
+  CV.fond = { terre, cote: d('mapCote'), topo: d('mapTopo'), ombre: d('mapOmbre') };
+  return CV.fond;
+}
+
+function cheminCommuneCanvas(code, poly){
+  let p = CV.cheminsCommunes.get(code);
+  if(!p){ p = new Path2D(cheminContour(poly)); CV.cheminsCommunes.set(code, p); }
+  return p;
+}
+
+function cheminDeptCanvas(dep, poly){
+  let p = CV.cheminsDepts.get(dep);
+  if(!p){ p = new Path2D(cheminContour(poly)); CV.cheminsDepts.set(dep, p); }
+  return p;
+}
+
+function dessinerCanvas(){
+  if(!canvasActif() || !mapBounds) return;
+  const ctx = CV.ctx;
+  const k = echelleCarte() * mapZoom * CV.dpr;
+  const tx = mapPanX * CV.dpr, ty = mapPanY * CV.dpr;
+
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, CV.largeur * CV.dpr, CV.hauteur * CV.dpr);
+
+  // la mer, en degrade comme dans le SVG
+  const g = ctx.createRadialGradient(
+    CV.largeur * CV.dpr * 0.45, CV.hauteur * CV.dpr * 0.4, 0,
+    CV.largeur * CV.dpr * 0.45, CV.hauteur * CV.dpr * 0.4, CV.largeur * CV.dpr * 0.75);
+  g.addColorStop(0, '#12294A');
+  g.addColorStop(1, '#081427');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, CV.largeur * CV.dpr, CV.hauteur * CV.dpr);
+
+  const fond = cheminsDuFond();
+  if(!fond) return;
+
+  ctx.setTransform(k, 0, 0, k, tx, ty);
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+  const trait = (px) => px / k * CV.dpr;   // epaisseur constante a l'ecran
+
+  // ombre portee, puis la terre
+  if(fond.ombre){
+    ctx.save(); ctx.translate(0, 7);
+    ctx.fillStyle = 'rgba(0,0,0,0.28)'; ctx.fill(fond.ombre);
+    ctx.restore();
+  }
+  const gt = ctx.createLinearGradient(0, 0, 0, MAP_H);
+  gt.addColorStop(0, '#20406A');
+  gt.addColorStop(1, '#172F52');
+  ctx.fillStyle = gt;
+  ctx.fill(fond.terre);
+
+  if(fond.topo){
+    ctx.save(); ctx.clip(fond.terre);
+    ctx.strokeStyle = 'rgba(169,188,212,0.09)'; ctx.lineWidth = trait(1);
+    ctx.stroke(fond.topo);
+    ctx.restore();
+  }
+
+  dessinerTerritoiresCanvas(ctx, trait, k);
+
+  if(fond.cote){
+    ctx.strokeStyle = 'rgba(169,188,212,0.45)'; ctx.lineWidth = trait(1.2);
+    ctx.stroke(fond.cote);
+  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+// Reprend le meme decoupage que le rendu SVG : de loin les departements,
+// de pres les vraies communes, et a defaut des zones approchees.
+// Le resultat ne change qu'avec les donnees, l'affichage des autres joueurs,
+// ou le franchissement d'un palier de zoom : on le garde en cache, sinon on
+// refait ce calcul soixante fois par seconde pendant un pincement.
+function bandeDeZoom(){
+  const seuils = Object.values(ZOOM_MINI).concat([SEUIL_CONTOURS]).sort((a, b) => a - b);
+  let n = 0;
+  for(const s of seuils) if(mapZoom >= s) n++;
+  return n;
+}
+
+function territoiresVisiblesCache(){
+  const signature = [collectionMap.size, othersMap.size, showOthers ? 1 : 0, bandeDeZoom()].join('|');
+  if(CV.donnees && CV.donneesSignature === signature) return CV.donnees;
+  CV.donneesSignature = signature;
+  CV.donnees = territoiresVisibles();
+  majReperage(CV.donnees.liste, CV.donnees.joueurs);
+  return CV.donnees;
+}
+
+function territoiresVisibles(){
+  const joueurs = new Map();
+  joueurs.set(ID_MOI, { id: ID_MOI, pseudo: 'Toi', couleur: COULEUR_MOI, fonce: couleurFoncee(COULEUR_MOI), moi: true, nb: 0 });
+  const liste = [];
+  for(const e of collectionMap.values()){
+    if(!METRO_DEPT_RE.test(e.dept) || e.lat == null) continue;
+    liste.push({ code: e.code, nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: ID_MOI });
+    joueurs.get(ID_MOI).nb++;
+  }
+  MASQUEES_PAR_ZOOM.commun = 0;
+  MASQUEES_PAR_ZOOM.peucommun = 0;
+  for(const e of othersMap.values()){
+    if(!METRO_DEPT_RE.test(e.dept) || e.lat == null) continue;
+    const visible = mapZoom < SEUIL_CONTOURS || mapZoom >= (ZOOM_MINI[e.tier.id] || 1);
+    if(showOthers && !visible && MASQUEES_PAR_ZOOM[e.tier.id] !== undefined) MASQUEES_PAR_ZOOM[e.tier.id]++;
+    if(!joueurs.has(e.joueurId)){
+      const couleur = colorForPlayer(e.joueurId);
+      joueurs.set(e.joueurId, { id: e.joueurId, pseudo: e.pseudo, couleur, fonce: couleurFoncee(couleur), moi: false, nb: 0 });
+    }
+    joueurs.get(e.joueurId).nb++;
+    if(showOthers && visible) liste.push({ code: e.code, nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: e.joueurId });
+  }
+  return { liste, joueurs };
+}
+
+// un joueur mis en evidence eteint les autres
+function opaciteJoueur(id, base){
+  if(!joueurSurligne) return base;
+  return id === joueurSurligne ? Math.min(1, base + 0.15) : base * 0.22;
+}
+
+function dessinerTerritoiresCanvas(ctx, trait, k){
+  const { liste, joueurs } = territoiresVisiblesCache();
+  if(joueurSurligne && !joueurs.has(joueurSurligne)) joueurSurligne = null;
+  if(!showOthers && joueurSurligne !== ID_MOI) joueurSurligne = null;
+
+  const ordre = (ids) => ids.slice().sort((a, b) => (a === ID_MOI ? 1 : 0) - (b === ID_MOI ? 1 : 0));
+
+  if(liste.length === 0){ majLegendeSiBesoin(joueurs); return; }
+
+  // ---- de loin : la France par departements ----
+  if(mapZoom < SEUIL_CONTOURS){
+    if(!CONTOURS_DEPTS) chargerDepartements();
+    if(CONTOURS_DEPTS && CONTOURS_DEPTS !== 'erreur' && CONTOURS_DEPTS !== 'attente'){
+      const chef = new Map();   // departement -> { joueur, force }
+      const compte = new Map();
+      for(const c of liste){
+        if(!compte.has(c.dept)) compte.set(c.dept, new Map());
+        const m = compte.get(c.dept);
+        m.set(c.joueur, (m.get(c.joueur) || 0) + 1);
+      }
+      for(const [dep, m] of compte){
+        let meilleur = null, n = 0, total = 0;
+        for(const [j, v] of m){ total += v; if(v > n){ n = v; meilleur = j; } }
+        const jo = joueurs.get(meilleur);
+        // plus la domination est nette, plus la couleur est franche
+        const force = (0.3 + 0.55 * (n / total)) * (jo && jo.moi ? 1 : 0.8);
+        chef.set(dep, { joueur: meilleur, force });
+      }
+      ctx.strokeStyle = 'rgba(169,188,212,0.28)'; ctx.lineWidth = trait(0.9);
+      for(const dep in CONTOURS_DEPTS){
+        const p = cheminDeptCanvas(dep, CONTOURS_DEPTS[dep]);
+        const info = chef.get(dep);
+        if(info){
+          const j = joueurs.get(info.joueur);
+          ctx.globalAlpha = opaciteJoueur(info.joueur, info.force);
+          ctx.fillStyle = j.couleur;
+          ctx.fill(p);
+          ctx.globalAlpha = 1;
+        }
+        ctx.stroke(p);
+      }
+      dessinerMarqueursCanvas(ctx, liste, joueurs, k, true);
+      majLegendeSiBesoin(joueurs);
+      return;
+    }
+  }
+
+  // ---- de pres : les vraies limites communales ----
+  if(mapZoom >= SEUIL_CONTOURS){
+    const deps = departementsVisibles(liste);
+    let pretes = 0;
+    for(const dep of deps){
+      const c = CONTOURS.get(dep);
+      if(c === undefined) chargerContours(dep);
+      else if(c && c !== 'erreur') pretes++;
+    }
+    if(pretes > 0){
+      const possedees = new Map(liste.map(c => [c.code, c]));
+      const parJoueur = new Map();
+      // les communes libres, en un seul chemin
+      const libres = new Path2D();
+      for(const dep of deps){
+        const contours = CONTOURS.get(dep);
+        if(!contours || contours === 'erreur') continue;
+        for(const code in contours){
+          const p = cheminCommuneCanvas(code, contours[code]);
+          const c = possedees.get(code);
+          if(!c){ libres.addPath(p); continue; }
+          if(!parJoueur.has(c.joueur)) parJoueur.set(c.joueur, new Path2D());
+          parJoueur.get(c.joueur).addPath(p);
+        }
+      }
+      ctx.fillStyle = 'rgba(22,48,79,0.75)';
+      ctx.strokeStyle = '#20406A'; ctx.lineWidth = trait(0.6);
+      ctx.fill(libres); ctx.stroke(libres);
+
+      for(const id of ordre([...parJoueur.keys()])){
+        const j = joueurs.get(id);
+        const p = parJoueur.get(id);
+        ctx.globalAlpha = opaciteJoueur(id, 1);
+        ctx.strokeStyle = '#07111F'; ctx.lineWidth = trait(3.4); ctx.stroke(p);
+        ctx.globalAlpha = opaciteJoueur(id, j.moi ? 0.95 : 0.78);
+        ctx.fillStyle = j.couleur; ctx.fill(p);
+        ctx.globalAlpha = opaciteJoueur(id, 0.55);
+        ctx.strokeStyle = j.fonce; ctx.lineWidth = trait(0.7); ctx.stroke(p);
+        ctx.globalAlpha = 1;
+      }
+      // communes possedees dont le departement n'est pas encore charge : une
+      // pastille, en attendant que ses vraies limites arrivent
+      // un seul chemin par joueur : deux appels de dessin au lieu de deux par commune
+      const ep = 1 / Math.max(1, mapZoom);
+      const pastilles = new Map();
+      for(const c of liste){
+        const etat = CONTOURS.get(c.dept);
+        if(etat && etat !== 'erreur') continue;
+        if(!joueurs.has(c.joueur)) continue;
+        if(!pastilles.has(c.joueur)) pastilles.set(c.joueur, new Path2D());
+        const pt = project(c.lat, c.lon);
+        const x = pt.x * MAP_W, y = pt.y * MAP_H, r = RAYON_ZONE[c.tier] * ep;
+        const chemin = pastilles.get(c.joueur);
+        chemin.moveTo(x + r, y);
+        chemin.arc(x, y, r, 0, Math.PI * 2);
+      }
+      for(const id of ordre([...pastilles.keys()])){
+        const j = joueurs.get(id), chemin = pastilles.get(id);
+        ctx.globalAlpha = opaciteJoueur(id, j.moi ? 0.95 : 0.7);
+        ctx.fillStyle = j.couleur; ctx.fill(chemin);
+        ctx.globalAlpha = opaciteJoueur(id, 1);
+        ctx.strokeStyle = '#07111F'; ctx.lineWidth = 2 * ep; ctx.stroke(chemin);
+        ctx.globalAlpha = 1;
+      }
+      dessinerMarqueursCanvas(ctx, liste, joueurs, k);
+      majLegendeSiBesoin(joueurs);
+      return;
+    }
+  }
+
+  // ---- a defaut : zones approchees par cellules de Voronoi ----
+  dessinerCellulesCanvas(ctx, trait, liste, joueurs, ordre);
+  dessinerMarqueursCanvas(ctx, liste, joueurs, k);
+  majLegendeSiBesoin(joueurs);
+}
+
+// La legende ne bouge que si la liste des joueurs ou le surlignage change :
+// la redessiner a chaque image coutait plus cher que toute la carte.
+let legendeSignature = '';
+function majLegendeSiBesoin(joueurs){
+  const sig = [...joueurs.values()].map(j => j.id + ':' + j.nb).join(',') + '|' + (joueurSurligne || '');
+  if(sig === legendeSignature) return;
+  legendeSignature = sig;
+  renderLegendeCarte(joueurs, (x) => 'j' + x);
+}
+
+function dessinerCellulesCanvas(ctx, trait, liste, joueurs, ordre){
+  const signature = liste.length + ':' + liste.map(c => c.code).join(',');
+  if(CV.cellulesSignature !== signature){
+    CV.cellulesSignature = signature;
+    const pts = liste.map(c => { const p = project(c.lat, c.lon); return [p.x * MAP_W, p.y * MAP_H]; });
+    const parJoueur = new Map();
+    let rayons = liste.map(c => RAYON_ZONE[c.tier]);
+    let voronoi = null;
+    if(D3_OK && liste.length > 0){
+      const delaunay = d3.Delaunay.from(pts);
+      voronoi = delaunay.voronoi([0, 0, MAP_W, MAP_H]);
+      rayons = liste.map((c, i) => {
+        let dMin = Infinity;
+        for(const kk of delaunay.neighbors(i)){
+          if(!liste[kk] || kk === i || liste[kk].joueur !== c.joueur) continue;
+          dMin = Math.min(dMin, Math.hypot(pts[kk][0] - pts[i][0], pts[kk][1] - pts[i][1]));
+        }
+        return dMin <= 22 ? Math.max(RAYON_ZONE[c.tier], dMin * 0.62) : RAYON_ZONE[c.tier];
+      });
+    }
+    liste.forEach((c, i) => {
+      if(!parJoueur.has(c.joueur)) parJoueur.set(c.joueur, { cellules: new Path2D(), cercles: new Path2D() });
+      const g = parJoueur.get(c.joueur);
+      const [x, y] = pts[i], r = rayons[i];
+      const cellule = voronoi ? voronoi.renderCell(i) : '';
+      if(cellule) g.cellules.addPath(new Path2D(cellule));
+      else { g.cellules.moveTo(x + r, y); g.cellules.arc(x, y, r, 0, Math.PI * 2); }
+      g.cercles.moveTo(x + r, y); g.cercles.arc(x, y, r, 0, Math.PI * 2);
+    });
+    CV.cellules = parJoueur;
+  }
+  const parJoueur = CV.cellules;
+  if(!parJoueur) return;
+  for(const id of ordre([...parJoueur.keys()])){
+    const j = joueurs.get(id);
+    if(!j) continue;
+    const g = parJoueur.get(id);
+    // la cellule est rognee par un disque : une commune isolee reste une tache ronde,
+    // deux voisines du meme joueur se rejoignent en un territoire continu
+    ctx.save();
+    ctx.clip(g.cercles);
+    ctx.globalAlpha = opaciteJoueur(id, j.moi ? 0.95 : 0.62);
+    ctx.fillStyle = j.couleur;
+    ctx.fill(g.cellules);
+    ctx.globalAlpha = opaciteJoueur(id, j.moi ? 0.6 : 0.25);
+    ctx.strokeStyle = j.fonce; ctx.lineWidth = trait(j.moi ? 0.7 : 0.5);
+    ctx.stroke(g.cellules);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+}
+
+// Etoiles et pastilles : taille constante a l'ecran, comme dans le SVG
+function dessinerMarqueursCanvas(ctx, liste, joueurs, k, legendairesSeules){
+  const e = 1 / Math.max(1, mapZoom);
+  for(const c of liste){
+    if(c.tier !== 'legendaire' && (legendairesSeules || c.tier !== 'rare')) continue;
+    const j = joueurs.get(c.joueur);
+    if(!j) continue;
+    const p = project(c.lat, c.lon);
+    const x = p.x * MAP_W, y = p.y * MAP_H;
+    ctx.globalAlpha = opaciteJoueur(c.joueur, 1);
+    if(c.tier === 'legendaire'){
+      const r = (j.moi ? 7 : 6) * e;
+      ctx.beginPath();
+      for(let i = 0; i < 10; i++){
+        const a = -Math.PI / 2 + i * Math.PI / 5;
+        const rr = i % 2 ? r * 0.45 : r;
+        ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+      }
+      ctx.closePath();
+      ctx.fillStyle = j.moi ? '#FFF6D6' : 'rgba(255,246,214,' + (legendairesSeules ? '0.8' : '0.75') + ')';
+      ctx.fill();
+      ctx.strokeStyle = '#0B1830';
+      ctx.lineWidth = (legendairesSeules ? 1.2 : (j.moi ? 1.4 : 1)) * e;
+      ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.arc(x, y, 2.2 * e, 0, Math.PI * 2);
+      ctx.fillStyle = j.moi ? '#fff' : 'rgba(255,255,255,0.7)';
+      ctx.fill();
+      ctx.strokeStyle = '#0B1830'; ctx.lineWidth = 1 * e; ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+}
+
+// ---------- Retrouver la commune sous le doigt ----------
+// Le SVG offrait le survol gratuitement avec des <title>. Ici on garde un index
+// des points visibles et on cherche le plus proche.
+function majReperage(liste, joueurs){
+  if(!D3_OK || liste.length === 0){ CV.reperage = null; return; }
+  const pts = liste.map(c => { const p = project(c.lat, c.lon); return [p.x * MAP_W, p.y * MAP_H]; });
+  CV.reperage = { delaunay: d3.Delaunay.from(pts), liste, joueurs, pts };
+}
+
+// (x, y) en pixels CSS dans le cadre -> coordonnees de la carte
+function ecranVersCarte(x, y){
+  const ech = echelleCarte() * mapZoom;
+  return { x: (x - mapPanX) / ech, y: (y - mapPanY) / ech };
+}
+
+function communeSousLePoint(xCss, yCss){
+  const r = CV.reperage;
+  if(!r) return null;
+  const p = ecranVersCarte(xCss, yCss);
+  const i = r.delaunay.find(p.x, p.y);
+  if(i == null || i < 0) return null;
+  const c = r.liste[i];
+  // au-dela d'une certaine distance on considere qu'on a clique a cote
+  const [px, py] = r.pts[i];
+  const limite = Math.max(RAYON_ZONE[c.tier] || 4, 14 / mapZoom);
+  if(Math.hypot(px - p.x, py - p.y) > limite) return null;
+  return { commune: c, joueur: r.joueurs.get(c.joueur) };
+}
+
+function brancherSurvolCanvas(){
+  const cv = document.getElementById('mapCanvas');
+  const bulle = document.getElementById('mapInfobulle');
+  if(!cv || !bulle) return;
+  cv.addEventListener('pointermove', (e) => {
+    if(mapDragging){ bulle.hidden = true; return; }
+    const rect = cv.getBoundingClientRect();
+    const t = communeSousLePoint(e.clientX - rect.left, e.clientY - rect.top);
+    if(!t){ bulle.hidden = true; CV.survol = null; return; }
+    CV.survol = t.commune;
+    bulle.hidden = false;
+    bulle.textContent = t.commune.nom + ' (' + t.commune.dept + '), '
+      + LIBELLE_TIER[t.commune.tier] + ', '
+      + (t.joueur.moi ? 'à toi' : 'à ' + t.joueur.pseudo);
+    const bb = bulle.getBoundingClientRect();
+    let gauche = e.clientX - rect.left + 14;
+    if(gauche + bb.width > rect.width) gauche = e.clientX - rect.left - bb.width - 14;
+    bulle.style.left = Math.max(4, gauche) + 'px';
+    bulle.style.top = Math.max(4, e.clientY - rect.top - bb.height - 12) + 'px';
+  });
+  cv.addEventListener('pointerleave', () => { bulle.hidden = true; CV.survol = null; });
+}
+
 function renderMapOverlay(){
+  if(canvasActif()){ CV.cellulesSignature = ''; CV.donneesSignature = ''; demanderDessin(); return; }
   // plusieurs appels rapproches (cartes retournees une par une) = un seul dessin
   if(carteRenduPlanifie) return;
   carteRenduPlanifie = true;

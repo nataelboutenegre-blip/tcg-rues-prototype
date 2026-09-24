@@ -2263,3 +2263,18 @@
     .lp-h1{ font-size:2.65rem; }
     .lp-fin .lp-h2{ font-size:2.1rem; }
   }
+
+  /* ---------- Rendu de la carte sur canvas ---------- */
+  #mapCanvas{ display:none; }
+  .map-wrap.en-canvas #mapCanvas{
+    display:block; position:absolute; inset:0;
+    width:100%; height:100%; touch-action:none;
+  }
+  .map-wrap.en-canvas #mapTransform{ display:none; }
+  .map-infobulle{
+    position:absolute; z-index:6; pointer-events:none;
+    background: rgba(7,17,31,0.94); color:#fff;
+    border:1px solid rgba(169,188,212,0.25); border-radius:9px;
+    padding:6px 10px; font-size:0.78rem; font-weight:500; white-space:nowrap;
+  }
+  .map-infobulle[hidden]{ display:none; }

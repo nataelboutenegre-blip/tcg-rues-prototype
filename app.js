@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '4a3b7acfe2f8';
+const VERSION_JEU = 'db19b1b97d15';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -616,6 +616,9 @@ async function loadOutline(){
     CV.fond = null;
     initCanvas();
     brancherSurvolCanvas();
+    brancherCalques();
+    // les frontieres viennent de ce fichier : on le demande sans attendre un dezoom
+    chargerDepartements();
     demanderDessin();
   }
 }
@@ -1243,6 +1246,7 @@ const CV = {
   fond: null,                  // { terre, cote, topo, ombre } en Path2D
   cheminsCommunes: new Map(),  // code commune -> Path2D
   cheminsDepts: new Map(),     // numero departement -> Path2D
+  frontieres: null,            // { fDept, fReg, etiquettes }, calcule une fois
   cellules: null,              // { cles, cellules, cercles } pour la vue de repli
   cellulesSignature: '',
   donnees: null,               // liste des territoires, recalculee seulement si besoin
@@ -1370,6 +1374,7 @@ function dessinerCanvas(){
     ctx.stroke(fond.cote);
   }
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  dessinerNomsRegions(ctx);
 }
 
 // Reprend le meme decoupage que le rendu SVG : de loin les departements,
@@ -1428,10 +1433,18 @@ function dessinerTerritoiresCanvas(ctx, trait, k){
   const { liste, joueurs } = territoiresVisiblesCache();
   if(joueurSurligne && !joueurs.has(joueurSurligne)) joueurSurligne = null;
   if(!showOthers && joueurSurligne !== ID_MOI) joueurSurligne = null;
+  const mode = dessinerFondsCanvas(ctx, trait, k, liste, joueurs);
+  dessinerFrontieres(ctx, trait, mode === 'contours');
+  if(CALQUES.raretes) dessinerMarqueursCanvas(ctx, liste, joueurs, k, mode === 'depts');
+  majLegendeSiBesoin(joueurs);
+}
 
+// Renvoie le mode retenu : 'depts', 'contours' ou 'cellules'.
+function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
   const ordre = (ids) => ids.slice().sort((a, b) => (a === ID_MOI ? 1 : 0) - (b === ID_MOI ? 1 : 0));
 
-  if(liste.length === 0){ majLegendeSiBesoin(joueurs); return; }
+  if(liste.length === 0) return 'vide';
+  if(!CALQUES.communes) return mapZoom < SEUIL_CONTOURS ? 'depts' : 'contours';
 
   // ---- de loin : la France par departements ----
   if(mapZoom < SEUIL_CONTOURS){
@@ -1452,22 +1465,16 @@ function dessinerTerritoiresCanvas(ctx, trait, k){
         const force = (0.3 + 0.55 * (n / total)) * (jo && jo.moi ? 1 : 0.8);
         chef.set(dep, { joueur: meilleur, force });
       }
-      ctx.strokeStyle = 'rgba(169,188,212,0.28)'; ctx.lineWidth = trait(0.9);
-      for(const dep in CONTOURS_DEPTS){
-        const p = cheminDeptCanvas(dep, CONTOURS_DEPTS[dep]);
-        const info = chef.get(dep);
-        if(info){
-          const j = joueurs.get(info.joueur);
-          ctx.globalAlpha = opaciteJoueur(info.joueur, info.force);
-          ctx.fillStyle = j.couleur;
-          ctx.fill(p);
-          ctx.globalAlpha = 1;
-        }
-        ctx.stroke(p);
+      for(const [dep, info] of chef){
+        if(!CONTOURS_DEPTS[dep]) continue;
+        const j = joueurs.get(info.joueur);
+        if(!j) continue;
+        ctx.globalAlpha = opaciteJoueur(info.joueur, info.force);
+        ctx.fillStyle = j.couleur;
+        ctx.fill(cheminDeptCanvas(dep, CONTOURS_DEPTS[dep]));
+        ctx.globalAlpha = 1;
       }
-      dessinerMarqueursCanvas(ctx, liste, joueurs, k, true);
-      majLegendeSiBesoin(joueurs);
-      return;
+      return 'depts';
     }
   }
 
@@ -1535,16 +1542,13 @@ function dessinerTerritoiresCanvas(ctx, trait, k){
         ctx.strokeStyle = '#07111F'; ctx.lineWidth = 2 * ep; ctx.stroke(chemin);
         ctx.globalAlpha = 1;
       }
-      dessinerMarqueursCanvas(ctx, liste, joueurs, k);
-      majLegendeSiBesoin(joueurs);
-      return;
+      return 'contours';
     }
   }
 
   // ---- a defaut : zones approchees par cellules de Voronoi ----
   dessinerCellulesCanvas(ctx, trait, liste, joueurs, ordre);
-  dessinerMarqueursCanvas(ctx, liste, joueurs, k);
-  majLegendeSiBesoin(joueurs);
+  return 'cellules';
 }
 
 // La legende ne bouge que si la liste des joueurs ou le surlignage change :
@@ -1641,6 +1645,193 @@ function dessinerMarqueursCanvas(ctx, liste, joueurs, k, legendairesSeules){
     }
     ctx.globalAlpha = 1;
   }
+}
+
+
+// ---------- Regions, frontieres et calques ----------
+// Les limites de region ne sont pas un fichier de plus : un segment partage par
+// deux departements de regions differentes est une frontiere de region. La
+// topologie des contours est propre (chaque segment interieur apparait
+// exactement deux fois), donc le trace est exact.
+const DEP_REGION = {
+  '01':'Auvergne-Rhône-Alpes','03':'Auvergne-Rhône-Alpes','07':'Auvergne-Rhône-Alpes',
+  '15':'Auvergne-Rhône-Alpes','26':'Auvergne-Rhône-Alpes','38':'Auvergne-Rhône-Alpes',
+  '42':'Auvergne-Rhône-Alpes','43':'Auvergne-Rhône-Alpes','63':'Auvergne-Rhône-Alpes',
+  '69':'Auvergne-Rhône-Alpes','73':'Auvergne-Rhône-Alpes','74':'Auvergne-Rhône-Alpes',
+  '21':'Bourgogne-Franche-Comté','25':'Bourgogne-Franche-Comté','39':'Bourgogne-Franche-Comté',
+  '58':'Bourgogne-Franche-Comté','70':'Bourgogne-Franche-Comté','71':'Bourgogne-Franche-Comté',
+  '89':'Bourgogne-Franche-Comté','90':'Bourgogne-Franche-Comté',
+  '22':'Bretagne','29':'Bretagne','35':'Bretagne','56':'Bretagne',
+  '18':'Centre-Val de Loire','28':'Centre-Val de Loire','36':'Centre-Val de Loire',
+  '37':'Centre-Val de Loire','41':'Centre-Val de Loire','45':'Centre-Val de Loire',
+  '2A':'Corse','2B':'Corse',
+  '08':'Grand Est','10':'Grand Est','51':'Grand Est','52':'Grand Est','54':'Grand Est',
+  '55':'Grand Est','57':'Grand Est','67':'Grand Est','68':'Grand Est','88':'Grand Est',
+  '02':'Hauts-de-France','59':'Hauts-de-France','60':'Hauts-de-France',
+  '62':'Hauts-de-France','80':'Hauts-de-France',
+  '75':'Île-de-France','77':'Île-de-France','78':'Île-de-France','91':'Île-de-France',
+  '92':'Île-de-France','93':'Île-de-France','94':'Île-de-France','95':'Île-de-France',
+  '14':'Normandie','27':'Normandie','50':'Normandie','61':'Normandie','76':'Normandie',
+  '16':'Nouvelle-Aquitaine','17':'Nouvelle-Aquitaine','19':'Nouvelle-Aquitaine',
+  '23':'Nouvelle-Aquitaine','24':'Nouvelle-Aquitaine','33':'Nouvelle-Aquitaine',
+  '40':'Nouvelle-Aquitaine','47':'Nouvelle-Aquitaine','64':'Nouvelle-Aquitaine',
+  '79':'Nouvelle-Aquitaine','86':'Nouvelle-Aquitaine','87':'Nouvelle-Aquitaine',
+  '09':'Occitanie','11':'Occitanie','12':'Occitanie','30':'Occitanie','31':'Occitanie',
+  '32':'Occitanie','34':'Occitanie','46':'Occitanie','48':'Occitanie','65':'Occitanie',
+  '66':'Occitanie','81':'Occitanie','82':'Occitanie',
+  '44':'Pays de la Loire','49':'Pays de la Loire','53':'Pays de la Loire',
+  '72':'Pays de la Loire','85':'Pays de la Loire',
+  '04':"Provence-Alpes-Côte d'Azur",'05':"Provence-Alpes-Côte d'Azur",
+  '06':"Provence-Alpes-Côte d'Azur",'13':"Provence-Alpes-Côte d'Azur",
+  '83':"Provence-Alpes-Côte d'Azur",'84':"Provence-Alpes-Côte d'Azur",
+};
+
+const CLE_CALQUES = 'terrafront-calques';
+const CALQUES = (() => {
+  const defaut = { regions: true, depts: true, communes: true, noms: true, raretes: true };
+  try {
+    const v = JSON.parse(localStorage.getItem(CLE_CALQUES) || '{}');
+    return Object.assign(defaut, v);
+  } catch(e){ return defaut; }
+})();
+
+function enregistrerCalques(){
+  try { localStorage.setItem(CLE_CALQUES, JSON.stringify(CALQUES)); } catch(e){}
+}
+
+// Un seul parcours des contours : on marque chaque segment, puis on en deduit
+// les deux jeux de frontieres et la position des etiquettes de region.
+function construireFrontieres(){
+  if(CV.frontieres || !CONTOURS_DEPTS || CONTOURS_DEPTS === 'erreur' || CONTOURS_DEPTS === 'attente') return CV.frontieres;
+  const proprio = new Map();
+  const ajouter = (a, b, dep) => {
+    // une cle stable quel que soit le sens de parcours du segment
+    const cle = (a[0] < b[0] || (a[0] === b[0] && a[1] <= b[1]))
+      ? a[0] + ',' + a[1] + '|' + b[0] + ',' + b[1]
+      : b[0] + ',' + b[1] + '|' + a[0] + ',' + a[1];
+    const e = proprio.get(cle);
+    if(e) e.deps.push(dep);
+    else proprio.set(cle, { a, b, deps: [dep] });
+  };
+  const parRegion = new Map();
+  for(const dep in CONTOURS_DEPTS){
+    for(const anneau of CONTOURS_DEPTS[dep]){
+      const n = anneau.length;
+      for(let i = 0; i < n; i++) ajouter(anneau[i], anneau[(i + 1) % n], dep);
+      const reg = DEP_REGION[dep];
+      if(reg){
+        if(!parRegion.has(reg)) parRegion.set(reg, { lon: 0, lat: 0, n: 0 });
+        const r = parRegion.get(reg);
+        for(const p of anneau){ r.lon += p[0]; r.lat += p[1]; r.n++; }
+      }
+    }
+  }
+  const fDept = new Path2D(), fReg = new Path2D();
+  for(const { a, b, deps } of proprio.values()){
+    if(deps.length !== 2) continue;            // la cote est deja tracee ailleurs
+    const pa = project(a[1], a[0]), pb = project(b[1], b[0]);
+    const x1 = pa.x * MAP_W, y1 = pa.y * MAP_H, x2 = pb.x * MAP_W, y2 = pb.y * MAP_H;
+    fDept.moveTo(x1, y1); fDept.lineTo(x2, y2);
+    if(DEP_REGION[deps[0]] !== DEP_REGION[deps[1]]){
+      fReg.moveTo(x1, y1); fReg.lineTo(x2, y2);
+    }
+  }
+  const etiquettes = [];
+  for(const [nom, r] of parRegion){
+    const p = project(r.lat / r.n, r.lon / r.n);
+    etiquettes.push({ nom: nom.toUpperCase(), x: p.x * MAP_W, y: p.y * MAP_H, poids: r.n });
+  }
+  // en cas de chevauchement, la plus grande region garde son nom
+  etiquettes.sort((a, b) => b.poids - a.poids);
+  CV.frontieres = { fDept, fReg, etiquettes };
+  return CV.frontieres;
+}
+
+// Trois passes : un lisere sombre, un trait clair, un pointille sombre. La
+// frontiere reste lisible aussi bien sur un territoire jaune que sur un bleu.
+function dessinerFrontieres(ctx, trait, modeContours){
+  const f = construireFrontieres();
+  if(!f) { if(!CONTOURS_DEPTS) chargerDepartements(); return; }
+  if(CALQUES.depts){
+    // de pres, les limites communales portent deja le dessin : on attenue
+    ctx.strokeStyle = modeContours ? 'rgba(169,188,212,0.16)' : 'rgba(169,188,212,0.28)';
+    ctx.lineWidth = trait(0.9);
+    ctx.stroke(f.fDept);
+  }
+  if(CALQUES.regions){
+    ctx.strokeStyle = 'rgba(7,17,31,0.55)'; ctx.lineWidth = trait(4.6); ctx.stroke(f.fReg);
+    ctx.strokeStyle = 'rgba(214,230,246,0.72)'; ctx.lineWidth = trait(2.1); ctx.stroke(f.fReg);
+    ctx.setLineDash([trait(7), trait(5)]);
+    ctx.strokeStyle = 'rgba(15,31,56,0.85)'; ctx.lineWidth = trait(1.1); ctx.stroke(f.fReg);
+    ctx.setLineDash([]);
+  }
+}
+
+// Les noms de region s'effacent quand on zoome : le detail prend le relais.
+function dessinerNomsRegions(ctx){
+  if(!CALQUES.noms) return;
+  const f = CV.frontieres;
+  if(!f) return;
+  const opacite = mapZoom <= 1.6 ? 1 : mapZoom >= 2.6 ? 0 : (2.6 - mapZoom) / 1;
+  if(opacite <= 0.02) return;
+  const ech = echelleCarte() * mapZoom * CV.dpr;
+  // la carte fait 330 px de large sur telephone et 900 sur ordinateur : une
+  // taille fixe serait illisible d'un cote et minuscule de l'autre
+  const taille = Math.round(Math.max(8.5, Math.min(13, CV.largeur / 72)) * CV.dpr);
+  const interlettre = Math.max(0.6, taille / CV.dpr / 7);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.font = '800 ' + taille + 'px "Big Shoulders Display", Impact, sans-serif';
+  if('letterSpacing' in ctx) ctx.letterSpacing = interlettre.toFixed(1) + 'px';
+  ctx.globalAlpha = opacite;
+  const poses = [];
+  for(const e of f.etiquettes){
+    const x = e.x * ech + mapPanX * CV.dpr, y = e.y * ech + mapPanY * CV.dpr;
+    if(x < -80 || y < -20 || x > CV.largeur * CV.dpr + 80 || y > CV.hauteur * CV.dpr + 20) continue;
+    const demiL = ctx.measureText(e.nom).width / 2 + 3 * CV.dpr;
+    const demiH = taille * 0.78;
+    const boite = [x - demiL, y - demiH, x + demiL, y + demiH];
+    if(poses.some(b => boite[0] < b[2] && boite[2] > b[0] && boite[1] < b[3] && boite[3] > b[1])) continue;
+    poses.push(boite);
+    ctx.strokeStyle = 'rgba(7,17,31,0.85)'; ctx.lineWidth = 3.4 * CV.dpr;
+    ctx.strokeText(e.nom, x, y);
+    ctx.fillStyle = 'rgba(224,236,250,0.82)';
+    ctx.fillText(e.nom, x, y);
+  }
+  ctx.globalAlpha = 1;
+  if('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+}
+
+function rendreCalques(){
+  const zone = document.getElementById('mapCalques');
+  if(!zone) return;
+  const ICONES = {
+    regions: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 6.5 9.5 4l5 2.5L20 4v13.5L14.5 20l-5-2.5L4 20z"/><path d="M9.5 4v13.5M14.5 6.5V20"/></svg>',
+    depts: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 3h8v8H3zM13 3h8v8h-8zM3 13h8v8H3zM13 13h8v8h-8z"/></svg>',
+    communes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>',
+    noms: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 18 12 5l7 13M8 14h8"/></svg>',
+    raretes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="m12 3.5 2.6 5.5 5.9.8-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.8l5.9-.8z"/></svg>',
+  };
+  const NOMS = { regions: 'Régions', depts: 'Départements', communes: 'Communes', noms: 'Noms', raretes: 'Raretés' };
+  zone.innerHTML = Object.keys(NOMS).map(id =>
+    `<button data-calque="${id}" class="${CALQUES[id] ? 'actif' : ''}" aria-pressed="${!!CALQUES[id]}">${ICONES[id]}${NOMS[id]}</button>`
+  ).join('');
+}
+
+function brancherCalques(){
+  const zone = document.getElementById('mapCalques');
+  if(!zone) return;
+  rendreCalques();
+  zone.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-calque]');
+    if(!b) return;
+    const id = b.dataset.calque;
+    CALQUES[id] = !CALQUES[id];
+    b.classList.toggle('actif', CALQUES[id]);
+    b.setAttribute('aria-pressed', String(CALQUES[id]));
+    enregistrerCalques();
+    demanderDessin();
+  });
 }
 
 // ---------- Retrouver la commune sous le doigt ----------
@@ -1920,6 +2111,10 @@ function renderLegendeCarte(joueurs, idSvg){
         return n > 0 ? `<p class="leg-indice leg-zoom">${n.toLocaleString('fr-FR')} petite${n > 1 ? 's' : ''} commune${n > 1 ? 's' : ''} masquée${n > 1 ? 's' : ''} : zoome pour les voir.</p>` : '';
       })()}
       <p class="leg-indice">Clique sur un joueur pour mettre son territoire en évidence.</p>
+      <div class="leg-traits">
+        <div><svg width="30" height="8"><line x1="1" y1="4" x2="29" y2="4" stroke="#D6E6F6" stroke-width="2.2" stroke-opacity=".72"/><line x1="1" y1="4" x2="29" y2="4" stroke="#0F1F38" stroke-width="1.1" stroke-dasharray="5 4"/></svg>Région</div>
+        <div><svg width="30" height="8"><line x1="1" y1="4" x2="29" y2="4" stroke="#A9BCD4" stroke-width="1" stroke-opacity=".45"/></svg>Département</div>
+      </div>
       <div class="leg-tailles">
         <div><svg width="10" height="10"><circle cx="5" cy="5" r="2.5" fill="#A9BCD4"/></svg>Commun</div>
         <div><svg width="14" height="14"><circle cx="7" cy="7" r="4" fill="#A9BCD4"/></svg>Peu c.</div>

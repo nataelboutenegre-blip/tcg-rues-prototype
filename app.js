@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '83e27f11608c';
+const VERSION_JEU = '305cc9fccd0c';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -1863,6 +1863,152 @@ function communeSousLePoint(xCss, yCss){
   return { commune: c, joueur: r.joueurs.get(c.joueur) };
 }
 
+
+// ---------- Panneau contextuel de la carte ----------
+// Cliquer une commune ouvre sa fiche sur place. Les actions ne rejouent pas
+// les interfaces existantes : elles basculent vers le bon onglet en pre-filtrant
+// sur la commune, ce qui evite de dupliquer le combat, la bourse et l'echange.
+let panneauCommune = null;
+
+const ICONES_PC = {
+  attaque: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 14.5 19.5 19.5a1.5 1.5 0 0 1-2 2L12.5 16.5"/><path d="M18.5 3.5 8 14M18.5 3.5h-3M18.5 3.5v3"/><path d="M9.5 14.5 4.5 19.5a1.5 1.5 0 0 0 2 2l5-5"/><path d="M5.5 3.5 16 14M5.5 3.5h3M5.5 3.5v3"/></svg>',
+  echange: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3.5-3.5M17 8l-3.5 3.5"/><path d="M20 16H7l3.5-3.5M7 16l3.5 3.5"/></svg>',
+  bouclier: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/></svg>',
+  vente: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.6 12.4 12 4h7.5a.5.5 0 0 1 .5.5V12l-8.4 8.4a1.4 1.4 0 0 1-2 0l-6-6a1.4 1.4 0 0 1 0-2z"/><circle cx="16.2" cy="7.8" r="1.3"/></svg>',
+  joueur: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></svg>',
+};
+
+const nbFr = (n) => Number(n).toLocaleString('fr-FR');
+
+function fermerPanneau(){
+  const el = document.getElementById('mapPanneau');
+  if(el) el.hidden = true;
+  const wrap = document.getElementById('mapWrap');
+  if(wrap) wrap.classList.remove('panneau-ouvert');
+  panneauCommune = null;
+}
+
+function ouvrirPanneau(code, xCss, yCss){
+  const el = document.getElementById('mapPanneau');
+  if(!el) return;
+  const mienne = collectionMap.get(code);
+  const autre = mienne ? null : othersMap.get(code);
+  const c = mienne || autre;
+  if(!c){ fermerPanneau(); return; }
+  panneauCommune = code;
+
+  const maintenant = Date.now();
+  const protegee = c.bouclierJusqua > maintenant;
+  const attaquable = !mienne && !protegee && (c.tier.id === 'rare' || c.tier.id === 'legendaire');
+  const enVente = mienne ? myListings.get(code) : null;
+
+  // sieges en cours, uniquement connus pour mes communes
+  let alerte = '';
+  if(mienne){
+    const s = siegesParCommune().get(code);
+    if(s){
+      alerte = `<p class="pc-alerte">${s.nb > 1 ? s.nb + ' joueurs t’attaquent' : 'Un joueur t’attaque'} — meilleure série <b>${s.max}/3</b></p>`;
+    }
+  }
+
+  const lignes = [];
+  if(c.pop != null) lignes.push(['Population', nbFr(c.pop)]);
+  if(mienne && c.rank) lignes.push(['Rang national', nbFr(c.rank) + '<sup>e</sup>']);
+  lignes.push(['Propriétaire', mienne ? '<b>Toi</b>' : echapperHtml(c.pseudo)]);
+  if(protegee) lignes.push(['Bouclier', 'jusqu’à ' + new Date(c.bouclierJusqua).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })]);
+  else if(mienne) lignes.push(['Bouclier', 'Aucun']);
+  if(enVente != null) lignes.push(['En vente', nbFr(enVente) + ' pts']);
+  if(c.acquiredAt) lignes.push([mienne ? 'Possédée depuis' : 'Prise le', new Date(c.acquiredAt).toLocaleDateString('fr-FR')]);
+
+  const actions = [];
+  if(attaquable) actions.push(['attaque', 'attaque', 'Attaquer', 'Attaquer ' + c.nom]);
+  if(!mienne) actions.push(['', 'echange', 'Proposer un échange', 'Échanger contre ' + c.nom]);
+  if(mienne && (c.tier.id === 'rare' || c.tier.id === 'legendaire') && !protegee)
+    actions.push(['', 'bouclier', 'Poser un bouclier', 'Protéger ' + c.nom]);
+  if(mienne && enVente == null) actions.push(['', 'vente', 'Mettre en vente', 'Vendre ' + c.nom]);
+
+  let note = '';
+  if(!mienne && protegee) note = 'Protégée par un bouclier : impossible de l’attaquer pour l’instant.';
+  else if(!mienne && !attaquable) note = 'Seules les communes rares et légendaires se prennent par la force.';
+
+  el.innerHTML = `
+    <div class="pc-tete">
+      <div class="pc-titre">
+        <b>${echapperHtml(c.nom)}</b>
+        <span class="pc-dep">${echapperHtml(DEPT_NAMES[c.dept] || '')} (${echapperHtml(c.dept)})</span>
+      </div>
+      <span class="pc-rarete ${c.tier.id}">${c.tier.label}</span>
+      <button class="pc-fermer" data-pc="fermer" aria-label="Fermer">&times;</button>
+    </div>
+    ${alerte}
+    <div class="pc-lignes">${lignes.map(([a, b]) => `<div class="pc-ligne"><span>${a}</span><b>${b}</b></div>`).join('')}</div>
+    ${note ? `<p class="pc-note">${note}</p>` : ''}
+    ${actions.length ? `<div class="pc-actions">${actions.map(([cl, ic, txt, titre]) =>
+      `<button class="pc-action ${cl}" data-pc="${ic}" title="${echapperHtml(titre)}">${ICONES_PC[ic]}${txt}</button>`).join('')}</div>` : ''}`;
+
+  el.hidden = false;
+  const wrap = document.getElementById('mapWrap');
+  if(wrap) wrap.classList.add('panneau-ouvert');
+  el.scrollTop = 0;
+  placerPanneau(el, xCss, yCss);
+}
+
+// Sur telephone le panneau est colle en bas par la feuille de style ; sur
+// ordinateur on le pose a cote du clic sans le laisser sortir du cadre.
+function placerPanneau(el, xCss, yCss){
+  if(surTelephone()){ el.style.left = ''; el.style.top = ''; return; }
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap) return;
+  const b = el.getBoundingClientRect();
+  const marge = 12;
+  let gauche = xCss + 16;
+  let haut = yCss - b.height / 2;
+  if(gauche + b.width > wrap.clientWidth - marge) gauche = xCss - b.width - 16;
+  gauche = Math.max(marge, Math.min(gauche, wrap.clientWidth - b.width - marge));
+  haut = Math.max(marge, Math.min(haut, wrap.clientHeight - b.height - marge));
+  el.style.left = Math.round(gauche) + 'px';
+  el.style.top = Math.round(haut) + 'px';
+}
+
+// Les actions renvoient vers l'onglet concerne, la recherche deja remplie sur
+// la commune : pas de duplication du combat, de la bourse ni de l'echange.
+function allerVers(onglet, champId, texte, apres){
+  const tab = document.querySelector('.tab[data-tab="' + onglet + '"]');
+  if(tab) tab.click();
+  setTimeout(() => {
+    const champ = document.getElementById(champId);
+    if(champ){
+      champ.value = texte;
+      champ.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    if(apres) apres();
+    const zone = document.getElementById('panel-' + onglet);
+    if(zone && zone.scrollIntoView) zone.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 140);
+}
+
+document.getElementById('mapPanneau').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pc]');
+  if(!b) return;
+  const quoi = b.dataset.pc;
+  const code = panneauCommune;
+  const c = code ? (collectionMap.get(code) || othersMap.get(code)) : null;
+  if(quoi === 'fermer' || !c){ fermerPanneau(); return; }
+  fermerPanneau();
+  if(quoi === 'attaque') allerVers('combat', 'combatSearch', c.nom);
+  else if(quoi === 'echange') allerVers('echange', 'echSearch', c.nom, () => {
+    // l'echange se fait a rarete egale : on se place d'emblee sur la bonne
+    const onglet = document.querySelector('#echTiers [data-tier="' + c.tier.id + '"]');
+    if(onglet) onglet.click();
+  });
+  else if(quoi === 'bouclier') allerVers('defense', 'boucliersSearch', c.nom);
+  else if(quoi === 'vente') allerVers('bourse', 'sellSearch', c.nom);
+});
+
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape' && panneauCommune) fermerPanneau();
+});
+
 function brancherSurvolCanvas(){
   const cv = document.getElementById('mapCanvas');
   const bulle = document.getElementById('mapInfobulle');
@@ -1884,10 +2030,31 @@ function brancherSurvolCanvas(){
     bulle.style.top = Math.max(4, e.clientY - rect.top - bb.height - 12) + 'px';
   });
   cv.addEventListener('pointerleave', () => { bulle.hidden = true; CV.survol = null; });
+
+  // un deplacement de la carte ne doit pas etre pris pour un clic
+  let depart = null;
+  cv.addEventListener('pointerdown', (e) => { depart = { x: e.clientX, y: e.clientY }; });
+  cv.addEventListener('pointerup', (e) => {
+    if(!depart) return;
+    const bouge = Math.hypot(e.clientX - depart.x, e.clientY - depart.y);
+    depart = null;
+    if(bouge > 6) return;
+    const rect = cv.getBoundingClientRect();
+    const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    const t = communeSousLePoint(x, y);
+    if(t) ouvrirPanneau(t.commune.code, x, y);
+    else fermerPanneau();
+  });
 }
 
 function renderMapOverlay(){
-  if(canvasActif()){ CV.cellulesSignature = ''; CV.donneesSignature = ''; demanderDessin(); return; }
+  if(canvasActif()){
+    CV.cellulesSignature = ''; CV.donneesSignature = '';
+    // la commune affichee a pu changer de main entre-temps
+    if(panneauCommune && !collectionMap.has(panneauCommune) && !othersMap.has(panneauCommune)) fermerPanneau();
+    demanderDessin();
+    return;
+  }
   // plusieurs appels rapproches (cartes retournees une par une) = un seul dessin
   if(carteRenduPlanifie) return;
   carteRenduPlanifie = true;

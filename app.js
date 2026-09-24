@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '0973c09a9e30';
+const VERSION_JEU = '4a3b7acfe2f8';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -1231,7 +1231,9 @@ let carteRenduPlanifie = false;
 // directement : les chemins sont calcules une fois en Path2D, et le deplacement
 // n'est plus une transformation CSS mais un changement de repere du contexte.
 // Consequence : plus de couche promue par le navigateur, donc plus de flou.
-const MODE_CANVAS = new URLSearchParams(location.search).has('canvas');
+// Le canvas est le rendu normal. ?svg=1 rebascule sur l'ancien rendu : porte de
+// sortie a donner a un joueur qui signalerait un probleme d'affichage.
+const MODE_CANVAS = !new URLSearchParams(location.search).has('svg');
 
 const CV = {
   ctx: null,

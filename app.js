@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'b352ed5f3d0e';
+const VERSION_JEU = 'e289a3203d39';
 
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C', target:0.83},
@@ -618,6 +618,8 @@ async function loadOutline(){
     initCanvas();
     brancherSurvolCanvas();
     brancherCalques();
+    placerLegende();
+    window.addEventListener('resize', placerLegende);
     // les frontieres viennent de ce fichier : on le demande sans attendre un dezoom
     chargerDepartements();
     demanderDessin();
@@ -1824,6 +1826,20 @@ function rendreCalques(){
   zone.innerHTML = Object.keys(NOMS).map(id =>
     `<button data-calque="${id}" class="${CALQUES[id] ? 'actif' : ''}" aria-pressed="${!!CALQUES[id]}">${ICONES[id]}${NOMS[id]}</button>`
   ).join('');
+}
+
+// Sur telephone la carte fait 350 px de large : une legende posee dessus en
+// cache la moitie et se retrouve coupee. On la descend sous la carte, et on la
+// remet en surimpression des qu'il y a la place.
+function placerLegende(){
+  const leg = document.getElementById('mapLegende');
+  const wrap = document.getElementById('mapWrap');
+  const bas = document.getElementById('mapLegendeBas');
+  if(!leg || !wrap || !bas) return;
+  const dessous = surTelephone();
+  const parentVoulu = dessous ? bas : wrap;
+  if(leg.parentElement !== parentVoulu) parentVoulu.appendChild(leg);
+  leg.classList.toggle('en-dessous', dessous);
 }
 
 function brancherCalques(){

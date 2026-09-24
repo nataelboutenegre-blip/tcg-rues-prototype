@@ -364,7 +364,10 @@
       <h1>Le territoire</h1>
       <div class="sub">Chaque commune possédée devient une zone. Les zones voisines d'un même joueur se rejoignent, et une frontière apparaît entre deux joueurs.</div>
       <div class="territory">
-        <button class="toggle-others-btn" id="toggleOthersBtn">Cacher le territoire des autres</button>
+        <div class="map-outils">
+          <button class="toggle-others-btn" id="toggleOthersBtn">Cacher le territoire des autres</button>
+          <div class="map-calques" id="mapCalques"></div>
+        </div>
         <div class="map-wrap" id="mapWrap">
           <div class="map-transform" id="mapTransform">
             <svg id="mapFranceSvg" class="map-france-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
@@ -394,10 +397,10 @@
           </div>
           <canvas id="mapCanvas"></canvas>
           <div class="map-infobulle" id="mapInfobulle" hidden></div>
-          <div class="map-calques" id="mapCalques"></div>
           <div class="pc" id="mapPanneau" hidden role="dialog" aria-label="Fiche de la commune"></div>
           <div class="map-legende" id="mapLegende"></div>
         </div>
+        <div id="mapLegendeBas"></div>
         <p class="map-note" style="margin-bottom:24px">Molette ou pincement pour zoomer, cliquer-glisser pour te déplacer. Survole une zone pour voir la commune et son propriétaire.</p>
       </div>
 

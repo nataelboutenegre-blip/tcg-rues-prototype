@@ -2471,3 +2471,32 @@
     transition: width .25s;
   }
   .pc-action[disabled]{ opacity:.45; pointer-events:none; }
+
+  /* ---------- Barre d'outils de la carte ---------- */
+  .map-outils{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    margin-bottom:14px;
+  }
+  .map-outils .toggle-others-btn{ margin-bottom:0; }
+
+  /* les calques ne sont plus poses sur la carte : ils rejoignent la barre */
+  .map-calques{
+    position:static; left:auto; right:auto; bottom:auto;
+    justify-content:flex-start; gap:6px; flex:1; min-width:0;
+  }
+  .map-wrap:not(.en-canvas) .map-calques{ display:none; }
+  .map-wrap.panneau-ouvert .map-calques{ display:flex; }
+
+  /* ---------- Legende descendue sous la carte ---------- */
+  .map-legende.en-dessous{
+    position:static; left:auto; top:auto;
+    width:100%; max-height:none; margin-top:12px;
+    background: var(--nuit-2);
+  }
+  .map-legende.en-dessous .leg-corps{ max-height:none; }
+  #mapLegendeBas:empty{ display:none; }
+
+  @media (max-width: 720px){
+    .map-outils{ gap:6px; }
+    .map-outils .toggle-others-btn{ width:100%; }
+  }

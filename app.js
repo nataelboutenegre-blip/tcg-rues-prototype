@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '81839909d8f7';
+const VERSION_JEU = '96ad939ca703';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -727,7 +727,23 @@ let mapZoom = 1, mapPanX = 0, mapPanY = 0;
 let mapDragging = false, mapDragStart = {x:0, y:0};
 let mapInteractionReady = false;
 const MAP_ZOOM_MIN = 1;
-const MAP_ZOOM_MAX = 6;
+
+// Le zoom est un multiple de la largeur du cadre, pas une echelle de terrain :
+// un plafond fixe a 6 donnait 7,2 px par kilometre sur un ecran de bureau et
+// 2,3 sur un telephone. La meme carte, trois experiences differentes — d'ou la
+// plainte, plus forte sur mobile. On vise desormais une echelle constante :
+// 22 px/km, soit une commune moyenne de 5,5 km affichee sur environ 120 px,
+// quelle que soit la taille de l'ecran.
+const CIBLE_PX_PAR_KM = 22;
+const LARGEUR_FRANCE_KM = 1000;
+function zoomMaxCarte(){
+  const wrap = document.getElementById('mapWrap');
+  const w = wrap && wrap.clientWidth ? wrap.clientWidth : 1000;
+  const cible = CIBLE_PX_PAR_KM * LARGEUR_FRANCE_KM / w;
+  // le plancher garde l'ancien comportement sur tres grand ecran, le plafond
+  // evite qu'un cadre minuscule autorise un zoom absurde
+  return Math.max(6, Math.min(60, cible));
+}
 
 // Empeche la carte de sortir du cadre (plus de France "perdue" hors ecran)
 function clampMapPan(){
@@ -785,7 +801,7 @@ function franchitUnSeuil(avant, apres){
 }
 
 function zoomMapAt(newZoom, px, py){
-  newZoom = Math.min(MAP_ZOOM_MAX, Math.max(MAP_ZOOM_MIN, newZoom));
+  newZoom = Math.min(zoomMaxCarte(), Math.max(MAP_ZOOM_MIN, newZoom));
   // On ne redessine qu'au franchissement d'un seuil : sinon chaque cran de molette
   // reconstruisait toute la carte. Le redessin de fin de geste est fait par signalerMouvementCarte.
   if(franchitUnSeuil(mapZoom, newZoom)) setTimeout(renderMapOverlay, 0);
@@ -874,7 +890,7 @@ function setupMapInteraction(){
     e.preventDefault();
     if(touchPinch && e.touches.length === 2){
       const rect = wrap.getBoundingClientRect();
-      const newZoom = Math.min(MAP_ZOOM_MAX, Math.max(MAP_ZOOM_MIN,
+      const newZoom = Math.min(zoomMaxCarte(), Math.max(MAP_ZOOM_MIN,
         touchPinch.zoom * touchDist(e.touches) / touchPinch.dist));
       // point de la carte qui etait sous les doigts au debut du pincement
       const mx = (touchPinch.mid.x - touchPinch.panX) / touchPinch.zoom;

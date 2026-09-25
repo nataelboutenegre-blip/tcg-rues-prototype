@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'ecd43f3afa68';
+const VERSION_JEU = '6bb39fc67df0';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1120,11 +1120,16 @@ function departementsVisibles(liste){
   if(!wrap) return new Set();
   const w = wrap.clientWidth, h = wrap.clientHeight;
   const vus = new Set();
-  for(const c of liste){
+  const ajouter = (c) => {
+    if(c.lat == null) return;
     const p = project(c.lat, c.lon);
     const x = p.x * w * mapZoom + mapPanX, y = p.y * h * mapZoom + mapPanY;
     if(x > -60 && x < w + 60 && y > -60 && y < h + 60) vus.add(c.dept);
-  }
+  };
+  for(const c of liste) ajouter(c);
+  // sans ca, une commune perdue dans un departement ou l'on ne possede plus
+  // rien n'aurait jamais ses contours charges : elle resterait invisible
+  if(CALQUES.passage) for(const c of perduesMap.values()) ajouter(c);
   return vus;
 }
 
@@ -1509,13 +1514,23 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
       const parJoueur = new Map();
       // les communes libres, en un seul chemin
       const libres = new Path2D();
+      // calque « Mon passage » : ce que j'ai eu et que je n'ai plus.
+      // Deux sorts differents — libre, on la repeint ; reprise, on se contente
+      // d'un lisere pour ne pas mentir sur son proprietaire actuel.
+      const passage = CALQUES.passage && perduesMap.size > 0;
+      const perduLibre = new Path2D();
+      const perduPris = new Path2D();
       for(const dep of deps){
         const contours = CONTOURS.get(dep);
         if(!contours || contours === 'erreur') continue;
         for(const code in contours){
           const p = cheminCommuneCanvas(code, contours[code]);
           const c = possedees.get(code);
-          if(!c){ libres.addPath(p); continue; }
+          const etaitAMoi = passage && perduesMap.has(code);
+          // quand on cache le territoire des autres, une commune reprise n'a
+          // plus rien dessous : elle retombe naturellement dans « libre »
+          if(!c){ (etaitAMoi ? perduLibre : libres).addPath(p); continue; }
+          if(etaitAMoi) perduPris.addPath(p);
           if(!parJoueur.has(c.joueur)) parJoueur.set(c.joueur, new Path2D());
           parJoueur.get(c.joueur).addPath(p);
         }
@@ -1523,6 +1538,21 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
       ctx.fillStyle = 'rgba(22,48,79,0.75)';
       ctx.strokeStyle = '#20406A'; ctx.lineWidth = trait(0.6);
       ctx.fill(libres); ctx.stroke(libres);
+
+      if(passage){
+        ctx.fillStyle = COULEUR_MOI;
+        // 0.20 virait au kaki sur le bleu du fond et ne se lisait plus comme
+        // « c'etait a moi » ; 0.30 garde la parente avec le jaune plein tout
+        // en restant nettement en retrait
+        ctx.globalAlpha = 0.30;
+        ctx.fill(perduLibre);
+        ctx.globalAlpha = 0.75;
+        ctx.strokeStyle = COULEUR_MOI; ctx.lineWidth = trait(1.2);
+        ctx.setLineDash([trait(5), trait(4)]);
+        ctx.stroke(perduLibre);
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+      }
 
       for(const id of ordre([...parJoueur.keys()])){
         const j = joueurs.get(id);
@@ -1535,6 +1565,16 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
         ctx.strokeStyle = j.fonce; ctx.lineWidth = trait(0.7); ctx.stroke(p);
         ctx.globalAlpha = 1;
       }
+      // le lisere des communes reprises : trace apres les fonds, sinon la
+      // couleur du nouveau proprietaire le recouvrirait
+      if(passage){
+        ctx.strokeStyle = COULEUR_MOI;
+        ctx.lineWidth = trait(3.4);
+        ctx.globalAlpha = 0.95;
+        ctx.stroke(perduPris);
+        ctx.globalAlpha = 1;
+      }
+
       // communes possedees dont le departement n'est pas encore charge : une
       // pastille, en attendant que ses vraies limites arrivent
       // un seul chemin par joueur : deux appels de dessin au lieu de deux par commune
@@ -1712,7 +1752,10 @@ const DEP_REGION = {
 
 const CLE_CALQUES = 'terrafront-calques';
 const CALQUES = (() => {
-  const defaut = { regions: true, depts: true, communes: true, noms: true, raretes: true };
+  // « passage » est eteint au depart : il demande un chargement de plus et
+  // n'a de sens que pour un joueur qui a deja perdu des communes
+  const defaut = { regions: true, depts: true, communes: true, noms: true,
+                   raretes: true, passage: false };
   try {
     const v = JSON.parse(localStorage.getItem(CLE_CALQUES) || '{}');
     return Object.assign(defaut, v);
@@ -1835,8 +1878,10 @@ function rendreCalques(){
     communes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/></svg>',
     noms: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 18 12 5l7 13M8 14h8"/></svg>',
     raretes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="m12 3.5 2.6 5.5 5.9.8-4.3 4.2 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.8l5.9-.8z"/></svg>',
+    passage: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19c3-7 6.5-10 9-10s3.5 1.5 3.5 3-1.5 2.5-3 2.5-2.5-1-2.5-2.5S12.5 5 16 4"/><circle cx="19.5" cy="4.5" r="1.6"/></svg>',
   };
-  const NOMS = { regions: 'Régions', depts: 'Départements', communes: 'Communes', noms: 'Noms', raretes: 'Raretés' };
+  const NOMS = { regions: 'Régions', depts: 'Départements', communes: 'Communes',
+                 noms: 'Noms', raretes: 'Raretés', passage: 'Mon passage' };
   zone.innerHTML = Object.keys(NOMS).map(id =>
     `<button data-calque="${id}" class="${CALQUES[id] ? 'actif' : ''}" aria-pressed="${!!CALQUES[id]}">${ICONES[id]}${NOMS[id]}</button>`
   ).join('');
@@ -1868,6 +1913,24 @@ function brancherCalques(){
     b.classList.toggle('actif', CALQUES[id]);
     b.setAttribute('aria-pressed', String(CALQUES[id]));
     enregistrerCalques();
+    if(id === 'passage' && CALQUES.passage){
+      // les communes perdues ne sont pas chargees au demarrage
+      loadMaFrance().then(() => {
+        if(!franceChargee){
+          CALQUES.passage = false;
+          b.classList.remove('actif');
+          b.setAttribute('aria-pressed', 'false');
+          enregistrerCalques();
+          notifier({ type: 'info', titre: 'Mon passage arrive bientôt',
+                     texte: "Ce calque n'est pas encore disponible." });
+          return;
+        }
+        CV.donneesSignature = '';      // le cache doit reprendre les perdues
+        demanderDessin();
+      });
+      return;
+    }
+    CV.donneesSignature = '';
     demanderDessin();
   });
 }

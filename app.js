@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '5b9829f1ddba';
+const VERSION_JEU = '81839909d8f7';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3016,6 +3016,17 @@ document.querySelector('.coll-vue').addEventListener('click', async (e) => {
 });
 
 
+// ---------- Mon solde, mes tirages ----------
+// La table joueurs n'est plus lisible en dehors de id, pseudo et avatar : une
+// policy RLS ne filtre que des lignes, jamais des colonnes, et celle du SELECT
+// laissait donc voir le solde et le rythme de jeu de tout le monde. On demande
+// desormais son propre etat a une fonction, qui ne rend que sa ligne.
+async function monEtat(){
+  const { data, error } = await sb.rpc('mon_etat');
+  if(error) return null;
+  return Array.isArray(data) ? (data[0] || null) : data;
+}
+
 // ---------- Profil d'un joueur ----------
 // Une seule fenetre pour tout le monde : sur son propre profil, les boutons
 // d'action laissent la place aux boutons de modification.
@@ -3507,8 +3518,8 @@ async function verifierTiragesEnAttente(){
   if(paquetEnCours) return;
   const { data: u } = await sb.auth.getUser();
   if(!u || !u.user) return;
-  const { data, error } = await sb.from('joueurs').select('tirages_restants').eq('id', u.user.id).single();
-  if(error || !data || !(data.tirages_restants > 0)) return;
+  const data = await monEtat();
+  if(!data || !(data.tirages_restants > 0)) return;
   paquetEnCours = true;
   renderPackStatus();
   afficherPaquetATirer('gratuit', Math.min(5, data.tirages_restants));
@@ -3522,7 +3533,7 @@ async function proposerPaquetSuivant(){
   if(!zone || zone.querySelector('.suivant-ligne')) return;
   const { data: u } = await sb.auth.getUser();
   if(!u || !u.user) return;
-  const { data } = await sb.from('joueurs').select('tirages_restants').eq('id', u.user.id).single();
+  const data = await monEtat();
   const restants = data && data.tirages_restants > 0 ? data.tirages_restants : 0;
   if(restants <= 0) return;
 
@@ -3564,7 +3575,7 @@ async function loadBourse(){
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
 
-  const { data: joueurRow } = await sb.from('joueurs').select('solde').eq('id', uid).single();
+  const joueurRow = await monEtat();
   document.getElementById('soldeValue').textContent = joueurRow ? joueurRow.solde : '—';
   soldeBourse = joueurRow ? joueurRow.solde : null;
   renderBoucliers();
@@ -4155,7 +4166,7 @@ async function loadCombat(){
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
 
-  const { data: joueurRow } = await sb.from('joueurs').select('solde').eq('id', uid).single();
+  const joueurRow = await monEtat();
   const solde = joueurRow ? joueurRow.solde : '—';
   document.getElementById('soldeValueCombat').textContent = solde;
   const soldeDef = document.getElementById('soldeValueDefense');
@@ -4655,7 +4666,7 @@ function renderSucces(){
 async function rafraichirSoldes(){
   const { data: userData } = await sb.auth.getUser();
   if(!userData || !userData.user) return;
-  const { data: row } = await sb.from('joueurs').select('solde').eq('id', userData.user.id).single();
+  const row = await monEtat();
   if(!row) return;
   ['soldeValue', 'soldeValueCombat', 'soldeValueDefense'].forEach(id => {
     const el = document.getElementById(id);
@@ -4708,7 +4719,7 @@ async function loadEchanges(){
   await chargerCiblesEchange();
   const { data: userData } = await sb.auth.getUser();
   if(userData && userData.user){
-    const { data: row } = await sb.from('joueurs').select('solde').eq('id', userData.user.id).single();
+    const row = await monEtat();
     const el = document.getElementById('soldeValueEchange');
     if(el && row) el.textContent = row.solde;
   }

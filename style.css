@@ -1271,6 +1271,100 @@
     transform: scale(.94); transition: transform .2s cubic-bezier(.2,.8,.3,1.2);
   }
   .fenetre-fond.visible .fenetre{ transform:none; }
+
+  /* ---------- Fiche de profil ---------- */
+  .fenetre.profil{ width:min(430px, 100%); padding:0; text-align:left; max-height:88vh; overflow-y:auto; }
+  .pr-tete{
+    position:relative; padding:22px 20px 18px; text-align:center;
+    background:
+      radial-gradient(120% 140% at 50% -20%, color-mix(in srgb, var(--joueur) 42%, transparent), transparent 70%),
+      linear-gradient(180deg, var(--nuit-3), var(--nuit-2));
+    border-bottom:1px solid rgba(169,188,212,0.14);
+  }
+  .pr-fermer{
+    position:absolute; top:12px; right:12px; width:30px; height:30px; border-radius:50%;
+    border:1px solid rgba(169,188,212,0.25); background:rgba(15,31,56,0.6);
+    color:var(--brume); font-size:1rem; line-height:1; cursor:pointer;
+  }
+  .pr-avatar{
+    width:82px; height:82px; border-radius:50%; margin:0 auto 10px;
+    display:grid; place-items:center; background:var(--nuit);
+    box-shadow:0 0 0 3px var(--joueur), 0 8px 20px rgba(0,0,0,0.45);
+  }
+  .pr-emoji{ font-size:2.3rem; line-height:1; }
+  .pr-initiale{ font-family:var(--titre); font-weight:900; font-size:2.4rem; line-height:1; }
+  .fenetre.profil h2{ font-size:2rem; margin:0; text-transform:uppercase; letter-spacing:.02em; }
+  .pr-sous{ font-size:.82rem; color:var(--brume); margin:4px 0 0; }
+  .pr-sous b{ color:var(--joueur); }
+  .pr-rang{
+    display:inline-block; font-family:var(--titre); font-weight:900; font-size:.9rem;
+    background:var(--c-legendaire); color:var(--encre);
+    padding:2px 10px; border-radius:999px; letter-spacing:.03em;
+  }
+  .pr-corps{ padding:18px 20px 20px; }
+  .pr-chiffres{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px; }
+  .pr-ch{ background:var(--nuit); border-radius:10px; padding:11px 6px; text-align:center; }
+  .pr-ch b{ display:block; font-family:var(--titre); font-weight:900; font-size:1.4rem; line-height:1.05; }
+  .pr-ch span{ font-size:.66rem; color:var(--brume); }
+  .fenetre.profil h3{
+    font-size:.7rem; font-weight:700; letter-spacing:.11em; text-transform:uppercase;
+    color:var(--brume); margin:0 0 9px; font-family:inherit;
+  }
+  .pr-puces{ display:flex; gap:7px; flex-wrap:wrap; margin-bottom:20px; }
+  .pr-puce{
+    font-size:.78rem; background:var(--nuit); color:#fff;
+    border:1px solid rgba(169,188,212,0.18); border-radius:999px; padding:6px 12px;
+  }
+  .pr-puce.or{ border-color:rgba(240,180,41,0.45); color:var(--c-legendaire); }
+  .pr-puce i{ font-style:normal; color:var(--brume); margin-left:6px; font-size:.72rem; }
+  .pr-phare{
+    display:flex; align-items:center; gap:11px; padding:9px 0;
+    border-bottom:1px solid rgba(169,188,212,0.1);
+  }
+  .pr-phare:last-of-type{ border-bottom:0; margin-bottom:12px; }
+  .pr-phare-nom{ flex:1; min-width:0; }
+  .pr-phare-nom b{ display:block; font-size:.92rem; font-weight:600; }
+  .pr-phare-nom span{ font-size:.72rem; color:var(--brume); }
+  .pr-tag{
+    font-size:.62rem; font-weight:700; padding:3px 9px; border-radius:999px;
+    color:#fff; white-space:nowrap; letter-spacing:.02em;
+  }
+  .pr-tag.legendaire{ background:var(--c-legendaire); color:var(--encre); }
+  .pr-tag.rare{ background:var(--c-rare); }
+  .pr-tag.peucommun{ background:var(--c-peucommun); }
+  .pr-tag.commun{ background:var(--c-commun); }
+  .pr-vide{ font-size:.82rem; color:var(--brume); font-style:italic; margin:0 0 12px; }
+  .pr-actions{ display:flex; gap:9px; margin-top:18px; flex-wrap:wrap; }
+  .pr-btn{
+    flex:1; min-width:150px; font:inherit; font-size:.86rem; font-weight:600;
+    border-radius:10px; padding:12px; cursor:pointer;
+    border:1px solid rgba(169,188,212,0.25); background:var(--nuit); color:#fff;
+  }
+  .pr-btn.principal{ background:var(--c-legendaire); color:var(--encre); border-color:transparent; }
+  .pr-btn:hover{ border-color:rgba(169,188,212,0.5); }
+  .pr-btn.principal:hover{ filter:brightness(1.06); }
+  .pr-choix{
+    flex-basis:100%; display:grid; grid-template-columns:repeat(auto-fill, minmax(42px, 1fr));
+    gap:6px; margin-top:4px;
+  }
+  .pr-choix button{
+    font-size:1.3rem; line-height:1; padding:8px 0; cursor:pointer;
+    background:var(--nuit); border:1px solid rgba(169,188,212,0.18); border-radius:9px;
+  }
+  .pr-choix button.actif{ border-color:var(--c-legendaire); background:rgba(240,180,41,0.14); }
+
+  /* le nom du proprietaire, dans la fiche d'une commune */
+  .pc-proprio{
+    font:inherit; font-weight:600; color:#fff; background:none; border:0; padding:0;
+    cursor:pointer; text-decoration:underline; text-decoration-color:rgba(169,188,212,0.45);
+    text-underline-offset:3px;
+  }
+  .pc-proprio:hover{ text-decoration-color:var(--c-legendaire); }
+
+  @media (max-width:520px){
+    .pr-chiffres{ grid-template-columns:repeat(2,1fr); }
+    .pr-btn{ min-width:100%; }
+  }
   .fenetre h2{ font-family: var(--titre); font-weight:900; font-size:2.2rem; line-height:.95; margin:0 0 8px; position:relative; }
   .conquete{ border:2px solid var(--c-legendaire); }
   .conquete.rare{ border-color: var(--c-rare); }

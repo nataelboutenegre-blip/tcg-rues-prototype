@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '6bb39fc67df0';
+const VERSION_JEU = '5b9829f1ddba';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -492,6 +492,17 @@ document.getElementById('signupBtn').addEventListener('click', async () => {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   const pseudo = document.getElementById('authPseudo').value.trim();
+  // Sans pseudo, la base retombait sur la partie gauche de l'adresse e-mail,
+  // et « prenom.nom » se retrouvait affiche dans le classement et sur la carte.
+  if(pseudo.length < 3){
+    showAuth('Choisis un pseudo d\u2019au moins 3 caractères : il sera visible par les autres joueurs.');
+    document.getElementById('authPseudo').focus();
+    return;
+  }
+  if(pseudo.length > 20){
+    showAuth('Ton pseudo ne peut pas dépasser 20 caractères.');
+    return;
+  }
   const { error } = await sb.auth.signUp({ email, password, options: { data: { pseudo } } });
   if(error) showAuth(error.message);
   else { modeAuth('connexion'); showAuth('Compte créé. Tu peux te connecter.', 'succes'); }
@@ -1072,20 +1083,12 @@ document.getElementById('classement').addEventListener('click', (e) => {
     loadClassement();
     return;
   }
+  // Depuis le classement, on ouvre la fiche. Le surlignage du territoire
+  // obligeait de toute facon a changer d'onglet, et la fiche porte un bouton
+  // qui le fait. La legende de la carte, elle, garde le clic direct : on y est
+  // deja devant la carte et on veut aller vite.
   const ligne = e.target.closest('[data-joueur-id]');
-  if(ligne){
-    const id = ligne.dataset.joueurId;
-    joueurSurligne = (joueurSurligne === id) ? null : (id === (window.__monId || '') ? ID_MOI : id);
-    // la carte vit dans l'onglet Territoire : on y bascule, sinon le clic ne montre rien
-    const panneauCarte = document.getElementById('panel-territoire');
-    if(panneauCarte && !panneauCarte.classList.contains('active')){
-      const ongletCarte = document.querySelector('.tab[data-tab="territoire"]');
-      if(ongletCarte) ongletCarte.click();
-    }
-    renderMapOverlay();
-    const carte = document.getElementById('mapWrap');
-    if(carte && carte.scrollIntoView) carte.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
+  if(ligne) ouvrirProfil(ligne.dataset.joueurId);
 });
 
 // ---------- Contours reels des communes ----------
@@ -2032,7 +2035,9 @@ function ouvrirPanneau(code, xCss, yCss){
   const lignes = [];
   if(c.pop != null) lignes.push(['Population', nbFr(c.pop)]);
   if(mienne && c.rank) lignes.push(['Rang national', nbFr(c.rank) + '<sup>e</sup>']);
-  lignes.push(['Propriétaire', mienne ? '<b>Toi</b>' : echapperHtml(c.pseudo)]);
+  lignes.push(['Propriétaire', mienne
+    ? '<b>Toi</b>'
+    : `<button class="pc-proprio" data-profil="${echapperHtml(c.joueurId)}">${echapperHtml(c.pseudo)}</button>`]);
   if(protegee) lignes.push(['Bouclier', 'jusqu’à ' + new Date(c.bouclierJusqua).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })]);
   else if(mienne) lignes.push(['Bouclier', 'Aucun']);
   if(enVente != null) lignes.push(['En vente', nbFr(enVente) + ' pts']);
@@ -2234,6 +2239,8 @@ function allerVers(onglet, champId, texte, apres){
 }
 
 document.getElementById('mapPanneau').addEventListener('click', (e) => {
+  const prof = e.target.closest('[data-profil]');
+  if(prof){ ouvrirProfil(prof.dataset.profil); return; }
   const b = e.target.closest('[data-pc]');
   if(!b) return;
   const quoi = b.dataset.pc;
@@ -3006,6 +3013,219 @@ document.querySelector('.coll-vue').addEventListener('click', async (e) => {
     bloc.hidden = true;
   }
   renderCollection();
+});
+
+
+// ---------- Profil d'un joueur ----------
+// Une seule fenetre pour tout le monde : sur son propre profil, les boutons
+// d'action laissent la place aux boutons de modification.
+const AVATARS = [
+  '🐺','🦊','🦅','🐗','🦌','🐻','🦉','🐎','🦁','🐉',
+  '⚔️','🛡️','🏰','👑','⚓','🗡️','🏹','🔱','⛰️','🌊',
+  '🍷','🧀','🥖','🌻','🌲','🗼','⚜️','🔥','❄️','⭐'
+];
+
+// Le titre ne se saisit pas : il se deduit de la region ou le joueur a le
+// plus de communes. Rien a stocker, rien a moderer, et il suit le territoire.
+function regionsTriees(deps){
+  const parRegion = new Map();
+  for(const d of (deps || [])){
+    const r = DEP_REGION[d.dep];
+    if(!r) continue;
+    parRegion.set(r, (parRegion.get(r) || 0) + (Number(d.n) || 0));
+  }
+  return [...parRegion.entries()].sort((x, y) => y[1] - x[1]);
+}
+
+// Une table plutot qu'une regle : « du Grand Est » et « du Centre-Val de Loire »
+// font mentir n'importe quelle regex, et il n'y a que treize regions.
+const ARTICLE_REGION = {
+  'Auvergne-Rhône-Alpes':        "d'Auvergne-Rhône-Alpes",
+  'Bourgogne-Franche-Comté':     'de Bourgogne-Franche-Comté',
+  'Bretagne':                    'de Bretagne',
+  'Centre-Val de Loire':         'du Centre-Val de Loire',
+  'Corse':                       'de Corse',
+  'Grand Est':                   'du Grand Est',
+  'Hauts-de-France':             'des Hauts-de-France',
+  'Île-de-France':               "d'Île-de-France",
+  'Normandie':                   'de Normandie',
+  'Nouvelle-Aquitaine':          'de Nouvelle-Aquitaine',
+  'Occitanie':                   "d'Occitanie",
+  'Pays de la Loire':            'des Pays de la Loire',
+  "Provence-Alpes-Côte d'Azur":  "de Provence-Alpes-Côte d'Azur",
+};
+function articleRegion(r){ return ARTICLE_REGION[r] || 'de ' + r; }
+
+function titreDepuisDeps(deps){
+  const regions = regionsTriees(deps);
+  if(regions.length === 0) return 'Sans terre';
+  const total = regions.reduce((s, [, n]) => s + n, 0);
+  const [region, max] = regions[0];
+  const part = total > 0 ? max / total : 0;
+  // trois paliers : le titre dit aussi a quel point le joueur est concentre
+  const rang = part >= 0.6 ? 'Seigneur' : part >= 0.3 ? 'Maître' : 'Baron';
+  return rang + ' ' + articleRegion(region);
+}
+
+function avatarHtml(p, couleur){
+  if(p.avatar) return `<span class="pr-emoji">${echapperTexte(p.avatar)}</span>`;
+  // pas d'avatar choisi : l'initiale du pseudo, dans la couleur du joueur
+  const init = String(p.pseudo || '?').trim().charAt(0).toUpperCase();
+  return `<span class="pr-initiale" style="color:${couleur}">${echapperTexte(init)}</span>`;
+}
+
+let profilEnCours = null;
+let fermerProfil = null;
+
+async function ouvrirProfil(joueurId){
+  if(!joueurId) return;
+  const { data, error } = await sb.rpc('profil_joueur', { p_joueur: joueurId });
+  if(error || !data){
+    // profil-joueur.sql pas encore execute : on le dit au lieu d'ouvrir un vide
+    notifier({ type: 'info', titre: 'Profil indisponible',
+               texte: "Cette fiche n'est pas encore disponible." });
+    return;
+  }
+  profilEnCours = data;
+  rendreProfil();
+}
+
+function rendreProfil(){
+  const p = profilEnCours;
+  if(!p) return;
+  const moi = !!p.est_moi;
+  const couleur = moi ? COULEUR_MOI : colorForPlayer(p.id);
+  const nb = (x) => Number(x || 0).toLocaleString('fr-FR');
+  const regions = regionsTriees(p.deps);
+  const depuis = p.depuis
+    ? new Date(p.depuis).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+
+  const phares = (p.phares || []).map(c => {
+    const t = TIERS.find(x => x.id === c.tier);
+    return `<div class="pr-phare">
+      <span class="pr-phare-nom"><b>${echapperTexte(c.nom)}</b>
+        <span>${echapperTexte(DEPT_NAMES[c.dep] || '')} (${echapperTexte(c.dep)}) · ${nb(c.pop)} hab.</span></span>
+      <span class="pr-tag ${echapperTexte(c.tier)}">${echapperTexte(t ? t.label : c.tier)}</span>
+    </div>`;
+  }).join('') || '<p class="pr-vide">Aucune commune pour le moment.</p>';
+
+  const puces = regions.slice(0, 4).map(([r, n], i) =>
+    `<span class="pr-puce${i === 0 ? ' or' : ''}">${i === 0 ? '👑 ' : ''}${echapperTexte(r)}<i>${nb(n)}</i></span>`
+  ).join('') || '<span class="pr-puce">Aucune région</span>';
+
+  const actions = moi
+    ? `<button class="pr-btn principal" data-pr="avatar">Changer d'avatar</button>
+       <button class="pr-btn" data-pr="pseudo">Changer de pseudo</button>`
+    : `<button class="pr-btn principal" data-pr="territoire">Voir son territoire</button>
+       <button class="pr-btn" data-pr="echange">Proposer un échange</button>`;
+
+  fermerProfil = ouvrirFenetre(`
+    <div class="fenetre profil" role="dialog" aria-modal="true" aria-labelledby="prNom"
+         style="--joueur:${couleur}">
+      <div class="pr-tete">
+        <button class="pr-fermer" data-pr="fermer" aria-label="Fermer">✕</button>
+        <div class="pr-avatar">${avatarHtml(p, couleur)}</div>
+        <h2 id="prNom">${echapperTexte(p.pseudo)}</h2>
+        <p class="pr-sous"><b>${echapperTexte(titreDepuisDeps(p.deps))}</b>${
+          p.rang > 0 ? ` · <span class="pr-rang">${p.rang}${p.rang === 1 ? 'er' : 'e'}</span>` : ''}</p>
+      </div>
+      <div class="pr-corps">
+        <div class="pr-chiffres">
+          <div class="pr-ch"><b style="color:${couleur}">${nb(p.communes)}</b><span>communes</span></div>
+          <div class="pr-ch"><b>${nb(p.departements)}</b><span>départements</span></div>
+          <div class="pr-ch"><b style="color:var(--c-legendaire)">${nb(p.legendaires)}</b><span>légendaires</span></div>
+          <div class="pr-ch"><b style="color:var(--c-rare)">${nb(p.rares)}</b><span>rares</span></div>
+        </div>
+
+        <h3>Territoire</h3>
+        <div class="pr-puces">${puces}</div>
+
+        <h3>Communes phares</h3>
+        ${phares}
+
+        <h3>En chiffres</h3>
+        <div class="pr-puces">
+          ${depuis ? `<span class="pr-puce">📅 Depuis le ${echapperTexte(depuis)}</span>` : ''}
+          <span class="pr-puce">⚔️ ${nb(p.conquetes)} conquête${p.conquetes > 1 ? 's' : ''}</span>
+          <span class="pr-puce">🛡️ ${nb(p.perdues)} perdue${p.perdues > 1 ? 's' : ''} au combat</span>
+          <span class="pr-puce">👥 ${nb(p.habitants)} habitants</span>
+        </div>
+
+        <div class="pr-actions">${actions}</div>
+      </div>
+    </div>`, () => { profilEnCours = null; fermerProfil = null; });
+}
+
+// Les actions de la fiche, par delegation sur le fond de fenetre
+document.getElementById('fenetre').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-pr]');
+  if(!b || !profilEnCours) return;
+  const p = profilEnCours;
+  const action = b.dataset.pr;
+
+  if(action === 'fermer'){
+    if(fermerProfil) fermerProfil(null);
+    return;
+  }
+
+  if(action === 'territoire'){
+    const id = p.est_moi ? ID_MOI : p.id;
+    joueurSurligne = id;
+    CV.donneesSignature = '';
+    if(fermerProfil) fermerProfil(null);
+    const onglet = document.querySelector('.tab[data-tab="territoire"]');
+    if(onglet) onglet.click();
+    renderMapOverlay();
+    demanderDessin();
+    const carte = document.getElementById('mapWrap');
+    if(carte && carte.scrollIntoView) carte.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  if(action === 'echange'){
+    if(fermerProfil) fermerProfil(null);
+    const onglet = document.querySelector('.tab[data-tab="echange"]');
+    if(onglet) onglet.click();
+    return;
+  }
+
+  if(action === 'avatar'){
+    const zone = b.closest('.pr-actions');
+    const deja = zone.querySelector('.pr-choix');
+    if(deja){ deja.remove(); return; }
+    const choix = document.createElement('div');
+    choix.className = 'pr-choix';
+    choix.innerHTML = AVATARS.map(x =>
+      `<button data-pr="avatar-choix" data-emoji="${x}" class="${p.avatar === x ? 'actif' : ''}">${x}</button>`
+    ).join('');
+    zone.appendChild(choix);
+    return;
+  }
+
+  if(action === 'avatar-choix'){
+    const emoji = b.dataset.emoji;
+    const { error } = await sb.rpc('changer_avatar', { p_avatar: emoji });
+    if(error){ notifier({ type: 'erreur', titre: 'Avatar', texte: messageLisible(error.message) }); return; }
+    profilEnCours.avatar = emoji;
+    rendreProfil();
+    notifier({ type: 'succes', titre: 'Avatar changé' });
+    return;
+  }
+
+  if(action === 'pseudo'){
+    const nouveau = prompt(
+      'Ton nouveau pseudo, entre 3 et 20 caractères.\n\nTu ne pourras plus en changer avant sept jours.',
+      p.pseudo);
+    if(nouveau == null) return;
+    const { data, error } = await sb.rpc('changer_pseudo', { p_pseudo: nouveau });
+    if(error){ notifier({ type: 'erreur', titre: 'Pseudo', texte: messageLisible(error.message) }); return; }
+    profilEnCours.pseudo = data;
+    rendreProfil();
+    notifier({ type: 'succes', titre: 'Pseudo changé', texte: 'Tu es maintenant ' + data + '.' });
+    loadClassement();
+    return;
+  }
 });
 
 // ---------- Cartes et paquet ----------
@@ -4154,6 +4374,7 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // Les 4 onglets principaux restent dans la barre, les autres passent dans le menu.
 const ONGLETS_BARRE = ['tirage', 'collection', 'combat', 'defense'];
 const ONGLETS_MENU = ['territoire', 'communaute', 'bourse', 'echange', 'succes'];
+const ICONE_PROFIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>';
 const ICONE_REGLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const ICONE_SORTIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M11 12h10m-3-3 3 3-3 3"/></svg>';
 const surTelephone = () => window.matchMedia('(max-width: 720px)').matches;
@@ -4174,6 +4395,7 @@ function construireMenuPlus(){
   }).join('');
   liste.innerHTML = entrees + `
     <div class="fp-sep"></div>
+    <button class="fp-item" data-aller="profil">${ICONE_PROFIL}Mon profil</button>
     <button class="fp-item" data-aller="regles">${ICONE_REGLES}Règles du jeu</button>
     <a class="fp-item fp-lien" href="${LIEN_DISCORD}" target="_blank" rel="noopener">${ICONE_DISCORD}Rejoindre le Discord</a>
     <button class="fp-item sortie" data-deconnexion>${ICONE_SORTIE}Se déconnecter</button>`;
@@ -4223,6 +4445,7 @@ document.getElementById('feuilleListe').addEventListener('click', (e) => {
   if(!b) return;
   ouvrirMenuPlus(false);
   if(b.hasAttribute('data-deconnexion')){ sb.auth.signOut(); return; }
+  if(b.dataset.aller === 'profil'){ ouvrirProfil(window.__monId || null); return; }
   if(b.dataset.aller === 'regles'){ document.getElementById('reglesBtn').click(); return; }
   const tab = document.querySelector(`.tab[data-tab="${b.dataset.aller}"]`);
   if(tab) tab.click();

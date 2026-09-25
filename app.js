@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '4f04916b5356';
+const VERSION_JEU = 'ecd43f3afa68';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2922,6 +2922,19 @@ document.querySelector('.coll-vue').addEventListener('click', async (e) => {
   const bloc = document.getElementById('collFrance');
   if(vueCollection === 'france'){
     await loadMaFrance();
+    if(!franceChargee){
+      // les fonctions ne sont pas encore en base : on revient en arriere
+      // proprement plutot que d'afficher une carte vide et des tirets
+      vueCollection = 'mienne';
+      document.querySelectorAll('.coll-vue button').forEach(x => {
+        const actif = x.dataset.vue === 'mienne';
+        x.classList.toggle('actif', actif);
+        x.setAttribute('aria-selected', String(actif));
+      });
+      notifier({ type: 'info', titre: 'Ma France arrive bientôt',
+                 texte: "Cette vue n'est pas encore disponible." });
+      return;
+    }
     if(bloc) bloc.hidden = false;
     majResumeFrance();
     // le canvas n'a de largeur qu'une fois le bloc affiche

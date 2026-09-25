@@ -354,8 +354,28 @@
           <h1>Ma collection</h1>
           <span class="coll-compteur"><b id="collectionCount">0</b> cartes</span>
         </div>
+        <div class="coll-vue" role="tablist" aria-label="Quelle collection afficher">
+          <button class="actif" data-vue="mienne" role="tab" aria-selected="true">Mes territoires</button>
+          <button data-vue="france" role="tab" aria-selected="false">Ma France</button>
+        </div>
         <div class="coll-filtres" id="collectionFilters"></div>
         <input type="text" id="collectionSearch" class="bourse-search coll-recherche" placeholder="Rechercher une commune ou un département…">
+      </div>
+      <div class="coll-france" id="collFrance" hidden>
+        <canvas id="collFranceCarte"></canvas>
+        <div class="cf-cote">
+          <div class="cf-chiffres">
+            <div class="cf-bloc"><b id="cfDecouvertes">—</b><span>découvertes</span></div>
+            <div class="cf-bloc gris"><b id="cfPerdues">—</b><span>perdues</span></div>
+          </div>
+          <div class="cf-jauge"><i id="cfJauge" style="width:0%"></i></div>
+          <p class="cf-jauge-txt" id="cfJaugeTxt">—</p>
+          <div class="cf-legende">
+            <span><i class="cf-p pleine"></i>Possédée en ce moment</span>
+            <span><i class="cf-p pale"></i>Eue puis perdue</span>
+            <span><i class="cf-p vide"></i>Jamais touchée</span>
+          </div>
+        </div>
       </div>
       <div class="coll-grille" id="collectionGrid"><p class="collection-empty">Aucune carte pour le moment. Ouvre un paquet.</p></div>
     </section>

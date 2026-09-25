@@ -333,6 +333,61 @@
   .coll-ligne-titre h1{ margin:0; font-size: clamp(2rem, 4vw, 2.6rem); }
   .coll-compteur{ color: var(--brume); font-size: 0.95rem; }
   .coll-compteur b{ color:#fff; font-weight:600; }
+  /* bascule entre les deux lectures de la collection */
+  .coll-vue{
+    display:inline-flex; background: var(--nuit); padding:3px; gap:2px;
+    border:1px solid rgba(169,188,212,0.2); border-radius:999px; margin-bottom:12px;
+  }
+  .coll-vue button{
+    font: inherit; font-size:0.82rem; font-weight:600; color: var(--brume);
+    background:none; border:0; border-radius:999px; padding:7px 16px; cursor:pointer;
+  }
+  .coll-vue button.actif{
+    background: rgba(240,180,41,0.16); color: var(--c-legendaire);
+    box-shadow: inset 0 0 0 1px rgba(240,180,41,0.5);
+  }
+  .coll-vue button:focus-visible{ outline:2px solid var(--c-legendaire); outline-offset:2px; }
+
+  /* la carte du passage complet */
+  .coll-france{
+    display:grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap:18px;
+    align-items:center; background: var(--nuit-2);
+    border:1px solid rgba(169,188,212,0.16); border-radius:14px;
+    padding:16px; margin:0 0 18px;
+  }
+  .coll-france[hidden]{ display:none; }
+  #collFranceCarte{ width:100%; height:auto; display:block; border-radius:10px; background: var(--nuit); }
+  .cf-chiffres{ display:flex; gap:22px; margin-bottom:14px; }
+  .cf-bloc b{
+    display:block; font-family: var(--titre); font-weight:900;
+    font-size:2rem; line-height:1; color: var(--c-legendaire);
+  }
+  .cf-bloc span{ font-size:0.74rem; color: var(--brume); }
+  .cf-bloc.gris b{ color: var(--brume); opacity:.75; }
+  .cf-jauge{ height:8px; border-radius:999px; background: rgba(169,188,212,0.16); overflow:hidden; }
+  .cf-jauge i{ display:block; height:100%; border-radius:999px;
+    background: linear-gradient(90deg, #F0B429, #E5A020); transition: width .5s ease; }
+  .cf-jauge-txt{ font-size:0.78rem; color: var(--brume); margin:7px 0 0; }
+  .cf-jauge-txt b{ color:#fff; font-weight:600; }
+  .cf-legende{
+    display:flex; gap:16px; flex-wrap:wrap; margin-top:14px; padding-top:12px;
+    border-top:1px solid rgba(169,188,212,0.12); font-size:0.76rem; color: var(--brume);
+  }
+  .cf-p{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:-1px; }
+  .cf-p.pleine{ background: var(--c-legendaire); }
+  .cf-p.pale{ background: var(--c-legendaire); opacity:.32; }
+  .cf-p.vide{ background: var(--nuit); box-shadow: inset 0 0 0 1px rgba(169,188,212,0.4); }
+
+  /* une commune perdue reste dans la collection, mais elle se voit */
+  .mini.perdue{ opacity:.45; filter: grayscale(.5); }
+  .mini.perdue .mini-int{ position:relative; }
+  .mini-perdue{
+    position:absolute; top:5px; right:5px; z-index:2;
+    font-size:0.52rem; font-weight:800; letter-spacing:0.06em;
+    color:#fff; background: rgba(229,72,77,0.92);
+    padding:2px 6px; border-radius:999px;
+  }
+
   .coll-filtres{ display:flex; flex-wrap:wrap; gap:8px; }
   .coll-filtre{
     display:inline-flex; align-items:center; gap:7px;
@@ -1047,6 +1102,9 @@
     .leg-tailles{ display:none; }
     .coll-entete{ margin: -20px -14px 12px; padding: 14px 14px 10px; }
     .coll-filtres{ flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    /* sur telephone la carte passe au-dessus des chiffres plutot qu'a cote */
+    .coll-france{ grid-template-columns: 1fr; gap:14px; padding:12px; }
+    .cf-bloc b{ font-size:1.6rem; }
     .coll-filtre{ white-space: nowrap; }
     .coll-grille{ grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
     .mini-art{ margin: 3px 3px 0; }

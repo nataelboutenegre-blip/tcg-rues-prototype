@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '0db3bbd221a6';
+const VERSION_JEU = '4f04916b5356';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2732,10 +2732,127 @@ function renderCollectionFilters(entries){
 }
 const COULEURS_FILTRE = {legendaire:'#F0B429', rare:'#2F7CF6', peucommun:'#22A06B', commun:'#7E8BA0'};
 
+// ---------- Ma France : tout ce que le joueur a possede un jour ----------
+// La carte du Territoire montre l'instant present. Celle-ci montre le passage :
+// une commune perdue y reste coloriee. C'est la seule progression du jeu qui ne
+// peut que monter, et pour un joueur qui s'est fait reprendre son territoire
+// c'est la difference entre 33 communes a regarder et 438.
+let vueCollection = 'mienne';          // 'mienne' | 'france'
+let perduesMap = new Map();
+let resumeFrance = null;
+let franceChargee = false;
+
+async function loadMaFrance(){
+  if(franceChargee) return;
+  franceChargee = true;                // une seule fois par session
+  const [perdues, resume] = await Promise.all([
+    sb.rpc('mes_communes_perdues'),
+    sb.rpc('ma_france_resume')
+  ]);
+  if(perdues.error || resume.error){
+    // le SQL n'est peut-etre pas encore passe : on laisse la vue par defaut
+    console.warn('Ma France indisponible', perdues.error || resume.error);
+    franceChargee = false;
+    return;
+  }
+  perduesMap = new Map();
+  for(const r of (perdues.data || [])){
+    const tier = TIERS.find(t => t.id === r.tier);
+    if(!tier) continue;
+    perduesMap.set(r.code, {
+      code: r.code, nom: r.nom, dept: r.dep, pop: r.pop,
+      lat: r.lat, lon: r.lon, tier, rank: r.rang, tierSize: r.total,
+      perdue: true, acquiredAt: 0, bouclierJusqua: 0, conquiseLe: 0
+    });
+  }
+  resumeFrance = Array.isArray(resume.data) ? resume.data[0] : resume.data;
+  majResumeFrance();
+  dessinerMaFrance();
+}
+
+function majResumeFrance(){
+  if(!resumeFrance) return;
+  const d = Number(resumeFrance.decouvertes) || 0;
+  const p = Number(resumeFrance.perdues) || 0;
+  const t = Number(resumeFrance.total) || 1;
+  const pct = 100 * d / t;
+  const fixe = (x) => x.toLocaleString('fr-FR');
+  const mettre = (id, v) => { const e = document.getElementById(id); if(e) e.textContent = v; };
+  mettre('cfDecouvertes', fixe(d));
+  mettre('cfPerdues', fixe(p));
+  const j = document.getElementById('cfJauge');
+  // en dessous de 0,4 % la barre serait invisible : on garde un trait
+  if(j) j.style.width = Math.max(pct, d > 0 ? 0.4 : 0) + '%';
+  const txt = document.getElementById('cfJaugeTxt');
+  if(txt) txt.innerHTML = '<b>' + fixe(d) + '</b> communes sur ' + fixe(t)
+    + ' — <b>' + pct.toLocaleString('fr-FR', {minimumFractionDigits:1, maximumFractionDigits:1})
+    + ' %</b> de la France découverte';
+}
+
+// La carte est redessinee a la demande : pas d'animation, pas de zoom, c'est
+// une image de synthese qu'on regarde, pas un terrain de jeu.
+function dessinerMaFrance(){
+  const cv = document.getElementById('collFranceCarte');
+  if(!cv || !FRANCE_OUTLINE || !mapBounds) return;
+  const largeur = cv.clientWidth || cv.parentElement?.clientWidth || 420;
+  if(largeur < 40) return;                       // panneau encore masque
+  const ratio = MAP_H / MAP_W;
+  const hauteur = Math.round(largeur * ratio);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.round(largeur * dpr);
+  cv.height = Math.round(hauteur * dpr);
+  cv.style.height = hauteur + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, largeur, hauteur);
+
+  // le contour, dans les tons de la carte principale
+  ctx.beginPath();
+  for(const ring of FRANCE_OUTLINE){
+    ring.forEach(([lon, lat], i) => {
+      const p = project(lat, lon);
+      const x = p.x * largeur, y = p.y * hauteur;
+      if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+  }
+  ctx.fillStyle = '#16294A';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(169,188,212,0.35)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  const rayon = Math.max(1.2, largeur / 200);
+  const points = (liste, couleur, alpha, r) => {
+    ctx.fillStyle = couleur;
+    ctx.globalAlpha = alpha;
+    ctx.beginPath();
+    for(const e of liste){
+      if(e.lat == null || e.lon == null) continue;
+      const p = project(e.lat, e.lon);
+      const x = p.x * largeur, y = p.y * hauteur;
+      ctx.moveTo(x + r, y);
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+    }
+    ctx.fill();
+    ctx.globalAlpha = 1;
+  };
+  // les perdues d'abord : les possedees passent par-dessus
+  points(perduesMap.values(), '#F0B429', 0.30, rayon);
+  points(collectionMap.values(), '#F0B429', 0.95, rayon * 1.08);
+}
+
+window.addEventListener('resize', () => {
+  if(vueCollection === 'france') dessinerMaFrance();
+});
+
 function renderCollection(){
   const countEl = document.getElementById('collectionCount');
   const gridEl = document.getElementById('collectionGrid');
-  const entries = Array.from(collectionMap.values());
+  // en vue « Ma France » la grille montre aussi ce qui a ete perdu
+  const entries = vueCollection === 'france'
+    ? Array.from(collectionMap.values()).concat(Array.from(perduesMap.values()))
+    : Array.from(collectionMap.values());
   countEl.textContent = entries.length.toLocaleString('fr-FR');
   renderCollectionFilters(entries);
   if(entries.length === 0){
@@ -2751,6 +2868,8 @@ function renderCollection(){
     .sort((a,b) => {
       const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
       if(ra !== rb) return ra - rb;
+      // a rarete egale, ce qu'on possede encore passe devant
+      if(!!a.perdue !== !!b.perdue) return a.perdue ? 1 : -1;
       return b.pop - a.pop;
     });
   if(visibles.length === 0){
@@ -2765,8 +2884,9 @@ function renderCollection(){
       ? `<span class="mini-siege" title="${s.nb > 1 ? s.nb + ' joueurs attaquent cette commune' : 'Un joueur attaque cette commune'} — meilleure série ${s.max} sur 3">${s.max}/3${s.nb > 1 ? ' ×' + s.nb : ''}</span>`
       : '';
     return `
-    <div class="mini ${entry.tier.id}" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}">
+    <div class="mini ${entry.tier.id}${entry.perdue ? ' perdue' : ''}" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
       <div class="mini-int">
+        ${entry.perdue ? '<span class="mini-perdue">PERDUE</span>' : ''}
         <div class="mini-art">${miniArtSvg(entry.code, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}</div>
         <div class="mini-infos">
           <p class="mini-nom ${entry.nom.length > 14 ? 'long' : ''}">${entry.nom}</p>
@@ -2787,6 +2907,28 @@ document.getElementById('collectionFilters').addEventListener('click', (e) => {
   const b = e.target.closest('.coll-filtre');
   if(!b) return;
   collectionFilterTier = b.dataset.tier;
+  renderCollection();
+});
+
+document.querySelector('.coll-vue').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-vue]');
+  if(!b || b.dataset.vue === vueCollection) return;
+  vueCollection = b.dataset.vue;
+  document.querySelectorAll('.coll-vue button').forEach(x => {
+    const actif = x.dataset.vue === vueCollection;
+    x.classList.toggle('actif', actif);
+    x.setAttribute('aria-selected', String(actif));
+  });
+  const bloc = document.getElementById('collFrance');
+  if(vueCollection === 'france'){
+    await loadMaFrance();
+    if(bloc) bloc.hidden = false;
+    majResumeFrance();
+    // le canvas n'a de largeur qu'une fois le bloc affiche
+    requestAnimationFrame(dessinerMaFrance);
+  } else if(bloc){
+    bloc.hidden = true;
+  }
   renderCollection();
 });
 

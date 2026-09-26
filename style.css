@@ -2749,3 +2749,126 @@
     .map-outils{ gap:6px; }
     .map-outils .toggle-others-btn{ width:100%; }
   }
+
+/* ---------- La fiche d'une commune ---------- */
+.mini[data-code]{ cursor: pointer; }
+.mini[data-code]:focus-visible{ outline: 2px solid var(--or, #F0B429); outline-offset: 3px; }
+
+.fenetre.fiche{
+  position: relative;
+  width: min(360px, calc(100vw - 32px));
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+}
+.fiche .fc-fermer{
+  position: absolute; top: 10px; right: 10px; z-index: 3;
+  width: 30px; height: 30px; border-radius: 50%;
+  border: 1px solid rgba(169,188,212,.25);
+  background: rgba(10,22,42,.62); color: #A9BCD4;
+  font: inherit; line-height: 1; cursor: pointer;
+}
+.fiche .fc-fermer:hover{ background: rgba(10,22,42,.9); color: #fff; }
+
+.fiche .fc-tete{ padding: 20px 20px 0; }
+.fiche .fc-carte{ width: 190px; margin: 0 auto; }
+.fiche .fc-carte .carte-cadre{ width: 100%; }
+/* une regle mobile cache le rang sur la carte d'ouverture de paquet, qui le
+   reaffiche plus bas ; la fiche n'a pas ce bas de carte, on le garde ici */
+.fenetre.fiche .carte-haut .carte-num{ display: inline; }
+
+.fiche .fc-corps{ padding: 14px 20px 20px; }
+.fiche .fc-nom{
+  margin: 12px 0 2px; text-align: center;
+  font-size: 1.75rem; line-height: 1.05; letter-spacing: .01em;
+}
+.fiche .fc-nom.long{ font-size: 1.35rem; }
+.fiche .fc-dep{ margin: 0; text-align: center; font-size: .82rem; color: #A9BCD4; }
+
+/* le gentile : masculin et feminin tous les deux en dore */
+.fiche .fc-gent{
+  margin: 8px 0 0; text-align: center;
+  font-size: .95rem; color: #F0B429;
+}
+
+.fiche .fc-chiffres{
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 8px; margin: 16px 0 18px;
+}
+.fiche .fc-ch{
+  background: rgba(8,18,35,.55); border-radius: 10px;
+  padding: 10px 6px; text-align: center;
+}
+.fiche .fc-ch b{
+  display: block; font-size: 1.2rem; line-height: 1.1;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.fiche .fc-ch span{ font-size: .63rem; color: #A9BCD4; }
+.fiche .fc-ch .fc-perdue{ color: #E5484D; font-size: 1.05rem; }
+.fiche.commun     .fc-ch .fc-rar{ color: #7E8BA0; font-size: 1.05rem; }
+.fiche.peucommun  .fc-ch .fc-rar{ color: #22A06B; font-size: 1.05rem; }
+.fiche.rare       .fc-ch .fc-rar{ color: #2F7CF6; font-size: 1.05rem; }
+.fiche.legendaire .fc-ch .fc-rar{ color: #F0B429; font-size: 1.05rem; }
+
+.fiche h3{
+  margin: 0 0 10px; font-size: .67rem; font-weight: 700;
+  letter-spacing: .11em; text-transform: uppercase; color: #A9BCD4;
+}
+.fiche .fc-attente{ margin: 0; font-size: .82rem; color: #8397B0; }
+.fiche .fc-fait{
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 9px 0; border-bottom: 1px solid rgba(169,188,212,.1);
+  font-size: .87rem; line-height: 1.45;
+}
+.fiche .fc-fait:last-of-type{ border-bottom: 0; }
+.fiche .fc-fait i{ flex-shrink: 0; font-style: normal; font-size: 1rem; line-height: 1.3; }
+.fiche .fc-fait.phare{
+  background: rgba(240,180,41,.09);
+  border: 1px solid rgba(240,180,41,.3);
+  border-radius: 10px; padding: 11px 12px; margin-bottom: 6px; border-bottom: 0;
+}
+.fiche .fc-fait.phare b{ color: #F0B429; font-weight: 600; }
+
+.fiche .fc-actions{ display: flex; gap: 8px; margin-top: 18px; }
+.fiche .fc-btn{
+  flex: 1; font: inherit; font-size: .85rem; font-weight: 600;
+  border-radius: 10px; padding: 11px; cursor: pointer;
+  border: 1px solid rgba(169,188,212,.25);
+  background: rgba(8,18,35,.55); color: #fff;
+}
+.fiche .fc-btn.principal{
+  background: #F0B429; color: #13233B; border-color: transparent;
+}
+.fiche .fc-btn:hover{ filter: brightness(1.08); }
+
+@media (max-width: 420px){
+  .fiche .fc-tete{ padding: 18px 16px 0; }
+  .fiche .fc-corps{ padding: 12px 16px 18px; }
+  .fiche .fc-carte{ width: 190px; }
+  .fiche .fc-nom{ font-size: 1.55rem; }
+}
+
+/* le repere pose par « Voir sur la carte » */
+/* l'anneau reste plein tout du long : c'est lui qui designe la commune.
+   Le halo qui s'ecarte n'est la que pour attirer l'oeil au premier instant. */
+.carte-visee{
+  position: absolute; z-index: 4; pointer-events: none;
+  width: 24px; height: 24px; margin: -12px 0 0 -12px;
+  border: 2.5px solid #F0B429; border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(10,22,41,.85), 0 0 16px rgba(240,180,41,.7);
+  animation: viseeFin .6s ease-in 3.4s forwards;
+}
+.carte-visee::after{
+  content: ''; position: absolute; inset: -3px;
+  border: 2px solid rgba(240,180,41,.9); border-radius: 50%;
+  animation: viseeHalo 1.6s ease-out 2;
+}
+@keyframes viseeHalo{
+  0%   { transform: scale(1);   opacity: .9; }
+  70%  { transform: scale(2.6); opacity: 0; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+@keyframes viseeFin{ to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce){
+  .carte-visee::after{ animation: none; opacity: 0; }
+}

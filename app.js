@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '35d865501b1e';
+const VERSION_JEU = 'b17f23b3ca63';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2971,7 +2971,7 @@ function renderCollection(){
       ? `<span class="mini-siege" title="${s.nb > 1 ? s.nb + ' joueurs attaquent cette commune' : 'Un joueur attaque cette commune'} — meilleure série ${s.max} sur 3">${s.max}/3${s.nb > 1 ? ' ×' + s.nb : ''}</span>`
       : '';
     return `
-    <div class="mini ${entry.tier.id}${entry.perdue ? ' perdue' : ''}" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
+    <div class="mini ${entry.tier.id}${entry.perdue ? ' perdue' : ''}" data-code="${entry.code}" role="button" tabindex="0" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
       <div class="mini-int">
         ${entry.perdue ? '<span class="mini-perdue">PERDUE</span>' : ''}
         <div class="mini-art">${miniArtSvg(entry.code, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}</div>
@@ -2984,6 +2984,205 @@ function renderCollection(){
       </div>
     </div>`;
   }).join('');
+}
+
+
+// ---------- La fiche d'une commune ----------
+// Ce qui s'ouvre quand on clique une carte de la collection. Les faits
+// viennent de communes.faits, calcule une fois par faits-communes.sql : rien
+// n'est genere ici, donc rien a verifier.
+
+let fermerFiche = null;
+const ficheCache = new Map();
+
+// Un appel par commune, garde en memoire. La colonne gentile n'existe pas
+// encore : on tente avec, on se replie sans, et la fiche la prendra toute
+// seule le jour ou elle arrive.
+let ficheChampsOk = null;
+async function detailsCommune(code){
+  if(ficheCache.has(code)) return ficheCache.get(code);
+  const variantes = ficheChampsOk ? [ficheChampsOk] : ['faits, gentile', 'faits'];
+  let d = null;
+  for(const champs of variantes){
+    const { data, error } = await sb.from('communes').select(champs).eq('code', code).limit(1);
+    if(!error){ ficheChampsOk = champs; d = (data && data[0]) || {}; break; }
+  }
+  if(!d) d = {};
+  ficheCache.set(code, d);
+  return d;
+}
+
+// Purement decoratif : le texte du fait est la seule verite, l'icone se
+// devine depuis lui. Aucun fait ne depend de cette fonction.
+function iconeFait(t){
+  const s = (t || '').toLowerCase();
+  if(s.indexOf('plus au nord') >= 0 || s.indexOf('plus au sud') >= 0
+     || s.indexOf('plus à l') >= 0) return '🧭';
+  if(s.indexOf('moins peuplée') >= 0) return '📉';
+  if(s.indexOf('plus peuplée') >= 0 || s.indexOf('plus peuplées') >= 0) return '📈';
+  if(s.indexOf('portent ce nom') >= 0) return '👥';
+  if(s.indexOf('commence par') >= 0) return '🔤';
+  if(s.indexOf('deux sens') >= 0) return '🔁';
+  if(s.indexOf('plus court') >= 0 || s.indexOf('plus longs') >= 0) return '📏';
+  if(s.indexOf('par la population') >= 0) return '📊';
+  return '✨';
+}
+
+function faitsTries(faits){
+  if(!Array.isArray(faits)) return [];
+  return faits
+    .filter(f => f && f.t)
+    .slice()
+    .sort((a, b) => (Number(a.r) || 9) - (Number(b.r) || 9));
+}
+
+async function ouvrirFicheCommune(code){
+  const entry = collectionMap.get(code) || perduesMap.get(code);
+  if(!entry) return;
+  rendreFiche(entry, null);                   // tout de suite, sans attendre
+  let d = {};
+  try { d = await detailsCommune(code); } catch(e){ d = {}; }
+  // l'utilisateur a pu refermer ou ouvrir une autre carte entre-temps
+  const ouverte = document.querySelector('#fenetre .fiche[data-code="' + code + '"]');
+  if(ouverte) rendreFiche(entry, d);
+}
+
+function rendreFiche(entry, d){
+  const nb = (x) => Number(x || 0).toLocaleString('fr-FR');
+  const tier = entry.tier;
+  const faits = d ? faitsTries(d.faits) : null;
+  const gentile = d && d.gentile ? String(d.gentile).trim() : '';
+
+  // Le rachat n'a de sens que sur une commune qu'on possede encore.
+  const troisieme = entry.perdue
+    ? '<div class="fc-ch"><b class="fc-perdue">Perdue</b><span>statut</span></div>'
+    : '<div class="fc-ch"><b>' + nb(PRIX_RACHAT[tier.id]) + ' pts</b><span>rachat</span></div>';
+
+  let savais;
+  if(faits === null){
+    savais = '<p class="fc-attente">Recherche des faits…</p>';
+  } else if(faits.length === 0){
+    savais = '';
+  } else {
+    const [phare, ...reste] = faits;
+    savais = '<h3>Le savais-tu ?</h3>'
+      + '<div class="fc-fait phare"><i>🏅</i><span><b>' + echapperTexte(phare.t) + '</b></span></div>'
+      + reste.map(f => '<div class="fc-fait"><i>' + iconeFait(f.t) + '</i><span>'
+          + echapperTexte(f.t) + '</span></div>').join('');
+  }
+
+  fermerFiche = ouvrirFenetre(`
+    <div class="fenetre fiche ${tier.id}" data-code="${echapperTexte(entry.code)}"
+         role="dialog" aria-modal="true" aria-labelledby="fcNom">
+      <button class="fc-fermer" data-fc="fermer" aria-label="Fermer">✕</button>
+      <div class="fc-tete">
+        <div class="fc-carte">
+          <div class="carte-cadre">
+            <div class="carte-int">
+              <div class="carte-haut">
+                <span class="carte-rarete">${tier.label}</span>
+                ${entry.rank ? `<span class="carte-num">${nb(entry.rank)} / ${nb(entry.tierSize)}</span>` : ''}
+              </div>
+              <div class="carte-art">${carteArtSvg(entry.code, tier.id)}<span class="carte-dept">${echapperTexte(entry.dept)}</span></div>
+              <div class="carte-lisere"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="fc-corps">
+        <h2 id="fcNom" class="fc-nom ${entry.nom.length > 22 ? 'long' : ''}">${echapperTexte(entry.nom)}</h2>
+        <p class="fc-dep">${DEPT_NAMES[entry.dept] ? echapperTexte(DEPT_NAMES[entry.dept]) + ' (' + echapperTexte(entry.dept) + ')' : echapperTexte(entry.dept)}</p>
+        ${gentile ? `<p class="fc-gent">les ${echapperTexte(gentile)}</p>` : ''}
+        <div class="fc-chiffres">
+          <div class="fc-ch"><b>${nb(entry.pop)}</b><span>habitants</span></div>
+          <div class="fc-ch"><b class="fc-rar">${tier.label}</b><span>rareté</span></div>
+          ${troisieme}
+        </div>
+        ${savais}
+        <div class="fc-actions">
+          <button class="fc-btn principal" data-fc="carte">Voir sur la carte</button>
+        </div>
+      </div>
+    </div>`);
+
+  const boite = document.querySelector('#fenetre .fiche');
+  if(!boite) return;
+  boite.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-fc]');
+    if(!b) return;
+    if(b.dataset.fc === 'fermer'){ fermerFiche(null); return; }
+    if(b.dataset.fc === 'carte') voirCommuneSurCarte(entry);
+  });
+  const premier = boite.querySelector('.fc-btn');
+  if(premier && faits !== null) premier.focus();
+}
+
+// Place la commune au centre du cadre. Les deux rendus, canvas et SVG,
+// lisent le meme couple (mapZoom, mapPan) : il suffit de le poser.
+function centrerSurCommune(lat, lon){
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap || !mapBounds || lat == null || lon == null) return false;
+  const largeur = wrap.clientWidth, hauteur = wrap.clientHeight;
+  if(!largeur || !hauteur) return false;
+  const p = project(lat, lon);
+  const ech = echelleCarte();
+  mapZoom = Math.min(zoomMaxCarte(), Math.max(MAP_ZOOM_MIN, 12));
+  mapPanX = largeur / 2 - p.x * MAP_W * ech * mapZoom;
+  mapPanY = hauteur / 2 - p.y * MAP_H * ech * mapZoom;
+  applyMapTransform();
+  renderMapOverlay();
+  demanderDessin();
+  // applyMapTransform borne le cadrage : pres d'un bord la commune n'est plus
+  // au centre. On lit donc le decalage APRES, sinon l'anneau vise a cote.
+  marquerCommuneVisee(p.x * MAP_W * ech * mapZoom + mapPanX,
+                      p.y * MAP_H * ech * mapZoom + mapPanY);
+  return true;
+}
+
+let viseeTimer = null;
+function marquerCommuneVisee(x, y){
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap) return;
+  const ancien = wrap.querySelector('.carte-visee');
+  if(ancien) ancien.remove();
+  clearTimeout(viseeTimer);
+  const rond = document.createElement('div');
+  rond.className = 'carte-visee';
+  rond.style.left = x + 'px';
+  rond.style.top = y + 'px';
+  wrap.appendChild(rond);
+  // il disparait seul : un repere permanent deviendrait du decor
+  viseeTimer = setTimeout(() => rond.remove(), 4000);
+}
+
+function voirCommuneSurCarte(entry){
+  if(fermerFiche) fermerFiche(null);
+  const onglet = document.querySelector('.tab[data-tab="territoire"]');
+  if(onglet) onglet.click();
+  const carte = document.getElementById('mapWrap');
+  if(carte && carte.scrollIntoView) carte.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  // le panneau vient d'etre affiche : il n'a ses dimensions qu'a l'image suivante
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if(!centrerSurCommune(entry.lat, entry.lon)){
+      notifier({ type: 'info', titre: 'Position inconnue',
+                 texte: 'Cette commune n’a pas de coordonnées : la carte est restée où elle était.' });
+    }
+  }));
+}
+
+const grilleColl = document.getElementById('collectionGrid');
+if(grilleColl){
+  grilleColl.addEventListener('click', (e) => {
+    const m = e.target.closest('.mini[data-code]');
+    if(m) ouvrirFicheCommune(m.dataset.code);
+  });
+  grilleColl.addEventListener('keydown', (e) => {
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    const m = e.target.closest('.mini[data-code]');
+    if(!m) return;
+    e.preventDefault();
+    ouvrirFicheCommune(m.dataset.code);
+  });
 }
 
 document.getElementById('collectionSearch').addEventListener('input', renderCollection);

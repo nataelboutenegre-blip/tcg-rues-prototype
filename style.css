@@ -1272,6 +1272,87 @@
   }
   .fenetre-fond.visible .fenetre{ transform:none; }
 
+  /* ---------- Amis ---------- */
+  .amis{
+    background: var(--nuit-2); border:1px solid rgba(169,188,212,0.16);
+    border-radius:14px; padding:18px; margin:0 0 18px;
+  }
+  .amis[hidden]{ display:none; }
+  .am-tete{ display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .am-tete h2{ font-family:var(--titre); font-weight:900; font-size:1.6rem; margin:0;
+    text-transform:uppercase; letter-spacing:.02em; }
+  .am-compte{ font-size:.86rem; color:var(--brume); }
+  .am-ajouter{
+    margin-left:auto; font:inherit; font-size:.8rem; font-weight:600;
+    background:rgba(240,180,41,.16); color:var(--c-legendaire);
+    border:1px solid rgba(240,180,41,.45); border-radius:999px; padding:7px 14px; cursor:pointer;
+  }
+  .am-recherche{ margin-bottom:14px; }
+  .am-recherche[hidden]{ display:none; }
+  .am-recherche input{
+    width:100%; font:inherit; font-size:.88rem; color:#fff;
+    background:var(--nuit); border:1px solid rgba(169,188,212,0.25);
+    border-radius:10px; padding:10px 13px;
+  }
+  .am-recherche input:focus{ outline:2px solid var(--c-legendaire); outline-offset:1px; }
+  .am-resultats{ margin-top:8px; }
+  .am-resultats:empty{ display:none; }
+
+  .amis h3{
+    font-size:.68rem; font-weight:700; letter-spacing:.11em; text-transform:uppercase;
+    color:var(--brume); margin:16px 0 9px; font-family:inherit;
+  }
+  .amis h3:first-child{ margin-top:0; }
+  .am-ligne{
+    display:flex; align-items:center; gap:11px; padding:10px 0;
+    border-bottom:1px solid rgba(169,188,212,0.1);
+  }
+  .am-ligne:last-child{ border-bottom:0; }
+  .am-pastille{
+    width:38px; height:38px; border-radius:50%; flex-shrink:0;
+    display:grid; place-items:center; background:var(--nuit); font-size:1.15rem;
+  }
+  .am-pastille.init{ font-family:var(--titre); font-weight:900; font-size:1.2rem; }
+  .am-qui{ flex:1; min-width:0; }
+  .am-qui b{ display:block; font-size:.95rem; font-weight:600;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .am-qui span{ font-size:.74rem; color:var(--brume); }
+  .am-actes{ display:flex; gap:6px; flex-shrink:0; align-items:center; }
+  .am-btn{
+    font:inherit; font-size:.76rem; font-weight:600; border-radius:8px; padding:6px 11px;
+    cursor:pointer; border:1px solid rgba(169,188,212,0.25); background:var(--nuit); color:#fff;
+  }
+  .am-btn.oui{ background:var(--c-legendaire); color:var(--encre); border-color:transparent; }
+  .am-btn.non{ color:var(--brume); }
+  .am-btn:disabled{ opacity:.5; cursor:default; }
+  .am-attente{ font-size:.74rem; color:var(--brume); font-style:italic; }
+
+  /* les demandes recues sont la seule ligne qui demande une action */
+  .am-demandes{
+    background:rgba(240,180,41,.07); border:1px solid rgba(240,180,41,.28);
+    border-radius:11px; padding:4px 13px; margin-bottom:6px;
+  }
+  .am-ligne.bloque{ opacity:.6; }
+  .am-ligne.bloque .am-qui b{
+    text-decoration:line-through; text-decoration-color:rgba(229,72,77,.6);
+  }
+  .am-vide{ font-size:.84rem; color:var(--brume); font-style:italic; margin:0; }
+
+  /* les deux ajouts sur la fiche de profil */
+  .pr-ami{
+    position:absolute; top:12px; left:12px; font:inherit; font-size:.74rem; font-weight:600;
+    background:rgba(240,180,41,.18); color:var(--c-legendaire);
+    border:1px solid rgba(240,180,41,.5); border-radius:999px; padding:5px 12px; cursor:pointer;
+  }
+  .pr-ami.pose{ background:rgba(169,188,212,.12); color:var(--brume); border-color:rgba(169,188,212,.3); }
+  .pr-bloquer{
+    display:block; width:100%; margin-top:14px; padding-top:12px;
+    border-top:1px solid rgba(169,188,212,0.12); text-align:center;
+    font:inherit; font-size:.78rem; color:var(--brume);
+    background:none; border-left:0; border-right:0; border-bottom:0; cursor:pointer;
+  }
+  .pr-bloquer:hover{ color:#FF9C9F; }
+
   /* ---------- Fiche de profil ---------- */
   .fenetre.profil{ width:min(430px, 100%); padding:0; text-align:left; max-height:88vh; overflow-y:auto; }
   .pr-tete{

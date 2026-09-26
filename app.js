@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '96ad939ca703';
+const VERSION_JEU = '35d865501b1e';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -445,6 +445,7 @@ async function showGame(session_){
   loadObjectifs();
   loadClassement();
   loadJournal();
+  loadAmis();
   verifierVersion();
   // arrivee depuis une notification : ?onglet=combat ou ?onglet=tirage
   if(new URLSearchParams(location.search).has('onglet')){
@@ -3032,6 +3033,190 @@ document.querySelector('.coll-vue').addEventListener('click', async (e) => {
 });
 
 
+
+// ---------- Amis ----------
+// Purement social : aucune treve, aucun bonus, aucun echange privilegie.
+// Avec des inscriptions gratuites par e-mail, le moindre avantage lie a
+// l'amitie serait exploite par trois comptes du meme joueur.
+let amisListe = [];
+let amisEtat = new Map();          // id du joueur -> 'accepte' | 'demande' | 'recue' | 'bloque'
+let amisCharges = false;
+
+async function loadAmis(){
+  const { data, error } = await sb.rpc('mes_amis');
+  if(error){
+    // amis.sql pas encore execute : on laisse le bloc masque
+    amisCharges = false;
+    return;
+  }
+  amisCharges = true;
+  amisListe = Array.isArray(data) ? data : [];
+  amisEtat = new Map(amisListe.map(x => [x.id, x.etat]));
+  renderAmis();
+}
+
+function pastilleAmi(x){
+  if(x.avatar) return `<span class="am-pastille">${echapperTexte(x.avatar)}</span>`;
+  const init = String(x.pseudo || '?').trim().charAt(0).toUpperCase();
+  return `<span class="am-pastille init" style="color:${colorForPlayer(x.id)}">${echapperTexte(init)}</span>`;
+}
+
+function dateCourte(s){
+  if(!s) return '';
+  const d = new Date(s);
+  const jours = Math.floor((Date.now() - d.getTime()) / 86400000);
+  if(jours <= 0) return "aujourd'hui";
+  if(jours === 1) return 'hier';
+  return 'le ' + d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+}
+
+function renderAmis(){
+  const bloc = document.getElementById('amis');
+  const corps = document.getElementById('amCorps');
+  if(!bloc || !corps) return;
+  if(!amisCharges){ bloc.hidden = true; return; }
+  bloc.hidden = false;
+
+  const par = (e) => amisListe.filter(x => x.etat === e);
+  const recues  = par('recue');
+  const acceptes = par('accepte');
+  const envoyees = par('demande');
+  const bloques  = par('bloque');
+
+  const cpt = document.getElementById('amCompte');
+  if(cpt) cpt.textContent = acceptes.length
+    + (recues.length ? ' · ' + recues.length + ' demande' + (recues.length > 1 ? 's' : '') : '');
+
+  const nb = (n) => Number(n || 0).toLocaleString('fr-FR');
+  const ligne = (x, actes, classe) => `
+    <div class="am-ligne ${classe || ''}" data-ami="${echapperTexte(x.id)}">
+      ${pastilleAmi(x)}
+      <span class="am-qui"><b>${echapperTexte(x.pseudo)}</b><span>${actes.sous}</span></span>
+      <span class="am-actes">${actes.html}</span>
+    </div>`;
+
+  let html = '';
+
+  if(recues.length){
+    html += '<h3>Demandes reçues</h3><div class="am-demandes">' + recues.map(x => ligne(x, {
+      sous: nb(x.communes) + ' commune' + (x.communes > 1 ? 's' : '') + ' · ' + dateCourte(x.depuis),
+      html: `<button class="am-btn oui" data-am="accepter">Accepter</button>
+             <button class="am-btn non" data-am="refuser">Refuser</button>`
+    })).join('') + '</div>';
+  }
+
+  html += '<h3>Mes amis</h3>';
+  html += acceptes.length
+    ? acceptes.map(x => ligne(x, {
+        sous: nb(x.communes) + ' commune' + (x.communes > 1 ? 's' : '') + ' · ami depuis ' + dateCourte(x.depuis),
+        html: `<button class="am-btn" data-am="voir">Voir</button>`
+      })).join('')
+    : '<p class="am-vide">Personne pour le moment. Cherche un joueur par son pseudo.</p>';
+
+  if(envoyees.length){
+    html += '<h3>Demandes envoyées</h3>' + envoyees.map(x => ligne(x, {
+      sous: 'envoyée ' + dateCourte(x.depuis),
+      html: `<span class="am-attente">en attente</span>
+             <button class="am-btn non" data-am="refuser">Annuler</button>`
+    })).join('');
+  }
+
+  if(bloques.length){
+    html += '<h3>Bloqués</h3>' + bloques.map(x => ligne(x, {
+      sous: 'bloqué ' + dateCourte(x.depuis),
+      html: `<button class="am-btn non" data-am="debloquer">Débloquer</button>`
+    }, 'bloque')).join('');
+  }
+
+  corps.innerHTML = html;
+}
+
+async function actionAmi(action, id, bouton){
+  const appels = {
+    accepter:  ['accepter_ami',     { p_ami: id }],
+    refuser:   ['retirer_ami',      { p_ami: id }],
+    debloquer: ['debloquer_joueur', { p_ami: id }],
+    ajouter:   ['demander_ami',     { p_ami: id }],
+    bloquer:   ['bloquer_joueur',   { p_ami: id }],
+  };
+  const appel = appels[action];
+  if(!appel) return false;
+  if(bouton) bouton.disabled = true;
+  const { error } = await sb.rpc(appel[0], appel[1]);
+  if(bouton) bouton.disabled = false;
+  if(error){
+    notifier({ type: 'erreur', titre: 'Amis', texte: messageLisible(error.message) });
+    return false;
+  }
+  await loadAmis();
+  return true;
+}
+
+document.getElementById('amCorps').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-am]');
+  if(!b) return;
+  const id = b.closest('[data-ami]')?.dataset.ami;
+  if(!id) return;
+  if(b.dataset.am === 'voir'){ ouvrirProfil(id); return; }
+  await actionAmi(b.dataset.am, id, b);
+});
+
+// ---------- Chercher un joueur ----------
+// Une recherche par pseudo, pas la liste de tous les joueurs : a dix-huit ce
+// serait pratique, a deux cents ce serait un annuaire — et un annuaire est
+// exactement l'outil de qui cherche a importuner du monde.
+document.getElementById('amAjouter').addEventListener('click', () => {
+  const zone = document.getElementById('amRecherche');
+  zone.hidden = !zone.hidden;
+  if(!zone.hidden) document.getElementById('amChamp').focus();
+  else { document.getElementById('amChamp').value = ''; document.getElementById('amResultats').innerHTML = ''; }
+});
+
+let rechercheAmiMinuteur = null;
+document.getElementById('amChamp').addEventListener('input', (e) => {
+  clearTimeout(rechercheAmiMinuteur);
+  const q = e.target.value.trim();
+  const zone = document.getElementById('amResultats');
+  if(q.length < 2){ zone.innerHTML = ''; return; }
+  // on attend une pause de frappe : sinon une requete part a chaque lettre
+  rechercheAmiMinuteur = setTimeout(async () => {
+    const { data, error } = await sb.from('joueurs')
+      .select('id, pseudo, avatar').ilike('pseudo', '%' + q + '%').limit(8);
+    if(error){ zone.innerHTML = ''; return; }
+    const moi = window.__monId || '';
+    const trouves = (data || []).filter(x => x.id !== moi);
+    if(trouves.length === 0){
+      zone.innerHTML = '<p class="am-vide">Aucun joueur de ce nom.</p>';
+      return;
+    }
+    zone.innerHTML = trouves.map(x => {
+      const etat = amisEtat.get(x.id);
+      const acte = etat === 'accepte'  ? '<span class="am-attente">déjà ami</span>'
+                 : etat === 'demande'  ? '<span class="am-attente">demande envoyée</span>'
+                 : etat === 'recue'    ? '<button class="am-btn oui" data-amr="accepter">Accepter</button>'
+                 : etat === 'bloque'   ? '<button class="am-btn non" data-amr="debloquer">Débloquer</button>'
+                 : '<button class="am-btn oui" data-amr="ajouter">Ajouter</button>';
+      return `<div class="am-ligne" data-ami="${echapperTexte(x.id)}">
+        ${pastilleAmi(x)}
+        <span class="am-qui"><b>${echapperTexte(x.pseudo)}</b></span>
+        <span class="am-actes">${acte}</span>
+      </div>`;
+    }).join('');
+  }, 280);
+});
+
+document.getElementById('amResultats').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-amr]');
+  if(!b) return;
+  const id = b.closest('[data-ami]')?.dataset.ami;
+  if(!id) return;
+  if(await actionAmi(b.dataset.amr, id, b)){
+    document.getElementById('amChamp').dispatchEvent(new Event('input', { bubbles: true }));
+    notifier({ type: 'succes', titre: 'Amis',
+               texte: b.dataset.amr === 'ajouter' ? 'Demande envoyée.' : 'C’est fait.' });
+  }
+});
+
 // ---------- Mon solde, mes tirages ----------
 // La table joueurs n'est plus lisible en dehors de id, pseudo et avatar : une
 // policy RLS ne filtre que des lignes, jamais des colonnes, et celle du SELECT
@@ -3104,6 +3289,17 @@ function avatarHtml(p, couleur){
 let profilEnCours = null;
 let fermerProfil = null;
 
+// L'etat du lien se lit dans la liste deja chargee : pas d'appel de plus a
+// l'ouverture d'une fiche.
+function boutonAmiProfil(id){
+  const etat = amisEtat.get(id);
+  if(etat === 'accepte') return '<button class="pr-ami pose" data-pr="retirer-ami">✓ Ami</button>';
+  if(etat === 'demande') return '<button class="pr-ami pose" data-pr="retirer-ami">Demande envoyée</button>';
+  if(etat === 'recue')   return '<button class="pr-ami" data-pr="accepter-ami">Accepter</button>';
+  if(etat === 'bloque')  return '';
+  return '<button class="pr-ami" data-pr="ajouter-ami">+ Ami</button>';
+}
+
 async function ouvrirProfil(joueurId){
   if(!joueurId) return;
   const { data, error } = await sb.rpc('profil_joueur', { p_joueur: joueurId });
@@ -3151,6 +3347,7 @@ function rendreProfil(){
     <div class="fenetre profil" role="dialog" aria-modal="true" aria-labelledby="prNom"
          style="--joueur:${couleur}">
       <div class="pr-tete">
+        ${moi ? '' : boutonAmiProfil(p.id)}
         <button class="pr-fermer" data-pr="fermer" aria-label="Fermer">✕</button>
         <div class="pr-avatar">${avatarHtml(p, couleur)}</div>
         <h2 id="prNom">${echapperTexte(p.pseudo)}</h2>
@@ -3180,6 +3377,9 @@ function rendreProfil(){
         </div>
 
         <div class="pr-actions">${actions}</div>
+        ${moi ? '' : `<button class="pr-bloquer" data-pr="${
+          amisEtat.get(p.id) === 'bloque' ? 'debloquer' : 'bloquer'}">${
+          amisEtat.get(p.id) === 'bloque' ? 'Débloquer ce joueur' : 'Bloquer ce joueur'}</button>`}
       </div>
     </div>`, () => { profilEnCours = null; fermerProfil = null; });
 }
@@ -3207,6 +3407,16 @@ document.getElementById('fenetre').addEventListener('click', async (e) => {
     demanderDessin();
     const carte = document.getElementById('mapWrap');
     if(carte && carte.scrollIntoView) carte.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  const liens = { 'ajouter-ami':'ajouter', 'retirer-ami':'refuser',
+                  'accepter-ami':'accepter', 'bloquer':'bloquer', 'debloquer':'debloquer' };
+  if(liens[action]){
+    if(action === 'bloquer' &&
+       !confirm('Bloquer ' + p.pseudo + ' ?\n\nVotre amitié sera supprimée et il ne pourra plus '
+                + 'te demander en ami ni joindre un mot à ses propositions d’échange.')) return;
+    if(await actionAmi(liens[action], p.id, b)) rendreProfil();
     return;
   }
 
@@ -4491,7 +4701,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
     if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
-    if(tab.dataset.tab === 'communaute'){ loadClassement(); loadJournal(); }
+    if(tab.dataset.tab === 'communaute'){ loadClassement(); loadJournal(); loadAmis(); }
     if(tab.dataset.tab === 'bourse') loadBourse();
     if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); }
     if(tab.dataset.tab === 'defense'){ loadMenaces(); loadCombat(); renderIntensite('defense'); }

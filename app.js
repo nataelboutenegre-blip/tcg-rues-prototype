@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'b17f23b3ca63';
+const VERSION_JEU = '54748e981146';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3876,7 +3876,20 @@ async function dechirerPaquet(pack, nbCartes){
   for(let i = 0; i < nbCartes; i++){
     const { row, error } = await tirerUneCarte();
     if(error || !row){
-      if(error) notifier({ type: 'erreur', titre: 'Tirage interrompu', texte: messageLisible(error.message) });
+      if(error){
+        notifier({ type: 'erreur', titre: 'Tirage interrompu', texte: messageLisible(error.message) });
+      } else {
+        // Le serveur a repondu sans erreur et sans carte. C'est ce cas-la qui
+        // produit les paquets courts depuis le 19 septembre, et jusqu'ici il
+        // ne disait rien : le joueur voyait deux cartes et pensait que c'etait
+        // normal. On ne relance pas — une relance masquerait la cause.
+        console.warn('TERRAFRONT tirage vide au tour', i + 1, 'sur', nbCartes,
+                     '— reponse du serveur :', row);
+        notifier({ type: 'erreur', titre: 'Paquet interrompu',
+                   texte: `Le serveur n'a pas renvoyé de carte au tirage ${i + 1} sur ${nbCartes}. `
+                        + `Tu gardes les ${i} déjà tirées et le reste t'est rendu. `
+                        + `Signale-le sur le Discord, ça aide à corriger.` });
+      }
       break;
     }
     const tier = TIERS.find(t => t.id === row.tier);

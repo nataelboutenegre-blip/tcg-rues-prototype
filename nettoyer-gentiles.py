@@ -162,17 +162,15 @@ def main():
         if not brut or not sans_balises(brut).strip(' .:-'):
             vides += 1
             continue
-        if r['insee'] in vus:
-            continue
         g = gentile_de(brut)
         if g:
             vus.add(r['insee'])
-            propres.append({'code': r['insee'], 'gentile': g})
+            propres.append({'code': r['insee'], 'titre': r['titre'], 'gentile': g})
         else:
             rejets.append({'code': r['insee'], 'titre': r['titre'], 'brut': brut})
 
     with io.open(SORTIE, 'w', encoding='utf-8', newline='') as f:
-        w = csv.DictWriter(f, fieldnames=['code', 'gentile'])
+        w = csv.DictWriter(f, fieldnames=['code', 'titre', 'gentile'])
         w.writeheader()
         w.writerows(propres)
     with io.open(REJETS, 'w', encoding='utf-8', newline='') as f:
@@ -183,7 +181,9 @@ def main():
     n = len(lignes)
     print('communes lues          : %d' % n)
     print('sans champ gentile     : %d  (%.1f %%)' % (vides, 100 * vides / n))
-    print('gentile retenu         : %d  (%.1f %%)' % (len(propres), 100 * len(propres) / n))
+    print('gentile retenu         : %d lignes, %d communes distinctes'
+          % (len(propres), len(vus)))
+    print('codes a plusieurs articles : %d' % (len(propres) - len(vus)))
     print('rejete (illisible)     : %d  (%.1f %%)' % (len(rejets), 100 * len(rejets) / n))
     print('\n-> %s et %s' % (SORTIE, REJETS))
     return 0

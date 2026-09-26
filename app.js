@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '0a9a229e72ff';
+const VERSION_JEU = '245576c3895d';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -417,6 +417,8 @@ document.getElementById('authRetourLanding').addEventListener('click', montrerLa
 
 function showAuth(msg, type = 'erreur'){
   if(menacesInterval){ clearInterval(menacesInterval); menacesInterval = null; }
+  if(echangesInterval){ clearInterval(echangesInterval); echangesInterval = null; }
+  echangesVus = null;
   if(packStatusInterval){ clearInterval(packStatusInterval); packStatusInterval = null; }
   packStatusCache = null;
   document.getElementById('authScreen').style.display = 'flex';
@@ -452,9 +454,12 @@ async function showGame(session_){
     ouvrirOngletDepuisUrl(location.href);
     history.replaceState(null, '', location.pathname);
   }
+  loadBadgeEchanges();
   if(!menacesInterval){
     // verifie toutes les minutes si une de mes communes est attaquee (pastille rouge sur l'onglet Combat)
     menacesInterval = setInterval(loadMenaces, 60000);
+    // meme cadence pour les propositions d'echange recues
+    echangesInterval = setInterval(loadBadgeEchanges, 60000);
   }
 }
 
@@ -4434,6 +4439,7 @@ function formatDuree(ms){
 // ---------- Mes communes attaquees ----------
 let menaces = [];
 let menacesInterval = null;
+let echangesInterval = null;
 
 async function loadMenaces(){
   const { data, error } = await sb.rpc('sieges_contre_moi');
@@ -5199,6 +5205,7 @@ async function loadEchanges(){
   echangesEnCours = error ? [] : (data || []);
   renderEchangePropositions();
   majBadgeEchange();
+  signalerNouveauxEchanges();
   renderEchangeMien();
   await chargerCiblesEchange();
   const { data: userData } = await sb.auth.getUser();
@@ -5207,6 +5214,42 @@ async function loadEchanges(){
     const el = document.getElementById('soldeValueEchange');
     if(el && row) el.textContent = row.solde;
   }
+}
+
+// null tant qu'on n'a rien vu : au tout premier chargement on remplit la
+// pastille sans rien annoncer, sinon ouvrir le jeu annoncerait comme neuves
+// des propositions vieilles de deux jours.
+let echangesVus = null;
+
+function signalerNouveauxEchanges(){
+  const recues = (echangesEnCours || []).filter(e => e.sens === 'recu');
+  const ids = new Set(recues.map(e => e.id));
+  if(echangesVus){
+    const neuves = recues.filter(e => !echangesVus.has(e.id));
+    if(neuves.length === 1){
+      const e = neuves[0];
+      notifier({ type: 'info', titre: 'Nouvelle proposition d’échange',
+                 texte: `${e.autre_pseudo || 'Un joueur'} te propose `
+                      + `${e.je_recois_nom} contre ${e.je_donne_nom}.` });
+    } else if(neuves.length > 1){
+      notifier({ type: 'info', titre: `${neuves.length} nouvelles propositions d’échange`,
+                 texte: 'Elles t’attendent dans l’onglet Échange.' });
+    }
+  }
+  echangesVus = ids;
+}
+
+// Version légère de loadEchanges : juste ce qu'il faut pour la pastille,
+// sans recharger les cibles ni le solde. Appelée toutes les minutes.
+async function loadBadgeEchanges(){
+  const { data, error } = await sb.rpc('mes_echanges');
+  if(error) return;
+  echangesEnCours = data || [];
+  majBadgeEchange();
+  // si le joueur est justement sur l'onglet, la liste suit toute seule
+  const panneau = document.getElementById('panel-echange');
+  if(panneau && panneau.classList.contains('active')) renderEchangePropositions();
+  signalerNouveauxEchanges();
 }
 
 function majBadgeEchange(){

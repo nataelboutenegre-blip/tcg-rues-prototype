@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '54748e981146';
+const VERSION_JEU = '0a9a229e72ff';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2004,6 +2004,10 @@ async function chargerTotalCommunes(){
 // les interfaces existantes : elles basculent vers le bon onglet en pre-filtrant
 // sur la commune, ce qui evite de dupliquer le combat, la bourse et l'echange.
 let panneauCommune = null;
+// Le point de la carte où le joueur a cliqué. Le panneau y revient à
+// chaque changement de contenu, au lieu de repartir de sa position
+// courante — c'est cette dérive qui le poussait hors du cadre.
+let panneauAncre = null;
 
 const ICONES_PC = {
   attaque: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 14.5 19.5 19.5a1.5 1.5 0 0 1-2 2L12.5 16.5"/><path d="M18.5 3.5 8 14M18.5 3.5h-3M18.5 3.5v3"/><path d="M9.5 14.5 4.5 19.5a1.5 1.5 0 0 0 2 2l5-5"/><path d="M5.5 3.5 16 14M5.5 3.5h3M5.5 3.5v3"/></svg>',
@@ -2021,6 +2025,7 @@ function fermerPanneau(){
   const wrap = document.getElementById('mapWrap');
   if(wrap) wrap.classList.remove('panneau-ouvert');
   panneauCommune = null;
+  panneauAncre = null;
 }
 
 function ouvrirPanneau(code, xCss, yCss){
@@ -2031,6 +2036,9 @@ function ouvrirPanneau(code, xCss, yCss){
   const c = mienne || autre;
   if(!c){ fermerPanneau(); return; }
   panneauCommune = code;
+  if(typeof xCss === 'number' && typeof yCss === 'number'){
+    panneauAncre = { x: xCss, y: yCss };
+  }
 
   const maintenant = Date.now();
   const protegee = c.bouclierJusqua > maintenant;
@@ -2115,6 +2123,8 @@ async function ouvrirAttaque(code){
     </div>
     <p class="pc-chargement">Calcul de tes chances…</p>`;
   el.hidden = false;
+  recadrerPanneau(el);
+  montrerPanneau(el);
 
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
@@ -2181,7 +2191,10 @@ function rendreAttaque(code, a, siege){
         ${attente > 0 ? 'Encore ' + formatDuree(attente) + ' à attendre' : `Lancer l’assaut — ${a.cout} pts`}
       </button>
     </div>`;
-  placerPanneau(el, parseFloat(el.style.left) || 40, parseFloat(el.style.top) || 40);
+  // recadrer, pas replacer : relire sa position pour la recalculer ajoutait
+  // 16 px a chaque assaut et a chaque changement d'intensite
+  recadrerPanneau(el);
+  montrerPanneau(el);
 }
 
 async function lancerAssaut(code){
@@ -2221,10 +2234,37 @@ async function lancerAssaut(code){
   }
 }
 
+// Le panneau a change de contenu, donc de hauteur : on le garde dans le
+// cadre sans le bouger autrement. Sans ca, passer de la fiche au panneau
+// d'attaque, plus haut, le faisait deborder par le bas.
+function recadrerPanneau(el){
+  if(!el || el.hidden || surTelephone()) return;
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap) return;
+  const b = el.getBoundingClientRect();
+  const marge = 12;
+  const gauche = Math.max(marge, Math.min(parseFloat(el.style.left) || marge,
+                          wrap.clientWidth - b.width - marge));
+  const haut = Math.max(marge, Math.min(parseFloat(el.style.top) || marge,
+                        wrap.clientHeight - b.height - marge));
+  el.style.left = Math.round(gauche) + 'px';
+  el.style.top = Math.round(haut) + 'px';
+}
+
+// Sur telephone la feuille de style colle le panneau au bas du cadre de la
+// carte. Si ce bas est hors de l'ecran, le joueur ne voit rien et croit que
+// son clic n'a servi a rien. On l'amene donc dans l'ecran.
+function montrerPanneau(el){
+  if(!el || el.hidden || !surTelephone() || !el.scrollIntoView) return;
+  requestAnimationFrame(() => {
+    if(!el.hidden) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+}
+
 // Sur telephone le panneau est colle en bas par la feuille de style ; sur
 // ordinateur on le pose a cote du clic sans le laisser sortir du cadre.
 function placerPanneau(el, xCss, yCss){
-  if(surTelephone()){ el.style.left = ''; el.style.top = ''; return; }
+  if(surTelephone()){ el.style.left = ''; el.style.top = ''; montrerPanneau(el); return; }
   const wrap = document.getElementById('mapWrap');
   if(!wrap) return;
   const b = el.getBoundingClientRect();
@@ -2264,7 +2304,13 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
   const code = panneauCommune;
   const c = code ? (collectionMap.get(code) || othersMap.get(code)) : null;
   if(quoi === 'fermer' || !c){ fermerPanneau(); return; }
-  if(quoi === 'retour'){ ouvrirPanneau(code, parseFloat(e.currentTarget.style.left) || 40, parseFloat(e.currentTarget.style.top) || 40); return; }
+  if(quoi === 'retour'){
+    // on revient au point du clic, pas à la position courante du panneau :
+    // lire sa position pour la recalculer le décalait de 16 px à chaque fois
+    const a = panneauAncre;
+    ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40);
+    return;
+  }
   if(quoi === 'assaut'){ lancerAssaut(code); return; }
   if(quoi === 'intensite'){
     intensiteChoisie = b.dataset.int;

@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '63fbdc1a0a3b';
+const VERSION_JEU = '63bf9ae3d67b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4362,7 +4362,7 @@ document.addEventListener('click', async (e) => {
             serie: result.victoires_consecutives
           });
         } else {
-          notifier({ type: 'defaite', titre: `Défaite contre ${nomCible}${result.cout ? ` (−${result.cout} pts)` : ''}`, texte: `Attaque ${intensite().label.toLowerCase()} à ${intensite().chances} % : la série repart à zéro.`, serie: 0 });
+          notifier({ type: 'defaite', titre: `Défaite contre ${nomCible}${result.cout ? ` (−${result.cout} pts)` : ''}`, texte: `${result.chances != null ? 'À ' + result.chances + ' % : la' : 'La'} série repart à zéro.`, serie: 0 });
         }
         await loadCombat();
         loadPackStatus();
@@ -4414,6 +4414,16 @@ try{
   if(v && INTENSITES.some(i => i.id === v)) intensiteChoisie = v;
 } catch(e){}
 const intensite = (id) => INTENSITES.find(i => i.id === (id || intensiteChoisie)) || INTENSITES[1];
+
+// Ce que l'intensité fait vraiment : décaler les chances, pas les fixer.
+// Le decalage se lit depuis le tableau lui-meme, pour qu'un changement de
+// reglage ne laisse pas un libelle mentir derriere lui.
+function ecartIntensite(i){
+  const ref = INTENSITES.find(x => x.id === 'normale') || INTENSITES[1];
+  const d = i.chances - ref.chances;
+  if(d === 0) return 'référence';
+  return (d > 0 ? '+' : '\u2212') + Math.abs(d) + ' pts';
+}
 
 function coutIntensite(tierId, id){
   return Math.max(1, Math.round(coutAttaque(tierId) * intensite(id).facteur));
@@ -4498,7 +4508,7 @@ function renderMenaces(){
           <span class="menace-statut">${statut}</span>
           ${v > 0 && !(bouclierFin > now) ? (m.defense_utilisee
             ? '<span class="menace-note">Défense déjà utilisée contre cette attaque</span>'
-            : (m.attaquant_id ? `<button class="menace-defendre" data-commune="${m.commune_code}" data-attaquant="${m.attaquant_id}" data-nom="${echapperTexte(m.nom)}">${ICONE_BOUCLIER}Défendre (${coutIntensite(m.tier)} pts, ${intensite().chances} %)</button>` : '')) : ''}
+            : (m.attaquant_id ? `<button class="menace-defendre" data-commune="${m.commune_code}" data-attaquant="${m.attaquant_id}" data-nom="${echapperTexte(m.nom)}">${ICONE_BOUCLIER}Défendre (${coutIntensite(m.tier)} pts)</button>` : '')) : ''}
         </div>
         <div class="menace-serie" title="${v} victoire${v > 1 ? 's' : ''} d'affilée sur 3">${serie}</div>
       </div>`;
@@ -4739,7 +4749,7 @@ function renderIntensite(){
   zone.innerHTML = INTENSITES.map(i => `
     <button class="intensite ${i.id === intensiteChoisie ? 'actif' : ''}" data-intensite="${i.id}" aria-pressed="${i.id === intensiteChoisie}">
       <span class="int-label">${i.label}</span>
-      <span class="int-chances">${i.chances} %</span>
+      <span class="int-chances">${ecartIntensite(i)}</span>
       <span class="int-cout">${i.facteur === 1 ? 'prix normal' : (i.facteur < 1 ? 'un tiers du prix' : 'prix doublé')}</span>
     </button>`).join('') + `<p class="int-aide">${intensite().aide}</p>`;
 }

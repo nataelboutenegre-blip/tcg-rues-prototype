@@ -79,7 +79,7 @@
         <div class="lp-etape">
           <span class="lp-num">3</span>
           <b>Conquiers</b>
-          <p>Les communes rares des autres se prennent par la force : trois victoires d'affilée. Les tiennes partent pareil.</p>
+          <p>Les communes des autres se prennent par la force : trois victoires d'affilée. Celles qui touchent ton territoire tombent plus vite. Les tiennes partent pareil.</p>
         </div>
       </div>
     </div>
@@ -93,7 +93,7 @@
         <div class="lp-rar" style="--c:#7E8BA0">
           <span class="lp-rar-pastille"></span><b>Commune</b>
           <small>moins de 2 000 hab.</small>
-          <p>Les villages. La masse, et 95 % de la carte.</p>
+          <p>Les villages. La masse, et 84 % de la carte.</p>
         </div>
         <div class="lp-rar" style="--c:#22A06B">
           <span class="lp-rar-pastille"></span><b>Peu commune</b>
@@ -102,8 +102,8 @@
         </div>
         <div class="lp-rar" style="--c:#2F7CF6">
           <span class="lp-rar-pastille"></span><b>Rare</b>
-          <small>à partir de 20 000</small>
-          <p>Convoitées. Elles s'attaquent et se défendent.</p>
+          <small>à partir de 10 000</small>
+          <p>Convoitées, et 981 seulement dans tout le pays.</p>
         </div>
         <div class="lp-rar" style="--c:#F0B429">
           <span class="lp-rar-pastille"></span><b>Légendaire</b>
@@ -685,26 +685,31 @@
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
           </summary>
           <div class="regle-corps">
-            <p>Tu peux attaquer les communes <b>rares et légendaires</b> qui appartiennent à d'autres joueurs.</p>
+            <p>Tu peux attaquer <b>n'importe quelle commune</b> appartenant à un autre joueur, depuis l'onglet Combat ou <b>directement sur la carte</b>.</p>
             <ul>
+              <li><b>D'où tu attaques compte.</b> Le jeu compte tes communes à moins de 20 km de ta cible : chacune ajoute à tes chances, jusqu'à <b>+15 points</b>. Si tu n'en as aucune, c'est une attaque à distance : <b>−12 points</b>. Tes chances restent toujours comprises entre 10 et 90 %.</li>
+              <li>C'est pour ça que <b>deux joueurs n'ont pas les mêmes chances</b> sur la même commune, et que le pourcentage affiché sur une carte n'est jamais exactement celui de ton engagement.</li>
               <li>Avant d'attaquer, tu choisis ton <b>engagement</b> : plus tu paies, plus tu as de chances. Le coût est prélevé à chaque round, même si tu perds.</li>
               <li><b>3 victoires d'affilée</b> et la commune est à toi. <b>Une défaite remet ta série à zéro.</b></li>
             </ul>
             <div class="tableau-defile">
               <table class="tableau">
-                <thead><tr><th>Engagement</th><th>Chances</th><th>Coût</th><th>Pour conquérir une légendaire</th></tr></thead>
+                <thead><tr><th>Engagement</th><th>Effet sur tes chances</th><th>Coût</th></tr></thead>
                 <tbody>
-                  <tr><td><b>Prudente</b></td><td class="chiffre">35 %</td><td class="chiffre">35 % du prix</td><td>~34 rounds : le moins cher, mais très lent</td></tr>
-                  <tr><td><b>Normale</b></td><td class="chiffre">50 %</td><td class="chiffre">prix normal</td><td>~14 rounds : le bon compromis</td></tr>
-                  <tr><td><b>Offensive</b></td><td class="chiffre">65 %</td><td class="chiffre">le double</td><td>~7 rounds : deux fois plus rapide</td></tr>
+                  <tr><td><b>Prudente</b></td><td class="chiffre">−15 points</td><td class="chiffre">un tiers du prix</td></tr>
+                  <tr><td><b>Normale</b></td><td class="chiffre">référence</td><td class="chiffre">prix normal</td></tr>
+                  <tr><td><b>Offensive</b></td><td class="chiffre">+15 points</td><td class="chiffre">le double</td></tr>
                 </tbody>
               </table>
             </div>
+            <p>Aligner trois victoires demande en moyenne <b>14 rounds à 50 %</b>, <b>7 à 65 %</b> et <b>5 à 80 %</b> — mais une centaine si tu tombes sous 25 %. Ce sont tes chances réelles qui comptent, proximité comprise, pas le nom de ton engagement.</p>
             <p>Le même choix s'applique à la défense, et <b>le défenseur ne voit pas</b> avec quel engagement on l'a attaqué.</p>
             <div class="tableau-defile">
               <table class="tableau">
                 <thead><tr><th>Cible</th><th>Coût d'un round<br><small>prudente / normale / offensive</small></th><th>Délai entre deux rounds</th><th>Bonus de conquête</th></tr></thead>
                 <tbody>
+                  <tr><td><span class="rarete commun">Commun</span></td><td class="chiffre">1 / 3 / 6</td><td class="chiffre">2 min</td><td class="chiffre or">+2 pts</td></tr>
+                  <tr><td><span class="rarete peucommun">Peu commun</span></td><td class="chiffre">2 / 5 / 10</td><td class="chiffre">5 min</td><td class="chiffre or">+10 pts</td></tr>
                   <tr><td><span class="rarete rare">Rare</span></td><td class="chiffre">4 / 10 / 20</td><td class="chiffre">10 min</td><td class="chiffre or">+50 pts</td></tr>
                   <tr><td><span class="rarete legendaire">Légendaire</span></td><td class="chiffre">35 / 100 / 200</td><td class="chiffre">3 h</td><td class="chiffre or">+500 pts</td></tr>
                 </tbody>
@@ -728,7 +733,7 @@
           <div class="regle-corps">
             <p>Quand un joueur gagne un round contre une de tes communes, une <b>pastille rouge</b> apparaît sur l'onglet Défense, et la commune s'affiche dans <b>Tes communes attaquées</b>.</p>
             <ul>
-              <li><b>Défendre</b> retire une victoire à l'attaquant si ça réussit. Comme pour l'attaque, tu choisis ton engagement : <b>35, 50 ou 65 %</b> de chances, à un prix correspondant.</li>
+              <li><b>Défendre</b> retire une victoire à l'attaquant si ça réussit. Comme pour l'attaque, tu choisis ton engagement — et <b>tu défends chez toi</b> : toutes tes communes voisines comptent pour toi.</li>
               <li>Tu as droit à <b>une seule défense par attaque</b>. Si la série de l'attaquant retombe à zéro, tu récupères ta défense pour sa prochaine attaque.</li>
               <li>Tu ne peux pas défendre une commune déjà protégée par un bouclier.</li>
             </ul>
@@ -825,7 +830,7 @@
     <div class="acc-etapes">
       <div class="acc-etape"><span class="acc-num">1</span><div><b>Ouvre des paquets</b><span>5 vraies communes à chaque fois. Plus une ville est peuplée, plus elle est rare.</span></div></div>
       <div class="acc-etape"><span class="acc-num">2</span><div><b>Construis ton territoire</b><span>Tes communes s'affichent sur la carte de France et se rejoignent quand elles sont voisines.</span></div></div>
-      <div class="acc-etape"><span class="acc-num">3</span><div><b>Attaque et défends</b><span>Prends les grandes villes des autres joueurs, et protège les tiennes.</span></div></div>
+      <div class="acc-etape"><span class="acc-num">3</span><div><b>Attaque et défends</b><span>Prends les communes des autres joueurs — d'autant plus facilement qu'elles sont près de chez toi — et protège les tiennes.</span></div></div>
     </div>
     <div class="acc-cadeau">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h18v10H3zM3 6h18v4H3zM12 6v14"/><path d="M12 6S9.5 2.5 7.5 4s1 2 4.5 2 6.5 0 4.5-2S12 6 12 6z"/></svg>

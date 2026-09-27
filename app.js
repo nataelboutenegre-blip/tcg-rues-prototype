@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '245576c3895d';
+const VERSION_JEU = '63fbdc1a0a3b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4687,6 +4687,50 @@ async function loadCombat(){
   loadMenaces();
   combatSieges = new Map((mesSieges || []).map(s => [s.commune_code, s]));
   renderCombatGrid();
+  chargerChancesCibles();
+}
+
+
+// Les vraies chances et le vrai coût, calculés par le serveur pour toutes
+// les cibles affichées. Avant ce patch, l'onglet Combat montrait le taux
+// nominal de l'intensité, le même pour toute la France : deux écrans
+// donnaient deux nombres pour la même commune.
+//
+// Un seul appel, gardé en mémoire. La requête coûte environ 900 ms pour
+// 200 cibles : acceptable au chargement, hors de question à chaque frappe
+// dans la recherche. Les filtres relisent ce cache.
+let chancesCibles = new Map();
+let chancesPour = null;     // l'intensité pour laquelle le cache est valable
+
+async function chargerChancesCibles(){
+  // le serveur refuse au-delà de 400 ; on n'envoie de toute façon que ce
+  // qui est affichable
+  const codes = combatCibles.slice(0, 400).map(c => c.commune_code);
+  const voulue = intensiteChoisie;
+  if(!codes.length){
+    chancesCibles = new Map();
+    chancesPour = voulue;
+    return;
+  }
+  try{
+    const { data, error } = await sb.rpc('apercu_attaques',
+      { p_codes: codes, p_intensite: voulue });
+    if(error) throw error;
+    const m = new Map();
+    for(const r of (data || [])){
+      m.set(r.commune_code, { chances: r.chances, cout: r.cout });
+    }
+    chancesCibles = m;
+    chancesPour = voulue;
+  }catch(e){
+    // Le serveur n'a pas répondu. On n'invente pas un pourcentage : les
+    // cartes afficheront un tiret. Un faux nombre serait pire que pas de
+    // nombre du tout — c'est exactement ce qui a produit ce bug.
+    console.warn('TERRAFRONT chances groupées indisponibles', e);
+    chancesCibles = new Map();
+    chancesPour = null;
+  }
+  renderCombatGrid();
 }
 
 function renderIntensite(){
@@ -4708,6 +4752,8 @@ document.getElementById('combatIntensite').addEventListener('click', (e) => {
   renderIntensite();
   renderCombatGrid();
   renderMenaces();
+  // les chances dépendent de l'intensité : le cache ne vaut plus
+  chargerChancesCibles();
 });
 
 function renderCombatGrid(){
@@ -4781,7 +4827,10 @@ function renderCombatGrid(){
     const prochainRound = dernierRound ? dernierRound + DELAI_ATTAQUE_MS[commune.tier] : 0;
     const enAttente = now < prochainRound;
 
-    const cout = coutIntensite(commune.tier);
+    // le cache ne vaut que pour l'intensité avec laquelle il a été rempli
+    const vrai = chancesPour === intensiteChoisie
+      ? chancesCibles.get(c.commune_code) : null;
+    const cout = vrai ? vrai.cout : coutIntensite(commune.tier);
     const bouclierFin = c.bouclier_jusqua ? new Date(c.bouclier_jusqua).getTime() : 0;
     let etatClasse, etatTexte, note = '', noteAlerte = false, disabled = true;
     if(bouclierFin > now){
@@ -4820,7 +4869,7 @@ function renderCombatGrid(){
           </div>
           <div class="cible-serie"><span>Ta série</span><span class="cible-ronds">${ronds}</span></div>
           <p class="cible-note ${noteAlerte ? 'alerte' : ''}">${note}</p>
-          <button class="cible-attaquer" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer <b>${cout} pts</b><i>${intensite().chances} %</i></button>
+          <button class="cible-attaquer" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer <b>${cout} pts</b><i>${vrai ? vrai.chances + ' %' : '…'}</i></button>
         </div>
       </article>`;
   }).join('');

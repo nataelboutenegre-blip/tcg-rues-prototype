@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=076fdc0f22fc">
+<link rel="stylesheet" href="style.css?v=38b68e7a8da2">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -467,7 +467,23 @@
             <button class="filter-pill" data-journal="moi">Ce qui me concerne</button>
           </div>
         </div>
+        <div class="jr-recherche">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input type="search" id="jrChamp" maxlength="40" autocomplete="off"
+                 placeholder="Un joueur, une commune…" aria-label="Chercher dans le journal">
+        </div>
+        <div class="jr-types" id="jrTypes">
+          <button class="jr-type active" data-jtype="">Tout</button>
+          <button class="jr-type" data-jtype="conquete"><i></i>Conquêtes</button>
+          <button class="jr-type" data-jtype="defense"><i></i>Défenses</button>
+          <button class="jr-type" data-jtype="echange"><i></i>Échanges</button>
+          <button class="jr-type" data-jtype="achat"><i></i>Bourse</button>
+          <button class="jr-type" data-jtype="tirage"><i></i>Tirages rares</button>
+        </div>
         <div class="jr-liste" id="journalListe"></div>
+        <p class="jr-compte" id="jrCompte"></p>
+        <button class="jr-plus" id="jrPlus" hidden>Charger 30 lignes de plus</button>
       </div>
     </section>
 
@@ -791,7 +807,8 @@
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
           </summary>
           <div class="regle-corps">
-            <p>En bas de l'onglet <b>Territoire</b>, le journal retrace les 30 derniers jours d'activité : conquêtes, défenses réussies, achats en bourse, et tirages de communes rares ou légendaires.</p>
+            <p>En bas de l'onglet <b>Communauté</b>, le journal retrace l'activité du jeu : conquêtes, défenses réussies, échanges, achats en bourse, et tirages de communes rares ou légendaires. Il affiche les 30 dernières actions, et le bouton en bas en charge 30 de plus.</p>
+            <p>Tu peux le <b>filtrer par type</b> et y <b>chercher un joueur ou une commune</b>. La recherche porte sur tout le journal, pas seulement sur ce qui est affiché : « ce qui me concerne » + « conquêtes » + le pseudo de quelqu'un répond à la question « qu'est-ce qu'il m'a pris ».</p>
             <ul>
               <li><b>Tout le jeu :</b> ce que font tous les joueurs.</li>
               <li><b>Ce qui me concerne :</b> uniquement tes actions et celles subies. C'est là que tu vois qui t'a pris une commune, et quelles attaques tu as repoussées.</li>
@@ -864,6 +881,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=076fdc0f22fc"></script>
+<script src="app.js?v=38b68e7a8da2"></script>
 </body>
 </html>

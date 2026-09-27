@@ -2002,6 +2002,7 @@
   .jr-ligne.defense{ border-left-color: var(--c-peucommun); }
   .jr-ligne.achat{ border-left-color: var(--c-rare); }
   .jr-ligne.tirage{ border-left-color: var(--c-legendaire); }
+  .jr-ligne.echange{ border-left-color: #9D7BEA; }
   .jr-ligne.moi{ background: rgba(240,180,41,0.07); }
   .jr-ligne.perdu{ background: rgba(229,72,77,0.08); }
   .jr-icone{
@@ -2014,13 +2015,67 @@
   .jr-ligne.defense .jr-icone{ color:#5EE0A8; background: rgba(34,160,107,0.15); }
   .jr-ligne.achat .jr-icone{ color:#8DB8FF; background: rgba(47,124,246,0.15); }
   .jr-ligne.tirage .jr-icone{ color: var(--c-legendaire); background: rgba(240,180,41,0.15); }
+  .jr-ligne.echange .jr-icone{ color:#C4AEFF; background: rgba(157,123,234,0.18); }
   .jr-texte{ flex:1; min-width:0; line-height:1.4; }
+
+  /* --- recherche, meme langage visuel que la recherche d'amis --- */
+  .jr-recherche{ position:relative; margin-bottom:9px; }
+  .jr-recherche input{
+    width:100%; font:inherit; font-size:.88rem; color:#fff;
+    background:var(--nuit); border:1px solid rgba(169,188,212,0.25);
+    border-radius:10px; padding:10px 13px 10px 36px;
+  }
+  .jr-recherche input::placeholder{ color:#6F8099; }
+  .jr-recherche input:focus{ outline:2px solid var(--c-legendaire); outline-offset:1px; }
+  .jr-recherche > svg{
+    position:absolute; left:12px; top:50%; transform:translateY(-50%);
+    width:15px; height:15px; color:#6F8099; pointer-events:none;
+  }
+
+  /* --- filtres par type --- */
+  .jr-types{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .jr-type{
+    font:inherit; font-size:.76rem; font-weight:600; cursor:pointer;
+    background:var(--nuit); color:var(--brume);
+    border:1px solid rgba(169,188,212,0.2); border-radius:8px; padding:6px 11px;
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .jr-type:hover{ border-color: rgba(169,188,212,0.4); }
+  .jr-type.active{ background: var(--nuit-3); color:#fff; border-color: rgba(169,188,212,0.55); }
+  .jr-type:focus-visible{ outline:2px solid var(--c-legendaire); outline-offset:2px; }
+  .jr-type i{ width:7px; height:7px; border-radius:2px; display:inline-block; }
+  .jr-type[data-jtype="conquete"] i{ background: var(--c-rouge); }
+  .jr-type[data-jtype="defense"]  i{ background: var(--c-peucommun); }
+  .jr-type[data-jtype="echange"]  i{ background:#9D7BEA; }
+  .jr-type[data-jtype="achat"]    i{ background: var(--c-rare); }
+  .jr-type[data-jtype="tirage"]   i{ background: var(--c-legendaire); }
+
+  /* --- pied de liste --- */
+  .jr-compte{ font-size:.74rem; color:#6F8099; margin:10px 2px 0; }
+  .jr-compte:empty{ display:none; }
+  .jr-plus{
+    margin-top:10px; width:100%; font:inherit; font-size:.82rem; font-weight:600;
+    color:var(--brume); background:var(--nuit); cursor:pointer;
+    border:1px solid rgba(169,188,212,0.2); border-radius:10px; padding:11px;
+  }
+  .jr-plus[hidden]{ display:none; }
+  .jr-plus:hover:not(:disabled){ border-color: rgba(169,188,212,0.45); color:#fff; }
+  .jr-plus:disabled{ opacity:.55; cursor:default; }
+  .jr-plus:focus-visible{ outline:2px solid var(--c-legendaire); outline-offset:2px; }
   .jr-commune.legendaire{ color: var(--c-legendaire); }
   .jr-commune.rare{ color:#8DB8FF; }
   .jr-date{ font-size:0.76rem; white-space:nowrap; flex-shrink:0; opacity:0.8; }
   @media (max-width: 760px){
     .jr-ligne{ flex-wrap:wrap; gap:8px 10px; font-size:0.82rem; padding:8px 11px; }
     .jr-date{ width:100%; padding-left:40px; }
+    /* six filtres ne tiennent pas sur une largeur de telephone : on les
+       fait defiler lateralement plutot que de les empiler sur trois rangs */
+    .jr-types{
+      flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none;
+      margin-left:-2px; padding:2px;
+    }
+    .jr-types::-webkit-scrollbar{ display:none; }
+    .jr-type{ flex-shrink:0; }
   }
 
 

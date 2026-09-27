@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '076fdc0f22fc';
+const VERSION_JEU = '38b68e7a8da2';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -932,6 +932,15 @@ let showOthers = true;
 
 // ---------- Journal d'activite ----------
 let journalMode = 'tous';
+let journalType = '';          // '' = tous les types
+let journalRecherche = '';
+let journalCurseur = null;     // { cree_le, id } de la derniere ligne affichee
+let journalFini = false;       // le serveur a renvoye moins que demande : fin de liste
+let journalAffichees = 0;
+let journalJeton = 0;          // identifie la requete en cours
+let journalMinuteur = null;
+const JOURNAL_PAGE = 30;
+const JOURNAL_MIN_RECHERCHE = 2;
 const ICONES_JOURNAL = {
   conquete: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 17.5L17 7M17 7h-4M17 7v4M17.5 17.5L7 7M7 7h4M7 7v4"/></svg>',
   defense: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/><path d="M9 12l2 2 4-4"/></svg>',
@@ -971,28 +980,122 @@ function ligneJournal(e){
     </div>`;
 }
 
-async function loadJournal(){
+function rechercheJournalActive(){
+  return journalRecherche.trim().length >= JOURNAL_MIN_RECHERCHE;
+}
+
+function journalFiltre(){
+  return !!journalType || rechercheJournalActive() || journalMode === 'moi';
+}
+
+function messageJournalVide(){
+  if(journalType || rechercheJournalActive())
+    return 'Rien ne correspond. Essaie un autre joueur, ou élargis les types.';
+  if(journalMode === 'moi')
+    return "Rien ne te concerne pour l'instant : ouvre des paquets et pars à l'attaque.";
+  return 'Aucune activité pour le moment.';
+}
+
+function majPiedJournal(){
+  const plus = document.getElementById('jrPlus');
+  const compte = document.getElementById('jrCompte');
+  if(plus){
+    plus.hidden = journalFini || journalAffichees === 0;
+    plus.disabled = false;
+    plus.textContent = `Charger ${JOURNAL_PAGE} lignes de plus`;
+  }
+  if(compte){
+    if(!journalAffichees) compte.textContent = '';
+    else compte.textContent = journalAffichees + ' ligne' + (journalAffichees > 1 ? 's' : '')
+      + (journalFiltre() ? ' trouvée' + (journalAffichees > 1 ? 's' : '') : '')
+      + (journalFini ? ' · fin du journal' : '');
+  }
+}
+
+// suite = true : on ajoute la page suivante au lieu de tout remplacer.
+// Chaque appel prend un jeton ; une reponse dont le jeton a ete depasse est
+// jetee, sinon une recherche lente pourrait ecraser une recherche plus
+// recente, ou ajouter deux fois les memes lignes.
+async function loadJournal({ suite = false } = {}){
   const bloc = document.getElementById('journal');
-  const { data, error } = await sb.rpc('journal', { p_mode: journalMode, p_limite: 30 });
+  const liste = document.getElementById('journalListe');
+  if(!liste) return;
+
+  const jeton = ++journalJeton;
+  if(!suite){ journalCurseur = null; journalFini = false; journalAffichees = 0; }
+
+  const args = { p_mode: journalMode, p_limite: JOURNAL_PAGE };
+  if(journalType) args.p_type = journalType;
+  if(rechercheJournalActive()) args.p_recherche = journalRecherche.trim();
+  if(suite && journalCurseur){
+    args.p_avant = journalCurseur.cree_le;
+    args.p_avant_id = journalCurseur.id;
+  }
+
+  const plus = document.getElementById('jrPlus');
+  if(suite && plus){ plus.disabled = true; plus.textContent = 'Chargement…'; }
+
+  const { data, error } = await sb.rpc('journal', args);
+  if(jeton !== journalJeton) return;   // une demande plus recente a pris la main
+
   if(error){
+    console.warn('TERRAFRONT journal indisponible', error);
+    if(suite){ majPiedJournal(); return; }   // on garde ce qui est deja affiche
     if(bloc) bloc.hidden = true;
     return;
   }
   if(bloc) bloc.hidden = false;
-  const liste = document.getElementById('journalListe');
-  if(!liste) return;
-  liste.innerHTML = (data || []).length
-    ? data.map(ligneJournal).join('')
-    : `<p class="collection-empty">${journalMode === 'moi' ? "Rien ne te concerne pour l'instant : ouvre des paquets et pars à l'attaque." : 'Aucune activité pour le moment.'}</p>`;
+
+  const lignes = data || [];
+  journalFini = lignes.length < JOURNAL_PAGE;
+  if(lignes.length){
+    const derniere = lignes[lignes.length - 1];
+    journalCurseur = { cree_le: derniere.cree_le, id: derniere.id };
+  }
+  journalAffichees = suite ? journalAffichees + lignes.length : lignes.length;
+
+  const html = lignes.map(ligneJournal).join('');
+  if(suite) liste.insertAdjacentHTML('beforeend', html);
+  else liste.innerHTML = html || `<p class="collection-empty">${messageJournalVide()}</p>`;
+  majPiedJournal();
 }
 
 document.getElementById('journal').addEventListener('click', (e) => {
-  const b = e.target.closest('[data-journal]');
-  if(!b) return;
-  journalMode = b.dataset.journal;
-  document.querySelectorAll('#journal [data-journal]').forEach(x => x.classList.toggle('active', x === b));
-  loadJournal();
+  const mode = e.target.closest('[data-journal]');
+  if(mode){
+    journalMode = mode.dataset.journal;
+    document.querySelectorAll('#journal [data-journal]')
+      .forEach(x => x.classList.toggle('active', x === mode));
+    loadJournal();
+    return;
+  }
+  const type = e.target.closest('[data-jtype]');
+  if(type){
+    journalType = type.dataset.jtype || '';
+    document.querySelectorAll('#journal [data-jtype]')
+      .forEach(x => x.classList.toggle('active', x === type));
+    loadJournal();
+    return;
+  }
+  if(e.target.closest('#jrPlus')) loadJournal({ suite: true });
 });
+
+(function rechercheJournal(){
+  const champ = document.getElementById('jrChamp');
+  if(!champ) return;
+  champ.addEventListener('input', () => {
+    journalRecherche = champ.value;
+    clearTimeout(journalMinuteur);
+    // on attend une pause de frappe : une requete par lettre pour rien
+    journalMinuteur = setTimeout(() => loadJournal(), 250);
+  });
+  // la croix d'un <input type="search"> ne declenche pas toujours 'input'
+  champ.addEventListener('search', () => {
+    journalRecherche = champ.value;
+    clearTimeout(journalMinuteur);
+    loadJournal();
+  });
+})();
 
 // ---------- Classement ----------
 let classementMode = 'general';

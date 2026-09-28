@@ -1,0 +1,23 @@
+# Ce fichier existe pour UNE raison : empecher GitHub Pages de publier le
+# SQL du jeu.
+#
+# Le depot est servi tel quel par GitHub Pages, donc tout fichier a la
+# racine est telechargeable publiquement. Les fichiers .sql decrivent le
+# corps de chaque fonction serveur, ses controles de securite et le nom des
+# fonctions d'administration. Ce n'est pas une faille — la protection
+# repose sur la RLS et les droits, pas sur le secret — mais c'est donner la
+# carte complete a qui cherche une breche.
+#
+# Jekyll ne publie deja pas les dossiers dont le nom commence par un tiret
+# bas, donc _sql/ serait exclu meme sans ce fichier. L'exclusion est
+# repetee ici explicitement pour deux raisons : elle est lisible, et elle
+# ne depend pas d'une convention implicite qu'un futur reglage pourrait
+# annuler.
+#
+# ATTENTION : ajouter un fichier .nojekyll a la racine desactiverait Jekyll
+# entierement, et rendrait tout ce dossier public d'un coup, sans
+# avertissement.
+exclude:
+  - _sql
+  - "*.py"
+  - README.md

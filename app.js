@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '96c9dfb9ffa8';
+const VERSION_JEU = 'da7517731712';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4741,11 +4741,16 @@ function renderMenaces(){
       statut = `Attaque repoussée il y a ${formatDuree(now - dernier)}.`;
     }
     const serie = [0, 1, 2].map(i => `<i class="${i < v ? 'pris' : ''}"></i>`).join('');
+    // Une commune favorite attaquee, c'est une des cinq places qui part. On
+    // le dit ici, ou le joueur regarde deja, plutot que de le lui apprendre
+    // une fois la commune perdue.
+    const estFavori = favorisSet.has(m.commune_code);
     return `
-      <div class="menace ${v > 0 ? 'danger' : ''}">
+      <div class="menace ${v > 0 ? 'danger' : ''}${estFavori ? ' favori' : ''}">
         <span class="menace-point" style="background:${COULEURS_FILTRE[m.tier] || '#7E8BA0'}"></span>
         <div class="menace-texte">
-          <span class="menace-titre"><b>${m.nom}</b> <span>${tier ? '(' + tier.label.toLowerCase() + ')' : ''}, attaquée par ${echapperTexte(m.attaquant_pseudo)}</span></span>
+          <span class="menace-titre">${estFavori ? '<span class="menace-etoile" title="Une de tes cinq communes gardées">★</span>' : ''}<b>${m.nom}</b> <span>${tier ? '(' + tier.label.toLowerCase() + ')' : ''}, attaquée par ${echapperTexte(m.attaquant_pseudo)}</span></span>
+          ${estFavori ? '<span class="menace-favori">Si tu la perds, tu perds une de tes cinq places gardées.</span>' : ''}
           <span class="menace-statut">${statut}</span>
           ${v > 0 && !(bouclierFin > now) ? (m.defense_utilisee
             ? '<span class="menace-note">Défense déjà utilisée contre cette attaque</span>'

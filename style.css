@@ -2020,6 +2020,13 @@
   .fc-aide{ font-size:0.72rem; color:#6F8099; text-align:center; margin:7px 0 0; line-height:1.45; }
   .fc-aide:empty{ display:none; }
 
+  .menace.favori{ border-color: rgba(240,180,41,0.35); }
+  .menace-etoile{ color: var(--c-legendaire); margin-right:5px; }
+  .menace-favori{
+    display:block; font-size:0.76rem; color: var(--c-legendaire);
+    margin:2px 0 1px; line-height:1.4;
+  }
+
   /* ---------- Journal d'activité ---------- */
   .journal{ width:100%; max-width:1200px; margin: 26px auto 0; }
   .journal[hidden]{ display:none; }

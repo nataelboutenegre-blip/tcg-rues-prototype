@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '61132749167d';
+const VERSION_JEU = 'cb066ee4ebf1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2956,7 +2956,11 @@ function miniArtSvg(code, tierId){
   const cle = code + '|' + tierId;
   if(miniArtCache.has(cle)) return miniArtCache.get(cle);
   const [clair, fonce] = TEINTES_CARTE[tierId];
-  const id = 'mg' + code;
+  // L'identifiant vient d'un hachage, jamais du texte recu : une
+  // apostrophe ou une espace dans un nom de commune (« L'Abergement »,
+  // « Aix en Othe ») rendait url(#...) non resoluble, et la carte
+  // s'affichait sur fond noir.
+  const id = 'mg' + hashTexte(cle).toString(36);
   const { d, cx, cy } = courbesDeNiveau(hashTexte(String(code)), 160, 100, 6, 36);
   const svg = `<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs><radialGradient id="${id}" cx="${(cx / 160 * 100).toFixed(0)}%" cy="${cy.toFixed(0)}%" r="85%">
@@ -3179,11 +3183,13 @@ function majRappelContrat(){
 // Vraies communes libres du palier vise, renvoyees par le serveur. Que ce
 // palier : montrer une rarete que le contrat ne peut pas donner afficherait
 // un resultat qui n'etait pas possible.
-function carteDefile(tier, nom, dept, pop, gagnante){
+// graine : le code INSEE quand on l'a, pour que la carte gagnante ait le
+// meme dessin ici et dans la Collection. Sinon le nom, faute de mieux.
+function carteDefile(tier, nom, dept, pop, gagnante, graine){
   const t = TIERS.find(x => x.id === tier) || TIERS[0];
   return `<div class="mini ${tier}${gagnante ? ' gagnante' : ''}">
     <div class="mini-int">
-      <div class="mini-art">${miniArtSvg(nom + dept, tier)}<span class="mini-dept">${echapperTexte(dept || '')}</span></div>
+      <div class="mini-art">${miniArtSvg(graine || (nom + dept), tier)}<span class="mini-dept">${echapperTexte(dept || '')}</span></div>
       <div class="mini-infos">
         <p class="mini-nom ${(nom || '').length > 14 ? 'long' : ''}">${echapperTexte(nom || '')}</p>
         <span class="mini-rarete">${t.label}</span>
@@ -3277,7 +3283,7 @@ function montrerRevelation(c, carte, decor){
   const direct = () => {
     rail.style.transition = 'none';
     rail.style.justifyContent = 'center';
-    rail.innerHTML = carteDefile(c.vers, carte.nom, carte.departement, carte.population, true);
+    rail.innerHTML = carteDefile(c.vers, carte.nom, carte.departement, carte.population, true, carte.code);
     requestAnimationFrame(() => requestAnimationFrame(() =>
       finir(piste.clientWidth / 2)));
   };
@@ -3288,10 +3294,10 @@ function montrerRevelation(c, carte, decor){
     let html = '';
     for(let i = 0; i < 45; i++){
       if(i === CT_IDX){
-        html += carteDefile(c.vers, carte.nom, carte.departement, carte.population, true);
+        html += carteDefile(c.vers, carte.nom, carte.departement, carte.population, true, carte.code);
       } else {
         const d = decor[i % decor.length];
-        html += carteDefile(c.vers, d.nom, d.departement, d.population, false);
+        html += carteDefile(c.vers, d.nom, d.departement, d.population, false, d.code);
       }
     }
     rail.style.justifyContent = 'flex-start';

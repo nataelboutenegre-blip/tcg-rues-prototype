@@ -194,14 +194,18 @@ grant execute on function public.signer_contrat(text[], text) to authenticated;
 --  le contrat ne peut pas donner afficherait un resultat qui n'etait pas
 --  possible. Ce n'est pas du suspense, c'est un mensonge.
 -- ---------------------------------------------------------------------------
-create or replace function public.contrat_defile(p_tier text, p_combien integer default 40)
-returns table(nom text, departement text, population integer)
+--  MAJ 28/09 : renvoie aussi le code INSEE, dont depend le dessin de la
+--  carte. Voir _sql/contrat-defile-code.sql, deja passe en base : ce
+--  fichier-ci est mis a jour pour rester la reference.
+drop function if exists public.contrat_defile(text, integer);
+create function public.contrat_defile(p_tier text, p_combien integer default 40)
+returns table(code text, nom text, departement text, population integer)
 language sql
 stable
 security definer
 set search_path to 'public'
 as $function$
-  select c.nom::text, c.departement::text, c.population
+  select c.code::text, c.nom::text, c.departement::text, c.population
     from communes c
     left join possessions p on p.commune_code = c.code
    where c.tier = p_tier

@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '38b68e7a8da2';
+const VERSION_JEU = '96c9dfb9ffa8';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2881,7 +2881,9 @@ async function loadMyCollection(){
     session.total++;
   }
   renderStats();
+  if(!favorisCharges) await chargerFavoris();
   renderCollection();
+  majBarreFavoris();
   renderMapOverlay();
   if(document.getElementById('sellableGrid')) renderSellableGrid();
   if(document.getElementById('boucliersGrid')) renderBoucliers();
@@ -2962,6 +2964,95 @@ function miniArtSvg(code, tierId){
   return svg;
 }
 
+// ---------- Favoris ----------
+// Cinq communes gardees a la fin de la saison, dont au plus une legendaire.
+// Les deux plafonds sont appliques en base ; ici on les affiche, et on
+// previent AVANT le clic plutot que de laisser le serveur refuser.
+const FAV_MAX = 5;
+const FAV_MAX_LEGENDAIRE = 1;
+let favorisSet = new Set();
+let favorisCharges = false;
+
+function favLegendaires(){
+  let n = 0;
+  for(const code of favorisSet){
+    const e = collectionMap.get(code);
+    if(e && e.tier && e.tier.id === 'legendaire') n++;
+  }
+  return n;
+}
+
+// Ce qui empeche de marquer cette commune, ou null si rien n'empeche.
+function favObstacle(entry){
+  if(!entry || favorisSet.has(entry.code)) return null;
+  if(favorisSet.size >= FAV_MAX) return 'plein';
+  if(entry.tier && entry.tier.id === 'legendaire'
+     && favLegendaires() >= FAV_MAX_LEGENDAIRE) return 'legendaire';
+  return null;
+}
+
+async function chargerFavoris(){
+  try{
+    const { data, error } = await sb.rpc('mes_favoris');
+    if(error) throw error;
+    favorisSet = new Set((data || []).map(r => r.commune_code));
+    favorisCharges = true;
+  }catch(e){
+    // la fonction n'existe pas encore en base : on n'affiche simplement rien
+    console.warn('TERRAFRONT favoris indisponibles', e);
+    favorisCharges = false;
+  }
+  majBarreFavoris();
+}
+
+function majBarreFavoris(){
+  const barre = document.getElementById('favBarre');
+  if(!barre) return;
+  if(!favorisCharges || vueCollection === 'france'){ barre.hidden = true; return; }
+  barre.hidden = false;
+  const n = favorisSet.size;
+  const elN = document.getElementById('favN');
+  const elP = document.getElementById('favPastilles');
+  const elT = document.getElementById('favTxt');
+  if(elN) elN.textContent = n;
+  if(elP) elP.innerHTML = Array.from({ length: FAV_MAX },
+    (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
+  if(elT) elT.innerHTML = n >= FAV_MAX
+    ? 'communes gardées à la fin de la saison. Retire une étoile pour en changer.'
+    : 'communes gardées à la fin de la saison — le reste retourne au pot. '
+      + '<b>Une seule légendaire</b> parmi les cinq.';
+}
+
+async function basculerFavori(entry){
+  if(!entry) return false;
+  const etait = favorisSet.has(entry.code);
+  const obstacle = favObstacle(entry);
+  if(obstacle === 'plein'){
+    notifier({ type: 'info', titre: 'Cinq places, pas une de plus',
+      texte: 'Retire une étoile ailleurs pour garder celle-ci.' });
+    return false;
+  }
+  if(obstacle === 'legendaire'){
+    notifier({ type: 'info', titre: 'Une seule légendaire',
+      texte: 'Les autres retournent au pot en fin de saison, pour que le palier '
+           + 'du haut continue de circuler.' });
+    return false;
+  }
+  try{
+    const { error } = await sb.rpc('marquer_gardee',
+      { p_commune_code: entry.code, p_gardee: !etait });
+    if(error) throw error;
+    if(etait) favorisSet.delete(entry.code); else favorisSet.add(entry.code);
+    majBarreFavoris();
+    renderCollection();
+    return true;
+  }catch(e){
+    notifier({ type: 'erreur', titre: 'Action impossible',
+      texte: messageLisible(e.message) });
+    return false;
+  }
+}
+
 function renderCollectionFilters(entries){
   const el = document.getElementById('collectionFilters');
   if(!el) return;
@@ -2969,6 +3060,11 @@ function renderCollectionFilters(entries){
   entries.forEach(e => compte[e.tier.id]++);
   const boutons = [`<button class="coll-filtre ${collectionFilterTier === 'tous' ? 'actif' : ''}" data-tier="tous">Toutes <span class="nb">${entries.length}</span></button>`]
     .concat(TIERS.map(t => `<button class="coll-filtre ${collectionFilterTier === t.id ? 'actif' : ''}" data-tier="${t.id}"><span class="point" style="background:${COULEURS_FILTRE[t.id]}"></span>${t.label} <span class="nb">${compte[t.id]}</span></button>`));
+  // le filtre des favoris n'apparait que s'il y en a : un bouton qui ne
+  // filtre rien n'apprend rien
+  if(favorisCharges && favorisSet.size && vueCollection !== 'france'){
+    boutons.push(`<button class="coll-filtre ${collectionFilterTier === 'favoris' ? 'actif' : ''}" data-tier="favoris"><span class="point" style="background:${COULEURS_FILTRE.legendaire}"></span>Favoris <span class="nb">${favorisSet.size}</span></button>`);
+  }
   el.innerHTML = boutons.join('');
 }
 const COULEURS_FILTRE = {legendaire:'#F0B429', rare:'#2F7CF6', peucommun:'#22A06B', commun:'#7E8BA0'};
@@ -3104,7 +3200,9 @@ function renderCollection(){
   const recherche = sansAccents(champ ? champ.value.trim() : '');
   const sieges = siegesParCommune();
   const visibles = entries
-    .filter(e => collectionFilterTier === 'tous' || e.tier.id === collectionFilterTier)
+    .filter(e => collectionFilterTier === 'tous'
+              || (collectionFilterTier === 'favoris' ? favorisSet.has(e.code)
+                                                     : e.tier.id === collectionFilterTier))
     .filter(e => correspondRecherche(e.nom, e.dept, recherche))
     .sort((a,b) => {
       const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
@@ -3125,9 +3223,9 @@ function renderCollection(){
       ? `<span class="mini-siege" title="${s.nb > 1 ? s.nb + ' joueurs attaquent cette commune' : 'Un joueur attaque cette commune'} — meilleure série ${s.max} sur 3">${s.max}/3${s.nb > 1 ? ' ×' + s.nb : ''}</span>`
       : '';
     return `
-    <div class="mini ${entry.tier.id}${entry.perdue ? ' perdue' : ''}" data-code="${entry.code}" role="button" tabindex="0" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
+    <div class="mini ${entry.tier.id}${entry.perdue ? ' perdue' : ''}${favorisSet.has(entry.code) ? ' favori' : ''}" data-code="${entry.code}" role="button" tabindex="0" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
       <div class="mini-int">
-        ${entry.perdue ? '<span class="mini-perdue">PERDUE</span>' : ''}
+        ${entry.perdue ? '<span class="mini-perdue">PERDUE</span>' : ''}${favorisSet.has(entry.code) ? '<span class="mini-fav" title="Gardée à la fin de la saison">★</span>' : ''}
         <div class="mini-art">${miniArtSvg(entry.code, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}</div>
         <div class="mini-infos">
           <p class="mini-nom ${entry.nom.length > 14 ? 'long' : ''}">${entry.nom}</p>
@@ -3253,9 +3351,15 @@ function rendreFiche(entry, d){
           ${troisieme}
         </div>
         ${savais}
-        <div class="fc-actions">
+        <div class="fc-actions${entry.perdue || !favorisCharges ? '' : ' empilees'}">
+          ${entry.perdue || !favorisCharges ? '' : `
+          <button class="fc-btn fav ${favorisSet.has(entry.code) ? 'actif' : ''}" data-fc="favori">
+            <span class="fav-etoile">${favorisSet.has(entry.code) ? '★' : '☆'}</span>
+            <span>${libelleFavori(entry)}</span>
+          </button>`}
           <button class="fc-btn principal" data-fc="carte">Voir sur la carte</button>
         </div>
+        ${entry.perdue || !favorisCharges ? '' : `<p class="fc-aide">${aideFavori(entry)}</p>`}
       </div>
     </div>`);
 
@@ -3265,10 +3369,44 @@ function rendreFiche(entry, d){
     const b = e.target.closest('[data-fc]');
     if(!b) return;
     if(b.dataset.fc === 'fermer'){ fermerFiche(null); return; }
-    if(b.dataset.fc === 'carte') voirCommuneSurCarte(entry);
+    if(b.dataset.fc === 'carte'){ voirCommuneSurCarte(entry); return; }
+    if(b.dataset.fc === 'favori'){
+      b.disabled = true;
+      basculerFavori(entry).then(() => {
+        b.disabled = false;
+        const etoile = b.querySelector('.fav-etoile');
+        const texte = b.querySelector('span:last-child');
+        const aide = boite.querySelector('.fc-aide');
+        const est = favorisSet.has(entry.code);
+        b.classList.toggle('actif', est);
+        if(etoile) etoile.textContent = est ? '★' : '☆';
+        if(texte) texte.textContent = libelleFavori(entry);
+        if(aide) aide.textContent = aideFavori(entry);
+      });
+    }
   });
   const premier = boite.querySelector('.fc-btn');
   if(premier && faits !== null) premier.focus();
+}
+
+// Le libelle ne ment pas : « favori » rend le geste anodin, ce qui est le
+// but, mais le bouton dit ce que ca implique vraiment.
+function libelleFavori(entry){
+  if(favorisSet.has(entry.code)) return 'Gardée à la fin de la saison';
+  const o = favObstacle(entry);
+  if(o === 'plein') return 'Tes 5 places sont prises';
+  if(o === 'legendaire') return 'Une seule légendaire';
+  return 'Garder à la fin de la saison';
+}
+
+function aideFavori(entry){
+  if(favorisSet.has(entry.code)) return 'Clique à nouveau pour libérer la place.';
+  const o = favObstacle(entry);
+  if(o === 'plein') return 'Retire une étoile ailleurs pour libérer une place.';
+  if(o === 'legendaire')
+    return 'Tu en gardes déjà une. Les autres retournent au pot en fin de saison.';
+  const reste = FAV_MAX - favorisSet.size;
+  return `Il te reste ${reste} place${reste > 1 ? 's' : ''}.`;
 }
 
 // Place la commune au centre du cadre. Les deux rendus, canvas et SVG,

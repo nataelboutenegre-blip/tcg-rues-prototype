@@ -1983,6 +1983,43 @@
   .classement.replie .cl-tete{ margin-bottom:8px; }
 
 
+  /* ---------- Favoris ---------- */
+  .fav-barre{
+    display:flex; align-items:center; gap:11px; flex-wrap:wrap;
+    background: var(--nuit-2); border:1px solid rgba(169,188,212,0.16);
+    border-radius:12px; padding:10px 14px; margin-top:10px;
+  }
+  .fav-barre[hidden]{ display:none; }
+  .fav-compte{ font-family: var(--titre); font-weight:800; font-size:1.25rem; white-space:nowrap; }
+  .fav-compte b{ color: var(--c-legendaire); }
+  .fav-pastilles{ display:flex; gap:4px; }
+  .fav-pastilles i{ width:11px; height:11px; border-radius:3px; display:block;
+                    background: rgba(169,188,212,0.18); }
+  .fav-pastilles i.on{ background: var(--c-legendaire); }
+  .fav-txt{ flex:1; min-width:190px; font-size:0.81rem; color: var(--brume); line-height:1.45; }
+
+  /* l'etoile de la grille INDIQUE, elle ne se clique pas */
+  .mini-fav{
+    position:absolute; top:6px; left:6px; z-index:2;
+    font-size:0.82rem; color: var(--c-legendaire); pointer-events:none;
+    text-shadow:0 1px 3px rgba(10,22,41,0.9);
+  }
+  .mini.favori .mini-int{ box-shadow: inset 0 0 0 1px rgba(240,180,41,0.5); }
+
+  /* le bouton de la fiche */
+  /* deux boutons dans une rangee, c'est un libelle sur deux lignes : on
+     empile des qu'il y a l'etoile */
+  .fiche .fc-actions.empilees{ flex-direction: column; }
+  .fc-btn.fav{ display:flex; align-items:center; justify-content:center; gap:8px; }
+  .fc-btn.fav .fav-etoile{ font-size:1rem; line-height:1; }
+  .fc-btn.fav.actif{
+    border-color: rgba(240,180,41,0.55); color: var(--c-legendaire);
+    background: rgba(240,180,41,0.1);
+  }
+  .fc-btn.fav:disabled{ opacity:0.5; cursor:default; }
+  .fc-aide{ font-size:0.72rem; color:#6F8099; text-align:center; margin:7px 0 0; line-height:1.45; }
+  .fc-aide:empty{ display:none; }
+
   /* ---------- Journal d'activité ---------- */
   .journal{ width:100%; max-width:1200px; margin: 26px auto 0; }
   .journal[hidden]{ display:none; }

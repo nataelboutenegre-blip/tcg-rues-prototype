@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=38b68e7a8da2">
+<link rel="stylesheet" href="style.css?v=96c9dfb9ffa8">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -360,6 +360,11 @@
         </div>
         <div class="coll-filtres" id="collectionFilters"></div>
         <input type="text" id="collectionSearch" class="bourse-search coll-recherche" placeholder="Rechercher une commune ou un département…">
+        <div class="fav-barre" id="favBarre" hidden>
+          <span class="fav-compte"><b id="favN">0</b> / 5</span>
+          <span class="fav-pastilles" id="favPastilles"></span>
+          <span class="fav-txt" id="favTxt"></span>
+        </div>
       </div>
       <div class="coll-france" id="collFrance" hidden>
         <canvas id="collFranceCarte"></canvas>
@@ -881,6 +886,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=38b68e7a8da2"></script>
+<script src="app.js?v=96c9dfb9ffa8"></script>
 </body>
 </html>

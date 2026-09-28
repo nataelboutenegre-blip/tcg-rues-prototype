@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'da7517731712';
+const VERSION_JEU = '3a171f84b4a9';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2852,6 +2852,7 @@ async function loadMyCollection(){
   const champsCommune = 'communes(code,nom,departement,population,latitude,longitude,tier,rang,palier_total)';
   // du plus complet au plus simple : si un fichier SQL n'a pas encore ete execute, le site se charge quand meme
   const variantes = [
+    'commune_code, acquired_at, bouclier_debut, bouclier_jusqua, conquise_le, etiquette, ',
     'commune_code, acquired_at, bouclier_debut, bouclier_jusqua, conquise_le, ',
     'commune_code, acquired_at, bouclier_debut, bouclier_jusqua, ',
     'commune_code, acquired_at, ',
@@ -2875,7 +2876,8 @@ async function loadMyCollection(){
       acquiredAt: row.acquired_at ? new Date(row.acquired_at).getTime() : 0,
       bouclierDebut: row.bouclier_debut ? new Date(row.bouclier_debut).getTime() : 0,
       bouclierJusqua: row.bouclier_jusqua ? new Date(row.bouclier_jusqua).getTime() : 0,
-      conquiseLe: row.conquise_le ? new Date(row.conquise_le).getTime() : 0
+      conquiseLe: row.conquise_le ? new Date(row.conquise_le).getTime() : 0,
+      etiquette: row.etiquette || ''
     });
     session[c.tier]++;
     session.total++;
@@ -2962,6 +2964,42 @@ function miniArtSvg(code, tierId){
   </svg>`;
   miniArtCache.set(cle, svg);
   return svg;
+}
+
+// ---------- Etiquettes ----------
+// Un mot par commune, prive. Le nettoyage (espaces, longueur) se fait en
+// base : on affiche ce que le serveur rend plutot que de deviner.
+const ETIQUETTE_MAX = 20;
+let etiquetteFiltre = null;        // null = toutes, '' = sans etiquette
+
+function etiquettesUtilisees(){
+  const n = new Map();
+  for(const e of collectionMap.values()){
+    if(e.etiquette) n.set(e.etiquette, (n.get(e.etiquette) || 0) + 1);
+  }
+  return [...n.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'fr'));
+}
+
+async function poserEtiquette(entry, texte){
+  try{
+    const { data, error } = await sb.rpc('etiqueter',
+      { p_commune_code: entry.code, p_etiquette: texte });
+    if(error) throw error;
+    entry.etiquette = data || '';
+    const dans = collectionMap.get(entry.code);
+    if(dans) dans.etiquette = entry.etiquette;
+    // le filtre courant peut ne plus exister apres ce changement
+    if(etiquetteFiltre && etiquetteFiltre !== ''
+       && !etiquettesUtilisees().some(([t]) => t === etiquetteFiltre)){
+      etiquetteFiltre = null;
+    }
+    renderCollection();
+    return true;
+  }catch(e){
+    notifier({ type: 'erreur', titre: 'Étiquette impossible',
+      texte: messageLisible(e.message) });
+    return false;
+  }
 }
 
 // ---------- Favoris ----------
@@ -3064,6 +3102,15 @@ function renderCollectionFilters(entries){
   // filtre rien n'apprend rien
   if(favorisCharges && favorisSet.size && vueCollection !== 'france'){
     boutons.push(`<button class="coll-filtre ${collectionFilterTier === 'favoris' ? 'actif' : ''}" data-tier="favoris"><span class="point" style="background:${COULEURS_FILTRE.legendaire}"></span>Favoris <span class="nb">${favorisSet.size}</span></button>`);
+  }
+  // les etiquettes deviennent des filtres, et seulement s'il y en a
+  const etiq = vueCollection === 'france' ? [] : etiquettesUtilisees();
+  if(etiq.length){
+    for(const [t, n] of etiq){
+      boutons.push(`<button class="coll-filtre etiq ${etiquetteFiltre === t ? 'actif' : ''}" data-etiq="${echapperTexte(t)}">${echapperTexte(t)} <span class="nb">${n}</span></button>`);
+    }
+    const sans = entries.filter(e => !e.etiquette && !e.perdue).length;
+    if(sans) boutons.push(`<button class="coll-filtre etiq ${etiquetteFiltre === '' ? 'actif' : ''}" data-etiq="">Sans étiquette <span class="nb">${sans}</span></button>`);
   }
   el.innerHTML = boutons.join('');
 }
@@ -3203,6 +3250,8 @@ function renderCollection(){
     .filter(e => collectionFilterTier === 'tous'
               || (collectionFilterTier === 'favoris' ? favorisSet.has(e.code)
                                                      : e.tier.id === collectionFilterTier))
+    .filter(e => etiquetteFiltre === null
+              || (etiquetteFiltre === '' ? !e.etiquette : e.etiquette === etiquetteFiltre))
     .filter(e => correspondRecherche(e.nom, e.dept, recherche))
     .sort((a,b) => {
       const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
@@ -3226,7 +3275,7 @@ function renderCollection(){
     <div class="mini ${entry.tier.id}${entry.perdue ? ' perdue' : ''}${favorisSet.has(entry.code) ? ' favori' : ''}" data-code="${entry.code}" role="button" tabindex="0" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
       <div class="mini-int">
         ${entry.perdue ? '<span class="mini-perdue">PERDUE</span>' : ''}${favorisSet.has(entry.code) ? '<span class="mini-fav" title="Gardée à la fin de la saison">★</span>' : ''}
-        <div class="mini-art">${miniArtSvg(entry.code, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}</div>
+        <div class="mini-art">${miniArtSvg(entry.code, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}${entry.etiquette ? `<span class="mini-etiq" title="Ton étiquette">${echapperTexte(entry.etiquette)}</span>` : ''}</div>
         <div class="mini-infos">
           <p class="mini-nom ${entry.nom.length > 14 ? 'long' : ''}">${entry.nom}</p>
           ${entry.rank ? `<span class="mini-num">n° ${Number(entry.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(entry.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
@@ -3360,6 +3409,16 @@ function rendreFiche(entry, d){
           <button class="fc-btn principal" data-fc="carte">Voir sur la carte</button>
         </div>
         ${entry.perdue || !favorisCharges ? '' : `<p class="fc-aide">${aideFavori(entry)}</p>`}
+        ${entry.perdue ? '' : `
+        <div class="fc-etiq">
+          <span class="fc-etiq-label">Étiquette — visible par toi seul</span>
+          <div class="fc-etiq-champ">
+            <input type="text" id="fcEtiq" maxlength="${ETIQUETTE_MAX}" autocomplete="off"
+                   placeholder="à échanger, ma région…" value="${echapperTexte(entry.etiquette || '')}">
+            <button class="fc-etiq-ok" data-fc="etiq-ok">OK</button>
+          </div>
+          <div class="fc-etiq-sugg">${suggestionsEtiquette(entry)}</div>
+        </div>`}
       </div>
     </div>`);
 
@@ -3370,6 +3429,23 @@ function rendreFiche(entry, d){
     if(!b) return;
     if(b.dataset.fc === 'fermer'){ fermerFiche(null); return; }
     if(b.dataset.fc === 'carte'){ voirCommuneSurCarte(entry); return; }
+    if(b.dataset.fc === 'etiq-ok'){
+      const champ = boite.querySelector('#fcEtiq');
+      if(!champ) return;
+      b.disabled = true;
+      poserEtiquette(entry, champ.value).then(() => {
+        b.disabled = false;
+        champ.value = entry.etiquette || '';
+        const sugg = boite.querySelector('.fc-etiq-sugg');
+        if(sugg) sugg.innerHTML = suggestionsEtiquette(entry);
+      });
+      return;
+    }
+    if(b.dataset.fc === 'etiq-sugg'){
+      const champ = boite.querySelector('#fcEtiq');
+      if(champ){ champ.value = b.dataset.t; boite.querySelector('[data-fc="etiq-ok"]').click(); }
+      return;
+    }
     if(b.dataset.fc === 'favori'){
       b.disabled = true;
       basculerFavori(entry).then(() => {
@@ -3385,8 +3461,28 @@ function rendreFiche(entry, d){
       });
     }
   });
+  const champEtiq = boite.querySelector('#fcEtiq');
+  if(champEtiq){
+    champEtiq.addEventListener('keydown', (ev) => {
+      if(ev.key !== 'Enter') return;
+      ev.preventDefault();
+      const ok = boite.querySelector('[data-fc="etiq-ok"]');
+      if(ok) ok.click();
+    });
+  }
   const premier = boite.querySelector('.fc-btn');
   if(premier && faits !== null) premier.focus();
+}
+
+// Les suggestions viennent des etiquettes deja posees, les plus utilisees
+// d'abord. Sans elles on se retrouve avec « a echanger », « à échanger » et
+// « aechanger » cote a cote, et le filtre ne sert plus a rien.
+function suggestionsEtiquette(entry){
+  return etiquettesUtilisees()
+    .filter(([t]) => t !== entry.etiquette)
+    .slice(0, 6)
+    .map(([t, n]) => `<button data-fc="etiq-sugg" data-t="${echapperTexte(t)}">${echapperTexte(t)} <i>${n}</i></button>`)
+    .join('');
 }
 
 // Le libelle ne ment pas : « favori » rend le geste anodin, ce qui est le
@@ -3484,7 +3580,12 @@ document.getElementById('echSearchMien').addEventListener('input', renderEchange
 document.getElementById('collectionFilters').addEventListener('click', (e) => {
   const b = e.target.closest('.coll-filtre');
   if(!b) return;
-  collectionFilterTier = b.dataset.tier;
+  if(b.dataset.etiq !== undefined){
+    // recliquer le filtre actif le retire
+    etiquetteFiltre = (etiquetteFiltre === b.dataset.etiq) ? null : b.dataset.etiq;
+  } else {
+    collectionFilterTier = b.dataset.tier;
+  }
   renderCollection();
 });
 

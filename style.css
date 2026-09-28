@@ -1983,6 +1983,46 @@
   .classement.replie .cl-tete{ margin-bottom:8px; }
 
 
+  /* ---------- Étiquettes ---------- */
+  .fc-etiq{ border-top:1px solid rgba(169,188,212,0.14); margin-top:14px; padding-top:12px; }
+  .fc-etiq-label{
+    display:block; font-size:0.64rem; font-weight:700; letter-spacing:0.1em;
+    text-transform:uppercase; color: var(--brume); margin-bottom:7px;
+  }
+  .fc-etiq-champ{ display:flex; gap:7px; }
+  .fc-etiq-champ input{
+    flex:1; min-width:0; font:inherit; font-size:0.85rem; color:#fff;
+    background: rgba(8,18,35,.55); border:1px solid rgba(169,188,212,0.25);
+    border-radius:9px; padding:9px 11px;
+  }
+  .fc-etiq-champ input::placeholder{ color:#6F8099; }
+  .fc-etiq-champ input:focus{ outline:2px solid var(--c-legendaire); outline-offset:1px; }
+  .fc-etiq-ok{
+    font:inherit; font-size:0.8rem; font-weight:700; cursor:pointer;
+    background: var(--c-legendaire); color:#13233B; border:none;
+    border-radius:9px; padding:0 14px;
+  }
+  .fc-etiq-ok:disabled{ opacity:0.45; cursor:default; }
+  .fc-etiq-sugg{ display:flex; gap:5px; flex-wrap:wrap; margin-top:8px; }
+  .fc-etiq-sugg:empty{ display:none; }
+  .fc-etiq-sugg button{
+    font:inherit; font-size:0.72rem; cursor:pointer; color: var(--brume);
+    background: rgba(8,18,35,.55); border:1px solid rgba(169,188,212,0.2);
+    border-radius:999px; padding:4px 10px;
+  }
+  .fc-etiq-sugg button:hover{ border-color: rgba(240,180,41,0.5); color:#fff; }
+  .fc-etiq-sugg button i{ font-style:normal; opacity:0.5; }
+
+  /* posee sur l'image, la vignette ayant un format fixe */
+  .mini-etiq{
+    position:absolute; left:4px; bottom:4px; max-width:78%;
+    font-size:0.6rem; font-weight:700; line-height:1.35;
+    color:#F2F6FB; background: rgba(10,22,41,0.82);
+    border-radius:5px; padding:1px 6px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .coll-filtre.etiq{ border-style:dashed; }
+
   /* ---------- Favoris ---------- */
   .fav-barre{
     display:flex; align-items:center; gap:11px; flex-wrap:wrap;

@@ -228,26 +228,35 @@ begin
   -- =======================================================================
 
   -- --- b) archiver le classement AVANT toute suppression ------------------
+  -- L'ordre est CELUI DU CLASSEMENT AFFICHE dans le jeu : score de rarete,
+  -- puis nombre de communes, puis habitants. Un palmares range autrement
+  -- ferait changer le rang d'un joueur entre la veille de la cloture et
+  -- l'archive, et il aurait raison de le signaler.
+  --
+  -- La colonne points recoit ce score de rarete, pas le solde du
+  -- portefeuille : le solde est remis a zero quelques lignes plus bas, et
+  -- ce n'est pas lui que le classement montre.
   insert into classement_saisons (saison, joueur_id, pseudo, rang, communes,
                                   legendaires, rares, departements, points)
   select p_saison,
          t.joueur_id,
          t.pseudo,
-         row_number() over (order by t.communes desc, t.legendaires desc,
-                                     t.rares desc, t.pseudo)::integer,
-         t.communes, t.legendaires, t.rares, t.departements, t.points
+         row_number() over (order by t.score desc, t.communes desc,
+                                     t.habitants desc, t.pseudo)::integer,
+         t.communes, t.legendaires, t.rares, t.departements, t.score
     from (
       select p.joueur_id,
-             j.pseudo,
+             coalesce(j.pseudo, 'Joueur')::text as pseudo,
+             sum(points_rarete(c.tier))::integer as score,
              count(*)::integer as communes,
+             sum(coalesce(c.population, 0))::bigint as habitants,
              count(*) filter (where c.tier = 'legendaire')::integer as legendaires,
              count(*) filter (where c.tier = 'rare')::integer as rares,
-             count(distinct c.departement)::integer as departements,
-             coalesce(j.solde, 0)::integer as points
+             count(distinct c.departement)::integer as departements
         from possessions p
         join communes c on c.code = p.commune_code
         left join joueurs j on j.id = p.joueur_id
-       group by p.joueur_id, j.pseudo, j.solde
+       group by p.joueur_id, j.pseudo
     ) t
   on conflict (saison, joueur_id) do nothing;
   get diagnostics v_lignes = row_count;

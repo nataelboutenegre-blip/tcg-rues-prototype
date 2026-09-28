@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '16c89020c9fb';
+const VERSION_JEU = '61132749167d';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3027,19 +3027,77 @@ function composerLot(){
   contratLot = (contratDispo[contratChoisi.de] || []).slice(0, contratChoisi.n);
 }
 
-// Remplace une ligne par la premiere candidate qui n'est pas deja dans le lot.
+// La pastille du departement. Vide si la base ne le connait pas : mieux
+// vaut pas de pastille qu'une pastille vide.
+function ctDept(dep){
+  const d = String(dep || '').trim();
+  if(!d) return '';
+  const nom = DEPT_NAMES[d] || '';
+  return `<span class="ct-dp"${nom ? ` title="${echapperTexte(nom)}"` : ''}>${echapperTexte(d)}</span>`;
+}
+
+// Remplacer une ligne : on ouvre la liste complete du palier, avec une
+// recherche sur le nom ou le numero de departement. Les communes deja dans
+// le lot restent affichees mais grisees — les cacher ferait chercher en
+// vain une commune qu'on possede bel et bien.
 function changerLigne(i){
   if(!contratChoisi) return;
+  const actuelle = contratLot[i];
+  if(!actuelle) return;
+  const toutes = contratDispo[contratChoisi.de] || [];
   const pris = new Set(contratLot.map(x => x.commune_code));
-  const suivante = (contratDispo[contratChoisi.de] || [])
-    .find(x => !pris.has(x.commune_code));
-  if(!suivante){
-    notifier({ type: 'info', titre: 'Plus de remplaçante',
-      texte: 'Toutes tes communes de ce palier sont déjà dans le lot.' });
-    return;
-  }
-  contratLot[i] = suivante;
-  renderContrat();
+
+  const fermer = ouvrirFenetre(`
+    <div class="fenetre ct-pick" role="dialog" aria-modal="true" aria-labelledby="ctPickT">
+      <h2 id="ctPickT">Remplacer ${echapperTexte(actuelle.nom || actuelle.commune_code)}</h2>
+      <p class="ct-sst">${ctNb(toutes.length)} commune${toutes.length > 1 ? 's' : ''} à choisir</p>
+      <input type="search" id="ctRech" autocomplete="off" placeholder="Nom ou département…"
+             aria-label="Chercher une commune">
+      <div class="ct-liste" id="ctPickL"></div>
+      <div class="ct-pkp"><button type="button" id="ctPickA">Annuler</button></div>
+    </div>`);
+
+  const champ = document.getElementById('ctRech');
+  const liste = document.getElementById('ctPickL');
+
+  const dessiner = () => {
+    // correspondRecherche() : le meme filtre que la Collection et la carte,
+    // nom OU numero de departement OU nom du departement
+    const m = sansAccents(champ.value.trim());
+    const vus = m ? toutes.filter(x =>
+      correspondRecherche(x.nom || x.commune_code, x.departement, m)) : toutes;
+    if(!vus.length){
+      liste.innerHTML = `<p class="ct-vide">Aucune commune ne correspond.</p>`;
+      return;
+    }
+    liste.innerHTML = vus.slice(0, 300).map(x => {
+      const soi = x.commune_code === actuelle.commune_code;
+      const dedans = pris.has(x.commune_code);
+      const note = soi ? 'celle-ci' : (dedans ? 'déjà dans le lot' : '');
+      return `<button type="button" class="ct-o ${contratChoisi.de}" ${dedans ? 'disabled' : ''}
+                      data-code="${echapperTexte(x.commune_code)}">
+        <span class="pt"></span>
+        <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${ctDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.</span></span>
+        ${note ? `<span class="dj">${note}</span>` : ''}
+      </button>`;
+    }).join('');
+  };
+
+  dessiner();
+  champ.addEventListener('input', dessiner);
+  document.getElementById('ctPickA').addEventListener('click', () => fermer(null));
+  liste.addEventListener('click', (e) => {
+    const b = e.target.closest('.ct-o');
+    if(!b || b.disabled) return;
+    const choisie = toutes.find(x => x.commune_code === b.dataset.code);
+    if(!choisie) return;
+    contratLot[i] = choisie;
+    fermer(null);
+    renderContrat();
+  });
+  // sur ordinateur on peut taper tout de suite ; sur telephone on ne force
+  // pas le clavier a s'ouvrir par-dessus la liste
+  if(!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) champ.focus();
 }
 
 function renderContrat(){
@@ -3080,7 +3138,7 @@ function renderContrat(){
   lot.innerHTML = contratLot.map((x, i) => `
     <div class="ct-l ${contratChoisi.de}">
       <span class="pt"></span>
-      <span class="tx"><span class="nm">${echapperTexte(x.nom || x.commune_code)}</span><span class="hb">${ctNb(x.population || 0)} hab.</span></span>
+      <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${ctDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.</span></span>
       <button data-ct-changer="${i}">changer</button>
     </div>`).join('');
   if(avert) avert.textContent =

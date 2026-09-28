@@ -1998,14 +1998,18 @@
   .ct-taux button:focus-visible{ outline:2px solid var(--c-legendaire); outline-offset:2px; }
 
   .ct-zone{ background: var(--nuit-2); border:1px solid rgba(169,188,212,0.16);
-            border-radius:14px; padding:15px; margin-bottom:13px; }
+            border-radius:14px; padding:15px; margin-bottom:13px;
+            width:100%; box-sizing:border-box; }
   .ct-zone[hidden]{ display:none; }
   .ct-zt{ display:flex; align-items:baseline; justify-content:space-between;
           gap:10px; flex-wrap:wrap; margin-bottom:11px; }
   .ct-zt h3{ font-size:0.68rem; font-weight:700; letter-spacing:0.1em;
              text-transform:uppercase; color: var(--brume); margin:0; }
   .ct-zt span{ font-size:0.74rem; color:#7F91AB; }
-  .ct-lot{ display:grid; grid-template-columns:repeat(auto-fill,minmax(188px,1fr)); gap:8px; }
+  /* .ct-zone n'avait pas de largeur : dans un .tab-panel en align-items:
+     flex-start, elle se reduisait au contenu et le lot tenait sur 483 px au
+     lieu de 980. Les noms etaient coupes pour rien. */
+  .ct-lot{ display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:8px; }
   .ct-l{ display:flex; align-items:center; gap:9px; background: var(--nuit);
          border:1px solid rgba(169,188,212,0.14); border-radius:9px; padding:7px 9px;
          transition: opacity .35s, transform .35s; }
@@ -2014,12 +2018,51 @@
   .ct-l.peucommun .pt{ background: var(--c-peucommun); }
   .ct-l .tx{ flex:1; min-width:0; display:flex; flex-direction:column; }
   .ct-l .nm{ font-size:0.79rem; font-weight:600; white-space:nowrap;
-             overflow:hidden; text-overflow:ellipsis; }
+             display:flex; align-items:baseline; gap:5px; min-width:0; }
+  /* le nom se laisse tronquer, la pastille du departement jamais */
+  .ct-l .nm i{ font-style:normal; overflow:hidden; text-overflow:ellipsis; }
+  .ct-dp{ font-size:0.62rem; font-weight:700; color:#7F91AB; flex-shrink:0;
+          background:rgba(169,188,212,0.13); border-radius:4px; padding:1px 4px; }
   .ct-l .hb{ font-size:0.67rem; color:#7F91AB; white-space:nowrap; }
   .ct-l button{ font:inherit; font-size:0.68rem; font-weight:600; cursor:pointer;
     flex-shrink:0; background:transparent; color:#7F91AB;
     border:1px solid rgba(169,188,212,0.22); border-radius:7px; padding:3px 7px; }
   .ct-l button:hover{ color:#fff; border-color: var(--c-legendaire); }
+  /* la fenetre de remplacement d'une ligne du lot */
+  .fenetre.ct-pick{ width:min(440px,100%); text-align:left; padding:20px 20px 16px;
+                    display:flex; flex-direction:column; max-height:min(560px, 82vh); }
+  .ct-pick h2{ font:900 1.5rem/1 var(--titre); margin:0 0 3px; letter-spacing:.01em; }
+  .ct-pick .ct-sst{ font-size:0.76rem; color:#7F91AB; margin:0 0 13px; }
+  .ct-pick input{ font:inherit; font-size:0.86rem; width:100%; box-sizing:border-box;
+    background: var(--nuit); color:#fff; border:1px solid rgba(169,188,212,0.22);
+    border-radius:9px; padding:9px 11px; margin-bottom:11px; }
+  .ct-pick input::placeholder{ color:#6C7E96; }
+  .ct-pick input:focus{ outline:none; border-color: var(--c-legendaire); }
+  .ct-liste{ overflow-y:auto; flex:1; margin:0 -4px; padding:0 4px; }
+  .ct-vide{ font-size:0.78rem; color:#7F91AB; text-align:center; padding:18px 0; margin:0; }
+  .ct-o{ display:flex; align-items:center; gap:9px; width:100%; text-align:left;
+    font:inherit; cursor:pointer; background:transparent; color:#fff;
+    border:1px solid transparent; border-radius:9px; padding:8px 9px; }
+  .ct-o:hover{ background: var(--nuit-3); }
+  .ct-o:focus-visible{ outline:2px solid var(--c-legendaire); outline-offset:-2px; }
+  .ct-o .pt{ width:8px; height:8px; border-radius:2px; flex-shrink:0; background: var(--c-commun); }
+  .ct-o.peucommun .pt{ background: var(--c-peucommun); }
+  .ct-o .tx{ flex:1; min-width:0; display:flex; flex-direction:column; }
+  .ct-o .nm{ font-size:0.82rem; font-weight:600; display:flex; align-items:baseline;
+             gap:5px; min-width:0; white-space:nowrap; }
+  .ct-o .nm i{ font-style:normal; overflow:hidden; text-overflow:ellipsis; }
+  .ct-o .hb{ font-size:0.67rem; color:#7F91AB; }
+  .ct-o .dj{ font-size:0.64rem; font-weight:700; color:#6C7E96; flex-shrink:0; }
+  .ct-o:disabled{ cursor:default; opacity:0.45; }
+  .ct-o:disabled:hover{ background:transparent; }
+  /* pas .ct-pied : ce nom sert deja au pied de la revelation, qui est en
+     opacity:0 tant qu'il n'a pas la classe .on */
+  .ct-pick .ct-pkp{ display:flex; justify-content:flex-end; margin-top:12px; }
+  .ct-pick .ct-pkp button{ font:inherit; font-size:0.78rem; font-weight:600; cursor:pointer;
+    background:transparent; color:#A9BCD4; border:1px solid rgba(169,188,212,0.22);
+    border-radius:9px; padding:7px 15px; }
+  .ct-pick .ct-pkp button:hover{ color:#fff; border-color: var(--c-legendaire); }
+
   .ct-avert{ font-size:0.75rem; color:#7F91AB; text-align:center; margin:9px 0 0; line-height:1.5; }
   .ct-avert:empty{ display:none; }
 

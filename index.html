@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=3a171f84b4a9">
+<link rel="stylesheet" href="style.css?v=16c89020c9fb">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -278,6 +278,17 @@
         <span class="tab-badge" id="echangeBadge" hidden></span>
       </div>
 
+      <div class="tab" data-tab="contrat">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 3.5h8.5L19 8v12.5H6z"/>
+            <path d="M14 3.5V8h5"/>
+            <path d="M9 12.5h6M9 16h4"/>
+          </svg>
+        </div>
+        Contrat
+      </div>
+
       <div class="tab" data-tab="succes">
         <div class="icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round">
@@ -360,6 +371,11 @@
         </div>
         <div class="coll-filtres" id="collectionFilters"></div>
         <input type="text" id="collectionSearch" class="bourse-search coll-recherche" placeholder="Rechercher une commune ou un département…">
+        <div class="ct-rappel" id="ctRappel" hidden>
+          <span class="ct-rappel-ic" aria-hidden="true">📜</span>
+          <span class="ct-rappel-t" id="ctRappelT"></span>
+          <button class="ct-rappel-b" id="ctRappelB">Voir</button>
+        </div>
         <div class="fav-barre" id="favBarre" hidden>
           <span class="fav-compte"><b id="favN">0</b> / 5</span>
           <span class="fav-pastilles" id="favPastilles"></span>
@@ -593,6 +609,25 @@
         <div class="ech-resume" id="echResume" hidden></div>
         <button class="open-btn" id="echEnvoyer" disabled>Choisis deux communes</button>
       </div>
+    </section>
+
+    <section class="tab-panel" id="panel-contrat">
+      <h1>Contrat</h1>
+      <div class="sub">Sacrifie dix communes pour en obtenir une d'un palier au-dessus. Les dix <b>retournent au pot</b> et redeviennent disponibles pour tout le monde ; tu reçois une commune tirée au hasard parmi les libres du palier visé.</div>
+
+      <div class="ct-taux" id="ctTaux"></div>
+
+      <div class="ct-zone" id="ctZone" hidden>
+        <div class="ct-zt">
+          <h3>Communes sacrifiées</h3>
+          <span id="ctInfo"></span>
+        </div>
+        <div class="ct-lot" id="ctLot"></div>
+      </div>
+
+      <button class="open-btn" id="ctSigner" hidden>Signer le contrat</button>
+      <p class="ct-avert" id="ctAvert"></p>
+      <p class="collection-empty" id="ctVide" hidden></p>
     </section>
 
     <section class="tab-panel" id="panel-succes">
@@ -886,6 +921,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=3a171f84b4a9"></script>
+<script src="app.js?v=16c89020c9fb"></script>
 </body>
 </html>

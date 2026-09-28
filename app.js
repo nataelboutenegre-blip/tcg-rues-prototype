@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '3a171f84b4a9';
+const VERSION_JEU = '16c89020c9fb';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -947,6 +947,7 @@ const ICONES_JOURNAL = {
   achat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h13l-3-3M17 8l-3 3M20 16H7l3-3M7 16l3 3"/></svg>',
   tirage: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M5 14l5-3v9"/></svg>',
   echange: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3.5-3.5M17 8l-3.5 3.5"/><path d="M20 16H7l3.5-3.5M7 16l3.5 3.5"/></svg>',
+  contrat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h8.5L19 8v12.5H6z"/><path d="M14 3.5V8h5"/><path d="M9 12.5h6M9 16h4"/></svg>',
 };
 
 function ilYA(date){
@@ -970,6 +971,7 @@ function ligneJournal(e){
   else if(e.type === 'defense') texte = `${acteur} ${a} repoussé une attaque de ${cible} sur ${commune}`;
   else if(e.type === 'achat') texte = `${acteur} ${a} acheté ${commune}${e.cible_pseudo ? ` à ${cible}` : ''}`;
   else if(e.type === 'echange') texte = `${acteur} ${a} reçu ${commune}${e.cible_pseudo ? ` de ${cible}` : ''} en échange`;
+  else if(e.type === 'contrat') texte = `${acteur} ${a} obtenu ${commune} par un contrat`;
   else texte = `${acteur} ${a} tiré ${e.tier === 'legendaire' ? 'une légendaire' : 'une rare'} : ${commune}`;
   const perso = e.je_suis_cible && (e.type === 'conquete' || e.type === 'achat');
   return `
@@ -2886,6 +2888,7 @@ async function loadMyCollection(){
   if(!favorisCharges) await chargerFavoris();
   renderCollection();
   majBarreFavoris();
+  majRappelContrat();
   renderMapOverlay();
   if(document.getElementById('sellableGrid')) renderSellableGrid();
   if(document.getElementById('boucliersGrid')) renderBoucliers();
@@ -2965,6 +2968,344 @@ function miniArtSvg(code, tierId){
   miniArtCache.set(cle, svg);
   return svg;
 }
+
+// ---------- Contrat ----------
+// Dix communes sacrifiees contre une d'un palier au-dessus. Les dix
+// retournent au pot : c'est le seul mecanisme du jeu qui REND des communes
+// sans attendre la fin de saison.
+const CONTRATS = [
+  { de: 'commun',    vers: 'peucommun', n: 10 },
+  { de: 'peucommun', vers: 'rare',      n: 10 },
+];
+let contratChoisi = null;
+let contratLot = [];              // les communes proposees, modifiables
+let contratDispo = {};            // { tier: [candidates] } renvoye par la base
+let contratEnCours = false;
+let contratSauterTjs = false;     // retenu apres deux « Passer » d'affilee
+let contratSautes = 0;
+
+const libelleTier = (id) => (TIERS.find(t => t.id === id) || {}).label || id;
+// nb() existe dans le fichier, mais locale a trois fonctions : la notre.
+const ctNb = (n) => Number(n || 0).toLocaleString('fr-FR');
+
+async function loadContrat(){
+  const zone = document.getElementById('ctZone');
+  const vide = document.getElementById('ctVide');
+  const signer = document.getElementById('ctSigner');
+  if(!document.getElementById('ctTaux')) return;
+  try{
+    const res = await Promise.all(CONTRATS.map(c =>
+      sb.rpc('contrat_candidates', { p_tier: c.de })));
+    if(res.some(r => r.error)) throw res.find(r => r.error).error;
+    contratDispo = {};
+    CONTRATS.forEach((c, i) => { contratDispo[c.de] = res[i].data || []; });
+  }catch(e){
+    console.warn('TERRAFRONT contrat indisponible', e);
+    if(zone) zone.hidden = true;
+    if(signer) signer.hidden = true;
+    if(vide){
+      vide.hidden = false;
+      vide.textContent = 'Les contrats ne sont pas encore disponibles.';
+    }
+    document.getElementById('ctTaux').innerHTML = '';
+    majRappelContrat();
+    return;
+  }
+  // on garde le choix courant s'il tient encore, sinon le premier possible
+  const possible = CONTRATS.filter(c => (contratDispo[c.de] || []).length >= c.n);
+  if(!contratChoisi || !possible.some(c => c.vers === contratChoisi.vers)){
+    contratChoisi = possible[0] || null;
+  }
+  composerLot();
+  renderContrat();
+  majRappelContrat();
+}
+
+// Le lot par defaut : les moins peuplees, dans l'ordre rendu par la base.
+function composerLot(){
+  if(!contratChoisi){ contratLot = []; return; }
+  contratLot = (contratDispo[contratChoisi.de] || []).slice(0, contratChoisi.n);
+}
+
+// Remplace une ligne par la premiere candidate qui n'est pas deja dans le lot.
+function changerLigne(i){
+  if(!contratChoisi) return;
+  const pris = new Set(contratLot.map(x => x.commune_code));
+  const suivante = (contratDispo[contratChoisi.de] || [])
+    .find(x => !pris.has(x.commune_code));
+  if(!suivante){
+    notifier({ type: 'info', titre: 'Plus de remplaçante',
+      texte: 'Toutes tes communes de ce palier sont déjà dans le lot.' });
+    return;
+  }
+  contratLot[i] = suivante;
+  renderContrat();
+}
+
+function renderContrat(){
+  const taux = document.getElementById('ctTaux');
+  const zone = document.getElementById('ctZone');
+  const lot = document.getElementById('ctLot');
+  const signer = document.getElementById('ctSigner');
+  const avert = document.getElementById('ctAvert');
+  const vide = document.getElementById('ctVide');
+  if(!taux) return;
+
+  taux.innerHTML = CONTRATS.map(c => {
+    const n = (contratDispo[c.de] || []).length;
+    const ok = n >= c.n;
+    return `<button data-vers="${c.vers}" class="${contratChoisi && contratChoisi.vers === c.vers ? 'actif' : ''}" ${ok ? '' : 'disabled'}>
+      <b>${c.n} ${libelleTier(c.de).toLowerCase()}s → 1 ${libelleTier(c.vers).toLowerCase()}</b>
+      <small>${ok ? `tu en as ${ctNb(n)}` : `il t'en faut ${c.n}, tu en as ${ctNb(n)}`}</small>
+    </button>`;
+  }).join('');
+
+  if(!contratChoisi){
+    if(zone) zone.hidden = true;
+    if(signer) signer.hidden = true;
+    if(avert) avert.textContent = '';
+    if(vide){
+      vide.hidden = false;
+      vide.textContent = 'Il te faut au moins 10 communes d\'un même palier, hors favoris, '
+        + 'hors ventes en cours et hors échanges en attente.';
+    }
+    return;
+  }
+  if(vide) vide.hidden = true;
+  if(zone) zone.hidden = false;
+  if(signer){ signer.hidden = false; signer.disabled = contratEnCours; }
+
+  document.getElementById('ctInfo').textContent =
+    `${contratChoisi.n} communes, les moins peuplées — favoris exclus`;
+  lot.innerHTML = contratLot.map((x, i) => `
+    <div class="ct-l ${contratChoisi.de}">
+      <span class="pt"></span>
+      <span class="tx"><span class="nm">${echapperTexte(x.nom || x.commune_code)}</span><span class="hb">${ctNb(x.population || 0)} hab.</span></span>
+      <button data-ct-changer="${i}">changer</button>
+    </div>`).join('');
+  if(avert) avert.textContent =
+    `Les ${contratChoisi.n} communes sacrifiées retournent au pot. C'est définitif.`;
+}
+
+// Le rappel en haut de la Collection. C'est la porte d'entree : un onglet
+// dans « Plus » ne se trouve pas tout seul.
+function majRappelContrat(){
+  const bloc = document.getElementById('ctRappel');
+  const txt = document.getElementById('ctRappelT');
+  if(!bloc || !txt) return;
+  if(vueCollection === 'france'){ bloc.hidden = true; return; }
+
+  // Le compte se fait sur la collection locale, PAS sur contrat_candidates :
+  // celle-ci n'est chargee qu'a l'ouverture de l'onglet, et ce rappel est
+  // justement ce qui doit faire decouvrir l'onglet. Il ne peut pas dependre
+  // de lui.
+  // Consequence assumee : une commune en vente ou dans un echange est
+  // comptee ici alors que le serveur la refusera. Elle appartient quand
+  // meme au joueur, donc la phrase reste vraie ; le compte exact s'affiche
+  // dans l'onglet.
+  const parTier = {};
+  for(const e of collectionMap.values()){
+    if(e.perdue || favorisSet.has(e.code)) continue;
+    const id = e.tier && e.tier.id;
+    if(id) parTier[id] = (parTier[id] || 0) + 1;
+  }
+  const c = CONTRATS.find(x => (parTier[x.de] || 0) >= x.n);
+  if(!c){ bloc.hidden = true; return; }
+  const n = parTier[c.de];
+  bloc.hidden = false;
+  txt.innerHTML = `Tu as <b>${ctNb(n)} ${libelleTier(c.de).toLowerCase()}s</b>. `
+    + `Dix d'entre eux valent un ${libelleTier(c.vers).toLowerCase()} — et les dix retournent au pot.`;
+}
+
+// ---------- Le defile ----------
+// Vraies communes libres du palier vise, renvoyees par le serveur. Que ce
+// palier : montrer une rarete que le contrat ne peut pas donner afficherait
+// un resultat qui n'etait pas possible.
+function carteDefile(tier, nom, dept, pop, gagnante){
+  const t = TIERS.find(x => x.id === tier) || TIERS[0];
+  return `<div class="mini ${tier}${gagnante ? ' gagnante' : ''}">
+    <div class="mini-int">
+      <div class="mini-art">${miniArtSvg(nom + dept, tier)}<span class="mini-dept">${echapperTexte(dept || '')}</span></div>
+      <div class="mini-infos">
+        <p class="mini-nom ${(nom || '').length > 14 ? 'long' : ''}">${echapperTexte(nom || '')}</p>
+        <span class="mini-rarete">${t.label}</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function ecranDefile(){
+  return `<div class="fenetre contrat-rev" role="dialog" aria-modal="true" aria-labelledby="ctRevNom">
+    <div class="ct-piste" id="ctPiste">
+      <div class="ct-halo" id="ctHalo"></div>
+      <div class="ct-viseur"></div>
+      <div class="ct-rail" id="ctRail"></div>
+      <button class="ct-sauter" id="ctSauter">Passer</button>
+    </div>
+    <div class="ct-pied" id="ctPied">
+      <h3 id="ctRevNom">—</h3>
+      <p id="ctRevTxt">—</p>
+      <div class="fc-actions empilees">
+        <button class="fc-btn principal" data-ct="continuer">Continuer</button>
+        <button class="fc-btn" data-ct="carte">Voir sur la carte</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+const CT_LARGEUR = 160;   // 150 de carte + 10 d'ecart
+const CT_IDX = 38;        // la gagnante, avec des cartes derriere elle
+
+async function signerContrat(){
+  if(contratEnCours || !contratChoisi) return;
+  contratEnCours = true;
+  const bouton = document.getElementById('ctSigner');
+  if(bouton){ bouton.disabled = true; bouton.textContent = 'Signature…'; }
+  const c = contratChoisi;
+  const codes = contratLot.map(x => x.commune_code);
+
+  let carte = null;
+  try{
+    const { data, error } = await sb.rpc('signer_contrat',
+      { p_codes: codes, p_vers: c.vers });
+    if(error) throw error;
+    carte = data;
+  }catch(e){
+    contratEnCours = false;
+    if(bouton){ bouton.disabled = false; bouton.textContent = 'Signer le contrat'; }
+    notifier({ type: 'erreur', titre: 'Contrat refusé', texte: messageLisible(e.message) });
+    loadContrat();
+    return;
+  }
+
+  // le decor du defile : de vraies communes libres du meme palier
+  let decor = [];
+  try{
+    const { data } = await sb.rpc('contrat_defile',
+      { p_tier: c.vers, p_combien: 45 });
+    decor = data || [];
+  }catch(e){ decor = []; }
+
+  montrerRevelation(c, carte, decor);
+}
+
+function montrerRevelation(c, carte, decor){
+  // onFermer couvre les trois sorties : bouton, Echap, clic a cote.
+  const fermer = ouvrirFenetre(ecranDefile(), () => terminerContrat(carte));
+  const piste = document.getElementById('ctPiste');
+  const rail = document.getElementById('ctRail');
+  const halo = document.getElementById('ctHalo');
+  const sauter = document.getElementById('ctSauter');
+  let minuteur = null;
+
+  const finir = (x) => {
+    if(minuteur){ clearTimeout(minuteur); minuteur = null; }
+    if(halo){
+      halo.className = 'ct-halo ' + c.vers;
+      halo.style.left = x + 'px';
+      halo.style.top = '50%';
+    }
+    if(piste) piste.classList.add('fini');
+    if(sauter) sauter.hidden = true;
+    const nom = document.getElementById('ctRevNom');
+    const txt = document.getElementById('ctRevTxt');
+    if(nom) nom.textContent = carte.nom || '';
+    if(txt) txt.textContent = `${libelleTier(c.vers).toLowerCase()} — `
+      + `${c.n} communes sont retournées au pot. Celle-ci est à toi.`;
+    const pied = document.getElementById('ctPied');
+    if(pied) pied.classList.add('on');
+  };
+
+  const direct = () => {
+    rail.style.transition = 'none';
+    rail.style.justifyContent = 'center';
+    rail.innerHTML = carteDefile(c.vers, carte.nom, carte.departement, carte.population, true);
+    requestAnimationFrame(() => requestAnimationFrame(() =>
+      finir(piste.clientWidth / 2)));
+  };
+
+  if(contratSauterTjs || decor.length < 5){
+    direct();
+  } else {
+    let html = '';
+    for(let i = 0; i < 45; i++){
+      if(i === CT_IDX){
+        html += carteDefile(c.vers, carte.nom, carte.departement, carte.population, true);
+      } else {
+        const d = decor[i % decor.length];
+        html += carteDefile(c.vers, d.nom, d.departement, d.population, false);
+      }
+    }
+    rail.style.justifyContent = 'flex-start';
+    rail.innerHTML = html;
+    rail.style.transition = 'none';
+    rail.style.transform = 'translateX(0)';
+    const centre = piste.clientWidth / 2;
+    // jamais pile au centre : un arret parfait a chaque fois trahirait que
+    // le resultat etait decide d'avance
+    const dedans = (Math.random() * 0.5 + 0.25) * 150;
+    const cible = -(10 + CT_IDX * CT_LARGEUR + dedans - centre);
+    const xGagnante = 10 + CT_IDX * CT_LARGEUR + 75 + cible;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      rail.style.transition = 'transform 3.6s cubic-bezier(.12,.72,.15,1)';
+      rail.style.transform = 'translateX(' + cible + 'px)';
+    }));
+    minuteur = setTimeout(() => finir(xGagnante), 3650);
+    if(sauter){
+      sauter.hidden = false;
+      sauter.addEventListener('click', () => {
+        contratSautes++;
+        // deux « Passer » d'affilee : on retient, avec retour en arriere au
+        // prochain contrat signe jusqu'au bout
+        if(contratSautes >= 2) contratSauterTjs = true;
+        rail.style.transition = 'none';
+        direct();
+      });
+    }
+  }
+
+  const boite = document.querySelector('#fenetre .contrat-rev');
+  if(boite) boite.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-ct]');
+    if(!b) return;
+    if(b.dataset.ct === 'carte'){
+      fermer(null);
+      voirCommuneSurCarte({ code: carte.code, lat: carte.latitude, lon: carte.longitude });
+      return;
+    }
+    fermer(null);
+  });
+}
+
+async function terminerContrat(carte){
+  contratEnCours = false;
+  const bouton = document.getElementById('ctSigner');
+  if(bouton){ bouton.disabled = false; bouton.textContent = 'Signer le contrat'; }
+  // la collection a change des deux cotes : dix parties, une arrivee
+  await loadMyCollection();
+  await loadContrat();
+  if(carte && carte.nom){
+    notifier({ type: 'succes', titre: 'Contrat honoré',
+      texte: `${carte.nom} rejoint ta collection.` });
+  }
+}
+
+document.getElementById('ctTaux').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-vers]');
+  if(!b || b.disabled) return;
+  contratChoisi = CONTRATS.find(c => c.vers === b.dataset.vers) || null;
+  composerLot();
+  renderContrat();
+});
+document.getElementById('ctLot').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-ct-changer]');
+  if(b) changerLigne(Number(b.dataset.ctChanger));
+});
+document.getElementById('ctSigner').addEventListener('click', signerContrat);
+document.getElementById('ctRappelB').addEventListener('click', () => {
+  const onglet = document.querySelector('.tab[data-tab="contrat"]');
+  if(onglet) onglet.click();
+});
 
 // ---------- Etiquettes ----------
 // Un mot par commune, prive. Le nettoyage (espaces, longueur) se fait en
@@ -5280,7 +5621,7 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // ---------- Navigation : barre du bas et menu "Plus" sur telephone ----------
 // Les 4 onglets principaux restent dans la barre, les autres passent dans le menu.
 const ONGLETS_BARRE = ['tirage', 'collection', 'combat', 'defense'];
-const ONGLETS_MENU = ['territoire', 'communaute', 'bourse', 'echange', 'succes'];
+const ONGLETS_MENU = ['territoire', 'communaute', 'bourse', 'echange', 'contrat', 'succes'];
 const ICONE_PROFIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>';
 const ICONE_REGLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const ICONE_SORTIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M11 12h10m-3-3 3 3-3 3"/></svg>';
@@ -5377,6 +5718,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'defense'){ loadMenaces(); loadCombat(); renderIntensite('defense'); }
     if(tab.dataset.tab === 'combat') loadCombat();
     if(tab.dataset.tab === 'succes') loadSucces();
+    if(tab.dataset.tab === 'contrat') loadContrat();
     if(tab.dataset.tab === 'echange') loadEchanges();
     if(tab.dataset.tab === 'regles') loadTauxTirage();
   });

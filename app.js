@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '99f4cb7cfcf9';
+const VERSION_JEU = '9e534334e312';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -394,6 +394,7 @@ function montrerLanding(){
   page.hidden = false;
   window.scrollTo(0, 0);
   dessinerCarteLanding();
+  majChiffresPaliers();
 }
 
 function cacherLanding(){
@@ -5284,11 +5285,82 @@ const COULEUR_TIER = {
   peucommun: 'var(--c-peucommun)', commun: 'var(--c-commun)'
 };
 let tauxEnCours = false;
+let totauxPaliers = null;      // { tier: { total, pop_min, pop_max } }
+let totauxDemandes = false;
+
+// Les comptes et les seuils viennent de la base. Le HTML garde les valeurs
+// actuelles en repli : si l'appel echoue, ou si totaux_paliers() n'existe
+// pas encore, l'affichage reste juste au lieu de montrer des trous.
+async function chargerTotauxPaliers(){
+  if(totauxPaliers || totauxDemandes) return totauxPaliers;
+  totauxDemandes = true;
+  try{
+    const { data, error } = await sb.rpc('totaux_paliers');
+    if(error || !Array.isArray(data) || !data.length) return null;
+    const m = {};
+    for(const l of data) m[l.tier] = l;
+    totauxPaliers = m;
+  }catch(e){
+    console.warn('TERRAFRONT totaux_paliers indisponible', e);
+  }finally{
+    totauxDemandes = false;
+  }
+  return totauxPaliers;
+}
+
+// « 50 000 et plus », « 5 000 a 49 999 », « Moins de 1 000 » : les bornes se
+// deduisent des paliers voisins, donc un seul chiffre a changer en base
+// suffit a corriger les quatre lignes.
+function libellePopulation(id, m){
+  const ordre = ['commun', 'peucommun', 'rare', 'legendaire'];
+  const i = ordre.indexOf(id);
+  if(i < 0 || !m[id]) return null;
+  const bas = Number(m[id].pop_min);
+  const suivant = m[ordre[i + 1]];
+  if(!suivant) return fmtNombre(bas) + ' et plus';
+  const haut = Number(suivant.pop_min) - 1;
+  if(i === 0) return 'Moins de ' + fmtNombre(Number(suivant.pop_min));
+  return fmtNombre(bas) + ' à ' + fmtNombre(haut);
+}
+
+async function majChiffresPaliers(){
+  const m = await chargerTotauxPaliers();
+  if(!m) return;
+  const grand = Object.values(m).reduce((s, l) => s + Number(l.total || 0), 0);
+
+  for(const id of ['commun', 'peucommun', 'rare', 'legendaire']){
+    if(!m[id]) continue;
+    const n = Number(m[id].total) || 0;
+    const pop = libellePopulation(id, m);
+
+    const cptRegles = document.querySelector('#panel-regles [data-total="' + id + '"]');
+    if(cptRegles) cptRegles.textContent = fmtNombre(n);
+    const popRegles = document.querySelector('#panel-regles [data-pop="' + id + '"]');
+    if(popRegles && pop) popRegles.textContent = pop;
+
+    const seuil = document.querySelector('[data-lp-seuil="' + id + '"]');
+    if(seuil && m[id]){
+      const suivant = { commun: 'peucommun', peucommun: 'rare',
+                        rare: 'legendaire' }[id];
+      seuil.textContent = suivant && m[suivant]
+        ? (id === 'commun'
+            ? 'moins de ' + fmtNombre(Number(m[suivant].pop_min)) + ' hab.'
+            : 'à partir de ' + fmtNombre(Number(m[id].pop_min)))
+        : 'à partir de ' + fmtNombre(Number(m[id].pop_min));
+    }
+    const nAccueil = document.querySelector('[data-lp-n="' + id + '"]');
+    if(nAccueil) nAccueil.textContent = fmtNombre(n);
+    const pctAccueil = document.querySelector('[data-lp-pct="' + id + '"]');
+    if(pctAccueil && grand > 0) pctAccueil.textContent = Math.round(100 * n / grand);
+  }
+}
 
 async function loadTauxTirage(){
   if(tauxEnCours) return;
   tauxEnCours = true;
   try{
+    // la jauge se calcule sur le total du palier : il doit etre a jour avant
+    await majChiffresPaliers();
     const { data, error } = await sb.rpc('taux_actuels');
     if(error || !Array.isArray(data)) return;   // on laisse le tiret, sans bruit
     for(const ligne of data){

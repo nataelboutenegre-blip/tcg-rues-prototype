@@ -2379,8 +2379,10 @@
       gap:0;
     }
     /* les onglets qui passent dans le menu "Plus" */
-    .tab[data-tab="territoire"], .tab[data-tab="communaute"], .tab[data-tab="bourse"],
-    .tab[data-tab="echange"], .tab[data-tab="succes"]{ display:none; }
+    /* La classe est posee par app.js depuis ONGLETS_MENU. Ne jamais
+       relister les onglets ici : les deux listes finiraient par diverger,
+       c'est exactement ce qui a mis la barre sur deux lignes. */
+    .tab.dans-le-menu{ display:none; }
     .tab-plus{ display:flex; }
     .tab{
       flex-direction:column; align-items:center; justify-content:flex-start; gap:4px;

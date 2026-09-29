@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'cb066ee4ebf1';
+const VERSION_JEU = '99f4cb7cfcf9';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -5692,6 +5692,17 @@ const ICONE_SORTIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
 const surTelephone = () => window.matchMedia('(max-width: 720px)').matches;
 const LIEN_DISCORD = 'https://discord.gg/T6suSy6xa7';
 const ICONE_DISCORD = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9.6 9.6 0 0 1-2.8-.4L4 21l1.5-4.1A8.2 8.2 0 0 1 3 11.5 8.4 8.4 0 0 1 12 3a8.4 8.4 0 0 1 9 8.5z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/></svg>';
+
+// La barre du bas ne garde que ONGLETS_BARRE. Les autres portent
+// .dans-le-menu, que le CSS cache sous 720 px. C'est le seul endroit ou
+// la repartition est decidee.
+function marquerOngletsDuMenu(){
+  for(const id of ONGLETS_MENU){
+    const tab = document.querySelector(`.tab[data-tab="${id}"]`);
+    if(tab) tab.classList.add('dans-le-menu');
+  }
+}
+marquerOngletsDuMenu();
 
 function construireMenuPlus(){
   const liste = document.getElementById('feuilleListe');

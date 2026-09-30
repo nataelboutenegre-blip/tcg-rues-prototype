@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=6df93a602dc9">
+<link rel="stylesheet" href="style.css?v=57a9b02d9a56">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -287,6 +287,15 @@
           </svg>
         </div>
         Contrat
+      </div>
+
+      <div class="tab" data-tab="profil">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/>
+          </svg>
+        </div>
+        Profil
       </div>
 
       <div class="tab" data-tab="succes">
@@ -641,6 +650,13 @@
       <button class="cl-plus" id="scPlus" hidden>Voir tous les départements</button>
     </section>
 
+    <section class="tab-panel" id="panel-profil">
+      <h1>Profil</h1>
+      <div class="sub">Ton niveau monte avec ce que tu fais : conquérir, défendre, signer des contrats, revenir chaque jour. Il ne redescend jamais, même quand on te prend des communes.</div>
+      <div id="pfCorps"></div>
+      <p class="collection-empty" id="pfVide" hidden>Chargement…</p>
+    </section>
+
     <section class="tab-panel" id="panel-regles">
       <div class="regles">
         <h1>Règles du jeu</h1>
@@ -921,6 +937,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=6df93a602dc9"></script>
+<script src="app.js?v=57a9b02d9a56"></script>
 </body>
 </html>

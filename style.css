@@ -2070,6 +2070,83 @@
     border-radius:9px; padding:7px 15px; }
   .ct-pick .ct-pkp button:hover{ color:#fff; border-color: var(--c-legendaire); }
 
+  /* ---------- Le panneau Profil ---------- */
+  #panel-profil #pfCorps{ width:100%; }
+
+  /* l'anneau de niveau : dix segments, un par niveau du grade */
+  .niv{ position:relative; flex-shrink:0; }
+  .niv svg{ position:absolute; inset:0; transform:rotate(-90deg); }
+  .niv .niv-fond{ fill:none; stroke:rgba(169,188,212,0.16); }
+  .niv .niv-seg{ fill:none; stroke-linecap:round; }
+  .niv-av{
+    position:absolute; border-radius:50%; display:grid; place-items:center;
+    background: var(--nuit); box-shadow:0 6px 18px rgba(0,0,0,0.45);
+  }
+  .niv-n{
+    position:absolute; left:50%; bottom:-7px; transform:translateX(-50%);
+    font-family: var(--titre); font-weight:900; line-height:1;
+    padding:3px 9px; border-radius:9px; color: var(--encre);
+    box-shadow:0 3px 8px rgba(0,0,0,0.45); white-space:nowrap;
+  }
+
+  /* dans la fenetre, l'anneau remplace .pr-avatar qui etait centre par
+     sa marge auto : il faut le recentrer explicitement */
+  .pr-avatar-niv{ display:flex; justify-content:center; margin:0 0 10px; }
+
+  .pf-tete{
+    display:flex; gap:24px; align-items:center; background: var(--nuit-2);
+    border:1px solid rgba(169,188,212,0.16); border-radius:16px; padding:20px 24px;
+  }
+  .pf-id{ flex:1; min-width:0; }
+  .pf-id h2{ font:900 2.3rem/1 var(--titre); margin:0;
+             text-transform:uppercase; letter-spacing:.02em; }
+  .pf-rangs{ display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin:8px 0 0; }
+  .pf-grade{ font:700 .78rem/1 var(--texte); padding:4px 10px; border-radius:8px; }
+  .pf-titre{ font-size:.86rem; color: var(--brume); }
+  .pf-titre b{ color: var(--joueur); }
+  .pf-place{
+    font-family: var(--titre); font-weight:900; font-size:.9rem;
+    background: var(--c-legendaire); color: var(--encre); padding:2px 9px; border-radius:7px;
+  }
+  .pf-xp{ margin-top:13px; }
+  .pf-xp-h{ display:flex; justify-content:space-between; gap:12px;
+            font-size:.73rem; color:#7F91AB; margin-bottom:5px; }
+  .pf-xp-b{ height:7px; border-radius:4px; background:rgba(169,188,212,0.14); overflow:hidden; }
+  .pf-xp-b i{ display:block; height:100%; border-radius:4px; transition:width .5s ease; }
+
+  /* align-items:start pour que chaque bloc s'arrete a son contenu : sinon
+     le plus haut de la rangee laisse du vide sous les autres */
+  .pf-grille{ display:grid; grid-template-columns:repeat(auto-fit,minmax(410px,1fr));
+              gap:13px; margin-top:13px; align-items:start; }
+  .pf-bloc{ background: var(--nuit-2); border:1px solid rgba(169,188,212,0.16);
+            border-radius:14px; padding:15px 17px; }
+  .pf-bloc h3{ font:700 .68rem/1 var(--texte); letter-spacing:.1em; text-transform:uppercase;
+               color: var(--brume); margin:0 0 13px; }
+  .pf-paire{ display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+  .pf-ch{ background: var(--nuit); border-radius:10px; padding:10px 12px; }
+  .pf-ch b{ display:block; font:900 1.5rem/1 var(--titre); }
+  .pf-ch span{ display:block; font-size:.72rem; color:#7F91AB; margin-top:3px; }
+  .pf-ch.ok b{ color:#3DD68C; }
+  .pf-ch.ko b{ color:#E5484D; }
+  .pf-ratio{ font-size:.75rem; color:#7F91AB; margin:11px 0 0; text-align:center; }
+  .pf-ratio b{ color:#fff; }
+  .pf-ratio:empty{ display:none; }
+  .pf-ligne{ display:flex; justify-content:space-between; align-items:baseline; gap:14px;
+             padding:7px 0; border-bottom:1px solid rgba(169,188,212,0.09); font-size:.85rem; }
+  .pf-ligne:last-child{ border-bottom:0; }
+  .pf-ligne span{ color:#9FB0C6; }
+  .pf-ligne b{ font-weight:700; white-space:nowrap; }
+  .pf-boutons{ display:flex; gap:9px; flex-wrap:wrap; margin-top:13px; }
+  .pf-boutons .pr-btn{ width:auto; flex:0 0 auto; }
+
+  @media (max-width: 720px){
+    .pf-tete{ flex-direction:column; text-align:center; gap:16px; padding:18px 16px; }
+    .pf-id h2{ font-size:1.9rem; }
+    .pf-rangs{ justify-content:center; }
+    .pf-grille{ grid-template-columns:1fr; }
+    .pf-xp-h{ font-size:.7rem; }
+  }
+
   .ct-avert{ font-size:0.75rem; color:#7F91AB; text-align:center; margin:9px 0 0; line-height:1.5; }
   .ct-avert:empty{ display:none; }
 

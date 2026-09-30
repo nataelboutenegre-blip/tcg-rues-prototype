@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '6df93a602dc9';
+const VERSION_JEU = '57a9b02d9a56';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4279,6 +4279,102 @@ function titreDepuisDeps(deps){
   return rang + ' ' + articleRegion(region);
 }
 
+// Six grades de dix niveaux. Les couleurs reprennent celles des raretes :
+// c'est la meme echelle de prestige que les cartes, le joueur la connait
+// deja. Rallonger l'echelle un jour = ajouter une ligne ici, et changer le
+// 60 dans niveau_de() cote base.
+const GRADES = [
+  { de:  1, a: 10, nom: 'Éclaireur',   couleur: '#7E8BA0' },
+  { de: 11, a: 20, nom: 'Arpenteur',   couleur: '#22A06B' },
+  { de: 21, a: 30, nom: 'Géomètre',    couleur: '#2F7CF6' },
+  { de: 31, a: 40, nom: 'Cartographe', couleur: '#8E7CF6' },
+  { de: 41, a: 50, nom: 'Géographe',   couleur: '#E5484D' },
+  { de: 51, a: 60, nom: 'Cassini',     couleur: '#F0B429' },
+];
+const gradeDe = (n) => GRADES.find(g => n >= g.de && n <= g.a) || GRADES[GRADES.length - 1];
+
+// L'anneau : dix segments, un par niveau du grade. On voit ou on en est
+// sans avoir a lire le chiffre.
+function anneauNiveau(p, taille){
+  const niveau = Number(p.niveau || 0);
+  const emoji = avatarHtml(p, p.est_moi ? COULEUR_MOI : colorForPlayer(p.id));
+  const T = taille || 112, R = T / 2 - 5, ep = Math.max(4, T / 22);
+  if(!niveau){
+    // niveaux.sql pas encore passe : on montre l'avatar seul, pas un trou
+    return `<div class="niv" style="width:${T}px;height:${T}px">
+      <div class="niv-av" style="inset:${ep + 2}px;font-size:${T * 0.3}px">${emoji}</div>
+    </div>`;
+  }
+  const g = gradeDe(niveau);
+  const pris = niveau - g.de + 1;                  // 1 a 10 dans le grade
+  const C = 2 * Math.PI * R, ecart = C * 0.018, seg = C / 10 - ecart;
+  const segments = Array.from({ length: 10 }, (_, i) =>
+    `<circle class="niv-seg" cx="${T / 2}" cy="${T / 2}" r="${R}" stroke-width="${ep}"
+       stroke="${i < pris ? g.couleur : 'transparent'}"
+       stroke-dasharray="${seg.toFixed(2)} ${(C - seg).toFixed(2)}"
+       stroke-dashoffset="${(-i * C / 10).toFixed(2)}"/>`).join('');
+  return `<div class="niv" style="width:${T}px;height:${T}px">
+    <svg viewBox="0 0 ${T} ${T}" width="${T}" height="${T}" aria-hidden="true">
+      <circle class="niv-fond" cx="${T / 2}" cy="${T / 2}" r="${R}" stroke-width="${ep}"/>
+      ${segments}
+    </svg>
+    <div class="niv-av" style="inset:${ep + 4}px;font-size:${T * 0.29}px">${emoji}</div>
+    <div class="niv-n" style="background:${g.couleur};font-size:${T * 0.085}px"
+         title="${g.nom} — niveaux ${g.de} à ${g.a}">${niveau}</div>
+  </div>`;
+}
+
+// Les blocs de statistiques, communs au panneau et a la fenetre : une
+// seule source, pour ne pas voir les deux rendus diverger.
+function blocsProfil(p){
+  const nb = (x) => Number(x || 0).toLocaleString('fr-FR');
+  const pct = (a, b) => (a + b) > 0 ? Math.round(100 * a / (a + b)) : null;
+  const att = pct(Number(p.conquetes || 0), Number(p.attaques_ratees || 0));
+  const def = pct(Number(p.defenses_ok || 0), Number(p.communes_perdues || 0));
+  const depuis = p.depuis
+    ? new Date(p.depuis).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
+  const combat = p.niveau ? `
+    <div class="pf-bloc">
+      <h3>Attaque</h3>
+      <div class="pf-paire">
+        <div class="pf-ch ok"><b>${nb(p.conquetes)}</b><span>conquêtes réussies</span></div>
+        <div class="pf-ch ko"><b>${nb(p.attaques_ratees)}</b><span>attaques repoussées</span></div>
+      </div>
+      <p class="pf-ratio">${att === null ? '' : `Tu l'emportes <b>${att} %</b> du temps quand tu attaques`}</p>
+    </div>
+    <div class="pf-bloc">
+      <h3>Défense</h3>
+      <div class="pf-paire">
+        <div class="pf-ch ok"><b>${nb(p.defenses_ok)}</b><span>défenses réussies</span></div>
+        <div class="pf-ch ko"><b>${nb(p.communes_perdues)}</b><span>communes perdues</span></div>
+      </div>
+      <p class="pf-ratio">${def === null ? '' : `Tu tiens <b>${def} %</b> des assauts contre toi`}</p>
+    </div>
+    <div class="pf-bloc">
+      <h3>Assiduité</h3>
+      ${depuis ? `<div class="pf-ligne"><span>Membre depuis</span><b>${echapperTexte(depuis)}</b></div>` : ''}
+      <div class="pf-ligne"><span>Jours actifs</span><b>${nb(p.jours_actifs)}</b></div>
+      <div class="pf-ligne"><span>Série en cours</span><b>${nb(p.serie)} jour${Number(p.serie) > 1 ? 's' : ''}</b></div>
+      <div class="pf-ligne"><span>Contrats signés</span><b>${nb(p.contrats)}</b></div>
+      <div class="pf-ligne"><span>Cartes tirées</span><b>${nb(p.cartes_tirees)}</b></div>
+    </div>` : '';
+  return `
+    <div class="pf-grille">
+      <div class="pf-bloc">
+        <h3>La collection</h3>
+        <div class="pf-paire">
+          <div class="pf-ch"><b style="color:var(--joueur)">${nb(p.communes)}</b><span>communes</span></div>
+          <div class="pf-ch"><b>${nb(p.departements)}</b><span>départements</span></div>
+          <div class="pf-ch"><b style="color:var(--c-legendaire)">${nb(p.legendaires)}</b><span>légendaires</span></div>
+          <div class="pf-ch"><b style="color:var(--c-rare)">${nb(p.rares)}</b><span>rares</span></div>
+        </div>
+        <p class="pf-ratio"><b>${nb(p.habitants)}</b> habitants sous sa garde</p>
+      </div>
+      ${combat}
+    </div>`;
+}
+
 function avatarHtml(p, couleur){
   if(p.avatar) return `<span class="pr-emoji">${echapperTexte(p.avatar)}</span>`;
   // pas d'avatar choisi : l'initiale du pseudo, dans la couleur du joueur
@@ -4288,6 +4384,76 @@ function avatarHtml(p, couleur){
 
 let profilEnCours = null;
 let fermerProfil = null;
+let profilPanneau = null;
+
+async function loadProfilPanneau(){
+  const corps = document.getElementById('pfCorps');
+  const vide = document.getElementById('pfVide');
+  if(!corps) return;
+  const id = window.__monId || null;
+  if(!id){ if(vide){ vide.hidden = false; vide.textContent = 'Profil indisponible.'; } return; }
+  if(!profilPanneau){
+    const { data, error } = await sb.rpc('profil_joueur', { p_joueur: id });
+    if(error || !data){
+      corps.innerHTML = '';
+      if(vide){ vide.hidden = false; vide.textContent = "Ton profil n'est pas encore disponible."; }
+      return;
+    }
+    profilPanneau = data;
+  }
+  if(vide) vide.hidden = true;
+  rendreProfilPanneau();
+}
+
+function rendreProfilPanneau(){
+  const p = profilPanneau, corps = document.getElementById('pfCorps');
+  if(!p || !corps) return;
+  const nb = (x) => Number(x || 0).toLocaleString('fr-FR');
+  const g = p.niveau ? gradeDe(Number(p.niveau)) : null;
+  const bas = Number(p.lieues_niveau || 0), haut = Number(p.lieues_suivant || 0);
+  const lieues = Number(p.lieues || 0);
+  const part = haut > bas ? Math.max(0, Math.min(100, Math.round(100 * (lieues - bas) / (haut - bas)))) : 0;
+  const plafond = p.niveau && Number(p.niveau) >= GRADES[GRADES.length - 1].a;
+
+  corps.innerHTML = `
+    <div class="pf-tete" style="--joueur:${COULEUR_MOI}">
+      ${anneauNiveau(p, 112)}
+      <div class="pf-id">
+        <h2>${echapperTexte(p.pseudo)}</h2>
+        <div class="pf-rangs">
+          ${g ? `<span class="pf-grade" style="background:${g.couleur}22;color:${g.couleur}">${g.nom}</span>` : ''}
+          <span class="pf-titre"><b>${echapperTexte(titreDepuisDeps(p.deps))}</b></span>
+          ${p.rang > 0 ? `<span class="pf-place">${p.rang}${p.rang === 1 ? 'er' : 'e'}</span>` : ''}
+        </div>
+        ${p.niveau ? `<div class="pf-xp">
+          <div class="pf-xp-h">
+            <span>Niveau ${p.niveau} · ${nb(lieues)} lieues</span>
+            <span>${plafond ? 'Dernier niveau atteint'
+                            : `${nb(haut - lieues)} lieues avant le niveau ${Number(p.niveau) + 1}`}</span>
+          </div>
+          <div class="pf-xp-b"><i style="width:${plafond ? 100 : part}%;background:${g.couleur}"></i></div>
+        </div>` : ''}
+      </div>
+    </div>
+    ${blocsProfil(p)}
+    <div class="pf-boutons">
+      <button class="pr-btn" data-pf="editer">Changer d'avatar ou de pseudo</button>
+    </div>`;
+}
+
+// Le bouton ouvre la fiche, ou les deux actions existent deja. Les
+// dupliquer ici ferait deux chemins pour une meme chose.
+document.getElementById('pfCorps').addEventListener('click', (e) => {
+  if(e.target.closest('[data-pf="editer"]')) ouvrirProfil(window.__monId || null);
+});
+
+// Apres un changement d'avatar ou de pseudo, le panneau doit se resservir
+// des nouvelles valeurs plutot que de garder sa copie.
+function rafraichirPanneauProfil(){
+  profilPanneau = null;
+  const panneau = document.getElementById('panel-profil');
+  if(panneau && panneau.classList.contains('active')) loadProfilPanneau();
+}
 
 // L'etat du lien se lit dans la liste deja chargee : pas d'appel de plus a
 // l'ouverture d'une fiche.
@@ -4349,9 +4515,11 @@ function rendreProfil(){
       <div class="pr-tete">
         ${moi ? '' : boutonAmiProfil(p.id)}
         <button class="pr-fermer" data-pr="fermer" aria-label="Fermer">✕</button>
-        <div class="pr-avatar">${avatarHtml(p, couleur)}</div>
+        <div class="pr-avatar-niv">${anneauNiveau(p, 92)}</div>
         <h2 id="prNom">${echapperTexte(p.pseudo)}</h2>
-        <p class="pr-sous"><b>${echapperTexte(titreDepuisDeps(p.deps))}</b>${
+        <p class="pr-sous">${p.niveau ? `<span class="pf-grade" style="background:${
+          gradeDe(Number(p.niveau)).couleur}22;color:${gradeDe(Number(p.niveau)).couleur}">${
+          gradeDe(Number(p.niveau)).nom}</span> ` : ''}<b>${echapperTexte(titreDepuisDeps(p.deps))}</b>${
           p.rang > 0 ? ` · <span class="pr-rang">${p.rang}${p.rang === 1 ? 'er' : 'e'}</span>` : ''}</p>
       </div>
       <div class="pr-corps">
@@ -4446,6 +4614,7 @@ document.getElementById('fenetre').addEventListener('click', async (e) => {
     if(error){ notifier({ type: 'erreur', titre: 'Avatar', texte: messageLisible(error.message) }); return; }
     profilEnCours.avatar = emoji;
     rendreProfil();
+    rafraichirPanneauProfil();
     notifier({ type: 'succes', titre: 'Avatar changé' });
     return;
   }
@@ -4458,6 +4627,7 @@ document.getElementById('fenetre').addEventListener('click', async (e) => {
     const { data, error } = await sb.rpc('changer_pseudo', { p_pseudo: nouveau });
     if(error){ notifier({ type: 'erreur', titre: 'Pseudo', texte: messageLisible(error.message) }); return; }
     profilEnCours.pseudo = data;
+    rafraichirPanneauProfil();
     rendreProfil();
     notifier({ type: 'succes', titre: 'Pseudo changé', texte: 'Tu es maintenant ' + data + '.' });
     loadClassement();
@@ -5759,7 +5929,7 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // ---------- Navigation : barre du bas et menu "Plus" sur telephone ----------
 // Les 4 onglets principaux restent dans la barre, les autres passent dans le menu.
 const ONGLETS_BARRE = ['tirage', 'collection', 'combat', 'defense'];
-const ONGLETS_MENU = ['territoire', 'communaute', 'bourse', 'echange', 'contrat', 'succes'];
+const ONGLETS_MENU = ['territoire', 'communaute', 'bourse', 'echange', 'contrat', 'succes', 'profil'];
 const ICONE_PROFIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>';
 const ICONE_REGLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const ICONE_SORTIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M11 12h10m-3-3 3 3-3 3"/></svg>';
@@ -5792,7 +5962,6 @@ function construireMenuPlus(){
   }).join('');
   liste.innerHTML = entrees + `
     <div class="fp-sep"></div>
-    <button class="fp-item" data-aller="profil">${ICONE_PROFIL}Mon profil</button>
     <button class="fp-item" data-aller="regles">${ICONE_REGLES}Règles du jeu</button>
     <a class="fp-item fp-lien" href="${LIEN_DISCORD}" target="_blank" rel="noopener">${ICONE_DISCORD}Rejoindre le Discord</a>
     <button class="fp-item sortie" data-deconnexion>${ICONE_SORTIE}Se déconnecter</button>`;
@@ -5842,7 +6011,6 @@ document.getElementById('feuilleListe').addEventListener('click', (e) => {
   if(!b) return;
   ouvrirMenuPlus(false);
   if(b.hasAttribute('data-deconnexion')){ sb.auth.signOut(); return; }
-  if(b.dataset.aller === 'profil'){ ouvrirProfil(window.__monId || null); return; }
   if(b.dataset.aller === 'regles'){ document.getElementById('reglesBtn').click(); return; }
   const tab = document.querySelector(`.tab[data-tab="${b.dataset.aller}"]`);
   if(tab) tab.click();
@@ -5867,6 +6035,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'defense'){ loadMenaces(); loadCombat(); renderIntensite('defense'); }
     if(tab.dataset.tab === 'combat') loadCombat();
     if(tab.dataset.tab === 'succes') loadSucces();
+    if(tab.dataset.tab === 'profil') loadProfilPanneau();
     if(tab.dataset.tab === 'contrat') loadContrat();
     if(tab.dataset.tab === 'echange') loadEchanges();
     if(tab.dataset.tab === 'regles') loadTauxTirage();

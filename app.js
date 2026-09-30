@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '89af18ec38be';
+const VERSION_JEU = '2491877b80f1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3689,7 +3689,37 @@ window.addEventListener('resize', () => {
   if(vueCollection === 'france') dessinerMaFrance();
 });
 
+// ---------- Rendu differe des onglets fermes ----------
+// Fabriquer le HTML d'un onglet qu'on ne regarde pas coute exactement aussi
+// cher que celui qu'on regarde. On note le travail et on le fait a
+// l'ouverture, juste avant que le panneau devienne visible.
+const RENDUS_EN_ATTENTE = new Map();   // nom d'onglet -> Set de fonctions
+
+function panneauOuvert(onglet){
+  const p = document.getElementById('panel-' + onglet);
+  return !!p && p.classList.contains('active');
+}
+
+// true => l'appelant doit s'arreter, le rendu se fera a l'ouverture
+function rendreALOuverture(onglet, fn){
+  if(panneauOuvert(onglet)) return false;
+  if(!RENDUS_EN_ATTENTE.has(onglet)) RENDUS_EN_ATTENTE.set(onglet, new Set());
+  RENDUS_EN_ATTENTE.get(onglet).add(fn);
+  return true;
+}
+
+function faireLesRendusEnAttente(onglet){
+  const attente = RENDUS_EN_ATTENTE.get(onglet);
+  if(!attente || attente.size === 0) return;
+  RENDUS_EN_ATTENTE.delete(onglet);
+  for(const fn of attente){
+    try { fn(); }
+    catch(e){ console.error('rendu differe (' + onglet + ')', e); }
+  }
+}
+
 function renderCollection(){
+  if(rendreALOuverture('collection', renderCollection)) return;
   const countEl = document.getElementById('collectionCount');
   const gridEl = document.getElementById('collectionGrid');
   // en vue « Ma France » la grille montre aussi ce qui a ete perdu
@@ -5083,6 +5113,7 @@ function etatBouclier(entry, now = Date.now()){
 }
 
 function renderBoucliers(){
+  if(rendreALOuverture('defense', renderBoucliers)) return;
   const grid = document.getElementById('boucliersGrid');
   if(!grid) return;
   const now = Date.now();
@@ -5180,6 +5211,7 @@ function choisirBouclier(entry){
 let sellFilterTier = 'tous';
 
 function renderSellableGrid(){
+  if(rendreALOuverture('bourse', renderSellableGrid)) return;
   const grid = document.getElementById('sellableGrid');
   const searchEl = document.getElementById('sellSearch');
   const searchText = sansAccents(searchEl ? searchEl.value.trim() : '');
@@ -5446,6 +5478,9 @@ function renderMenaces(){
     majBadgePlus();
     badge.title = enDanger.length > 1 ? `${enDanger.length} communes attaquées` : 'Une commune attaquée';
   }
+  // la pastille est posee, elle : elle previent le joueur qui n'ouvre pas
+  // l'onglet, c'est precisement a lui qu'elle sert
+  if(rendreALOuverture('defense', renderMenaces)) return;
   const bloc = document.getElementById('combatMenaces');
   const liste = document.getElementById('combatMenacesListe');
   if(!bloc || !liste) return;
@@ -5815,6 +5850,7 @@ document.getElementById('combatIntensite').addEventListener('click', (e) => {
 });
 
 function renderCombatGrid(){
+  if(rendreALOuverture('combat', renderCombatGrid)) return;
   renderIntensite();
   const grid = document.getElementById('combatGrid');
   const searchEl = document.getElementById('combatSearch');
@@ -6080,6 +6116,9 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     majBadgePlus();
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+    // le panneau vient de devenir visible : on rattrape ce qu'on avait
+    // repousse, avant que le joueur ne voie un onglet vide
+    faireLesRendusEnAttente(tab.dataset.tab);
     if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
     if(tab.dataset.tab === 'communaute'){ loadClassement(); loadJournal(); loadAmis(); }
     if(tab.dataset.tab === 'bourse') loadBourse();

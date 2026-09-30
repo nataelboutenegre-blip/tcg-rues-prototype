@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '9e534334e312';
+const VERSION_JEU = '6df93a602dc9';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3032,13 +3032,15 @@ function composerLot(){
   contratLot = (contratDispo[contratChoisi.de] || []).slice(0, contratChoisi.n);
 }
 
-// La pastille du departement. Vide si la base ne le connait pas : mieux
-// vaut pas de pastille qu'une pastille vide.
-function ctDept(dep){
+// La pastille du departement, commune au contrat, au combat et a la
+// defense. Vide si la base ne le connait pas : mieux vaut pas de pastille
+// qu'une pastille vide. Un seul emetteur, pour n'avoir qu'un endroit a
+// changer le jour ou son apparence bouge.
+function badgeDept(dep){
   const d = String(dep || '').trim();
   if(!d) return '';
   const nom = DEPT_NAMES[d] || '';
-  return `<span class="ct-dp"${nom ? ` title="${echapperTexte(nom)}"` : ''}>${echapperTexte(d)}</span>`;
+  return `<span class="dep"${nom ? ` title="${echapperTexte(nom)}"` : ''}>${echapperTexte(d)}</span>`;
 }
 
 // Remplacer une ligne : on ouvre la liste complete du palier, avec une
@@ -3082,7 +3084,7 @@ function changerLigne(i){
       return `<button type="button" class="ct-o ${contratChoisi.de}" ${dedans ? 'disabled' : ''}
                       data-code="${echapperTexte(x.commune_code)}">
         <span class="pt"></span>
-        <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${ctDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.</span></span>
+        <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${badgeDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.</span></span>
         ${note ? `<span class="dj">${note}</span>` : ''}
       </button>`;
     }).join('');
@@ -3143,7 +3145,7 @@ function renderContrat(){
   lot.innerHTML = contratLot.map((x, i) => `
     <div class="ct-l ${contratChoisi.de}">
       <span class="pt"></span>
-      <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${ctDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.</span></span>
+      <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${badgeDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.</span></span>
       <button data-ct-changer="${i}">changer</button>
     </div>`).join('');
   if(avert) avert.textContent =
@@ -4900,7 +4902,7 @@ function renderBoucliers(){
     return `
       <div class="ligne ${e.tier.id}">
         <div class="ligne-texte">
-          <span class="ligne-nom">${e.nom}</span>
+          <span class="ligne-nom"><span class="nm-tx">${e.nom}</span>${badgeDept(e.dept)}</span>
           <span class="ligne-etat ${etat.code === 'actif' || etat.code === 'programme' ? 'bleu' : ''}">${etat.code === 'actif' || etat.code === 'programme' ? ICONE_BOUCLIER : ''}${etat.texte}</span>
         </div>
         ${bouton}
@@ -4927,7 +4929,7 @@ function choisirBouclier(entry){
     const fermer = ouvrirFenetre(`
       <form class="fenetre prix bouclier-fenetre" role="dialog" aria-modal="true" aria-labelledby="bouclierTitre" novalidate>
         <h2 id="bouclierTitre"><span class="bouclier-titre-icone">${ICONE_BOUCLIER}</span>Bouclier</h2>
-        <p class="prix-commune">${echapperTexte(entry.nom)}, ${entry.tier.label.toLowerCase()}</p>
+        <p class="prix-commune">${echapperTexte(entry.nom)}${entry.dept ? ` — ${echapperTexte(DEPT_NAMES[entry.dept] || '')} (${echapperTexte(entry.dept)})` : ''}, ${entry.tier.label.toLowerCase()}</p>
         <div class="offres">${options}</div>
         ${etat.code === 'immunite' ? `<p class="prix-aide">Cette commune est encore protégée ${formatDuree(entry.acquiredAt + IMMUNITE_MS - Date.now())} grâce à son acquisition récente : le bouclier démarrera juste après.</p>` : ''}
         <p class="prix-aide">${solde !== null ? `Ton solde : ${Number(solde).toLocaleString('fr-FR')} pts. ` : ''}Après ce bouclier, 12 h sans protection possible.</p>
@@ -5256,7 +5258,7 @@ function renderMenaces(){
       <div class="menace ${v > 0 ? 'danger' : ''}${estFavori ? ' favori' : ''}">
         <span class="menace-point" style="background:${COULEURS_FILTRE[m.tier] || '#7E8BA0'}"></span>
         <div class="menace-texte">
-          <span class="menace-titre">${estFavori ? '<span class="menace-etoile" title="Une de tes cinq communes gardées">★</span>' : ''}<b>${m.nom}</b> <span>${tier ? '(' + tier.label.toLowerCase() + ')' : ''}, attaquée par ${echapperTexte(m.attaquant_pseudo)}</span></span>
+          <span class="menace-titre">${estFavori ? '<span class="menace-etoile" title="Une de tes cinq communes gardées">★</span>' : ''}<b>${m.nom}</b>${badgeDept(miennne ? miennne.dept : '')} <span>${tier ? '(' + tier.label.toLowerCase() + ')' : ''}, attaquée par ${echapperTexte(m.attaquant_pseudo)}</span></span>
           ${estFavori ? '<span class="menace-favori">Si tu la perds, tu perds une de tes cinq places gardées.</span>' : ''}
           <span class="menace-statut">${statut}</span>
           ${v > 0 && !(bouclierFin > now) ? (m.defense_utilisee

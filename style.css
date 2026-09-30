@@ -2021,8 +2021,10 @@
              display:flex; align-items:baseline; gap:5px; min-width:0; }
   /* le nom se laisse tronquer, la pastille du departement jamais */
   .ct-l .nm i{ font-style:normal; overflow:hidden; text-overflow:ellipsis; }
-  .ct-dp{ font-size:0.62rem; font-weight:700; color:#7F91AB; flex-shrink:0;
-          background:rgba(169,188,212,0.13); border-radius:4px; padding:1px 4px; }
+  /* la pastille du departement : contrat, combat, defense, boucliers */
+  .dep{ font-size:0.62rem; font-weight:700; color:#7F91AB; flex-shrink:0;
+        background:rgba(169,188,212,0.13); border-radius:4px; padding:1px 4px;
+        vertical-align:middle; white-space:nowrap; }
   .ct-l .hb{ font-size:0.67rem; color:#7F91AB; white-space:nowrap; }
   .ct-l button{ font:inherit; font-size:0.68rem; font-weight:600; cursor:pointer;
     flex-shrink:0; background:transparent; color:#7F91AB;
@@ -2039,6 +2041,11 @@
   .ct-pick input::placeholder{ color:#6C7E96; }
   .ct-pick input:focus{ outline:none; border-color: var(--c-legendaire); }
   .ct-liste{ overflow-y:auto; flex:1; margin:0 -4px; padding:0 4px; }
+
+  /* Boucliers : la pastille suit le nom sur la meme ligne */
+  .ligne-nom{ display:inline-flex; align-items:baseline; gap:6px;
+              min-width:0; max-width:100%; }
+  .ligne-nom span.nm-tx{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .ct-vide{ font-size:0.78rem; color:#7F91AB; text-align:center; padding:18px 0; margin:0; }
   .ct-o{ display:flex; align-items:center; gap:9px; width:100%; text-align:left;
     font:inherit; cursor:pointer; background:transparent; color:#fff;

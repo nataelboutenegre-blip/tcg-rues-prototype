@@ -27,6 +27,12 @@ CLE SUPABASE
       export SUPABASE_URL='https://xxxx.supabase.co'
       export SUPABASE_SERVICE_KEY='ey...'
 
+LE CACHE N'EST PAS UN DETAIL
+  Les images partent avec un cache-control de 30 jours. Sans lui, Supabase
+  sert son defaut d'une heure et chaque session de jeu retelecharge toute
+  la collection : 120 Go de trafic par mois pour 23 joueurs, contre 1,3 Go
+  une seule fois. C'est le rapport entre viable et pas viable.
+
 USAGE
     python3 photos-2-import.py --essai              # 20 communes, pour voir
     python3 photos-2-import.py --palier rare,legendaire
@@ -41,6 +47,19 @@ import urllib.parse, urllib.request, urllib.error
 
 UA = "TerraFront/1.0 (https://terrafront.fr) python-urllib"
 LARGEUR = 400                      # px : la vignette telle qu'elle sera servie
+
+# COMBIEN DE TEMPS LE NAVIGATEUR GARDE UNE IMAGE.
+#
+#   C'est le poste de cout numero un, et il ne se rattrape pas apres coup :
+#   sans cet en-tete, Supabase applique son defaut (une heure), et chaque
+#   session de jeu retelecharge toute la collection. A 23 joueurs cela fait
+#   120 Go de trafic par mois ; a un mois de cache, 1,3 Go une seule fois.
+#
+#   30 jours et pas un an : si une photo se revele fausse ou mal cadree, la
+#   correction arrive chez les joueurs en un mois au pire. Et si tu veux
+#   qu'elle arrive tout de suite, renomme le fichier (01053-2.jpg) et mets
+#   a jour communes.photo : une adresse neuve n'est jamais en cache.
+CACHE = "2592000"                  # 30 jours, en secondes
 FAITS = "photos-faits.txt"
 ECARTEES = "photos-ecartees.csv"
 
@@ -173,7 +192,8 @@ def main():
                 dest = "%s/storage/v1/object/communes/%s.jpg" % (base, code)
                 http(dest, donnees=image, methode="POST", brut=True, entetes={
                     "apikey": cle, "Authorization": "Bearer " + cle,
-                    "Content-Type": "image/jpeg", "x-upsert": "true"})
+                    "Content-Type": "image/jpeg", "x-upsert": "true",
+                    "cache-control": "max-age=" + CACHE})
 
                 page = ("https://commons.wikimedia.org/wiki/File:"
                         + urllib.parse.quote(fichier.replace(" ", "_")))

@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '57a9b02d9a56';
+const VERSION_JEU = '3ee6c78f9df4';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2852,7 +2852,12 @@ async function loadOthersPossessions(){
 async function loadMyCollection(){
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
-  const champsCommune = 'communes(code,nom,departement,population,latitude,longitude,tier,rang,palier_total)';
+  // du plus complet au plus simple, ici aussi : tant que photos-colonnes.sql
+  // n'est pas passe, la seconde variante fait tourner le site comme avant
+  const CHAMPS_COMMUNE = [
+    'communes(code,nom,departement,population,latitude,longitude,tier,rang,palier_total,photo,photo_auteur,photo_licence,photo_source)',
+    'communes(code,nom,departement,population,latitude,longitude,tier,rang,palier_total)',
+  ];
   // du plus complet au plus simple : si un fichier SQL n'a pas encore ete execute, le site se charge quand meme
   const variantes = [
     'commune_code, acquired_at, bouclier_debut, bouclier_jusqua, conquise_le, etiquette, ',
@@ -2861,10 +2866,13 @@ async function loadMyCollection(){
     'commune_code, acquired_at, ',
   ];
   let data = null, error = null;
-  for(const champs of variantes){
-        ({ data, error } = await toutesLesLignes(() => sb
-      .from('possessions').select(champs + champsCommune).eq('joueur_id', uid)));
-    if(!error) break;
+  boucle:
+  for(const champsCommune of CHAMPS_COMMUNE){
+    for(const champs of variantes){
+      ({ data, error } = await toutesLesLignes(() => sb
+        .from('possessions').select(champs + champsCommune).eq('joueur_id', uid)));
+      if(!error) break boucle;
+    }
   }
   if(error){ console.error(error); return; }
 
@@ -2880,7 +2888,9 @@ async function loadMyCollection(){
       bouclierDebut: row.bouclier_debut ? new Date(row.bouclier_debut).getTime() : 0,
       bouclierJusqua: row.bouclier_jusqua ? new Date(row.bouclier_jusqua).getTime() : 0,
       conquiseLe: row.conquise_le ? new Date(row.conquise_le).getTime() : 0,
-      etiquette: row.etiquette || ''
+      etiquette: row.etiquette || '',
+      photo: c.photo || '', photoAuteur: c.photo_auteur || '',
+      photoLicence: c.photo_licence || '', photoSource: c.photo_source || ''
     });
     session[c.tier]++;
     session.total++;
@@ -2952,6 +2962,36 @@ function siegesParCommune(){
   return par;
 }
 const miniArtCache = new Map();
+
+// Le bucket « communes » est public : l'adresse se compose a partir de
+// celle du projet, que le client connait deja.
+const urlPhoto = (fichier) => fichier
+  ? SUPABASE_URL + '/storage/v1/object/public/communes/' + fichier
+  : null;
+
+// L'art d'une carte : la photo si on l'a, le dessin sinon. Le dessin reste
+// EN DESSOUS de l'image, pas a la place : si le chargement echoue, onerror
+// retire l'image et son voile, et le dessin reapparait sans trou ni saut
+// de mise en page.
+function artCommune(e, tierId, taille){
+  const dessin = (taille === 'grande' ? carteArtSvg : miniArtSvg)(e.code, tierId);
+  const u = urlPhoto(e && e.photo);
+  if(!u) return dessin;
+  return dessin
+    + `<img class="art-photo" src="${echapperTexte(u)}" alt="" loading="lazy"`
+    + ` decoding="async" onerror="this.nextElementSibling&&this.nextElementSibling.remove();this.remove()">`
+    + `<span class="art-voile"></span>`;
+}
+
+// L'attribution, obligatoire pour les licences CC BY et CC BY-SA.
+function creditPhoto(e){
+  if(!e || !e.photo || !e.photoAuteur) return '';
+  const licence = e.photoLicence ? ' · ' + echapperTexte(e.photoLicence) : '';
+  const texte = 'Photo : ' + echapperTexte(e.photoAuteur) + licence;
+  return e.photoSource
+    ? `<p class="carte-credit"><a href="${echapperTexte(e.photoSource)}" target="_blank" rel="noopener">${texte}</a></p>`
+    : `<p class="carte-credit">${texte}</p>`;
+}
 
 function miniArtSvg(code, tierId){
   const cle = code + '|' + tierId;
@@ -3683,7 +3723,7 @@ function renderCollection(){
     <div class="mini ${entry.tier.id}${entry.perdue ? ' perdue' : ''}${favorisSet.has(entry.code) ? ' favori' : ''}" data-code="${entry.code}" role="button" tabindex="0" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
       <div class="mini-int">
         ${entry.perdue ? '<span class="mini-perdue">PERDUE</span>' : ''}${favorisSet.has(entry.code) ? '<span class="mini-fav" title="Gardée à la fin de la saison">★</span>' : ''}
-        <div class="mini-art">${miniArtSvg(entry.code, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}${entry.etiquette ? `<span class="mini-etiq" title="Ton étiquette">${echapperTexte(entry.etiquette)}</span>` : ''}</div>
+        <div class="mini-art">${artCommune(entry, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}${entry.etiquette ? `<span class="mini-etiq" title="Ton étiquette">${echapperTexte(entry.etiquette)}</span>` : ''}</div>
         <div class="mini-infos">
           <p class="mini-nom ${entry.nom.length > 14 ? 'long' : ''}">${entry.nom}</p>
           ${entry.rank ? `<span class="mini-num">n° ${Number(entry.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(entry.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
@@ -3792,7 +3832,7 @@ function rendreFiche(entry, d){
                 <span class="carte-rarete">${tier.label}</span>
                 ${entry.rank ? `<span class="carte-num">${nb(entry.rank)} / ${nb(entry.tierSize)}</span>` : ''}
               </div>
-              <div class="carte-art">${carteArtSvg(entry.code, tier.id)}<span class="carte-dept">${echapperTexte(entry.dept)}</span></div>
+              <div class="carte-art">${artCommune(entry, tier.id, 'grande')}<span class="carte-dept">${echapperTexte(entry.dept)}</span></div>
               <div class="carte-lisere"><span></span><span></span><span></span></div>
             </div>
           </div>
@@ -3827,6 +3867,7 @@ function rendreFiche(entry, d){
           </div>
           <div class="fc-etiq-sugg">${suggestionsEtiquette(entry)}</div>
         </div>`}
+        ${creditPhoto(entry)}
       </div>
     </div>`);
 

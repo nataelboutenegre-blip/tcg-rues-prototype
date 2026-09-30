@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '3ee6c78f9df4';
+const VERSION_JEU = '89af18ec38be';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1390,6 +1390,9 @@ let carteRenduPlanifie = false;
 // Le canvas est le rendu normal. ?svg=1 rebascule sur l'ancien rendu : porte de
 // sortie a donner a un joueur qui signalerait un probleme d'affichage.
 const MODE_CANVAS = !new URLSearchParams(location.search).has('svg');
+// Passe a true si le navigateur refuse un contexte 2d. C'est la seule
+// situation ou la carte SVG doit reprendre la main.
+let CANVAS_HS = false;
 
 const CV = {
   ctx: null,
@@ -1427,6 +1430,7 @@ function initCanvas(){
   if(!cv || !wrap || !MODE_CANVAS) return;
   wrap.classList.add('en-canvas');
   CV.ctx = cv.getContext('2d');
+  if(!CV.ctx){ CANVAS_HS = true; wrap.classList.remove('en-canvas'); renderMapOverlay(); return; }
   redimensionnerCanvas();
   window.addEventListener('resize', () => { redimensionnerCanvas(); demanderDessin(); });
 }
@@ -2492,6 +2496,13 @@ function renderMapOverlay(){
     demanderDessin();
     return;
   }
+  // Le canvas est en service mais pas encore initialise : il attend
+  // data/france-outline.json. Surtout NE PAS dessiner le SVG en attendant.
+  // Il serait recouvert par le canvas des qu'il est pret, donc invisible,
+  // mais resterait dans la page : 37 000 elements payes par tous les
+  // joueurs a chaque interaction, pour rien. Mesure a l'appui : les vider
+  // a chaud ne change pas un seul pixel sur 2,2 millions.
+  if(MODE_CANVAS && !CANVAS_HS) return;
   // plusieurs appels rapproches (cartes retournees une par une) = un seul dessin
   if(carteRenduPlanifie) return;
   carteRenduPlanifie = true;

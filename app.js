@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'fe8f7fe817b9';
+const VERSION_JEU = '9ca2fb2154a1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3203,6 +3203,26 @@ function renderContrat(){
     `Les ${contratChoisi.n} communes sacrifiées retournent au pot. C'est définitif.`;
 }
 
+// ---------- Bandeaux qu'on peut fermer ----------
+// Fermer ne fait pas taire le bandeau pour toujours : on retient la
+// SITUATION au moment de la fermeture. Tant qu'elle ne change pas, il reste
+// ferme ; des qu'elle change, il revient une fois. Un rappel qu'on ferme
+// definitivement finit par manquer, un rappel qui revient a chaque visite
+// finit par etre ignore — celui-ci ne parle que s'il a du neuf a dire.
+function cleBandeau(id){
+  return 'tf-bandeau-' + id + '-' + (ID_MOI || 'anon');
+}
+
+function bandeauMasque(id, signature){
+  try{ return localStorage.getItem(cleBandeau(id)) === String(signature); }
+  catch(e){ return false; }   // navigation privee : le bandeau s'affiche, tant pis
+}
+
+function masquerBandeau(id, signature, element){
+  try{ localStorage.setItem(cleBandeau(id), String(signature)); }catch(e){}
+  if(element) element.hidden = true;
+}
+
 // Le rappel en haut de la Collection. C'est la porte d'entree : un onglet
 // dans « Plus » ne se trouve pas tout seul.
 function majRappelContrat(){
@@ -3228,6 +3248,10 @@ function majRappelContrat(){
   const c = CONTRATS.find(x => (parTier[x.de] || 0) >= x.n);
   if(!c){ bloc.hidden = true; return; }
   const n = parTier[c.de];
+  // la situation, c'est le nombre de contrats signables : le rappel revient
+  // quand le joueur peut en signer un de plus qu'au moment ou il l'a ferme
+  bloc.dataset.signature = c.de + ':' + Math.floor(n / c.n);
+  if(bandeauMasque('contrat', bloc.dataset.signature)){ bloc.hidden = true; return; }
   bloc.hidden = false;
   txt.innerHTML = `Tu as <b>${ctNb(n)} ${libelleTier(c.de).toLowerCase()}s</b>. `
     + `Dix d'entre eux valent un ${libelleTier(c.vers).toLowerCase()} — et les dix retournent au pot.`;
@@ -3420,6 +3444,15 @@ document.getElementById('ctLot').addEventListener('click', (e) => {
   if(b) changerLigne(Number(b.dataset.ctChanger));
 });
 document.getElementById('ctSigner').addEventListener('click', signerContrat);
+document.getElementById('ctRappelX').addEventListener('click', () => {
+  const bloc = document.getElementById('ctRappel');
+  masquerBandeau('contrat', bloc.dataset.signature, bloc);
+});
+document.getElementById('favBarreX').addEventListener('click', () => {
+  const barre = document.getElementById('favBarre');
+  masquerBandeau('favoris', barre.dataset.signature, barre);
+});
+
 document.getElementById('ctRappelB').addEventListener('click', () => {
   const onglet = document.querySelector('.tab[data-tab="contrat"]');
   if(onglet) onglet.click();
@@ -3506,8 +3539,11 @@ function majBarreFavoris(){
   const barre = document.getElementById('favBarre');
   if(!barre) return;
   if(!favorisCharges || vueCollection === 'france'){ barre.hidden = true; return; }
-  barre.hidden = false;
   const n = favorisSet.size;
+  // la situation, c'est le nombre d'etoiles posees
+  barre.dataset.signature = String(n);
+  if(bandeauMasque('favoris', barre.dataset.signature)){ barre.hidden = true; return; }
+  barre.hidden = false;
   const elN = document.getElementById('favN');
   const elP = document.getElementById('favPastilles');
   const elT = document.getElementById('favTxt');

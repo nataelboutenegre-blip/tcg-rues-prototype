@@ -2314,6 +2314,23 @@
     border-radius:12px; padding:10px 14px; margin-top:10px;
   }
   .fav-barre[hidden]{ display:none; }
+
+  /* La croix des bandeaux. Discrete au repos — elle ne doit pas attirer
+     l'oeil plus que le message — mais 30 px de zone touchable, soit de quoi
+     la viser au pouce sans zoomer. */
+  /* En coin, hors du flux : la barre des favoris passe a la ligne quand elle
+     est etroite, et un bouton dans le flux y creait une rangee vide — le
+     bandeau devenait plus haut qu'avant au lieu de se faire oublier. */
+  .ct-rappel, .fav-barre{ position:relative; padding-right:38px; }
+  .bandeau-fermer{
+    position:absolute; top:4px; right:4px;
+    width:30px; height:30px; padding:0; border:0; background:none; cursor:pointer;
+    color: var(--brume); opacity:0.45; font-size:0.9rem; line-height:1;
+    border-radius:8px; transition: opacity .15s, background .15s;
+  }
+  .bandeau-fermer:hover, .bandeau-fermer:focus-visible{
+    opacity:1; background: rgba(169,188,212,0.12);
+  }
   .fav-compte{ font-family: var(--titre); font-weight:800; font-size:1.25rem; white-space:nowrap; }
   .fav-compte b{ color: var(--c-legendaire); }
   .fav-pastilles{ display:flex; gap:4px; }

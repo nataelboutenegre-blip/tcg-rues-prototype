@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=fe8f7fe817b9">
+<link rel="stylesheet" href="style.css?v=9ca2fb2154a1">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -384,11 +384,13 @@
           <span class="ct-rappel-ic" aria-hidden="true">📜</span>
           <span class="ct-rappel-t" id="ctRappelT"></span>
           <button class="ct-rappel-b" id="ctRappelB">Voir</button>
+          <button class="bandeau-fermer" id="ctRappelX" aria-label="Masquer ce rappel" title="Masquer">&#10005;</button>
         </div>
         <div class="fav-barre" id="favBarre" hidden>
           <span class="fav-compte"><b id="favN">0</b> / 5</span>
           <span class="fav-pastilles" id="favPastilles"></span>
           <span class="fav-txt" id="favTxt"></span>
+          <button class="bandeau-fermer" id="favBarreX" aria-label="Masquer ce rappel" title="Masquer">&#10005;</button>
         </div>
       </div>
       <div class="coll-france" id="collFrance" hidden>
@@ -937,6 +939,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=fe8f7fe817b9"></script>
+<script src="app.js?v=9ca2fb2154a1"></script>
 </body>
 </html>

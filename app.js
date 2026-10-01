@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '1f3be6a9ce23';
+const VERSION_JEU = '8e8ea8579b07';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3808,7 +3808,7 @@ function renderCollection(){
       : '<p class="collection-empty">Aucune carte de cette rareté pour le moment.</p>';
     return;
   }
-  gridEl.innerHTML = visibles.map(entry => {
+  const carteMini = (entry) => {
     const s = sieges.get(entry.code);
     const badgeSiege = s
       ? `<span class="mini-siege" title="${s.nb > 1 ? s.nb + ' joueurs attaquent cette commune' : 'Un joueur attaque cette commune'} — meilleure série ${s.max} sur 3">${s.max}/3${s.nb > 1 ? ' ×' + s.nb : ''}</span>`
@@ -3826,7 +3826,14 @@ function renderCollection(){
         <div class="mini-lisere"><span></span><span></span><span></span></div>
       </div>
     </div>`;
-  }).join('');
+  };
+
+  // le siege d'une commune peut changer sans que le joueur ait touche a un
+  // filtre : il ne doit pas perdre sa place pour autant, donc il n'entre pas
+  // dans la signature
+  const signature = [vueCollection, collectionFilterTier, etiquetteFiltre,
+                     recherche, visibles.length].join('|');
+  afficherParLots(gridEl, visibles, carteMini, signature);
 }
 
 
@@ -5200,7 +5207,7 @@ function renderBoucliers(){
     grid.innerHTML = '<p class="collection-empty">Aucune de tes communes n\'a besoin d\'un bouclier pour le moment.</p>';
     return;
   }
-  grid.innerHTML = protegeables.map(e => {
+  const ligneBouclier = (e) => {
     const etat = etatBouclier(e, now);
     const bouton = etat.achetable
       ? `<div class="ligne-actions"><button class="btn-p or" data-action="bouclier" data-code="${e.code}">Protéger</button></div>`
@@ -5213,7 +5220,9 @@ function renderBoucliers(){
         </div>
         ${bouton}
       </div>`;
-  }).join('');
+  };
+  afficherParLots(grid, protegeables, ligneBouclier,
+                  [boucliersTout, rechercheB, protegeables.length].join('|'));
 }
 
 function choisirBouclier(entry){
@@ -5290,7 +5299,7 @@ function renderSellableGrid(){
     grid.innerHTML = '<p class="collection-empty">Aucune commune ne correspond à la recherche.</p>';
     return;
   }
-  grid.innerHTML = entries.map(entry => {
+  const ligneVente = (entry) => {
     const listedPrice = myListings.get(entry.code);
     const rachat = PRIX_RACHAT[entry.tier.id];
     const actions = listedPrice
@@ -5308,7 +5317,9 @@ function renderSellableGrid(){
         </div>
         ${actions}
       </div>`;
-  }).join('');
+  };
+  afficherParLots(grid, entries, ligneVente,
+                  [sellFilterTier, searchText, entries.length].join('|'));
 }
 
 function renderMarketGrid(market, myUid){
@@ -5318,7 +5329,7 @@ function renderMarketGrid(market, myUid){
     return;
   }
   const tiersById = Object.fromEntries(TIERS.map(t => [t.id, t]));
-  grid.innerHTML = market.map(a => {
+  const ligneAnnonce = (a) => {
     const c = a.communes;
     const tier = tiersById[c.tier];
     const isMine = a.joueur_id === myUid;
@@ -5339,7 +5350,8 @@ function renderMarketGrid(market, myUid){
         <span class="ligne-prix">${Number(a.prix).toLocaleString('fr-FR')}<small>pts</small></span>
         <div class="ligne-actions">${action}</div>
       </div>`;
-  }).join('');
+  };
+  afficherParLots(grid, market, ligneAnnonce, 'marche|' + market.length);
 }
 
 document.addEventListener('click', async (e) => {

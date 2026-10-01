@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '9ca2fb2154a1';
+const VERSION_JEU = '83af1c441d18';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2976,8 +2976,18 @@ const miniArtCache = new Map();
 
 // Le bucket « communes » est public : l'adresse se compose a partir de
 // celle du projet, que le client connait deja.
+//
+// Le ?v= n'est pas decoratif. Les images sont stockees avec un cache de 30
+// jours, mais Cloudflare garde des entrees datant d'avant ce reglage : il
+// revalide et ressert ses anciens en-tetes en no-cache, ce qui oblige le
+// navigateur a redemander chaque image a chaque affichage. Un numero de
+// version rend l'adresse neuve a ses yeux : il va la chercher a la source
+// et garde la bonne reponse. Meme procede que app.js?v= dans index.html.
+// Monter ce numero rafraichit toutes les photos d'un coup, le jour ou on
+// remplacera une mauvaise image.
+const PHOTOS_V = '2';
 const urlPhoto = (fichier) => fichier
-  ? SUPABASE_URL + '/storage/v1/object/public/communes/' + fichier
+  ? SUPABASE_URL + '/storage/v1/object/public/communes/' + fichier + '?v=' + PHOTOS_V
   : null;
 
 // L'art d'une carte : la photo si on l'a, le dessin sinon. Le dessin reste

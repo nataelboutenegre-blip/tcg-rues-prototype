@@ -3447,3 +3447,15 @@
     input[type="password"], input[type="number"], input[type="tel"],
     input[type="url"], select, textarea{ font-size:16px; }
   }
+
+  /* ---------- Les quatre groupes de la colonne ----------
+     Douze onglets a intervalle egal, et l'oeil n'y voit aucune logique.
+     Trois respirations suffisent a montrer le decoupage : on obtient, on se
+     bat, on transforme, on fait le point. Pas de trait ni de titre — il n'y
+     a rien a lire, juste a sentir. Sur telephone la barre du bas est une
+     rangee : la regle ne s'y applique jamais. */
+  @media (min-width: 721px){
+    .tab[data-tab="combat"],
+    .tab[data-tab="contrat"],
+    .tab[data-tab="profil"]{ margin-top: 14px; }
+  }

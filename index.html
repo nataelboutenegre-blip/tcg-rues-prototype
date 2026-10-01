@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=57191be7b980">
+<link rel="stylesheet" href="style.css?v=3f4ee28211c4">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -204,6 +204,15 @@
         Tirage
       </div>
 
+      <div class="tab" data-tab="territoire">
+        <div class="icon">
+          <svg viewBox="0 0 24 24">
+            <polygon points="13.4,22.0 6.5,19.7 7.7,16.7 7.6,14.6 8.1,15.1 8.2,15.7 8.4,15.8 8.1,14.9 7.4,14.3 7.6,12.9 6.5,12.5 5.5,10.2 2.6,9.5 2.0,8.9 2.8,8.4 2.0,7.8 4.3,7.1 5.1,7.9 7.1,7.6 6.3,5.1 9.3,6.0 9.8,5.8 9.6,5.2 11.9,4.1 11.7,2.5 13.2,2.0 15.8,3.9 15.8,4.6 16.8,4.1 16.8,5.0 17.7,5.6 22.0,6.9 21.0,10.0 20.1,10.2 18.5,13.2 19.8,12.8 20.4,15.0 19.5,15.7 20.1,17.7 21.2,17.8 20.9,18.7 18.8,20.4 15.4,19.3 14.1,20.3 14.2,21.8 13.4,22.0" fill="currentColor"/>
+          </svg>
+        </div>
+        Territoire
+      </div>
+
       <div class="tab" data-tab="collection">
         <div class="icon">
           <svg viewBox="0 0 24 24" fill="none">
@@ -214,35 +223,11 @@
         Collection
       </div>
 
-      <div class="tab" data-tab="territoire">
+      <div class="tab" data-tab="monuments">
         <div class="icon">
-          <svg viewBox="0 0 24 24">
-            <polygon points="13.4,22.0 6.5,19.7 7.7,16.7 7.6,14.6 8.1,15.1 8.2,15.7 8.4,15.8 8.1,14.9 7.4,14.3 7.6,12.9 6.5,12.5 5.5,10.2 2.6,9.5 2.0,8.9 2.8,8.4 2.0,7.8 4.3,7.1 5.1,7.9 7.1,7.6 6.3,5.1 9.3,6.0 9.8,5.8 9.6,5.2 11.9,4.1 11.7,2.5 13.2,2.0 15.8,3.9 15.8,4.6 16.8,4.1 16.8,5.0 17.7,5.6 22.0,6.9 21.0,10.0 20.1,10.2 18.5,13.2 19.8,12.8 20.4,15.0 19.5,15.7 20.1,17.7 21.2,17.8 20.9,18.7 18.8,20.4 15.4,19.3 14.1,20.3 14.2,21.8 13.4,22.0" fill="currentColor"/>
-          </svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20.5h18M4.5 20.5V10L12 4.5 19.5 10v10.5"/><path d="M9.5 20.5v-5.5h5v5.5"/></svg>
         </div>
-        Territoire
-      </div>
-
-      <div class="tab" data-tab="communaute">
-        <div class="icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="9" cy="7.8" r="3.3"/>
-            <path d="M3.4 19.6a5.6 5.6 0 0 1 11.2 0"/>
-            <path d="M16.2 5.3a3.3 3.3 0 0 1 0 5"/>
-            <path d="M17.4 14.2a5.6 5.6 0 0 1 3.2 5.4"/>
-          </svg>
-        </div>
-        Communauté
-      </div>
-
-      <div class="tab" data-tab="bourse">
-        <div class="icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-            <path d="M4 8h13M17 8l-3-3M17 8l-3 3"/>
-            <path d="M20 16H7M7 16l3-3M7 16l3 3"/>
-          </svg>
-        </div>
-        Bourse
+        Monuments
       </div>
 
       <div class="tab" data-tab="combat">
@@ -267,17 +252,6 @@
         <span class="tab-badge" id="combatBadge" hidden></span>
       </div>
 
-      <div class="tab" data-tab="echange">
-        <div class="icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 8h13l-3.5-3.5M17 8l-3.5 3.5"/>
-            <path d="M20 16H7l3.5-3.5M7 16l3.5 3.5"/>
-          </svg>
-        </div>
-        Échange
-        <span class="tab-badge" id="echangeBadge" hidden></span>
-      </div>
-
       <div class="tab" data-tab="contrat">
         <div class="icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -289,6 +263,27 @@
         Contrat
       </div>
 
+      <div class="tab" data-tab="bourse">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3.5 12.6V5.2a1.7 1.7 0 0 1 1.7-1.7h7.4l7.9 7.9a1.7 1.7 0 0 1 0 2.4l-7.4 7.4a1.7 1.7 0 0 1-2.4 0z"/>
+            <circle cx="8.2" cy="8.2" r="1.5"/>
+          </svg>
+        </div>
+        Bourse
+      </div>
+
+      <div class="tab" data-tab="echange">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 8h13l-3.5-3.5M17 8l-3.5 3.5"/>
+            <path d="M20 16H7l3.5-3.5M7 16l3.5 3.5"/>
+          </svg>
+        </div>
+        Échange
+        <span class="tab-badge" id="echangeBadge" hidden></span>
+      </div>
+
       <div class="tab" data-tab="profil">
         <div class="icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
@@ -296,6 +291,18 @@
           </svg>
         </div>
         Profil
+      </div>
+
+      <div class="tab" data-tab="communaute">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="7.8" r="3.3"/>
+            <path d="M3.4 19.6a5.6 5.6 0 0 1 11.2 0"/>
+            <path d="M16.2 5.3a3.3 3.3 0 0 1 0 5"/>
+            <path d="M17.4 14.2a5.6 5.6 0 0 1 3.2 5.4"/>
+          </svg>
+        </div>
+        Communauté
       </div>
 
       <div class="tab" data-tab="succes">
@@ -308,14 +315,6 @@
         </div>
         Succès
       </div>
-
-      <div class="tab" data-tab="monuments">
-        <div class="icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20.5h18M4.5 20.5V10L12 4.5 19.5 10v10.5"/><path d="M9.5 20.5v-5.5h5v5.5"/></svg>
-        </div>
-        Monuments
-      </div>
-
       <button class="tab tab-plus" id="btnPlus" aria-expanded="false" aria-haspopup="true">
         <span class="icon"><span class="points"><i></i><i></i><i></i></span></span>
         Plus
@@ -954,6 +953,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=57191be7b980"></script>
+<script src="app.js?v=3f4ee28211c4"></script>
 </body>
 </html>

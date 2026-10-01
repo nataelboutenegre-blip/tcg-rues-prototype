@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '8e8ea8579b07';
+const VERSION_JEU = 'fe8f7fe817b9';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6159,6 +6159,48 @@ document.getElementById('btnPlus').addEventListener('click', (e) => {
   ouvrirMenuPlus(!document.getElementById('feuillePlus').classList.contains('ouvert'));
 });
 document.getElementById('voileMenu').addEventListener('click', () => ouvrirMenuPlus(false));
+
+// La poignee ressemblait a quelque chose qu'on tire : elle le fait maintenant.
+// glisse = true pendant le court instant qui suit un vrai glissement : sans
+// ca, relacher le doigt apres avoir tire de 20 px declenche aussi le clic du
+// bouton, et la feuille se ferme alors qu'on ne l'a pas assez tiree.
+let feuilleGlissee = false;
+document.getElementById('feuilleFermer').addEventListener('click', () => {
+  if(feuilleGlissee) return;
+  ouvrirMenuPlus(false);
+});
+
+// Glisser la feuille vers le bas la referme. Elle suit le doigt pendant le
+// geste, sinon on ne sait pas si on a bien attrape quelque chose.
+(function glisserFeuille(){
+  const feuille = document.getElementById('feuillePlus');
+  if(!feuille) return;
+  let depart = null, decalage = 0;
+  const FERMETURE = 60;            // px au-dela desquels on considere que c'est ferme
+
+  feuille.addEventListener('pointerdown', (e) => {
+    if(e.target.closest('.fp-item')) return;   // un appui sur une ligne reste un appui
+    depart = e.clientY; decalage = 0;
+    feuille.style.transition = 'none';
+  });
+  feuille.addEventListener('pointermove', (e) => {
+    if(depart === null) return;
+    decalage = Math.max(0, e.clientY - depart);
+    feuille.style.transform = 'translateY(' + decalage + 'px)';
+  });
+  const relacher = () => {
+    if(depart === null) return;
+    depart = null;
+    feuille.style.transition = '';
+    feuille.style.transform = '';
+    feuilleGlissee = decalage > 10;
+    setTimeout(() => { feuilleGlissee = false; }, 50);
+    if(decalage > FERMETURE) ouvrirMenuPlus(false);
+  };
+  feuille.addEventListener('pointerup', relacher);
+  feuille.addEventListener('pointercancel', relacher);
+  feuille.addEventListener('pointerleave', relacher);
+})();
 document.addEventListener('keydown', (e) => {
   if(e.key === 'Escape' && document.getElementById('feuillePlus').classList.contains('ouvert')) ouvrirMenuPlus(false);
 });

@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '3f4ee28211c4';
+const VERSION_JEU = '0727dcc5f534';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6227,11 +6227,16 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 
 // ---------- Navigation : barre du bas et menu "Plus" sur telephone ----------
 // Les 4 onglets principaux restent dans la barre, les autres passent dans le menu.
-const ONGLETS_BARRE = ['tirage', 'collection', 'combat', 'defense'];
-// Meme ordre que la colonne de l'ordinateur, moins les quatre de la barre du
-// bas : deux ordres differents pour les memes entrees, c'etait une raison de
-// se tromper pour rien.
-const ONGLETS_MENU = ['territoire', 'monuments', 'contrat', 'bourse', 'echange', 'profil', 'communaute', 'succes'];
+// La barre du bas tient quatre onglets plus le bouton Plus : mesure faite de
+// 320 a 430 px de large, au-dela de quatre le bouton Plus passe a la ligne.
+const ONGLETS_BARRE = ['tirage', 'territoire', 'combat', 'defense'];
+// Le menu Plus n'est plus une liste a tenir : c'est tout ce qui n'est pas dans
+// la barre, dans l'ordre de la colonne. Deux listes ecrites a la main, c'etait
+// deux listes qui finissaient par diverger — et c'est exactement ce qui etait
+// arrive. Un onglet ajoute demain se place tout seul au bon endroit.
+const ONGLETS_MENU = Array.prototype.map
+  .call(document.querySelectorAll('.tab[data-tab]'), (t) => t.dataset.tab)
+  .filter((id) => ONGLETS_BARRE.indexOf(id) < 0);
 const ICONE_PROFIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>';
 const ICONE_REGLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const ICONE_SORTIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M11 12h10m-3-3 3 3-3 3"/></svg>';

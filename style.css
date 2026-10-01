@@ -1515,6 +1515,9 @@
   /* ---------- Combat : cartes cibles ---------- */
   .cibles-grille{ width:100%; display:grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap:18px; margin-top:6px; }
   .cibles-grille > .collection-empty{ grid-column: 1 / -1; }
+  /* Le reperage du bas de liste : invisible, il occupe toute la largeur de
+     la grille pour que le navigateur sache quand on en approche. */
+  .lot-suite{ grid-column: 1 / -1; height:1px; }
   .cible{ border-radius:14px; padding:3px; box-shadow: 0 12px 24px rgba(0,0,0,0.4); }
   .cible.rare{ background: linear-gradient(160deg, #7FB0FF, var(--c-rare) 45%, #1D4FB8); }
   .cible.legendaire{

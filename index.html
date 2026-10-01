@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=24d9759ef898">
+<link rel="stylesheet" href="style.css?v=57191be7b980">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -307,6 +307,13 @@
           </svg>
         </div>
         Succès
+      </div>
+
+      <div class="tab" data-tab="monuments">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20.5h18M4.5 20.5V10L12 4.5 19.5 10v10.5"/><path d="M9.5 20.5v-5.5h5v5.5"/></svg>
+        </div>
+        Monuments
       </div>
 
       <button class="tab tab-plus" id="btnPlus" aria-expanded="false" aria-haspopup="true">
@@ -652,6 +659,14 @@
       <button class="cl-plus" id="scPlus" hidden>Voir tous les départements</button>
     </section>
 
+    <section class="tab-panel" id="panel-monuments">
+      <h1>Monuments <span class="mon-compteur" id="monCompteur">—</span></h1>
+      <div class="sub">Un lieu connu par commune : qui possède la commune possède son monument, et le perd avec elle. Les cartes en gris sont celles que tu n'as pas, avec le nom de celui qui les a.</div>
+      <div class="coll-filtres" id="monFiltres"></div>
+      <input type="text" id="monRech" class="bourse-search" placeholder="Rechercher un monument, une commune, un département…">
+      <div class="mon-grille" id="monGrille"><p class="collection-empty">Chargement…</p></div>
+    </section>
+
     <section class="tab-panel" id="panel-profil">
       <h1>Profil</h1>
       <div class="sub">Ton niveau monte avec ce que tu fais : conquérir, défendre, signer des contrats, revenir chaque jour. Il ne redescend jamais, même quand on te prend des communes.</div>
@@ -939,6 +954,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=24d9759ef898"></script>
+<script src="app.js?v=57191be7b980"></script>
 </body>
 </html>

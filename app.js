@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '24d9759ef898';
+const VERSION_JEU = '57191be7b980';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -974,6 +974,13 @@ function ligneJournal(e){
   else if(e.type === 'echange') texte = `${acteur} ${a} reçu ${commune}${e.cible_pseudo ? ` de ${cible}` : ''} en échange`;
   else if(e.type === 'contrat') texte = `${acteur} ${a} obtenu ${commune} par un contrat`;
   else texte = `${acteur} ${a} tiré ${e.tier === 'legendaire' ? 'une légendaire' : 'une rare'} : ${commune}`;
+  // Le monument change de mains avec la commune : quand la ligne en concerne
+  // une, on le nomme. C'est ce qui transforme « Maroli a conquis Millau » en
+  // une raison d'aller la reprendre, et c'est public : tout le monde le voit
+  // changer de mains. commune_code n'arrive qu'une fois journal-code.sql
+  // passe ; avant, la ligne reste exactement telle qu'elle etait.
+  const mon = monumentsNoms.get(e.commune_code);
+  if(mon) texte += ` <span class="jr-monument" title="Monument de la commune">${ICONE_MONUMENT}${echapperTexte(mon)}</span>`;
   const perso = e.je_suis_cible && (e.type === 'conquete' || e.type === 'achat');
   return `
     <div class="jr-ligne ${e.type} ${perso ? 'perdu' : ''} ${e.je_suis_acteur ? 'moi' : ''}">
@@ -2908,6 +2915,9 @@ async function loadMyCollection(){
   }
   renderStats();
   if(!favorisCharges) await chargerFavoris();
+  // les monuments arrivent en arriere-plan : la collection s'affiche sans
+  // attendre, et les badges apparaissent quand la liste est la
+  chargerNomsMonuments().then((noms) => { if(noms.size) renderCollection(); });
   renderCollection();
   majBarreFavoris();
   majRappelContrat();
@@ -3863,7 +3873,7 @@ function renderCollection(){
     <div class="mini ${entry.tier.id}${entry.perdue ? ' perdue' : ''}${favorisSet.has(entry.code) ? ' favori' : ''}" data-code="${entry.code}" role="button" tabindex="0" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
       <div class="mini-int">
         ${entry.perdue ? '<span class="mini-perdue">PERDUE</span>' : ''}${favorisSet.has(entry.code) ? '<span class="mini-fav" title="Gardée à la fin de la saison">★</span>' : ''}
-        <div class="mini-art">${artCommune(entry, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}${entry.etiquette ? `<span class="mini-etiq" title="Ton étiquette">${echapperTexte(entry.etiquette)}</span>` : ''}</div>
+        <div class="mini-art">${artCommune(entry, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}${monumentsNoms.has(entry.code) ? `<span class="mini-monument" title="Monument : ${echapperTexte(monumentsNoms.get(entry.code))}">${ICONE_MONUMENT}</span>` : ''}${entry.etiquette ? `<span class="mini-etiq" title="Ton étiquette">${echapperTexte(entry.etiquette)}</span>` : ''}</div>
         <div class="mini-infos">
           <p class="mini-nom ${entry.nom.length > 14 ? 'long' : ''}">${entry.nom}</p>
           ${entry.rank ? `<span class="mini-num">n° ${Number(entry.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(entry.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
@@ -3989,6 +3999,7 @@ function rendreFiche(entry, d){
         <h2 id="fcNom" class="fc-nom ${entry.nom.length > 22 ? 'long' : ''}">${echapperTexte(entry.nom)}</h2>
         <p class="fc-dep">${DEPT_NAMES[entry.dept] ? echapperTexte(DEPT_NAMES[entry.dept]) + ' (' + echapperTexte(entry.dept) + ')' : echapperTexte(entry.dept)}</p>
         ${gentile ? `<p class="fc-gent">les ${echapperTexte(gentile)}</p>` : ''}
+        ${monumentsNoms.has(entry.code) ? `<div class="fc-monument"><span class="fc-mon-ic">${ICONE_MONUMENT}</span><span><b>${echapperTexte(monumentsNoms.get(entry.code))}</b><i>monument de la commune — il te suit tant que tu la gardes</i></span></div>` : ''}
         <div class="fc-chiffres">
           <div class="fc-ch"><b>${nb(entry.pop)}</b><span>habitants</span></div>
           <div class="fc-ch"><b class="fc-rar">${tier.label}</b><span>rareté</span></div>
@@ -6217,7 +6228,7 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // ---------- Navigation : barre du bas et menu "Plus" sur telephone ----------
 // Les 4 onglets principaux restent dans la barre, les autres passent dans le menu.
 const ONGLETS_BARRE = ['tirage', 'collection', 'combat', 'defense'];
-const ONGLETS_MENU = ['territoire', 'communaute', 'bourse', 'echange', 'contrat', 'succes', 'profil'];
+const ONGLETS_MENU = ['territoire', 'communaute', 'bourse', 'echange', 'contrat', 'succes', 'monuments', 'profil'];
 const ICONE_PROFIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>';
 const ICONE_REGLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const ICONE_SORTIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M11 12h10m-3-3 3 3-3 3"/></svg>';
@@ -6368,6 +6379,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'defense'){ loadMenaces(); loadCombat(); renderIntensite('defense'); }
     if(tab.dataset.tab === 'combat') loadCombat();
     if(tab.dataset.tab === 'succes') loadSucces();
+    if(tab.dataset.tab === 'monuments') loadMonuments();
     if(tab.dataset.tab === 'profil') loadProfilPanneau();
     if(tab.dataset.tab === 'contrat') loadContrat();
     if(tab.dataset.tab === 'echange') loadEchanges();
@@ -6470,6 +6482,154 @@ document.getElementById('objectifs').addEventListener('click', async (e) => {
     btn.disabled = false;
   }
 });
+
+// ---------- Les monuments ----------
+// Un lieu connu par commune : qui possede la commune possede le monument.
+// L'album montre les 239, celles qu'on n'a pas en gris. Voir le trou est ce
+// qui donne envie d'aller le combler ; un album qui ne montrerait que ses
+// propres cartes n'apprendrait rien a personne.
+
+const ICONE_MONUMENT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20.5h18M4.5 20.5V10L12 4.5 19.5 10v10.5"/><path d="M9.5 20.5v-5.5h5v5.5"/></svg>';
+
+// Les noms seuls, pour le badge des vignettes et de la fiche : deux colonnes,
+// table en lecture libre. Une seule requete par session, en arriere-plan.
+let monumentsNoms = new Map();
+let monumentsNomsPromesse = null;
+function chargerNomsMonuments(){
+  if(monumentsNomsPromesse) return monumentsNomsPromesse;
+  monumentsNomsPromesse = Promise.resolve(sb.from('monuments').select('commune_code, nom'))
+    .then(({ data, error }) => {
+      // monuments.sql pas encore passe : on repart avec une liste vide et le
+      // jeu se comporte exactement comme avant
+      if(!error) monumentsNoms = new Map((data || []).map(m => [m.commune_code, m.nom]));
+      return monumentsNoms;
+    })
+    .catch(() => monumentsNoms);
+  return monumentsNomsPromesse;
+}
+
+// Le catalogue complet : il porte les proprietaires, donc il vieillit.
+let monuments = [];
+let monumentsLe = 0;
+let monumentFiltre = 'tous';
+const MONUMENTS_FRAIS = 60000;          // au-dela, on redemande
+
+async function loadMonuments(){
+  const grille = document.getElementById('monGrille');
+  if(!grille) return;
+  if(monuments.length && Date.now() - monumentsLe < MONUMENTS_FRAIS){
+    renderMonuments(); return;
+  }
+  const { data, error } = await sb.rpc('monuments_catalogue');
+  if(error){
+    console.error(error);
+    grille.innerHTML = '<p class="collection-empty">L\'album des monuments n\'est pas encore disponible.</p>';
+    return;
+  }
+  monuments = data || [];
+  monumentsLe = Date.now();
+  renderMonuments();
+}
+
+function carteMonument(m){
+  const u = urlPhoto(m.photo);
+  const dept = m.departement || '';
+  const etat = m.a_moi ? 'amoi' : (m.libre ? 'libre' : 'pris');
+  const qui = m.a_moi ? 'à toi'
+            : (m.libre ? 'personne ne l\'a' : echapperTexte(m.proprietaire || 'un joueur'));
+  // une commune libre ne s'attaque pas : elle sort d'un paquet ou d'un
+  // contrat. Pas d'action, donc pas d'apparence cliquable.
+  const action = m.a_moi ? 'fiche' : (m.libre ? '' : 'attaquer');
+  return `
+    <article class="mon ${etat}"
+             ${action ? 'data-mon="' + action + '" data-code="' + echapperTexte(m.commune_code) + '" role="button" tabindex="0"' : ''}
+             title="${echapperTexte(m.embleme)} — ${echapperTexte(m.nom)}, connu en ${Number(m.langues) || 0} langues">
+      <div class="mon-int">
+        <div class="mon-art">
+          ${u ? '<img src="' + echapperTexte(u) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">'
+              : '<span class="mon-sans">' + ICONE_MONUMENT + '</span>'}
+          <span class="mon-dept">${echapperTexte(dept)}</span>
+        </div>
+        <div class="mon-infos">
+          <p class="mon-nom ${(m.embleme || '').length > 24 ? 'long' : ''}">${echapperTexte(m.embleme)}</p>
+          <p class="mon-ou">${echapperTexte(m.nom)}</p>
+        </div>
+        <p class="mon-qui">${qui}</p>
+      </div>
+    </article>`;
+}
+
+function renderMonuments(){
+  const grille = document.getElementById('monGrille');
+  const filtres = document.getElementById('monFiltres');
+  if(!grille) return;
+
+  const compte = {
+    tous: monuments.length,
+    moi: monuments.filter(m => m.a_moi).length,
+    libres: monuments.filter(m => m.libre).length,
+    pris: monuments.filter(m => !m.a_moi && !m.libre).length,
+  };
+  const cpt = document.getElementById('monCompteur');
+  if(cpt) cpt.textContent = compte.moi.toLocaleString('fr-FR') + ' / ' + compte.tous.toLocaleString('fr-FR');
+
+  if(filtres){
+    filtres.innerHTML = [['tous', 'Tous'], ['moi', 'À toi'],
+                         ['pris', 'Chez les autres'], ['libres', 'Libres']]
+      .map(([id, lab]) => `<button class="coll-filtre ${monumentFiltre === id ? 'actif' : ''}" data-monf="${id}">${lab} <span class="nb">${compte[id].toLocaleString('fr-FR')}</span></button>`)
+      .join('');
+  }
+
+  let vus = monuments;
+  if(monumentFiltre === 'moi') vus = vus.filter(m => m.a_moi);
+  else if(monumentFiltre === 'libres') vus = vus.filter(m => m.libre);
+  else if(monumentFiltre === 'pris') vus = vus.filter(m => !m.a_moi && !m.libre);
+
+  const champ = document.getElementById('monRech');
+  const t = sansAccents(champ ? champ.value.trim() : '');
+  if(t){
+    vus = vus.filter(m => sansAccents(m.embleme || '').indexOf(t) >= 0
+                       || correspondRecherche(m.nom, m.departement, t));
+  }
+
+  if(!vus.length){
+    grille.innerHTML = '<p class="collection-empty">'
+      + (monuments.length ? 'Aucun monument ne correspond.' : 'Aucun monument pour le moment.')
+      + '</p>';
+    return;
+  }
+  afficherParLots(grille, vus, carteMonument,
+                  [monumentFiltre, t, vus.length].join('|'), 40);
+}
+
+document.getElementById('monFiltres').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-monf]');
+  if(!b) return;
+  monumentFiltre = b.dataset.monf;
+  renderMonuments();
+});
+document.getElementById('monRech').addEventListener('input', renderMonuments);
+document.getElementById('monGrille').addEventListener('click', (e) => {
+  const c = e.target.closest('[data-mon]');
+  if(!c) return;
+  if(c.dataset.mon === 'fiche'){ ouvrirFicheCommune(c.dataset.code); return; }
+  if(c.dataset.mon === 'attaquer'){
+    // on emmene le joueur la ou il peut agir, recherche deja remplie
+    const m = monuments.find(x => x.commune_code === c.dataset.code);
+    const tab = document.querySelector('.tab[data-tab="combat"]');
+    if(tab) tab.click();
+    const champ = document.getElementById('combatSearch');
+    if(champ && m){ champ.value = m.nom; renderCombatGrid(); }
+  }
+});
+document.getElementById('monGrille').addEventListener('keydown', (e) => {
+  if(e.key !== 'Enter' && e.key !== ' ') return;
+  const c = e.target.closest('[data-mon]');
+  if(!c) return;
+  e.preventDefault();
+  c.click();
+});
+
 
 // ---------- Succes : completion par departement ----------
 // Une commune possedee au moins une fois reste acquise pour toujours : la progression

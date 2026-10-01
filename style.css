@@ -1962,6 +1962,106 @@
   .obj-btn:active:not(:disabled){ transform: translateY(2px); box-shadow: 0 1px 0 #B7791F; }
   .obj-btn:disabled{ opacity:0.5; cursor:default; }
   .obj-fait{ font-size:0.76rem; color: var(--c-peucommun); font-weight:600; white-space:nowrap; }
+
+  /* ---------- L'album des monuments ---------- */
+  .mon-compteur{
+    font-family: var(--texte); font-size:1rem; font-weight:600;
+    color: var(--brume); margin-left:8px; vertical-align:middle;
+  }
+  /* .tab-panel est une colonne flex en align-items:flex-start : un enfant
+     direct se dimensionne sur son contenu, pas sur la largeur disponible.
+     La barre de filtres refuse de passer a la ligne sur telephone, donc
+     sans cette largeur imposee elle rendait toute la page plus large que
+     l'ecran. Les filtres de la Collection y echappent parce qu'ils sont
+     ranges dans un bloc intermediaire. */
+  #monFiltres{ width:100%; min-width:0; }
+  .mon-grille{
+    width:100%; display:grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr));
+    gap:14px; margin-top:4px;
+  }
+  .mon-grille > .collection-empty{ grid-column: 1 / -1; }
+  .mon{
+    border-radius:12px; padding:2px;
+    background: rgba(169,188,212,0.22);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+    transition: transform .12s ease-out;
+    content-visibility: auto; contain-intrinsic-size: auto 210px;
+  }
+  /* Possede : cadre dore, image en couleur. C'est la seule difference qui
+     compte, et elle se voit sans lire. */
+  .mon.amoi{ background: linear-gradient(135deg, #FFF1B8, var(--c-legendaire) 40%, #B7791F 75%, #FCE38A); }
+  .mon[data-mon]{ cursor:pointer; }
+  .mon[data-mon]:hover{ transform: translateY(-2px); }
+  .mon-int{
+    border-radius:10px; overflow:hidden;
+    background: var(--papier); color: var(--encre);
+    display:flex; flex-direction:column; height:100%;
+  }
+  .mon-art{
+    position:relative; aspect-ratio: 16 / 10; margin:4px 4px 0;
+    border-radius:6px; overflow:hidden; flex-shrink:0;
+    background: #C7CEDA; display:flex; align-items:center; justify-content:center;
+  }
+  .mon-art img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .mon-sans{ width:34px; height:34px; color: rgba(31,39,51,0.35); }
+  .mon-sans svg{ width:100%; height:100%; display:block; }
+  .mon-dept{
+    position:absolute; right:5px; bottom:-4px;
+    font-family: var(--titre); font-weight:900; font-size:1.5rem; line-height:1;
+    color: rgba(255,255,255,0.45);
+  }
+  .mon-infos{ flex:1; min-height:0; padding:6px 8px 2px; }
+  .mon-nom{ margin:0; font-size:0.9rem; font-weight:700; line-height:1.2; }
+  .mon-nom.long{ font-size:0.78rem; }
+  .mon-ou{ margin:3px 0 0; font-size:0.74rem; color: var(--ink-soft); }
+  .mon-qui{
+    margin:0; padding:5px 8px 7px;
+    font-size:0.72rem; font-weight:600; color: var(--ink-soft);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .mon.amoi .mon-qui{ color: var(--peucommun); }
+  /* Pas possede : tout passe en gris. Le joueur voit ses trous d'un coup
+     d'oeil, sans avoir a lire une seule ligne. */
+  .mon.libre, .mon.pris{ opacity:0.74; }
+  .mon.libre .mon-int, .mon.pris .mon-int{ background:#CFD7E2; }
+  .mon.libre .mon-art img, .mon.pris .mon-art img{ filter: grayscale(1) contrast(0.92); opacity:0.62; }
+  .mon.libre .mon-nom, .mon.pris .mon-nom{ color: rgba(31,39,51,0.62); }
+  .mon.libre .mon-qui{ font-style:italic; opacity:0.8; }
+  @media (max-width: 560px){
+    .mon-grille{ grid-template-columns: repeat(auto-fill, minmax(146px, 1fr)); gap:10px; }
+    .mon-nom{ font-size:0.84rem; }
+    .mon-nom.long{ font-size:0.72rem; }
+    .mon-dept{ font-size:1.25rem; }
+  }
+
+  /* ---------- Le monument sur la vignette et sur la fiche ---------- */
+  .mini-monument{
+    position:absolute; bottom:4px; left:4px;
+    width:19px; height:19px; padding:2px;
+    border-radius:5px; background: rgba(10,22,41,0.82);
+    color: var(--c-legendaire);
+  }
+  .mini-monument svg{ width:100%; height:100%; display:block; }
+  /* les deux vivent en bas a gauche : l'etiquette se decale quand il y a un
+     monument, et ne le recouvre donc jamais */
+  .mini-monument ~ .mini-etiq{ left:27px; max-width:calc(78% - 23px); }
+  .fc-monument{
+    display:flex; align-items:center; gap:10px; margin:10px 0 2px;
+    padding:9px 12px; border-radius:12px;
+    background: rgba(240,180,41,0.09); border:1px solid rgba(240,180,41,0.32);
+    text-align:left;
+  }
+  .fc-mon-ic{ width:22px; height:22px; flex-shrink:0; color: var(--c-legendaire); }
+  .fc-mon-ic svg{ width:100%; height:100%; display:block; }
+  .fc-monument b{ display:block; font-size:0.92rem; font-weight:600; }
+  .fc-monument i{ display:block; font-size:0.72rem; color: var(--brume); font-style:normal; margin-top:1px; }
+  .jr-monument{
+    display:inline-flex; align-items:center; gap:4px;
+    margin-left:6px; padding:1px 8px 1px 6px; border-radius:999px;
+    background: rgba(240,180,41,0.14); color: var(--c-legendaire);
+    font-size:0.74rem; font-weight:600; white-space:nowrap;
+  }
+  .jr-monument svg{ width:12px; height:12px; flex-shrink:0; }
   @media (max-width: 760px){
     .obj{ flex-wrap:wrap; gap:8px 12px; padding:10px 12px; }
     .obj-droite{ width:100%; justify-content:space-between; }

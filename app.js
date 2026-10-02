@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '64ca17179f1f';
+const VERSION_JEU = 'e6ace05646b5';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2995,12 +2995,16 @@ const sansAccents = (s) => String(s).toLowerCase().normalize('NFD').replace(/[\u
 
 // Nom de departement saisi en entier, ou sans ambiguite : on renvoie son numero
 function codeDepartement(texte){
-  const t = sansAccents(texte || '');
+  // Les separateurs ne doivent pas decider du resultat : « haute savoie »,
+  // « haute-savoie » et « hautesavoie » visent la meme chose, et personne ne
+  // tape l'apostrophe de Val-d'Oise. On les retire des deux cotes.
+  const nu = (s) => sansAccents(s).replace(/[\s'\u2019-]+/g, '');
+  const t = nu(texte || '');
   if(t.length < 3) return null;
   const codes = Object.keys(DEPT_NAMES);
-  const exact = codes.find(c => sansAccents(DEPT_NAMES[c]) === t);
+  const exact = codes.find(c => nu(DEPT_NAMES[c]) === t);
   if(exact) return exact;
-  const debuts = codes.filter(c => sansAccents(DEPT_NAMES[c]).startsWith(t));
+  const debuts = codes.filter(c => nu(DEPT_NAMES[c]).startsWith(t));
   return debuts.length === 1 ? debuts[0] : null;
 }
 
@@ -3300,8 +3304,10 @@ document.getElementById('ctExclAjouter').addEventListener('click', () => {
   const champ = document.getElementById('ctExclDept');
   const saisi = (champ.value || '').trim();
   if(!saisi) return;
-  // « charente » devient « 16 » : le meme utilitaire que les recherches
-  const code = codeDepartement(saisi) || saisi;
+  // « charente » devient « 16 » : le meme utilitaire que les recherches.
+  // A defaut, la saisie est prise pour un numero — en majuscules, la Corse
+  // etant le seul departement dont le numero contient une lettre.
+  const code = codeDepartement(saisi) || saisi.toUpperCase();
   if(!DEPT_NAMES[code]){
     direErreurExclusion('Département inconnu. Essaie un numéro (16) ou un nom (Charente).');
     return;

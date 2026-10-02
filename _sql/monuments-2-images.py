@@ -124,17 +124,44 @@ def nettoyer_wiki(v):
     return s
 
 
+def deposants(fichiers):
+    """{fichier: nom du deposant} — le groupage est permis pour imageinfo."""
+    out = {}
+    for i in range(0, len(fichiers), 50):
+        corps = urllib.parse.urlencode({
+            "action": "query", "format": "json", "prop": "imageinfo",
+            "iiprop": "user",
+            "titles": "|".join("File:" + f for f in fichiers[i:i + 50])}).encode("utf-8")
+        try:
+            data = http("https://commons.wikimedia.org/w/api.php", donnees=corps)
+        except Exception:
+            return out
+        for page in ((data.get("query", {}) or {}).get("pages", {}) or {}).values():
+            titre = page.get("title", "")[len("File:"):]
+            ii = (page.get("imageinfo") or [{}])[0]
+            if ii.get("user"):
+                out[titre] = ii["user"]
+        time.sleep(0.3)
+    return out
+
+
 def auteur_du_wikitexte(fichiers):
     """({fichier: auteur}, {fichier: raison de l'echec}).
 
-    L'auteur de ces fichiers n'est pas dans les metadonnees mais dans le
-    texte de la page, dans le modele Information.
+    Deux sources, dans cet ordre :
+
+      1. le parametre author du modele Information, dans le texte de la page ;
+      2. a defaut, le deposant SI la page porte {{self}} — ce modele est la
+         declaration par laquelle le deposant affirme etre l'auteur. Sans
+         {{self}}, on ne retient rien : le deposant n'est pas forcement
+         l'auteur.
 
     UNE PAGE A LA FOIS : l'interface refuse de renvoyer le contenu de
-    plusieurs pages dans une seule requete. Grouper, comme on le fait pour
-    les metadonnees, ne ramenait rien du tout.
+    plusieurs pages dans une seule requete.
     """
     trouves, raisons = {}, {}
+    qui_a_depose = deposants(fichiers)
+
     for n, f in enumerate(fichiers, 1):
         corps = urllib.parse.urlencode({
             "action": "query", "format": "json", "prop": "revisions",
@@ -165,17 +192,30 @@ def auteur_du_wikitexte(fichiers):
         if not texte:
             raisons[f] = "texte de la page non renvoye"
             continue
+
+        nom, origine = "", ""
         m = re.search(r"\|\s*(?:author|artist|auteur|photographer)\s*=\s*(.*?)"
                       r"(?=\n\s*\||\n\}\}|\Z)", texte, flags=re.S | re.I)
-        if not m:
-            raisons[f] = "page lue (%d caracteres), aucun parametre auteur" % len(texte)
-            continue
-        nom = nettoyer_wiki(m.group(1))
+        if m:
+            nom = nettoyer_wiki(m.group(1))
+            origine = "champ auteur de la page"
+
+        if not nom and re.search(r"\{\{\s*self\b", texte, flags=re.I):
+            # {{self}} : le deposant declare etre l'auteur. C'est une
+            # declaration, pas une supposition de notre part.
+            nom = qui_a_depose.get(f, "")
+            origine = "deposant, declare auteur par {{self}}"
+
         if not nom:
-            raisons[f] = "parametre auteur present mais vide apres nettoyage : %r" % m.group(1)[:80]
+            if re.search(r"\{\{\s*self\b", texte, flags=re.I):
+                raisons[f] = "page avec {{self}} mais deposant inconnu"
+            else:
+                raisons[f] = ("page lue (%d caracteres), ni champ auteur ni {{self}}"
+                              % len(texte))
             continue
+
         trouves[f] = nom
-        print("      %d/%d  %s -> %s" % (n, len(fichiers), f[:44], nom))
+        print("      %d/%d  %-40s -> %s  [%s]" % (n, len(fichiers), f[:40], nom, origine))
         time.sleep(0.3)
     return trouves, raisons
 

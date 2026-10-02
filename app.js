@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '10722bf5f177';
+const VERSION_JEU = 'edc7c24049d4';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -449,6 +449,9 @@ async function showGame(session_){
   loadClassement();
   loadJournal();
   loadAmis();
+  // la pastille de l'onglet Echange ne s'allumait qu'apres avoir ouvert
+  // l'onglet : on ne savait qu'on avait une proposition qu'en allant voir
+  chargerEchangesEnCours();
   verifierVersion();
   // arrivee depuis une notification : ?onglet=combat ou ?onglet=tirage
   if(new URLSearchParams(location.search).has('onglet')){
@@ -2150,6 +2153,26 @@ function fermerPanneau(){
   panneauAncre = null;
 }
 
+// La proposition en attente qui concerne cette commune, s'il y en a une.
+// Quatre situations, et elles ne se disent pas pareil : on te la demande, on
+// te l'offre, tu l'as proposee, tu l'as demandee. Une seule phrase pour les
+// quatre serait fausse trois fois.
+function echangeSurCommune(code){
+  for(const e of (echangesEnCours || [])){
+    if(e.je_donne_code === code){
+      return e.sens === 'recu'
+        ? (e.autre_pseudo || 'Un joueur') + ' veut cette commune en échange'
+        : 'Tu as proposé cette commune en échange';
+    }
+    if(e.je_recois_code === code){
+      return e.sens === 'recu'
+        ? (e.autre_pseudo || 'Un joueur') + ' te propose cette commune'
+        : 'Tu as demandé cette commune en échange';
+    }
+  }
+  return null;
+}
+
 function ouvrirPanneau(code, xCss, yCss){
   const el = document.getElementById('mapPanneau');
   if(!el) return;
@@ -2197,6 +2220,8 @@ function ouvrirPanneau(code, xCss, yCss){
     actions.push(['', 'bouclier', 'Poser un bouclier', 'Protéger ' + c.nom]);
   if(mienne && enVente == null) actions.push(['', 'vente', 'Mettre en vente', 'Vendre ' + c.nom]);
 
+  const propose = echangeSurCommune(code);
+
   let note = '';
   if(!mienne && protegee) note = 'Protégée par un bouclier : impossible de l’attaquer pour l’instant.';
   else if(immunisee) note = 'Prise il y a moins de 3 heures : encore immunisée.';
@@ -2211,6 +2236,7 @@ function ouvrirPanneau(code, xCss, yCss){
       <button class="pc-fermer" data-pc="fermer" aria-label="Fermer">&times;</button>
     </div>
     ${alerte}
+    ${propose ? `<button class="pc-echange" data-pc="voir-echange">${ICONES_PC.echange}<span>${echapperHtml(propose)}</span><i>Voir</i></button>` : ''}
     <div class="pc-lignes">${lignes.map(([a, b]) => `<div class="pc-ligne"><span>${a}</span><b>${b}</b></div>`).join('')}</div>
     ${note ? `<p class="pc-note">${note}</p>` : ''}
     ${actions.length ? `<div class="pc-actions">${actions.map(([cl, ic, txt, titre]) =>
@@ -2442,6 +2468,14 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
     return;
   }
   if(quoi === 'attaque'){ ouvrirAttaque(code); return; }
+  if(quoi === 'voir-echange'){
+    // les propositions sont listees en haut de l'onglet : inutile de remplir
+    // une recherche, il n'y a rien a chercher
+    fermerPanneau();
+    const onglet = document.querySelector('.tab[data-tab="echange"]');
+    if(onglet) onglet.click();
+    return;
+  }
   // les actions restantes quittent la carte pour l'onglet concerne
   fermerPanneau();
   if(quoi === 'echange') allerVers('echange', 'echSearch', c.nom, () => {
@@ -6766,13 +6800,20 @@ let echangeCibles = [];
 let echangeRecherche = '';
 let echangeMinuteur = null;
 
-async function loadEchanges(){
+// Les propositions seules, sans rien dessiner : le demarrage en a besoin pour
+// la pastille de l'onglet et pour le panneau de la carte, bien avant que le
+// joueur n'ouvre Echange.
+async function chargerEchangesEnCours(){
   const { data, error } = await sb.rpc('mes_echanges');
-  if(error) console.error(error);
-  echangesEnCours = error ? [] : (data || []);
-  renderEchangePropositions();
+  if(error){ console.warn('TERRAFRONT echanges indisponibles', error); return; }
+  echangesEnCours = data || [];
   majBadgeEchange();
   signalerNouveauxEchanges();
+}
+
+async function loadEchanges(){
+  await chargerEchangesEnCours();
+  renderEchangePropositions();
   renderEchangeMien();
   await chargerCiblesEchange();
   const { data: userData } = await sb.auth.getUser();

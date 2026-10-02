@@ -63,6 +63,41 @@ def http(url, donnees=None, entetes=None, methode=None, essais=4, brut=False):
             time.sleep(3 * n)
 
 
+def nom_auteur(brut):
+    """Le champ Artist de Commons est du HTML, et pas toujours bien forme.
+
+    Retirer les balises suffit quand le champ vaut « <a ...>Jean Dupont</a> ».
+    Ca ne donne rien quand il vaut « <a href="/wiki/User:Jean"
+    title="User:Jean"></a> » : un lien sans texte, dont le nom n'existe que
+    dans title ou dans l'adresse. On lit donc les liens avant de nettoyer.
+    """
+    if not brut:
+        return ""
+
+    def du_lien(m):
+        attributs, texte = m.group(1), m.group(2)
+        texte = re.sub(r"<[^>]+>", " ", texte).strip()
+        if texte:
+            return texte
+        titre = re.search(r'title="([^"]*)"', attributs)
+        if titre and titre.group(1).strip():
+            t = titre.group(1).strip()
+            # un lien vers un fichier ou une categorie n'est pas un auteur
+            if t.lower().split(":", 1)[0] in ("file", "image", "category", "fichier"):
+                return ""
+            return t.split(":", 1)[1] if t.lower().startswith("user:") else t
+        adresse = re.search(r'href="([^"]*)"', attributs)
+        if adresse and "User:" in adresse.group(1):
+            return urllib.parse.unquote(adresse.group(1).split("User:")[-1]).replace("_", " ")
+        return ""
+
+    s = re.sub(r"<a\b([^>]*)>(.*?)</a>", du_lien, brut, flags=re.S | re.I)
+    s = re.sub(r"<[^>]+>", " ", s)
+    s = re.sub(r"&amp;", "&", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s
+
+
 def metadonnees(fichiers):
     """{nom: (auteur, licence)} — par paquets de 50."""
     infos = {}
@@ -71,15 +106,19 @@ def metadonnees(fichiers):
         corps = urllib.parse.urlencode({
             "action": "query", "format": "json", "prop": "imageinfo",
             "iiprop": "extmetadata",
-            "iiextmetadatafilter": "Artist|LicenseShortName",
+            "iiextmetadatafilter": "Artist|Attribution|LicenseShortName",
             "titles": "|".join("File:" + f for f in paquet)}).encode("utf-8")
         data = http("https://commons.wikimedia.org/w/api.php", donnees=corps)
         for page in (data.get("query", {}).get("pages", {}) or {}).values():
             titre = page.get("title", "")[len("File:"):]
             meta = ((page.get("imageinfo") or [{}])[0].get("extmetadata") or {})
             lire = lambda c: (meta.get(c, {}) or {}).get("value", "") or ""
-            auteur = re.sub(r"<[^>]+>", "", lire("Artist"))
-            infos[titre] = (re.sub(r"\s+", " ", auteur).strip(), lire("LicenseShortName"))
+            # Artist d'abord ; a defaut Attribution, le champ dans lequel
+            # Commons indique comment crediter. On ne descend pas jusqu'au
+            # deposant du fichier : il n'est pas forcement l'auteur, et une
+            # attribution approximative est pire qu'une image manquante.
+            auteur = nom_auteur(lire("Artist")) or nom_auteur(lire("Attribution"))
+            infos[titre] = (auteur, lire("LicenseShortName"))
         print("   metadonnees %d/%d" % (min(i + 50, len(fichiers)), len(fichiers)))
         time.sleep(0.4)
     return infos

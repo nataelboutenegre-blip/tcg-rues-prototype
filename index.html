@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=e6ace05646b5">
+<link rel="stylesheet" href="style.css?v=25c8f337d557">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -340,6 +340,14 @@
           <path d="M9 8h7M9 11.5h5"/>
         </svg>
       </button>
+    </div>
+
+    <div class="saison-bandeau" id="saisonBandeau" hidden>
+      <div class="sb-txt">
+        <b id="sbTitre"></b>
+        <span id="sbTexte"></span>
+      </div>
+      <button class="sb-btn" id="sbChoisir">Choisir mes cinq</button>
     </div>
 
 
@@ -965,6 +973,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=e6ace05646b5"></script>
+<script src="app.js?v=25c8f337d557"></script>
 </body>
 </html>

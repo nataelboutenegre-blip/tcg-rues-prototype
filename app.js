@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'e6ace05646b5';
+const VERSION_JEU = '25c8f337d557';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -452,6 +452,9 @@ async function showGame(session_){
   // la pastille de l'onglet Echange ne s'allumait qu'apres avoir ouvert
   // l'onglet : on ne savait qu'on avait une proposition qu'en allant voir
   chargerEchangesEnCours();
+  // c'est cet appel qui arme le compte a rebours le jour ou le seuil est
+  // franchi : sans lui le mecanisme de saison ne se declenche jamais
+  chargerSaison();
   verifierVersion();
   // arrivee depuis une notification : ?onglet=combat ou ?onglet=tirage
   if(new URLSearchParams(location.search).has('onglet')){
@@ -3708,10 +3711,90 @@ async function chargerFavoris(){
   majBarreFavoris();
 }
 
+// ---------- La fin de saison ----------
+// saison_courante() fait deux choses : elle dit ou en est la saison, et elle
+// ARME le compte a rebours quand le seuil de communes libres est franchi.
+// Rien ne l'appelait jusqu'ici : le mecanisme etait installe mais inerte, et
+// la saison 1 serait restee ouverte indefiniment.
+let saisonEtat = null;
+let saisonMinuteur = null;
+
+const enFinDeSaison = () => !!(saisonEtat && saisonEtat.etat === 'compte_a_rebours');
+
+// showGame() est appelee deux fois au demarrage (getSession, puis
+// onAuthStateChange) : sans ce garde-fou, saison_courante() tournerait deux
+// fois, et elle compte les 34 739 communes et toutes les possessions a chaque
+// appel. On retient la promesse en cours, comme loadOutline() le fait deja.
+let saisonEnCours = null;
+function chargerSaison(){
+  if(!saisonEnCours) saisonEnCours = lireSaison();
+  return saisonEnCours;
+}
+
+async function lireSaison(){
+  const { data, error } = await sb.rpc('saison_courante');
+  if(error){
+    // on ne sait pas ou on en est : on n'annonce rien plutot que d'annoncer
+    // a tort une fin de saison
+    console.warn('TERRAFRONT saison indisponible', error);
+    saisonEtat = null;
+  } else {
+    saisonEtat = (data && data[0]) || null;
+  }
+  renderSaison();
+  majBarreFavoris();
+}
+
+// « 4 j 7 h », « 7 h 20 min », « 12 min »
+function dureeRestante(ms){
+  if(ms <= 0) return 'quelques instants';
+  const min = Math.floor(ms / 60000);
+  const h = Math.floor(min / 60);
+  const j = Math.floor(h / 24);
+  if(j >= 1) return j + ' j ' + (h % 24) + ' h';
+  if(h >= 1) return h + ' h ' + (min % 60) + ' min';
+  return min + ' min';
+}
+
+function renderSaison(){
+  const bandeau = document.getElementById('saisonBandeau');
+  if(!bandeau) return;
+  if(!enFinDeSaison()){
+    bandeau.hidden = true;
+    if(saisonMinuteur){ clearInterval(saisonMinuteur); saisonMinuteur = null; }
+    return;
+  }
+  bandeau.hidden = false;
+  const fin = saisonEtat.fin_prevue ? new Date(saisonEtat.fin_prevue).getTime() : 0;
+  const titre = document.getElementById('sbTitre');
+  const texte = document.getElementById('sbTexte');
+  if(titre) titre.textContent = fin
+    ? 'Fin de saison dans ' + dureeRestante(fin - Date.now())
+    : 'La saison se termine';
+  if(texte) texte.innerHTML = 'Tu gardes <b>cinq communes</b>, dont <b>une seule légendaire</b>. '
+    + 'Tout le reste retourne au pot.'
+    + (saisonEtat.sans_bouclier
+       ? ' <b>Dernières 24 heures : les boucliers ne protègent plus.</b>' : '');
+  // le compte a rebours doit descendre sous les yeux du joueur, sinon il
+  // croit l'ecran fige
+  if(!saisonMinuteur) saisonMinuteur = setInterval(renderSaison, 60000);
+}
+
+document.getElementById('sbChoisir').addEventListener('click', () => {
+  const tab = document.querySelector('.tab[data-tab="collection"]');
+  if(tab) tab.click();
+});
+
+
 function majBarreFavoris(){
   const barre = document.getElementById('favBarre');
   if(!barre) return;
   if(!favorisCharges || vueCollection === 'france'){ barre.hidden = true; return; }
+  // Avant le compte a rebours, elle reclamerait tous les jours un choix qui
+  // n'a pas de sens : les communes changent de mains entre-temps, et la
+  // cloture complete toute seule pour qui n'a rien marque. L'etoile reste
+  // disponible sur la fiche pour qui veut choisir a l'avance.
+  if(!enFinDeSaison()){ barre.hidden = true; return; }
   const n = favorisSet.size;
   // la situation, c'est le nombre d'etoiles posees
   barre.dataset.signature = String(n);
@@ -3724,9 +3807,8 @@ function majBarreFavoris(){
   if(elP) elP.innerHTML = Array.from({ length: FAV_MAX },
     (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
   if(elT) elT.innerHTML = n >= FAV_MAX
-    ? 'communes gardées à la fin de la saison. Retire une étoile pour en changer.'
-    : 'communes gardées à la fin de la saison — le reste retourne au pot. '
-      + '<b>Une seule légendaire</b> parmi les cinq.';
+    ? 'communes choisies. Retire une étoile pour en changer.'
+    : 'communes choisies. Clique l’étoile d’une carte pour la garder.';
 }
 
 async function basculerFavori(entry){

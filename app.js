@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'c09131250f50';
+const VERSION_JEU = '64ca17179f1f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3106,6 +3106,12 @@ const libelleTier = (id) => (TIERS.find(t => t.id === id) || {}).label || id;
 // nb() existe dans le fichier, mais locale a trois fonctions : la notre.
 const ctNb = (n) => Number(n || 0).toLocaleString('fr-FR');
 
+document.getElementById('ctLot').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-ct-exclure]');
+  if(!b) return;
+  exclureDuContrat({ p_commune: b.dataset.ctExclure });
+});
+
 async function loadContrat(){
   const zone = document.getElementById('ctZone');
   const vide = document.getElementById('ctVide');
@@ -3137,6 +3143,13 @@ async function loadContrat(){
   composerLot();
   renderContrat();
   majRappelContrat();
+}
+
+// L'onglet charge sa liste d'exclusions en meme temps que ses candidats.
+async function loadContratEtExclusions(){
+  const ok = await chargerExclusions();
+  if(ok) renderExclusions();
+  await loadContrat();
 }
 
 // Le lot par defaut : les moins peuplees, dans l'ordre rendu par la base.
@@ -3220,6 +3233,93 @@ function changerLigne(i){
   if(!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) champ.focus();
 }
 
+// ---------- Ne jamais sacrifier ----------
+// La liste vit en base : la perdre en changeant d'appareil reviendrait a
+// sacrifier des communes qu'on voulait garder, et un contrat ne se defait pas.
+const ICONE_CADENAS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></svg>';
+
+let contratExclusions = [];
+
+async function chargerExclusions(){
+  const { data, error } = await sb.rpc('mes_exclusions_contrat');
+  // contrat-exclusions.sql pas encore passe : on continue sans, le contrat
+  // marche comme avant
+  if(error){ contratExclusions = []; return false; }
+  contratExclusions = data || [];
+  return true;
+}
+
+function renderExclusions(){
+  const bloc = document.getElementById('ctExcl');
+  const liste = document.getElementById('ctExclListe');
+  const nb = document.getElementById('ctExclNb');
+  if(!bloc || !liste) return;
+  bloc.hidden = false;
+  if(nb) nb.textContent = contratExclusions.length
+    ? contratExclusions.length + (contratExclusions.length > 1 ? ' exclusions' : ' exclusion')
+    : 'aucune pour l’instant';
+
+  if(!contratExclusions.length){
+    liste.innerHTML = '<p class="ct-excl-vide">Rien d’exclu. Le cadenas sur une ligne du lot ajoute la commune ici.</p>';
+    return;
+  }
+  liste.innerHTML = contratExclusions.map(x => x.departement
+    ? `<span class="ct-excl-item dept">${echapperTexte(DEPT_NAMES[x.departement] || '')} (${echapperTexte(x.departement)}) — tout le département
+         <button data-ct-inclure-dept="${echapperTexte(x.departement)}" aria-label="Ne plus exclure">&#10005;</button></span>`
+    : `<span class="ct-excl-item">${echapperTexte(x.nom || x.commune_code)}${badgeDept(x.dept_commune)}
+         <button data-ct-inclure="${echapperTexte(x.commune_code)}" aria-label="Ne plus exclure">&#10005;</button></span>`
+  ).join('');
+}
+
+function direErreurExclusion(texte){
+  const el = document.getElementById('ctExclErr');
+  if(!el) return;
+  el.hidden = !texte;
+  el.textContent = texte || '';
+}
+
+async function exclureDuContrat(args){
+  direErreurExclusion('');
+  const { error } = await sb.rpc('exclure_du_contrat', args);
+  if(error){ direErreurExclusion(messageLisible(error.message)); return; }
+  await chargerExclusions();
+  renderExclusions();
+  await loadContrat();          // le serveur ne les propose plus : on relit
+}
+
+async function inclureAuContrat(args){
+  direErreurExclusion('');
+  const { error } = await sb.rpc('inclure_au_contrat', args);
+  if(error){ direErreurExclusion(messageLisible(error.message)); return; }
+  await chargerExclusions();
+  renderExclusions();
+  await loadContrat();
+}
+
+document.getElementById('ctExclAjouter').addEventListener('click', () => {
+  const champ = document.getElementById('ctExclDept');
+  const saisi = (champ.value || '').trim();
+  if(!saisi) return;
+  // « charente » devient « 16 » : le meme utilitaire que les recherches
+  const code = codeDepartement(saisi) || saisi;
+  if(!DEPT_NAMES[code]){
+    direErreurExclusion('Département inconnu. Essaie un numéro (16) ou un nom (Charente).');
+    return;
+  }
+  champ.value = '';
+  exclureDuContrat({ p_departement: code });
+});
+document.getElementById('ctExclDept').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('ctExclAjouter').click(); }
+});
+document.getElementById('ctExclListe').addEventListener('click', (e) => {
+  const c = e.target.closest('[data-ct-inclure]');
+  if(c){ inclureAuContrat({ p_commune: c.dataset.ctInclure }); return; }
+  const d = e.target.closest('[data-ct-inclure-dept]');
+  if(d){ inclureAuContrat({ p_departement: d.dataset.ctInclureDept }); }
+});
+
+
 function renderContrat(){
   const taux = document.getElementById('ctTaux');
   const zone = document.getElementById('ctZone');
@@ -3245,7 +3345,8 @@ function renderContrat(){
     if(vide){
       vide.hidden = false;
       vide.textContent = 'Il te faut au moins 10 communes d\'un même palier, hors favoris, '
-        + 'hors ventes en cours et hors échanges en attente.';
+        + 'hors ventes en cours, hors échanges en attente'
+        + (contratExclusions.length ? ' et hors liste « ne jamais sacrifier ».' : '.');
     }
     return;
   }
@@ -3253,12 +3354,16 @@ function renderContrat(){
   if(zone) zone.hidden = false;
   if(signer){ signer.hidden = false; signer.disabled = contratEnCours; }
 
+  // dire « favoris exclus » alors qu'on ecarte aussi une liste posee par le
+  // joueur, c'est lui cacher la moitie de la regle
   document.getElementById('ctInfo').textContent =
-    `${contratChoisi.n} communes, les moins peuplées — favoris exclus`;
+    `${contratChoisi.n} communes, les moins peuplées — favoris`
+    + (contratExclusions.length ? ' et exclusions' : '') + ' exclus';
   lot.innerHTML = contratLot.map((x, i) => `
     <div class="ct-l ${contratChoisi.de}">
       <span class="pt"></span>
       <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${badgeDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.</span></span>
+      <button class="ct-cadenas" data-ct-exclure="${echapperTexte(x.commune_code)}" title="Ne plus jamais proposer ${echapperTexte(x.nom || x.commune_code)}">${ICONE_CADENAS}</button>
       <button data-ct-changer="${i}">changer</button>
     </div>`).join('');
   if(avert) avert.textContent =
@@ -6431,7 +6536,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'succes') loadSucces();
     if(tab.dataset.tab === 'monuments') loadMonuments();
     if(tab.dataset.tab === 'profil') loadProfilPanneau();
-    if(tab.dataset.tab === 'contrat') loadContrat();
+    if(tab.dataset.tab === 'contrat') loadContratEtExclusions();
     if(tab.dataset.tab === 'echange') loadEchanges();
     if(tab.dataset.tab === 'regles') loadTauxTirage();
   });

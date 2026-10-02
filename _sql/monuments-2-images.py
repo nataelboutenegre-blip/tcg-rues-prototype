@@ -98,6 +98,61 @@ def nom_auteur(brut):
     return s
 
 
+def nettoyer_wiki(v):
+    """Un parametre de modele wiki vers un nom lisible."""
+    if not v:
+        return ""
+    s = v.strip()
+    s = re.sub(r"<!--.*?-->", " ", s, flags=re.S)
+    # [[User:Foo|Bar]] -> Bar ; [[User:Foo]] -> Foo
+    s = re.sub(r"\[\[[^\]|]*\|([^\]]*)\]\]", r"\1", s)
+    s = re.sub(r"\[\[(?:[Uu]ser|[Uu]tilisateur):([^\]]*)\]\]", r"\1", s)
+    s = re.sub(r"\[\[([^\]]*)\]\]", r"\1", s)
+    # [http://x Bar] -> Bar
+    s = re.sub(r"\[https?://\S+\s+([^\]]*)\]", r"\1", s)
+    s = re.sub(r"\[https?://\S+\]", " ", s)
+    # {{Creator:Foo}} / {{User:Foo/credit}} -> Foo
+    s = re.sub(r"\{\{\s*(?:[Cc]reator|[Uu]ser)\s*:\s*([^|}/]+)[^}]*\}\}", r"\1", s)
+    s = re.sub(r"\{\{[^}]*\}\}", " ", s)
+    s = re.sub(r"<[^>]+>", " ", s)
+    s = re.sub(r"'{2,}", "", s)
+    s = re.sub(r"&amp;", "&", s)
+    s = re.sub(r"\s+", " ", s).strip(" |\t")
+    # un parametre vide ou un mot-cle qui ne nomme personne
+    if s.lower() in ("", "unknown", "inconnu", "self", "own work", "travail personnel", "n/a", "-"):
+        return ""
+    return s
+
+
+def auteur_du_wikitexte(fichiers):
+    """{nom de fichier: auteur} — lu dans le modele Information de la page.
+
+    L'interface des metadonnees ne sait pas lire certains modeles anciens,
+    alors que le texte de la page, lui, contient bien la reponse.
+    """
+    trouves = {}
+    for i in range(0, len(fichiers), 20):
+        paquet = fichiers[i:i + 20]
+        corps = urllib.parse.urlencode({
+            "action": "query", "format": "json", "prop": "revisions",
+            "rvprop": "content", "rvslots": "main",
+            "titles": "|".join("File:" + f for f in paquet)}).encode("utf-8")
+        data = http("https://commons.wikimedia.org/w/api.php", donnees=corps)
+        for page in (data.get("query", {}).get("pages", {}) or {}).values():
+            titre = page.get("title", "")[len("File:"):]
+            revs = page.get("revisions") or [{}]
+            texte = (((revs[0].get("slots") or {}).get("main") or {}).get("*")
+                     or revs[0].get("*") or "")
+            m = re.search(r"\|\s*(?:author|artist|auteur)\s*=\s*(.*?)(?=\n\s*\||\n\}\}|\Z)",
+                          texte, flags=re.S | re.I)
+            if m:
+                nom = nettoyer_wiki(m.group(1))
+                if nom:
+                    trouves[titre] = nom
+        time.sleep(0.4)
+    return trouves
+
+
 def metadonnees(fichiers):
     """{nom: (auteur, licence)} — par paquets de 50."""
     infos = {}
@@ -106,7 +161,7 @@ def metadonnees(fichiers):
         corps = urllib.parse.urlencode({
             "action": "query", "format": "json", "prop": "imageinfo",
             "iiprop": "extmetadata",
-            "iiextmetadatafilter": "Artist|Attribution|LicenseShortName",
+            "iiextmetadatafilter": "Artist|Attribution|LicenseShortName|AttributionRequired",
             "titles": "|".join("File:" + f for f in paquet)}).encode("utf-8")
         data = http("https://commons.wikimedia.org/w/api.php", donnees=corps)
         for page in (data.get("query", {}).get("pages", {}) or {}).values():
@@ -118,7 +173,10 @@ def metadonnees(fichiers):
             # deposant du fichier : il n'est pas forcement l'auteur, et une
             # attribution approximative est pire qu'une image manquante.
             auteur = nom_auteur(lire("Artist")) or nom_auteur(lire("Attribution"))
-            infos[titre] = (auteur, lire("LicenseShortName"))
+            # le domaine public ne demande pas d'attribution : exiger un
+            # auteur reviendrait a ecarter une image qu'on a le droit d'utiliser
+            libre = (lire("AttributionRequired").strip().lower() == "false")
+            infos[titre] = (auteur, lire("LicenseShortName"), libre)
         print("   metadonnees %d/%d" % (min(i + 50, len(fichiers)), len(fichiers)))
         time.sleep(0.4)
     return infos
@@ -127,6 +185,8 @@ def metadonnees(fichiers):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--essai", action="store_true", help="10 emblemes puis on s'arrete")
+    ap.add_argument("--montrer", action="store_true",
+                    help="affiche l'auteur retenu pour chaque fichier et n'ecrit rien")
     args = ap.parse_args()
 
     base = (os.environ.get("SUPABASE_URL") or "").rstrip("/")
@@ -154,13 +214,49 @@ def main():
 
     print("\nAuteurs et licences...")
     infos = metadonnees(sorted({l["image"] for l in lignes}))
-    sans_auteur = [l for l in lignes if not infos.get(l["image"], ("",))[0]]
+
+    # Ce que les metadonnees n'ont pas donne vit souvent dans le texte de la
+    # page du fichier, que l'interface ne sait pas lire pour certains modeles.
+    manquants = sorted({l["image"] for l in lignes
+                        if not infos.get(l["image"], ("", "", False))[0]
+                        and not infos.get(l["image"], ("", "", False))[2]})
+    if manquants:
+        print("   %d sans auteur dans les metadonnees, on lit la page du fichier..."
+              % len(manquants))
+        repechés = auteur_du_wikitexte(manquants)
+        for f, nom in repechés.items():
+            licence, libre = infos.get(f, ("", "", False))[1:3]
+            infos[f] = (nom, licence, libre)
+        print("   %d auteur(s) retrouve(s)." % len(repechés))
+
+    if args.montrer:
+        print("\nCe que le script utiliserait (rien n'est ecrit) :\n")
+        for l in lignes:
+            auteur, licence, libre = infos.get(l["image"], ("", "", False))
+            if auteur:
+                etat = "auteur : %s" % auteur
+            elif libre:
+                etat = "domaine public, pas d'attribution requise"
+            else:
+                etat = "AUCUN AUTEUR -> ecartee"
+            print("  %-46s %s" % (l["nom"][:46], etat))
+            print("  %-46s   licence : %s" % ("", licence or "(aucune)"))
+        print("\nRien n'a ete modifie. Relance sans --montrer si c'est juste.")
+        return
+
+    # Une image reste ecartee seulement si elle exige une attribution qu'on
+    # ne sait pas donner. Le domaine public passe sans auteur.
+    sans_auteur = [l for l in lignes
+                   if not infos.get(l["image"], ("", "", False))[0]
+                   and not infos.get(l["image"], ("", "", False))[2]]
     if sans_auteur:
         print("   %d sans auteur lisible, ecartes (l'attribution est obligatoire) :"
               % len(sans_auteur))
         for l in sans_auteur[:8]:
             print("      %s" % l["nom"])
-        lignes = [l for l in lignes if infos.get(l["image"], ("",))[0]]
+        lignes = [l for l in lignes
+                  if infos.get(l["image"], ("", "", False))[0]
+                  or infos.get(l["image"], ("", "", False))[2]]
 
     print("\n%d a traiter.\n" % len(lignes))
     ok = rates = 0
@@ -179,7 +275,7 @@ def main():
                      entetes=dict(auth, **{"Content-Type": "image/jpeg",
                                            "x-upsert": "true",
                                            "cache-control": "max-age=" + CACHE}))
-                auteur, licence = infos.get(fichier, ("", ""))
+                auteur, licence = infos.get(fichier, ("", "", False))[:2]
                 page = ("https://commons.wikimedia.org/wiki/File:"
                         + urllib.parse.quote(fichier.replace(" ", "_")))
                 http("%s/rest/v1/monuments?commune_code=eq.%s" % (base, code),

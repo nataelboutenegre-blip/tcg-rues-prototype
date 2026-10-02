@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '0727dcc5f534';
+const VERSION_JEU = '10722bf5f177';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6876,17 +6876,31 @@ function renderEchangeMien(){
   const maintenant = Date.now();
   const champM = document.getElementById('echSearchMien');
   const rechercheM = sansAccents(champM ? champM.value.trim() : '');
-  const miennes = [...collectionMap.values()]
+  // Une commune deja engagee dans une proposition en attente ne peut pas etre
+  // promise une seconde fois. Le serveur le sait et la refuse, mais elle
+  // restait affichee comme disponible. mes_echanges renvoie deja le code de
+  // celle que je donne, pour les propositions envoyees comme pour les recues :
+  // il n'y a rien de plus a lui demander.
+  const engagees = new Set((echangesEnCours || []).map(e => e.je_donne_code));
+
+  const duPalier = [...collectionMap.values()]
     .filter(c => c.tier && c.tier.id === echangeTier)
     .filter(c => !(c.bouclierJusqua > maintenant))
-    .filter(c => !myListings.has(c.code))
+    .filter(c => !myListings.has(c.code));
+  const miennes = duPalier
+    .filter(c => !engagees.has(c.code))
     .filter(c => correspondRecherche(c.nom, c.dept, rechercheM))
     .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
 
   if(miennes.length === 0){
+    // dire « tu n'en as aucune » alors qu'elles sont toutes promises, c'est
+    // envoyer le joueur chercher une erreur qui n'existe pas
+    const toutesPromises = !rechercheM && duPalier.length > 0;
     zone.innerHTML = rechercheM
       ? '<p class="collection-empty">Aucune de tes communes ne correspond à cette recherche.</p>'
-      : '<p class="collection-empty">Tu n\'as aucune commune échangeable de cette rareté.</p>';
+      : (toutesPromises
+         ? '<p class="collection-empty">Toutes tes communes de cette rareté sont déjà engagées dans une proposition.</p>'
+         : '<p class="collection-empty">Tu n\'as aucune commune échangeable de cette rareté.</p>');
     echangeMien = null;
     majResumeEchange();
     return;

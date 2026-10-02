@@ -125,32 +125,59 @@ def nettoyer_wiki(v):
 
 
 def auteur_du_wikitexte(fichiers):
-    """{nom de fichier: auteur} — lu dans le modele Information de la page.
+    """({fichier: auteur}, {fichier: raison de l'echec}).
 
-    L'interface des metadonnees ne sait pas lire certains modeles anciens,
-    alors que le texte de la page, lui, contient bien la reponse.
+    L'auteur de ces fichiers n'est pas dans les metadonnees mais dans le
+    texte de la page, dans le modele Information.
+
+    UNE PAGE A LA FOIS : l'interface refuse de renvoyer le contenu de
+    plusieurs pages dans une seule requete. Grouper, comme on le fait pour
+    les metadonnees, ne ramenait rien du tout.
     """
-    trouves = {}
-    for i in range(0, len(fichiers), 20):
-        paquet = fichiers[i:i + 20]
+    trouves, raisons = {}, {}
+    for n, f in enumerate(fichiers, 1):
         corps = urllib.parse.urlencode({
             "action": "query", "format": "json", "prop": "revisions",
-            "rvprop": "content", "rvslots": "main",
-            "titles": "|".join("File:" + f for f in paquet)}).encode("utf-8")
-        data = http("https://commons.wikimedia.org/w/api.php", donnees=corps)
-        for page in (data.get("query", {}).get("pages", {}) or {}).values():
-            titre = page.get("title", "")[len("File:"):]
-            revs = page.get("revisions") or [{}]
-            texte = (((revs[0].get("slots") or {}).get("main") or {}).get("*")
-                     or revs[0].get("*") or "")
-            m = re.search(r"\|\s*(?:author|artist|auteur)\s*=\s*(.*?)(?=\n\s*\||\n\}\}|\Z)",
-                          texte, flags=re.S | re.I)
-            if m:
-                nom = nettoyer_wiki(m.group(1))
-                if nom:
-                    trouves[titre] = nom
-        time.sleep(0.4)
-    return trouves
+            "rvprop": "content", "rvslots": "main", "rvlimit": "1",
+            "titles": "File:" + f}).encode("utf-8")
+        try:
+            data = http("https://commons.wikimedia.org/w/api.php", donnees=corps)
+        except Exception as e:
+            raisons[f] = "requete impossible : %s" % e
+            continue
+        if isinstance(data, dict) and data.get("error"):
+            raisons[f] = "erreur de l'interface : %s" % str(
+                data["error"].get("info", data["error"]))[:140]
+            continue
+        pages = (data.get("query", {}) or {}).get("pages", {}) or {}
+        page = None
+        for p in pages.values():
+            page = p
+        if page is None:
+            raisons[f] = "aucune page renvoyee"
+            continue
+        if "missing" in page:
+            raisons[f] = "fichier inexistant sur Commons"
+            continue
+        revs = page.get("revisions") or [{}]
+        texte = (((revs[0].get("slots") or {}).get("main") or {}).get("*")
+                 or revs[0].get("*") or "")
+        if not texte:
+            raisons[f] = "texte de la page non renvoye"
+            continue
+        m = re.search(r"\|\s*(?:author|artist|auteur|photographer)\s*=\s*(.*?)"
+                      r"(?=\n\s*\||\n\}\}|\Z)", texte, flags=re.S | re.I)
+        if not m:
+            raisons[f] = "page lue (%d caracteres), aucun parametre auteur" % len(texte)
+            continue
+        nom = nettoyer_wiki(m.group(1))
+        if not nom:
+            raisons[f] = "parametre auteur present mais vide apres nettoyage : %r" % m.group(1)[:80]
+            continue
+        trouves[f] = nom
+        print("      %d/%d  %s -> %s" % (n, len(fichiers), f[:44], nom))
+        time.sleep(0.3)
+    return trouves, raisons
 
 
 def metadonnees(fichiers):
@@ -212,6 +239,7 @@ def main():
         print("Rien a faire.")
         return
 
+    raisons_echec = {}
     print("\nAuteurs et licences...")
     infos = metadonnees(sorted({l["image"] for l in lignes}))
 
@@ -223,11 +251,11 @@ def main():
     if manquants:
         print("   %d sans auteur dans les metadonnees, on lit la page du fichier..."
               % len(manquants))
-        repechés = auteur_du_wikitexte(manquants)
-        for f, nom in repechés.items():
+        repeches, raisons_echec = auteur_du_wikitexte(manquants)
+        for f, nom in repeches.items():
             licence, libre = infos.get(f, ("", "", False))[1:3]
             infos[f] = (nom, licence, libre)
-        print("   %d auteur(s) retrouve(s)." % len(repechés))
+        print("   %d auteur(s) retrouve(s) sur %d." % (len(repeches), len(manquants)))
 
     if args.montrer:
         print("\nCe que le script utiliserait (rien n'est ecrit) :\n")
@@ -239,6 +267,9 @@ def main():
                 etat = "domaine public, pas d'attribution requise"
             else:
                 etat = "AUCUN AUTEUR -> ecartee"
+                pourquoi = raisons_echec.get(l["image"])
+                if pourquoi:
+                    etat += "  (%s)" % pourquoi
             print("  %-46s %s" % (l["nom"][:46], etat))
             print("  %-46s   licence : %s" % ("", licence or "(aucune)"))
         print("\nRien n'a ete modifie. Relance sans --montrer si c'est juste.")

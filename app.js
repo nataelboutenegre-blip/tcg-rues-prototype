@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'edc7c24049d4';
+const VERSION_JEU = 'c09131250f50';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2141,6 +2141,9 @@ const ICONES_PC = {
   vente: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.6 12.4 12 4h7.5a.5.5 0 0 1 .5.5V12l-8.4 8.4a1.4 1.4 0 0 1-2 0l-6-6a1.4 1.4 0 0 1 0-2z"/><circle cx="16.2" cy="7.8" r="1.3"/></svg>',
   joueur: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0"/></svg>',
 };
+// Voir une proposition et en faire une, c'est le meme objet vu des deux
+// cotes : meme icone.
+ICONES_PC['voir-echange'] = ICONES_PC.echange;
 
 const nbFr = (n) => Number(n).toLocaleString('fr-FR');
 
@@ -2213,14 +2216,19 @@ function ouvrirPanneau(code, xCss, yCss){
   if(enVente != null) lignes.push(['En vente', nbFr(enVente) + ' pts']);
   if(c.acquiredAt) lignes.push([mienne ? 'Possédée depuis' : 'Prise le', new Date(c.acquiredAt).toLocaleDateString('fr-FR')]);
 
+  // une proposition en attente sur cette commune, s'il y en a une
+  const propose = echangeSurCommune(code);
+
   const actions = [];
   if(attaquable && !immunisee) actions.push(['attaque', 'attaque', 'Attaquer', 'Attaquer ' + c.nom]);
-  if(!mienne) actions.push(['', 'echange', 'Proposer un échange', 'Échanger contre ' + c.nom]);
+  // Si une proposition est deja en attente, « Proposer un echange » menait
+  // nulle part : le serveur ecarte les communes engagees de la liste des
+  // echangeables, donc le joueur arrivait sur l'onglet et ne la trouvait pas.
+  if(propose) actions.push(['', 'voir-echange', 'Voir l’échange proposé', 'Voir la proposition sur ' + c.nom]);
+  else if(!mienne) actions.push(['', 'echange', 'Proposer un échange', 'Échanger contre ' + c.nom]);
   if(mienne && (c.tier.id === 'rare' || c.tier.id === 'legendaire') && !protegee)
     actions.push(['', 'bouclier', 'Poser un bouclier', 'Protéger ' + c.nom]);
   if(mienne && enVente == null) actions.push(['', 'vente', 'Mettre en vente', 'Vendre ' + c.nom]);
-
-  const propose = echangeSurCommune(code);
 
   let note = '';
   if(!mienne && protegee) note = 'Protégée par un bouclier : impossible de l’attaquer pour l’instant.';
@@ -2236,7 +2244,7 @@ function ouvrirPanneau(code, xCss, yCss){
       <button class="pc-fermer" data-pc="fermer" aria-label="Fermer">&times;</button>
     </div>
     ${alerte}
-    ${propose ? `<button class="pc-echange" data-pc="voir-echange">${ICONES_PC.echange}<span>${echapperHtml(propose)}</span><i>Voir</i></button>` : ''}
+    ${propose ? `<p class="pc-propose">${ICONES_PC.echange}<span>${echapperHtml(propose)}</span></p>` : ''}
     <div class="pc-lignes">${lignes.map(([a, b]) => `<div class="pc-ligne"><span>${a}</span><b>${b}</b></div>`).join('')}</div>
     ${note ? `<p class="pc-note">${note}</p>` : ''}
     ${actions.length ? `<div class="pc-actions">${actions.map(([cl, ic, txt, titre]) =>

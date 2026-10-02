@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '25c8f337d557';
+const VERSION_JEU = '4c581dc0dc53';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -271,6 +271,11 @@ function celebrerConquete({ nom, tier, dept, bonus }){
 }
 
 function demanderPrix({ nom, rachat }){
+  // Le plancher de la Bourse, c'est le prix de rachat du jeu : en dessous,
+  // vendre a un joueur n'avait aucun sens pour un vendeur de bonne foi, il
+  // avait toujours mieux a faire en vendant au jeu. Voir bourse-plancher.sql.
+  const plancher = Number(rachat) || 1;
+  const plancherTxt = plancher.toLocaleString('fr-FR');
   return new Promise((resolve) => {
     const fermer = ouvrirFenetre(`
       <form class="fenetre prix" role="dialog" aria-modal="true" aria-labelledby="prixTitre" novalidate>
@@ -278,9 +283,9 @@ function demanderPrix({ nom, rachat }){
         <p class="prix-commune">${echapperTexte(nom)}</p>
         <label class="prix-champ">
           <span>Ton prix</span>
-          <span class="prix-saisie"><input type="number" inputmode="numeric" min="1" step="1" id="prixValeur" required><em>pts</em></span>
+          <span class="prix-saisie"><input type="number" inputmode="numeric" min="${plancher}" step="1" id="prixValeur" value="${plancher}" required><em>pts</em></span>
         </label>
-        <p class="prix-aide">Le jeu te la rachète ${Number(rachat).toLocaleString('fr-FR')} pts si tu préfères vendre tout de suite.</p>
+        <p class="prix-aide">Minimum ${plancherTxt} pts — c’est aussi ce que le jeu te la rachète si tu préfères vendre tout de suite.</p>
         <p class="prix-erreur" id="prixErreur" role="alert"></p>
         <div class="prix-boutons">
           <button type="button" class="open-btn secondary" data-annuler>Annuler</button>
@@ -293,8 +298,9 @@ function demanderPrix({ nom, rachat }){
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const prix = parseInt(champ.value, 10);
-      if(!prix || prix <= 0){
-        document.getElementById('prixErreur').textContent = 'Indique un prix supérieur à 0.';
+      if(!prix || prix < plancher){
+        document.getElementById('prixErreur').textContent =
+          'Le prix minimum pour cette rareté est de ' + plancherTxt + ' pts.';
         champ.focus();
         return;
       }

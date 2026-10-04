@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=4c581dc0dc53">
+<link rel="stylesheet" href="style.css?v=b11e3ea3b887">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -357,9 +357,20 @@
       <div class="notif-banniere" id="notifBanniere" hidden></div>
 
       <div class="puces" id="packStatus"><span class="puce">Chargement…</span></div>
+      <div class="pot-libres" id="potLibres" hidden>
+        <div class="pot-ligne">
+          <span class="pot-nombre"><b id="potNombre">—</b> communes libres</span>
+          <span class="pot-seuil" id="potSeuil"></span>
+        </div>
+        <div class="pot-jauge" role="progressbar" aria-label="Avancée de la saison" aria-valuemin="0" aria-valuemax="100" id="potJauge"><i id="potBarre"></i></div>
+      </div>
       <div class="pack-buttons">
         <button class="open-btn" id="openFreeBtn">Ouvrir un paquet gratuit</button>
         <button class="open-btn secondary" id="openBuyBtn">Acheter un paquet (200 pts)</button>
+        <div class="ouv-reglages" aria-label="Réglages de l'ouverture">
+          <button type="button" class="ouv-bascule" id="ouvSon" aria-pressed="true">Son</button>
+          <button type="button" class="ouv-bascule" id="ouvAnim" aria-pressed="true">Animation</button>
+        </div>
       </div>
 
       <div class="pack-zone" id="packZone"></div>
@@ -973,6 +984,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=4c581dc0dc53"></script>
+<script src="app.js?v=b11e3ea3b887"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '4c581dc0dc53';
+const VERSION_JEU = 'b11e3ea3b887';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3747,6 +3747,8 @@ async function lireSaison(){
   } else {
     saisonEtat = (data && data[0]) || null;
   }
+  potLibres = null;       // repart des chiffres du serveur
+  renderPot();
   renderSaison();
   majBarreFavoris();
 }
@@ -5135,31 +5137,313 @@ function makeCardEl(draw, onFlip){
 let pendingFlips = 0;
 let paquetEnCours = false;
 
+// Ce qui se passe quand une carte est retournee : inchange depuis l'ancienne grille.
+function surCarteRetournee(draw){
+  return () => {
+    collectionMap.set(draw.code, draw);
+    session[draw.tier.id]++;
+    session.total++;
+    renderStats();
+    renderCollection();
+    renderMapOverlay();
+    pendingFlips--;
+    if(pendingFlips <= 0){
+      paquetEnCours = false;
+      loadObjectifs();
+      // les cartes restent affichees : c'est le joueur qui decide de passer au suivant
+      loadPackStatus().then(proposerPaquetSuivant);
+    }
+  };
+}
+
+// Animation coupee : tout le paquet d'un coup, deja retourne.
 function revealCards(draws){
   const zone = document.getElementById('packZone');
+  const tries = trierPourRevelation(draws);
   zone.innerHTML = '';
-  pendingFlips = draws.length;
-  draws.forEach((draw, index) => {
-    const carte = makeCardEl(draw, () => {
-      collectionMap.set(draw.code, draw);
-      session[draw.tier.id]++;
-      session.total++;
-      renderStats();
-      renderCollection();
-      renderMapOverlay();
-      pendingFlips--;
-      if(pendingFlips <= 0){
-        paquetEnCours = false;
-        loadObjectifs();
-        // les cartes restent affichees : c'est le joueur qui decide de passer au suivant
-        loadPackStatus().then(proposerPaquetSuivant);
-      }
-    });
-    // les cartes arrivent l'une apres l'autre
-    carte.classList.add('entree');
-    carte.style.animationDelay = (index * 90) + 'ms';
-    zone.appendChild(carte);
+  pendingFlips = tries.length;
+  potRetirer(tries.length);
+  const rangee = document.createElement('div');
+  rangee.className = 'ouv-rangee';
+  zone.appendChild(rangee);
+  tries.forEach(draw => {
+    const carte = makeCardEl(draw, surCarteRetournee(draw));
+    rangee.appendChild(carte);
+    carte.click();
   });
+  sonsOuverture.revele(tries[tries.length - 1].tier.id);
+  annoncerOuv('Paquet ouvert : ' + tries.map(d => d.nom + ', ' + d.tier.label).join(' ; '));
+}
+
+// ---------- Ouverture de paquet : scene, pile, revelation triee, sons ----------
+const RANG_TIER = { commun: 0, peucommun: 1, rare: 2, legendaire: 3 };
+// la meilleure carte arrive en dernier
+const trierPourRevelation = (draws) =>
+  draws.slice().sort((a, b) => RANG_TIER[a.tier.id] - RANG_TIER[b.tier.id]);
+const attendreOuv = (ms) => new Promise(r => setTimeout(r, REDUCED_MOTION ? 0 : ms));
+
+function prefOuv(cle, defaut){
+  try { const v = localStorage.getItem(cle); return v === null ? defaut : v === '1'; }
+  catch(e){ return defaut; }
+}
+function ecrirePrefOuv(cle, v){ try { localStorage.setItem(cle, v ? '1' : '0'); } catch(e){} }
+let ouvSon = prefOuv('tf-son', true);
+let ouvAnim = prefOuv('tf-anim', true) && !REDUCED_MOTION;
+
+function majReglagesOuv(){
+  const s = document.getElementById('ouvSon'), a = document.getElementById('ouvAnim');
+  if(s) s.setAttribute('aria-pressed', String(ouvSon));
+  if(a) a.setAttribute('aria-pressed', String(ouvAnim));
+}
+(function brancherReglagesOuv(){
+  const s = document.getElementById('ouvSon'), a = document.getElementById('ouvAnim');
+  if(s) s.addEventListener('click', () => {
+    ouvSon = !ouvSon; ecrirePrefOuv('tf-son', ouvSon); majReglagesOuv();
+    if(ouvSon) sonsOuverture.tick();
+  });
+  if(a) a.addEventListener('click', () => {
+    ouvAnim = !ouvAnim; ecrirePrefOuv('tf-anim', ouvAnim); majReglagesOuv();
+  });
+  majReglagesOuv();
+})();
+
+// Sons generes dans le navigateur : aucun fichier, discrets.
+const sonsOuverture = (() => {
+  let ctx = null, maitre = null;
+  const pret = () => {
+    if(!ouvSon) return false;
+    if(!ctx){
+      const C = window.AudioContext || window.webkitAudioContext;
+      if(!C) return false;
+      ctx = new C(); maitre = ctx.createGain(); maitre.gain.value = 0.32; maitre.connect(ctx.destination);
+    }
+    if(ctx.state === 'suspended') ctx.resume();
+    return true;
+  };
+  const note = (f, debut, duree, type, vol) => {
+    const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + debut;
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
+    o.connect(g); g.connect(maitre); o.start(t); o.stop(t + duree + 0.05);
+  };
+  const bruit = (duree, f1, f2, vol, type) => {
+    const n = Math.floor(ctx.sampleRate * duree), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
+    for(let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    const s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain(), t = ctx.currentTime;
+    s.buffer = b; fl.type = type || 'bandpass'; fl.Q.value = 0.8;
+    fl.frequency.setValueAtTime(f1, t); fl.frequency.exponentialRampToValueAtTime(f2, t + duree);
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
+    s.connect(fl); fl.connect(g); g.connect(maitre); s.start(t);
+  };
+  return {
+    charge(){ if(!pret()) return;
+      const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter(), t = ctx.currentTime;
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(150, t + 0.62);
+      f.type = 'lowpass'; f.frequency.value = 500;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.55); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.66);
+      o.connect(f); f.connect(g); g.connect(maitre); o.start(t); o.stop(t + 0.7); },
+    dechire(){ if(!pret()) return;
+      bruit(0.62, 900, 3800, 0.45);
+      [0.05, 0.16, 0.27, 0.36, 0.44].forEach(d => setTimeout(() => { if(pret()) bruit(0.035, 3500, 6000, 0.3, 'highpass'); }, d * 1000)); },
+    sortie(){ if(pret()) bruit(0.45, 250, 1600, 0.3, 'lowpass'); },
+    retourne(){ if(pret()) bruit(0.07, 2500, 5200, 0.35, 'highpass'); },
+    tick(){ if(pret()) note(880, 0, 0.09, 'sine', 0.25); },
+    tension(tier){ if(!pret()) return;
+      const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime, k = tier === 'legendaire' ? 1 : 0.8;
+      o.type = 'sine'; o.frequency.setValueAtTime(180 * k, t); o.frequency.exponentialRampToValueAtTime(360 * k, t + 0.9);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18, t + 0.5); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.0);
+      o.connect(g); g.connect(maitre); o.start(t); o.stop(t + 1.05); },
+    revele(tier){ if(!pret()) return;
+      if(tier === 'commun') note(660, 0, 0.12, 'sine', 0.3);
+      else if(tier === 'peucommun'){ note(660, 0, 0.12, 'sine', 0.32); note(880, 0.08, 0.16, 'sine', 0.32); }
+      else if(tier === 'rare') [523, 659, 784, 1047].forEach((f, i) => note(f, i * 0.07, 0.35, 'triangle', 0.35));
+      else {
+        [523, 659, 784].forEach(f => note(f, 0, 1.4, 'triangle', 0.28));
+        note(1047, 0.12, 1.5, 'triangle', 0.3);
+        [1568, 2093, 2637, 3136].forEach((f, i) => note(f, 0.2 + i * 0.09, 0.5, 'sine', 0.12));
+      } }
+  };
+})();
+
+function annoncerOuv(texte){
+  const el = document.getElementById('ouvAnnonce');
+  if(el) el.textContent = texte;
+}
+
+// La scene : la pile a gauche, la carte retournee a droite, la rangee dessous.
+function sceneOuverture(zone){
+  zone.innerHTML = `
+    <div class="ouv-scene">
+      <div class="ouv-slot-pile"><div class="ouv-echelle"></div></div>
+      <div class="ouv-slot-carte"></div>
+    </div>
+    <p class="ouv-decouverte" aria-live="polite"></p>
+    <div class="ouv-actions" hidden>
+      <span class="ouv-consigne"></span>
+      <button type="button" class="ouv-tout">Tout révéler</button>
+    </div>
+    <div class="ouv-rangee"></div>
+    <p class="ouv-lecteur" id="ouvAnnonce" aria-live="polite"></p>`;
+  return { scene: zone.querySelector('.ouv-scene'), echelle: zone.querySelector('.ouv-echelle') };
+}
+
+// La pile : la fin du tableau est la carte du dessus.
+function construirePileOuv(pileDraws){
+  const pile = document.createElement('button');
+  pile.type = 'button';
+  pile.className = 'ouv-pile';
+  pile.setAttribute('aria-label', 'Retourner la carte suivante');
+  pileDraws.forEach((d, i) => {
+    const dos = makeCardEl(d, () => {});
+    dos.classList.add('ouv-dos');
+    const prof = pileDraws.length - 1 - i;
+    dos.style.transform = `translate(${prof * 3}px, ${prof * -3}px) rotate(${(prof % 2 ? 1 : -1) * prof * 0.8}deg)`;
+    pile.appendChild(dos);
+  });
+  const compte = document.createElement('span');
+  compte.className = 'ouv-compte';
+  compte.textContent = pileDraws.length > 1 ? `${pileDraws.length} cartes` : 'Dernière carte';
+  pile.appendChild(compte);
+  return pile;
+}
+
+function lancerRevelation(zone, scene, tries){
+  const echelle = scene.querySelector('.ouv-echelle');
+  const slotCarte = scene.querySelector('.ouv-slot-carte');
+  const rangee = zone.querySelector('.ouv-rangee');
+  const decouverte = zone.querySelector('.ouv-decouverte');
+  const actions = zone.querySelector('.ouv-actions');
+  const consigne = zone.querySelector('.ouv-consigne');
+  const btnTout = zone.querySelector('.ouv-tout');
+  const pile = tries.slice().reverse();          // la moins rare sur le dessus
+  let enCours = null, verrou = false, fini = false;
+
+  pendingFlips = tries.length;
+  potRetirer(tries.length);
+  // le gentile et les faits arrivent pendant qu'on retourne : rien n'attend
+  tries.forEach(d => { detailsCommune(d.code).catch(() => {}); });
+
+  const decouvrir = (draw) => {
+    decouverte.textContent = '';
+    detailsCommune(draw.code).then(d => {
+      if(!enCours || enCours.draw !== draw) return;
+      const gentile = d && d.gentile ? String(d.gentile).trim() : '';
+      const fait = d ? (faitsTries(d.faits)[0] || {}).t : '';
+      decouverte.textContent = gentile ? `${draw.nom} : ses habitants sont les ${gentile}.` : (fait || '');
+    }).catch(() => {});
+  };
+  const versRangee = (el) => { el.classList.remove('ouv-scene-carte'); rangee.appendChild(el); };
+  const redessinerPile = () => {
+    const ancienne = echelle.querySelector('.ouv-pile');
+    if(ancienne) ancienne.remove();
+    if(!pile.length) return;
+    const p = construirePileOuv(pile);
+    const prochaine = pile[pile.length - 1];
+    if(pile.length === 1 && RANG_TIER[prochaine.tier.id] >= 2){
+      [...p.querySelectorAll('.ouv-dos')].pop().classList.add(prochaine.tier.id === 'legendaire' ? 'lueur-leg' : 'lueur-rare');
+      setTimeout(() => sonsOuverture.tension(prochaine.tier.id), 450);
+    }
+    p.addEventListener('click', suivante);
+    echelle.appendChild(p);
+  };
+  const terminer = async () => {
+    if(fini) return;
+    fini = true;
+    actions.hidden = true;
+    await attendreOuv(250);
+    scene.remove();
+    decouverte.remove();
+    actions.remove();
+  };
+
+  async function suivante(){
+    if(verrou || !pile.length) return;
+    verrou = true;
+    if(!scene.classList.contains('etalee')){
+      // premiere carte : la pile glisse a gauche pour faire de la place
+      scene.classList.add('etalee');
+      await attendreOuv(480);
+    }
+    if(enCours){ versRangee(enCours.el); enCours = null; }
+    const draw = pile.pop();
+    const el = makeCardEl(draw, surCarteRetournee(draw));
+    el.classList.add('ouv-scene-carte');
+    slotCarte.appendChild(el);
+    enCours = { draw, el };
+    redessinerPile();
+    sonsOuverture.retourne();
+    requestAnimationFrame(() => requestAnimationFrame(async () => {
+      el.click();                                  // retourne la carte et l'ajoute a la collection
+      decouvrir(draw);
+      await attendreOuv(420);
+      sonsOuverture.revele(draw.tier.id);
+      if(RANG_TIER[draw.tier.id] >= 2) el.classList.add('ouv-eclat');
+      annoncerOuv(draw.nom + ', ' + draw.tier.label);
+      verrou = false;
+      if(!pile.length){
+        consigne.textContent = '';
+        btnTout.hidden = true;
+        scene.classList.add('seule');            // la derniere carte se recentre
+        await attendreOuv(draw.tier.id === 'legendaire' ? 1800 : 1100);
+        if(enCours){ versRangee(enCours.el); enCours = null; }
+        terminer();
+      }
+    }));
+  }
+
+  btnTout.addEventListener('click', async () => {
+    if(btnTout.hidden || !pile.length) return;
+    btnTout.hidden = true;
+    // une carte est peut-etre en train de se retourner : on attend qu'elle ait fini
+    while(verrou) await new Promise(r => setTimeout(r, 40));
+    if(!pile.length) return;
+    verrou = true;
+    btnTout.hidden = true;
+    if(enCours){ versRangee(enCours.el); enCours = null; }
+    const reste = pile.splice(0).reverse();
+    redessinerPile();
+    reste.forEach((draw, i) => setTimeout(() => {
+      const el = makeCardEl(draw, surCarteRetournee(draw));
+      rangee.appendChild(el);
+      el.click();
+      if(i === reste.length - 1){ sonsOuverture.revele(draw.tier.id); terminer(); }
+      else sonsOuverture.retourne();
+    }, i * 110));
+  });
+  scene.addEventListener('keydown', (e) => {
+    if((e.key === ' ' || e.key === 'Enter') && e.target === scene){ e.preventDefault(); suivante(); }
+  });
+
+  redessinerPile();
+  consigne.textContent = 'Touche la pile pour retourner la carte suivante';
+  actions.hidden = false;
+  const p = echelle.querySelector('.ouv-pile');
+  if(p) p.focus({ preventScroll: true });
+}
+
+// ---------- Communes libres : le compte a rebours de la saison ----------
+let potLibres = null;   // copie locale : on la fait baisser a chaque paquet sans requete
+function renderPot(){
+  const bloc = document.getElementById('potLibres');
+  if(!bloc) return;
+  const s = (typeof saisonEtat !== 'undefined') ? saisonEtat : null;
+  if(!s || s.libres == null || !s.total){ bloc.hidden = true; return; }
+  if(potLibres === null) potLibres = Number(s.libres);
+  const total = Number(s.total), seuil = Number(s.seuil) || 0;
+  const libres = Math.max(0, potLibres);
+  document.getElementById('potNombre').textContent = libres.toLocaleString('fr-FR');
+  document.getElementById('potSeuil').textContent = seuil > 0
+    ? `La fin de saison s'enclenche à ${seuil.toLocaleString('fr-FR')}` : '';
+  const pct = total > seuil ? Math.max(0, Math.min(100, (total - libres) / (total - seuil) * 100)) : 100;
+  document.getElementById('potBarre').style.width = pct.toFixed(1) + '%';
+  document.getElementById('potJauge').setAttribute('aria-valuenow', String(Math.round(pct)));
+  bloc.hidden = false;
+}
+function potRetirer(n){
+  if(potLibres === null) return;
+  potLibres -= n;
+  renderPot();
 }
 
 // Paquet bleu pour le gratuit, dore pour celui achete
@@ -5169,7 +5453,9 @@ function makePackEl(type){
   pack.className = 'paquet ' + (type === 'achete' ? 'achete' : 'gratuit');
   pack.setAttribute('aria-label', 'Déchirer le paquet');
   pack.innerHTML = `
-    <div class="paquet-languette">${motif}<div class="paquet-pointilles"></div></div>
+    <div class="paquet-languette">${motif}</div>
+    <svg class="paquet-perfo" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><polyline class="perfo-base" points="${PERFO_POINTS}"/></svg>
+    <div class="perfo-masque"><svg class="paquet-perfo perfo-lueur" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><polyline class="perfo-trace" points="${PERFO_POINTS}"/></svg></div>
     <div class="paquet-corps">${motif}
       <div class="paquet-etiquette">${ICONE_EPINGLE}<span class="paquet-titre">Paquet</span></div>
       <div class="paquet-bande">5 communes</div>
@@ -5184,6 +5470,11 @@ let packStatusCache = null;
 let packStatusFetchedAt = 0;
 let packStatusInterval = null;
 let dispoPrecedente = null;   // pour reperer le moment ou un jeton se recharge
+
+// La perforation : 36 dents fines, de gauche a droite. Le trait dore du
+// survol et de la dechirure suit exactement ces points.
+const PERFO_POINTS = Array.from({ length: 73 }, (_, i) =>
+  (i * 100 / 72).toFixed(3) + ',' + (i % 2 ? 2 : 8)).join(' ');
 
 // Morceaux de papier projetes a la dechirure : positions figees, calculees une fois
 const MORCEAUX_PAQUET = [
@@ -5275,14 +5566,52 @@ async function openPack(type){
   afficherPaquetATirer(type, 5);
 }
 
-// Le paquet se tend, puis se dechire. Le tirage part pendant l'animation,
-// pour ne pas laisser le joueur attendre une fois le paquet disparu.
+// Le paquet se charge, puis se dechire. Le tirage part des le clic, pendant
+// la charge : quand la bande s'arrache, les cartes sont deja la.
 async function dechirerPaquet(pack, nbCartes){
   const zone = document.getElementById('packZone');
-  pack.classList.add('tension');
-  if(!REDUCED_MOTION) await new Promise(r => setTimeout(r, 200));
+  const tirage = tirerCartesDuPaquet(nbCartes);
+
+  if(!ouvAnim){
+    // animation coupee : une dechirure courte, puis tout le paquet d'un coup
+    sonsOuverture.dechire();
+    pack.classList.add('dechire');
+    const [draws] = await Promise.all([tirage, attendreOuv(300)]);
+    if(draws.length === 0) return paquetSansCarte(zone);
+    revealCards(draws);
+    return;
+  }
+
+  // 1. la tension monte, la perforation s'allume
+  sonsOuverture.charge();
+  pack.classList.add('charge');
+  const [draws] = await Promise.all([tirage, attendreOuv(650)]);
+  if(draws.length === 0) return paquetSansCarte(zone);
+
+  // 2. la bande s'arrache par la droite ; les cartes attendent dans le paquet
+  const tries = trierPourRevelation(draws);
+  const scene = pack.closest('.ouv-scene');
+  const pile = construirePileOuv(tries.slice().reverse());
+  pile.classList.add('dedans');
+  scene.querySelector('.ouv-echelle').appendChild(pile);
+  pack.classList.remove('charge');
   pack.classList.add('dechire');
-  const animation = new Promise(resolve => setTimeout(resolve, REDUCED_MOTION ? 0 : 660));
+  sonsOuverture.dechire();
+  await attendreOuv(500);
+
+  // 3. le paquet tombe, la pile sort par le haut
+  pack.classList.add('sortie');
+  pile.classList.remove('dedans');
+  pile.classList.add('emerge');
+  sonsOuverture.sortie();
+  await attendreOuv(800);
+  pack.remove();
+  pile.classList.remove('emerge');
+  lancerRevelation(zone, scene, tries);
+}
+
+// Les cinq tirages, l'un apres l'autre, avec la gestion d'erreur d'origine.
+async function tirerCartesDuPaquet(nbCartes){
   const draws = [];
   for(let i = 0; i < nbCartes; i++){
     const { row, error } = await tirerUneCarte();
@@ -5309,21 +5638,20 @@ async function dechirerPaquet(pack, nbCartes){
       lat: row.latitude, lon: row.longitude, tier, rank: row.rang, tierSize: row.palier_total
     });
   }
-  await animation;
-  if(draws.length === 0){
-    if(zone) zone.innerHTML = '';
-    paquetEnCours = false;
-    loadPackStatus();
-    return;
-  }
-  revealCards(draws);
+  return draws;
+}
+
+function paquetSansCarte(zone){
+  if(zone) zone.innerHTML = '';
+  paquetEnCours = false;
+  loadPackStatus();
 }
 
 function afficherPaquetATirer(type, nbCartes){
   const zone = document.getElementById('packZone');
   zone.innerHTML = '';
   const pack = makePackEl(type);
-  zone.appendChild(pack);
+  sceneOuverture(zone).echelle.appendChild(pack);
   pack.addEventListener('click', () => dechirerPaquet(pack, nbCartes), { once: true });
 }
 
@@ -5335,7 +5663,7 @@ function afficherPaquetPret(type){
   const pack = makePackEl(type);
   pack.dataset.pret = '1';
   pack.setAttribute('aria-label', 'Ouvrir un paquet gratuit');
-  zone.appendChild(pack);
+  sceneOuverture(zone).echelle.appendChild(pack);
   pack.addEventListener('click', async () => {
     if(paquetEnCours) return;
     paquetEnCours = true;

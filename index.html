@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=b11e3ea3b887">
+<link rel="stylesheet" href="style.css?v=c5a403d1ed95">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -240,16 +240,16 @@
           </svg>
         </div>
         Combat
+        <span class="tab-badge" id="combatBadge" hidden></span>
       </div>
 
-      <div class="tab" data-tab="defense">
+      <div class="tab onglet-fusionne" data-tab="defense" aria-hidden="true">
         <div class="icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
             <path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/>
           </svg>
         </div>
         Défense
-        <span class="tab-badge" id="combatBadge" hidden></span>
       </div>
 
       <div class="tab" data-tab="contrat">
@@ -570,6 +570,10 @@
 
     <section class="tab-panel" id="panel-combat">
       <h1>Combat</h1>
+      <div class="volets" role="tablist" aria-label="Combat">
+        <button type="button" class="volet actif" data-volet="combat" role="tab" aria-selected="true">Attaquer</button>
+        <button type="button" class="volet" data-volet="defense" role="tab" aria-selected="false">Défendre<span class="volet-badge" data-badge-defense hidden></span></button>
+      </div>
       <div class="sub">3 victoires d'affilée pour conquérir une commune rare ou légendaire, une défaite remet ta série à zéro. Avant d'attaquer, choisis ton engagement : plus tu paies, plus tu as de chances. Un round toutes les 10 min sur une rare, toutes les 3 h sur une légendaire.</div>
       <div class="bourse-filters combat-proximite">
         <span class="puce solde">Solde <b id="soldeValueCombat">—</b></span>
@@ -595,7 +599,12 @@
     </section>
 
     <section class="tab-panel" id="panel-defense">
-      <h1>Défense</h1>
+      <h1>Combat</h1>
+      <div class="volets" role="tablist" aria-label="Combat">
+        <button type="button" class="volet" data-volet="combat" role="tab" aria-selected="false">Attaquer</button>
+        <button type="button" class="volet actif" data-volet="defense" role="tab" aria-selected="true">Défendre<span class="volet-badge" data-badge-defense hidden></span></button>
+      </div>
+      <div class="reveil" id="reveilDefense" hidden></div>
       <div class="sub">Quand un joueur gagne un round contre toi, tente une défense ou pose un bouclier. Une seule défense par attaque, et un bouclier bloque toute attaque pendant sa durée.</div>
       <div class="puces"><span class="puce solde">Solde <b id="soldeValueDefense">—</b></span></div>
 
@@ -984,6 +993,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=b11e3ea3b887"></script>
+<script src="app.js?v=c5a403d1ed95"></script>
 </body>
 </html>

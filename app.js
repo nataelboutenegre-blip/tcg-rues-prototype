@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'b11e3ea3b887';
+const VERSION_JEU = 'c5a403d1ed95';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6169,6 +6169,10 @@ function renderMenaces(){
     majBadgePlus();
     badge.title = enDanger.length > 1 ? `${enDanger.length} communes attaquées` : 'Une commune attaquée';
   }
+  document.querySelectorAll('[data-badge-defense]').forEach(b => {
+    b.hidden = enDanger.length === 0;
+    b.textContent = enDanger.length;
+  });
   // la pastille est posee, elle : elle previent le joueur qui n'ouvre pas
   // l'onglet, c'est precisement a lui qu'elle sert
   if(rendreALOuverture('defense', renderMenaces)) return;
@@ -6798,14 +6802,18 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // Les 4 onglets principaux restent dans la barre, les autres passent dans le menu.
 // La barre du bas tient quatre onglets plus le bouton Plus : mesure faite de
 // 320 a 430 px de large, au-dela de quatre le bouton Plus passe a la ligne.
-const ONGLETS_BARRE = ['tirage', 'territoire', 'combat', 'defense'];
+// Combat et Defense ne font plus qu'un onglet (patch65) : la place liberee
+// revient a Collection. L'onglet Defense reste dans la page, cache, et
+// n'apparait ni dans la barre ni dans le menu.
+const ONGLETS_BARRE = ['tirage', 'territoire', 'collection', 'combat'];
+const ONGLETS_FUSIONNES = ['defense'];
 // Le menu Plus n'est plus une liste a tenir : c'est tout ce qui n'est pas dans
 // la barre, dans l'ordre de la colonne. Deux listes ecrites a la main, c'etait
 // deux listes qui finissaient par diverger — et c'est exactement ce qui etait
 // arrive. Un onglet ajoute demain se place tout seul au bon endroit.
 const ONGLETS_MENU = Array.prototype.map
   .call(document.querySelectorAll('.tab[data-tab]'), (t) => t.dataset.tab)
-  .filter((id) => ONGLETS_BARRE.indexOf(id) < 0);
+  .filter((id) => ONGLETS_BARRE.indexOf(id) < 0 && ONGLETS_FUSIONNES.indexOf(id) < 0);
 const ICONE_PROFIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>';
 const ICONE_REGLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const ICONE_SORTIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M11 12h10m-3-3 3 3-3 3"/></svg>';
@@ -6862,12 +6870,12 @@ function ouvrirMenuPlus(ouvert){
   }
 }
 
-// La pastille des attaques suit l'onglet Defense : sur la barre, ou sur "Plus" s'il est dans le menu
+// La pastille des attaques suit l'onglet Combat : sur la barre, ou sur "Plus" s'il est dans le menu
 function majBadgePlus(){
   const source = document.getElementById('combatBadge');
   const cible = document.getElementById('plusBadge');
   if(!source || !cible) return;
-  const dansLeMenu = surTelephone() && ONGLETS_MENU.includes('defense');
+  const dansLeMenu = surTelephone() && ONGLETS_MENU.includes('combat');
   cible.hidden = !dansLeMenu || source.hidden;
   cible.textContent = source.textContent;
 }
@@ -6934,6 +6942,65 @@ document.getElementById('feuilleListe').addEventListener('click', (e) => {
   if(tab) tab.click();
 });
 
+// ---------- Volets Attaquer / Defendre ----------
+document.addEventListener('click', (e) => {
+  const v = e.target.closest('.volet[data-volet]');
+  if(!v || v.classList.contains('actif')) return;
+  const tab = document.querySelector(`.tab[data-tab="${v.dataset.volet}"]`);
+  if(tab) tab.click();
+});
+
+// ---------- Le reveil : ce qui s'est passe depuis la derniere visite ----------
+// La derniere visite est gardee dans ce navigateur. On la remet a maintenant
+// des l'ouverture : la prochaine fois, le resume repartira d'ici.
+async function loadReveil(){
+  const bloc = document.getElementById('reveilDefense');
+  if(!bloc) return;
+  const maintenant = Date.now();
+  const limite = maintenant - 24 * 3600 * 1000;   // sieges_contre_moi ne garde que 24 h
+  let vu = 0;
+  try { vu = Number(localStorage.getItem('tf-defense-vu')) || 0; } catch(e){}
+  try { localStorage.setItem('tf-defense-vu', String(maintenant)); } catch(e){}
+  const depuis = Math.max(vu, limite);
+
+  let pertes = [];
+  try {
+    const { data, error } = await sb.rpc('journal', { p_mode: 'moi', p_type: 'conquete', p_limite: 50 });
+    if(!error) pertes = (data || []).filter(e => e.je_suis_cible && new Date(e.cree_le).getTime() > depuis);
+  } catch(e){}
+
+  const repoussees = menaces.filter(m => m.victoires_consecutives === 0 && new Date(m.dernier_round).getTime() > depuis);
+  const enCours = menaces.filter(m => m.victoires_consecutives > 0);
+  const urgentes = enCours.filter(m => {
+    const c = collectionMap.get(m.commune_code);
+    const protegee = c && c.bouclierJusqua > maintenant;
+    return m.victoires_consecutives >= 2 && !protegee;
+  });
+
+  const quand = vu <= limite ? 'ces dernières 24 h'
+    : (maintenant - vu < 60000 ? 'à l’instant' : `il y a ${formatDuree(maintenant - vu)}`);
+  const nb = (n, un, plusieurs) => `<b>${n}</b><span>${n > 1 ? plusieurs : un}</span>`;
+  const noms = (liste, f) => liste.slice(0, 3).map(f).join(', ') + (liste.length > 3 ? ` et ${liste.length - 3} autre${liste.length > 4 ? 's' : ''}` : '');
+
+  if(pertes.length === 0 && repoussees.length === 0 && enCours.length === 0){
+    bloc.className = 'reveil calme';
+    bloc.innerHTML = `<p class="reveil-calme"><b>Tout est calme</b> depuis ta dernière visite (${quand}).</p>`;
+    bloc.hidden = false;
+    return;
+  }
+  bloc.className = 'reveil' + (urgentes.length ? ' alerte' : '');
+  bloc.innerHTML = `
+    <div class="reveil-tete"><b>Depuis ta dernière visite</b><span>${quand}</span></div>
+    <div class="reveil-chiffres">
+      <div class="rc perte${pertes.length ? '' : ' zero'}">${nb(pertes.length, 'commune perdue', 'communes perdues')}</div>
+      <div class="rc ok${repoussees.length ? '' : ' zero'}">${nb(repoussees.length, 'attaque repoussée', 'attaques repoussées')}</div>
+      <div class="rc encours${enCours.length ? '' : ' zero'}">${nb(enCours.length, 'siège en cours', 'sièges en cours')}</div>
+    </div>
+    ${urgentes.length ? `<p class="reveil-ligne urgent">À une victoire d'être prise : ${noms(urgentes, m => '<b>' + echapperTexte(m.nom) + '</b>')}. Pose un bouclier ou défends-la.</p>` : ''}
+    ${pertes.length ? `<p class="reveil-ligne">Perdue${pertes.length > 1 ? 's' : ''} : ${noms(pertes, e => '<b>' + echapperTexte(e.commune_nom || 'une commune') + '</b> (prise par ' + echapperTexte(e.acteur_pseudo || 'un joueur') + ')')}.</p>` : ''}`;
+  bloc.hidden = false;
+}
+
 // ---------- Navigation par onglets ----------
 document.querySelectorAll('.tab[data-tab]').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -6943,6 +7010,11 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     document.getElementById('reglesBtnMobile').classList.remove('actif');
     document.getElementById('btnPlus').classList.remove('actif');
     tab.classList.add('active');
+    // Defense est un volet de Combat : c'est Combat qui s'allume
+    if(ONGLETS_FUSIONNES.indexOf(tab.dataset.tab) >= 0){
+      const combat = document.querySelector('.tab[data-tab="combat"]');
+      if(combat) combat.classList.add('active');
+    }
     majBadgePlus();
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
     document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
@@ -6953,7 +7025,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'communaute'){ loadClassement(); loadJournal(); loadAmis(); }
     if(tab.dataset.tab === 'bourse') loadBourse();
     if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); }
-    if(tab.dataset.tab === 'defense'){ loadMenaces(); loadCombat(); renderIntensite('defense'); }
+    if(tab.dataset.tab === 'defense'){ loadMenaces().then(loadReveil); loadCombat(); renderIntensite('defense'); }
     if(tab.dataset.tab === 'combat') loadCombat();
     if(tab.dataset.tab === 'succes') loadSucces();
     if(tab.dataset.tab === 'monuments') loadMonuments();

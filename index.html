@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=c5a403d1ed95">
+<link rel="stylesheet" href="style.css?v=fd1fba814093">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -223,6 +223,14 @@
         Collection
       </div>
 
+      <div class="tab" data-tab="cdj">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
+        </div>
+        Commune du jour
+        <span class="tab-badge" id="cdjBadge" hidden></span>
+      </div>
+
       <div class="tab" data-tab="monuments">
         <div class="icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20.5h18M4.5 20.5V10L12 4.5 19.5 10v10.5"/><path d="M9.5 20.5v-5.5h5v5.5"/></svg>
@@ -356,6 +364,7 @@
       <div class="sub">Chaque carte tirée est une vraie commune de France, à sa vraie position géographique. Elle n'appartient qu'à toi tant que tu la gardes. Clique sur le paquet pour le déchirer.</div>
       <div class="notif-banniere" id="notifBanniere" hidden></div>
 
+      <button type="button" class="cdj-carte" id="cdjCarte" hidden></button>
       <div class="puces" id="packStatus"><span class="puce">Chargement…</span></div>
       <div class="pot-libres" id="potLibres" hidden>
         <div class="pot-ligne">
@@ -391,6 +400,40 @@
       </div>
 
       <div class="note">Les chances de tirage suivent ce qu'il reste à découvrir : plus un palier se vide, plus il devient rare. Le détail est dans l'onglet Règles.</div>
+    </section>
+
+    <section class="tab-panel" id="panel-cdj">
+      <h1>Commune du jour <span class="cdj-numero" id="cdjNumero"></span></h1>
+      <div class="sub">La même commune pour tout le monde, six essais pour la trouver. Chaque erreur dévoile un indice, et chaque essai dit à quelle distance tu es et dans quelle direction chercher. Nouvelle commune chaque jour à minuit.</div>
+      <p class="cdj-indispo" id="cdjIndispo" hidden>La commune du jour n'est pas disponible pour le moment.</p>
+      <div class="cdj-grille" id="cdjJeu" hidden>
+        <div class="cdj-bloc">
+          <div class="cdj-tete">
+            <svg class="cdj-sil" id="cdjSil" viewBox="0 0 100 100" role="img" aria-label="Silhouette de la commune mystère"></svg>
+            <div><small>Commune mystère</small><b>Quelle est cette commune&nbsp;?</b></div>
+          </div>
+          <ul class="cdj-indices" id="cdjIndices"></ul>
+          <div class="cdj-saisie" id="cdjSaisie">
+            <label for="cdjChamp">Ta proposition</label>
+            <div class="cdj-ligne">
+              <input id="cdjChamp" type="text" autocomplete="off" spellcheck="false" placeholder="Tape le nom d'une commune…" aria-autocomplete="list" aria-controls="cdjListe">
+              <button type="button" id="cdjValider" disabled>Valider</button>
+            </div>
+            <ul class="cdj-liste" id="cdjListe" role="listbox" hidden></ul>
+          </div>
+          <div class="cdj-fin" id="cdjFin" hidden></div>
+        </div>
+        <div class="cdj-bloc">
+          <svg class="cdj-france" id="cdjFrance" role="img" aria-label="Carte de France avec tes essais"></svg>
+          <div class="cdj-legende">
+            <span><i class="trouvee"></i>trouvée</span>
+            <span><i class="proche"></i>moins de 50 km</span>
+            <span><i class="moyen"></i>moins de 150 km</span>
+            <span><i class="loin"></i>plus loin</span>
+          </div>
+          <ol class="cdj-essais" id="cdjEssais" aria-label="Tes essais"></ol>
+        </div>
+      </div>
     </section>
 
     <section class="tab-panel" id="panel-collection">
@@ -993,6 +1036,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=c5a403d1ed95"></script>
+<script src="app.js?v=fd1fba814093"></script>
 </body>
 </html>

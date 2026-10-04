@@ -3732,3 +3732,86 @@
   .rc b{ font-size:1.5rem; }
   .rc span{ font-size:.7rem; }
 }
+
+
+/* ---------- Commune du jour (patch66) ---------- */
+.cdj-carte{
+  box-sizing:border-box; width:100%; max-width:100%; min-width:0;
+  display:flex; align-items:center; gap:12px;
+  margin:12px 0 14px; padding:10px 12px; border-radius:12px;
+  background:linear-gradient(100deg, rgba(240,180,41,.13), rgba(240,180,41,.03) 60%);
+  border:1px solid rgba(240,180,41,.45);
+  color:#fff; font:inherit; text-align:left; cursor:pointer;
+}
+.cdj-carte[hidden]{ display:none; }
+.cdj-carte:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+.cdj-carte svg{ width:46px; height:46px; flex:none; }
+.cdj-carte svg path{ fill: var(--c-legendaire); }
+.cdj-carte-txt{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+.cdj-carte-txt b{ font-family: var(--titre); font-size:19px; font-weight:800; letter-spacing:.01em; text-transform:uppercase; line-height:1.05; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cdj-carte-txt span{ font-size:13px; color: var(--brume); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.cdj-carte-btn{ flex:none; font-family: var(--titre); font-weight:800; font-size:17px; letter-spacing:.04em; text-transform:uppercase; background: var(--c-legendaire); color: var(--nuit); border-radius:9px; padding:8px 12px; }
+.cdj-carte.faite{ background: rgba(255,255,255,.04); border-color: rgba(169,188,212,.25); }
+.cdj-carte.faite svg path{ fill: var(--c-peucommun); }
+.cdj-carte.faite .cdj-carte-btn{ background:transparent; color: var(--brume); border:1px solid rgba(169,188,212,.3); font-family: var(--texte); font-size:12.5px; font-weight:600; text-transform:none; letter-spacing:0; }
+
+.cdj-numero{ color: var(--brume); }
+.cdj-indispo{ color: var(--brume); }
+.cdj-grille{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:18px; align-items:start; margin-top:16px; }
+.cdj-grille[hidden]{ display:none; }
+@media (max-width: 900px){ .cdj-grille{ grid-template-columns:minmax(0,1fr); } }
+.cdj-bloc{ background: var(--nuit-2); border:1px solid rgba(169,188,212,.18); border-radius:14px; padding:16px; min-width:0; }
+.cdj-tete{ display:flex; gap:16px; align-items:center; }
+.cdj-sil{ width:96px; height:96px; flex:none; border-radius:12px; background:radial-gradient(circle at 50% 45%, var(--nuit-3), transparent 70%); }
+.cdj-sil path{ fill: var(--c-legendaire); }
+.cdj-tete small{ display:block; text-transform:uppercase; letter-spacing:.08em; font-size:11.5px; color: var(--brume); }
+.cdj-tete b{ font-family: var(--titre); font-size:22px; font-weight:800; letter-spacing:.01em; line-height:1.15; }
+.cdj-indices{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+.cdj-indices li{ display:flex; gap:10px; align-items:baseline; padding:8px 10px; border-radius:9px; background:rgba(255,255,255,.03); border:1px solid transparent; font-size:14px; }
+.cdj-lab{ flex:none; width:96px; font-size:11.5px; text-transform:uppercase; letter-spacing:.07em; color: var(--brume); }
+.cdj-indices li.ferme .cdj-val{ color: var(--brume); opacity:.55; }
+.cdj-indices li.neuf{ border-color: rgba(240,180,41,.6); animation: cdjNeuf 1.2s ease-out; }
+@keyframes cdjNeuf{ from{ background: rgba(240,180,41,.22); } }
+.cdj-saisie{ position:relative; margin-top:14px; }
+.cdj-saisie[hidden]{ display:none; }
+.cdj-saisie label{ display:block; font-size:12.5px; color: var(--brume); margin-bottom:6px; }
+.cdj-ligne{ display:flex; gap:8px; }
+#cdjChamp{ flex:1; min-width:0; font:inherit; font-size:16px; padding:11px 12px; border-radius:10px; border:1px solid rgba(169,188,212,.25); background: var(--nuit); color:#fff; }
+#cdjChamp:focus-visible{ outline:2px solid var(--c-legendaire); outline-offset:1px; }
+#cdjValider{ font-family: var(--titre); font-weight:800; font-size:18px; letter-spacing:.04em; text-transform:uppercase; padding:0 18px; border-radius:10px; border:0; background: var(--c-legendaire); color: var(--nuit); cursor:pointer; }
+#cdjValider:disabled{ opacity:.4; cursor:default; }
+.cdj-liste{ position:absolute; left:0; right:0; top:100%; margin-top:4px; background: var(--nuit-3); border:1px solid rgba(169,188,212,.2); border-radius:10px; list-style:none; padding:4px; z-index:20; max-height:280px; overflow:auto; box-shadow:0 14px 30px rgba(0,0,0,.45); }
+.cdj-liste[hidden]{ display:none; }
+.cdj-liste li{ padding:8px 10px; border-radius:7px; cursor:pointer; display:flex; justify-content:space-between; gap:10px; }
+.cdj-liste li small{ color: var(--brume); white-space:nowrap; }
+.cdj-liste li[aria-selected="true"], .cdj-liste li:hover{ background: rgba(255,255,255,.08); }
+.cdj-fin{ display:flex; flex-direction:column; gap:10px; margin-top:18px; }
+.cdj-fin[hidden]{ display:none; }
+.cdj-fin h2{ font-family: var(--titre); font-weight:900; font-size:32px; text-transform:uppercase; margin:0; line-height:1; }
+.cdj-fin h2.gagne{ color: var(--c-legendaire); }
+.cdj-fin p{ margin:0; color: var(--brume); }
+.cdj-fin p b{ color:#fff; }
+.cdj-partage{ margin:0; font-family:inherit; font-size:15px; background: var(--nuit); border:1px solid rgba(169,188,212,.2); border-radius:10px; padding:10px 12px; white-space:pre-wrap; }
+.cdj-copier{ align-self:flex-start; font:inherit; font-weight:600; padding:9px 14px; border-radius:9px; border:1px solid var(--c-legendaire); background:transparent; color: var(--c-legendaire); cursor:pointer; }
+.cdj-france{ width:100%; height:auto; display:block; }
+.cdj-fr{ fill: var(--nuit-3); stroke: rgba(169,188,212,.45); stroke-width:.6; vector-effect:non-scaling-stroke; }
+.cdj-trait{ stroke: var(--brume); stroke-opacity:.35; }
+.cdj-point{ stroke: var(--nuit); }
+.cdj-num{ fill:#fff; font-weight:600; text-anchor:middle; }
+.cdj-cible{ fill:none; stroke: var(--c-legendaire); }
+.cdj-cible-c{ fill: var(--c-legendaire); }
+.cdj-point.trouvee, .cdj-pastille.trouvee, .cdj-legende i.trouvee{ fill:#22A06B; background:#22A06B; }
+.cdj-point.proche, .cdj-pastille.proche, .cdj-legende i.proche{ fill:#E8C547; background:#E8C547; }
+.cdj-point.moyen, .cdj-pastille.moyen, .cdj-legende i.moyen{ fill:#E8873A; background:#E8873A; }
+.cdj-point.loin, .cdj-pastille.loin, .cdj-legende i.loin{ fill:#E5484D; background:#E5484D; }
+.cdj-legende{ display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12px; color: var(--brume); margin-top:8px; }
+.cdj-legende i{ display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+.cdj-essais{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:6px; }
+.cdj-essais li{ display:grid; grid-template-columns:20px minmax(0,1fr) auto 26px; gap:10px; align-items:center; padding:8px 10px; border-radius:9px; background:rgba(255,255,255,.04); font-variant-numeric:tabular-nums; }
+.cdj-essais li.vide{ background:transparent; border:1px dashed rgba(169,188,212,.18); height:38px; }
+.cdj-pastille{ width:14px; height:14px; border-radius:4px; }
+.cdj-nom{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cdj-nom small{ color: var(--brume); }
+.cdj-dist{ font-weight:600; }
+.cdj-dir{ font-size:18px; text-align:center; line-height:1; }
+@media (prefers-reduced-motion: reduce){ .cdj-indices li.neuf{ animation:none; } }

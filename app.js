@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'c5a403d1ed95';
+const VERSION_JEU = 'fd1fba814093';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -461,6 +461,7 @@ async function showGame(session_){
   // c'est cet appel qui arme le compte a rebours le jour ou le seuil est
   // franchi : sans lui le mecanisme de saison ne se declenche jamais
   chargerSaison();
+  chargerCdj();
   verifierVersion();
   // arrivee depuis une notification : ?onglet=combat ou ?onglet=tirage
   if(new URLSearchParams(location.search).has('onglet')){
@@ -6876,8 +6877,15 @@ function majBadgePlus(){
   const cible = document.getElementById('plusBadge');
   if(!source || !cible) return;
   const dansLeMenu = surTelephone() && ONGLETS_MENU.includes('combat');
-  cible.hidden = !dansLeMenu || source.hidden;
-  cible.textContent = source.textContent;
+  const cdj = document.getElementById('cdjBadge');
+  const cdjAJouer = surTelephone() && cdj && !cdj.hidden;
+  if(dansLeMenu && !source.hidden){
+    cible.hidden = false;
+    cible.textContent = source.textContent;
+  } else {
+    cible.hidden = !cdjAJouer;
+    cible.textContent = cdjAJouer ? '1' : '';
+  }
 }
 
 document.getElementById('btnPlus').addEventListener('click', (e) => {
@@ -7029,6 +7037,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'combat') loadCombat();
     if(tab.dataset.tab === 'succes') loadSucces();
     if(tab.dataset.tab === 'monuments') loadMonuments();
+    if(tab.dataset.tab === 'cdj') ouvrirCdj();
     if(tab.dataset.tab === 'profil') loadProfilPanneau();
     if(tab.dataset.tab === 'contrat') loadContratEtExclusions();
     if(tab.dataset.tab === 'echange') loadEchanges();
@@ -7991,7 +8000,7 @@ if('serviceWorker' in navigator){
   });
 }
 
-const ONGLETS_CONNUS = ['tirage', 'collection', 'territoire', 'bourse', 'combat', 'defense', 'regles'];
+const ONGLETS_CONNUS = ['tirage', 'collection', 'territoire', 'bourse', 'combat', 'defense', 'regles', 'cdj'];
 function ouvrirOngletDepuisUrl(url){
   try{
     const onglet = new URL(url, location.href).searchParams.get('onglet');
@@ -8110,5 +8119,336 @@ document.querySelectorAll('#panel-regles .sommaire a').forEach(a => a.addEventLi
   const cible = document.querySelector(a.getAttribute('href'));
   if(cible && cible.tagName === 'DETAILS') cible.open = true;
 }));
+
+// ---------- Commune du jour ----------
+// Tout ce qui compte se decide sur le serveur (cdj_partie, cdj_essayer) :
+// le navigateur n'a jamais la reponse avant la fin. Ici, on affiche.
+let cdjEtat = null;
+let cdjNoms = null, cdjNomsEnCours = null;
+let cdjChoix = null, cdjResultats = [], cdjSurligne = -1, cdjMinuteur = null;
+let cdjEnvoi = false, cdjDernierIndice = null;   // null : premier affichage, rien a souligner
+const CDJ_LIBELLES = { population: 'Population', region: 'Région', gentile: 'Habitants', departement: 'Département', anecdote: 'Anecdote' };
+const CDJ_FLECHES = ['⬆️', '↗️', '➡️', '↘️', '⬇️', '↙️', '⬅️', '↖️'];
+const CDJ_DIRECTIONS = ['vers le nord', 'vers le nord-est', 'vers l’est', 'vers le sud-est', 'vers le sud', 'vers le sud-ouest', 'vers l’ouest', 'vers le nord-ouest'];
+const cdjCouleur = (km) => km === 0 ? 'trouvee' : km < 50 ? 'proche' : km < 150 ? 'moyen' : 'loin';
+const cdjCarre = (km) => km === 0 ? '🟩' : km < 50 ? '🟨' : km < 150 ? '🟧' : '🟥';
+const cdjCle = (s) => sansAccents(s).replace(/[-'’\s]+/g, ' ').trim();
+const cdjJourParis = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' });
+
+async function chargerCdj(){
+  const { data, error } = await sb.rpc('cdj_partie');
+  if(error){
+    console.warn('TERRAFRONT commune du jour indisponible', error);
+    cdjEtat = null;
+  } else {
+    cdjEtat = data;
+  }
+  renderCdjCarte();
+  renderCdj();
+}
+
+function ouvrirCdj(){
+  // a minuit la partie change : on la redemande si le jour n'est plus le meme
+  if(!cdjEtat || cdjEtat.jour !== cdjJourParis()) chargerCdj();
+  else renderCdj();
+  cdjChargerNoms();
+}
+
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && cdjEtat && cdjEtat.jour !== cdjJourParis()) chargerCdj();
+});
+
+function cdjSilhouette(points){
+  return (points || []).map(r => 'M' + r.map(p => p[0] + ',' + p[1]).join('L') + 'Z').join('');
+}
+
+function renderCdjCarte(){
+  const carte = document.getElementById('cdjCarte');
+  const badge = document.getElementById('cdjBadge');
+  if(!carte) return;
+  const e = cdjEtat;
+  if(!e){
+    carte.hidden = true;
+    if(badge) badge.hidden = true;
+    majBadgePlus();
+    return;
+  }
+  const serie = e.serie > 0 ? `série de ${e.serie} jour${e.serie > 1 ? 's' : ''}` : '';
+  const nb = e.essais.length;
+  let titre, texte, bouton;
+  if(e.fini){
+    titre = e.trouve ? `Trouvée en ${nb} essai${nb > 1 ? 's' : ''}` : 'Pas trouvée aujourd’hui';
+    const qui = e.trouves > 0 ? `${e.trouves} l’${e.trouves > 1 ? 'ont' : 'a'} trouvée` : '';
+    texte = [serie && serie.charAt(0).toUpperCase() + serie.slice(1), qui].filter(Boolean).join(' · ') || 'Nouvelle commune à minuit';
+    bouton = 'Revoir';
+  } else if(nb > 0){
+    titre = 'Commune du jour';
+    texte = `Partie en cours · ${nb} essai${nb > 1 ? 's' : ''} sur 6`;
+    bouton = 'Continuer';
+  } else {
+    titre = 'Commune du jour';
+    texte = ['6 essais', serie].filter(Boolean).join(' · ');
+    bouton = 'Jouer';
+  }
+  carte.className = 'cdj-carte' + (e.fini ? ' faite' : '');
+  carte.innerHTML = `<svg viewBox="0 0 100 100" aria-hidden="true"><path d="${cdjSilhouette(e.silhouette)}"/></svg>
+    <span class="cdj-carte-txt"><b>${titre}</b><span>${texte}</span></span>
+    <span class="cdj-carte-btn">${bouton}</span>`;
+  carte.hidden = false;
+  if(badge){
+    badge.hidden = e.fini;
+    badge.textContent = '1';
+  }
+  majBadgePlus();
+}
+
+document.getElementById('cdjCarte').addEventListener('click', () => {
+  const tab = document.querySelector('.tab[data-tab="cdj"]');
+  if(tab) tab.click();
+});
+
+// ----- le panneau -----
+let cdjBornes = null;
+const CDJ_K = Math.cos(46.5 * Math.PI / 180);
+function cdjPx(lon, lat){
+  return [(lon * CDJ_K - cdjBornes.x0).toFixed(3), (-lat - cdjBornes.y0).toFixed(3)];
+}
+
+function renderCdjFrance(){
+  const svg = document.getElementById('cdjFrance');
+  if(!svg || !FRANCE_OUTLINE || !cdjEtat) return;
+  if(!cdjBornes){
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for(const anneau of FRANCE_OUTLINE) for(const [lo, la] of anneau){
+      x0 = Math.min(x0, lo * CDJ_K); x1 = Math.max(x1, lo * CDJ_K);
+      y0 = Math.min(y0, -la); y1 = Math.max(y1, -la);
+    }
+    const m = 0.3;
+    cdjBornes = { x0: x0 - m, y0: y0 - m, w: x1 - x0 + 2 * m, h: y1 - y0 + 2 * m };
+  }
+  svg.setAttribute('viewBox', `0 0 ${cdjBornes.w.toFixed(2)} ${cdjBornes.h.toFixed(2)}`);
+  const rayon = cdjBornes.w / 90;
+  let h = '';
+  for(const anneau of FRANCE_OUTLINE){
+    h += `<path class="cdj-fr" d="M${anneau.map(([lo, la]) => cdjPx(lo, la).join(',')).join('L')}Z"/>`;
+  }
+  const rep = cdjEtat.reponse;
+  if(rep){
+    const [cx, cy] = cdjPx(+rep.lon, +rep.lat);
+    for(const e of cdjEtat.essais){
+      if(e.km === 0) continue;
+      const [x, y] = cdjPx(+e.lon, +e.lat);
+      h += `<line class="cdj-trait" x1="${x}" y1="${y}" x2="${cx}" y2="${cy}" stroke-width="${rayon / 3}" stroke-dasharray="${rayon / 2} ${rayon / 2}"/>`;
+    }
+  }
+  cdjEtat.essais.forEach((e, n) => {
+    const [x, y] = cdjPx(+e.lon, +e.lat);
+    h += `<circle class="cdj-point ${cdjCouleur(e.km)}" cx="${x}" cy="${y}" r="${rayon}" stroke-width="${rayon / 4}"/>`;
+    h += `<text class="cdj-num" x="${x}" y="${(+y - rayon * 1.6).toFixed(3)}" font-size="${rayon * 1.9}">${n + 1}</text>`;
+  });
+  if(rep){
+    const [x, y] = cdjPx(+rep.lon, +rep.lat);
+    h += `<circle class="cdj-cible" cx="${x}" cy="${y}" r="${rayon * 2.4}" stroke-width="${rayon / 2.5}"/>`;
+    h += `<circle class="cdj-cible-c" cx="${x}" cy="${y}" r="${rayon * 0.9}"/>`;
+  }
+  svg.innerHTML = h;
+}
+
+function renderCdj(){
+  const jeu = document.getElementById('cdjJeu');
+  const indispo = document.getElementById('cdjIndispo');
+  if(!jeu) return;
+  const e = cdjEtat;
+  jeu.hidden = !e;
+  indispo.hidden = !!e;
+  if(!e) return;
+
+  document.getElementById('cdjNumero').textContent = '#' + e.numero;
+  document.getElementById('cdjSil').innerHTML = `<path d="${cdjSilhouette(e.silhouette)}"/>`;
+
+  // les indices : le serveur n'envoie que ceux deja gagnes
+  const ouverts = e.indices.filter(i => i.valeur !== null).length;
+  document.getElementById('cdjIndices').innerHTML = e.indices.map((i, n) => {
+    const ouvert = i.valeur !== null;
+    const neuf = ouvert && cdjDernierIndice !== null && n === ouverts - 1 && n > cdjDernierIndice && !e.fini;
+    let valeur = i.valeur;
+    if(ouvert && i.cle === 'departement') valeur = `${DEPT_NAMES[i.valeur] || i.valeur} (${i.valeur})`;
+    if(ouvert && i.cle === 'gentile') valeur = 'les ' + i.valeur;
+    return `<li class="${ouvert ? '' : 'ferme'}${neuf ? ' neuf' : ''}"><span class="cdj-lab">${CDJ_LIBELLES[i.cle] || i.cle}</span>
+      <span class="cdj-val">${ouvert ? echapperTexte(valeur) : `après ${n + 1} essai${n ? 's' : ''}`}</span></li>`;
+  }).join('');
+  cdjDernierIndice = ouverts - 1;
+
+  // les essais
+  let h = '';
+  for(let n = 0; n < 6; n++){
+    const x = e.essais[n];
+    if(!x){ h += '<li class="vide" aria-hidden="true"></li>'; continue; }
+    const dist = x.km === 0 ? 'trouvée' : x.km.toLocaleString('fr-FR') + ' km';
+    const dir = x.km === 0 ? '🎯' : CDJ_FLECHES[x.cap];
+    h += `<li><span class="cdj-pastille ${cdjCouleur(x.km)}"></span>
+      <span class="cdj-nom">${echapperTexte(x.nom)} <small>(${echapperTexte(x.dept)})</small></span>
+      <span class="cdj-dist">${dist}</span>
+      <span class="cdj-dir" title="${x.km === 0 ? '' : CDJ_DIRECTIONS[x.cap]}" aria-label="${x.km === 0 ? 'trouvée' : CDJ_DIRECTIONS[x.cap]}">${dir}</span></li>`;
+  }
+  document.getElementById('cdjEssais').innerHTML = h;
+
+  document.getElementById('cdjSaisie').hidden = e.fini;
+  renderCdjFin();
+  renderCdjFrance();
+}
+
+function cdjTextePartage(){
+  const e = cdjEtat;
+  const ligne = e.essais.map(x => cdjCarre(x.km) + (x.km === 0 ? '🎯' : CDJ_FLECHES[x.cap])).join(' ');
+  return `TerraFront · Commune du jour #${e.numero}\n${e.trouve ? e.essais.length : 'X'}/6  ${ligne}\nterrafront.fr`;
+}
+
+function renderCdjFin(){
+  const z = document.getElementById('cdjFin');
+  const e = cdjEtat;
+  z.hidden = !e.fini;
+  if(!e.fini) return;
+  const r = e.reponse;
+  const nb = e.essais.length;
+  const qui = e.joueurs > 0
+    ? `${e.joueurs} joueur${e.joueurs > 1 ? 's ont' : ' a'} joué aujourd’hui, ${e.trouves} l’${e.trouves > 1 ? 'ont' : 'a'} trouvée.`
+    : '';
+  const serie = e.serie > 0 ? ` Série en cours : <b>${e.serie} jour${e.serie > 1 ? 's' : ''}</b>.` : '';
+  z.innerHTML = `<h2 class="${e.trouve ? 'gagne' : ''}">${e.trouve ? `Trouvée en ${nb}` : 'Pas trouvée'}</h2>
+    <p>C’était <b>${echapperTexte(r.nom)}</b>, ${echapperTexte(DEPT_NAMES[r.dept] || r.dept)}, ${Number(r.pop).toLocaleString('fr-FR')} habitants.</p>
+    <p>${qui}${serie} Nouvelle commune à minuit.</p>
+    <pre class="cdj-partage" id="cdjPartage">${echapperTexte(cdjTextePartage())}</pre>
+    <button type="button" class="cdj-copier" id="cdjCopier">Copier le résultat pour Discord</button>`;
+  document.getElementById('cdjCopier').onclick = async (ev) => {
+    const b = ev.currentTarget;
+    try{
+      await navigator.clipboard.writeText(cdjTextePartage());
+      b.textContent = 'Copié';
+    } catch(err){
+      const sel = getSelection(), plage = document.createRange();
+      plage.selectNodeContents(document.getElementById('cdjPartage'));
+      sel.removeAllRanges(); sel.addRange(plage);
+      b.textContent = 'Sélectionné : copie-le';
+    }
+  };
+}
+
+// ----- la saisie -----
+function cdjChargerNoms(){
+  if(cdjNoms || cdjNomsEnCours) return cdjNomsEnCours;
+  const champ = document.getElementById('cdjChamp');
+  champ.disabled = true;
+  champ.placeholder = 'Chargement des communes…';
+  cdjNomsEnCours = fetch('data/noms-communes.json', { cache: 'force-cache' })
+    .then(r => r.json())
+    .then(liste => {
+      cdjNoms = liste.map(([nom, dept, code]) => ({ nom, dept, code, cle: cdjCle(nom) }));
+      champ.disabled = false;
+      champ.placeholder = 'Tape le nom d’une commune…';
+    })
+    .catch(err => {
+      console.warn('TERRAFRONT liste des communes indisponible', err);
+      cdjNomsEnCours = null;
+      champ.disabled = false;
+      champ.placeholder = 'Liste indisponible, recharge la page';
+    });
+  return cdjNomsEnCours;
+}
+
+function cdjChercher(q){
+  const k = cdjCle(q);
+  if(!cdjNoms || k.length < 2) return [];
+  const debut = [], dedans = [];
+  for(const c of cdjNoms){
+    if(c.cle.startsWith(k)) debut.push(c);
+    else if(dedans.length < 40 && c.cle.includes(k)) dedans.push(c);
+    if(debut.length > 200) break;
+  }
+  debut.sort((a, b) => a.cle.length - b.cle.length || a.nom.localeCompare(b.nom, 'fr'));
+  return [...debut, ...dedans].slice(0, 8);
+}
+
+function cdjMajListe(){
+  const champ = document.getElementById('cdjChamp');
+  const liste = document.getElementById('cdjListe');
+  cdjResultats = cdjChercher(champ.value);
+  cdjSurligne = cdjResultats.length ? 0 : -1;
+  liste.hidden = !cdjResultats.length;
+  liste.innerHTML = cdjResultats.map((c, n) =>
+    `<li role="option" data-n="${n}" aria-selected="${n === cdjSurligne}"><span>${echapperTexte(c.nom)}</span><small>${echapperTexte(DEPT_NAMES[c.dept] || '')} (${echapperTexte(c.dept)})</small></li>`).join('');
+}
+
+function cdjMajBouton(){
+  document.getElementById('cdjValider').disabled = !cdjChoix || cdjEnvoi;
+}
+
+function cdjChoisir(c){
+  cdjChoix = c;
+  document.getElementById('cdjChamp').value = `${c.nom} (${c.dept})`;
+  document.getElementById('cdjListe').hidden = true;
+  cdjMajBouton();
+  document.getElementById('cdjValider').focus();
+}
+
+async function cdjValider(){
+  if(!cdjChoix || cdjEnvoi || !cdjEtat || cdjEtat.fini) return;
+  const champ = document.getElementById('cdjChamp');
+  if(cdjEtat.essais.some(x => x.code === cdjChoix.code)){
+    notifier({ type: 'info', titre: 'Déjà proposée', texte: 'Essaie une autre commune.' });
+    return;
+  }
+  cdjEnvoi = true;
+  cdjMajBouton();
+  try{
+    const { data, error } = await sb.rpc('cdj_essayer', { p_code: cdjChoix.code });
+    if(error) throw error;
+    cdjEtat = data;
+    cdjChoix = null;
+    champ.value = '';
+    renderCdjCarte();
+    renderCdj();
+    if(!cdjEtat.fini) champ.focus();
+  } catch(err){
+    notifier({ type: 'erreur', titre: 'Essai refusé', texte: messageLisible(err.message) });
+    // la partie a pu changer ailleurs (autre appareil, minuit) : on la relit
+    chargerCdj();
+  } finally {
+    cdjEnvoi = false;
+    cdjMajBouton();
+  }
+}
+
+(function brancherCdj(){
+  const champ = document.getElementById('cdjChamp');
+  const liste = document.getElementById('cdjListe');
+  champ.addEventListener('input', () => { clearTimeout(cdjMinuteur); cdjChoix = null; cdjMajBouton(); cdjMajListe(); });
+  champ.addEventListener('focus', () => clearTimeout(cdjMinuteur));
+  champ.addEventListener('blur', () => { cdjMinuteur = setTimeout(() => { liste.hidden = true; }, 150); });
+  champ.addEventListener('keydown', (e) => {
+    if(liste.hidden){
+      if(e.key === 'Enter' && cdjChoix){ e.preventDefault(); cdjValider(); }
+      return;
+    }
+    if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+      e.preventDefault();
+      cdjSurligne = (cdjSurligne + (e.key === 'ArrowDown' ? 1 : -1) + cdjResultats.length) % cdjResultats.length;
+      liste.querySelectorAll('li').forEach((li, n) => li.setAttribute('aria-selected', n === cdjSurligne));
+    } else if(e.key === 'Enter' && cdjSurligne >= 0){
+      e.preventDefault();
+      cdjChoisir(cdjResultats[cdjSurligne]);
+    } else if(e.key === 'Escape'){
+      liste.hidden = true;
+    }
+  });
+  // mousedown plutot que click : le clic arrive apres le blur du champ
+  liste.addEventListener('mousedown', (e) => {
+    const li = e.target.closest('li');
+    if(!li) return;
+    e.preventDefault();
+    cdjChoisir(cdjResultats[+li.dataset.n]);
+  });
+  document.getElementById('cdjValider').addEventListener('click', cdjValider);
+})();
 
 initAuth();

@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=807b65b661c2">
+<link rel="stylesheet" href="style.css?v=128f7ab93f77">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -236,12 +236,25 @@
         Collection
       </div>
 
-      <div class="tab" data-tab="cdj">
+      <div class="tab" data-tab="qg">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 L17.6 6.4"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/></svg>
+        </div>
+        QG
+        <span class="tab-badge" id="qgBadge" hidden></span>
+      </div>
+
+      <div class="tab onglet-fusionne" data-tab="cdj" aria-hidden="true">
         <div class="icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
         </div>
         Commune du jour
         <span class="tab-badge" id="cdjBadge" hidden></span>
+      </div>
+
+      <div class="tab onglet-fusionne" data-tab="radar" aria-hidden="true">
+        <div class="icon"><svg viewBox="0 0 24 24"></svg></div>
+        Radar
       </div>
 
       <div class="tab" data-tab="monuments">
@@ -413,6 +426,80 @@
       </div>
 
       <div class="note">Les chances de tirage suivent ce qu'il reste à découvrir : plus un palier se vide, plus il devient rare. Le détail est dans l'onglet Règles.</div>
+    </section>
+
+    <section class="tab-panel" id="panel-qg">
+      <h1>QG</h1>
+      <div class="sub">Les défis du jour et les duels contre les autres joueurs.</div>
+
+      <div class="qg-grille">
+        <div class="qg-carte" id="qgCdj">
+          <div class="qg-tete">
+            <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
+            <div class="qg-titre"><h2>Commune du jour</h2><p>Solo · une commune mystère par jour</p></div>
+            <span class="qg-etiquette" id="qgCdjEtat"></span>
+          </div>
+          <div class="qg-actions"><button type="button" class="qg-btn" id="qgCdjBtn">Jouer</button><span class="qg-petit" id="qgCdjInfo"></span></div>
+        </div>
+
+        <div class="qg-carte" id="qgRadar">
+          <div class="qg-tete">
+            <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 L17.6 6.4"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/></svg></span>
+            <div class="qg-titre"><h2>Radar</h2><p>Duel classé · place 5 communes sur la carte</p></div>
+            <span class="qg-etiquette or" id="qgRestants"></span>
+          </div>
+          <div class="qg-rang">
+            <div><b id="qgRangNom">—</b><span class="qg-petit" id="qgRangSuivant"></span></div>
+            <span class="qg-elo"><b id="qgElo">—</b> Elo</span>
+          </div>
+          <div>
+            <div class="qg-jauge"><i id="qgJauge"></i></div>
+            <div class="qg-paliers"><span>Promeneur</span><span>Randonneur</span><span>Guetteur</span><span>Vigie</span><span>Navigateur</span></div>
+          </div>
+          <div class="qg-actions"><button type="button" class="qg-btn plein" id="qgLancer">Lancer un duel</button><span class="qg-petit" id="qgAttente"></span></div>
+        </div>
+
+        <div class="qg-carte" id="qgDerniersBloc" hidden>
+          <h3 class="qg-h3">Tes derniers duels</h3>
+          <ul class="qg-duels" id="qgDerniers"></ul>
+        </div>
+
+        <div class="qg-carte">
+          <h3 class="qg-h3">Classement Radar</h3>
+          <ol class="qg-classement" id="qgClassement"><li class="qg-vide">Aucun duel joué pour l'instant.</li></ol>
+        </div>
+
+        <div class="qg-carte qg-bientot">
+          <div class="qg-tete">
+            <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></svg></span>
+            <div class="qg-titre"><h2>Bientôt</h2><p>D'autres duels arriveront ici</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="panel-radar">
+      <h1>Radar</h1>
+      <div class="rd-ecran" id="rdVs" hidden>
+        <p class="qg-petit" id="rdVsTexte"></p>
+        <div class="rd-vs">
+          <div class="rd-joueur"><b>Toi</b><span id="rdVsMoi"></span></div>
+          <em>VS</em>
+          <div class="rd-joueur"><b id="rdVsLui">?</b><span id="rdVsLuiInfo"></span></div>
+        </div>
+      </div>
+      <div class="rd-ecran" id="rdManche" hidden>
+        <div class="rd-points" id="rdPoints"></div>
+        <div class="rd-tete">
+          <div><small id="rdNum"></small><b id="rdNom">—</b></div>
+          <span class="rd-chrono" id="rdChrono"></span>
+        </div>
+        <div class="rd-carte"><svg id="rdCarte" role="img" aria-label="Carte de France : clique pour placer la commune"></svg></div>
+        <div class="rd-verdict" id="rdVerdict"></div>
+        <div class="qg-actions"><button type="button" class="qg-btn plein" id="rdValider" disabled>Valider</button></div>
+      </div>
+      <div class="rd-ecran" id="rdFin" hidden></div>
+      <p class="qg-vide" id="rdIndispo" hidden>Radar n'est pas disponible pour le moment.</p>
     </section>
 
     <section class="tab-panel" id="panel-cdj">
@@ -1059,6 +1146,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=807b65b661c2"></script>
+<script src="app.js?v=128f7ab93f77"></script>
 </body>
 </html>

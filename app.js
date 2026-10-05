@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '807b65b661c2';
+const VERSION_JEU = '128f7ab93f77';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -463,6 +463,7 @@ async function showGame(session_){
   // franchi : sans lui le mecanisme de saison ne se declenche jamais
   chargerSaison();
   chargerCdj();
+  chargerRadar();
   verifierVersion();
   // arrivee depuis une notification : ?onglet=combat ou ?onglet=tirage
   if(new URLSearchParams(location.search).has('onglet')){
@@ -6810,9 +6811,9 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // revient a Collection. L'onglet Defense reste dans la page, cache, et
 // n'apparait ni dans la barre ni dans le menu.
 const ONGLETS_BARRE = ['tirage', 'territoire', 'collection', 'combat'];
-const ONGLETS_FUSIONNES = ['defense', 'succes'];
+const ONGLETS_FUSIONNES = ['defense', 'succes', 'cdj', 'radar'];
 // l'onglet qui s'allume quand on ouvre un volet fusionne
-const ONGLET_PARENT = { defense: 'combat', succes: 'profil' };
+const ONGLET_PARENT = { defense: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg' };
 // Le menu Plus n'est plus une liste a tenir : c'est tout ce qui n'est pas dans
 // la barre, dans l'ordre de la colonne. Deux listes ecrites a la main, c'etait
 // deux listes qui finissaient par diverger — et c'est exactement ce qui etait
@@ -6882,7 +6883,7 @@ function majBadgePlus(){
   const cible = document.getElementById('plusBadge');
   if(!source || !cible) return;
   const dansLeMenu = surTelephone() && ONGLETS_MENU.includes('combat');
-  const cdj = document.getElementById('cdjBadge');
+  const cdj = document.getElementById('qgBadge');
   const cdjAJouer = surTelephone() && cdj && !cdj.hidden;
   if(dansLeMenu && !source.hidden){
     cible.hidden = false;
@@ -7043,6 +7044,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'succes') loadSucces();
     if(tab.dataset.tab === 'monuments') loadMonuments();
     if(tab.dataset.tab === 'cdj') ouvrirCdj();
+    if(tab.dataset.tab === 'qg') ouvrirQG();
     if(tab.dataset.tab === 'profil') loadProfilPanneau();
     if(tab.dataset.tab === 'contrat') loadContratEtExclusions();
     if(tab.dataset.tab === 'echange') loadEchanges();
@@ -8022,7 +8024,7 @@ if('serviceWorker' in navigator){
   });
 }
 
-const ONGLETS_CONNUS = ['tirage', 'collection', 'territoire', 'bourse', 'combat', 'defense', 'regles', 'cdj'];
+const ONGLETS_CONNUS = ['tirage', 'collection', 'territoire', 'bourse', 'combat', 'defense', 'regles', 'cdj', 'qg', 'radar'];
 function ouvrirOngletDepuisUrl(url){
   try{
     const onglet = new URL(url, location.href).searchParams.get('onglet');
@@ -8193,6 +8195,7 @@ function renderCdjCarte(){
   if(!e){
     carte.hidden = true;
     if(badge) badge.hidden = true;
+    majBadgeQG();
     majBadgePlus();
     return;
   }
@@ -8220,6 +8223,7 @@ function renderCdjCarte(){
   carte.hidden = false;
   if(badge){
     badge.hidden = e.fini;
+    majBadgeQG();
     badge.textContent = '1';
   }
   majBadgePlus();
@@ -8582,5 +8586,308 @@ document.addEventListener('click', (ev) => {
   quitterInviteCdj();
   quitterLanding(inscr ? 'inscription' : 'connexion');
 });
+
+// ---------- QG et Radar (patch70) ----------
+// Tout ce qui compte (chrono, distances, Elo) se decide sur le serveur.
+let radarEtat = null;
+let radarPartie = null;
+let radarPin = null;
+let radarRevele = false;
+let radarChrono = null, radarFin = 0, radarEnvoi = false;
+const RADAR_RANGS = [['Promeneur', 0], ['Randonneur', 900], ['Guetteur', 1000], ['Vigie', 1100], ['Navigateur', 1200]];
+
+function majBadgeQG(){
+  const b = document.getElementById('qgBadge');
+  if(!b) return;
+  const cdj = document.getElementById('cdjBadge');
+  const cdjAJouer = cdj && !cdj.hidden;
+  const nonVus = radarEtat ? Number(radarEtat.non_vus || 0) : 0;
+  const n = (cdjAJouer ? 1 : 0) + nonVus;
+  b.hidden = n === 0;
+  b.textContent = n;
+  majBadgePlus();
+}
+
+async function chargerRadar(){
+  const { data, error } = await sb.rpc('radar_etat');
+  if(error){ console.warn('TERRAFRONT radar indisponible', error); radarEtat = null; }
+  else radarEtat = data;
+  majBadgeQG();
+  const qg = document.getElementById('panel-qg');
+  if(qg && qg.classList.contains('active')) renderQG();
+}
+
+async function ouvrirQG(){
+  renderQG();
+  if(!cdjEtat) chargerCdj();
+  await chargerRadar();
+  renderQG();
+  // les resultats affiches sont vus : la pastille s'eteint
+  if(radarEtat && radarEtat.non_vus > 0){
+    sb.rpc('radar_vu').then(() => { radarEtat.non_vus = 0; majBadgeQG(); });
+  }
+}
+
+function rangSuivant(elo){
+  for(const [nom, seuil] of RADAR_RANGS) if(elo < seuil) return [nom, seuil];
+  return null;
+}
+
+function renderQG(){
+  // Commune du jour
+  const e = cdjEtat;
+  const etat = document.getElementById('qgCdjEtat'), info = document.getElementById('qgCdjInfo'), btn = document.getElementById('qgCdjBtn');
+  if(!e){ etat.textContent = ''; info.textContent = 'Pas disponible pour le moment.'; btn.hidden = true; }
+  else {
+    btn.hidden = false;
+    const nb = e.essais.length;
+    etat.className = 'qg-etiquette' + (e.fini ? (e.trouve ? ' vert' : '') : ' or');
+    etat.textContent = e.fini ? (e.trouve ? `Trouvée en ${nb}` : 'Pas trouvée') : (nb ? `${nb} essai${nb > 1 ? 's' : ''} sur 6` : 'À jouer');
+    btn.textContent = e.fini ? 'Revoir' : (nb ? 'Continuer' : 'Jouer');
+    btn.classList.toggle('plein', !e.fini);
+    info.textContent = (e.serie > 0 ? `Série de ${e.serie} jour${e.serie > 1 ? 's' : ''} · ` : '') + 'nouvelle commune à minuit';
+  }
+
+  // Radar
+  const r = radarEtat;
+  const lancer = document.getElementById('qgLancer');
+  if(!r){
+    document.getElementById('qgRangNom').textContent = '—';
+    document.getElementById('qgRangSuivant').textContent = '';
+    document.getElementById('qgElo').textContent = '—';
+    document.getElementById('qgRestants').textContent = '';
+    document.getElementById('qgAttente').textContent = 'Radar n’est pas disponible pour le moment.';
+    lancer.disabled = true;
+    return;
+  }
+  const elo = Number(r.elo);
+  document.getElementById('qgRangNom').textContent = r.rang;
+  document.getElementById('qgRangNom').className = 'rang-' + sansAccents(r.rang).toLowerCase();
+  const suiv = rangSuivant(elo);
+  document.getElementById('qgRangSuivant').textContent = r.rang === 'Lapérouse' ? 'n°1 du classement'
+    : (suiv ? `encore ${suiv[1] - elo} pts pour ${suiv[0]}` : 'rang le plus haut');
+  document.getElementById('qgElo').textContent = elo.toLocaleString('fr-FR');
+  document.getElementById('qgJauge').style.width = Math.max(2, Math.min(100, (elo - 800) / 500 * 100)) + '%';
+  document.getElementById('qgRestants').textContent = r.en_cours ? 'partie en cours'
+    : (r.restants > 0 ? `${r.restants} duel${r.restants > 1 ? 's' : ''} aujourd’hui` : 'reviens demain');
+  lancer.textContent = r.en_cours ? 'Reprendre la partie' : 'Lancer un duel';
+  lancer.disabled = !r.en_cours && r.restants <= 0;
+  document.getElementById('qgAttente').textContent = r.en_attente > 0
+    ? `${r.en_attente} partie${r.en_attente > 1 ? 's' : ''} en attente d’un adversaire` : '';
+
+  // derniers duels
+  const d = r.derniers || [];
+  document.getElementById('qgDerniersBloc').hidden = d.length === 0;
+  document.getElementById('qgDerniers').innerHTML = d.map(x => {
+    const delta = (x.elo_apres != null && x.elo_avant != null) ? x.elo_apres - x.elo_avant : 0;
+    const mot = x.resultat === 'victoire' ? 'Victoire' : x.resultat === 'defaite' ? 'Défaite' : 'Égalité';
+    return `<li class="${x.vu ? '' : 'nouveau'}"><span class="qg-res ${x.resultat}">${mot}</span>
+      <span class="qg-adv">contre <b>${echapperTexte(x.adversaire || 'un joueur')}</b><small>${Number(x.total_km).toLocaleString('fr-FR')} km contre ${Number(x.adversaire_km).toLocaleString('fr-FR')} km</small></span>
+      <span class="qg-delta ${delta >= 0 ? 'plus' : 'moins'}">${delta >= 0 ? '+' : ''}${delta}</span></li>`;
+  }).join('');
+
+  // classement
+  const c = r.classement || [];
+  document.getElementById('qgClassement').innerHTML = c.length ? c.map((x, i) =>
+    `<li class="${x.moi ? 'moi' : ''}"><span class="qg-pos">${i + 1}</span><span class="qg-nom">${echapperTexte(x.pseudo)}</span><span class="qg-rangpetit rang-${sansAccents(x.rang).toLowerCase()}">${x.rang}</span><b>${Number(x.elo).toLocaleString('fr-FR')}</b></li>`).join('')
+    : '<li class="qg-vide">Aucun duel joué pour l’instant.</li>';
+}
+
+document.getElementById('qgCdjBtn').addEventListener('click', () => {
+  const t = document.querySelector('.tab[data-tab="cdj"]'); if(t) t.click();
+});
+
+// ----- la partie -----
+function radarMontrer(id){
+  for(const x of ['rdVs', 'rdManche', 'rdFin']) document.getElementById(x).hidden = x !== id;
+  document.getElementById('rdIndispo').hidden = true;
+}
+
+document.getElementById('qgLancer').addEventListener('click', async (ev) => {
+  const b = ev.currentTarget;
+  b.disabled = true;
+  try{
+    const { data, error } = await sb.rpc('radar_lancer');
+    if(error) throw error;
+    radarPartie = data;
+    const t = document.querySelector('.tab[data-tab="radar"]'); if(t) t.click();
+    // reprise d'une partie deja commencee : directement la manche
+    if(data.jouees.length > 0 || data.en_cours){ radarSuite(); return; }
+    radarMontrer('rdVs');
+    const moi = radarEtat ? `${radarEtat.rang} · ${Number(radarEtat.elo).toLocaleString('fr-FR')}` : '';
+    document.getElementById('rdVsMoi').textContent = moi;
+    const a = data.adversaire;
+    if(a){
+      document.getElementById('rdVsLui').textContent = a.pseudo;
+      document.getElementById('rdVsLuiInfo').textContent = a.elo ? `${radarRangDe(a.elo)} · ${Number(a.elo).toLocaleString('fr-FR')}` : '';
+      document.getElementById('rdVsTexte').textContent = `${a.pseudo} a joué ces 5 communes. À toi de faire mieux.`;
+    } else {
+      document.getElementById('rdVsLui').textContent = '?';
+      document.getElementById('rdVsLuiInfo').textContent = '';
+      document.getElementById('rdVsTexte').textContent = 'Personne de disponible pour l’instant : tu joues 5 communes neuves, et le prochain joueur les affrontera. Le résultat arrivera dans le QG.';
+    }
+    setTimeout(radarSuite, a ? 2200 : 3200);
+  } catch(err){
+    notifier({ type: 'erreur', titre: 'Radar', texte: messageLisible(err.message) });
+    chargerRadar();
+  } finally { b.disabled = false; }
+});
+
+function radarRangDe(elo){
+  let r = RADAR_RANGS[0][0];
+  for(const [nom, seuil] of RADAR_RANGS) if(elo >= seuil) r = nom;
+  return r;
+}
+
+async function radarSuite(){
+  if(!radarPartie) return;
+  if(radarPartie.fini){ radarResultat(); return; }
+  const { data, error } = await sb.rpc('radar_ouvrir', { p_id: radarPartie.id });
+  if(error){ notifier({ type: 'erreur', titre: 'Radar', texte: messageLisible(error.message) }); return; }
+  radarPartie = data;
+  if(data.fini){ radarResultat(); return; }
+  radarPin = null; radarRevele = false; radarEnvoi = false;
+  radarMontrer('rdManche');
+  const n = data.manche;
+  document.getElementById('rdNum').textContent = `Commune ${n + 1} sur ${data.manches}`;
+  document.getElementById('rdNom').textContent = data.en_cours ? data.en_cours.nom : '—';
+  document.getElementById('rdPoints').innerHTML = Array.from({ length: data.manches }, (_, i) =>
+    `<i class="${i < n ? 'fait' : i === n ? 'encours' : ''}"></i>`).join('');
+  document.getElementById('rdVerdict').innerHTML = '<span>Clique sur la carte, puis valide.</span>';
+  const v = document.getElementById('rdValider');
+  v.disabled = true; v.textContent = 'Valider';
+  radarDessiner();
+  radarFin = Date.now() + (data.en_cours ? data.en_cours.reste_ms : 0);
+  clearInterval(radarChrono);
+  radarChrono = setInterval(radarTic, 200);
+  radarTic();
+}
+
+function radarTic(){
+  const r = Math.max(0, Math.ceil((radarFin - Date.now()) / 1000));
+  const el = document.getElementById('rdChrono');
+  el.textContent = r;
+  el.classList.toggle('court', r <= 5);
+  // a zero, on envoie ce qu'on a (le point pose, ou rien)
+  if(r === 0 && !radarRevele && !radarEnvoi) radarViser();
+}
+
+async function radarViser(){
+  if(radarEnvoi || radarRevele || !radarPartie) return;
+  radarEnvoi = true;
+  clearInterval(radarChrono);
+  document.getElementById('rdValider').disabled = true;
+  const p = radarPin;
+  const { data, error } = await sb.rpc('radar_viser', { p_id: radarPartie.id, p_lon: p ? p[0] : null, p_lat: p ? p[1] : null });
+  radarEnvoi = false;
+  if(error){ notifier({ type: 'erreur', titre: 'Radar', texte: messageLisible(error.message) }); return; }
+  radarPartie = data;
+  radarRevele = true;
+  const m = data.jouees[data.jouees.length - 1];
+  const moi = m.moi, lui = m.lui;
+  const temps = moi.lon === null;
+  document.getElementById('rdVerdict').innerHTML =
+    `<b>${temps ? 'Temps écoulé · ' : ''}${Number(moi.km).toLocaleString('fr-FR')} km</b>` +
+    (lui ? `<span>${echapperTexte(data.adversaire ? data.adversaire.pseudo : 'Adversaire')} : ${Number(lui.km).toLocaleString('fr-FR')} km</span>` : `<span>${echapperTexte(m.nom)} (${echapperTexte(m.dept)})</span>`);
+  const v = document.getElementById('rdValider');
+  v.disabled = false;
+  v.textContent = data.fini ? 'Voir le résultat' : 'Commune suivante';
+  radarDessiner(m);
+}
+
+document.getElementById('rdValider').addEventListener('click', () => {
+  if(!radarRevele){ if(radarPin) radarViser(); return; }
+  if(radarPartie.fini) radarResultat(); else radarSuite();
+});
+
+function radarAssurerBornes(){
+  const contour = FRANCE_OUTLINE || cdjContour;
+  if(cdjBornes || !contour) return !!cdjBornes;
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+  for(const anneau of contour) for(const [lo, la] of anneau){
+    x0 = Math.min(x0, lo * CDJ_K); x1 = Math.max(x1, lo * CDJ_K);
+    y0 = Math.min(y0, -la); y1 = Math.max(y1, -la);
+  }
+  cdjBornes = { x0: x0 - 0.3, y0: y0 - 0.3, w: x1 - x0 + 0.6, h: y1 - y0 + 0.6 };
+  return true;
+}
+
+function radarDessiner(manche){
+  const svg = document.getElementById('rdCarte');
+  if(!svg || !radarAssurerBornes()) return;
+  const contour = FRANCE_OUTLINE || cdjContour;
+  svg.setAttribute('viewBox', `0 0 ${cdjBornes.w.toFixed(2)} ${cdjBornes.h.toFixed(2)}`);
+  const ray = cdjBornes.w / 80;
+  let h = '';
+  for(const a of contour) h += `<path class="cdj-fr" d="M${a.map(([lo, la]) => cdjPx(lo, la).join(',')).join('L')}Z"/>`;
+  if(manche){
+    const [cx, cy] = cdjPx(+manche.lon, +manche.lat);
+    if(manche.lui && manche.lui.lon !== null){
+      const [ax, ay] = cdjPx(+manche.lui.lon, +manche.lui.lat);
+      h += `<line class="rd-trait lui" x1="${ax}" y1="${ay}" x2="${cx}" y2="${cy}" stroke-width="${ray / 3}" stroke-dasharray="${ray / 2} ${ray / 2}"/>`;
+      h += `<circle class="rd-lui" cx="${ax}" cy="${ay}" r="${ray * 0.8}" stroke-width="${ray / 4}"/>`;
+    }
+    if(manche.moi && manche.moi.lon !== null){
+      const [x, y] = cdjPx(+manche.moi.lon, +manche.moi.lat);
+      h += `<line class="rd-trait moi" x1="${x}" y1="${y}" x2="${cx}" y2="${cy}" stroke-width="${ray / 3}" stroke-dasharray="${ray / 2} ${ray / 2}"/>`;
+    }
+    h += `<circle class="cdj-cible" cx="${cx}" cy="${cy}" r="${ray * 2.2}" stroke-width="${ray / 2.5}"/><circle class="cdj-cible-c" cx="${cx}" cy="${cy}" r="${ray * 0.9}"/>`;
+    h += `<text class="rd-etiquette" x="${cx}" y="${(cy - ray * 2.8).toFixed(3)}" font-size="${ray * 2.2}">${echapperTexte(manche.nom)}</text>`;
+  }
+  const pin = manche ? (manche.moi && manche.moi.lon !== null ? [manche.moi.lon, manche.moi.lat] : null) : radarPin;
+  if(pin){
+    const [x, y] = cdjPx(+pin[0], +pin[1]);
+    h += `<circle class="rd-moi" cx="${x}" cy="${y}" r="${ray}" stroke-width="${ray / 3.5}"/>`;
+  }
+  svg.innerHTML = h;
+}
+
+document.getElementById('rdCarte').addEventListener('click', (e) => {
+  if(radarRevele || radarEnvoi || !cdjBornes) return;
+  const svg = e.currentTarget, pt = svg.createSVGPoint();
+  pt.x = e.clientX; pt.y = e.clientY;
+  const q = pt.matrixTransform(svg.getScreenCTM().inverse());
+  radarPin = [(q.x + cdjBornes.x0) / CDJ_K, -(q.y + cdjBornes.y0)];
+  document.getElementById('rdValider').disabled = false;
+  document.getElementById('rdVerdict').innerHTML = '<span>Tu peux déplacer ton point, puis valider.</span>';
+  radarDessiner();
+});
+
+function radarResultat(){
+  clearInterval(radarChrono);
+  const p = radarPartie;
+  radarMontrer('rdFin');
+  const fmt = (n) => Number(n).toLocaleString('fr-FR');
+  const lignes = p.jouees.map(m => `<tr><td>${echapperTexte(m.nom)} <small>(${echapperTexte(m.dept)})</small></td>
+    <td class="${m.lui && m.moi.km < m.lui.km ? 'mieux' : ''}">${fmt(m.moi.km)} km</td>
+    ${p.adversaire ? `<td class="${m.lui && m.lui.km < m.moi.km ? 'mieux' : ''}">${m.lui ? fmt(m.lui.km) + ' km' : ''}</td>` : ''}</tr>`).join('');
+  const tableau = `<table class="rd-detail"><thead><tr><th>Commune</th><th>Toi</th>${p.adversaire ? `<th>${echapperTexte(p.adversaire.pseudo)}</th>` : ''}</tr></thead><tbody>${lignes}</tbody></table>`;
+  let tete;
+  if(p.adversaire && p.resultat){
+    const mot = p.resultat === 'victoire' ? 'Victoire' : p.resultat === 'defaite' ? 'Défaite' : 'Égalité';
+    const delta = p.elo_apres - p.elo_avant;
+    const avant = radarRangDe(p.elo_avant), apres = radarRangDe(p.elo_apres);
+    tete = `<h2 class="${p.resultat}">${mot}</h2>
+      <div class="rd-score"><div><b>${fmt(p.total_km)} km</b><span>Toi</span></div><em>contre</em><div><b>${fmt(p.adversaire.total_km)} km</b><span>${echapperTexte(p.adversaire.pseudo)}</span></div></div>
+      <div class="rd-elo"><span>Elo</span><b class="${delta >= 0 ? 'plus' : 'moins'}">${delta >= 0 ? '+' : ''}${delta}</b><span class="qg-petit">${fmt(p.elo_apres)} · ${apres}${apres !== avant ? (delta > 0 ? ' (promu !)' : ' (rétrogradé)') : ''}</span></div>`;
+  } else {
+    tete = `<h2>${fmt(p.total_km)} km</h2>
+      <p class="qg-petit">Ta partie attend un adversaire : le prochain joueur qui lance un duel affrontera ces 5 communes. Le résultat et l’Elo arriveront dans le QG.</p>`;
+  }
+  const partage = p.adversaire && p.resultat
+    ? `TerraFront · Radar\n${p.resultat === 'victoire' ? 'Victoire' : p.resultat === 'defaite' ? 'Défaite' : 'Égalité'} contre ${p.adversaire.pseudo} : ${fmt(p.total_km)} km contre ${fmt(p.adversaire.total_km)} km\n${p.jouees.map(m => m.lui && m.moi.km < m.lui.km ? '🟦' : '🟥').join('')}\nterrafront.fr/?onglet=qg`
+    : null;
+  document.getElementById('rdFin').innerHTML = `<div class="rd-bloc">${tete}${tableau}
+    ${partage ? `<pre class="cdj-partage" id="rdPartage">${echapperTexte(partage)}</pre>` : ''}
+    <div class="qg-actions"><button type="button" class="qg-btn plein" id="rdRetour">Retour au QG</button>${partage ? '<button type="button" class="qg-btn" id="rdCopier">Copier pour Discord</button>' : ''}</div></div>`;
+  document.getElementById('rdRetour').onclick = () => { const t = document.querySelector('.tab[data-tab="qg"]'); if(t) t.click(); };
+  const c = document.getElementById('rdCopier');
+  if(c) c.onclick = async () => {
+    try{ await navigator.clipboard.writeText(partage); c.textContent = 'Copié'; }
+    catch(err){ const s = getSelection(), r = document.createRange(); r.selectNodeContents(document.getElementById('rdPartage')); s.removeAllRanges(); s.addRange(r); c.textContent = 'Sélectionné : copie-le'; }
+  };
+  radarPartie = null;
+  chargerRadar();
+}
 
 initAuth();

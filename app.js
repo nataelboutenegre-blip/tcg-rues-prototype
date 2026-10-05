@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'fd1fba814093';
+const VERSION_JEU = 'b08a441ecfe6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6807,7 +6807,9 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // revient a Collection. L'onglet Defense reste dans la page, cache, et
 // n'apparait ni dans la barre ni dans le menu.
 const ONGLETS_BARRE = ['tirage', 'territoire', 'collection', 'combat'];
-const ONGLETS_FUSIONNES = ['defense'];
+const ONGLETS_FUSIONNES = ['defense', 'succes'];
+// l'onglet qui s'allume quand on ouvre un volet fusionne
+const ONGLET_PARENT = { defense: 'combat', succes: 'profil' };
 // Le menu Plus n'est plus une liste a tenir : c'est tout ce qui n'est pas dans
 // la barre, dans l'ordre de la colonne. Deux listes ecrites a la main, c'etait
 // deux listes qui finissaient par diverger — et c'est exactement ce qui etait
@@ -7020,8 +7022,8 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     tab.classList.add('active');
     // Defense est un volet de Combat : c'est Combat qui s'allume
     if(ONGLETS_FUSIONNES.indexOf(tab.dataset.tab) >= 0){
-      const combat = document.querySelector('.tab[data-tab="combat"]');
-      if(combat) combat.classList.add('active');
+      const parent = document.querySelector(`.tab[data-tab="${ONGLET_PARENT[tab.dataset.tab]}"]`);
+      if(parent) parent.classList.add('active');
     }
     majBadgePlus();
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });

@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=fd1fba814093">
+<link rel="stylesheet" href="style.css?v=b08a441ecfe6">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -313,7 +313,7 @@
         Communauté
       </div>
 
-      <div class="tab" data-tab="succes">
+      <div class="tab onglet-fusionne" data-tab="succes" aria-hidden="true">
         <div class="icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round">
             <path d="M8 3.5h8V9a4 4 0 0 1-8 0z"/>
@@ -731,7 +731,11 @@
     </section>
 
     <section class="tab-panel" id="panel-succes">
-      <h1>Succès</h1>
+      <h1>Profil</h1>
+      <div class="volets" role="tablist" aria-label="Profil">
+        <button type="button" class="volet" data-volet="profil" role="tab" aria-selected="false">Profil</button>
+        <button type="button" class="volet actif" data-volet="succes" role="tab" aria-selected="true">Succès</button>
+      </div>
       <div class="sub">Toute commune possédée au moins une fois reste acquise, même si tu la revends ou qu'on te la prend. Termine un département pour toucher sa récompense.</div>
       <div class="sc-entete">
         <span class="puce" id="scTotal">—</span>
@@ -751,6 +755,10 @@
 
     <section class="tab-panel" id="panel-profil">
       <h1>Profil</h1>
+      <div class="volets" role="tablist" aria-label="Profil">
+        <button type="button" class="volet actif" data-volet="profil" role="tab" aria-selected="true">Profil</button>
+        <button type="button" class="volet" data-volet="succes" role="tab" aria-selected="false">Succès</button>
+      </div>
       <div class="sub">Ton niveau monte avec ce que tu fais : conquérir, défendre, signer des contrats, revenir chaque jour. Il ne redescend jamais, même quand on te prend des communes.</div>
       <div id="pfCorps"></div>
       <p class="collection-empty" id="pfVide" hidden>Chargement…</p>
@@ -1036,6 +1044,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=fd1fba814093"></script>
+<script src="app.js?v=b08a441ecfe6"></script>
 </body>
 </html>

@@ -3937,3 +3937,12 @@
 .rd-detail td{ padding:7px 6px; border-top:1px solid rgba(169,188,212,.18); text-align:right; white-space:nowrap; }
 .rd-detail td small{ color: var(--brume); }
 .rd-detail td.mieux{ color: var(--c-legendaire); font-weight:600; }
+
+
+/* ---------- Radar : grande carte sur ordinateur (patch72) ---------- */
+@media (min-width: 721px){
+  #rdManche{ max-width: 1000px; }
+  #rdManche .rd-carte{ display:flex; justify-content:center; }
+  /* la hauteur de la fenetre, moins le titre, le nom, le verdict et le bouton */
+  #rdManche .rd-carte svg{ width:auto; height: calc(100vh - 345px); min-height: 420px; max-width:100%; }
+}

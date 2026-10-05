@@ -3465,7 +3465,7 @@
      a rien a lire, juste a sentir. Sur telephone la barre du bas est une
      rangee : la regle ne s'y applique jamais. */
   @media (min-width: 721px){
-    .tab[data-tab="combat"],
+    .tab[data-tab="qg"],
     .tab[data-tab="contrat"],
     .tab[data-tab="profil"]{ margin-top: 14px; }
   }

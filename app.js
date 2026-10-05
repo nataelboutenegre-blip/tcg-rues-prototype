@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '128f7ab93f77';
+const VERSION_JEU = '8826a037ee1f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6810,7 +6810,7 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // Combat et Defense ne font plus qu'un onglet (patch65) : la place liberee
 // revient a Collection. L'onglet Defense reste dans la page, cache, et
 // n'apparait ni dans la barre ni dans le menu.
-const ONGLETS_BARRE = ['tirage', 'territoire', 'collection', 'combat'];
+const ONGLETS_BARRE = ['tirage', 'territoire', 'qg', 'combat'];
 const ONGLETS_FUSIONNES = ['defense', 'succes', 'cdj', 'radar'];
 // l'onglet qui s'allume quand on ouvre un volet fusionne
 const ONGLET_PARENT = { defense: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg' };
@@ -6884,7 +6884,7 @@ function majBadgePlus(){
   if(!source || !cible) return;
   const dansLeMenu = surTelephone() && ONGLETS_MENU.includes('combat');
   const cdj = document.getElementById('qgBadge');
-  const cdjAJouer = surTelephone() && cdj && !cdj.hidden;
+  const cdjAJouer = surTelephone() && ONGLETS_MENU.includes('qg') && cdj && !cdj.hidden;
   if(dansLeMenu && !source.hidden){
     cible.hidden = false;
     cible.textContent = source.textContent;

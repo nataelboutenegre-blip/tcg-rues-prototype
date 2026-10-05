@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'd78247c523d7';
+const VERSION_JEU = '807b65b661c2';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -437,6 +437,7 @@ function showAuth(msg, type = 'erreur'){
 }
 
 async function showGame(session_){
+  if(cdjInvite) quitterInviteCdj();
   cacherLanding();
   marquerDejaJoue();
   document.getElementById('authScreen').style.display = 'none';
@@ -485,6 +486,7 @@ async function initAuth(){
   const { data: { session: s } } = await sb.auth.getSession();
   if(recuperationEnCours){ showAuth(); ecranAuth('nouveau'); }
   else if(s) showGame(s);
+  else if(new URLSearchParams(location.search).get('onglet') === 'cdj') montrerInviteCdj();
   else if(dejaJoue()) showAuth();
   else montrerLanding();
   sb.auth.onAuthStateChange((event, s2) => {
@@ -497,6 +499,7 @@ async function initAuth(){
     // pendant une réinitialisation Supabase ouvre une session : on n'entre pas dans le jeu pour autant
     if(recuperationEnCours && event !== 'SIGNED_OUT') return;
     if(s2) showGame(s2);
+    else if(cdjInvite) return;
     else { showAuth(); ecranAuth('principal'); }
   });
 }
@@ -8174,6 +8177,7 @@ function ouvrirCdj(){
 }
 
 document.addEventListener('visibilitychange', () => {
+  if(cdjInvite) return;
   if(!document.hidden && cdjEtat && cdjEtat.jour !== cdjJourParis()) chargerCdj();
 });
 
@@ -8235,10 +8239,11 @@ function cdjPx(lon, lat){
 
 function renderCdjFrance(){
   const svg = document.getElementById('cdjFrance');
-  if(!svg || !FRANCE_OUTLINE || !cdjEtat) return;
+  const contour = FRANCE_OUTLINE || cdjContour;
+  if(!svg || !contour || !cdjEtat) return;
   if(!cdjBornes){
     let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
-    for(const anneau of FRANCE_OUTLINE) for(const [lo, la] of anneau){
+    for(const anneau of contour) for(const [lo, la] of anneau){
       x0 = Math.min(x0, lo * CDJ_K); x1 = Math.max(x1, lo * CDJ_K);
       y0 = Math.min(y0, -la); y1 = Math.max(y1, -la);
     }
@@ -8248,7 +8253,7 @@ function renderCdjFrance(){
   svg.setAttribute('viewBox', `0 0 ${cdjBornes.w.toFixed(2)} ${cdjBornes.h.toFixed(2)}`);
   const rayon = cdjBornes.w / 90;
   let h = '';
-  for(const anneau of FRANCE_OUTLINE){
+  for(const anneau of contour){
     h += `<path class="cdj-fr" d="M${anneau.map(([lo, la]) => cdjPx(lo, la).join(',')).join('L')}Z"/>`;
   }
   const rep = cdjEtat.reponse;
@@ -8283,6 +8288,9 @@ function renderCdj(){
   if(!e) return;
 
   document.getElementById('cdjNumero').textContent = '#' + e.numero;
+  const bandeau = document.getElementById('cdjInviteBandeau');
+  bandeau.hidden = !e.invite;
+  if(e.invite) bandeau.innerHTML = `Tu joues <b>la commune d’hier</b>, sans compte. Celle d’aujourd’hui est réservée aux joueurs inscrits.`;
   document.getElementById('cdjSil').innerHTML = `<path d="${cdjSilhouette(e.silhouette)}"/>`;
 
   // les indices : le serveur n'envoie que ceux deja gagnes
@@ -8320,7 +8328,7 @@ function renderCdj(){
 function cdjTextePartage(){
   const e = cdjEtat;
   const ligne = e.essais.map(x => cdjCarre(x.km) + (x.km === 0 ? '🎯' : CDJ_FLECHES[x.cap])).join(' ');
-  return `TerraFront · Commune du jour #${e.numero}\n${e.trouve ? e.essais.length : 'X'}/6  ${ligne}\nterrafront.fr`;
+  return `TerraFront · Commune du jour #${e.numero}\n${e.trouve ? e.essais.length : 'X'}/6  ${ligne}\nterrafront.fr/?onglet=cdj`;
 }
 
 function renderCdjFin(){
@@ -8328,6 +8336,7 @@ function renderCdjFin(){
   const e = cdjEtat;
   z.hidden = !e.fini;
   if(!e.fini) return;
+  if(e.invite){ renderCdjFinInvite(z, e); return; }
   const r = e.reponse;
   const nb = e.essais.length;
   const qui = e.joueurs > 0
@@ -8420,7 +8429,14 @@ async function cdjValider(){
   cdjEnvoi = true;
   cdjMajBouton();
   try{
-    const { data, error } = await sb.rpc('cdj_essayer', { p_code: cdjChoix.code });
+    let data, error;
+    if(cdjInvite){
+      const codes = cdjInviteCodes.concat(cdjChoix.code);
+      ({ data, error } = await sb.rpc('cdj_invite', { p_codes: codes }));
+      if(!error){ cdjInviteCodes = codes; cdjInviteGarder(data.jour); }
+    } else {
+      ({ data, error } = await sb.rpc('cdj_essayer', { p_code: cdjChoix.code }));
+    }
     if(error) throw error;
     cdjEtat = data;
     cdjChoix = null;
@@ -8431,7 +8447,7 @@ async function cdjValider(){
   } catch(err){
     notifier({ type: 'erreur', titre: 'Essai refusé', texte: messageLisible(err.message) });
     // la partie a pu changer ailleurs (autre appareil, minuit) : on la relit
-    chargerCdj();
+    if(cdjInvite) chargerCdjInvite(); else chargerCdj();
   } finally {
     cdjEnvoi = false;
     cdjMajBouton();
@@ -8469,5 +8485,102 @@ async function cdjValider(){
   });
   document.getElementById('cdjValider').addEventListener('click', cdjValider);
 })();
+
+// ---------- Commune du jour sans compte (patch69) ----------
+// Le panneau du jeu est deplace tel quel dans l'ecran invite, puis remis a
+// sa place a la connexion : un seul jeu, un seul code d'affichage.
+let cdjInvite = false;
+let cdjInviteCodes = [];
+let cdjContour = null;
+let cdjPlace = null;
+const CLE_CDJ_INVITE = 'tf-cdj-invite';
+
+function cdjInviteGarder(jour){
+  try { localStorage.setItem(CLE_CDJ_INVITE, JSON.stringify({ jour, codes: cdjInviteCodes })); } catch(e){}
+}
+function cdjInviteRelire(){
+  try { const x = JSON.parse(localStorage.getItem(CLE_CDJ_INVITE) || 'null'); return x && Array.isArray(x.codes) ? x : null; }
+  catch(e){ return null; }
+}
+
+async function chargerCdjInvite(){
+  const garde = cdjInviteRelire();
+  cdjInviteCodes = garde ? garde.codes : [];
+  let { data, error } = await sb.rpc('cdj_invite', { p_codes: cdjInviteCodes });
+  // ce qui etait garde concernait une autre journee : on repart de zero
+  if(!error && garde && garde.jour !== data.jour){
+    cdjInviteCodes = [];
+    ({ data, error } = await sb.rpc('cdj_invite', { p_codes: [] }));
+  }
+  if(error){
+    console.warn('TERRAFRONT commune du jour (invite) indisponible', error);
+    cdjEtat = null;
+  } else {
+    cdjEtat = data;
+    cdjInviteGarder(data.jour);
+  }
+  cdjDernierIndice = null;
+  renderCdj();
+}
+
+function montrerInviteCdj(){
+  const ecran = document.getElementById('cdjInvite');
+  const panneau = document.getElementById('panel-cdj');
+  if(!ecran || !panneau) return;
+  if(!cdjPlace) cdjPlace = { parent: panneau.parentNode, suivant: panneau.nextSibling };
+  document.getElementById('cdjInviteHote').appendChild(panneau);
+  panneau.classList.add('active');
+  cacherLanding();
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('gameScreen').style.display = 'none';
+  ecran.hidden = false;
+  cdjInvite = true;
+  window.scrollTo(0, 0);
+  if(!FRANCE_OUTLINE && !cdjContour){
+    fetch('data/france-outline.json').then(r => r.json()).then(c => { cdjContour = c; renderCdjFrance(); }).catch(() => {});
+  }
+  cdjChargerNoms();
+  chargerCdjInvite();
+}
+
+function quitterInviteCdj(){
+  const ecran = document.getElementById('cdjInvite');
+  const panneau = document.getElementById('panel-cdj');
+  if(cdjPlace && panneau){
+    cdjPlace.parent.insertBefore(panneau, cdjPlace.suivant);
+    panneau.classList.remove('active');
+  }
+  if(ecran) ecran.hidden = true;
+  cdjInvite = false;
+  cdjEtat = null;
+  cdjDernierIndice = null;
+}
+
+function renderCdjFinInvite(z, e){
+  const r = e.reponse;
+  const nb = e.essais.length;
+  const qui = e.joueurs > 0
+    ? `${e.trouves} joueur${e.trouves > 1 ? 's' : ''} sur ${e.joueurs} l’${e.trouves > 1 ? 'ont' : 'a'} trouvée.`
+    : '';
+  z.innerHTML = `<h2 class="${e.trouve ? 'gagne' : ''}">${e.trouve ? `Trouvée en ${nb}` : 'Pas trouvée'}</h2>
+    <p>C’était <b>${echapperTexte(r.nom)}</b>, ${echapperTexte(DEPT_NAMES[r.dept] || r.dept)}, ${Number(r.pop).toLocaleString('fr-FR')} habitants. ${qui}</p>
+    <div class="cdj-invite-appel">
+      <b>La commune d’aujourd’hui t’attend.</b>
+      <p>Crée un compte gratuit pour la jouer avec les autres, garder ta série et comparer tes résultats. Tu pourras aussi ouvrir des paquets et collectionner les vraies communes de France.</p>
+      <div class="cdj-invite-actions">
+        <button type="button" class="cdj-copier cdj-plein" data-cdj-inscription>Créer mon compte</button>
+        <button type="button" class="cdj-copier" data-cdj-connexion>J’ai déjà un compte</button>
+      </div>
+    </div>`;
+}
+
+document.addEventListener('click', (ev) => {
+  if(ev.target.closest('[data-cdj-invite]')){ montrerInviteCdj(); return; }
+  const inscr = ev.target.closest('[data-cdj-inscription]');
+  const conn = ev.target.closest('[data-cdj-connexion]');
+  if(!inscr && !conn) return;
+  quitterInviteCdj();
+  quitterLanding(inscr ? 'inscription' : 'connexion');
+});
 
 initAuth();

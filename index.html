@@ -24,7 +24,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=d78247c523d7">
+<link rel="stylesheet" href="style.css?v=807b65b661c2">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -47,6 +47,10 @@
         <div class="lp-actions">
           <button class="lp-cta" data-jouer>Commencer à jouer</button>
           <span class="lp-gratuit">Gratuit · aucune carte bancaire</span>
+        </div>
+        <div class="lp-invite">
+          <button class="lp-invite-btn" data-cdj-invite>Jouer à la Commune du jour, sans compte</button>
+          <span>Trouve une commune mystère en six essais, sans t'inscrire.</span>
         </div>
         <div class="lp-chiffres">
           <div class="lp-chiffre"><b>35 000</b><small>COMMUNES</small></div>
@@ -169,8 +173,17 @@
       <button class="auth-valider" id="authOubliEnvoyer" hidden>Envoyer le lien</button>
       <button class="auth-valider" id="authNouveauValider" hidden>Enregistrer</button>
       <button class="auth-retour" id="authOubliRetour" hidden>Retour à la connexion</button>
+      <button class="auth-invite" data-cdj-invite>Essayer sans compte : la Commune du jour</button>
     </div>
   </div>
+</div>
+
+<div id="cdjInvite" class="cdj-invite-ecran" hidden>
+  <div class="cdj-invite-barre">
+    <p class="lp-marque">Terra<span>Front</span></p>
+    <button class="lp-connexion" data-cdj-connexion>J'ai déjà un compte</button>
+  </div>
+  <div id="cdjInviteHote"></div>
 </div>
 
 <div id="gameScreen" class="app-shell" style="display:none">
@@ -405,6 +418,7 @@
     <section class="tab-panel" id="panel-cdj">
       <h1>Commune du jour <span class="cdj-numero" id="cdjNumero"></span></h1>
       <div class="sub">La même commune pour tout le monde, six essais pour la trouver. Chaque erreur dévoile un indice, et chaque essai dit à quelle distance tu es et dans quelle direction chercher. Nouvelle commune chaque jour à minuit.</div>
+      <p class="cdj-invite-bandeau" id="cdjInviteBandeau" hidden></p>
       <p class="cdj-indispo" id="cdjIndispo" hidden>La commune du jour n'est pas disponible pour le moment.</p>
       <div class="cdj-grille" id="cdjJeu" hidden>
         <div class="cdj-bloc">
@@ -1045,6 +1059,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=d78247c523d7"></script>
+<script src="app.js?v=807b65b661c2"></script>
 </body>
 </html>

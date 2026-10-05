@@ -69,7 +69,7 @@ returns integer language sql immutable as $$
     when 'secondes'   then 15
     when 'marge'      then 2
     when 'penalite'   then 1000
-    when 'par_jour'   then 5
+    when 'par_jour'   then 15
     when 'k'          then 24
     when 'population' then 15000
   end;

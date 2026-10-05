@@ -3815,3 +3815,11 @@
 .cdj-dist{ font-weight:600; }
 .cdj-dir{ font-size:18px; text-align:center; line-height:1; }
 @media (prefers-reduced-motion: reduce){ .cdj-indices li.neuf{ animation:none; } }
+
+
+/* ---------- Echange : raccourci vers les propositions (patch68) ---------- */
+.ech-raccourci{ font: inherit; font-size:.9rem; font-weight:600; padding:6px 12px; border-radius:20px; cursor:pointer;
+  background:transparent; color: var(--brume); border:1px solid rgba(169,188,212,.3); }
+.ech-raccourci.urgent{ color: var(--nuit); background: var(--c-legendaire); border-color: var(--c-legendaire); }
+.ech-raccourci:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+#echPropositions{ scroll-margin-top: 16px; }

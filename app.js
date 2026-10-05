@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'b08a441ecfe6';
+const VERSION_JEU = 'd78247c523d7';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7526,6 +7526,18 @@ function renderEchangePropositions(){
   if(!bloc || !liste) return;
   bloc.hidden = echangesEnCours.length === 0;
   liste.innerHTML = echangesEnCours.map(ligneEchange).join('');
+  // le raccourci du haut : combien, et combien attendent une reponse
+  const raccourci = document.getElementById('echRaccourci');
+  if(raccourci){
+    const n = echangesEnCours.length;
+    const recues = echangesEnCours.filter(e => e.sens === 'recu').length;
+    raccourci.hidden = n === 0;
+    raccourci.classList.toggle('urgent', recues > 0);
+    const s = (k) => k > 1 ? 's' : '';
+    raccourci.textContent = recues > 0
+      ? `${recues} proposition${s(recues)} en attente ↓`
+      : `${n} proposition${s(n)} envoyée${s(n)} ↓`;
+  }
 }
 
 // mes communes de la rarete choisie, hors boucliers et hors annonces en cours
@@ -7680,6 +7692,11 @@ document.getElementById('echEnvoyer').addEventListener('click', async (e) => {
     notifier({ type: 'erreur', titre: 'Échange impossible', texte: messageLisible(err.message) });
     btn.disabled = false;
   }
+});
+
+document.getElementById('echRaccourci').addEventListener('click', () => {
+  const bloc = document.getElementById('echPropositions');
+  if(bloc) bloc.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 document.getElementById('echListe').addEventListener('click', async (e) => {

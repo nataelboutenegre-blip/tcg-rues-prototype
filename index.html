@@ -22,7 +22,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=a50446e5c686">
+<link rel="stylesheet" href="style.css?v=02349b8afb24">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -457,7 +457,7 @@
             <div class="qg-jauge"><i id="qgJauge"></i></div>
             <div class="qg-paliers"><span>Promeneur</span><span>Randonneur</span><span>Guetteur</span><span>Vigie</span><span>Navigateur</span></div>
           </div>
-          <div class="qg-actions"><button type="button" class="qg-btn plein" id="qgLancer">Lancer un duel</button><span class="qg-petit" id="qgAttente"></span></div>
+          <div class="qg-actions"><button type="button" class="qg-btn plein" id="qgLancer">Lancer un duel</button><button type="button" class="qg-btn" id="qgEntr">S'entraîner</button><span class="qg-petit" id="qgAttente"></span></div>
         </div>
 
         <div class="qg-carte" id="qgDerniersBloc" hidden>
@@ -499,6 +499,7 @@
         <div class="rd-verdict" id="rdVerdict"></div>
         <div class="qg-actions"><button type="button" class="qg-btn plein" id="rdValider" disabled>Valider</button></div>
       </div>
+      <div class="rd-ecran" id="rdEntr" hidden></div>
       <div class="rd-ecran" id="rdFin" hidden></div>
       <p class="qg-vide" id="rdIndispo" hidden>Radar n'est pas disponible pour le moment.</p>
     </section>
@@ -1147,6 +1148,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=a50446e5c686"></script>
+<script src="app.js?v=02349b8afb24"></script>
 </body>
 </html>

@@ -4024,3 +4024,35 @@
 .suppr-champ input:focus{ outline:2px solid #E5484D; outline-offset:1px; }
 .fenetre.suppr .open-btn.suppr-ok{ background:#E5484D; color:#fff; }
 .fenetre.suppr .open-btn.suppr-ok:disabled{ opacity:.4; cursor:not-allowed; }
+
+/* ---------- Radar : entraînement (patch76) ---------- */
+#qgEntr{ position:relative; }
+#qgEntr.neuf::after{ content:'Nouveau'; position:absolute; top:-9px; right:-8px; background: var(--c-peucommun); color:#fff;
+  font-size:10px; font-weight:700; padding:2px 6px; border-radius:999px; text-transform:uppercase; letter-spacing:.04em; }
+.rd-etiq{ align-self:flex-start; display:inline-block; font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+  color: var(--c-legendaire); background: rgba(240,180,41,.12); border:1px solid rgba(240,180,41,.35); padding:3px 9px; border-radius:999px; }
+.rd-entr{ max-width:640px; }
+.rd-label{ margin:0 0 8px; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color: var(--brume); font-weight:700; }
+.rd-seg{ display:grid; gap:8px; }
+.rd-seg.trois{ grid-template-columns:repeat(3, 1fr); }
+.rd-seg.deux{ grid-template-columns:1fr 1fr; }
+.rd-seg button{ font:inherit; color:#fff; background: var(--nuit); border:1px solid rgba(169,188,212,.25); border-radius:12px;
+  padding:10px 9px; text-align:left; cursor:pointer; min-width:0; }
+.rd-seg button:hover{ border-color: rgba(169,188,212,.6); }
+.rd-seg button b{ display:block; font-family: var(--titre); font-size:19px; font-weight:800; text-transform:uppercase; line-height:1.05; }
+.rd-seg button span{ display:block; font-size:12px; color: var(--brume); margin-top:3px; }
+.rd-seg button.actif{ border-color: var(--c-legendaire); background: rgba(240,180,41,.12); box-shadow: inset 0 0 0 1px var(--c-legendaire); }
+.rd-select{ width:100%; margin-top:8px; font:inherit; font-size:15px; color:#fff; background: var(--nuit);
+  border:1px solid var(--c-legendaire); border-radius:10px; padding:10px 12px; }
+.rd-record{ display:flex; justify-content:space-between; align-items:center; background: rgba(255,255,255,.04); border-radius:10px;
+  padding:10px 12px; font-size:14px; color: var(--brume); }
+.rd-record b{ font-family: var(--titre); font-size:24px; color:#fff; }
+.rd-chrono.libre{ font-size:30px; line-height:1; text-align:right; }
+.rd-chrono.libre small{ display:block; font-family: var(--texte); font-size:12px; font-weight:400; color: var(--brume); }
+.rd-dep{ fill:#22416B; stroke: rgba(169,188,212,.55); stroke-width:.8; vector-effect: non-scaling-stroke; }
+svg.rd-zoom .cdj-fr{ fill:#172D4C; }
+.rd-entr-total{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; }
+.rd-entr-total h2{ margin:0; }
+.rd-record-ok{ background: var(--c-peucommun); color:#fff; font-family: var(--titre); font-weight:800; font-size:20px;
+  text-transform:uppercase; padding:4px 12px; border-radius:999px; }
+@media (max-width: 380px){ .rd-seg button b{ font-size:16px; } }

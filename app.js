@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '483790612e6b';
+const VERSION_JEU = 'ac8461136cb8';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8678,15 +8678,21 @@ function renderQG(){
   document.getElementById('qgAttente').textContent = r.en_attente > 0
     ? `${r.en_attente} partie${r.en_attente > 1 ? 's' : ''} en attente d’un adversaire` : '';
 
-  // derniers duels
-  const d = r.derniers || [];
-  document.getElementById('qgDerniersBloc').hidden = d.length === 0;
-  document.getElementById('qgDerniers').innerHTML = d.map(x => {
+  // derniers duels, et en tete les parties qui attendent un adversaire.
+  // Chaque ligne ouvre le resume du duel (patch74).
+  const d = r.derniers || [], att = r.attente_liste || [];
+  document.getElementById('qgDerniersBloc').hidden = d.length === 0 && att.length === 0;
+  const kmQG = (n) => Number(n).toLocaleString('fr-FR');
+  document.getElementById('qgDerniers').innerHTML = att.map(x =>
+    `<li data-id="${Number(x.id)}" tabindex="0" role="button"><span class="qg-res attente">En attente</span>
+      <span class="qg-adv">pas encore d’adversaire<small>${kmQG(x.total_km)} km</small></span>
+      <span></span><span class="qg-chev" aria-hidden="true">›</span></li>`).join('')
+  + d.map(x => {
     const delta = (x.elo_apres != null && x.elo_avant != null) ? x.elo_apres - x.elo_avant : 0;
     const mot = x.resultat === 'victoire' ? 'Victoire' : x.resultat === 'defaite' ? 'Défaite' : 'Égalité';
-    return `<li class="${x.vu ? '' : 'nouveau'}"><span class="qg-res ${x.resultat}">${mot}</span>
-      <span class="qg-adv">contre <b>${echapperTexte(x.adversaire || 'un joueur')}</b><small>${Number(x.total_km).toLocaleString('fr-FR')} km contre ${Number(x.adversaire_km).toLocaleString('fr-FR')} km</small></span>
-      <span class="qg-delta ${delta >= 0 ? 'plus' : 'moins'}">${delta >= 0 ? '+' : ''}${delta}</span></li>`;
+    return `<li class="${x.vu ? '' : 'nouveau'}" data-id="${Number(x.id)}" tabindex="0" role="button"><span class="qg-res ${x.resultat}">${mot}</span>
+      <span class="qg-adv">contre <b>${echapperTexte(x.adversaire || 'un joueur')}</b><small>${kmQG(x.total_km)} km contre ${kmQG(x.adversaire_km)} km</small></span>
+      <span class="qg-delta ${delta >= 0 ? 'plus' : 'moins'}">${delta >= 0 ? '+' : ''}${delta}</span><span class="qg-chev" aria-hidden="true">›</span></li>`;
   }).join('');
 
   // classement
@@ -8858,39 +8864,160 @@ document.getElementById('rdCarte').addEventListener('click', (e) => {
 
 function radarResultat(){
   clearInterval(radarChrono);
-  const p = radarPartie;
+  radarAfficherResume(radarPartie, true);
+  radarPartie = null;
+  chargerRadar();
+}
+
+// ----- le resume d'un duel (patch74) -----
+let radarRes = null, radarResSel = -1;
+
+async function radarOuvrirResume(id){
+  try{
+    const [{ data, error }] = await Promise.all([sb.rpc('radar_resume', { p_id: id }), loadOutline()]);
+    if(error) throw error;
+    const t = document.querySelector('.tab[data-tab="radar"]'); if(t) t.click();
+    radarAfficherResume(data, false);
+    window.scrollTo({ top: 0 });
+  } catch(err){
+    notifier({ type: 'erreur', titre: 'Radar', texte: messageLisible(err.message) });
+  }
+}
+
+(function(){
+  const liste = document.getElementById('qgDerniers');
+  liste.addEventListener('click', (e) => {
+    const li = e.target.closest('li[data-id]'); if(li) radarOuvrirResume(Number(li.dataset.id));
+  });
+  liste.addEventListener('keydown', (e) => {
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    const li = e.target.closest('li[data-id]'); if(!li) return;
+    e.preventDefault(); radarOuvrirResume(Number(li.dataset.id));
+  });
+  // choix de la manche : puces, lignes du tableau, groupes de la carte
+  document.getElementById('rdFin').addEventListener('click', (e) => {
+    const x = e.target.closest('[data-m]'); if(!x || !radarRes) return;
+    const i = Number(x.dataset.m);
+    radarResChoisir(x.tagName === 'BUTTON' ? i : (radarResSel === i ? -1 : i));
+  });
+})();
+
+function radarQuand(iso){
+  if(!iso) return '';
+  const d = new Date(iso), auj = new Date(), hier = new Date();
+  hier.setDate(auj.getDate() - 1);
+  const h = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }).replace(':', ' h ');
+  const jour = d.toDateString() === auj.toDateString() ? 'aujourd’hui'
+    : d.toDateString() === hier.toDateString() ? 'hier'
+    : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  return `${jour} ${h}`;
+}
+
+function radarKm(c){
+  if(!c) return '';
+  return c.lon === null || c.lon === undefined
+    ? `<span class="rd-passe" title="temps écoulé">${Number(c.km).toLocaleString('fr-FR')} km</span>`
+    : `${Number(c.km).toLocaleString('fr-FR')} km`;
+}
+
+function radarAfficherResume(p, fin){
   radarMontrer('rdFin');
+  radarRes = p; radarResSel = -1;
   const fmt = (n) => Number(n).toLocaleString('fr-FR');
-  const lignes = p.jouees.map(m => `<tr><td>${echapperTexte(m.nom)} <small>(${echapperTexte(m.dept)})</small></td>
-    <td class="${m.lui && m.moi.km < m.lui.km ? 'mieux' : ''}">${fmt(m.moi.km)} km</td>
-    ${p.adversaire ? `<td class="${m.lui && m.lui.km < m.moi.km ? 'mieux' : ''}">${m.lui ? fmt(m.lui.km) + ' km' : ''}</td>` : ''}</tr>`).join('');
-  const tableau = `<table class="rd-detail"><thead><tr><th>Commune</th><th>Toi</th>${p.adversaire ? `<th>${echapperTexte(p.adversaire.pseudo)}</th>` : ''}</tr></thead><tbody>${lignes}</tbody></table>`;
+  const adv = p.adversaire && p.resultat ? p.adversaire : null;
+  const nomAdv = adv ? echapperTexte(adv.pseudo) : '';
+  const quand = radarQuand(p.regle_le);
   let tete;
-  if(p.adversaire && p.resultat){
+  if(adv){
     const mot = p.resultat === 'victoire' ? 'Victoire' : p.resultat === 'defaite' ? 'Défaite' : 'Égalité';
     const delta = p.elo_apres - p.elo_avant;
     const avant = radarRangDe(p.elo_avant), apres = radarRangDe(p.elo_apres);
-    tete = `<h2 class="${p.resultat}">${mot}</h2>
-      <div class="rd-score"><div><b>${fmt(p.total_km)} km</b><span>Toi</span></div><em>contre</em><div><b>${fmt(p.adversaire.total_km)} km</b><span>${echapperTexte(p.adversaire.pseudo)}</span></div></div>
+    tete = `<div class="rd-titre"><h2 class="${p.resultat}">${mot}</h2><span>contre <b>${nomAdv}</b>${quand ? ` · ${quand}` : ''}</span></div>
+      <div class="rd-score"><div><b>${fmt(p.total_km)} km</b><span>Toi</span></div><em>contre</em><div><b>${fmt(adv.total_km)} km</b><span>${nomAdv}</span></div></div>
       <div class="rd-elo"><span>Elo</span><b class="${delta >= 0 ? 'plus' : 'moins'}">${delta >= 0 ? '+' : ''}${delta}</b><span class="qg-petit">${fmt(p.elo_apres)} · ${apres}${apres !== avant ? (delta > 0 ? ' (promu !)' : ' (rétrogradé)') : ''}</span></div>`;
   } else {
     tete = `<h2>${fmt(p.total_km)} km</h2>
-      <p class="qg-petit">Ta partie attend un adversaire : le prochain joueur qui lance un duel affrontera ces 5 communes. Le résultat et l’Elo arriveront dans le QG.</p>`;
+      <p class="qg-petit">${fin
+        ? 'Ta partie attend un adversaire : le prochain joueur qui lance un duel affrontera ces 5 communes. Le résultat et l’Elo arriveront dans le QG.'
+        : 'Cette partie attend encore un adversaire. Le résultat et l’Elo arriveront dans le QG.'}</p>`;
   }
-  const partage = p.adversaire && p.resultat
-    ? `TerraFront · Radar\n${p.resultat === 'victoire' ? 'Victoire' : p.resultat === 'defaite' ? 'Défaite' : 'Égalité'} contre ${p.adversaire.pseudo} : ${fmt(p.total_km)} km contre ${fmt(p.adversaire.total_km)} km\n${p.jouees.map(m => m.lui && m.moi.km < m.lui.km ? '🟦' : '🟥').join('')}\nterrafront.fr/?onglet=qg`
+  const gagne = (m) => m.lui && m.moi.km < m.lui.km;
+  const puces = `<div class="rd-manches"><button type="button" data-m="-1" class="actif">Tout</button>${p.jouees.map((m, i) =>
+    `<button type="button" data-m="${i}">${i + 1}${adv ? `<i class="${gagne(m) ? 'g' : 'p'}"></i>` : ''}</button>`).join('')}</div>
+    <div class="rd-focus" id="rdFocus" hidden></div>`;
+  const lignes = p.jouees.map((m, i) => `<tr data-m="${i}"><td><span class="rd-num">${i + 1}</span>${echapperTexte(m.nom)} <small>(${echapperTexte(m.dept)})</small></td>
+    <td class="${adv && gagne(m) ? 'mieux' : ''}">${radarKm(m.moi)}</td>
+    ${adv ? `<td class="${m.lui && m.lui.km < m.moi.km ? 'mieux' : ''}">${radarKm(m.lui)}</td>` : ''}</tr>`).join('');
+  const tableau = `<table class="rd-detail"><thead><tr><th>Commune</th><th>Toi</th>${adv ? `<th>${nomAdv}</th>` : ''}</tr></thead><tbody>${lignes}</tbody></table>`;
+  const partage = adv
+    ? `TerraFront · Radar\n${p.resultat === 'victoire' ? 'Victoire' : p.resultat === 'defaite' ? 'Défaite' : 'Égalité'} contre ${adv.pseudo} : ${fmt(p.total_km)} km contre ${fmt(adv.total_km)} km\n${p.jouees.map(m => gagne(m) ? '🟦' : '🟥').join('')}\nterrafront.fr/?onglet=qg`
     : null;
-  document.getElementById('rdFin').innerHTML = `<div class="rd-bloc">${tete}${tableau}
-    ${partage ? `<pre class="cdj-partage" id="rdPartage">${echapperTexte(partage)}</pre>` : ''}
-    <div class="qg-actions"><button type="button" class="qg-btn plein" id="rdRetour">Retour au QG</button>${partage ? '<button type="button" class="qg-btn" id="rdCopier">Copier pour Discord</button>' : ''}</div></div>`;
-  document.getElementById('rdRetour').onclick = () => { const t = document.querySelector('.tab[data-tab="qg"]'); if(t) t.click(); };
+  document.getElementById('rdFin').innerHTML = `<button type="button" class="rd-retour" id="rdRetourHaut">← QG</button>
+    <div class="rd-resume">
+      <div class="rd-bloc rd-res-tete">${tete}${puces}</div>
+      <div class="rd-bloc rd-res-carte"><div class="rd-zone"><svg id="rdResCarte" role="img" aria-label="Carte du duel : les communes et les points des joueurs"></svg></div>
+        <div class="rd-legende"><span><i class="c"></i>la commune</span><span><i class="m"></i>toi</span>${adv ? `<span><i class="l"></i>${nomAdv}</span>` : ''}</div></div>
+      <div class="rd-bloc rd-res-detail">${tableau}
+        ${partage ? `<pre class="cdj-partage" id="rdPartage">${echapperTexte(partage)}</pre>` : ''}
+        <div class="qg-actions"><button type="button" class="qg-btn plein" id="rdRetour">Retour au QG</button>${partage ? '<button type="button" class="qg-btn" id="rdCopier">Copier pour Discord</button>' : ''}</div></div>
+    </div>`;
+  const retour = () => { const t = document.querySelector('.tab[data-tab="qg"]'); if(t) t.click(); };
+  document.getElementById('rdRetour').onclick = retour;
+  document.getElementById('rdRetourHaut').onclick = retour;
   const c = document.getElementById('rdCopier');
   if(c) c.onclick = async () => {
     try{ await navigator.clipboard.writeText(partage); c.textContent = 'Copié'; }
     catch(err){ const s = getSelection(), r = document.createRange(); r.selectNodeContents(document.getElementById('rdPartage')); s.removeAllRanges(); s.addRange(r); c.textContent = 'Sélectionné : copie-le'; }
   };
-  radarPartie = null;
-  chargerRadar();
+  radarResDessiner();
+}
+
+function radarResChoisir(i){
+  const p = radarRes; if(!p) return;
+  radarResSel = (i >= 0 && i < p.jouees.length) ? i : -1;
+  const fin = document.getElementById('rdFin');
+  fin.querySelectorAll('.rd-manches button').forEach(b => b.classList.toggle('actif', Number(b.dataset.m) === radarResSel));
+  fin.querySelectorAll('.rd-detail tbody tr').forEach(tr => tr.classList.toggle('sel', Number(tr.dataset.m) === radarResSel));
+  const f = document.getElementById('rdFocus');
+  if(radarResSel < 0){ f.hidden = true; f.innerHTML = ''; }
+  else {
+    const m = p.jouees[radarResSel];
+    const adv = p.adversaire && p.resultat ? p.adversaire : null;
+    const dit = (c) => c.lon === null || c.lon === undefined ? 'temps écoulé (1 000 km)' : radarKm(c);
+    f.hidden = false;
+    f.innerHTML = `<b>${echapperTexte(m.nom)} <small>(${echapperTexte(m.dept)})</small></b>
+      <span><span class="rd-c-moi">Toi ${dit(m.moi)}</span>${adv && m.lui ? ` · <span class="rd-c-lui">${echapperTexte(adv.pseudo)} ${dit(m.lui)}</span>` : ''}</span>`;
+  }
+  radarResDessiner();
+}
+
+function radarResDessiner(){
+  const svg = document.getElementById('rdResCarte'), p = radarRes;
+  if(!svg || !p || !radarAssurerBornes()) return;
+  const contour = FRANCE_OUTLINE || cdjContour;
+  svg.setAttribute('viewBox', `0 0 ${cdjBornes.w.toFixed(2)} ${cdjBornes.h.toFixed(2)}`);
+  const ray = cdjBornes.w / 80;
+  let h = '';
+  for(const a of contour) h += `<path class="cdj-fr" d="M${a.map(([lo, la]) => cdjPx(lo, la).join(',')).join('L')}Z"/>`;
+  // la manche choisie en dernier, pour passer au-dessus des autres
+  const ordre = p.jouees.map((m, i) => i).filter(i => i !== radarResSel);
+  if(radarResSel >= 0) ordre.push(radarResSel);
+  for(const i of ordre){
+    const m = p.jouees[i];
+    const [cx, cy] = cdjPx(+m.lon, +m.lat).map(Number);
+    let g = '';
+    for(const [qui, c] of [['lui', m.lui], ['moi', m.moi]]){
+      if(!c || c.lon === null || c.lon === undefined) continue;
+      const [x, y] = cdjPx(+c.lon, +c.lat);
+      g += `<line class="rd-trait ${qui}" x1="${x}" y1="${y}" x2="${cx}" y2="${cy}" stroke-width="${ray / 3}" stroke-dasharray="${ray / 2} ${ray / 2}"/>`;
+      g += `<circle class="rd-${qui}" cx="${x}" cy="${y}" r="${ray * 0.85}" stroke-width="${qui === 'moi' ? ray / 3.5 : ray / 4}"/>`;
+    }
+    g += `<circle class="rd-pastille" cx="${cx}" cy="${cy}" r="${ray * 1.5}"/>`;
+    g += `<text class="rd-pastille-n" x="${cx}" y="${(cy + ray * 0.6).toFixed(3)}" font-size="${ray * 1.7}">${i + 1}</text>`;
+    if(i === radarResSel) g += `<text class="rd-etiquette" x="${cx}" y="${(cy - ray * 2.6).toFixed(3)}" font-size="${ray * 2.2}">${echapperTexte(m.nom)}</text>`;
+    h += `<g data-m="${i}" class="${radarResSel < 0 || radarResSel === i ? '' : 'estompe'}">${g}</g>`;
+  }
+  svg.innerHTML = h;
 }
 
 initAuth();

@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'ef62a95ef2c3';
+const VERSION_JEU = '483790612e6b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8668,10 +8668,13 @@ function renderQG(){
     : (suiv ? `encore ${suiv[1] - elo} pts pour ${suiv[0]}` : 'rang le plus haut');
   document.getElementById('qgElo').textContent = elo.toLocaleString('fr-FR');
   document.getElementById('qgJauge').style.width = Math.max(2, Math.min(100, (elo - 800) / 500 * 100)) + '%';
+  // restants null : pas de limite, pas de compteur (l'etiquette vide est cachee)
+  const sansLimite = r.restants === null || r.restants === undefined;
   document.getElementById('qgRestants').textContent = r.en_cours ? 'partie en cours'
+    : sansLimite ? ''
     : (r.restants > 0 ? `${r.restants} duel${r.restants > 1 ? 's' : ''} aujourd’hui` : 'reviens demain');
   lancer.textContent = r.en_cours ? 'Reprendre la partie' : 'Lancer un duel';
-  lancer.disabled = !r.en_cours && r.restants <= 0;
+  lancer.disabled = !r.en_cours && !sansLimite && r.restants <= 0;
   document.getElementById('qgAttente').textContent = r.en_attente > 0
     ? `${r.en_attente} partie${r.en_attente > 1 ? 's' : ''} en attente d’un adversaire` : '';
 

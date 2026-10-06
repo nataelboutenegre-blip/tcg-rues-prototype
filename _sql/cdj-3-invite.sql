@@ -36,7 +36,7 @@ begin
 
   -- l'anecdote : le meilleur fait qui ne donne pas le nom, sinon le rang
   -- de population dans le département
-  if p_ouverts >= 5 then
+  if p_ouverts >= 3 then
     select f->>'t' into v_fait
       from jsonb_array_elements(coalesce(c.faits, '[]'::jsonb)) f
      where (f->>'t') !~ '«|lettres|caractères'
@@ -58,9 +58,10 @@ begin
            when c.population < 100000 then 'entre 50 000 et 100 000 habitants'
            else 'plus de 100 000 habitants' end end),
     jsonb_build_object('cle', 'region',      'valeur', case when p_ouverts >= 2 then cdj_region(c.departement) end),
-    jsonb_build_object('cle', 'gentile',     'valeur', case when p_ouverts >= 3 then c.gentile end),
+    jsonb_build_object('cle', 'anecdote',    'valeur', case when p_ouverts >= 3 then v_fait end),
     jsonb_build_object('cle', 'departement', 'valeur', case when p_ouverts >= 4 then c.departement end),
-    jsonb_build_object('cle', 'anecdote',    'valeur', case when p_ouverts >= 5 then v_fait end));
+    -- le nom des habitants donnait presque le nom de la commune : en dernier (6 octobre)
+    jsonb_build_object('cle', 'gentile',     'valeur', case when p_ouverts >= 5 then c.gentile end));
 end;
 $$;
 

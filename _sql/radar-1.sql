@@ -63,20 +63,24 @@ revoke all on sequence public.radar_parties_id_seq from public, anon, authentica
 -- Réglages
 -- ---------------------------------------------------------------------
 create or replace function public.radar_reglage(p text)
-returns integer language sql immutable as $$
+returns integer language sql immutable
+set search_path to 'public'
+as $$
   select case p
     when 'manches'    then 5
     when 'secondes'   then 15
     when 'marge'      then 2
     when 'penalite'   then 1000
-    when 'par_jour'   then 15
+    when 'par_jour'   then null   -- null : pas de limite (6 octobre)
     when 'k'          then 24
     when 'population' then 15000
   end;
 $$;
 
 create or replace function public.radar_rang(p_elo integer)
-returns text language sql immutable as $$
+returns text language sql immutable
+set search_path to 'public'
+as $$
   select case when p_elo >= 1200 then 'Navigateur'
               when p_elo >= 1100 then 'Vigie'
               when p_elo >= 1000 then 'Guetteur'
@@ -254,8 +258,10 @@ begin
     'elo', v_elo,
     'parties', coalesce(v_parties, 0),
     'rang', case when v_premier = v_uid then 'Lapérouse' else radar_rang(v_elo) end,
-    'restants', greatest(0, radar_reglage('par_jour')
-                  - (select count(*) from radar_parties where joueur_id = v_uid and jour = v_jour)),
+    -- null : pas de limite
+    'restants', case when radar_reglage('par_jour') is null then null
+                     else greatest(0, radar_reglage('par_jour')
+                       - (select count(*) from radar_parties where joueur_id = v_uid and jour = v_jour)) end,
     'en_cours', (select id from radar_parties where joueur_id = v_uid and not fini order by id desc limit 1),
     'non_vus', (select count(*) from radar_parties where joueur_id = v_uid and not vu),
     'en_attente', (select count(*) from radar_parties
@@ -313,18 +319,20 @@ begin
   select elo into v_elo from radar_joueurs where joueur_id = v_uid;
 
   -- un adversaire : une partie terminée, pas encore affrontée, d'un autre
-  -- joueur, que je n'ai pas affronté dans les dernières 24 h ; la plus
-  -- proche en Elo, puis la plus ancienne (personne n'attend trop)
+  -- joueur. De préférence quelqu'un que je n'ai pas affronté dans les
+  -- dernières 24 h, puis le plus proche en Elo, puis la plus ancienne
+  -- (personne n'attend trop). Ce n'est qu'une préférence : avec peu de
+  -- joueurs, une exclusion laissait des parties sans adversaire (6 octobre).
   select p.* into s
     from radar_parties p
     left join radar_joueurs r on r.joueur_id = p.joueur_id
    where p.source_id is null and p.fini and not p.utilisee
      and p.joueur_id <> v_uid
-     and not exists (select 1 from radar_parties m
+   order by exists (select 1 from radar_parties m
                       join radar_parties ms on ms.id = m.source_id
                      where m.joueur_id = v_uid and ms.joueur_id = p.joueur_id
-                       and m.cree_le > now() - interval '24 hours')
-   order by abs(coalesce(r.elo, 1000) - v_elo), p.fin_le
+                       and m.cree_le > now() - interval '24 hours'),
+            abs(coalesce(r.elo, 1000) - v_elo), p.fin_le
    limit 1
    for update of p skip locked;
 

@@ -22,7 +22,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=942936b9efec">
+<link rel="stylesheet" href="style.css?v=4ccdeeb899c8">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -495,7 +495,12 @@
           <div><small id="rdNum"></small><b id="rdNom">—</b></div>
           <span class="rd-chrono" id="rdChrono"></span>
         </div>
-        <div class="rd-carte"><svg id="rdCarte" role="img" aria-label="Carte de France : clique pour placer la commune"></svg></div>
+        <div class="rd-carte"><canvas id="rdFond" aria-hidden="true"></canvas><svg id="rdCarte" role="img" aria-label="Carte de France : clique pour placer la commune"></svg>
+          <div class="rd-zoom-btns" role="group" aria-label="Zoom de la carte">
+            <button type="button" data-zoom="plus" aria-label="Zoomer">+</button>
+            <button type="button" data-zoom="moins" aria-label="Dézoomer">−</button>
+            <button type="button" data-zoom="raz" aria-label="Revoir toute la carte" hidden>⤢</button>
+          </div></div>
         <div class="rd-verdict" id="rdVerdict"></div>
         <div class="qg-actions"><button type="button" class="qg-btn plein" id="rdValider" disabled>Valider</button></div>
       </div>
@@ -1148,6 +1153,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=942936b9efec"></script>
+<script src="app.js?v=4ccdeeb899c8"></script>
 </body>
 </html>

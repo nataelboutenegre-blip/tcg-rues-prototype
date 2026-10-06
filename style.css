@@ -4056,3 +4056,17 @@ svg.rd-zoom .cdj-fr{ fill:#172D4C; }
 .rd-record-ok{ background: var(--c-peucommun); color:#fff; font-family: var(--titre); font-weight:800; font-size:20px;
   text-transform:uppercase; padding:4px 12px; border-radius:999px; }
 @media (max-width: 380px){ .rd-seg button b{ font-size:16px; } }
+
+/* ---------- Radar : zoom (patch78) ---------- */
+.rd-carte{ position:relative; }
+.rd-carte svg.rd-zoome{ touch-action:none; cursor:grab; }
+.rd-carte svg.rd-zoome:active{ cursor:grabbing; }
+.rd-zoom-btns{ position:absolute; right:12px; top:12px; display:flex; flex-direction:column; gap:6px; z-index:2; }
+.rd-zoom-btns button{ width:40px; height:40px; border-radius:10px; border:1px solid rgba(169,188,212,.35);
+  background: rgba(11,24,48,.85); color:#fff; font:700 22px/1 var(--texte); cursor:pointer; display:grid; place-items:center; }
+.rd-zoom-btns button:hover{ border-color: var(--c-legendaire); color: var(--c-legendaire); }
+.rd-zoom-btns button[hidden]{ display:none; }
+.rd-zoom-btns [data-zoom="raz"]{ font-size:18px; }
+#rdFond{ position:absolute; left:0; top:0; pointer-events:none; z-index:0; }
+#rdCarte{ position:relative; z-index:1; }
+#rdCarte .cdj-fr{ fill:none; }

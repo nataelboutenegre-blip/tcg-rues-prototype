@@ -3993,3 +3993,34 @@
   .rd-res-carte{ grid-column:1; grid-row:1 / 3; }
   .rd-res-tete, .rd-res-detail{ grid-column:2; }
 }
+
+/* ---------- Pages légales et suppression de compte (patch75) ---------- */
+.lp-legal{ flex-basis:100%; font-size:.8rem; }
+.lp-legal a{ color: var(--brume); }
+.auth-legal{ font-size:.74rem; line-height:1.45; color: var(--brume); text-align:center; margin:8px 2px 0; }
+.auth-legal[hidden]{ display:none; }
+.auth-legal a{ color: var(--brume); text-decoration:underline; }
+.liens-legaux{ font-size:.72rem; line-height:1.5; color: rgba(169,188,212,.75); margin:10px 0 0; }
+.liens-legaux a{ color: inherit; text-decoration:none; }
+.liens-legaux a:hover{ color:#fff; text-decoration:underline; }
+.pf-compte{ margin-top:28px; padding-top:16px; border-top:1px solid rgba(169,188,212,.16);
+  display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center; justify-content:space-between; }
+.pf-legal{ margin:0; font-size:.8rem; color: var(--brume); }
+.pf-legal a{ color: var(--brume); }
+.pf-legal a:hover{ color:#fff; }
+.pf-suppr{ font:inherit; font-size:.84rem; font-weight:600; color:#FF8A8D; background:transparent;
+  border:1px solid rgba(229,72,77,.45); border-radius:10px; padding:8px 14px; cursor:pointer; }
+.pf-suppr:hover{ background: rgba(229,72,77,.12); border-color: rgba(229,72,77,.8); }
+.fenetre.suppr{ width:min(430px, 100%); text-align:left; }
+.fenetre.suppr h2{ font-family: var(--titre); font-weight:900; font-size:1.9rem; text-transform:uppercase; margin:0 0 6px; color:#FF8A8D; }
+.suppr-alerte{ margin:0 0 12px; font-weight:600; color:#fff; }
+.suppr-liste{ margin:0 0 16px; padding-left:18px; color: var(--brume); font-size:.9rem; line-height:1.5; }
+.suppr-liste li{ margin:4px 0; }
+.suppr-liste b{ color:#fff; }
+.suppr-champ{ display:flex; flex-direction:column; gap:6px; font-size:.86rem; color: var(--brume); }
+.suppr-champ b{ color:#fff; }
+.suppr-champ input{ font:inherit; font-size:1rem; color:#fff; background: var(--nuit); border:1px solid rgba(169,188,212,.3);
+  border-radius:10px; padding:10px 12px; }
+.suppr-champ input:focus{ outline:2px solid #E5484D; outline-offset:1px; }
+.fenetre.suppr .open-btn.suppr-ok{ background:#E5484D; color:#fff; }
+.fenetre.suppr .open-btn.suppr-ok:disabled{ opacity:.4; cursor:not-allowed; }

@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'ac8461136cb8';
+const VERSION_JEU = 'a50446e5c686';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -549,6 +549,7 @@ function ecranAuth(ecran){
   } else {
     q('loginBtn').hidden = true;
     q('signupBtn').hidden = true;
+    q('authLegal').hidden = true;
     const premier = q(ecran === 'oubli' ? 'authOubliEmail' : 'authNouveau1');
     if(premier) premier.focus();
   }
@@ -613,6 +614,7 @@ function modeAuth(mode){
   document.getElementById('authChampPseudo').hidden = !inscription;
   document.getElementById('loginBtn').hidden = inscription;
   document.getElementById('signupBtn').hidden = !inscription;
+  document.getElementById('authLegal').hidden = !inscription;
   document.getElementById('authPassword').setAttribute('autocomplete', inscription ? 'new-password' : 'current-password');
   const msg = document.getElementById('authMsg');
   msg.textContent = ''; msg.className = 'auth-msg';
@@ -4885,6 +4887,10 @@ function rendreProfilPanneau(){
     ${blocsProfil(p)}
     <div class="pf-boutons">
       <button class="pr-btn" data-pf="editer">Changer d'avatar ou de pseudo</button>
+    </div>
+    <div class="pf-compte">
+      <p class="pf-legal"><a href="mentions-legales.html">Mentions légales</a> · <a href="confidentialite.html">Confidentialité</a> · <a href="cgu.html">Conditions d\'utilisation</a></p>
+      <button type="button" class="pf-suppr" data-pf="supprimer">Supprimer mon compte</button>
     </div>`;
 }
 
@@ -4892,7 +4898,59 @@ function rendreProfilPanneau(){
 // dupliquer ici ferait deux chemins pour une meme chose.
 document.getElementById('pfCorps').addEventListener('click', (e) => {
   if(e.target.closest('[data-pf="editer"]')) ouvrirProfil(window.__monId || null);
+  if(e.target.closest('[data-pf="supprimer"]')) ouvrirSuppressionCompte();
 });
+
+// Suppression de compte (patch75) : le joueur retape son pseudo, le serveur
+// verifie aussi. Tout est fait en une transaction (supprimer_mon_compte).
+function ouvrirSuppressionCompte(){
+  const p = profilPanneau || {};
+  const pseudo = String(p.pseudo || '');
+  const n = Number(p.communes || 0);
+  const fermer = ouvrirFenetre(`
+    <form class="fenetre suppr" role="dialog" aria-modal="true" aria-labelledby="supprTitre" novalidate>
+      <h2 id="supprTitre">Supprimer ton compte ?</h2>
+      <p class="suppr-alerte">C'est définitif : rien ne pourra être récupéré.</p>
+      <ul class="suppr-liste">
+        <li>${n > 0 ? `Tes <b>${n.toLocaleString('fr-FR')} commune${n > 1 ? 's' : ''}</b> retournent dans les paquets.` : 'Tes communes retournent dans les paquets.'}</li>
+        <li>Ton e-mail, ton pseudo, tes amis, tes échanges et leurs messages sont effacés.</li>
+        <li>Le journal et les classements passés gardent les parties jouées, sous « un joueur ».</li>
+      </ul>
+      <label class="suppr-champ"><span>Pour confirmer, écris ton pseudo : <b>${echapperTexte(pseudo)}</b></span>
+        <input type="text" id="supprPseudo" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <p class="prix-erreur" id="supprErreur" role="alert"></p>
+      <div class="prix-boutons">
+        <button type="button" class="open-btn secondary" data-annuler>Annuler</button>
+        <button type="submit" class="open-btn suppr-ok" disabled>Supprimer définitivement</button>
+      </div>
+    </form>`);
+  const form = document.querySelector('#fenetre form.suppr');
+  const champ = document.getElementById('supprPseudo');
+  const ok = form.querySelector('.suppr-ok');
+  const erreur = document.getElementById('supprErreur');
+  const pareil = () => champ.value.trim().toLowerCase() === pseudo.trim().toLowerCase() && pseudo !== '';
+  champ.addEventListener('input', () => { ok.disabled = !pareil(); erreur.textContent = ''; });
+  form.querySelector('[data-annuler]').addEventListener('click', () => fermer(null));
+  champ.focus();
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if(!pareil()) return;
+    ok.disabled = true; ok.textContent = 'Suppression…';
+    const { error } = await sb.rpc('supprimer_mon_compte', { p_confirmation: champ.value });
+    if(error){
+      erreur.textContent = messageLisible(error.message);
+      ok.textContent = 'Supprimer définitivement'; ok.disabled = !pareil();
+      return;
+    }
+    // le compte n'existe plus : on oublie la session sur cet appareil seulement
+    try { await sb.auth.signOut({ scope: 'local' }); } catch(err){}
+    form.outerHTML = `<div class="fenetre suppr" role="dialog" aria-modal="true">
+      <h2>Compte supprimé</h2>
+      <p>Tes données ont été effacées. Merci d'avoir joué à TerraFront.</p>
+      <div class="prix-boutons"><button type="button" class="open-btn" id="supprFin">Fermer</button></div></div>`;
+    document.getElementById('supprFin').addEventListener('click', () => location.replace('./'));
+  });
+}
 
 // Apres un changement d'avatar ou de pseudo, le panneau doit se resservir
 // des nouvelles valeurs plutot que de garder sa copie.
@@ -8925,7 +8983,7 @@ function radarAfficherResume(p, fin){
   radarRes = p; radarResSel = -1;
   const fmt = (n) => Number(n).toLocaleString('fr-FR');
   const adv = p.adversaire && p.resultat ? p.adversaire : null;
-  const nomAdv = adv ? echapperTexte(adv.pseudo) : '';
+  const nomAdv = adv ? echapperTexte(adv.pseudo || 'un joueur') : '';
   const quand = radarQuand(p.regle_le);
   let tete;
   if(adv){
@@ -8950,7 +9008,7 @@ function radarAfficherResume(p, fin){
     ${adv ? `<td class="${m.lui && m.lui.km < m.moi.km ? 'mieux' : ''}">${radarKm(m.lui)}</td>` : ''}</tr>`).join('');
   const tableau = `<table class="rd-detail"><thead><tr><th>Commune</th><th>Toi</th>${adv ? `<th>${nomAdv}</th>` : ''}</tr></thead><tbody>${lignes}</tbody></table>`;
   const partage = adv
-    ? `TerraFront · Radar\n${p.resultat === 'victoire' ? 'Victoire' : p.resultat === 'defaite' ? 'Défaite' : 'Égalité'} contre ${adv.pseudo} : ${fmt(p.total_km)} km contre ${fmt(adv.total_km)} km\n${p.jouees.map(m => gagne(m) ? '🟦' : '🟥').join('')}\nterrafront.fr/?onglet=qg`
+    ? `TerraFront · Radar\n${p.resultat === 'victoire' ? 'Victoire' : p.resultat === 'defaite' ? 'Défaite' : 'Égalité'} contre ${adv.pseudo || 'un joueur'} : ${fmt(p.total_km)} km contre ${fmt(adv.total_km)} km\n${p.jouees.map(m => gagne(m) ? '🟦' : '🟥').join('')}\nterrafront.fr/?onglet=qg`
     : null;
   document.getElementById('rdFin').innerHTML = `<button type="button" class="rd-retour" id="rdRetourHaut">← QG</button>
     <div class="rd-resume">
@@ -8986,7 +9044,7 @@ function radarResChoisir(i){
     const dit = (c) => c.lon === null || c.lon === undefined ? 'temps écoulé (1 000 km)' : radarKm(c);
     f.hidden = false;
     f.innerHTML = `<b>${echapperTexte(m.nom)} <small>(${echapperTexte(m.dept)})</small></b>
-      <span><span class="rd-c-moi">Toi ${dit(m.moi)}</span>${adv && m.lui ? ` · <span class="rd-c-lui">${echapperTexte(adv.pseudo)} ${dit(m.lui)}</span>` : ''}</span>`;
+      <span><span class="rd-c-moi">Toi ${dit(m.moi)}</span>${adv && m.lui ? ` · <span class="rd-c-lui">${echapperTexte(adv.pseudo || 'un joueur')} ${dit(m.lui)}</span>` : ''}</span>`;
   }
   radarResDessiner();
 }

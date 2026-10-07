@@ -4070,3 +4070,12 @@ svg.rd-zoom .cdj-fr{ fill:#172D4C; }
 #rdFond{ position:absolute; left:0; top:0; pointer-events:none; z-index:0; }
 #rdCarte{ position:relative; z-index:1; }
 #rdCarte .cdj-fr{ fill:none; }
+
+/* ---------- Bulle de la carte déplaçable (patch79) ---------- */
+.pc{ padding-top:20px; }
+.pc::before{ content:''; position:absolute; left:50%; top:7px; width:36px; height:4px; margin-left:-18px;
+  border-radius:2px; background: rgba(169,188,212,.35); }
+.pc-tete{ cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; }
+.pc-tete button, .pc-tete a, .pc-tete [data-profil]{ cursor:pointer; }
+.pc.pc-glisse{ animation:none; box-shadow:0 24px 60px rgba(0,0,0,.6); }
+.pc.pc-glisse .pc-tete{ cursor:grabbing; }

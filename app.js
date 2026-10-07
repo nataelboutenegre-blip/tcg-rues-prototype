@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '4ccdeeb899c8';
+const VERSION_JEU = 'bedb00f9b2e4';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2149,6 +2149,9 @@ let panneauCommune = null;
 // chaque changement de contenu, au lieu de repartir de sa position
 // courante — c'est cette dérive qui le poussait hors du cadre.
 let panneauAncre = null;
+// Position choisie par le joueur en faisant glisser la bulle (patch79).
+// Tant qu'elle est ouverte, la bulle y reste, même pour une autre commune.
+let panneauDeplace = null;
 
 const ICONES_PC = {
   attaque: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 14.5 19.5 19.5a1.5 1.5 0 0 1-2 2L12.5 16.5"/><path d="M18.5 3.5 8 14M18.5 3.5h-3M18.5 3.5v3"/><path d="M9.5 14.5 4.5 19.5a1.5 1.5 0 0 0 2 2l5-5"/><path d="M5.5 3.5 16 14M5.5 3.5h3M5.5 3.5v3"/></svg>',
@@ -2170,6 +2173,7 @@ function fermerPanneau(){
   if(wrap) wrap.classList.remove('panneau-ouvert');
   panneauCommune = null;
   panneauAncre = null;
+  panneauDeplace = null;
 }
 
 // La proposition en attente qui concerne cette commune, s'il y en a une.
@@ -2410,6 +2414,7 @@ async function lancerAssaut(code){
 // cadre sans le bouger autrement. Sans ca, passer de la fiche au panneau
 // d'attaque, plus haut, le faisait deborder par le bas.
 function recadrerPanneau(el){
+  if(el && !el.hidden && panneauDeplace){ poserPanneauDeplace(el); return; }
   if(!el || el.hidden || surTelephone()) return;
   const wrap = document.getElementById('mapWrap');
   if(!wrap) return;
@@ -2436,7 +2441,8 @@ function montrerPanneau(el){
 // Sur telephone le panneau est colle en bas par la feuille de style ; sur
 // ordinateur on le pose a cote du clic sans le laisser sortir du cadre.
 function placerPanneau(el, xCss, yCss){
-  if(surTelephone()){ el.style.left = ''; el.style.top = ''; montrerPanneau(el); return; }
+  if(panneauDeplace){ poserPanneauDeplace(el); return; }
+  if(surTelephone()){ el.style.left = ''; el.style.top = ''; el.style.bottom = ''; montrerPanneau(el); return; }
   const wrap = document.getElementById('mapWrap');
   if(!wrap) return;
   const b = el.getBoundingClientRect();
@@ -2449,6 +2455,46 @@ function placerPanneau(el, xCss, yCss){
   el.style.left = Math.round(gauche) + 'px';
   el.style.top = Math.round(haut) + 'px';
 }
+
+// ----- déplacer la bulle (patch79) -----
+// La position voulue, remise dans le cadre de la carte. Sur téléphone, la
+// bulle garde toute la largeur : seul le haut change.
+function poserPanneauDeplace(el){
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap || !panneauDeplace) return;
+  const b = el.getBoundingClientRect(), marge = 8;
+  const haut = Math.max(marge, Math.min(panneauDeplace.top, wrap.clientHeight - b.height - marge));
+  el.style.top = Math.round(haut) + 'px';
+  el.style.bottom = 'auto';
+  if(surTelephone()){ el.style.left = ''; return; }
+  const gauche = Math.max(marge, Math.min(panneauDeplace.left, wrap.clientWidth - b.width - marge));
+  el.style.left = Math.round(gauche) + 'px';
+}
+(function(){
+  const el = document.getElementById('mapPanneau');
+  if(!el) return;
+  let geste = null;
+  el.addEventListener('pointerdown', (e) => {
+    // on attrape par l'en-tête, ou par la petite barre tout en haut
+    const enHaut = e.clientY - el.getBoundingClientRect().top < 20;
+    if(!(enHaut || e.target.closest('.pc-tete')) || e.target.closest('button, a, input, select, [data-pc], [data-profil]')) return;
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    const wrap = document.getElementById('mapWrap');
+    const rw = wrap.getBoundingClientRect(), re = el.getBoundingClientRect();
+    geste = { id: e.pointerId, dx: e.clientX - (re.left - rw.left - wrap.clientLeft), dy: e.clientY - (re.top - rw.top - wrap.clientTop) };
+    try { el.setPointerCapture(e.pointerId); } catch(err){}
+    el.classList.add('pc-glisse');
+    e.preventDefault();
+  });
+  el.addEventListener('pointermove', (e) => {
+    if(!geste || geste.id !== e.pointerId) return;
+    panneauDeplace = { left: e.clientX - geste.dx, top: e.clientY - geste.dy };
+    poserPanneauDeplace(el);
+  });
+  const fin = (e) => { if(!geste || geste.id !== e.pointerId) return; geste = null; el.classList.remove('pc-glisse'); };
+  el.addEventListener('pointerup', fin);
+  el.addEventListener('pointercancel', fin);
+})();
 
 // Les actions renvoient vers l'onglet concerne, la recherche deja remplie sur
 // la commune : pas de duplication du combat, de la bourse ni de l'echange.
@@ -5045,7 +5091,7 @@ function rendreProfil(){
         <div class="pr-puces">
           ${depuis ? `<span class="pr-puce">📅 Depuis le ${echapperTexte(depuis)}</span>` : ''}
           <span class="pr-puce">⚔️ ${nb(p.conquetes)} conquête${p.conquetes > 1 ? 's' : ''}</span>
-          <span class="pr-puce">🛡️ ${nb(p.perdues)} perdue${p.perdues > 1 ? 's' : ''} au combat</span>
+          <span class="pr-puce">🛡️ ${nb(p.communes_perdues)} perdue${p.communes_perdues > 1 ? 's' : ''} au combat</span>
           <span class="pr-puce">👥 ${nb(p.habitants)} habitants</span>
         </div>
 

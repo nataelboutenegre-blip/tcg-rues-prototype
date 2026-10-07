@@ -4166,3 +4166,27 @@ svg.rd-zoom .cdj-fr{ fill:#172D4C; }
 .pd-j b small, .pd-libre b small{ font-weight:400; color:#8FA4BF; }
 .pd-j.moi span b{ color:#fff; }
 .pc-rarete.pd-num{ background:rgba(169,188,212,.16); color:#DCE6F2; }
+
+
+/* ---------- patch83 : defis Radar ---------- */
+.qg-res.defi{ color: var(--c-legendaire); }
+.qg-res.sans-reponse{ color: var(--brume); }
+.qg-amical{ font-size:11px; font-weight:600; color: var(--brume); border:1px solid rgba(169,188,212,.3); border-radius:999px; padding:1px 7px; }
+.qg-defis li.recu{ grid-template-columns:84px minmax(0,1fr) auto; background: rgba(240,180,41,.08); }
+.qg-defi-actions{ display:flex; gap:6px; }
+.qg-defi-actions .qg-btn{ padding:6px 12px; font-size:.82rem; }
+.fenetre.defi-choix{ text-align:left; width:min(420px, 100%); max-height:min(80vh, 640px); overflow:auto; }
+.defi-choix h2{ font-size:1.9rem; }
+.defi-choix h3{ margin:14px 0 6px; font-size:.75rem; letter-spacing:.06em; text-transform:uppercase; color: var(--brume); }
+.dc-aide{ margin:0 0 6px; color: var(--brume); font-size:.86rem; line-height:1.45; }
+.dc-aide.petit{ font-size:.78rem; margin-top:14px; }
+.dc-liste{ display:flex; flex-direction:column; gap:4px; }
+.dc-joueur{ display:flex; justify-content:space-between; align-items:center; gap:12px; width:100%; font:inherit; color:#fff; text-align:left;
+  background: rgba(255,255,255,.04); border:1px solid rgba(169,188,212,.16); border-radius:10px; padding:9px 12px; cursor:pointer; }
+.dc-joueur:hover, .dc-joueur:focus-visible{ border-color: var(--c-legendaire); outline:none; }
+.dc-joueur span{ font-size:.78rem; color: var(--brume); }
+.defi-choix .open-btn{ margin-top:12px; width:100%; }
+@media (max-width:520px){
+  .qg-defis li.recu{ grid-template-columns:64px minmax(0,1fr); }
+  .qg-defi-actions{ grid-column:1 / -1; justify-content:flex-end; }
+}

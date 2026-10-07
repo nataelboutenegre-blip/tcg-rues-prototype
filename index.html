@@ -22,8 +22,8 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=c1fcfcc70e77">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="style.css?v=ff8f6ee236f3">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
 <body>
@@ -457,7 +457,12 @@
             <div class="qg-jauge"><i id="qgJauge"></i></div>
             <div class="qg-paliers"><span>Promeneur</span><span>Randonneur</span><span>Guetteur</span><span>Vigie</span><span>Navigateur</span></div>
           </div>
-          <div class="qg-actions"><button type="button" class="qg-btn plein" id="qgLancer">Lancer un duel</button><button type="button" class="qg-btn" id="qgEntr">S'entraîner</button><span class="qg-petit" id="qgAttente"></span></div>
+          <div class="qg-actions"><button type="button" class="qg-btn plein" id="qgLancer">Lancer un duel</button><button type="button" class="qg-btn" id="qgEntr">S'entraîner</button><button type="button" class="qg-btn" id="qgDefier">Défier un joueur</button><span class="qg-petit" id="qgAttente"></span></div>
+        </div>
+
+        <div class="qg-carte" id="qgDefisBloc" hidden>
+          <h3 class="qg-h3">Défis</h3>
+          <ul class="qg-duels qg-defis" id="qgDefis"></ul>
         </div>
 
         <div class="qg-carte" id="qgDerniersBloc" hidden>
@@ -1153,6 +1158,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=c1fcfcc70e77"></script>
+<script src="app.js?v=ff8f6ee236f3"></script>
 </body>
 </html>

@@ -4079,3 +4079,20 @@ svg.rd-zoom .cdj-fr{ fill:#172D4C; }
 .pc-tete button, .pc-tete a, .pc-tete [data-profil]{ cursor:pointer; }
 .pc.pc-glisse{ animation:none; box-shadow:0 24px 60px rgba(0,0,0,.6); }
 .pc.pc-glisse .pc-tete{ cursor:grabbing; }
+
+/* ---------- Bulle de la carte compacte sur téléphone (patch80) ---------- */
+@media (max-width: 720px){
+  .pc{ padding:16px 11px 9px; left:6px; right:6px; bottom:6px; border-radius:12px; }
+  .pc::before{ top:5px; width:30px; }
+  .pc-titre b{ font-size:1.2rem; }
+  .pc-dep{ font-size:0.7rem; margin-top:1px; }
+  .pc-lignes{ margin-top:7px; padding-top:5px; }
+  .pc-ligne{ font-size:0.74rem; padding:1px 0; }
+  .pc-note{ margin-top:6px; font-size:0.7rem; }
+  .pc-propose, .pc-alerte{ margin-top:7px; font-size:0.74rem; }
+  .pc-actions{ display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:8px; }
+  .pc-action{ padding:7px 8px; font-size:0.74rem; gap:5px; border-radius:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+  .pc-action svg{ width:15px; height:15px; }
+  /* un bouton seul sur sa ligne prend toute la largeur */
+  .pc-actions .pc-action:last-child:nth-child(odd){ grid-column:1 / -1; }
+}

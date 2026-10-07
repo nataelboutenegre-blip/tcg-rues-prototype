@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'ff8f6ee236f3';
+const VERSION_JEU = '00019ef72b9d';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -189,6 +189,7 @@ function messageLisible(msg){
     [/invalid login credentials/i, 'Email ou mot de passe incorrect.'],
     [/user already registered/i, 'Un compte existe déjà avec cet email.'],
     [/password should be at least (\d+)/i, (x) => `Le mot de passe doit faire au moins ${x[1]} caractères.`],
+    [/known to be weak|easy to guess|pwned|leaked/i, 'Ce mot de passe est apparu dans une fuite de données connue : choisis-en un autre.'],
     [/email not confirmed/i, 'Confirme ton adresse email avant de te connecter (regarde tes mails).'],
     [/invalid format|unable to validate email/i, 'Adresse email invalide.'],
     [/failed to fetch|network/i, 'Connexion impossible. Vérifie ta connexion internet.'],

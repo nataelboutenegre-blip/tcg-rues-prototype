@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '625a0a83a98d';
+const VERSION_JEU = 'f8a1b55aae25';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -209,7 +209,7 @@ function notifier({ type = 'info', titre, texte = '', serie = null, duree }){
   el.setAttribute('role', type === 'erreur' ? 'alert' : 'status');
   const ronds = serie === null ? '' : `<span class="notif-serie">${[0, 1, 2].map(i => `<i class="${i < serie ? 'plein' : ''}"></i>`).join('')}</span>`;
   el.innerHTML = `
-    <span class="notif-icone">${ICONES_NOTIF[type] || ICONES_NOTIF.info}</span>
+    <span class="notif-icone">${ICONES_NOTIF[type] || (type === 'monument' ? ICONE_MONUMENT : ICONES_NOTIF.info)}</span>
     <span class="notif-texte"><b>${echapperTexte(titre)}</b>${texte ? `<span>${echapperTexte(texte)}</span>` : ''}</span>
     ${ronds}
     <button class="notif-fermer" aria-label="Fermer">
@@ -253,8 +253,11 @@ function ouvrirFenetre(html, onFermer){
   return fermer;
 }
 
-function celebrerConquete({ nom, tier, dept, bonus }){
+function celebrerConquete({ nom, tier, dept, bonus, code }){
   const t = TIERS.find(x => x.id === tier);
+  const mon = code ? monumentDe(code) : null;
+  const photoMon = mon && mon.photo ? urlPhoto(mon.photo) : '';
+  if(mon) monumentsLe = 0;
   const fermer = ouvrirFenetre(`
     <div class="fenetre conquete ${tier}" role="dialog" aria-modal="true" aria-labelledby="conqueteTitre">
       <div class="conquete-eclat" aria-hidden="true"></div>
@@ -262,6 +265,10 @@ function celebrerConquete({ nom, tier, dept, bonus }){
       <h2 id="conqueteTitre">${echapperTexte(nom)}</h2>
       <p class="conquete-infos"><span class="conquete-rarete">${t ? t.label : ''}</span>${dept ? ` ${echapperTexte(DEPT_NAMES[dept] || '')} (${dept})` : ''}</p>
       <p class="conquete-bonus">+${Number(bonus).toLocaleString('fr-FR')} pts de bonus</p>
+      ${mon ? `<div class="conquete-monument">
+        <span class="cm-art">${photoMon ? `<img src="${echapperTexte(photoMon)}" alt="" onerror="this.remove()">` : ''}${ICONE_MONUMENT}</span>
+        <span class="cm-tx"><i>Monument conquis avec la commune</i><b>${echapperTexte(mon.nom)}</b></span>
+      </div>` : ''}
       <p class="conquete-note">Elle t'appartient maintenant et elle est protégée pendant 3 h. Revente au jeu possible dans 12 h.</p>
       <button class="open-btn" data-fermer>Génial !</button>
     </div>`);
@@ -2389,7 +2396,7 @@ async function lancerAssaut(code){
       await loadMyCollection();
       await loadOthersPossessions();
       fermerPanneau();
-      celebrerConquete({ nom, tier, dept, bonus: Math.floor(PRIX_RACHAT[tier] * BONUS_CONQUETE_PART) });
+      celebrerConquete({ nom, tier, dept, code, bonus: Math.floor(PRIX_RACHAT[tier] * BONUS_CONQUETE_PART) });
     } else if(r.gagne){
       notifier({ type: 'victoire', titre: `Victoire contre ${nom} (−${r.cout} pts)`,
         texte: r.victoires_consecutives >= 2 ? 'Encore une victoire pour la conquérir.' : `Série : ${r.victoires_consecutives} sur 3`,
@@ -3276,7 +3283,7 @@ function changerLigne(i){
       return `<button type="button" class="ct-o ${contratChoisi.de}" ${dedans ? 'disabled' : ''}
                       data-code="${echapperTexte(x.commune_code)}">
         <span class="pt"></span>
-        <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${badgeDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.</span></span>
+        <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${badgeDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.${monumentsNoms.has(x.commune_code) ? `<span class="jr-monument ct-mon" title="Ce monument partirait avec la commune">${ICONE_MONUMENT}<span>${echapperTexte(monumentsNoms.get(x.commune_code))}</span></span>` : ''}</span></span>
         ${note ? `<span class="dj">${note}</span>` : ''}
       </button>`;
     }).join('');
@@ -3430,12 +3437,14 @@ function renderContrat(){
   lot.innerHTML = contratLot.map((x, i) => `
     <div class="ct-l ${contratChoisi.de}">
       <span class="pt"></span>
-      <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${badgeDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.</span></span>
+      <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${badgeDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.${monumentsNoms.has(x.commune_code) ? `<span class="jr-monument ct-mon" title="Ce monument partirait avec la commune">${ICONE_MONUMENT}<span>${echapperTexte(monumentsNoms.get(x.commune_code))}</span></span>` : ''}</span></span>
       <button class="ct-cadenas" data-ct-exclure="${echapperTexte(x.commune_code)}" title="Ne plus jamais proposer ${echapperTexte(x.nom || x.commune_code)}">${ICONE_CADENAS}</button>
       <button data-ct-changer="${i}">changer</button>
     </div>`).join('');
+  const nbMon = contratLot.filter(x => monumentsNoms.has(x.commune_code)).length;
   if(avert) avert.textContent =
-    `Les ${contratChoisi.n} communes sacrifiées retournent au pot. C'est définitif.`;
+    `Les ${contratChoisi.n} communes sacrifiées retournent au pot. C'est définitif.`
+    + (nbMon ? ` Attention : ${nbMon > 1 ? nbMon + ' monuments partent' : 'un monument part'} avec elles — « changer » ou le cadenas pour ${nbMon > 1 ? 'les' : 'le'} garder.` : '');
 }
 
 // ---------- Bandeaux qu'on peut fermer ----------
@@ -3664,6 +3673,7 @@ async function terminerContrat(carte){
   if(carte && carte.nom){
     notifier({ type: 'succes', titre: 'Contrat honoré',
       texte: `${carte.nom} rejoint ta collection.` });
+    if(carte.code) annoncerMonument(carte.code, carte.nom);
   }
 }
 
@@ -5189,7 +5199,8 @@ document.getElementById('fenetre').addEventListener('click', async (e) => {
 // ---------- Cartes et paquet ----------
 function makeCardEl(draw, onFlip){
   const wrap = document.createElement('div');
-  wrap.className = 'card ' + draw.tier.id;
+  const mon = monumentDe(draw.code);
+  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '');
   wrap.innerHTML = `
     <div class="card-inner">
       <div class="face face-back">
@@ -5204,7 +5215,7 @@ function makeCardEl(draw, onFlip){
               <span class="carte-rarete">${draw.tier.label}</span>
               <span class="carte-num">${draw.rank.toLocaleString('fr-FR')} / ${draw.tierSize.toLocaleString('fr-FR')}</span>
             </div>
-            <div class="carte-art">${carteArtSvg(draw.code, draw.tier.id)}<span class="carte-dept">${draw.dept}</span></div>
+            <div class="carte-art">${carteArtSvg(draw.code, draw.tier.id)}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
             <div class="carte-infos">
               <p class="carte-nom ${draw.nom.length > 26 ? 'tres-long' : draw.nom.length > 16 ? 'long' : ''}" title="${echapperTexte(draw.nom)}">${draw.nom}</p>
               <p class="carte-departement">${DEPT_NAMES[draw.dept] ? `<span class="dep-nom">${DEPT_NAMES[draw.dept]}</span> <span class="dep-num">(${draw.dept})</span>` : `<span class="dep-num">${draw.dept}</span>`}</p>
@@ -5250,6 +5261,7 @@ let paquetEnCours = false;
 function surCarteRetournee(draw){
   return () => {
     collectionMap.set(draw.code, draw);
+    annoncerMonument(draw.code, draw.nom);
     session[draw.tier.id]++;
     session.total++;
     renderStats();
@@ -5288,7 +5300,8 @@ function revealCards(draws){
 const RANG_TIER = { commun: 0, peucommun: 1, rare: 2, legendaire: 3 };
 // la meilleure carte arrive en dernier
 const trierPourRevelation = (draws) =>
-  draws.slice().sort((a, b) => RANG_TIER[a.tier.id] - RANG_TIER[b.tier.id]);
+  draws.slice().sort((a, b) => RANG_TIER[a.tier.id] - RANG_TIER[b.tier.id]
+    || (monumentsNoms.has(a.code) ? 1 : 0) - (monumentsNoms.has(b.code) ? 1 : 0));
 const attendreOuv = (ms) => new Promise(r => setTimeout(r, REDUCED_MOTION ? 0 : ms));
 
 function prefOuv(cle, defaut){
@@ -5435,6 +5448,13 @@ function lancerRevelation(zone, scene, tries){
 
   const decouvrir = (draw) => {
     decouverte.textContent = '';
+    decouverte.classList.remove('monument');
+    const mon = monumentDe(draw.code);
+    if(mon){
+      decouverte.classList.add('monument');
+      decouverte.innerHTML = `${ICONE_MONUMENT}<span>Monument : <b>${echapperTexte(mon.nom)}</b>. Il te suit tant que tu gardes ${echapperTexte(draw.nom)}.</span>`;
+      return;
+    }
     detailsCommune(draw.code).then(d => {
       if(!enCours || enCours.draw !== draw) return;
       const gentile = d && d.gentile ? String(d.gentile).trim() : '';
@@ -5487,7 +5507,7 @@ function lancerRevelation(zone, scene, tries){
       decouvrir(draw);
       await attendreOuv(420);
       sonsOuverture.revele(draw.tier.id);
-      if(RANG_TIER[draw.tier.id] >= 2) el.classList.add('ouv-eclat');
+      if(RANG_TIER[draw.tier.id] >= 2 || monumentsNoms.has(draw.code)) el.classList.add('ouv-eclat');
       annoncerOuv(draw.nom + ', ' + draw.tier.label);
       verrou = false;
       if(!pile.length){
@@ -5660,6 +5680,7 @@ async function tirerUneCarte(){
 }
 
 async function openPack(type){
+  chargerNomsMonuments();
   document.getElementById('openFreeBtn').disabled = true;
   document.getElementById('openBuyBtn').disabled = true;
 
@@ -6154,6 +6175,7 @@ document.addEventListener('click', async (e) => {
           await loadOthersPossessions();
           celebrerConquete({
             nom: nomCible,
+            code,
             tier: cible ? cible.communes.tier : '',
             dept: cible ? cible.communes.departement : '',
             bonus: cible ? Math.floor(PRIX_RACHAT[cible.communes.tier] * BONUS_CONQUETE_PART) : 0
@@ -7263,18 +7285,39 @@ const ICONE_MONUMENT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColo
 // Les noms seuls, pour le badge des vignettes et de la fiche : deux colonnes,
 // table en lecture libre. Une seule requete par session, en arriere-plan.
 let monumentsNoms = new Map();
+let monumentsPhotos = new Map();
 let monumentsNomsPromesse = null;
 function chargerNomsMonuments(){
   if(monumentsNomsPromesse) return monumentsNomsPromesse;
-  monumentsNomsPromesse = Promise.resolve(sb.from('monuments').select('commune_code, nom'))
+  const lireListe = (colonnes) => Promise.resolve(sb.from('monuments').select(colonnes));
+  monumentsNomsPromesse = lireListe('commune_code, nom, photo')
+    // sans la colonne photo, on se contente des noms
+    .then((r) => r.error ? lireListe('commune_code, nom') : r)
     .then(({ data, error }) => {
       // monuments.sql pas encore passe : on repart avec une liste vide et le
       // jeu se comporte exactement comme avant
-      if(!error) monumentsNoms = new Map((data || []).map(m => [m.commune_code, m.nom]));
+      if(!error){
+        monumentsNoms = new Map((data || []).map(m => [m.commune_code, m.nom]));
+        monumentsPhotos = new Map((data || []).filter(m => m.photo).map(m => [m.commune_code, m.photo]));
+      }
       return monumentsNoms;
     })
     .catch(() => monumentsNoms);
   return monumentsNomsPromesse;
+}
+
+// Le monument d'une commune, ou null. Sert au tirage, a la conquete et au
+// contrat : un monument obtenu doit se voir au moment ou on l'obtient.
+function monumentDe(code){
+  const nom = monumentsNoms.get(code);
+  return nom ? { nom, photo: monumentsPhotos.get(code) || '' } : null;
+}
+function annoncerMonument(code, nomCommune){
+  const m = monumentDe(code);
+  if(!m) return;
+  monumentsLe = 0;                 // l'album a change : on le relira
+  notifier({ type: 'monument', titre: 'Monument obtenu : ' + m.nom,
+    texte: `Il est à toi tant que tu gardes ${nomCommune}.`, duree: 6000 });
 }
 
 // Le catalogue complet : il porte les proprietaires, donc il vieillit.

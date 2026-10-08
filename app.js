@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '00019ef72b9d';
+const VERSION_JEU = 'e98af184bc89';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1483,6 +1483,7 @@ function redimensionnerCanvas(){
 
 function demanderDessin(){
   if(!canvasActif() || CV.dessinPlanifie) return;
+  if(rendreALOuverture('territoire', demanderDessin)) return;   // patch85
   CV.dessinPlanifie = true;
   requestAnimationFrame(() => { CV.dessinPlanifie = false; dessinerCanvas(); });
 }
@@ -2751,6 +2752,8 @@ function brancherSurvolCanvas(){
 }
 
 function renderMapOverlay(){
+  // patch85 : onglet ferme, on redessinera a l'ouverture (une seule fois)
+  if(rendreALOuverture('territoire', renderMapOverlay)) return;
   if(canvasActif()){
     CV.cellulesSignature = ''; CV.donneesSignature = '';
     // la commune affichee a pu changer de main entre-temps
@@ -5405,6 +5408,21 @@ function makeCardEl(draw, onFlip){
   return wrap;
 }
 
+// Le dos seul, pour la pile : la face n'y est jamais visible (patch85)
+function makeDosEl(draw){
+  const wrap = document.createElement('div');
+  wrap.className = 'card ' + draw.tier.id;
+  wrap.innerHTML = `
+    <div class="card-inner">
+      <div class="face face-back">
+        ${DOS_MOTIF_SVG}
+        <span class="dos-coin hg"></span><span class="dos-coin hd"></span><span class="dos-coin bg"></span><span class="dos-coin bd"></span>
+        <div class="dos-embleme">${ICONE_EPINGLE}</div>
+      </div>
+    </div>`;
+  return wrap;
+}
+
 let pendingFlips = 0;
 let paquetEnCours = false;
 
@@ -5500,14 +5518,19 @@ const sonsOuverture = (() => {
     g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
     o.connect(g); g.connect(maitre); o.start(t); o.stop(t + duree + 0.05);
   };
+  let bruitBlanc = null;
   const bruit = (duree, f1, f2, vol, type) => {
-    const n = Math.floor(ctx.sampleRate * duree), b = ctx.createBuffer(1, n, ctx.sampleRate), d = b.getChannelData(0);
-    for(let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    // patch85 : une seconde de bruit fabriquee une fois, on en lit un morceau
+    if(!bruitBlanc){
+      const n = ctx.sampleRate, d = (bruitBlanc = ctx.createBuffer(1, n, ctx.sampleRate)).getChannelData(0);
+      for(let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    }
     const s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain(), t = ctx.currentTime;
-    s.buffer = b; fl.type = type || 'bandpass'; fl.Q.value = 0.8;
+    s.buffer = bruitBlanc; fl.type = type || 'bandpass'; fl.Q.value = 0.8;
     fl.frequency.setValueAtTime(f1, t); fl.frequency.exponentialRampToValueAtTime(f2, t + duree);
     g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + duree);
-    s.connect(fl); fl.connect(g); g.connect(maitre); s.start(t);
+    s.connect(fl); fl.connect(g); g.connect(maitre);
+    s.start(t, Math.random() * Math.max(0, 1 - duree), Math.min(duree, 1));
   };
   return {
     charge(){ if(!pret()) return;
@@ -5568,7 +5591,7 @@ function construirePileOuv(pileDraws){
   pile.className = 'ouv-pile';
   pile.setAttribute('aria-label', 'Retourner la carte suivante');
   pileDraws.forEach((d, i) => {
-    const dos = makeCardEl(d, () => {});
+    const dos = makeDosEl(d);
     dos.classList.add('ouv-dos');
     const prof = pileDraws.length - 1 - i;
     dos.style.transform = `translate(${prof * 3}px, ${prof * -3}px) rotate(${(prof % 2 ? 1 : -1) * prof * 0.8}deg)`;

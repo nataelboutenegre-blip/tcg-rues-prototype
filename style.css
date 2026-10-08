@@ -4200,3 +4200,75 @@ svg.rd-zoom .cdj-fr{ fill:#172D4C; }
   .qg-defis li.recu{ grid-template-columns:64px minmax(0,1fr); }
   .qg-defi-actions{ grid-column:1 / -1; justify-content:flex-end; }
 }
+
+
+/* ---------- patch86 : l'assaut mis en scene ---------- */
+.fenetre.assaut{ width:min(470px, 100%); padding:22px 16px 18px; overflow:hidden;
+  background: radial-gradient(90% 70% at 50% 40%, #1c3a68, #0b1830 78%); border:1px solid rgba(240,180,41,.35); }
+.fenetre.assaut::before{ content:''; position:absolute; inset:0; opacity:.16; pointer-events:none;
+  background: repeating-radial-gradient(circle at 50% 38%, transparent 0 34px, rgba(169,188,212,.5) 35px 36px); }
+.as-surtitre{ position:relative; margin:0 0 14px; font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color: var(--brume); }
+.as-duel{ position:relative; display:flex; align-items:flex-start; justify-content:center; gap:clamp(8px, 4vw, 26px); margin-bottom:46px; }
+.as-cote{ position:relative; display:flex; flex-direction:column; align-items:center; }
+.as-vs{ align-self:center; font-family: var(--titre); font-weight:900; font-size:2rem; color: var(--c-legendaire); opacity:0; }
+.as-carte{ width:clamp(118px, 34vw, 150px); aspect-ratio:188/263; border-radius:13px; background:#EEF2F7; color: var(--encre);
+  border:4px solid var(--as-c, var(--c-commun)); padding:6px 0 0; display:flex; flex-direction:column; overflow:hidden; text-align:left;
+  box-shadow:0 16px 36px rgba(0,0,0,.45); opacity:0; }
+.as-carte.vide{ background: rgba(255,255,255,.05); border-style:dashed; border-color: rgba(169,188,212,.3); }
+.as-carte.commun{ --as-c: var(--c-commun); } .as-carte.peucommun{ --as-c: var(--c-peucommun); }
+.as-carte.rare{ --as-c: var(--c-rare); } .as-carte.legendaire{ --as-c: var(--c-legendaire); }
+.as-h{ padding:0 7px 4px; }
+.as-pill{ font-size:.58rem; font-weight:700; padding:2px 7px; border-radius:999px; background: var(--as-c); color:#fff; }
+.as-carte.legendaire .as-pill{ color: var(--encre); }
+.as-art{ position:relative; margin:0 6px; height:42%; border-radius:7px; overflow:hidden; }
+.as-art > svg, .as-art > img{ width:100%; height:100%; display:block; object-fit:cover; }
+.as-art > *:not(svg):not(.art-photo):not(.art-voile){ z-index:3; }
+.as-dep{ position:absolute; right:5px; bottom:-5px; font-family: var(--titre); font-weight:900; font-size:2.3rem; line-height:1; color: rgba(255,255,255,.3); }
+.as-nom{ font-family: var(--titre); font-weight:800; font-size:1.25rem; line-height:1.06; padding-bottom:.06em; margin:5px 7px 0; overflow-wrap:anywhere; }
+.as-nom.long{ font-size:1rem; }
+.as-dpt{ font-size:.64rem; color:#5A6B82; margin:1px 7px 0; }
+.as-qui{ font-size:.66rem; font-weight:700; color:#3a4a62; margin:2px 7px 0; }
+.as-lis{ margin-top:auto; display:flex; height:4px; } .as-lis i{ flex:1; }
+.as-lis i:nth-child(1){ background:#2B4A9A; } .as-lis i:nth-child(2){ background:#fff; } .as-lis i:nth-child(3){ background:#E05252; }
+.as-proche{ position:absolute; top:100%; margin:10px 0 0; width:max-content; max-width:46vw; text-align:center; font-size:.7rem; line-height:1.3; color: var(--brume); }
+.as-proche b{ color: var(--vert, #2BD48B); font-weight:700; }
+.as-loin{ color:#F0566A; font-weight:600; }
+.as-pastilles{ position:absolute; top:100%; left:0; right:0; margin-top:16px; display:flex; gap:7px; justify-content:center; }
+.as-pastilles i{ width:26%; height:11px; border-radius:999px; background: rgba(169,188,212,.28); border:1px solid rgba(169,188,212,.45); transition: background .3s, box-shadow .3s; }
+.as-pastilles i.gagne{ background:#2BD48B; border-color:#7ff0c0; box-shadow:0 0 12px rgba(43,212,139,.6); }
+.as-pastilles i.perdu{ background:#F0566A; border-color:#ff9aa8; box-shadow:0 0 12px rgba(240,86,106,.6); }
+.as-pastilles i.tombe{ animation: asTombe .6s ease-in forwards; }
+@keyframes asTombe{ to{ transform: translateY(24px) rotate(18deg); opacity:0; } }
+.as-drapeau{ position:absolute; left:50%; top:-12px; width:38px; height:54px; margin-left:-6px; z-index:4; opacity:0; }
+.as-drapeau svg{ width:100%; height:100%; overflow:visible; }
+.as-onde{ position:absolute; left:50%; top:42%; width:20px; height:20px; margin:-10px 0 0 -10px; border-radius:50%; border:2px solid var(--c-legendaire); opacity:0; pointer-events:none; }
+.as-jauge{ position:relative; width:min(330px, 100%); margin:0 auto; }
+.as-cadran{ position:relative; height:15px; border-radius:999px; overflow:hidden; background: rgba(240,86,106,.35); border:1px solid rgba(255,255,255,.18); }
+.as-zone{ position:absolute; left:0; top:0; bottom:0; background: linear-gradient(90deg, rgba(43,212,139,.75), rgba(43,212,139,.45)); }
+.as-aiguille{ position:absolute; top:-7px; left:0; width:3px; height:29px; margin-left:-1.5px; background:#fff; border-radius:2px; box-shadow:0 0 10px rgba(255,255,255,.9); }
+.as-jleg{ display:flex; justify-content:space-between; font-size:.74rem; color: var(--brume); margin-top:8px; }
+.as-jleg b{ color:#2BD48B; } .as-jleg b.blanc{ color:#fff; }
+.fenetre .as-verdict{ position:relative; margin:24px 0 8px; min-height:1.1em; font-family: var(--titre); font-weight:900; font-size:clamp(1.9rem, 8vw, 2.6rem); line-height:1; opacity:0; }
+.as-verdict.ok{ color:#2BD48B; text-shadow:0 0 22px rgba(43,212,139,.5); }
+.as-verdict.ko{ color:#F0566A; text-shadow:0 0 22px rgba(240,86,106,.45); }
+.as-verdict.conq{ color: var(--c-legendaire); text-shadow:0 0 28px rgba(240,180,41,.65); }
+.as-detail{ position:relative; margin:0 0 14px; min-height:1.3em; color: var(--brume); font-size:.86rem; line-height:1.45; }
+.as-petit{ display:block; font-size:.74rem; opacity:.85; margin-top:4px; }
+.as-serie{ display:inline-flex; gap:5px; vertical-align:middle; margin-left:6px; }
+.as-serie i{ width:10px; height:10px; border-radius:50%; border:1.5px solid #2BD48B; }
+.as-serie i.plein{ background:#2BD48B; }
+.as-mon{ display:flex; align-items:center; justify-content:center; gap:6px; margin-top:6px; color:#FFE7A8; }
+.as-mon svg{ width:16px; height:16px; color: var(--c-legendaire); }
+.as-actions{ position:relative; display:flex; gap:10px; justify-content:center; opacity:0; }
+.as-actions .open-btn{ flex:1; max-width:220px; }
+/* le bandeau des grandes conquetes, chez tous les joueurs connectes */
+.grande-conquete{ position:fixed; left:50%; top:calc(12px + env(safe-area-inset-top, 0px)); z-index:80; transform:translate(-50%, -160%);
+  width:min(520px, calc(100% - 24px)); display:flex; align-items:center; gap:12px; padding:10px 16px; border-radius:14px; cursor:pointer;
+  background: linear-gradient(90deg, #3d3519, #13284A 45%); border:1px solid rgba(240,180,41,.65); color:#fff;
+  box-shadow:0 14px 40px rgba(0,0,0,.5), 0 0 30px rgba(240,180,41,.25); transition: transform .45s cubic-bezier(.2,.8,.3,1.15); }
+.grande-conquete.visible{ transform:translate(-50%, 0); }
+.gc-ico{ font-size:1.5rem; }
+.gc-tx b{ display:block; font-family: var(--titre); font-weight:800; font-size:1.15rem; }
+.gc-tx b em{ font-style:normal; color: var(--c-legendaire); }
+.gc-tx small{ display:block; font-size:.76rem; color: var(--brume); }
+@media (prefers-reduced-motion: reduce){ .grande-conquete{ transition:none; } .as-pastilles i.tombe{ animation:none; opacity:0; } }

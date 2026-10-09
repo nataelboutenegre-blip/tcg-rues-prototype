@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '62ec5620d082';
+const VERSION_JEU = '9edc3704007c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7328,6 +7328,44 @@ let combatSieges = new Map();
 let combatFilterTier = 'tous';
 let combatActionEnCours = false;
 let combatProximite = false;
+// patch95 : communs et peu communs, charges a la demande (environ 25 000
+// cibles : les charger a chaque ouverture ralentirait tout l'onglet)
+const COMBAT_TIERS_BAS = ['commun', 'peucommun'];
+let combatBasCharges = new Set();
+let combatBasChargement = false;
+const tiersCombat = () => ['rare', 'epique', 'legendaire'].concat([...combatBasCharges]);
+function combatBasVoulus(){
+  if(COMBAT_TIERS_BAS.indexOf(combatFilterTier) >= 0) return [combatFilterTier];
+  if(combatProximite && combatFilterTier === 'tous') return COMBAT_TIERS_BAS.slice();
+  return [];
+}
+async function assurerCiblesBas(){
+  const manquants = combatBasVoulus().filter(t => !combatBasCharges.has(t));
+  if(!manquants.length || combatBasChargement) return;
+  combatBasChargement = true;
+  renderCombatGrid();
+  try{
+    const { data: userData } = await sb.auth.getUser();
+    const uid = userData.user.id;
+    const { data, error } = await toutesLesLignes(() => sb
+      .from('possessions')
+      .select('commune_code, joueur_id, acquired_at, bouclier_jusqua, communes!inner(nom,departement,tier,latitude,longitude), joueurs(pseudo)')
+      .neq('joueur_id', uid)
+      .in('communes.tier', manquants));
+    if(error) throw error;
+    manquants.forEach(t => combatBasCharges.add(t));
+    const deja = new Set(combatCibles.map(c => c.commune_code));
+    combatCibles = combatCibles.concat((data || []).filter(c => !deja.has(c.commune_code)));
+    calculerDistancesCibles();
+  }catch(e){
+    console.error('TERRAFRONT cibles communes', e);
+  }
+  combatBasChargement = false;
+  renderCombatGrid();
+  demanderChances();
+  // le filtre a pu changer pendant le chargement
+  if(combatBasVoulus().some(t => !combatBasCharges.has(t))) assurerCiblesBas();
+}
 let combatEnCours = false;
 let combatRayonKm = 20;
 
@@ -7380,11 +7418,11 @@ async function loadCombat(){
     .from('possessions')
     .select('commune_code, joueur_id, acquired_at, bouclier_jusqua, ' + champsCible)
     .neq('joueur_id', uid)
-    .in('communes.tier', ['rare','epique','legendaire']));
+    .in('communes.tier', tiersCombat()));
   if(error){
     ({ data: cibles, error } = await toutesLesLignes(() => sb
       .from('possessions').select('commune_code, joueur_id, acquired_at, ' + champsCible)
-      .neq('joueur_id', uid).in('communes.tier', ['rare','epique','legendaire'])));
+      .neq('joueur_id', uid).in('communes.tier', tiersCombat())));
   }
   if(error){ console.error(error); return; }
 
@@ -7397,6 +7435,16 @@ async function loadCombat(){
       : r);
 
   combatCibles = cibles || [];
+  // un combat en cours sur une commune ou une peu commune doit rester visible
+  // meme si son palier n'est pas charge
+  const horsListe = (mesSieges || []).map(s => s.commune_code)
+    .filter(code => !combatCibles.some(c => c.commune_code === code));
+  if(horsListe.length){
+    const { data: enPlus } = await sb.from('possessions')
+      .select('commune_code, joueur_id, acquired_at, bouclier_jusqua, ' + champsCible)
+      .neq('joueur_id', uid).in('commune_code', horsListe.slice(0, 200));
+    if(enPlus) combatCibles = combatCibles.concat(enPlus);
+  }
   calculerDistancesCibles();
   loadMenaces();
   combatSieges = new Map((mesSieges || []).map(s => [s.commune_code, s]));
@@ -7545,6 +7593,10 @@ function renderCombatGrid(){
   const searchEl = document.getElementById('combatSearch');
   const searchText = sansAccents(searchEl ? searchEl.value.trim() : '');
 
+  if(combatBasChargement && combatBasVoulus().some(t => !combatBasCharges.has(t))){
+    grid.innerHTML = '<p class="collection-empty">Chargement des communes et peu communes…</p>';
+    return;
+  }
   let cibles = combatCibles;
   if(combatFilterTier !== 'tous'){
     cibles = cibles.filter(c => c.communes.tier === combatFilterTier);
@@ -7587,7 +7639,7 @@ function renderCombatGrid(){
     } else if(combatProximite && collectionMap.size === 0){
       msg = 'Il te faut au moins une commune pour attaquer autour de ton territoire.';
     } else if(combatProximite){
-      msg = `Aucune commune rare ou légendaire à moins de ${combatRayonKm} km de ton territoire.`;
+      msg = `Aucune cible à moins de ${combatRayonKm} km de ton territoire.`;
     }
     grid.innerHTML = `<p class="collection-empty">${msg}</p>`;
     return;
@@ -7702,6 +7754,7 @@ document.getElementById('combatProxToggle').addEventListener('click', () => {
   btn.setAttribute('aria-pressed', String(combatProximite));
   document.getElementById('combatRayons').hidden = !combatProximite;
   renderCombatGrid();
+  assurerCiblesBas();
 });
 document.getElementById('combatRayons').addEventListener('click', (e) => {
   const pill = e.target.closest('.filter-pill');
@@ -7719,6 +7772,7 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
   pill.classList.add('active');
   combatFilterTier = pill.dataset.tier;
   renderCombatGrid();
+  assurerCiblesBas();
 });
 
 // ---------- Navigation : barre du bas et menu "Plus" sur telephone ----------

@@ -22,7 +22,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=62ec5620d082">
+<link rel="stylesheet" href="style.css?v=9edc3704007c">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -730,7 +730,7 @@
         <button type="button" class="volet actif" data-volet="combat" role="tab" aria-selected="true">Attaquer</button>
         <button type="button" class="volet" data-volet="defense" role="tab" aria-selected="false">Défendre<span class="volet-badge" data-badge-defense hidden></span></button>
       </div>
-      <div class="sub">3 victoires d'affilée pour conquérir une commune rare ou légendaire, une défaite remet ta série à zéro. Avant d'attaquer, choisis ton engagement : plus tu paies, plus tu as de chances. Un round toutes les 10 min sur une rare, toutes les 3 h sur une légendaire.</div>
+      <div class="sub">3 victoires d'affilée pour conquérir une commune, une défaite remet ta série à zéro. Avant d'attaquer, choisis ton engagement : plus tu paies, plus tu as de chances. Un round toutes les 2 min sur une commune, 5 min sur une peu commune, 10 min sur une rare, 3 h sur une légendaire. Les communes et peu communes s'affichent avec leur filtre ou « Près de mon territoire ».</div>
       <div class="bourse-filters combat-proximite">
         <span class="puce solde">Solde <b id="soldeValueCombat">—</b></span>
         <button class="filter-pill prox-toggle" id="combatEnCoursToggle" aria-pressed="false"><span class="prox-switch"></span>Combats en cours <span class="en-cours-nb" id="combatEnCoursNb">0</span></button>
@@ -749,6 +749,8 @@
         <button class="filter-pill active" data-tier="tous">Toutes</button>
         <button class="filter-pill" data-tier="legendaire"><span class="pill-point" style="background:#F0B429"></span>Légendaire</button>
         <button class="filter-pill" data-tier="rare"><span class="pill-point" style="background:#2F7CF6"></span>Rare</button>
+        <button class="filter-pill" data-tier="peucommun"><span class="pill-point" style="background:#22A06B"></span>Peu commun</button>
+        <button class="filter-pill" data-tier="commun"><span class="pill-point" style="background:#7E8BA0"></span>Commun</button>
       </div>
       <input type="text" id="combatSearch" class="bourse-search" placeholder="Rechercher une commune ou un département…">
       <div id="combatGrid" class="cibles-grille"><p class="collection-empty">Aucune cible disponible pour le moment.</p></div>
@@ -1158,6 +1160,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=62ec5620d082"></script>
+<script src="app.js?v=9edc3704007c"></script>
 </body>
 </html>

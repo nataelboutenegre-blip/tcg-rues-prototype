@@ -1546,6 +1546,11 @@
   .cible.rare .cible-rarete{ background: var(--c-rare); }
   .cible.epique .cible-rarete{ background: var(--c-epique); }
   .cible.legendaire .cible-rarete{ background: var(--c-legendaire); color: var(--encre); }
+  /* patch95 : communs et peu communs dans Combat */
+  .cible.peucommun{ background: linear-gradient(160deg, #7FE0B4, var(--c-peucommun) 45%, #16734C); }
+  .cible.commun{ background: linear-gradient(160deg, #C3CBD8, var(--c-commun) 45%, #4E5A6E); }
+  .cible.peucommun .cible-rarete{ background: var(--c-peucommun); }
+  .cible.commun .cible-rarete{ background: var(--c-commun); }
   .cible-etat{ display:inline-flex; align-items:center; gap:4px; font-size:0.68rem; font-weight:600; padding:2px 8px; border-radius:999px; white-space:nowrap; }
   .cible-etat svg{ width:11px; height:11px; }
   .cible-etat.pret{ background:#DDF3E8; color:#12664A; }

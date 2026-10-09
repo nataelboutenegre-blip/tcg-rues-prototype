@@ -4517,3 +4517,8 @@ body.mode-front #panel-defense .bourse-section{ display:none !important; }
 .mf-pastille{ width:34px; height:34px; border-radius:8px; flex:none; background:#1A3256; }
 .mf-pastille.commun{ background:var(--c-commun); } .mf-pastille.peucommun{ background:var(--c-peucommun); }
 .mf-pastille.rare{ background:var(--c-rare); } .mf-pastille.epique{ background:var(--c-epique); } .mf-pastille.legendaire{ background:var(--c-legendaire); }
+
+/* patch94 : commune absente de ma collection Terra (Bourse, Echange) */
+.tg-neuf{ display:inline-block; margin-left:7px; padding:2px 7px; border-radius:999px; background:#35B97E; color:#0B2A1D;
+  font-size:.56rem; font-weight:800; letter-spacing:.05em; vertical-align:2px; white-space:nowrap; }
+.ech-face > .tg-neuf{ align-self:flex-start; margin:4px 0 0; color:#0B2A1D; font-size:.56rem; }

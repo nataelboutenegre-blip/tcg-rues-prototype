@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '76c1876962b2';
+const VERSION_JEU = '62ec5620d082';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6575,7 +6575,40 @@ document.getElementById('toggleOthersBtn').addEventListener('click', () => {
 const PRIX_RACHAT = {commun: 5, peucommun: 20, rare: 100, epique: 300, legendaire: 1000};
 let myListings = new Map();
 
+// patch94 : en saison 2, Bourse et Echange n'existent qu'en Terra et
+// travaillent sur les doublons de la collection Terra
+const marcheTerra = () => SAISON2;
+const TAG_NEUF = '<span class="tg-neuf">NOUVELLE POUR TOI</span>';
+const TEXTES_TERRA = {
+  bourse: 'Vends tes <b>doublons</b> au jeu ou à d\'autres joueurs, et achète ceux des autres. Tu gardes toujours un exemplaire de chaque commune.',
+  echange: 'Propose un troc à un autre joueur : un de tes <b>doublons</b> contre un des siens, de la même rareté. Tu gardes toujours un exemplaire de chaque commune.',
+};
+function textesMarche(id){
+  const sub = document.querySelector('#panel-' + id + ' .sub');
+  if(!sub) return;
+  if(sub.dataset.s1 === undefined) sub.dataset.s1 = sub.innerHTML;
+  sub.innerHTML = marcheTerra() ? TEXTES_TERRA[id] : sub.dataset.s1;
+}
+let marcheTerraLignes = [];
+
+async function loadBourseTerra(){
+  textesMarche('bourse');
+  const joueurRow = await monEtat();
+  document.getElementById('soldeValue').textContent = joueurRow ? joueurRow.solde : '—';
+  soldeBourse = joueurRow ? joueurRow.solde : null;
+  const [m] = await Promise.all([sb.rpc('terra_marche'), terraCharge ? null : chargerCollectionTerra()]);
+  if(m.error) console.error(m.error);
+  marcheTerraLignes = m.data || [];
+  myListings = new Map(marcheTerraLignes.filter(a => a.mienne).map(a => [a.commune_code, a.prix]));
+  renderSellableGrid();
+  renderMarketGrid(marcheTerraLignes.map(a => ({
+    id: a.id, commune_code: a.commune_code, prix: a.prix, joueur_id: a.vendeur, je_l_ai: a.je_l_ai,
+    communes: { nom: a.nom, departement: a.departement, tier: a.tier }, joueurs: { pseudo: a.pseudo },
+  })), (marcheTerraLignes.find(a => a.mienne) || {}).vendeur || ID_MOI);
+}
+
 async function loadBourse(){
+  if(marcheTerra()) return loadBourseTerra();
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
 
@@ -6730,6 +6763,7 @@ function renderSellableGrid(){
   const grid = document.getElementById('sellableGrid');
   const searchEl = document.getElementById('sellSearch');
   const searchText = sansAccents(searchEl ? searchEl.value.trim() : '');
+  if(marcheTerra()) return renderVenteTerra(grid, searchText);
 
   let entries = Array.from(collectionMap.values()).sort((a,b) => {
     const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
@@ -6775,6 +6809,71 @@ function renderSellableGrid(){
                   [sellFilterTier, searchText, entries.length].join('|'));
 }
 
+function renderVenteTerra(grid, searchText){
+  let entries = [...terraCollection.values()]
+    .filter(e => e.exemplaires > 1 || myListings.has(e.code))
+    .sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || b.exemplaires - a.exemplaires || b.pop - a.pop);
+  const total = entries.length;
+  if(sellFilterTier !== 'tous') entries = entries.filter(e => e.tier.id === sellFilterTier);
+  if(searchText) entries = entries.filter(e => correspondRecherche(e.nom, e.dept, searchText));
+  if(!total){
+    grid.innerHTML = '<p class="collection-empty">Tu n\'as aucun doublon pour l\'instant. Ils arrivent en ouvrant des paquets.</p>';
+    return;
+  }
+  if(!entries.length){
+    grid.innerHTML = '<p class="collection-empty">Aucun doublon ne correspond à la recherche.</p>';
+    return;
+  }
+  const ligne = (e) => {
+    const n = e.exemplaires - 1;
+    const prixAnnonce = myListings.get(e.code);
+    const actions = prixAnnonce
+      ? `<span class="chip-vente">En vente à ${Number(prixAnnonce).toLocaleString('fr-FR')} pts</span>
+         <div class="ligne-actions"><button class="btn-p contour" data-action="retirer" data-code="${e.code}">Retirer</button></div>`
+      : `<div class="ligne-actions"><button class="btn-p contour" data-action="vendre-jeu" data-code="${e.code}">Vendre au jeu <b>${TERRA_REVENTE[e.tier.id]}</b></button>
+         <button class="btn-p or" data-action="mettre-vente" data-code="${e.code}">Mettre en vente</button></div>`;
+    return `
+      <div class="ligne ${e.tier.id}">
+        <div class="ligne-texte">
+          <span class="ligne-nom">${echapperTexte(e.nom)}</span>
+          <span class="ligne-detail">${DEPT_NAMES[e.dept] ? DEPT_NAMES[e.dept] + ' ' : ''}(${e.dept}), ${e.tier.label.toLowerCase()} · ${n > 0 ? n + ' doublon' + (n > 1 ? 's' : '') : 'plus de doublon'}</span>
+        </div>
+        ${actions}
+      </div>`;
+  };
+  afficherParLots(grid, entries, ligne, ['terra', sellFilterTier, searchText, entries.length].join('|'));
+}
+
+async function actionBourseTerra(action, code, btn){
+  const e = terraCollection.get(code);
+  if(action === 'vendre-jeu'){
+    const { data, error } = await sb.rpc('terra_vendre', { p_code: code, p_n: 1 });
+    if(error) throw error;
+    const r = data && data[0];
+    notifier({ type: 'succes', titre: `Doublon de ${e ? e.nom : 'la commune'} vendu au jeu`, texte: r ? `+${r.gain} pts` : '' });
+  } else if(action === 'mettre-vente'){
+    const prix = await demanderPrix({ nom: e ? e.nom : 'Cette commune', rachat: e ? TERRA_REVENTE[e.tier.id] : 1 });
+    if(!prix){ btn.disabled = false; return; }
+    const { error } = await sb.rpc('terra_mettre_en_vente', { p_code: code, p_prix: prix });
+    if(error) throw error;
+    notifier({ type: 'succes', titre: 'Annonce publiée', texte: `Un doublon de ${e ? e.nom : 'la commune'} est en vente à ${prix.toLocaleString('fr-FR')} pts` });
+  } else if(action === 'retirer'){
+    const { error } = await sb.rpc('terra_retirer_de_la_vente', { p_code: code });
+    if(error) throw error;
+    notifier({ type: 'info', titre: 'Annonce retirée', texte: 'Le doublon revient dans ta collection.' });
+  } else if(action === 'acheter'){
+    const { data, error } = await sb.rpc('terra_acheter', { p_id: Number(btn.dataset.id) });
+    if(error) throw error;
+    const r = data && data[0];
+    notifier({ type: 'succes', titre: r ? `${r.nom} rejoint ta collection` : 'Commune achetée',
+               texte: r && r.nouvelle ? 'Nouvelle commune !' : 'Un exemplaire de plus.' });
+  }
+  terraCharge = false;
+  await chargerCollectionTerra();
+  await loadBourse();
+  loadPackStatus();
+}
+
 function renderMarketGrid(market, myUid){
   const grid = document.getElementById('marketGrid');
   if(market.length === 0){
@@ -6790,14 +6889,14 @@ function renderMarketGrid(market, myUid){
     const tropCher = !isMine && soldeBourse !== null && soldeBourse < a.prix;
     const action = isMine
       ? `<button class="btn-p contour" data-action="retirer" data-code="${a.commune_code}">Retirer</button>`
-      : `<button class="btn-p or" data-action="acheter" data-code="${a.commune_code}" ${tropCher ? 'disabled title="Solde insuffisant"' : ''}>Acheter</button>`;
+      : `<button class="btn-p or" data-action="acheter" data-code="${a.commune_code}"${a.id ? ` data-id="${a.id}"` : ''} ${tropCher ? 'disabled title="Solde insuffisant"' : ''}>Acheter</button>`;
     const vendeur = isMine
       ? 'ton annonce'
       : `vendue par <i style="background:${colorForPlayer(a.joueur_id)}"></i>${echapperTexte(pseudo)}`;
     return `
       <div class="ligne ${c.tier}">
         <div class="ligne-texte">
-          <span class="ligne-nom">${c.nom}</span>
+          <span class="ligne-nom">${echapperTexte(c.nom)}${a.je_l_ai === false && !isMine ? TAG_NEUF : ''}</span>
           <span class="ligne-detail">${DEPT_NAMES[c.departement] ? DEPT_NAMES[c.departement] + ' ' : ''}(${c.departement}), ${tier.label.toLowerCase()}, ${vendeur}</span>
         </div>
         <span class="ligne-prix">${Number(a.prix).toLocaleString('fr-FR')}<small>pts</small></span>
@@ -6814,6 +6913,10 @@ document.addEventListener('click', async (e) => {
   const code = btn.dataset.code;
   btn.disabled = true;
   try{
+    if(marcheTerra() && ['vendre-jeu', 'mettre-vente', 'retirer', 'acheter'].includes(action)){
+      await actionBourseTerra(action, code, btn);
+      return;
+    }
     if(action === 'vendre-jeu'){
       const vendue = collectionMap.get(code);
       const { error } = await sb.rpc('vendre_au_jeu', { p_commune_code: code });
@@ -9010,7 +9113,7 @@ let echangeMinuteur = null;
 // la pastille de l'onglet et pour le panneau de la carte, bien avant que le
 // joueur n'ouvre Echange.
 async function chargerEchangesEnCours(){
-  const { data, error } = await sb.rpc('mes_echanges');
+  const { data, error } = await sb.rpc(marcheTerra() ? 'terra_mes_echanges' : 'mes_echanges');
   if(error){ console.warn('TERRAFRONT echanges indisponibles', error); return; }
   echangesEnCours = data || [];
   majBadgeEchange();
@@ -9018,6 +9121,8 @@ async function chargerEchangesEnCours(){
 }
 
 async function loadEchanges(){
+  textesMarche('echange');
+  if(marcheTerra() && !terraCharge) await chargerCollectionTerra();
   await chargerEchangesEnCours();
   renderEchangePropositions();
   renderEchangeMien();
@@ -9056,7 +9161,7 @@ function signalerNouveauxEchanges(){
 // Version légère de loadEchanges : juste ce qu'il faut pour la pastille,
 // sans recharger les cibles ni le solde. Appelée toutes les minutes.
 async function loadBadgeEchanges(){
-  const { data, error } = await sb.rpc('mes_echanges');
+  const { data, error } = await sb.rpc(marcheTerra() ? 'terra_mes_echanges' : 'mes_echanges');
   if(error) return;
   echangesEnCours = data || [];
   majBadgeEchange();
@@ -9093,7 +9198,7 @@ function ligneEchange(e){
         <div class="ech-face recoit">
           <span>Tu reçois</span>
           <b>${echapperTexte(e.je_recois_nom)}</b>
-          <small>(${echapperTexte(e.je_recois_dept)})</small>
+          <small>(${echapperTexte(e.je_recois_dept)})</small>${e.nouvelle === true ? TAG_NEUF : ''}
         </div>
         <div class="ech-face donne">
           <span>Tu donnes</span>
@@ -9141,6 +9246,7 @@ function renderEchangeMien(){
   // celle que je donne, pour les propositions envoyees comme pour les recues :
   // il n'y a rien de plus a lui demander.
   const engagees = new Set((echangesEnCours || []).map(e => e.je_donne_code));
+  if(marcheTerra()) return renderEchangeMienTerra(zone, rechercheM);
 
   const duPalier = [...collectionMap.values()]
     .filter(c => c.tier && c.tier.id === echangeTier)
@@ -9174,12 +9280,44 @@ function renderEchangeMien(){
   majResumeEchange();
 }
 
+// Terra : mes doublons du palier, moins ceux deja promis dans mes
+// propositions envoyees (le serveur applique la meme regle)
+function renderEchangeMienTerra(zone, rechercheM){
+  const promis = {};
+  for(const e of echangesEnCours || []) if(e.sens === 'envoye') promis[e.je_donne_code] = (promis[e.je_donne_code] || 0) + 1;
+  const duPalier = [...terraCollection.values()]
+    .filter(c => c.tier.id === echangeTier && c.exemplaires > 1);
+  const miennes = duPalier
+    .map(c => Object.assign({}, c, { libres: c.exemplaires - 1 - (promis[c.code] || 0) }))
+    .filter(c => c.libres > 0)
+    .filter(c => correspondRecherche(c.nom, c.dept, rechercheM))
+    .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  if(!miennes.length){
+    zone.innerHTML = rechercheM
+      ? '<p class="collection-empty">Aucun de tes doublons ne correspond à cette recherche.</p>'
+      : (duPalier.length
+         ? '<p class="collection-empty">Tous tes doublons de cette rareté sont déjà promis dans une proposition.</p>'
+         : '<p class="collection-empty">Tu n\'as aucun doublon de cette rareté.</p>');
+    echangeMien = null;
+    majResumeEchange();
+    return;
+  }
+  if(echangeMien && !miennes.some(c => c.code === echangeMien)) echangeMien = null;
+  zone.innerHTML = miennes.map(c => `
+    <button class="ech-item ${echangeTier} ${echangeMien === c.code ? 'choisi' : ''}" data-mien="${echapperTexte(c.code)}">
+      <b>${echapperTexte(c.nom)}</b>
+      <small>${echapperTexte(c.dept)} · ${c.libres} doublon${c.libres > 1 ? 's' : ''}</small>
+    </button>`).join('');
+  majResumeEchange();
+}
+const cleCible = (c) => c.commune_code + '|' + (c.proprietaire || '');
+
 async function chargerCiblesEchange(){
   const zone = document.getElementById('echCibles');
   if(!zone) return;
   zone.innerHTML = '<p class="collection-empty">Chargement…</p>';
   // le serveur ne connait que les numeros de departement : "charente" devient "16"
-  const { data, error } = await sb.rpc('cibles_echange', {
+  const { data, error } = await sb.rpc(marcheTerra() ? 'terra_cibles_echange' : 'cibles_echange', {
     p_tier: echangeTier, p_recherche: codeDepartement(echangeRecherche) || echangeRecherche
   });
   if(error){
@@ -9200,11 +9338,11 @@ function renderEchangeCibles(){
     majResumeEchange();
     return;
   }
-  if(echangeCible && !echangeCibles.some(c => c.commune_code === echangeCible.commune_code)) echangeCible = null;
+  if(echangeCible && !echangeCibles.some(c => cleCible(c) === cleCible(echangeCible))) echangeCible = null;
 
   zone.innerHTML = echangeCibles.map(c => `
-    <button class="ech-item ${echangeTier} ${echangeCible && echangeCible.commune_code === c.commune_code ? 'choisi' : ''}" data-cible="${echapperTexte(c.commune_code)}">
-      <b>${echapperTexte(c.nom)}</b>
+    <button class="ech-item ${echangeTier} ${echangeCible && cleCible(echangeCible) === cleCible(c) ? 'choisi' : ''}" data-cible="${echapperTexte(cleCible(c))}">
+      <b>${echapperTexte(c.nom)}${c.nouvelle === true ? TAG_NEUF : ''}</b>
       <small>${echapperTexte(c.departement)} · ${echapperTexte(c.pseudo || 'un joueur')}</small>
     </button>`).join('');
   majResumeEchange();
@@ -9221,7 +9359,7 @@ function majResumeEchange(){
     bouton.textContent = 'Choisis deux communes';
     return;
   }
-  const mienne = collectionMap.get(echangeMien);
+  const mienne = (marcheTerra() ? terraCollection : collectionMap).get(echangeMien);
   const commission = COMMISSION_ECHANGE[echangeTier] || 1;
   resume.innerHTML = `
     <span><b>${echapperTexte(mienne ? mienne.nom : echangeMien)}</b> contre <b>${echapperTexte(echangeCible.nom)}</b></span>
@@ -9257,8 +9395,8 @@ document.getElementById('echMien').addEventListener('click', (e) => {
 document.getElementById('echCibles').addEventListener('click', (e) => {
   const b = e.target.closest('[data-cible]');
   if(!b) return;
-  const c = echangeCibles.find(x => x.commune_code === b.dataset.cible);
-  echangeCible = (echangeCible && echangeCible.commune_code === b.dataset.cible) ? null : c;
+  const c = echangeCibles.find(x => cleCible(x) === b.dataset.cible);
+  echangeCible = (echangeCible && cleCible(echangeCible) === b.dataset.cible) ? null : c;
   renderEchangeCibles();
 });
 
@@ -9267,9 +9405,12 @@ document.getElementById('echEnvoyer').addEventListener('click', async (e) => {
   const btn = e.currentTarget;
   btn.disabled = true;
   try{
-    const { data, error } = await sb.rpc('proposer_echange', {
-      p_ma_commune: echangeMien, p_sa_commune: echangeCible.commune_code
-    });
+    const { data, error } = marcheTerra()
+      ? await sb.rpc('terra_proposer_echange', {
+          p_ma_commune: echangeMien, p_sa_commune: echangeCible.commune_code, p_autre: echangeCible.proprietaire })
+      : await sb.rpc('proposer_echange', {
+          p_ma_commune: echangeMien, p_sa_commune: echangeCible.commune_code
+        });
     if(error) throw error;
     const r = data && data[0];
     notifier({ type: 'succes', titre: 'Proposition envoyée', texte: r ? r.message : '' });
@@ -9295,14 +9436,14 @@ document.getElementById('echListe').addEventListener('click', async (e) => {
   btn.disabled = true;
   try{
     if(accepter){
-      const { data, error } = await sb.rpc('accepter_echange', { p_id: Number(accepter.dataset.accepter) });
+      const { data, error } = await sb.rpc(marcheTerra() ? 'terra_accepter_echange' : 'accepter_echange', { p_id: Number(accepter.dataset.accepter) });
       if(error) throw error;
       const r = data && data[0];
-      notifier({ type: 'succes', titre: 'Échange conclu', texte: r ? r.message : '' });
-      await loadMyCollection();
-      await loadOthersPossessions();
+      notifier({ type: 'succes', titre: 'Échange conclu', texte: r ? r.message + (r.nouvelle ? ' — nouvelle commune !' : '') : '' });
+      if(marcheTerra()){ terraCharge = false; await chargerCollectionTerra(); }
+      else { await loadMyCollection(); await loadOthersPossessions(); }
     } else {
-      const { data, error } = await sb.rpc('refuser_echange', { p_id: Number(refuser.dataset.refuser) });
+      const { data, error } = await sb.rpc(marcheTerra() ? 'terra_refuser_echange' : 'refuser_echange', { p_id: Number(refuser.dataset.refuser) });
       if(error) throw error;
       const r = data && data[0];
       notifier({ type: 'info', titre: r ? r.message : 'Proposition retirée' });

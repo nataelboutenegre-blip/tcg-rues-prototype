@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '064faae8f65c';
+const VERSION_JEU = 'a3ad27a76716';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -5702,6 +5702,12 @@ const sonsOuverture = (() => {
     o.connect(g); g.connect(maitre); o.start(t); o.stop(t + duree + 0.05);
   };
   let bruitBlanc = null;
+  const assurerBruit = () => {
+    if(!bruitBlanc){
+      const n = ctx.sampleRate, d = (bruitBlanc = ctx.createBuffer(1, n, ctx.sampleRate)).getChannelData(0);
+      for(let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+    }
+  };
   const bruit = (duree, f1, f2, vol, type) => {
     // patch85 : une seconde de bruit fabriquee une fois, on en lit un morceau
     if(!bruitBlanc){
@@ -5728,6 +5734,21 @@ const sonsOuverture = (() => {
     sortie(){ if(pret()) bruit(0.45, 250, 1600, 0.3, 'lowpass'); },
     retourne(){ if(pret()) bruit(0.07, 2500, 5200, 0.35, 'highpass'); },
     tick(){ if(pret()) note(880, 0, 0.09, 'sine', 0.25); },
+    // patch87 : la coupe
+    grain(force){ if(pret()){ const f = 2200 + Math.random() * 2500; bruit(0.03 + Math.random() * 0.03, f, f * 1.3, 0.12 + 0.25 * force); } },
+    zip(duree){ if(!pret()) return; assurerBruit();
+      const t = ctx.currentTime, s = ctx.createBufferSource(), fl = ctx.createBiquadFilter(), g = ctx.createGain();
+      s.buffer = bruitBlanc; fl.type = 'bandpass'; fl.Q.value = 2;
+      fl.frequency.setValueAtTime(1800, t); fl.frequency.exponentialRampToValueAtTime(7000, t + duree);
+      g.gain.setValueAtTime(0.05, t); g.gain.exponentialRampToValueAtTime(0.3, t + duree); g.gain.exponentialRampToValueAtTime(0.0001, t + duree + 0.05);
+      s.connect(fl); fl.connect(g); g.connect(maitre); s.start(t, 0.2, duree + 0.1); },
+    cede(lum){ if(!pret()) return;
+      bruit(0.45, 900, 4200, 0.45);
+      const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime;
+      const f0 = lum === 'lum-leg' ? 392 : lum === 'lum-rare' ? 330 : 262;
+      o.type = 'triangle'; o.frequency.setValueAtTime(f0, t + 0.15); o.frequency.exponentialRampToValueAtTime(f0 * 2, t + 0.7);
+      g.gain.setValueAtTime(0.0001, t + 0.15); g.gain.exponentialRampToValueAtTime(lum ? 0.18 : 0.08, t + 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
+      o.connect(g); g.connect(maitre); o.start(t + 0.15); o.stop(t + 1.2); },
     // patch86 : l'assaut
     assautChoc(){ if(pret()){ note(90, 0, 0.32, 'sine', 0.5); bruit(0.18, 300, 120, 0.25, 'lowpass'); } },
     assautTic(){ if(pret()) note(1700, 0, 0.025, 'square', 0.05); },
@@ -5943,7 +5964,7 @@ function makePackEl(type){
   const motif = paquetMotifSvg(type);
   const pack = document.createElement('button');
   pack.className = 'paquet ' + (type === 'achete' ? 'achete' : 'gratuit');
-  pack.setAttribute('aria-label', 'Déchirer le paquet');
+  pack.setAttribute('aria-label', 'Ouvrir le paquet');
   pack.innerHTML = `
     <div class="paquet-languette">${motif}</div>
     <svg class="paquet-perfo" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><polyline class="perfo-base" points="${PERFO_POINTS}"/></svg>
@@ -5953,7 +5974,9 @@ function makePackEl(type){
       <div class="paquet-bande">5 communes</div>
     </div>
     <div class="paquet-eclat"></div>
-    <div class="paquet-bouts">${MORCEAUX_PAQUET}</div>`;
+    <div class="paquet-bouts">${MORCEAUX_PAQUET}</div>
+    <div class="coupe-lueur"></div><div class="coupe-trace"></div><div class="coupe-tete"></div><div class="coupe-eclair"></div>
+    <span class="coupe-consigne" aria-hidden="true">Touche le paquet · ou coupe les pointillés</span>`;
   return pack;
 }
 
@@ -6103,6 +6126,165 @@ async function dechirerPaquet(pack, nbCartes){
   lancerRevelation(zone, scene, tries);
 }
 
+// patch87 : ouvrir le paquet en le coupant d'un trait de lumiere.
+// demarrer() est appele au premier toucher (ou au debut de la coupe) et
+// renvoie les tirages, ou null si l'ouverture a echoue (le paquet revient).
+const SEUIL_COUPE = 0.4;
+function lumierePaquet(draws){
+  const ids = draws.map(d => d.tier && d.tier.id);
+  return ids.includes('legendaire') ? 'lum-leg' : ids.includes('rare') ? 'lum-rare' : '';
+}
+function armerPaquet(pack, demarrer){
+  const zone = document.getElementById('packZone');
+  const q = (c) => pack.querySelector(c);
+  const languette = q('.paquet-languette'), trace = q('.coupe-trace'), tete = q('.coupe-tete'), lueur = q('.coupe-lueur');
+  const anim = ouvAnim && !REDUCED_MOTION;
+  let p = 0, fini = false, tirage = null, g = null, rayons = null, jeton = 0, dernierGrain = 0, derniereEtincelle = 0;
+
+  const poser = (v) => {
+    p = v;
+    trace.style.transform = `scaleX(${v.toFixed(3)})`;
+    lueur.style.transform = `scaleX(${Math.max(0, v - 0.02).toFixed(3)})`;
+    lueur.style.opacity = Math.min(1, v * 3);
+    tete.style.transform = `translateX(${(v * 200).toFixed(1)}px)`;
+    tete.style.opacity = v > 0 && v < 1 ? 1 : 0;
+    languette.style.transform = v > 0 ? `rotate(${(-v * 4).toFixed(2)}deg)` : '';
+    if(rayons){ rayons.style.opacity = Math.min(0.5, v * 0.8); rayons.style.transform = `scale(${(0.3 + v * 0.5).toFixed(3)})`; }
+  };
+  // quelques etincelles qui partent de la tete (peu : c'est pour un telephone)
+  const etincelle = (force) => {
+    const now = performance.now();
+    if(now - derniereEtincelle < 30) return;
+    derniereEtincelle = now;
+    for(let i = 0; i < 2; i++){
+      const e = document.createElement('i'); e.className = 'coupe-etincelle';
+      e.style.left = (p * 200 - 1) + 'px';
+      pack.appendChild(e);
+      const dx = -10 - Math.random() * 40 * (1 + force), dy = (Math.random() - 0.7) * 50;
+      e.animate([{ transform: 'none', opacity: 1 }, { transform: `translate(${dx}px,${dy}px) scale(.3)`, opacity: 0 }],
+        { duration: 380 + Math.random() * 250, easing: 'cubic-bezier(.2,.7,.4,1)' }).onfinish = () => e.remove();
+    }
+  };
+  const animerVers = (cible, duree, accel) => new Promise(fin => {
+    const mien = ++jeton, de = p, t0 = performance.now();
+    const pas = (now) => {
+      if(mien !== jeton) return fin();
+      const x = Math.min(1, (now - t0) / duree), e = accel ? x * x : 1 - Math.pow(1 - x, 2);
+      poser(de + (cible - de) * e);
+      if(cible > de){ etincelle(accel ? 1 : 0.5); if(Math.random() < 0.5) sonsOuverture.grain(0.7); }
+      x < 1 ? requestAnimationFrame(pas) : fin();
+    };
+    requestAnimationFrame(pas);
+  });
+  const engager = () => {
+    if(tirage) return;
+    pack.classList.add('coupe');
+    if(anim){
+      rayons = document.createElement('div'); rayons.className = 'coupe-rayons';
+      pack.parentElement.insertBefore(rayons, pack);
+    }
+    tirage = Promise.resolve().then(demarrer).catch(e => { console.error(e); return null; });
+    tirage.then(draws => {
+      const c = draws && draws.length ? lumierePaquet(draws) : '';
+      if(c){ pack.classList.add(c); if(rayons) rayons.classList.add(c); }
+    });
+  };
+  const abandon = () => {
+    fini = false; tirage = null; g = null; jeton++;
+    pack.classList.remove('coupe', 'attente', 'lum-rare', 'lum-leg');
+    if(rayons){ rayons.remove(); rayons = null; }
+    poser(0);
+  };
+  const finir = async (duree) => {
+    if(fini) return;
+    fini = true; g = null;
+    engager();
+    if(!anim){
+      // animation coupee : une ouverture courte, puis tout le paquet d'un coup
+      const draws = await tirage;
+      if(!draws) return abandon();
+      if(!draws.length) return paquetSansCarte(zone);
+      sonsOuverture.dechire();
+      pack.classList.add('dechire');
+      await attendreOuv(300);
+      revealCards(draws);
+      return;
+    }
+    sonsOuverture.grain(0.4);
+    sonsOuverture.zip(duree / 1000);
+    await animerVers(1, duree, true);
+    // le serveur n'a pas encore repondu : la tete attend au bout en palpitant
+    pack.classList.add('attente');
+    const draws = await tirage;
+    pack.classList.remove('attente');
+    if(!draws) return abandon();
+    if(!draws.length){ if(rayons) rayons.remove(); return paquetSansCarte(zone); }
+
+    const tries = trierPourRevelation(draws);
+    const scene = pack.closest('.ouv-scene');
+    const pile = construirePileOuv(tries.slice().reverse());
+    pile.classList.add('dedans');
+    scene.querySelector('.ouv-echelle').appendChild(pile);
+    const lum = lumierePaquet(draws);
+    sonsOuverture.cede(lum);
+    if(navigator.vibrate) try{ navigator.vibrate(lum === 'lum-leg' ? [30, 40, 60] : 35); }catch(e){}
+    pack.classList.add('coupee');
+    if(rayons){
+      const r = rayons;
+      r.animate([{ opacity: 0.5, transform: 'scale(.8)' },
+                 { opacity: lum ? 0.85 : 0.45, transform: 'scale(1.25) rotate(20deg)' },
+                 { opacity: 0, transform: 'scale(1.4) rotate(40deg)' }],
+        { duration: lum === 'lum-leg' ? 2200 : 1500, easing: 'ease-in-out', fill: 'forwards' }).onfinish = () => r.remove();
+    }
+    await attendreOuv(560);
+    // le paquet tombe, la pile sort par le haut
+    pack.classList.add('sortie');
+    pile.classList.remove('dedans');
+    pile.classList.add('emerge');
+    sonsOuverture.sortie();
+    await attendreOuv(800);
+    pack.remove();
+    pile.classList.remove('emerge');
+    lancerRevelation(zone, scene, tries);
+  };
+
+  pack.addEventListener('pointerdown', (e) => {
+    if(fini || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const r = pack.getBoundingClientRect();
+    g = { id: e.pointerId, x0: e.clientX, r, haut: (e.clientY - r.top) / r.height < 90 / 280,
+          glisse: false, last: e.clientX, tl: performance.now() };
+    try{ pack.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  pack.addEventListener('pointermove', (e) => {
+    if(!g || g.id !== e.pointerId || fini || !anim || !g.haut) return;
+    if(!g.glisse){
+      if(Math.abs(e.clientX - g.x0) <= 12) return;
+      g.glisse = true; engager();
+    }
+    jeton++;   // le doigt reprend la main sur une retraction en cours
+    const v = Math.max(p, Math.min(1, (e.clientX - g.r.left) / g.r.width));
+    const now = performance.now(), vit = Math.abs(e.clientX - g.last) / Math.max(1, now - g.tl);
+    if(v > p){
+      if(now - dernierGrain > Math.max(18, 70 - vit * 60)){ sonsOuverture.grain(Math.min(1, vit)); dernierGrain = now; }
+      etincelle(Math.min(1, vit));
+    }
+    g.last = e.clientX; g.tl = now;
+    poser(v);
+    if(v >= SEUIL_COUPE) finir(Math.round(300 * (1 - v) + 60));   // seuil passe : la coupe part toute seule
+  });
+  const lacher = (annule) => (e) => {
+    if(!g || g.id !== e.pointerId) return;
+    const glisse = g.glisse; g = null;
+    if(fini) return;
+    if(glisse) animerVers(0, 260);       // avant le seuil : le trait se retracte
+    else if(!annule) finir(520);         // un toucher, n'importe ou : ouverture automatique
+  };
+  pack.addEventListener('pointerup', lacher(false));
+  pack.addEventListener('pointercancel', lacher(true));   // le navigateur a pris la main (defilement)
+  // clavier (Entree, Espace) : le bouton recoit un clic sans pointeur
+  pack.addEventListener('click', (e) => { if(e.detail === 0 && !fini) finir(520); });
+}
+
 // Les cinq tirages, l'un apres l'autre, avec la gestion d'erreur d'origine.
 async function tirerCartesDuPaquet(nbCartes){
   const draws = [];
@@ -6145,7 +6327,7 @@ function afficherPaquetATirer(type, nbCartes){
   zone.innerHTML = '';
   const pack = makePackEl(type);
   sceneOuverture(zone).echelle.appendChild(pack);
-  pack.addEventListener('click', () => dechirerPaquet(pack, nbCartes), { once: true });
+  armerPaquet(pack, () => tirerCartesDuPaquet(nbCartes));   // patch87
 }
 
 // Paquet pose sur l'ecran d'arrivee : un seul clic le paie et le dechire.
@@ -6157,8 +6339,9 @@ function afficherPaquetPret(type){
   pack.dataset.pret = '1';
   pack.setAttribute('aria-label', 'Ouvrir un paquet gratuit');
   sceneOuverture(zone).echelle.appendChild(pack);
-  pack.addEventListener('click', async () => {
-    if(paquetEnCours) return;
+  // patch87 : le premier toucher (ou le debut de la coupe) paie, puis tire
+  armerPaquet(pack, async () => {
+    if(paquetEnCours) return null;
     paquetEnCours = true;
     renderPackStatus();
     const err = await payerPaquet(type);
@@ -6166,12 +6349,12 @@ function afficherPaquetPret(type){
       paquetEnCours = false;
       notifier({ type: 'erreur', titre: 'Impossible d\'ouvrir le paquet', texte: messageLisible(err.message) });
       loadPackStatus();
-      return;
+      return null;
     }
     delete pack.dataset.pret;
     loadPackStatus();
-    dechirerPaquet(pack, 5);
-  }, { once: true });
+    return tirerCartesDuPaquet(5);
+  });
 }
 
 // Tant qu'un paquet gratuit attend, il est visible sans qu'on ait a cliquer sur un bouton.

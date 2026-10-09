@@ -22,7 +22,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=a63c75a40b72">
+<link rel="stylesheet" href="style.css?v=5d65a14b341c">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -651,8 +651,11 @@
           <div class="cl-modes">
             <button class="filter-pill active" data-mode="general">Général</button>
             <button class="filter-pill" data-mode="mois">Ce mois-ci</button>
+            <button class="filter-pill" data-mode="terra" hidden>Terra</button>
+            <button class="filter-pill" data-mode="palmares" hidden>Palmarès</button>
           </div>
         </div>
+        <div class="cl-saisons" id="clSaisons" hidden></div>
         <div class="cl-podium" id="clPodium"></div>
         <div class="cl-liste" id="clListe"></div>
         <button class="cl-plus" id="clPlus" hidden>Voir le classement complet</button>
@@ -1160,6 +1163,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=a63c75a40b72"></script>
+<script src="app.js?v=5d65a14b341c"></script>
 </body>
 </html>

@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'a63c75a40b72';
+const VERSION_JEU = '5d65a14b341c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1358,9 +1358,49 @@ let classementOuvert = (() => {
   return !window.matchMedia('(max-width: 760px)').matches;
 })();
 
+// patch97 : classement par saison (Terra, Palmares)
+let palmaresSaisons = [], palmaresChoisie = null, palmaresCharge = false;
+async function initModesClassement(){
+  const general = document.querySelector('#classement [data-mode="general"]');
+  if(general) general.textContent = SAISON2 ? 'Front' : 'Saison en cours';
+  const terra = document.querySelector('#classement [data-mode="terra"]');
+  if(terra) terra.hidden = !SAISON2;
+  if(palmaresCharge) return;
+  palmaresCharge = true;
+  const { data, error } = await sb.rpc('palmares_saisons');
+  palmaresSaisons = error ? [] : (data || []);
+  if(!palmaresChoisie && palmaresSaisons.length) palmaresChoisie = palmaresSaisons[0].saison;
+  const b = document.querySelector('#classement [data-mode="palmares"]');
+  if(b) b.hidden = !palmaresSaisons.length;
+}
+
+function renderSaisonsPalmares(){
+  const el = document.getElementById('clSaisons');
+  if(!el) return;
+  el.hidden = classementMode !== 'palmares' || !classementOuvert;
+  if(el.hidden) return;
+  const s = palmaresSaisons.find(x => x.saison === palmaresChoisie);
+  const fin = s && s.fin ? new Date(s.fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  el.innerHTML = `<div class="cl-saisons-puces">${palmaresSaisons.map(x =>
+      `<button class="filter-pill ${x.saison === palmaresChoisie ? 'active' : ''}" data-saison="${echapperTexte(x.saison)}">${echapperTexte(x.nom)}</button>`).join('')}</div>
+    ${s ? `<p class="cl-saisons-info">🏆 Classement final${fin ? ` · terminée le ${fin}` : ''} · ${Number(s.joueurs).toLocaleString('fr-FR')} joueurs</p>` : ''}`;
+}
+
 async function loadClassement(){
   const bloc = document.getElementById('classement');
-  const { data, error } = await sb.rpc('classement', { p_mode: classementMode, p_limite: classementComplet ? 50 : 10 });
+  await initModesClassement();
+  const limite = classementComplet ? 50 : 10;
+  let appel;
+  if(classementMode === 'terra') appel = sb.rpc('terra_classement', { p_limite: limite });
+  else if(classementMode === 'palmares') appel = sb.rpc('palmares', { p_saison: palmaresChoisie, p_limite: limite });
+  else appel = sb.rpc('classement', { p_mode: classementMode, p_limite: limite });
+  const { data, error } = await appel;
+  if(error && classementMode !== 'general' && classementMode !== 'mois'){
+    console.error('Classement :', error.message);
+    classementDonnees = [];
+    renderClassement();
+    return;
+  }
   if(error){
     // classement.sql pas encore execute : on masque le bloc au lieu d'afficher un titre vide
     if(bloc) bloc.hidden = true;
@@ -1372,6 +1412,7 @@ async function loadClassement(){
 }
 
 function renderClassement(){
+  renderSaisonsPalmares();
   const podium = document.getElementById('clPodium');
   const liste = document.getElementById('clListe');
   const plus = document.getElementById('clPlus');
@@ -1401,7 +1442,10 @@ function renderClassement(){
   }
   if(classementDonnees.length === 0){
     podium.innerHTML = '';
-    liste.innerHTML = `<p class="collection-empty">${classementMode === 'mois' ? 'Aucune commune prise ce mois-ci pour le moment.' : 'Le classement apparaîtra dès que des communes seront possédées.'}</p>`;
+    liste.innerHTML = `<p class="collection-empty">${classementMode === 'mois' ? 'Aucune commune prise ce mois-ci pour le moment.'
+      : classementMode === 'terra' ? 'Le classement Terra apparaîtra dès les premiers paquets ouverts.'
+      : classementMode === 'palmares' ? 'Pas de palmarès pour cette saison.'
+      : 'Le classement apparaîtra dès que des communes seront possédées.'}</p>`;
     if(plus) plus.hidden = true;
     return;
   }
@@ -1440,6 +1484,13 @@ document.getElementById('classement').addEventListener('click', (e) => {
     classementOuvert = !classementOuvert;
     try{ localStorage.setItem('tf-classement-ouvert', classementOuvert ? '1' : '0'); } catch(err){}
     renderClassement();
+    return;
+  }
+  const saison = e.target.closest('[data-saison]');
+  if(saison){
+    palmaresChoisie = saison.dataset.saison;
+    classementComplet = false;
+    loadClassement();
     return;
   }
   const mode = e.target.closest('[data-mode]');

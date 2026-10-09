@@ -1860,7 +1860,13 @@
   .classement{ width:100%; max-width:1200px; margin: 0 auto 22px; }
   .cl-tete{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:12px; }
   .cl-tete h2{ font-family: var(--titre); font-weight:800; font-size:1.5rem; margin:0; flex:1; color:#fff; }
-  .cl-modes{ display:flex; gap:8px; }
+  .cl-modes{ display:flex; gap:8px; flex-wrap:wrap; }
+  .cl-modes [hidden]{ display:none; }
+  .cl-saisons{ margin:4px 0 10px; }
+  .cl-saisons[hidden]{ display:none; }
+  .cl-saisons-puces{ display:flex; gap:6px; flex-wrap:wrap; }
+  .cl-saisons-puces .filter-pill{ font-size:.78rem; padding:5px 11px; }
+  .cl-saisons-info{ margin:8px 0 0; font-size:.8rem; color: var(--brume); }
   .cl-podium{ display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; align-items:end; margin-bottom:10px; }
   .cl-podium:empty{ display:none; }
   .cl-marche{

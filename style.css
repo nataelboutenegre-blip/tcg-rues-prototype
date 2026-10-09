@@ -4381,3 +4381,51 @@ body.mode-front .tab.active, body.mode-front .tab.active .icon{ color:#FF8A8E; }
   body.mode-terra .tabs-row .tab, body.mode-front .tabs-row .tab{ order: var(--ordre-tel, 20); }
   body.mode-terra .tabs-row .tab-plus, body.mode-front .tabs-row .tab-plus{ order: 10; }
 }
+
+/* =====================================================================
+   patch90 — Terra : Tirage et Collection (n'apparait qu'en mode Terra)
+   ===================================================================== */
+body.mode-terra #potLibres{ display:none !important; }
+body.mode-terra .paquet .paquet-motif{ filter: hue-rotate(-62deg) saturate(1.05); }
+#terraColl{ display:none; width:100%; min-width:0; }
+body.mode-terra #terraColl{ display:block; }
+body.mode-terra #panel-collection > :not(#terraColl){ display:none !important; }
+.mini-ex{ position:absolute; top:5px; right:5px; z-index:4; background:#0F1F38; color:#fff; font-weight:700; font-size:.66rem;
+  padding:2px 6px; border-radius:999px; box-shadow:0 0 0 1.5px rgba(255,255,255,.85); font-variant-numeric:tabular-nums; }
+.tc-prog{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; width:100%; margin:4px 0 12px; }
+.tc-prog div{ background:rgba(169,188,212,.07); border:1px solid rgba(169,188,212,.14); border-radius:10px; padding:7px 6px 8px; min-width:0; }
+.tc-prog b{ display:block; color:#fff; font-size:.82rem; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.tc-prog span{ display:block; color:var(--brume); font-size:.6rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tc-prog i{ display:block; height:4px; border-radius:2px; margin-top:6px; background:rgba(169,188,212,.18); overflow:hidden; }
+.tc-prog i::after{ content:''; display:block; height:100%; width:var(--p); min-width:2px; background:var(--c); }
+.tc-vente{ display:flex; align-items:center; gap:10px; width:100%; margin:0 0 12px; padding:10px 12px; border-radius:12px;
+  background:linear-gradient(160deg,rgba(53,185,126,.16),rgba(53,185,126,.06)); border:1px solid rgba(53,185,126,.4); color:#E8F6EE; font-size:.84rem; }
+.tc-vente b{ color:#5FD39D; }
+.tc-vente button{ margin-left:auto; border:none; border-radius:999px; padding:7px 12px; background:#35B97E; color:#0B2A1D; font:inherit; font-weight:700; font-size:.78rem; cursor:pointer; }
+#terraColl .coll-grille{ width:100%; }
+.tc-plus-zone{ display:flex; justify-content:center; margin:14px 0 4px; }
+.tc-voile{ position:fixed; inset:0; background:rgba(5,12,24,.6); z-index:79; }
+.tc-feuille{ position:fixed; left:0; right:0; bottom:0; z-index:80; max-width:520px; margin:0 auto; background:#122743;
+  border-top:1px solid rgba(169,188,212,.2); border-radius:18px 18px 0 0; padding:14px 16px calc(22px + env(safe-area-inset-bottom));
+  box-shadow:0 -14px 40px rgba(0,0,0,.55); color:#fff; }
+.tc-feuille h3{ margin:4px 0 4px; font-family:var(--titre); font-size:1.4rem; }
+.tc-feuille p{ margin:0 0 12px; color:var(--brume); font-size:.8rem; }
+.tc-ligne{ display:flex; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid rgba(169,188,212,.1); font-size:.88rem; cursor:pointer; }
+.tc-ligne input{ accent-color:#35B97E; width:18px; height:18px; }
+.tc-ligne em{ font-style:normal; color:var(--brume); font-size:.78rem; }
+.tc-ligne b{ margin-left:auto; color:#5FD39D; }
+.tc-ligne .pt{ width:9px; height:9px; border-radius:50%; flex:none; }
+.tc-ok{ width:100%; margin-top:14px; border:none; border-radius:12px; padding:13px; background:#35B97E; color:#0B2A1D; font:inherit; font-weight:800; font-size:.95rem; cursor:pointer; }
+.tc-ok:disabled{ opacity:.5; cursor:default; }
+.tc-annuler{ width:100%; margin-top:8px; border:none; background:none; color:var(--brume); font:inherit; font-size:.85rem; padding:8px; cursor:pointer; }
+.tt-bilan-bloc{ width:100%; min-width:0; max-width:620px; }
+.tt-bilan{ width:100%; margin:18px 0 0; font-size:.82rem; color:var(--brume); }
+.tt-bilan b{ color:#fff; }
+.tt-res{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; width:100%; margin-top:14px; padding-top:4px; }
+.tt-c{ position:relative; min-width:0; }
+.tt-c .mini{ width:100%; }
+.tt-c .mini-num{ display:none; }
+.tt-tag{ position:absolute; left:50%; transform:translateX(-50%); top:-9px; z-index:5; white-space:nowrap; font-size:.58rem; font-weight:800;
+  letter-spacing:.04em; padding:2px 7px; border-radius:999px; }
+.tt-tag.neuf{ background:#35B97E; color:#0B2A1D; }
+.tt-tag.dbl{ background:#1F3A60; color:#C7D6EA; box-shadow:0 0 0 1px rgba(169,188,212,.3); }

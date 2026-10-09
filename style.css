@@ -4401,6 +4401,7 @@ body.mode-terra #panel-collection > :not(#terraColl){ display:none !important; }
 .tc-vente{ display:flex; align-items:center; gap:10px; width:100%; margin:0 0 12px; padding:10px 12px; border-radius:12px;
   background:linear-gradient(160deg,rgba(53,185,126,.16),rgba(53,185,126,.06)); border:1px solid rgba(53,185,126,.4); color:#E8F6EE; font-size:.84rem; }
 .tc-vente b{ color:#5FD39D; }
+.tc-vente button.tc-ct{ margin-left:0; background:transparent; color:#5FD39D; box-shadow:inset 0 0 0 1.5px #35B97E; }
 .tc-vente button{ margin-left:auto; border:none; border-radius:999px; padding:7px 12px; background:#35B97E; color:#0B2A1D; font:inherit; font-weight:700; font-size:.78rem; cursor:pointer; }
 #terraColl .coll-grille{ width:100%; }
 .tc-plus-zone{ display:flex; justify-content:center; margin:14px 0 4px; }

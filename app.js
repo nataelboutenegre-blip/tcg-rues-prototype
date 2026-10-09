@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '50af185181af';
+const VERSION_JEU = '76c1876962b2';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3558,6 +3558,30 @@ let contratEnCours = false;
 let contratSauterTjs = false;     // retenu apres deux « Passer » d'affilee
 let contratSautes = 0;
 
+// patch93 : en Terra, le contrat se fait sur les doublons de la collection
+// Terra. Une ligne du lot = un exemplaire en trop ; une commune avec quatre
+// doublons peut donc fournir quatre lignes. On garde toujours un exemplaire.
+const ctTerra = () => enTerra();
+function ctDeplier(rows){
+  const out = [];
+  for(const r of rows){
+    const n = Math.max(0, Number(r.dispo) || 0);
+    for(let k = 0; k < n; k++) out.push(Object.assign({}, r, { cle: r.commune_code + '#' + k }));
+  }
+  return out;
+}
+function ctTextes(){
+  const sub = document.querySelector('#panel-contrat .sub');
+  if(sub){
+    if(sub.dataset.s1 === undefined) sub.dataset.s1 = sub.innerHTML;
+    sub.innerHTML = ctTerra()
+      ? 'Échange dix <b>doublons</b> contre une commune d\'un palier au-dessus. Tu gardes toujours au moins un exemplaire de chaque commune, et tu reçois une commune que tu n\'as <b>pas encore</b>, tirée au hasard.'
+      : sub.dataset.s1;
+  }
+  const excl = document.getElementById('ctExcl');
+  if(excl && ctTerra()) excl.hidden = true;
+}
+
 const libelleTier = (id) => (TIERS.find(t => t.id === id) || {}).label || id;
 // nb() existe dans le fichier, mais locale a trois fonctions : la notre.
 const ctNb = (n) => Number(n || 0).toLocaleString('fr-FR');
@@ -3573,12 +3597,17 @@ async function loadContrat(){
   const vide = document.getElementById('ctVide');
   const signer = document.getElementById('ctSigner');
   if(!document.getElementById('ctTaux')) return;
+  ctTextes();
   try{
+    const terra = ctTerra();
     const res = await Promise.all(CONTRATS.map(c =>
-      sb.rpc('contrat_candidates', { p_tier: c.de })));
+      sb.rpc(terra ? 'terra_contrat_candidates' : 'contrat_candidates', { p_tier: c.de })));
     if(res.some(r => r.error)) throw res.find(r => r.error).error;
     contratDispo = {};
-    CONTRATS.forEach((c, i) => { contratDispo[c.de] = res[i].data || []; });
+    CONTRATS.forEach((c, i) => {
+      const rows = res[i].data || [];
+      contratDispo[c.de] = terra ? ctDeplier(rows) : rows;
+    });
   }catch(e){
     console.warn('TERRAFRONT contrat indisponible', e);
     if(zone) zone.hidden = true;
@@ -3603,6 +3632,8 @@ async function loadContrat(){
 
 // L'onglet charge sa liste d'exclusions en meme temps que ses candidats.
 async function loadContratEtExclusions(){
+  // en Terra rien ne peut etre perdu : pas de liste d'exclusions
+  if(ctTerra()){ await loadContrat(); return; }
   const ok = await chargerExclusions();
   if(ok) renderExclusions();
   await loadContrat();
@@ -3633,8 +3664,15 @@ function changerLigne(i){
   if(!contratChoisi) return;
   const actuelle = contratLot[i];
   if(!actuelle) return;
-  const toutes = contratDispo[contratChoisi.de] || [];
-  const pris = new Set(contratLot.map(x => x.commune_code));
+  const terra = ctTerra();
+  const unites = contratDispo[contratChoisi.de] || [];
+  // en Terra, une ligne par commune dans la liste ; elle est « deja dans le
+  // lot » quand tous ses doublons y sont
+  const toutes = terra ? unites.filter(x => x.cle.endsWith('#0')) : unites;
+  const dansLot = (code) => contratLot.filter(x => x.commune_code === code).length;
+  const pris = new Set(terra
+    ? toutes.filter(x => dansLot(x.commune_code) >= x.dispo).map(x => x.commune_code)
+    : contratLot.map(x => x.commune_code));
 
   const fermer = ouvrirFenetre(`
     <div class="fenetre ct-pick" role="dialog" aria-modal="true" aria-labelledby="ctPickT">
@@ -3666,7 +3704,7 @@ function changerLigne(i){
       return `<button type="button" class="ct-o ${contratChoisi.de}" ${dedans ? 'disabled' : ''}
                       data-code="${echapperTexte(x.commune_code)}">
         <span class="pt"></span>
-        <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${badgeDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.${monumentsNoms.has(x.commune_code) ? `<span class="jr-monument ct-mon" title="Ce monument partirait avec la commune">${ICONE_MONUMENT}<span>${echapperTexte(monumentsNoms.get(x.commune_code))}</span></span>` : ''}</span></span>
+        <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${badgeDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.${ctTerra() ? ` · ${x.dispo} doublon${x.dispo > 1 ? 's' : ''}` : ''}${!ctTerra() && monumentsNoms.has(x.commune_code) ? `<span class="jr-monument ct-mon" title="Ce monument partirait avec la commune">${ICONE_MONUMENT}<span>${echapperTexte(monumentsNoms.get(x.commune_code))}</span></span>` : ''}</span></span>
         ${note ? `<span class="dj">${note}</span>` : ''}
       </button>`;
     }).join('');
@@ -3678,7 +3716,10 @@ function changerLigne(i){
   liste.addEventListener('click', (e) => {
     const b = e.target.closest('.ct-o');
     if(!b || b.disabled) return;
-    const choisie = toutes.find(x => x.commune_code === b.dataset.code);
+    const choisie = terra
+      ? unites.find(u => u.commune_code === b.dataset.code
+          && !contratLot.some(l => l !== actuelle && l.cle === u.cle))
+      : toutes.find(x => x.commune_code === b.dataset.code);
     if(!choisie) return;
     contratLot[i] = choisie;
     fermer(null);
@@ -3791,7 +3832,7 @@ function renderContrat(){
     const n = (contratDispo[c.de] || []).length;
     const ok = n >= c.n;
     return `<button data-vers="${c.vers}" class="${contratChoisi && contratChoisi.vers === c.vers ? 'actif' : ''}" ${ok ? '' : 'disabled'}>
-      <b>${c.n} ${libelleTier(c.de).toLowerCase()}s → 1 ${libelleTier(c.vers).toLowerCase()}</b>
+      <b>${c.n} ${ctTerra() ? 'doublons ' : ''}${libelleTier(c.de).toLowerCase()}s → 1 ${libelleTier(c.vers).toLowerCase()}</b>
       <small>${ok ? `tu en as ${ctNb(n)}` : `il t'en faut ${c.n}, tu en as ${ctNb(n)}`}</small>
     </button>`;
   }).join('');
@@ -3802,7 +3843,9 @@ function renderContrat(){
     if(avert) avert.textContent = '';
     if(vide){
       vide.hidden = false;
-      vide.textContent = 'Il te faut au moins 10 communes d\'un même palier, hors favoris, '
+      vide.textContent = ctTerra()
+        ? 'Il te faut au moins 10 doublons d\'un même palier (commun ou peu commun). Les doublons arrivent en ouvrant des paquets.'
+        : 'Il te faut au moins 10 communes d\'un même palier, hors favoris, '
         + 'hors ventes en cours, hors échanges en attente'
         + (contratExclusions.length ? ' et hors liste « ne jamais sacrifier ».' : '.');
     }
@@ -3814,19 +3857,21 @@ function renderContrat(){
 
   // dire « favoris exclus » alors qu'on ecarte aussi une liste posee par le
   // joueur, c'est lui cacher la moitie de la regle
-  document.getElementById('ctInfo').textContent =
-    `${contratChoisi.n} communes, les moins peuplées — favoris`
+  document.getElementById('ctInfo').textContent = ctTerra()
+    ? `${contratChoisi.n} doublons, les plus nombreux d'abord`
+    : `${contratChoisi.n} communes, les moins peuplées — favoris`
     + (contratExclusions.length ? ' et exclusions' : '') + ' exclus';
   lot.innerHTML = contratLot.map((x, i) => `
     <div class="ct-l ${contratChoisi.de}">
       <span class="pt"></span>
-      <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${badgeDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.${monumentsNoms.has(x.commune_code) ? `<span class="jr-monument ct-mon" title="Ce monument partirait avec la commune">${ICONE_MONUMENT}<span>${echapperTexte(monumentsNoms.get(x.commune_code))}</span></span>` : ''}</span></span>
-      <button class="ct-cadenas" data-ct-exclure="${echapperTexte(x.commune_code)}" title="Ne plus jamais proposer ${echapperTexte(x.nom || x.commune_code)}">${ICONE_CADENAS}</button>
+      <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${badgeDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.${ctTerra() ? ` · ${x.dispo} doublon${x.dispo > 1 ? 's' : ''}` : ''}${!ctTerra() && monumentsNoms.has(x.commune_code) ? `<span class="jr-monument ct-mon" title="Ce monument partirait avec la commune">${ICONE_MONUMENT}<span>${echapperTexte(monumentsNoms.get(x.commune_code))}</span></span>` : ''}</span></span>
+      ${ctTerra() ? '' : `<button class="ct-cadenas" data-ct-exclure="${echapperTexte(x.commune_code)}" title="Ne plus jamais proposer ${echapperTexte(x.nom || x.commune_code)}">${ICONE_CADENAS}</button>`}
       <button data-ct-changer="${i}">changer</button>
     </div>`).join('');
   const nbMon = contratLot.filter(x => monumentsNoms.has(x.commune_code)).length;
-  if(avert) avert.textContent =
-    `Les ${contratChoisi.n} communes sacrifiées retournent au pot. C'est définitif.`
+  if(avert) avert.textContent = ctTerra()
+    ? `Les ${contratChoisi.n} doublons sont échangés, c'est définitif. Tu gardes au moins un exemplaire de chaque commune.`
+    : `Les ${contratChoisi.n} communes sacrifiées retournent au pot. C'est définitif.`
     + (nbMon ? ` Attention : ${nbMon > 1 ? nbMon + ' monuments partent' : 'un monument part'} avec elles — « changer » ou le cadenas pour ${nbMon > 1 ? 'les' : 'le'} garder.` : '');
 }
 
@@ -3873,7 +3918,7 @@ function majRappelContrat(){
     if(id) parTier[id] = (parTier[id] || 0) + 1;
   }
   const c = CONTRATS.find(x => (parTier[x.de] || 0) >= x.n);
-  if(!c){ bloc.hidden = true; return; }
+  if(!c || ctTerra()){ bloc.hidden = true; return; }
   const n = parTier[c.de];
   // la situation, c'est le nombre de contrats signables : le rappel revient
   // quand le joueur peut en signer un de plus qu'au moment ou il l'a ferme
@@ -3935,7 +3980,7 @@ async function signerContrat(){
 
   let carte = null;
   try{
-    const { data, error } = await sb.rpc('signer_contrat',
+    const { data, error } = await sb.rpc(ctTerra() ? 'terra_signer_contrat' : 'signer_contrat',
       { p_codes: codes, p_vers: c.vers });
     if(error) throw error;
     carte = data;
@@ -3949,7 +3994,9 @@ async function signerContrat(){
 
   // le decor du defile : de vraies communes libres du meme palier
   let decor = [];
-  try{
+  // Terra : le serveur renvoie le decor avec la carte
+  if(carte && Array.isArray(carte.decor)) decor = carte.decor;
+  else try{
     const { data } = await sb.rpc('contrat_defile',
       { p_tier: c.vers, p_combien: 45 });
     decor = data || [];
@@ -3966,6 +4013,11 @@ function montrerRevelation(c, carte, decor){
   const halo = document.getElementById('ctHalo');
   const sauter = document.getElementById('ctSauter');
   let minuteur = null;
+  // Terra : la commune n'est pas sur la carte du Front
+  if(ctTerra()){
+    const bc = document.querySelector('#fenetre [data-ct="carte"]');
+    if(bc) bc.remove();
+  }
 
   const finir = (x) => {
     if(minuteur){ clearTimeout(minuteur); minuteur = null; }
@@ -3979,8 +4031,11 @@ function montrerRevelation(c, carte, decor){
     const nom = document.getElementById('ctRevNom');
     const txt = document.getElementById('ctRevTxt');
     if(nom) nom.textContent = carte.nom || '';
-    if(txt) txt.textContent = `${libelleTier(c.vers).toLowerCase()} — `
-      + `${c.n} communes sont retournées au pot. Celle-ci est à toi.`;
+    if(txt) txt.textContent = `${libelleTier(c.vers).toLowerCase()} — ` + (ctTerra()
+      ? (carte.nouvelle === false
+          ? `${c.n} doublons échangés. Tu l'avais déjà : un exemplaire de plus.`
+          : `${c.n} doublons échangés. Nouvelle dans ta collection !`)
+      : `${c.n} communes sont retournées au pot. Celle-ci est à toi.`);
     const pied = document.getElementById('ctPied');
     if(pied) pied.classList.add('on');
   };
@@ -4051,12 +4106,14 @@ async function terminerContrat(carte){
   const bouton = document.getElementById('ctSigner');
   if(bouton){ bouton.disabled = false; bouton.textContent = 'Signer le contrat'; }
   // la collection a change des deux cotes : dix parties, une arrivee
-  await loadMyCollection();
+  const terra = ctTerra();
+  if(terra){ terraCharge = false; await chargerCollectionTerra(); }
+  else await loadMyCollection();
   await loadContrat();
   if(carte && carte.nom){
     notifier({ type: 'succes', titre: 'Contrat honoré',
-      texte: `${carte.nom} rejoint ta collection.` });
-    if(carte.code) annoncerMonument(carte.code, carte.nom);
+      texte: `${carte.nom} rejoint ta collection${terra ? ' Terra' : ''}.` });
+    if(carte.code && !terra) annoncerMonument(carte.code, carte.nom);
   }
 }
 
@@ -7890,7 +7947,7 @@ function renderCollectionTerra(){
       const n = parTier[t.id] || 0, total = tot[t.id] ? Number(tot[t.id].total) : 0;
       return `<div style="--c:${COULEURS_FILTRE[t.id]};--p:${total ? (100 * n / total).toFixed(1) : 0}%"><b>${fmtNombre(n)}</b><span>${t.label}${total ? ' · ' + fmtNombre(total) : ''}</span><i></i></div>`;
     }).join('')}</div>
-    ${nbDbl ? `<div class="tc-vente"><span aria-hidden="true">🔁</span><span><b>${fmtNombre(nbDbl)} doublon${nbDbl > 1 ? 's' : ''}</b> · jusqu'à ${fmtNombre(gainMax)} pts</span><button data-tc="vendre">Vendre…</button></div>` : ''}
+    ${nbDbl ? `<div class="tc-vente"><span aria-hidden="true">🔁</span><span><b>${fmtNombre(nbDbl)} doublon${nbDbl > 1 ? 's' : ''}</b> · jusqu'à ${fmtNombre(gainMax)} pts</span><button data-tc="vendre">Vendre…</button>${CONTRATS.some(c => (dbl[c.de] || 0) >= c.n) ? '<button class="tc-ct" data-tc="contrat">Contrat</button>' : ''}</div>` : ''}
     <div class="coll-filtres">
       <button class="coll-filtre ${terraFiltre === 'tous' ? 'actif' : ''}" data-tcf="tous">Toutes <span class="nb">${fmtNombre(terraCollection.size)}</span></button>
       <button class="coll-filtre ${terraFiltre === 'doublons' ? 'actif' : ''}" data-tcf="doublons">Doublons <span class="nb">${fmtNombre(nbDbl)}</span></button>
@@ -8250,6 +8307,10 @@ function clicCollectionTerra(e){
   if(!b) return;
   if(b.dataset.tc === 'plus'){ terraLimite += 240; renderGrilleTerra(); }
   if(b.dataset.tc === 'vendre') ouvrirVenteTerra();
+  if(b.dataset.tc === 'contrat'){
+    const onglet = document.querySelector('.tab[data-tab="contrat"]');
+    if(onglet) onglet.click();
+  }
 }
 
 function ouvrirVenteTerra(){

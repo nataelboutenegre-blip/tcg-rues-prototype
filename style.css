@@ -4429,3 +4429,59 @@ body.mode-terra #panel-collection > :not(#terraColl){ display:none !important; }
   letter-spacing:.04em; padding:2px 7px; border-radius:999px; }
 .tt-tag.neuf{ background:#35B97E; color:#0B2A1D; }
 .tt-tag.dbl{ background:#1F3A60; color:#C7D6EA; box-shadow:0 0 0 1px rgba(169,188,212,.3); }
+
+/* =====================================================================
+   patch91 — Front de la saison 2 : energie, garnison (n'existe qu'avec SAISON2)
+   ===================================================================== */
+body.mode-front #openBuyBtn{ display:none !important; }
+body.mode-front #panel-combat .puce.solde, body.mode-front #panel-defense .puce.solde{ display:none !important; }
+body.mode-front #panel-defense .bourse-section{ display:none !important; }
+.jauge-energie{ width:100%; max-width:560px; min-width:0; background:rgba(169,188,212,.07); border:1px solid rgba(169,188,212,.16);
+  border-radius:14px; padding:14px; margin:0 0 14px; }
+.jauge-energie:empty{ display:none; }
+.je-titre{ display:flex; align-items:center; gap:6px; color:#FF8A8E; font-weight:600; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+.je-titre svg{ width:14px; height:14px; }
+.je-haut{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; color:#fff; }
+.je-haut b{ font-family:var(--titre); font-weight:900; font-size:2rem; line-height:1; }
+.je-haut b small{ font-size:1rem; color:var(--brume); font-weight:700; }
+.je-haut span{ color:var(--brume); font-size:.8rem; text-align:right; }
+.je-barre{ display:grid; grid-template-columns:repeat(40,1fr); gap:2px; margin-top:10px; }
+.je-barre i{ height:10px; border-radius:2px; background:rgba(169,188,212,.16); }
+.je-barre i.p{ background:linear-gradient(180deg,#FF9A7A,#E5484D); }
+.je-note{ margin:8px 0 0; font-size:.74rem; color:var(--brume); }
+.gn{ margin-top:11px; padding:10px 11px; border-radius:11px; background:linear-gradient(160deg,rgba(229,72,77,.14),rgba(229,72,77,.05)); border:1px solid rgba(229,72,77,.35); }
+.gn-haut{ display:flex; align-items:center; gap:7px; color:#FFB3B5; font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; }
+.gn-haut svg{ width:16px; height:16px; }
+.gn-haut b{ margin-left:auto; color:#fff; font-size:.95rem; letter-spacing:0; display:flex; align-items:center; gap:3px; }
+.gn-haut b svg{ width:13px; height:13px; color:#FF8A8E; }
+.gn-barre{ display:grid; grid-template-columns:repeat(10,1fr); gap:3px; margin:8px 0 6px; }
+.gn-barre i{ height:8px; border-radius:2px; background:rgba(169,188,212,.16); }
+.gn-barre i.p{ background:linear-gradient(180deg,#FF9A7A,#E5484D); }
+.gn-txt{ font-size:.72rem; color:#C9B4B6; line-height:1.4; margin:0; }
+.gn-btns{ display:flex; gap:6px; margin-top:9px; }
+.gn-btns button{ flex:1; border-radius:9px; border:1px solid rgba(229,72,77,.45); background:rgba(229,72,77,.14); color:#fff; font:inherit;
+  font-size:.8rem; font-weight:600; padding:8px 4px; display:flex; align-items:center; justify-content:center; gap:4px; cursor:pointer; }
+.gn-btns button:disabled{ opacity:.45; cursor:default; }
+.gn-btns button svg{ width:12px; height:12px; color:#FF8A8E; }
+.gn-btns button.sec{ background:none; border-color:rgba(169,188,212,.25); color:var(--brume); font-weight:500; }
+.gn-btns button.sec.arme{ border-color:#E5484D; color:#fff; background:rgba(229,72,77,.25); }
+.gn-badge{ display:flex; align-items:flex-start; gap:8px; margin-top:10px; padding:9px 10px; border-radius:10px; background:rgba(229,72,77,.1);
+  border:1px solid rgba(229,72,77,.3); font-size:.76rem; color:#F3D6D7; line-height:1.4; }
+.gn-badge svg{ width:18px; height:18px; flex:none; color:#FF8A8E; }
+.gn-badge b{ color:#fff; }
+.pc-gn-nb{ margin-left:auto; color:var(--brume); font-size:.76rem; }
+.garnisons-bloc{ width:100%; max-width:620px; min-width:0; margin:0 0 18px; }
+.garnisons-bloc h2{ margin:4px 0 6px; }
+.gl{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid rgba(169,188,212,.1); }
+.gl-c{ width:30px; height:30px; border-radius:7px; flex:none; background:var(--c-commun); }
+.gl-c.peucommun{ background:var(--c-peucommun); } .gl-c.rare{ background:var(--c-rare); } .gl-c.epique{ background:var(--c-epique); } .gl-c.legendaire{ background:var(--c-legendaire); }
+.gl-t{ flex:1; min-width:0; }
+.gl-t b{ display:block; color:#fff; font-size:.86rem; }
+.gl-t span{ font-size:.7rem; color:var(--brume); }
+.gl-barre{ display:grid !important; grid-template-columns:repeat(10,1fr); gap:2px; margin-top:4px; width:120px; }
+.gl-barre i{ height:5px; border-radius:1px; background:rgba(169,188,212,.16); }
+.gl-barre i.p{ background:#E5484D; }
+.gl-r{ flex:none; border:1px solid rgba(229,72,77,.45); background:rgba(229,72,77,.14); color:#fff; border-radius:999px; padding:7px 12px;
+  font:inherit; font-size:.76rem; font-weight:600; cursor:pointer; white-space:nowrap; }
+.gl-r:disabled{ opacity:.45; cursor:default; }
+.gl-vide{ color:var(--brume); font-size:.78rem; padding:10px 0 2px; margin:0; }

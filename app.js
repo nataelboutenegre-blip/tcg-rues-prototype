@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '006f35f68b47';
+const VERSION_JEU = 'd387215cf7eb';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -299,6 +299,10 @@ function mettreEnSceneAssaut(cible, r){
   const chances = Math.max(1, Math.min(99, Number(r.chances) || 50));
   const serieAvant = r.conquise ? 2 : (r.gagne ? Math.max(0, Number(r.victoires_consecutives) - 1) : null);
   const res = r.conquise ? 'conq' : (r.gagne ? 'ok' : 'ko');
+  // patch91 : une victoire annulee par la garnison revient perdue mais avec une serie intacte
+  const parGarnison = SAISON2 && !r.gagne && !r.conquise && Number(r.victoires_consecutives) > 0;
+  const soldeAvant = packStatusCache ? Number(packStatusCache.solde) : null;
+  if(SAISON2) setTimeout(majEnergie, 300);
   // ou l'aiguille s'arrete : dans le vert si gagne, dans le rouge sinon
   const arret = res === 'ko' ? chances + (100 - chances) * (0.25 + Math.random() * 0.6)
                              : chances * (0.15 + Math.random() * 0.7);
@@ -325,7 +329,7 @@ function mettreEnSceneAssaut(cible, r){
         </div>
       </div>
       <div class="as-jauge"><div class="as-cadran"><div class="as-zone" style="width:${chances}%"></div><div class="as-aiguille"></div></div>
-        <div class="as-jleg"><span>Tes chances : <b>${chances} %</b></span>${r.cout ? `<span>Coût : <b class="blanc">${Number(r.cout).toLocaleString('fr-FR')} pts</b></span>` : ''}</div></div>
+        <div class="as-jleg"><span>Tes chances : <b>${chances} %</b></span>${r.cout ? `<span>Coût : <b class="blanc">${coutTexte(r.cout)}</b></span>` : ''}</div></div>
       <h2 class="as-verdict" id="asVerdict"></h2>
       <p class="as-detail"></p>
       <div class="as-actions"></div>
@@ -374,10 +378,12 @@ function mettreEnSceneAssaut(cible, r){
         + ` <span class="as-petit">Prochain assaut dans ${Math.round((DELAI_ATTAQUE_MS[tierId] || 0) / 60000) >= 60 ? Math.round(DELAI_ATTAQUE_MS[tierId] / 3600000) + ' h' : Math.round((DELAI_ATTAQUE_MS[tierId] || 0) / 60000) + ' min'}.</span>`;
       if(!passe) sonsOuverture.assautGagne();
     } else if(res === 'ko'){
-      v.className = 'as-verdict ko'; v.textContent = 'Repoussé';
-      bl.forEach(b => b.className = 'perdu');
+      v.className = 'as-verdict ko'; v.textContent = parGarnison ? 'Annulé par la garnison' : 'Repoussé';
+      bl.forEach((b, i) => b.className = parGarnison ? (i < Number(r.victoires_consecutives) ? 'gagne' : '') : 'perdu');
       jouer(att1, [{ transform: 'translateX(-6px) rotate(-1deg)' }, { transform: 'translateX(5px) rotate(1deg)' }, { transform: 'none' }], { duration: 380 });
-      d.innerHTML = `${nomCible} tient bon : ta série repart à zéro.`;
+      d.innerHTML = parGarnison
+        ? `La garnison ${deCommune(nomCible)} a annulé ta victoire : ta série reste à ${Number(r.victoires_consecutives)} sur 3.`
+        : `${nomCible} tient bon : ta série repart à zéro.`;
       if(!passe) sonsOuverture.assautPerdu();
     } else {
       v.className = 'as-verdict conq'; v.textContent = `${cible.nom} est à toi !`;
@@ -387,8 +393,18 @@ function mettreEnSceneAssaut(cible, r){
       await att(320);
       jouer($q('.as-drapeau'), [{ opacity: 0, transform: 'translateY(-40px)' }, { opacity: 1, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'ease-in' });
       if(!passe) jouer($q('.as-onde'), [{ opacity: .9, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(14)' }], { duration: 1100, easing: 'ease-out' });
-      d.innerHTML = `+${bonus.toLocaleString('fr-FR')} pts de bonus · protégée 3 h · revente au jeu dans 12 h`
+      d.innerHTML = (SAISON2 ? `<span class="as-gain">Points Terra : calcul…</span> · protégée 3 h`
+                             : `+${bonus.toLocaleString('fr-FR')} pts de bonus · protégée 3 h · revente au jeu dans 12 h`)
         + (mon ? `<span class="as-mon">${ICONE_MONUMENT}Monument conquis : <b>${echapperTexte(mon.nom)}</b></span>` : '');
+      if(SAISON2 && soldeAvant != null){
+        // le gain reel (plafond du jour, reprise, degressif) se lit sur le solde
+        sb.rpc('statut_paquets').then(({ data }) => {
+          const g = fen.querySelector('.as-gain');
+          if(!g || !data || !data[0]) return;
+          const gain = Number(data[0].solde) - soldeAvant;
+          g.textContent = gain > 0 ? `+${gain.toLocaleString('fr-FR')} points Terra` : 'Aucun point Terra (plafond du jour ou reprise)';
+        });
+      }
     }
     jouer(v, [{ opacity: 0, transform: 'scale(1.6)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 300, easing: 'cubic-bezier(.2,.8,.3,1.3)' });
     tas.innerHTML = res === 'conq'
@@ -2421,6 +2437,7 @@ const ICONES_PC = {
 // Voir une proposition et en faire une, c'est le meme objet vu des deux
 // cotes : meme icone.
 ICONES_PC['voir-echange'] = ICONES_PC.echange;
+ICONES_PC['gn-poser'] = ICONES_PC.bouclier;
 
 const nbFr = (n) => Number(n).toLocaleString('fr-FR');
 
@@ -2571,6 +2588,18 @@ function ouvrirPanneau(code, xCss, yCss){
   if(mienne && (c.tier.id === 'rare' || c.tier.id === 'legendaire') && !protegee)
     actions.push(['', 'bouclier', 'Poser un bouclier', 'Protéger ' + c.nom]);
   if(mienne && enVente == null) actions.push(['', 'vente', 'Mettre en vente', 'Vendre ' + c.nom]);
+  // patch91 : en saison 2, le Front n'a ni bouclier, ni echange, ni vente ; il a la garnison
+  let gnBloc = '';
+  if(SAISON2){
+    for(let i = actions.length - 1; i >= 0; i--)
+      if(['bouclier', 'echange', 'voir-echange', 'vente'].includes(actions[i][1])) actions.splice(i, 1);
+    for(let i = lignes.length - 1; i >= 0; i--)
+      if(lignes[i][0] === 'Bouclier' || lignes[i][0] === 'En vente') lignes.splice(i, 1);
+    if(mienne){
+      gnBloc = blocGarnisonFiche(code);
+      if(!gnBloc) actions.push(['', 'gn-poser', `Mettre en garnison <span class="pc-gn-nb">${garnisonsMoi.size} / 3</span>`, 'Défense automatique sur ' + c.nom]);
+    }
+  }
 
   let note = '';
   if(!mienne && protegee) note = 'Protégée par un bouclier : impossible de l’attaquer pour l’instant.';
@@ -2586,6 +2615,7 @@ function ouvrirPanneau(code, xCss, yCss){
       <button class="pc-fermer" data-pc="fermer" aria-label="Fermer">&times;</button>
     </div>
     ${alerte}
+    ${gnBloc}
     ${propose ? `<p class="pc-propose">${ICONES_PC.echange}<span>${echapperHtml(propose)}</span></p>` : ''}
     <div class="pc-lignes">${lignes.map(([a, b]) => `<div class="pc-ligne"><span>${a}</span><b>${b}</b></div>`).join('')}</div>
     ${note ? `<p class="pc-note">${note}</p>` : ''}
@@ -2604,6 +2634,7 @@ function ouvrirPanneau(code, xCss, yCss){
 // L'onglet Combat ne peut pas lister les 30 000 communes du pays : la guerre
 // locale se mene sur la carte, la ou le joueur voit son front.
 let attaqueEnCours = false;
+let attaqueEnGarnison = false;   // patch91 : la cible ouverte est-elle en garnison
 
 async function ouvrirAttaque(code){
   const el = document.getElementById('mapPanneau');
@@ -2626,11 +2657,13 @@ async function ouvrirAttaque(code){
 
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
-  const [apercu, siege] = await Promise.all([
+  const [apercu, siege, gnv] = await Promise.all([
     sb.rpc('apercu_attaque', { p_commune_code: code, p_intensite: intensiteChoisie }),
     sb.from('sieges').select('victoires_consecutives, dernier_round')
       .eq('attacker_id', uid).eq('commune_code', code).maybeSingle(),
+    SAISON2 ? sb.rpc('garnisons_visibles', { p_codes: [code] }) : Promise.resolve({ data: [] }),
   ]);
+  attaqueEnGarnison = !!(gnv && Array.isArray(gnv.data) && gnv.data.length);
   if(panneauCommune !== code) return;          // le joueur est passe a autre chose
 
   if(apercu.error){
@@ -2653,7 +2686,7 @@ function rendreAttaque(code, a, siege){
 
   const pastilles = INTENSITES.map(i => `
     <button class="pc-int ${i.id === intensiteChoisie ? 'actif' : ''}" data-pc="intensite" data-int="${i.id}">
-      <span>${i.label}</span><small>${i.facteur === 1 ? 'prix normal' : (i.facteur < 1 ? '⅓ du prix' : 'prix doublé')}</small>
+      <span>${i.label}</span><small>${SAISON2 ? coutIntensiteTexte(i) : (i.facteur === 1 ? 'prix normal' : (i.facteur < 1 ? '⅓ du prix' : 'prix doublé'))}</small>
     </button>`).join('');
 
   el.innerHTML = `
@@ -2665,6 +2698,7 @@ function rendreAttaque(code, a, siege){
       <button class="pc-fermer" data-pc="retour" aria-label="Retour">&larr;</button>
     </div>
 
+    ${attaqueEnGarnison ? `<div class="gn-badge">${ICONES_PC.bouclier}<span><b>Commune en garnison.</b> Chaque victoire peut être annulée par une défense automatique (1 chance sur 2).</span></div>` : ''}
     <div class="pc-prox ${a.a_distance ? 'loin' : ''}">
       ${a.a_distance
         ? 'Aucune de tes communes à moins de 20 km : <b>attaque à distance</b>, tes chances baissent.'
@@ -2686,7 +2720,7 @@ function rendreAttaque(code, a, siege){
 
     <div class="pc-actions">
       <button class="pc-action attaque" data-pc="assaut" ${attente > 0 || attaqueEnCours ? 'disabled' : ''}>
-        ${attente > 0 ? 'Encore ' + formatDuree(attente) + ' à attendre' : `Lancer l’assaut — ${a.cout} pts`}
+        ${attente > 0 ? 'Encore ' + formatDuree(attente) + ' à attendre' : `Lancer l’assaut — ${coutTexte(a.cout)}`}
       </button>
     </div>`;
   // recadrer, pas replacer : relire sa position pour la recalculer ajoutait
@@ -2847,6 +2881,18 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
     return;
   }
   if(quoi === 'assaut'){ lancerAssaut(code); return; }
+  if(quoi === 'gn-plus'){ gnRetraitArme = null; garnisonAction(code, Number(b.dataset.n) || 1); return; }
+  if(quoi === 'gn-poser'){
+    const dispo = energieEtat ? Math.floor(energieEtat.energie) : 5;
+    garnisonAction(code, Math.max(1, Math.min(5, dispo)));
+    return;
+  }
+  if(quoi === 'gn-retirer'){
+    if(gnRetraitArme !== code){ gnRetraitArme = code; const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); return; }
+    gnRetraitArme = null;
+    garnisonAction(code, 'retirer');
+    return;
+  }
   if(quoi === 'intensite'){
     intensiteChoisie = b.dataset.int;
     try{ localStorage.setItem('tf-intensite', intensiteChoisie); } catch(err){}
@@ -6052,8 +6098,10 @@ function renderPackStatus(){
     const minutes = Math.ceil((1 - (live % 1)) * 20);
     puces.push(`<span class="puce">Prochain dans <b>${minutes} min</b></span>`);
   }
-  puces.push(`<span class="puce">Achetés aujourd'hui <b>${achetesJour} sur 5</b></span>`);
-  puces.push(`<span class="puce solde">Solde <b>${Number(packStatusCache.solde).toLocaleString('fr-FR')}</b></span>`);
+  if(!SAISON2 || enTerra()){
+    puces.push(`<span class="puce">Achetés aujourd'hui <b>${achetesJour} sur 5</b></span>`);
+    puces.push(`<span class="puce solde">Solde <b>${Number(packStatusCache.solde).toLocaleString('fr-FR')}</b></span>`);
+  }
   document.getElementById('packStatus').innerHTML = puces.join('');
 
   // pendant l'ouverture d'un paquet, on ne peut pas en relancer un autre
@@ -6833,6 +6881,7 @@ function ecartIntensite(i){
 }
 
 function coutIntensite(tierId, id){
+  if(SAISON2) return ENERGIE_INTENSITE[intensite(id).id] || 2;
   return Math.max(1, Math.round(coutAttaque(tierId) * intensite(id).facteur));
 }
 
@@ -7097,10 +7146,11 @@ document.getElementById('combatMenacesListe').addEventListener('click', async (e
         serie: r.victoires_restantes
       });
     } else {
-      notifier({ type: 'defaite', titre: `Défense ratée à ${btn.dataset.nom}`, texte: `L'attaquant garde ses victoires (−${r ? r.cout : ''} pts).` });
+      notifier({ type: 'defaite', titre: `Défense ratée à ${btn.dataset.nom}`, texte: `L'attaquant garde ses victoires (−${r ? coutTexte(r.cout) : ''}).` });
     }
     await loadMenaces();
     loadPackStatus();
+    if(SAISON2) majEnergie();
     if(packStatusCache){
       ['soldeValueCombat', 'soldeValueDefense'].forEach(id => {
         const el = document.getElementById(id);
@@ -7261,7 +7311,7 @@ function appliquerChances(){
     if(!v) continue;
     const pc = b.querySelector('i'), prix = b.querySelector('b');
     if(pc) pc.textContent = v.chances + ' %';
-    if(prix) prix.textContent = v.cout + ' pts';
+    if(prix) prix.textContent = coutTexte(v.cout);
   }
 }
 
@@ -7310,8 +7360,8 @@ function renderIntensite(){
   zone.innerHTML = INTENSITES.map(i => `
     <button class="intensite ${i.id === intensiteChoisie ? 'actif' : ''}" data-intensite="${i.id}" aria-pressed="${i.id === intensiteChoisie}">
       <span class="int-label">${i.label}</span>
-      <span class="int-chances">${ecartIntensite(i)}</span>
-      <span class="int-cout">${i.facteur === 1 ? 'prix normal' : (i.facteur < 1 ? 'un tiers du prix' : 'prix doublé')}</span>
+      <span class="int-chances">${SAISON2 ? i.chances + ' %' : ecartIntensite(i)}</span>
+      <span class="int-cout">${coutIntensiteTexte(i)}</span>
     </button>`).join('') + `<p class="int-aide">${intensite().aide}</p>`;
 }
 
@@ -7442,7 +7492,7 @@ function renderCombatGrid(){
           </div>
           <div class="cible-serie"><span>Ta série</span><span class="cible-ronds">${ronds}</span></div>
           <p class="cible-note ${noteAlerte ? 'alerte' : ''}">${note}</p>
-          <button class="cible-attaquer" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer <b>${cout} pts</b><i>${vrai ? vrai.chances + ' %' : '…'}</i></button>
+          <button class="cible-attaquer" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer <b>${coutTexte(cout)}</b><i>${vrai ? vrai.chances + ' %' : '…'}</i></button>
         </div>
       </article>`;
   };
@@ -7549,6 +7599,14 @@ let terraFiltre = 'tous';
 let terraRecherche = '';
 let terraLimite = 120;
 let terraDernier = null;           // le dernier paquet ouvert, pour le bilan
+// patch91 : Front
+const ENERGIE_INTENSITE = { prudente: 1, normale: 2, offensive: 3 };
+let garnisonsMoi = new Map();      // code -> { energie, nom, tier, attaquants, repousses, subis }
+let energieEtat = null;            // { energie, prochaine_dans, lu }
+let gnRetraitArme = null;          // code de la garnison dont le retrait attend confirmation
+const coutTexte = (n) => SAISON2 ? `${n} énergie` : `${Number(n).toLocaleString('fr-FR')} pts`;
+const coutIntensiteTexte = (i) => SAISON2 ? `${ENERGIE_INTENSITE[i.id]} énergie`
+  : (i.facteur === 1 ? 'prix normal' : (i.facteur < 1 ? 'un tiers du prix' : 'prix doublé'));
 // Le menu Plus n'est plus une liste a tenir : c'est tout ce qui n'est pas dans
 // la barre, dans l'ordre de la colonne. Deux listes ecrites a la main, c'etait
 // deux listes qui finissaient par diverger — et c'est exactement ce qui etait
@@ -7599,6 +7657,86 @@ function initModes(){
   appliquerMode();
   majEnergie();
   if(!energieTimer) energieTimer = setInterval(majEnergie, 60000);
+  // patch91 : la jauge d'energie en tete de Combat, les garnisons dans Defendre
+  const combat = document.getElementById('panel-combat');
+  if(combat && !document.getElementById('jaugeEnergie')){
+    const j = document.createElement('div');
+    j.id = 'jaugeEnergie';
+    j.className = 'jauge-energie';
+    combat.querySelector('.volets').insertAdjacentElement('afterend', j);
+  }
+  const defense = document.getElementById('panel-defense');
+  if(defense && !document.getElementById('garnisonsBloc')){
+    const sub = defense.querySelector('.sub');
+    if(sub) sub.textContent = 'Quand un joueur gagne un round contre toi, tente une défense (1 énergie). Tes garnisons, elles, se défendent toutes seules.';
+    const g = document.createElement('div');
+    g.id = 'garnisonsBloc';
+    g.className = 'garnisons-bloc';
+    const sect = defense.querySelector('.bourse-section');
+    if(sect) sect.insertAdjacentElement('beforebegin', g); else defense.appendChild(g);
+    g.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-gn-recharger]');
+      if(b) garnisonAction(b.dataset.gnRecharger, 5);
+    });
+  }
+  chargerGarnisons();
+}
+
+// ---------- patch91 : garnisons ----------
+async function chargerGarnisons(){
+  if(!SAISON2) return;
+  const { data, error } = await sb.rpc('mes_garnisons');
+  if(error){ console.error(error); return; }
+  garnisonsMoi = new Map((data || []).map(g => [g.commune_code, {
+    energie: Number(g.energie) || 0, nom: g.nom, tier: g.tier, attaquants: g.attaquants,
+    repousses: g.repousses_24h, subis: g.subis_24h }]));
+  renderGarnisons();
+}
+
+function renderGarnisons(){
+  const el = document.getElementById('garnisonsBloc');
+  if(!el) return;
+  const liste = [...garnisonsMoi.entries()];
+  const barre = (n) => `<span class="gl-barre">${Array.from({ length: 10 }, (_, i) => `<i class="${i < n ? 'p' : ''}"></i>`).join('')}</span>`;
+  const recits = liste.filter(([, g]) => g.subis > 0).map(([, g]) =>
+    `<div class="gn-badge">${ICONES_PC.bouclier}<span>Ta garnison ${deCommune(g.nom).startsWith("d'") ? 'd’' : 'de '}<b>${echapperTexte(g.nom)}</b> a repoussé <b>${g.repousses} assaut${g.repousses > 1 ? 's' : ''} sur ${g.subis}</b> en 24 h (−${g.subis} énergie).</span></div>`).join('');
+  el.innerHTML = `<h2>Mes garnisons · ${liste.length} / 3</h2>
+    ${liste.map(([code, g]) => {
+      const tier = TIERS.find(t => t.id === g.tier) || TIERS[TIERS.length - 1];
+      return `<div class="gl"><i class="gl-c ${tier.id}"></i><div class="gl-t"><b>${echapperTexte(g.nom)}</b>
+        <span>${tier.label} · ${g.attaquants > 0 ? 'attaquée' : 'calme'} · ${g.energie} / 10</span>${barre(g.energie)}</div>
+        <button class="gl-r" data-gn-recharger="${code}" ${g.energie >= 10 ? 'disabled' : ''}>Recharger</button></div>`;
+    }).join('')}
+    ${liste.length < 3 ? `<p class="gl-vide">${3 - liste.length} place${liste.length < 2 ? 's' : ''} libre${liste.length < 2 ? 's' : ''} : ouvre une de tes communes sur la carte et choisis « Mettre en garnison ».</p>` : ''}
+    ${recits}`;
+}
+
+async function garnisonAction(code, n){
+  const rpc = n === 'retirer' ? sb.rpc('garnison_retirer', { p_code: code }) : sb.rpc('garnison_poser', { p_code: code, p_n: n });
+  const { data, error } = await rpc;
+  if(error){ notifier({ type: 'erreur', titre: 'Garnison', texte: messageLisible(error.message) }); return; }
+  const r = data && data[0];
+  if(n === 'retirer') notifier({ type: 'info', titre: 'Garnison retirée', texte: `${r ? r.rendue : 0} énergie te revient.` });
+  await Promise.all([chargerGarnisons(), majEnergie()]);
+  if(panneauCommune === code && collectionMap.get(code)){
+    const a = panneauAncre;
+    ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40);
+  }
+}
+
+function blocGarnisonFiche(code){
+  const g = garnisonsMoi.get(code);
+  if(!g) return '';
+  const armee = gnRetraitArme === code;
+  return `<div class="gn">
+    <div class="gn-haut">${ICONES_PC.bouclier} Garnison <b>${ICONE_ENERGIE} ${g.energie} / 10</b></div>
+    <div class="gn-barre">${Array.from({ length: 10 }, (_, i) => `<i class="${i < g.energie ? 'p' : ''}"></i>`).join('')}</div>
+    <p class="gn-txt">Quand un attaquant gagne un round ici, ta garnison tente de l'annuler (1 chance sur 2) et dépense 1 énergie.</p>
+    <div class="gn-btns">
+      <button data-pc="gn-plus" data-n="1" ${g.energie >= 10 ? 'disabled' : ''}>+1 ${ICONE_ENERGIE}</button>
+      <button data-pc="gn-plus" data-n="5" ${g.energie >= 10 ? 'disabled' : ''}>+5 ${ICONE_ENERGIE}</button>
+      <button class="sec ${armee ? 'arme' : ''}" data-pc="gn-retirer">${armee ? `Confirmer (+${Math.floor(g.energie / 2)})` : 'Retirer'}</button>
+    </div></div>`;
 }
 
 function appliquerMode(){
@@ -7634,7 +7772,7 @@ function appliquerMode(){
   }
   majBadgePlus();
   // patch90 : le statut des paquets et la collection suivent le mode
-  if(packStatusCache) loadPackStatus();
+  loadPackStatus();
   viderBilanTerra();
   const ouvert = document.querySelector('.tab.active[data-tab]');
   if(ouvert && ouvert.dataset.tab === 'collection' && enTerra()) ouvrirCollectionTerra();
@@ -7840,6 +7978,22 @@ async function majEnergie(){
   if(error || !data || !data[0]) return;
   const el = document.getElementById('mbEnergie');
   if(el) el.textContent = data[0].energie;
+  energieEtat = { energie: Number(data[0].energie), prochaine_dans: data[0].prochaine_dans, lu: Date.now() };
+  renderJaugeEnergie();
+}
+
+function renderJaugeEnergie(){
+  const el = document.getElementById('jaugeEnergie');
+  if(!el || !energieEtat) return;
+  const e = energieEtat.energie, max = 40;
+  const manque = Math.max(0, max - e);
+  const prochaineMin = energieEtat.prochaine_dans != null ? Math.max(1, Math.ceil(energieEtat.prochaine_dans / 60)) : null;
+  const pleinMin = manque > 0 && prochaineMin != null ? prochaineMin + (manque - 1) * 10 : 0;
+  const duree = (m) => m >= 60 ? Math.floor(m / 60) + ' h ' + String(m % 60).padStart(2, '0') : m + ' min';
+  el.innerHTML = `<div class="je-titre">${ICONE_ENERGIE} Énergie</div>
+    <div class="je-haut"><b>${e} <small>/ ${max}</small></b><span>${e >= max ? 'Réserve pleine' : `+1 dans ${prochaineMin} min · pleine dans ${duree(pleinMin)}`}</span></div>
+    <div class="je-barre">${Array.from({ length: max }, (_, i) => `<i class="${i < e ? 'p' : ''}"></i>`).join('')}</div>
+    <p class="je-note">L'énergie se recharge seule : +1 toutes les 10 minutes.</p>`;
 }
 
 function construireMenuPlus(){
@@ -8051,7 +8205,8 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'communaute'){ loadClassement(); loadJournal(); loadAmis(); }
     if(tab.dataset.tab === 'bourse') loadBourse();
     if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); }
-    if(tab.dataset.tab === 'defense'){ loadMenaces().then(loadReveil); loadCombat(); renderIntensite('defense'); }
+    if(tab.dataset.tab === 'defense'){ loadMenaces().then(loadReveil); loadCombat(); renderIntensite('defense'); if(SAISON2) chargerGarnisons(); }
+    if(tab.dataset.tab === 'combat' && SAISON2) majEnergie();
     if(tab.dataset.tab === 'combat') loadCombat();
     if(tab.dataset.tab === 'succes') loadSucces();
     if(tab.dataset.tab === 'monuments') loadMonuments();

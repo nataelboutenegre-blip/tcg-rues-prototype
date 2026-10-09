@@ -3,16 +3,20 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'a3ad27a76716';
+const VERSION_JEU = '547c10823727';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
 const TIERS = [
   {id:'legendaire', label:'Légendaire', color:'#B0862C'},
+  {id:'epique', label:'Épique', color:'#7A3FD1'},
   {id:'rare', label:'Rare', color:'#2A5FA8'},
   {id:'peucommun', label:'Peu commun', color:'#2E7D5B'},
   {id:'commun', label:'Commun', color:'#7C8798'},
 ];
+// patch88 : la ligne Epique des statistiques et le filtre de la Collection
+// restent caches jusqu'au lancement de la saison 2
+const EPIQUE_VISIBLE = false;
 const DEPT_NAMES = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","2A":"Corse-du-Sud","2B":"Haute-Corse","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise","971":"Guadeloupe","972":"Martinique","973":"Guyane","974":"La Réunion","975":"Saint-Pierre-et-Miquelon","976":"Mayotte"};
 const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
 
@@ -74,6 +78,7 @@ const TEINTES_CARTE = {
   commun:     ['#8D9AAE', '#5F6C80'],
   peucommun:  ['#35B97E', '#16734C'],
   rare:       ['#4E92FF', '#1D4FB8'],
+  epique:     ['#B58BFF', '#5B2BB5'],
   legendaire: ['#F7C548', '#B7791F'],
 };
 
@@ -171,7 +176,7 @@ let MAP_W = 1000, MAP_H = 1000;
 let mapBounds = null;
 let collectionMap = new Map();
 let othersMap = new Map();
-let session = {commun:0, peucommun:0, rare:0, legendaire:0, total:0};
+let session = {commun:0, peucommun:0, rare:0, epique:0, legendaire:0, total:0};
 
 // ---------- Notifications (remplacent les fenetres grises du navigateur) ----------
 const ICONES_NOTIF = {
@@ -288,7 +293,7 @@ function carteAssaut(e, qui){
 // le rechargement des possessions. r : la reponse de attaquer().
 function mettreEnSceneAssaut(cible, r){
   const tierId = cible.tier && cible.tier.id ? cible.tier.id : cible.tier;
-  const grand = tierId === 'rare' || tierId === 'legendaire';
+  const grand = tierId === 'rare' || tierId === 'epique' || tierId === 'legendaire';
   const anim = ouvAnim && !REDUCED_MOTION;
   const proche = maCommuneLaPlusProche(cible.lat, cible.lon, cible.code);
   const chances = Math.max(1, Math.min(99, Number(r.chances) || 50));
@@ -1575,11 +1580,11 @@ function dessinerDepartements(liste, joueurs){
 }
 
 // ---------- Territoires sur la carte ----------
-const RAYON_ZONE = {commun: 4.5, peucommun: 6.5, rare: 10, legendaire: 15};
+const RAYON_ZONE = {commun: 4.5, peucommun: 6.5, rare: 10, epique: 12, legendaire: 15};
 // De loin, les petites communes des autres joueurs ne sont que du bruit : on les revele en zoomant.
-const ZOOM_MINI = {commun: 2.6, peucommun: 1.8, rare: 1, legendaire: 1};
+const ZOOM_MINI = {commun: 2.6, peucommun: 1.8, rare: 1, epique: 1, legendaire: 1};
 const MASQUEES_PAR_ZOOM = {commun: 0, peucommun: 0};
-const LIBELLE_TIER = {commun: 'commun', peucommun: 'peu commun', rare: 'rare', legendaire: 'légendaire'};
+const LIBELLE_TIER = {commun: 'commun', peucommun: 'peu commun', rare: 'rare', epique: 'épique', legendaire: 'légendaire'};
 const ID_MOI = '__moi__';
 let joueurSurligne = null;
 let listeJoueursComplete = false;
@@ -2040,7 +2045,7 @@ function dessinerCellulesCanvas(ctx, trait, liste, joueurs, ordre){
 function dessinerMarqueursCanvas(ctx, liste, joueurs, k, legendairesSeules){
   const e = 1 / Math.max(1, mapZoom);
   for(const c of liste){
-    if(c.tier !== 'legendaire' && (legendairesSeules || c.tier !== 'rare')) continue;
+    if(c.tier !== 'legendaire' && (legendairesSeules || (c.tier !== 'rare' && c.tier !== 'epique'))) continue;
     const j = joueurs.get(c.joueur);
     if(!j) continue;
     const p = project(c.lat, c.lon);
@@ -3043,7 +3048,7 @@ function dessinerTerritoires(){
     g.cellules += cellule ? `<path d="${cellule}"/>` : `<circle cx="${cx}" cy="${cy}" r="${r.toFixed(1)}"/>`;
     if(c.tier === 'legendaire'){
       g.marqueurs += `<polygon points="${etoileSvg(x, y, j.moi ? 7 : 6)}" fill="${j.moi ? '#FFF6D6' : 'rgba(255,246,214,0.75)'}" stroke="#0B1830" stroke-width="${j.moi ? 1.4 : 1}" stroke-opacity="${j.moi ? 1 : 0.5}" vector-effect="non-scaling-stroke"/>`;
-    } else if(c.tier === 'rare'){
+    } else if(c.tier === 'rare' || c.tier === 'epique'){
       g.marqueurs += `<circle cx="${cx}" cy="${cy}" r="2.2" fill="${j.moi ? '#fff' : 'rgba(255,255,255,0.7)'}" stroke="#0B1830" stroke-width="1" stroke-opacity="${j.moi ? 1 : 0.45}" vector-effect="non-scaling-stroke"/>`;
     }
     zonesSurvol += `<circle cx="${cx}" cy="${cy}" r="${Math.max(RAYON_ZONE[c.tier], 6)}" fill="transparent"><title>${echapperHtml(c.nom)} (${c.dept}), ${LIBELLE_TIER[c.tier]}, ${j.moi ? 'à toi' : 'à ' + echapperHtml(j.pseudo)}</title></circle>`;
@@ -3100,7 +3105,7 @@ function dessinerContours(liste, joueurs, deps){
       const j = joueurs.get(c.joueur);
       if(c.tier === 'legendaire'){
         g.marqueurs += `<polygon points="${etoileSvg(x, y, (j.moi ? 7 : 6) * e)}" fill="${j.moi ? '#FFF6D6' : 'rgba(255,246,214,0.75)'}" stroke="#0B1830" stroke-width="${(1.2 * e).toFixed(2)}"/>`;
-      } else if(c.tier === 'rare'){
+      } else if(c.tier === 'rare' || c.tier === 'epique'){
         g.marqueurs += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(2.2 * e).toFixed(2)}" fill="${j.moi ? '#fff' : 'rgba(255,255,255,0.7)'}" stroke="#0B1830" stroke-width="${(1 * e).toFixed(2)}"/>`;
       }
       zonesSurvol += `<path d="${d}" fill="transparent"><title>${echapperHtml(c.nom)} (${c.dept}), ${LIBELLE_TIER[c.tier]}, ${j.moi ? 'à toi' : 'à ' + echapperHtml(j.pseudo)}</title></path>`;
@@ -3336,7 +3341,7 @@ async function loadMyCollection(){
   if(error){ console.error(error); return; }
 
   collectionMap = new Map();
-  session = {commun:0, peucommun:0, rare:0, legendaire:0, total:0};
+  session = {commun:0, peucommun:0, rare:0, epique:0, legendaire:0, total:0};
   for(const row of data){
     const c = row.communes;
     const tier = TIERS.find(t => t.id === c.tier);
@@ -3371,6 +3376,7 @@ function renderStats(){
   const rows = document.getElementById('statRows');
   rows.innerHTML = '';
   for(const t of TIERS){
+    if(t.id === 'epique' && !EPIQUE_VISIBLE && !session.epique) continue;
     const n = session[t.id];
     const pct = session.total ? (n/session.total*100) : 0;
     const row = document.createElement('div');
@@ -4248,7 +4254,7 @@ function renderCollectionFilters(entries){
   const compte = Object.fromEntries(TIERS.map(t => [t.id, 0]));
   entries.forEach(e => compte[e.tier.id]++);
   const boutons = [`<button class="coll-filtre ${collectionFilterTier === 'tous' ? 'actif' : ''}" data-tier="tous">Toutes <span class="nb">${entries.length}</span></button>`]
-    .concat(TIERS.map(t => `<button class="coll-filtre ${collectionFilterTier === t.id ? 'actif' : ''}" data-tier="${t.id}"><span class="point" style="background:${COULEURS_FILTRE[t.id]}"></span>${t.label} <span class="nb">${compte[t.id]}</span></button>`));
+    .concat(TIERS.filter(t => t.id !== 'epique' || EPIQUE_VISIBLE || compte.epique).map(t => `<button class="coll-filtre ${collectionFilterTier === t.id ? 'actif' : ''}" data-tier="${t.id}"><span class="point" style="background:${COULEURS_FILTRE[t.id]}"></span>${t.label} <span class="nb">${compte[t.id]}</span></button>`));
   // le filtre des favoris n'apparait que s'il y en a : un bouton qui ne
   // filtre rien n'apprend rien
   if(favorisCharges && favorisSet.size && vueCollection !== 'france'){
@@ -4265,7 +4271,7 @@ function renderCollectionFilters(entries){
   }
   el.innerHTML = boutons.join('');
 }
-const COULEURS_FILTRE = {legendaire:'#F0B429', rare:'#2F7CF6', peucommun:'#22A06B', commun:'#7E8BA0'};
+const COULEURS_FILTRE = {legendaire:'#F0B429', epique:'#9B5CF6', rare:'#2F7CF6', peucommun:'#22A06B', commun:'#7E8BA0'};
 
 // ---------- Ma France : tout ce que le joueur a possede un jour ----------
 // La carte du Territoire montre l'instant present. Celle-ci montre le passage :
@@ -5649,7 +5655,7 @@ function revealCards(draws){
 }
 
 // ---------- Ouverture de paquet : scene, pile, revelation triee, sons ----------
-const RANG_TIER = { commun: 0, peucommun: 1, rare: 2, legendaire: 3 };
+const RANG_TIER = { commun: 0, peucommun: 1, rare: 2, epique: 3, legendaire: 4 };
 // la meilleure carte arrive en dernier
 const trierPourRevelation = (draws) =>
   draws.slice().sort((a, b) => RANG_TIER[a.tier.id] - RANG_TIER[b.tier.id]
@@ -5745,7 +5751,7 @@ const sonsOuverture = (() => {
     cede(lum){ if(!pret()) return;
       bruit(0.45, 900, 4200, 0.45);
       const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime;
-      const f0 = lum === 'lum-leg' ? 392 : lum === 'lum-rare' ? 330 : 262;
+      const f0 = lum === 'lum-leg' ? 392 : lum === 'lum-epi' ? 360 : lum === 'lum-rare' ? 330 : 262;
       o.type = 'triangle'; o.frequency.setValueAtTime(f0, t + 0.15); o.frequency.exponentialRampToValueAtTime(f0 * 2, t + 0.7);
       g.gain.setValueAtTime(0.0001, t + 0.15); g.gain.exponentialRampToValueAtTime(lum ? 0.18 : 0.08, t + 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
       o.connect(g); g.connect(maitre); o.start(t + 0.15); o.stop(t + 1.2); },
@@ -5756,7 +5762,7 @@ const sonsOuverture = (() => {
     assautPerdu(){ if(pret()){ note(330, 0, 0.25, 'sawtooth', 0.16); note(220, 0.15, 0.42, 'sawtooth', 0.14); } },
     assautConquete(){ if(pret()) [523, 659, 784, 1047].forEach((f, i) => note(f, i * 0.12, 0.5, 'triangle', 0.3)); },
     tension(tier){ if(!pret()) return;
-      const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime, k = tier === 'legendaire' ? 1 : 0.8;
+      const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime, k = tier === 'legendaire' ? 1 : tier === 'epique' ? 0.9 : 0.8;
       o.type = 'sine'; o.frequency.setValueAtTime(180 * k, t); o.frequency.exponentialRampToValueAtTime(360 * k, t + 0.9);
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.18, t + 0.5); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.0);
       o.connect(g); g.connect(maitre); o.start(t); o.stop(t + 1.05); },
@@ -5764,6 +5770,7 @@ const sonsOuverture = (() => {
       if(tier === 'commun') note(660, 0, 0.12, 'sine', 0.3);
       else if(tier === 'peucommun'){ note(660, 0, 0.12, 'sine', 0.32); note(880, 0.08, 0.16, 'sine', 0.32); }
       else if(tier === 'rare') [523, 659, 784, 1047].forEach((f, i) => note(f, i * 0.07, 0.35, 'triangle', 0.35));
+      else if(tier === 'epique') [523, 659, 784, 1047, 1319].forEach((f, i) => note(f, i * 0.07, 0.45, 'triangle', 0.34));
       else {
         [523, 659, 784].forEach(f => note(f, 0, 1.4, 'triangle', 0.28));
         note(1047, 0.12, 1.5, 'triangle', 0.3);
@@ -5854,7 +5861,7 @@ function lancerRevelation(zone, scene, tries){
     const p = construirePileOuv(pile);
     const prochaine = pile[pile.length - 1];
     if(pile.length === 1 && RANG_TIER[prochaine.tier.id] >= 2){
-      [...p.querySelectorAll('.ouv-dos')].pop().classList.add(prochaine.tier.id === 'legendaire' ? 'lueur-leg' : 'lueur-rare');
+      [...p.querySelectorAll('.ouv-dos')].pop().classList.add(prochaine.tier.id === 'legendaire' ? 'lueur-leg' : prochaine.tier.id === 'epique' ? 'lueur-epi' : 'lueur-rare');
       setTimeout(() => sonsOuverture.tension(prochaine.tier.id), 450);
     }
     p.addEventListener('click', suivante);
@@ -6132,7 +6139,7 @@ async function dechirerPaquet(pack, nbCartes){
 const SEUIL_COUPE = 0.4;
 function lumierePaquet(draws){
   const ids = draws.map(d => d.tier && d.tier.id);
-  return ids.includes('legendaire') ? 'lum-leg' : ids.includes('rare') ? 'lum-rare' : '';
+  return ids.includes('legendaire') ? 'lum-leg' : ids.includes('epique') ? 'lum-epi' : ids.includes('rare') ? 'lum-rare' : '';
 }
 function armerPaquet(pack, demarrer){
   const zone = document.getElementById('packZone');
@@ -6191,7 +6198,7 @@ function armerPaquet(pack, demarrer){
   };
   const abandon = () => {
     fini = false; tirage = null; g = null; jeton++;
-    pack.classList.remove('coupe', 'attente', 'lum-rare', 'lum-leg');
+    pack.classList.remove('coupe', 'attente', 'lum-rare', 'lum-epi', 'lum-leg');
     if(rayons){ rayons.remove(); rayons = null; }
     poser(0);
   };
@@ -6421,7 +6428,7 @@ document.getElementById('toggleOthersBtn').addEventListener('click', () => {
 });
 
 // ---------- Bourse ----------
-const PRIX_RACHAT = {commun: 5, peucommun: 20, rare: 100, legendaire: 1000};
+const PRIX_RACHAT = {commun: 5, peucommun: 20, rare: 100, epique: 300, legendaire: 1000};
 let myListings = new Map();
 
 async function loadBourse(){
@@ -6759,6 +6766,7 @@ const DELAI_ATTAQUE_MS = {
   commun: 2 * 60 * 1000,
   peucommun: 5 * 60 * 1000,
   rare: 10 * 60 * 1000,
+  epique: 3600 * 1000,
   legendaire: 3 * 3600 * 1000,
 };
 
@@ -6791,7 +6799,7 @@ function coutIntensite(tierId, id){
 
 // doit rester aligne avec cout_attaque() en base : le serveur ne suit plus
 // le prix de rachat, il a sa propre echelle
-const COUT_ATTAQUE = { commun: 3, peucommun: 5, rare: 10, legendaire: 100 };
+const COUT_ATTAQUE = { commun: 3, peucommun: 5, rare: 10, epique: 30, legendaire: 100 };
 function coutAttaque(tierId){
   return COUT_ATTAQUE[tierId] || 3;
 }
@@ -6900,7 +6908,7 @@ document.getElementById('boucliersToutToggle').addEventListener('click', (e) => 
 // les pourcentages bougent donc tout seuls au fil de la saison. On les relit a
 // chaque ouverture de l'onglet plutot que de les figer dans la page.
 const COULEUR_TIER = {
-  legendaire: 'var(--c-legendaire)', rare: 'var(--c-rare)',
+  legendaire: 'var(--c-legendaire)', epique: 'var(--c-epique)', rare: 'var(--c-rare)',
   peucommun: 'var(--c-peucommun)', commun: 'var(--c-commun)'
 };
 let tauxEnCours = false;
@@ -6930,12 +6938,14 @@ async function chargerTotauxPaliers(){
 // « 50 000 et plus », « 5 000 a 49 999 », « Moins de 1 000 » : les bornes se
 // deduisent des paliers voisins, donc un seul chiffre a changer en base
 // suffit a corriger les quatre lignes.
+const ORDRE_PALIERS = ['commun', 'peucommun', 'rare', 'epique', 'legendaire'];
 function libellePopulation(id, m){
-  const ordre = ['commun', 'peucommun', 'rare', 'legendaire'];
+  const ordre = ORDRE_PALIERS;
   const i = ordre.indexOf(id);
   if(i < 0 || !m[id]) return null;
   const bas = Number(m[id].pop_min);
-  const suivant = m[ordre[i + 1]];
+  // patch88 : on saute un palier absent de la base (l'epique avant la saison 2)
+  const suivant = m[ordre.slice(i + 1).find(t => m[t])];
   if(!suivant) return fmtNombre(bas) + ' et plus';
   const haut = Number(suivant.pop_min) - 1;
   if(i === 0) return 'Moins de ' + fmtNombre(Number(suivant.pop_min));
@@ -6947,7 +6957,7 @@ async function majChiffresPaliers(){
   if(!m) return;
   const grand = Object.values(m).reduce((s, l) => s + Number(l.total || 0), 0);
 
-  for(const id of ['commun', 'peucommun', 'rare', 'legendaire']){
+  for(const id of ORDRE_PALIERS){
     if(!m[id]) continue;
     const n = Number(m[id].total) || 0;
     const pop = libellePopulation(id, m);
@@ -6959,8 +6969,7 @@ async function majChiffresPaliers(){
 
     const seuil = document.querySelector('[data-lp-seuil="' + id + '"]');
     if(seuil && m[id]){
-      const suivant = { commun: 'peucommun', peucommun: 'rare',
-                        rare: 'legendaire' }[id];
+      const suivant = ORDRE_PALIERS.slice(ORDRE_PALIERS.indexOf(id) + 1).find(t => m[t]);
       seuil.textContent = suivant && m[suivant]
         ? (id === 'commun'
             ? 'moins de ' + fmtNombre(Number(m[suivant].pop_min)) + ' hab.'
@@ -7122,11 +7131,11 @@ async function loadCombat(){
     .from('possessions')
     .select('commune_code, joueur_id, acquired_at, bouclier_jusqua, ' + champsCible)
     .neq('joueur_id', uid)
-    .in('communes.tier', ['rare','legendaire']));
+    .in('communes.tier', ['rare','epique','legendaire']));
   if(error){
     ({ data: cibles, error } = await toutesLesLignes(() => sb
       .from('possessions').select('commune_code, joueur_id, acquired_at, ' + champsCible)
-      .neq('joueur_id', uid).in('communes.tier', ['rare','legendaire'])));
+      .neq('joueur_id', uid).in('communes.tier', ['rare','epique','legendaire'])));
   }
   if(error){ console.error(error); return; }
 
@@ -8094,7 +8103,7 @@ document.getElementById('panel-succes').addEventListener('click', async (e) => {
 // ---------- Echange de communes entre joueurs ----------
 // Meme rarete des deux cotes, et une commission prelevee a chacun : sans cette
 // friction, un joueur pourrait faire remonter les bonnes cartes de comptes secondaires.
-const COMMISSION_ECHANGE = { commun: 1, peucommun: 4, rare: 20, legendaire: 200 };
+const COMMISSION_ECHANGE = { commun: 1, peucommun: 4, rare: 20, epique: 60, legendaire: 200 };
 
 let echangesEnCours = [];
 let echangeTier = 'commun';

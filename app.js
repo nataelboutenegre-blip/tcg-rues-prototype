@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '9edc3704007c';
+const VERSION_JEU = 'a63c75a40b72';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9926,6 +9926,7 @@ document.querySelectorAll('#panel-regles .sommaire a').forEach(a => a.addEventLi
 // Tout ce qui compte se decide sur le serveur (cdj_partie, cdj_essayer) :
 // le navigateur n'a jamais la reponse avant la fin. Ici, on affiche.
 let cdjEtat = null;
+const radarGainVu = new Set();   // patch96 : un gain ne recharge le solde qu'une fois
 let cdjNoms = null, cdjNomsEnCours = null;
 let cdjChoix = null, cdjResultats = [], cdjSurligne = -1, cdjMinuteur = null;
 let cdjEnvoi = false, cdjDernierIndice = null;   // null : premier affichage, rien a souligner
@@ -10126,6 +10127,7 @@ function renderCdjFin(){
     : '';
   const serie = e.serie > 0 ? ` Série en cours : <b>${e.serie} jour${e.serie > 1 ? 's' : ''}</b>.` : '';
   z.innerHTML = `<h2 class="${e.trouve ? 'gagne' : ''}">${e.trouve ? `Trouvée en ${nb}` : 'Pas trouvée'}</h2>
+    ${e.trouve && e.gain ? `<p class="mj-gain">+${Number(e.gain).toLocaleString('fr-FR')} pts sur ton solde</p>` : ''}
     <p>C’était <b>${echapperTexte(r.nom)}</b>, ${echapperTexte(DEPT_NAMES[r.dept] || r.dept)}, ${Number(r.pop).toLocaleString('fr-FR')} habitants.</p>
     <p>${qui}${serie} Nouvelle commune à minuit.</p>
     <pre class="cdj-partage" id="cdjPartage">${echapperTexte(cdjTextePartage())}</pre>
@@ -10220,6 +10222,8 @@ async function cdjValider(){
       ({ data, error } = await sb.rpc('cdj_essayer', { p_code: cdjChoix.code }));
     }
     if(error) throw error;
+    // patch96 : trouvee = des points, le solde affiche suit
+    if(!cdjInvite && data && data.trouve && data.gain) loadPackStatus();
     cdjEtat = data;
     cdjChoix = null;
     champ.value = '';
@@ -10345,6 +10349,7 @@ function renderCdjFinInvite(z, e){
     ? `${e.trouves} joueur${e.trouves > 1 ? 's' : ''} sur ${e.joueurs} l’${e.trouves > 1 ? 'ont' : 'a'} trouvée.`
     : '';
   z.innerHTML = `<h2 class="${e.trouve ? 'gagne' : ''}">${e.trouve ? `Trouvée en ${nb}` : 'Pas trouvée'}</h2>
+    ${e.trouve && e.gain ? `<p class="mj-gain">+${Number(e.gain).toLocaleString('fr-FR')} pts sur ton solde</p>` : ''}
     <p>C’était <b>${echapperTexte(r.nom)}</b>, ${echapperTexte(DEPT_NAMES[r.dept] || r.dept)}, ${Number(r.pop).toLocaleString('fr-FR')} habitants. ${qui}</p>
     <div class="cdj-invite-appel">
       <b>La commune d’aujourd’hui t’attend.</b>
@@ -11039,7 +11044,9 @@ function radarAfficherResume(p, fin){
     const avant = radarRangDe(p.elo_avant), apres = radarRangDe(p.elo_apres);
     tete = `<div class="rd-titre"><h2 class="${p.resultat}">${mot}</h2><span>contre <b>${nomAdv}</b>${quand ? ` · ${quand}` : ''}</span></div>
       <div class="rd-score"><div><b>${fmt(p.total_km)} km</b><span>Toi</span></div><em>contre</em><div><b>${fmt(adv.total_km)} km</b><span>${nomAdv}</span></div></div>
-      <div class="rd-elo"><span>Elo</span><b class="${delta >= 0 ? 'plus' : 'moins'}">${delta >= 0 ? '+' : ''}${delta}</b><span class="qg-petit">${fmt(p.elo_apres)} · ${apres}${apres !== avant ? (delta > 0 ? ' (promu !)' : ' (rétrogradé)') : ''}</span></div>`;
+      <div class="rd-elo"><span>Elo</span><b class="${delta >= 0 ? 'plus' : 'moins'}">${delta >= 0 ? '+' : ''}${delta}</b><span class="qg-petit">${fmt(p.elo_apres)} · ${apres}${apres !== avant ? (delta > 0 ? ' (promu !)' : ' (rétrogradé)') : ''}</span></div>
+      ${p.gain ? `<p class="mj-gain">+${fmt(p.gain)} pts sur ton solde</p>` : ''}`;
+    if(p.gain && !radarGainVu.has(p.id)){ radarGainVu.add(p.id); loadPackStatus(); }
   } else if(p.cible){
     const cible = echapperTexte(p.cible);
     const phrase = p.resultat === 'refuse' ? `${cible} a décliné ton défi.`

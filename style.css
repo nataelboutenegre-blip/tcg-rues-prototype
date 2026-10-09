@@ -4527,3 +4527,7 @@ body.mode-front #panel-defense .bourse-section{ display:none !important; }
 .tg-neuf{ display:inline-block; margin-left:7px; padding:2px 7px; border-radius:999px; background:#35B97E; color:#0B2A1D;
   font-size:.56rem; font-weight:800; letter-spacing:.05em; vertical-align:2px; white-space:nowrap; }
 .ech-face > .tg-neuf{ align-self:flex-start; margin:4px 0 0; color:#0B2A1D; font-size:.56rem; }
+
+/* patch96 : points gagnes aux mini-jeux */
+.mj-gain{ align-self:flex-start; margin:0; padding:6px 12px; border-radius:999px; font-weight:800; font-size:.9rem;
+  color:#0B2A1D !important; background: var(--c-peucommun); }

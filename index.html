@@ -22,7 +22,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=9edc3704007c">
+<link rel="stylesheet" href="style.css?v=a63c75a40b72">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -437,7 +437,7 @@
         <div class="qg-carte" id="qgCdj">
           <div class="qg-tete">
             <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
-            <div class="qg-titre"><h2>Commune du jour</h2><p>Solo · une commune mystère par jour</p></div>
+            <div class="qg-titre"><h2>Commune du jour</h2><p>Solo · une commune mystère par jour · jusqu'à 50 pts</p></div>
             <span class="qg-etiquette" id="qgCdjEtat"></span>
           </div>
           <div class="qg-actions"><button type="button" class="qg-btn" id="qgCdjBtn">Jouer</button><span class="qg-petit" id="qgCdjInfo"></span></div>
@@ -446,7 +446,7 @@
         <div class="qg-carte" id="qgRadar">
           <div class="qg-tete">
             <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 L17.6 6.4"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/></svg></span>
-            <div class="qg-titre"><h2>Radar</h2><p>Duel classé · place 5 communes sur la carte</p></div>
+            <div class="qg-titre"><h2>Radar</h2><p>Duel classé · 20 pts par victoire, 5 par jour</p></div>
             <span class="qg-etiquette or" id="qgRestants"></span>
           </div>
           <div class="qg-rang">
@@ -516,7 +516,7 @@
 
     <section class="tab-panel" id="panel-cdj">
       <h1>Commune du jour <span class="cdj-numero" id="cdjNumero"></span></h1>
-      <div class="sub">La même commune pour tout le monde, six essais pour la trouver. Chaque erreur dévoile un indice, et chaque essai dit à quelle distance tu es et dans quelle direction chercher. Nouvelle commune chaque jour à minuit.</div>
+      <div class="sub">La même commune pour tout le monde, six essais pour la trouver. Chaque erreur dévoile un indice, et chaque essai dit à quelle distance tu es et dans quelle direction chercher. Nouvelle commune chaque jour à minuit. La trouver rapporte des points : 50 en un essai, puis 40, 30, 20, 15 et 10.</div>
       <p class="cdj-invite-bandeau" id="cdjInviteBandeau" hidden></p>
       <p class="cdj-indispo" id="cdjIndispo" hidden>La commune du jour n'est pas disponible pour le moment.</p>
       <div class="cdj-grille" id="cdjJeu" hidden>
@@ -1160,6 +1160,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=9edc3704007c"></script>
+<script src="app.js?v=a63c75a40b72"></script>
 </body>
 </html>

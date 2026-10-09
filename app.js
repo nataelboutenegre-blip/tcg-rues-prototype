@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '547c10823727';
+const VERSION_JEU = '8487aeda319b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -667,6 +667,7 @@ async function showGame(session_){
   chargerCdj();
   chargerRadar();
   verifierVersion();
+  if(SAISON2) initModes();
   // arrivee depuis une notification : ?onglet=combat ou ?onglet=tirage
   if(new URLSearchParams(location.search).has('onglet')){
     ouvrirOngletDepuisUrl(location.href);
@@ -6010,6 +6011,7 @@ async function loadPackStatus(){
   if(error){ console.error(error); return; }
   packStatusCache = data[0];
   packStatusFetchedAt = Date.now();
+  majBascule();
   renderPackStatus();
   if(!packStatusInterval){
     packStatusInterval = setInterval(renderPackStatus, 5000);
@@ -7479,15 +7481,32 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // Combat et Defense ne font plus qu'un onglet (patch65) : la place liberee
 // revient a Collection. L'onglet Defense reste dans la page, cache, et
 // n'apparait ni dans la barre ni dans le menu.
-const ONGLETS_BARRE = ['tirage', 'territoire', 'qg', 'combat'];
+let ONGLETS_BARRE = ['tirage', 'territoire', 'qg', 'combat'];
 const ONGLETS_FUSIONNES = ['defense', 'succes', 'cdj', 'radar'];
 // l'onglet qui s'allume quand on ouvre un volet fusionne
 const ONGLET_PARENT = { defense: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg' };
+
+// ---------- patch89 : saison 2, deux modes ----------
+// SAISON2 = false : la saison 1 tourne comme avant, rien de ce bloc ne
+// s'execute. Le passer a true au lancement de la saison 2.
+const SAISON2 = false;
+const ONGLETS_MODE = {
+  terra: { nom: 'Terra', barre: ['tirage', 'collection', 'qg', 'contrat'],
+           propres: ['tirage', 'collection', 'qg', 'contrat', 'monuments', 'bourse', 'echange'] },
+  front: { nom: 'Front', barre: ['tirage', 'territoire', 'qg', 'combat'],
+           propres: ['tirage', 'territoire', 'qg', 'combat', 'collection'] },
+};
+const ONGLETS_COMMUNS = ['profil', 'communaute'];
+let modeJeu = (() => {
+  try { return localStorage.getItem('tf-mode') === 'front' ? 'front' : 'terra'; }
+  catch(e){ return 'terra'; }
+})();
+let energieTimer = null;
 // Le menu Plus n'est plus une liste a tenir : c'est tout ce qui n'est pas dans
 // la barre, dans l'ordre de la colonne. Deux listes ecrites a la main, c'etait
 // deux listes qui finissaient par diverger — et c'est exactement ce qui etait
 // arrive. Un onglet ajoute demain se place tout seul au bon endroit.
-const ONGLETS_MENU = Array.prototype.map
+let ONGLETS_MENU = Array.prototype.map
   .call(document.querySelectorAll('.tab[data-tab]'), (t) => t.dataset.tab)
   .filter((id) => ONGLETS_BARRE.indexOf(id) < 0 && ONGLETS_FUSIONNES.indexOf(id) < 0);
 const ICONE_PROFIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>';
@@ -7508,10 +7527,84 @@ function marquerOngletsDuMenu(){
 }
 marquerOngletsDuMenu();
 
+// patch89 : le selecteur Terra / Front et la barre qui suit le mode
+const ICONE_ENERGIE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.2 2.5 5.5 13.2h5.3l-1 8.3 7.7-10.7h-5.3z"/></svg>';
+function initModes(){
+  if(!SAISON2 || document.getElementById('modeBascule')) { appliquerMode(); return; }
+  const el = document.createElement('div');
+  el.className = 'mode-bascule';
+  el.id = 'modeBascule';
+  el.setAttribute('role', 'tablist');
+  el.setAttribute('aria-label', 'Mode de jeu');
+  el.innerHTML = `
+    <button class="terra" data-mode="terra" role="tab"><span class="mb-nom">Terra</span><span class="mb-res"><b id="mbPoints">—</b>points</span></button>
+    <button class="front" data-mode="front" role="tab"><span class="mb-nom">Front</span><span class="mb-res">${ICONE_ENERGIE}<b id="mbEnergie">—</b>/ 40 énergie</span></button>`;
+  const entete = document.querySelector('.content .entete-mobile');
+  entete.insertAdjacentElement('afterend', el);
+  el.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-mode]');
+    if(!b || b.dataset.mode === modeJeu) return;
+    modeJeu = b.dataset.mode;
+    try { localStorage.setItem('tf-mode', modeJeu); } catch(err){}
+    appliquerMode();
+  });
+  appliquerMode();
+  majEnergie();
+  if(!energieTimer) energieTimer = setInterval(majEnergie, 60000);
+}
+
+function appliquerMode(){
+  if(!SAISON2) return;
+  const m = ONGLETS_MODE[modeJeu];
+  const visibles = m.propres.concat(ONGLETS_COMMUNS);
+  ONGLETS_BARRE = m.barre.slice();
+  ONGLETS_MENU = visibles.filter(id => ONGLETS_BARRE.indexOf(id) < 0);
+  document.body.classList.toggle('mode-terra', modeJeu === 'terra');
+  document.body.classList.toggle('mode-front', modeJeu === 'front');
+  for(const tab of document.querySelectorAll('.tab[data-tab]')){
+    const id = tab.dataset.tab;
+    if(ONGLETS_FUSIONNES.indexOf(id) >= 0) continue;
+    tab.classList.toggle('hors-mode', visibles.indexOf(id) < 0);
+    tab.classList.toggle('dans-le-menu', ONGLETS_BARRE.indexOf(id) < 0);
+    const i = ONGLETS_BARRE.indexOf(id);
+    if(i >= 0) tab.style.setProperty('--ordre-tel', i); else tab.style.removeProperty('--ordre-tel');
+  }
+  const bascule = document.getElementById('modeBascule');
+  if(bascule) bascule.querySelectorAll('[data-mode]').forEach(b => {
+    const on = b.dataset.mode === modeJeu;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-selected', String(on));
+  });
+  majBascule();
+  // l'onglet ouvert n'existe pas dans ce mode : retour au Tirage
+  const actif = document.querySelector('.tab.active[data-tab]');
+  const idActif = actif ? actif.dataset.tab : null;
+  const parent = idActif && ONGLET_PARENT[idActif] ? ONGLET_PARENT[idActif] : idActif;
+  if(!parent || visibles.indexOf(parent) < 0){
+    const tirage = document.querySelector('.tab[data-tab="tirage"]');
+    if(tirage) tirage.click();
+  }
+  majBadgePlus();
+}
+
+function majBascule(){
+  if(!SAISON2) return;
+  const el = document.getElementById('mbPoints');
+  if(el && packStatusCache && packStatusCache.solde != null) el.textContent = fmtNombre(Number(packStatusCache.solde));
+}
+
+async function majEnergie(){
+  if(!SAISON2) return;
+  const { data, error } = await sb.rpc('front_energie');
+  if(error || !data || !data[0]) return;
+  const el = document.getElementById('mbEnergie');
+  if(el) el.textContent = data[0].energie;
+}
+
 function construireMenuPlus(){
   const liste = document.getElementById('feuilleListe');
   if(!liste) return;
-  const entrees = ONGLETS_MENU.map(id => {
+  const entree = (id) => {
     const tab = document.querySelector(`.tab[data-tab="${id}"]`);
     if(!tab) return '';
     const icone = tab.querySelector('.icon').innerHTML;
@@ -7519,7 +7612,16 @@ function construireMenuPlus(){
     const badge = tab.querySelector('.tab-badge');
     const nb = badge && !badge.hidden ? `<span class="fp-badge">${badge.textContent}</span>` : '';
     return `<button class="fp-item" data-aller="${id}">${icone}${nom}${nb}</button>`;
-  }).join('');
+  };
+  let entrees;
+  if(SAISON2){
+    const propres = ONGLETS_MENU.filter(id => ONGLETS_COMMUNS.indexOf(id) < 0);
+    const communs = ONGLETS_MENU.filter(id => ONGLETS_COMMUNS.indexOf(id) >= 0);
+    entrees = (propres.length ? `<p class="fp-titre">${ONGLETS_MODE[modeJeu].nom}</p>` + propres.map(entree).join('') : '')
+      + `<p class="fp-titre">Commun</p>` + communs.map(entree).join('');
+  } else {
+    entrees = ONGLETS_MENU.map(entree).join('');
+  }
   liste.innerHTML = entrees + `
     <div class="fp-sep"></div>
     <button class="fp-item" data-aller="regles">${ICONE_REGLES}Règles du jeu</button>
@@ -8076,6 +8178,7 @@ async function rafraichirSoldes(){
     const el = document.getElementById(id);
     if(el) el.textContent = row.solde;
   });
+  if(SAISON2){ const mb = document.getElementById('mbPoints'); if(mb) mb.textContent = fmtNombre(Number(row.solde)); }
 }
 
 document.getElementById('panel-succes').addEventListener('click', async (e) => {

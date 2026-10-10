@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '542285c891ad';
+const VERSION_JEU = 'd60e37e1ed8e';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7230,7 +7230,7 @@ function renderDefenseLisible(liste){
     let action = '';
     if(v > 0 && !g.bouclier){
       action = m.defense_utilisee ? '<span class="df-note">défense déjà utilisée</span>'
-        : (m.attaquant_id ? `<button class="menace-defendre" data-commune="${m.commune_code}" data-attaquant="${m.attaquant_id}" data-nom="${echapperTexte(g.nom)}">${ICONE_BOUCLIER}${coutTexte(coutIntensite(g.tier))}</button>` : '');
+        : (m.attaquant_id ? `<button class="menace-defendre" data-commune="${m.commune_code}" data-attaquant="${m.attaquant_id}" data-nom="${echapperTexte(g.nom)}">${ICONE_BOUCLIER}${coutTexte(SAISON2 ? 1 : coutIntensite(g.tier))}</button>` : '');
     }
     return `<div class="df-att"><span class="menace-serie" title="${v} victoire${v > 1 ? 's' : ''} d'affilée sur 3">${serie}</span>
       <span class="df-qui"><b>${echapperTexte(m.attaquant_pseudo || 'Un joueur')}</b><small>${quand}</small></span>${action}</div>`;
@@ -7448,6 +7448,8 @@ document.getElementById('combatMenacesListe').addEventListener('click', async (e
   const btn = e.target.closest('.menace-defendre');
   if(!btn || btn.disabled) return;
   btn.disabled = true;
+  const gn = SAISON2 ? garnisonsMoi.get(btn.dataset.commune) : null;
+  const recharge = gn ? Math.min(3, 10 - gn.energie) : 0;
   try{
     let { data, error } = await sb.rpc('defendre', { p_commune_code: btn.dataset.commune, p_attaquant: btn.dataset.attaquant, p_intensite: intensiteChoisie });
     if(error && /p_intensite|does not exist|could not find/i.test(error.message || '')){
@@ -7459,7 +7461,8 @@ document.getElementById('combatMenacesListe').addEventListener('click', async (e
       notifier({
         type: 'victoire',
         titre: `Défense réussie à ${btn.dataset.nom}`,
-        texte: r.victoires_restantes > 0 ? `L'attaquant perd une victoire (plus que ${r.victoires_restantes} sur 3).` : 'L\'attaquant perd sa victoire : son attaque repart de zéro.',
+        texte: (r.victoires_restantes > 0 ? `L'attaquant perd une victoire (plus que ${r.victoires_restantes} sur 3).` : 'L\'attaquant perd sa victoire : son attaque repart de zéro.')
+          + (recharge > 0 ? ` +${recharge} énergie dans la garnison.` : ''),
         serie: r.victoires_restantes
       });
     } else {
@@ -7467,7 +7470,7 @@ document.getElementById('combatMenacesListe').addEventListener('click', async (e
     }
     await loadMenaces();
     loadPackStatus();
-    if(SAISON2) majEnergie();
+    if(SAISON2){ majEnergie(); if(gn) chargerGarnisons(); }
     if(packStatusCache){
       ['soldeValueCombat', 'soldeValueDefense'].forEach(id => {
         const el = document.getElementById(id);
@@ -7921,6 +7924,9 @@ document.getElementById('combatRayons').addEventListener('click', (e) => {
   combatRayonKm = Number(pill.dataset.km);
   renderCombatGrid();
 });
+
+// patch100 : les filtres Epique n'apparaissent qu'avec la saison 2
+if(EPIQUE_VISIBLE) document.querySelectorAll('[data-epique]').forEach(b => { b.hidden = false; });
 
 document.getElementById('combatFilters').addEventListener('click', (e) => {
   const pill = e.target.closest('.filter-pill');
@@ -8883,7 +8889,7 @@ async function loadReveil(){
       <div class="rc ok${repoussees.length ? '' : ' zero'}">${nb(repoussees.length, 'attaque repoussée', 'attaques repoussées')}</div>
       <div class="rc encours${enCours.length ? '' : ' zero'}">${nb(enCours.length, 'siège en cours', 'sièges en cours')}</div>
     </div>
-    ${urgentes.length ? `<p class="reveil-ligne urgent">À une victoire d'être prise : ${noms(urgentes, m => '<b>' + echapperTexte(m.nom) + '</b>')}. Pose un bouclier ou défends-la.</p>` : ''}
+    ${urgentes.length ? `<p class="reveil-ligne urgent">À une victoire d'être prise : ${noms(urgentes, m => '<b>' + echapperTexte(m.nom) + '</b>')}. ${SAISON2 ? 'Défends-la ou mets-la en garnison.' : 'Pose un bouclier ou défends-la.'}</p>` : ''}
     ${pertes.length ? `<p class="reveil-ligne">Perdue${pertes.length > 1 ? 's' : ''} : ${noms(pertes, e => '<b>' + echapperTexte(e.commune_nom || 'une commune') + '</b> (prise par ' + echapperTexte(e.acteur_pseudo || 'un joueur') + ')')}.</p>` : ''}`;
   bloc.hidden = false;
 }

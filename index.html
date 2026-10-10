@@ -22,7 +22,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=542285c891ad">
+<link rel="stylesheet" href="style.css?v=d60e37e1ed8e">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -718,6 +718,7 @@
         <div class="bourse-filters" id="sellFilters">
           <button class="filter-pill active" data-tier="tous">Toutes</button>
           <button class="filter-pill" data-tier="legendaire"><span class="pill-point" style="background:#F0B429"></span>Légendaire</button>
+          <button class="filter-pill" data-tier="epique" data-epique hidden><span class="pill-point" style="background:#9B5CF6"></span>Épique</button>
           <button class="filter-pill" data-tier="rare"><span class="pill-point" style="background:#2F7CF6"></span>Rare</button>
           <button class="filter-pill" data-tier="peucommun"><span class="pill-point" style="background:#22A06B"></span>Peu commun</button>
           <button class="filter-pill" data-tier="commun"><span class="pill-point" style="background:#7E8BA0"></span>Commun</button>
@@ -751,6 +752,7 @@
       <div class="bourse-filters" id="combatFilters">
         <button class="filter-pill active" data-tier="tous">Toutes</button>
         <button class="filter-pill" data-tier="legendaire"><span class="pill-point" style="background:#F0B429"></span>Légendaire</button>
+        <button class="filter-pill" data-tier="epique" data-epique hidden><span class="pill-point" style="background:#9B5CF6"></span>Épique</button>
         <button class="filter-pill" data-tier="rare"><span class="pill-point" style="background:#2F7CF6"></span>Rare</button>
         <button class="filter-pill" data-tier="peucommun"><span class="pill-point" style="background:#22A06B"></span>Peu commun</button>
         <button class="filter-pill" data-tier="commun"><span class="pill-point" style="background:#7E8BA0"></span>Commun</button>
@@ -797,6 +799,7 @@
           <button class="filter-pill active" data-tier="commun"><span class="pill-point" style="background:#7E8BA0"></span>Commun</button>
           <button class="filter-pill" data-tier="peucommun"><span class="pill-point" style="background:#22A06B"></span>Peu commun</button>
           <button class="filter-pill" data-tier="rare"><span class="pill-point" style="background:#2F7CF6"></span>Rare</button>
+          <button class="filter-pill" data-tier="epique" data-epique hidden><span class="pill-point" style="background:#9B5CF6"></span>Épique</button>
           <button class="filter-pill" data-tier="legendaire"><span class="pill-point" style="background:#F0B429"></span>Légendaire</button>
         </div>
 
@@ -1163,6 +1166,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=542285c891ad"></script>
+<script src="app.js?v=d60e37e1ed8e"></script>
 </body>
 </html>

@@ -4576,3 +4576,6 @@ body.mode-front #panel-defense .bourse-section{ display:none !important; }
 .df-note{ font-size:.72rem; color: var(--brume); font-style: italic; }
 .df-epingle{ font-size:.85rem; }
 .df-nb{ margin-left:4px; font-weight:800; color: var(--c-legendaire); }
+
+/* patch100 */
+.filter-pill[data-epique][hidden]{ display:none; }

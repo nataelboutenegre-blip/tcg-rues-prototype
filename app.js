@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '5d65a14b341c';
+const VERSION_JEU = '542285c891ad';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7119,6 +7119,7 @@ let menacesInterval = null;
 let echangesInterval = null;
 
 async function loadMenaces(){
+  await chargerDefPrio();
   const { data, error } = await sb.rpc('sieges_contre_moi');
   if(error){ console.error(error); return; }
   menaces = data || [];
@@ -7151,48 +7152,153 @@ function renderMenaces(){
   const bloc = document.getElementById('combatMenaces');
   const liste = document.getElementById('combatMenacesListe');
   if(!bloc || !liste) return;
-  bloc.hidden = menaces.length === 0;
-  if(menaces.length === 0){ liste.innerHTML = ''; return; }
+  bloc.hidden = menaces.length === 0 && defPrio === null;
+  if(bloc.hidden){ liste.innerHTML = ''; return; }
 
-  const now = Date.now();
-  liste.innerHTML = menaces.map(m => {
-    const tier = TIERS.find(t => t.id === m.tier);
-    const v = m.victoires_consecutives;
-    const dernier = new Date(m.dernier_round).getTime();
-    let statut;
-    const miennne = collectionMap.get(m.commune_code);
-    const bouclierFin = miennne ? miennne.bouclierJusqua : 0;
-    if(v > 0 && bouclierFin > now){
-      statut = `Protégée par ton bouclier encore ${formatDuree(bouclierFin - now)}. La série de l'attaquant est en pause.`;
-    } else if(v > 0){
-      const prochain = dernier + (DELAI_ATTAQUE_MS[m.tier] || 0);
-      const quand = now < prochain
-        ? `Prochain assaut possible dans ${formatDuree(prochain - now)}.`
-        : 'Peut repasser à l\'assaut à tout moment.';
-      statut = (v >= 2 ? 'Plus qu\'une victoire avant de la perdre. ' : '') + quand;
-    } else {
-      statut = `Attaque repoussée il y a ${formatDuree(now - dernier)}.`;
-    }
-    const serie = [0, 1, 2].map(i => `<i class="${i < v ? 'pris' : ''}"></i>`).join('');
-    // Une commune favorite attaquee, c'est une des cinq places qui part. On
-    // le dit ici, ou le joueur regarde deja, plutot que de le lui apprendre
-    // une fois la commune perdue.
-    const estFavori = favorisSet.has(m.commune_code);
-    return `
-      <div class="menace ${v > 0 ? 'danger' : ''}${estFavori ? ' favori' : ''}">
-        <span class="menace-point" style="background:${COULEURS_FILTRE[m.tier] || '#7E8BA0'}"></span>
-        <div class="menace-texte">
-          <span class="menace-titre">${estFavori ? '<span class="menace-etoile" title="Une de tes cinq communes gardées">★</span>' : ''}<b>${m.nom}</b>${badgeDept(miennne ? miennne.dept : '')} <span>${tier ? '(' + tier.label.toLowerCase() + ')' : ''}, attaquée par ${echapperTexte(m.attaquant_pseudo)}</span></span>
-          ${estFavori ? '<span class="menace-favori">Si tu la perds, tu perds une de tes cinq places gardées.</span>' : ''}
-          <span class="menace-statut">${statut}</span>
-          ${v > 0 && !(bouclierFin > now) ? (m.defense_utilisee
-            ? '<span class="menace-note">Défense déjà utilisée contre cette attaque</span>'
-            : (m.attaquant_id ? `<button class="menace-defendre" data-commune="${m.commune_code}" data-attaquant="${m.attaquant_id}" data-nom="${echapperTexte(m.nom)}">${ICONE_BOUCLIER}Défendre (${coutIntensite(m.tier)} pts)</button>` : '')) : ''}
-        </div>
-        <div class="menace-serie" title="${v} victoire${v > 1 ? 's' : ''} d'affilée sur 3">${serie}</div>
-      </div>`;
-  }).join('');
+  renderDefenseLisible(liste);
 }
+
+// ---------- patch99 : Defendre lisible + departements prioritaires ----------
+let defPrio = [];            // codes de departement, dans l'ordre d'ajout
+let defPrioCharge = false;
+let defFiltre = 'tout';      // 'tout' | 'prio'
+let defAjoutOuvert = false;
+const DEF_PRIO_MAX = 5;
+
+async function chargerDefPrio(){
+  if(defPrioCharge) return;
+  defPrioCharge = true;
+  const { data, error } = await sb.rpc('mes_departements_defense');
+  if(error){ defPrio = null; return; }          // SQL pas encore passe : pas de priorites
+  defPrio = (data || []).map(x => x.departement);
+}
+
+function deptDe(m){
+  const c = collectionMap.get(m.commune_code);
+  return c ? String(c.dept || '') : '';
+}
+
+// mes departements les plus fournis, pour proposer sans rien taper
+function suggestionsDefPrio(){
+  const n = {};
+  for(const e of collectionMap.values()){
+    if(e.perdue || !e.dept) continue;
+    n[e.dept] = (n[e.dept] || 0) + 1;
+  }
+  return Object.entries(n).filter(([d]) => !(defPrio || []).includes(d))
+    .sort((a, b) => b[1] - a[1]).slice(0, 6);
+}
+
+function renderDefenseLisible(liste){
+  const now = Date.now();
+  const prio = new Set(defPrio || []);
+  // regroupement par commune
+  const parCommune = new Map();
+  for(const m of menaces){
+    let g = parCommune.get(m.commune_code);
+    if(!g){ g = { code: m.commune_code, nom: m.nom, tier: m.tier, dept: deptDe(m), attaques: [] }; parCommune.set(m.commune_code, g); }
+    g.attaques.push(m);
+  }
+  const groupes = [...parCommune.values()].map(g => {
+    const c = collectionMap.get(g.code);
+    g.bouclier = c && c.bouclierJusqua > now ? c.bouclierJusqua : 0;
+    g.vmax = Math.max(...g.attaques.map(a => a.victoires_consecutives));
+    g.prio = prio.has(g.dept);
+    g.favori = favorisSet.has(g.code);
+    g.prochain = Math.min(...g.attaques.filter(a => a.victoires_consecutives > 0)
+      .map(a => new Date(a.dernier_round).getTime() + (DELAI_ATTAQUE_MS[g.tier] || 0)), Infinity);
+    g.attaques.sort((a, b) => b.victoires_consecutives - a.victoires_consecutives);
+    return g;
+  });
+  const vus = defFiltre === 'prio' ? groupes.filter(g => g.prio) : groupes;
+  const tri = (a, b) => (b.prio - a.prio) || (b.favori - a.favori) || (b.vmax - a.vmax) || (a.prochain - b.prochain);
+  const urgentes = vus.filter(g => g.vmax >= 2 && !g.bouclier).sort(tri);
+  const attaquees = vus.filter(g => g.vmax > 0 && !(g.vmax >= 2 && !g.bouclier)).sort(tri);
+  const repoussees = vus.filter(g => g.vmax === 0).sort(tri);
+  const nbPrio = groupes.filter(g => g.prio && g.vmax > 0).length;
+
+  const ligneAttaque = (g, m) => {
+    const v = m.victoires_consecutives;
+    const serie = [0, 1, 2].map(i => `<i class="${i < v ? 'pris' : ''}"></i>`).join('');
+    let quand = '';
+    if(v === 0) quand = `repoussée il y a ${formatDuree(now - new Date(m.dernier_round).getTime())}`;
+    else if(g.bouclier) quand = 'en pause (bouclier)';
+    else {
+      const p = new Date(m.dernier_round).getTime() + (DELAI_ATTAQUE_MS[g.tier] || 0);
+      quand = now < p ? `prochain assaut dans ${formatDuree(p - now)}` : 'peut attaquer maintenant';
+    }
+    let action = '';
+    if(v > 0 && !g.bouclier){
+      action = m.defense_utilisee ? '<span class="df-note">défense déjà utilisée</span>'
+        : (m.attaquant_id ? `<button class="menace-defendre" data-commune="${m.commune_code}" data-attaquant="${m.attaquant_id}" data-nom="${echapperTexte(g.nom)}">${ICONE_BOUCLIER}${coutTexte(coutIntensite(g.tier))}</button>` : '');
+    }
+    return `<div class="df-att"><span class="menace-serie" title="${v} victoire${v > 1 ? 's' : ''} d'affilée sur 3">${serie}</span>
+      <span class="df-qui"><b>${echapperTexte(m.attaquant_pseudo || 'Un joueur')}</b><small>${quand}</small></span>${action}</div>`;
+  };
+  const ligne = (g) => {
+    const tier = TIERS.find(t => t.id === g.tier);
+    return `<div class="df-ligne${g.vmax >= 2 && !g.bouclier ? ' urgente' : ''}${g.prio ? ' prio' : ''}">
+      <div class="df-tete"><span class="menace-point" style="background:${COULEURS_FILTRE[g.tier] || '#7E8BA0'}"></span>
+        ${g.prio ? '<span class="df-epingle" title="Département prioritaire">📍</span>' : ''}${g.favori ? '<span class="menace-etoile" title="Une de tes cinq communes gardées">★</span>' : ''}
+        <b>${echapperTexte(g.nom)}</b>${badgeDept(g.dept)}<span class="df-rarete">${tier ? tier.label.toLowerCase() : ''}</span>
+        ${g.bouclier ? `<span class="df-bouclier">${ICONE_BOUCLIER}${formatDuree(g.bouclier - now)}</span>` : ''}</div>
+      ${g.attaques.map(m => ligneAttaque(g, m)).join('')}
+    </div>`;
+  };
+  const bloc = (classe, titre, liste_, aide) => liste_.length ? `<div class="df-bloc ${classe}"><h3>${titre} <span>${liste_.length}</span></h3>${aide ? `<p class="df-aide">${aide}</p>` : ''}${liste_.map(ligne).join('')}</div>` : '';
+
+  // la barre des departements prioritaires
+  let barre = '';
+  if(defPrio !== null){
+    const chips = (defPrio || []).map(d => `<button type="button" class="df-dep" data-def-dep="${echapperTexte(d)}" title="Retirer">${echapperTexte(d)} <span>${echapperTexte(DEPT_NAMES[d] || '')}</span> ×</button>`).join('');
+    const sugg = defAjoutOuvert ? `<div class="df-sugg">${suggestionsDefPrio().map(([d, n]) =>
+        `<button type="button" class="df-dep ajout" data-def-dep="${echapperTexte(d)}">+ ${echapperTexte(d)} <span>${echapperTexte(DEPT_NAMES[d] || '')} · ${n}</span></button>`).join('') || '<span class="df-aide">Tous tes départements sont déjà choisis.</span>'}
+        <input type="text" id="defDepChamp" maxlength="30" placeholder="Autre : 33 ou Gironde" autocomplete="off"></div>` : '';
+    barre = `<div class="df-prio"><div class="df-prio-ligne"><span class="df-prio-t">📍 Mes départements</span>${chips}
+        ${(defPrio || []).length < DEF_PRIO_MAX ? `<button type="button" class="df-dep plus" data-def-ajout>${defAjoutOuvert ? 'Fermer' : '+ Ajouter'}</button>` : ''}</div>
+        ${!(defPrio || []).length && !defAjoutOuvert ? '<p class="df-aide">Choisis jusqu\'à 5 départements : leurs communes attaquées passent en tête.</p>' : ''}${sugg}</div>
+      ${(defPrio || []).length ? `<div class="df-filtres"><button class="filter-pill ${defFiltre === 'tout' ? 'active' : ''}" data-def-filtre="tout">Tout</button><button class="filter-pill ${defFiltre === 'prio' ? 'active' : ''}" data-def-filtre="prio">Mes départements <b class="df-nb">${nbPrio}</b></button></div>` : ''}`;
+  }
+
+  const corps = bloc('urgent', 'À défendre maintenant', urgentes, 'Une victoire de plus et la commune est perdue.')
+    + bloc('', 'Attaquées', attaquees, '')
+    + (repoussees.length ? `<details class="df-bloc repoussees"><summary>Repoussées · 24 h <span>${repoussees.length}</span></summary>${repoussees.map(ligne).join('')}</details>` : '');
+  liste.innerHTML = barre + (corps || `<p class="collection-empty">${defFiltre === 'prio' ? 'Aucune attaque dans tes départements.' : 'Aucune attaque en cours.'}</p>`);
+}
+
+async function basculerDefPrio(dep){
+  const { data, error } = await sb.rpc('basculer_departement_defense', { p_dep: dep });
+  if(error){ notifier({ type: 'erreur', titre: 'Départements', texte: messageLisible(error.message) }); return; }
+  defPrio = (data || []).map(x => x.departement);
+  if(!defPrio.length) defFiltre = 'tout';
+  renderMenaces();
+}
+
+function trouverDepartementSaisi(txt){
+  const t = sansAccents(String(txt || '').trim()).toLowerCase();
+  if(!t) return null;
+  const code = t.toUpperCase();
+  if(DEPT_NAMES[code]) return code;
+  if(DEPT_NAMES['0' + code]) return '0' + code;
+  const e = Object.entries(DEPT_NAMES).find(([, nom]) => sansAccents(nom).toLowerCase() === t);
+  return e ? e[0] : null;
+}
+
+document.getElementById('combatMenacesListe').addEventListener('click', (e) => {
+  const f = e.target.closest('[data-def-filtre]');
+  if(f){ defFiltre = f.dataset.defFiltre; renderMenaces(); return; }
+  if(e.target.closest('[data-def-ajout]')){ defAjoutOuvert = !defAjoutOuvert; renderMenaces();
+    if(defAjoutOuvert){ const c = document.getElementById('defDepChamp'); if(c && !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) c.focus(); }
+    return; }
+  const d = e.target.closest('[data-def-dep]');
+  if(d){ basculerDefPrio(d.dataset.defDep); return; }
+});
+document.getElementById('combatMenacesListe').addEventListener('keydown', (e) => {
+  if(e.key !== 'Enter' || e.target.id !== 'defDepChamp') return;
+  const code = trouverDepartementSaisi(e.target.value);
+  if(!code){ notifier({ type: 'erreur', titre: 'Département inconnu', texte: 'Tape son numéro (16) ou son nom (Charente).' }); return; }
+  basculerDefPrio(code);
+});
 
 document.getElementById('boucliersToutToggle').addEventListener('click', (e) => {
   boucliersTout = !boucliersTout;

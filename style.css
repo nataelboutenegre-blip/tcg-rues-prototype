@@ -4537,3 +4537,42 @@ body.mode-front #panel-defense .bourse-section{ display:none !important; }
 /* patch96 : points gagnes aux mini-jeux */
 .mj-gain{ align-self:flex-start; margin:0; padding:6px 12px; border-radius:999px; font-weight:800; font-size:.9rem;
   color:#0B2A1D !important; background: var(--c-peucommun); }
+
+/* patch99 : Defendre lisible + departements prioritaires */
+.df-prio{ display:flex; flex-direction:column; gap:8px; margin-bottom:10px; }
+.df-prio-ligne{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+.df-prio-t{ font-weight:700; font-size:.85rem; margin-right:4px; }
+.df-dep{ border:1px solid rgba(240,180,41,.45); background: rgba(240,180,41,.1); color:#fff; border-radius:999px; padding:4px 10px; font:inherit; font-size:.78rem; font-weight:700; cursor:pointer; }
+.df-dep span{ font-weight:400; color: var(--brume); }
+.df-dep.ajout{ border-color: rgba(169,188,212,.3); background: transparent; }
+.df-dep.plus{ border-style:dashed; border-color: rgba(169,188,212,.45); background:transparent; color: var(--brume); }
+.df-sugg{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.df-sugg input{ flex:1 1 160px; min-width:0; background: var(--nuit-2); border:1px solid rgba(169,188,212,.25); border-radius:999px; color:#fff; padding:6px 12px; font:inherit; font-size:.8rem; }
+.df-filtres{ display:flex; gap:8px; margin-bottom:12px; }
+.df-aide{ margin:0 0 6px; font-size:.75rem; color: var(--brume); }
+.df-bloc{ display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+.df-bloc h3, .df-bloc summary{ margin:0; font-family: var(--titre); font-weight:800; font-size:1.05rem; text-transform:uppercase; letter-spacing:.02em; display:flex; align-items:center; gap:8px; }
+.df-bloc h3 span, .df-bloc summary span{ font-family: inherit; font-size:.75rem; background: rgba(255,255,255,.1); border-radius:999px; padding:1px 8px; }
+.df-bloc.urgent h3{ color:#FF8A8D; }
+.df-bloc.urgent h3 span{ background: var(--c-rouge); color:#fff; }
+.df-bloc.repoussees summary{ cursor:pointer; color: var(--brume); list-style:none; }
+.df-bloc.repoussees summary::-webkit-details-marker{ display:none; }
+.df-bloc.repoussees summary::before{ content:'▸'; }
+.df-bloc.repoussees[open] summary::before{ content:'▾'; }
+.df-bloc.repoussees[open]{ gap:8px; }
+.df-ligne{ background: var(--nuit-2); border:1px solid rgba(169,188,212,.16); border-radius:10px; padding:9px 12px; display:flex; flex-direction:column; gap:6px; }
+.df-ligne.urgente{ border-left:3px solid var(--c-rouge); }
+.df-ligne.prio{ border-color: rgba(240,180,41,.4); }
+.df-tete{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:.92rem; }
+.df-tete b{ font-weight:700; }
+.df-rarete{ font-size:.75rem; color: var(--brume); }
+.df-bouclier{ margin-left:auto; display:inline-flex; align-items:center; gap:4px; font-size:.75rem; color:#9FD3FF; }
+.df-bouclier svg{ width:13px; height:13px; }
+.df-att{ display:flex; align-items:center; gap:10px; padding-left:15px; }
+.df-qui{ flex:1; min-width:0; display:flex; flex-direction:column; font-size:.82rem; }
+.df-qui small{ font-size:.72rem; color: var(--brume); }
+.df-ligne.urgente .df-qui small{ color:#FFB3B5; }
+.df-att .menace-defendre{ margin-top:0; font-size:.85rem; padding:5px 10px 6px; }
+.df-note{ font-size:.72rem; color: var(--brume); font-style: italic; }
+.df-epingle{ font-size:.85rem; }
+.df-nb{ margin-left:4px; font-weight:800; color: var(--c-legendaire); }

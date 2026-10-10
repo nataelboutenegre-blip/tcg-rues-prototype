@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'd60e37e1ed8e';
+const VERSION_JEU = 'd5448a242ca3';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8154,6 +8154,7 @@ function appliquerMode(){
   majBadgePlus();
   // patch90 : le statut des paquets et la collection suivent le mode
   loadPackStatus();
+  if(quetesTout.length) renderObjectifs(); else loadObjectifs();
   viderBilanTerra();
   const ouvert = document.querySelector('.tab.active[data-tab]');
   if(ouvert && ouvert.dataset.tab === 'collection' && enTerra()) ouvrirCollectionTerra();
@@ -8942,7 +8943,18 @@ document.addEventListener('visibilitychange', () => {
 let objectifsListe = [];
 let objectifsTout = false;
 
+// patch101 : en saison 2, les quetes du mode affiche
+let quetesTout = [];
+async function loadQuetes(){
+  const { data, error } = await sb.rpc('quetes');
+  const bloc = document.getElementById('objectifs');
+  if(error){ if(bloc) bloc.hidden = true; return; }
+  quetesTout = data || [];
+  renderObjectifs();
+}
+
 async function loadObjectifs(){
+  if(SAISON2) return loadQuetes();
   const { data, error } = await sb.rpc('objectifs');
   const bloc = document.getElementById('objectifs');
   if(error){
@@ -8955,7 +8967,9 @@ async function loadObjectifs(){
 
 function carteObjectif(o){
   const pct = Math.min(100, Math.round(100 * o.avancement / o.cible));
-  const recompense = o.recompense === 'points'
+  const recompense = o.points !== undefined
+    ? [o.points ? `${Number(o.points).toLocaleString('fr-FR')} pts` : '', o.energie ? `+${o.energie} ⚡` : ''].filter(Boolean).join(' · ')
+    : o.recompense === 'points'
     ? `${Number(o.valeur).toLocaleString('fr-FR')} pts`
     : (o.valeur > 1 ? `${o.valeur} paquets` : '1 paquet');
   const etat = o.reclame
@@ -8970,7 +8984,7 @@ function carteObjectif(o){
       </div>
       <div class="obj-droite">
         <span class="obj-chiffres">${Number(o.avancement).toLocaleString('fr-FR')} / ${Number(o.cible).toLocaleString('fr-FR')}</span>
-        <span class="obj-gain gain-${o.recompense}">${recompense}</span>
+        <span class="obj-gain gain-${o.points !== undefined ? (o.energie && !o.points ? 'energie' : 'points') : o.recompense}">${recompense}</span>
         ${etat}
       </div>
     </div>`;
@@ -8979,6 +8993,7 @@ function carteObjectif(o){
 function renderObjectifs(){
   const bloc = document.getElementById('objectifs');
   if(!bloc) return;
+  if(SAISON2) objectifsListe = quetesTout.filter(q => q.mode === modeJeu);
   bloc.hidden = objectifsListe.length === 0;
   if(objectifsListe.length === 0) return;
 
@@ -8995,10 +9010,13 @@ function renderObjectifs(){
     pastille.hidden = prets === 0;
     pastille.textContent = prets > 1 ? `${prets} récompenses à récupérer` : '1 récompense à récupérer';
   }
+  const ej = SAISON2 && modeJeu === 'front' && objectifsListe.length ? Number(objectifsListe[0].energie_jour) || 0 : null;
   document.getElementById('objJour').innerHTML =
-    `<h3>Aujourd'hui</h3>` + jour.map(carteObjectif).join('');
-  document.getElementById('objUnique').innerHTML =
-    `<h3>${objectifsTout ? 'Tous les défis' : 'Tes prochains défis'}</h3>` + visibles.map(carteObjectif).join('');
+    `<h3>Aujourd'hui${ej !== null ? `<span class="obj-plafond">⚡ ${ej} / 20 d'énergie de quêtes</span>` : ''}</h3>` + jour.map(carteObjectif).join('');
+  const blocUnique = document.getElementById('objUnique');
+  blocUnique.hidden = uniques.length === 0;
+  blocUnique.innerHTML = uniques.length
+    ? `<h3>${objectifsTout ? 'Tous les défis' : 'Tes prochains défis'}</h3>` + visibles.map(carteObjectif).join('') : '';
   const plus = document.getElementById('objPlus');
   if(plus){
     plus.hidden = objectifsTout || uniques.length <= visibles.length;
@@ -9016,10 +9034,11 @@ document.getElementById('objectifs').addEventListener('click', async (e) => {
   if(!btn) return;
   btn.disabled = true;
   try{
-    const { data, error } = await sb.rpc('reclamer_objectif', { p_id: btn.dataset.objectif });
+    const { data, error } = await sb.rpc(SAISON2 ? 'reclamer_quete' : 'reclamer_objectif', { p_id: btn.dataset.objectif });
     if(error) throw error;
     const r = data && data[0];
-    notifier({ type: 'succes', titre: 'Objectif atteint', texte: r ? r.message : 'Récompense récupérée' });
+    notifier({ type: 'succes', titre: SAISON2 ? 'Quête accomplie' : 'Objectif atteint', texte: r ? r.message : 'Récompense récupérée' });
+    if(SAISON2) majEnergie();
     await loadObjectifs();
     await loadPackStatus();
     if(r && r.recompense === 'paquet') verifierTiragesEnAttente();

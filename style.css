@@ -4579,3 +4579,8 @@ body.mode-front #panel-defense .bourse-section{ display:none !important; }
 
 /* patch100 */
 .filter-pill[data-epique][hidden]{ display:none; }
+
+/* patch101 : quetes de la saison 2 */
+.obj-gain.gain-energie{ color:#5FD39D; }
+.obj-plafond{ margin-left:8px; font-family: var(--corps, inherit); font-size:.72rem; font-weight:600; color:#5FD39D; text-transform:none; letter-spacing:0; }
+.obj-groupe[hidden]{ display:none; }

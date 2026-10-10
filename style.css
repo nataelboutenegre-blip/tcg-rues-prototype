@@ -4750,3 +4750,35 @@ body[data-dos="ble-or"], .bq-dos-apercu[data-dos="ble-or"]{
 @media (min-width: 721px) and (hover: hover) and (prefers-reduced-motion: reduce){
   .sidebar{ transition:none; }
 }
+
+/* patch110 : les clans */
+html:not(.clans-ouverts) .tab[data-tab="clan"]{ display:none !important; }
+.clan-zone{ width:100%; }
+.clan-grille{ display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:18px; align-items:start; width:100%; }
+@media (max-width: 900px){ .clan-grille{ grid-template-columns:minmax(0,1fr); } }
+.clan-carte{ background: rgba(15,31,56,0.55); border:1px solid rgba(169,188,212,0.18); border-radius:14px; padding:18px; }
+.clan-carte h2{ font-family: var(--titre); font-size:1.3rem; margin:14px 0 8px; }
+.clan-carte h2:first-child{ margin-top:0; }
+.clan-tete{ display:flex; gap:16px; align-items:center; margin-bottom:12px; }
+.clan-nom{ font-family: var(--titre); font-weight:900; font-size:2rem; line-height:1; }
+.clan-tete small, .clan-invit small, .clan-membre small{ display:block; color: var(--brume); font-size:.8rem; margin-top:3px; }
+.blason{ --clan:#E07A2E; width:64px; height:74px; flex-shrink:0; background: var(--clan); color:#1a0d02;
+  clip-path: polygon(50% 0, 100% 15%, 100% 55%, 50% 100%, 0 55%, 0 15%);
+  display:inline-flex; align-items:center; justify-content:center; font-family: var(--titre); font-weight:900; font-size:1.3rem; }
+.blason.petit{ width:28px; height:32px; font-size:.6rem; }
+.clan-membre, .clan-invit{ display:grid; grid-template-columns:34px minmax(0,1fr) auto auto; gap:12px; align-items:center; padding:9px 0; border-top:1px solid rgba(169,188,212,0.1); }
+.clan-invit{ grid-template-columns:64px minmax(0,1fr) auto auto; }
+.clan-membre .av{ width:34px; height:34px; border-radius:50%; background: var(--nuit-3); display:flex; align-items:center; justify-content:center; font-family: var(--titre); font-weight:800; box-shadow:0 0 0 2px var(--clan); }
+.clan-nb{ color: var(--brume); font-size:.85rem; }
+.clan-inviter, .clan-form{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+.clan-form label{ display:flex; flex-direction:column; gap:4px; font-size:.8rem; color: var(--brume); flex:1; min-width:140px; }
+.clan-inviter input, .clan-form input{ flex:1; background: var(--nuit); border:1px solid rgba(169,188,212,0.3); border-radius:9px; padding:9px 12px; color:#fff; font:inherit; }
+.clan-couleurs{ display:flex; gap:8px; margin:12px 0; }
+.clan-couleurs button{ width:28px; height:28px; border-radius:50%; border:2px solid rgba(255,255,255,.2); cursor:pointer; padding:0; }
+.clan-couleurs button[aria-pressed="true"]{ border-color:#fff; box-shadow:0 0 0 2px var(--nuit), 0 0 0 4px #fff; }
+.clan-note{ color: var(--brume); font-size:.82rem; line-height:1.5; margin:10px 0 0; }
+.clan-regles{ margin:14px 0; padding-left:18px; color: var(--brume); font-size:.84rem; line-height:1.55; }
+.cl-ligne{ display:grid; grid-template-columns:22px 30px minmax(0,1fr) auto; gap:10px; align-items:center; padding:8px 4px; border-top:1px solid rgba(169,188,212,0.1); }
+.cl-ligne.moi{ background: rgba(240,180,41,0.08); border-radius:8px; }
+.cl-ligne .cl-score{ font-family: var(--titre); font-size:1.1rem; text-align:right; }
+.cl-ligne .cl-score small{ display:block; font-family: var(--texte); font-size:.68rem; color: var(--brume); }

@@ -3,7 +3,11 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '2ff085087add';
+// patch110 : les clans. Passer a true le jour de leur ouverture (avec
+// config_jeu 'clans_ouverts' cote serveur).
+const CLANS = false;
+document.documentElement.classList.toggle('clans-ouverts', CLANS);
+const VERSION_JEU = '39c8d874d8d6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -204,6 +208,19 @@ function messageLisible(msg){
     [/^Tu l'as deja$/i, 'Tu l\'as déjà.'],
     [/^Tu ne l'as pas encore$/i, 'Achète-le d\'abord.'],
     [/La boutique ouvre avec la saison 2/i, 'La boutique ouvre avec la saison 2.'],
+    [/Les clans ouvrent bientot/i, 'Les clans ouvrent bientôt.'],
+    [/Tu es deja dans un clan/i, 'Tu es déjà dans un clan.'],
+    [/Attente de 48 h apres un depart/i, 'Après avoir quitté un clan, il faut attendre 48 h.'],
+    [/Nom du clan : 3 a 24/i, 'Le nom du clan fait de 3 à 24 caractères.'],
+    [/Sigle : 2 a 4/i, 'Le sigle fait 2 à 4 lettres ou chiffres.'],
+    [/Ce nom de clan est deja pris/i, 'Ce nom de clan est déjà pris.'],
+    [/Ce sigle est deja pris/i, 'Ce sigle est déjà pris.'],
+    [/Seul le chef peut inviter/i, 'Seul le chef du clan peut inviter.'],
+    [/Joueur introuvable/i, 'Aucun joueur avec ce pseudo.'],
+    [/Ce joueur est deja dans un clan/i, 'Ce joueur est déjà dans un clan.'],
+    [/Le clan est complet/i, 'Le clan est complet (5 membres).'],
+    [/Invitation introuvable ou expiree/i, 'Cette invitation a expiré.'],
+    [/Tu ne peux pas attaquer un membre de ton clan/i, 'Tu ne peux pas attaquer un membre de ton clan.'],
   ];
   for(const [re, trad] of table){
     const x = m.match(re);
@@ -1850,10 +1867,12 @@ function bandeDeZoom(){
 }
 
 function territoiresVisiblesCache(){
-  const signature = [collectionMap.size, othersMap.size, showOthers ? 1 : 0, bandeDeZoom()].join('|');
+  const signature = [collectionMap.size, othersMap.size, showOthers ? 1 : 0, bandeDeZoom(),
+                     CLANS && CALQUES.clans ? 'c' + clansCarteVersion : ''].join('|');
   if(CV.donnees && CV.donneesSignature === signature) return CV.donnees;
   CV.donneesSignature = signature;
   CV.donnees = territoiresVisibles();
+  if(CLANS && CALQUES.clans) peindreClans(CV.donnees.joueurs);   // patch110
   majReperage(CV.donnees.liste, CV.donnees.joueurs);
   return CV.donnees;
 }
@@ -2053,7 +2072,7 @@ let legendeSignature = '';
 function majLegendeSiBesoin(joueurs){
   // sans l'etat replie ni la liste complete, les boutons de la legende
   // changeaient la variable sans jamais redessiner
-  const sig = [...joueurs.values()].map(j => j.id + ':' + j.nb).join(',')
+  const sig = [...joueurs.values()].map(j => j.id + ':' + j.nb + ':' + j.couleur).join(',')
     + '|' + (joueurSurligne || '')
     + '|' + (legendeOuverte ? 1 : 0)
     + '|' + (listeJoueursComplete ? 1 : 0)
@@ -2194,7 +2213,7 @@ const CALQUES = (() => {
   // « passage » est eteint au depart : il demande un chargement de plus et
   // n'a de sens que pour un joueur qui a deja perdu des communes
   const defaut = { regions: true, depts: true, communes: true, noms: true,
-                   raretes: true, passage: false };
+                   raretes: true, passage: false, clans: false };
   try {
     const v = JSON.parse(localStorage.getItem(CLE_CALQUES) || '{}');
     return Object.assign(defaut, v);
@@ -2321,6 +2340,11 @@ function rendreCalques(){
   };
   const NOMS = { regions: 'Régions', depts: 'Départements', communes: 'Communes',
                  noms: 'Noms', raretes: 'Raretés', passage: 'Mon passage' };
+  // patch110 : le filtre des clans
+  if(CLANS){
+    NOMS.clans = 'Clans';
+    ICONES.clans = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3 19.5 5.5v6c0 4.6-3.2 8.2-7.5 9.5-4.3-1.3-7.5-4.9-7.5-9.5v-6z"/></svg>';
+  }
   zone.innerHTML = Object.keys(NOMS).map(id =>
     `<button data-calque="${id}" class="${CALQUES[id] ? 'actif' : ''}" aria-pressed="${!!CALQUES[id]}">${ICONES[id]}${NOMS[id]}</button>`
   ).join('');
@@ -7869,6 +7893,7 @@ function renderCombatGrid(){
     return;
   }
   let cibles = combatCibles;
+  if(clanMembres.size) cibles = cibles.filter(c => !clanMembres.has(c.joueur_id));   // patch110
   if(combatFilterTier !== 'tous'){
     cibles = cibles.filter(c => c.communes.tier === combatFilterTier);
   }
@@ -8072,7 +8097,7 @@ const ONGLETS_MODE = {
   front: { nom: 'Front', barre: ['tirage', 'territoire', 'qg', 'combat'],
            propres: ['tirage', 'territoire', 'qg', 'combat', 'collection'] },
 };
-const ONGLETS_COMMUNS = ['profil', 'communaute'];
+const ONGLETS_COMMUNS = CLANS ? ['profil', 'communaute', 'clan'] : ['profil', 'communaute'];
 let modeJeu = (() => {
   try { return localStorage.getItem('tf-mode') === 'front' ? 'front' : 'terra'; }
   catch(e){ return 'terra'; }
@@ -8107,7 +8132,8 @@ const coutIntensiteTexte = (i) => SAISON2 ? `${ENERGIE_INTENSITE[i.id]} énergie
 let ONGLETS_MENU = Array.prototype.map
   .call(document.querySelectorAll('.tab[data-tab]'), (t) => t.dataset.tab)
   .filter((id) => ONGLETS_BARRE.indexOf(id) < 0 && ONGLETS_FUSIONNES.indexOf(id) < 0)
-  .filter((id) => SAISON2 || id !== 'boutique');   // patch107
+  .filter((id) => SAISON2 || id !== 'boutique')    // patch107
+  .filter((id) => CLANS || id !== 'clan');         // patch110
 const ICONE_PROFIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>';
 const ICONE_REGLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const ICONE_SORTIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M11 12h10m-3-3 3 3-3 3"/></svg>';
@@ -9038,6 +9064,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'communaute'){ loadClassement(); loadJournal(); loadAmis(); }
     if(tab.dataset.tab === 'bourse') loadBourse();
     if(tab.dataset.tab === 'boutique') loadBoutique();
+    if(tab.dataset.tab === 'clan') loadClan();
     if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); }
     if(tab.dataset.tab === 'defense'){ loadMenaces().then(loadReveil); loadCombat(); renderIntensite('defense'); if(SAISON2) chargerGarnisons(); }
     if(tab.dataset.tab === 'combat' && SAISON2) majEnergie();
@@ -11728,8 +11755,8 @@ function dosApercuHtml(id){
 async function loadBoutique(silencieux){
   if(!SAISON2) return;
   const { data, error } = await sb.rpc('boutique');
-  if(error){
-    if(!silencieux){
+  if(error || !data){
+    if(!silencieux && error){
       const st = document.getElementById('bqStatut');
       if(st) st.innerHTML = `<span class="puce">${echapperTexte(messageLisible(error.message))}</span>`;
     }
@@ -11931,3 +11958,133 @@ function dessinerArrondissementsParis(ctx, trait, k, liste){
   }
   ctx.restore();
 }
+
+
+// ---------- patch110 : les clans ----------
+const CLAN_COULEURS = ['#E07A2E', '#4C9BE8', '#C45BD6', '#2BB673', '#E5484D', '#E8C547', '#1ABC9C', '#8E9AAF'];
+let clanMembres = new Set();          // ids des autres membres de mon clan (cibles exclues)
+let clansCarte = new Map();           // joueur_id -> { tag, couleur }
+let clansCarteVersion = 0;
+let monUidClan = null;
+let clanCache = null;
+let clanCouleurChoisie = CLAN_COULEURS[0];
+
+async function loadClansCarte(){
+  if(!CLANS) return;
+  try{
+    if(!monUidClan){ const { data: u } = await sb.auth.getUser(); monUidClan = u && u.user ? u.user.id : null; }
+    const { data, error } = await sb.rpc('clans_carte');
+    if(error) return;
+    clansCarte = new Map((data || []).map(r => [r.joueur_id, { tag: r.tag, couleur: r.couleur }]));
+    clansCarteVersion++;
+    const moi = monUidClan ? clansCarte.get(monUidClan) : null;
+    clanMembres = new Set(moi ? (data || []).filter(r => r.tag === moi.tag && r.joueur_id !== monUidClan).map(r => r.joueur_id) : []);
+    if(typeof demanderDessin === 'function'){ CV.donneesSignature = ''; demanderDessin(); }
+  }catch(e){ /* les clans restent invisibles */ }
+}
+function peindreClans(joueurs){
+  for(const j of joueurs.values()){
+    const k = clansCarte.get(j.id === ID_MOI ? monUidClan : j.id);
+    if(!k) continue;
+    j.couleur = k.couleur;
+    j.fonce = couleurFoncee(k.couleur);
+    j.clan = k.tag;
+  }
+}
+
+async function loadClan(){
+  const zone = document.getElementById('clanZone');
+  if(!CLANS || !zone) return;
+  const [mc, cl] = await Promise.all([sb.rpc('mon_clan'), sb.rpc('clans_classement')]);
+  if(mc.error){ zone.innerHTML = `<p class="collection-empty">${echapperTexte(messageLisible(mc.error.message))}</p>`; return; }
+  clanCache = { moi: mc.data || {}, classement: cl.error ? [] : (cl.data || []) };
+  renderClan();
+}
+function blasonHtml(tag, couleur, petit){
+  return `<span class="blason${petit ? ' petit' : ''}" style="--clan:${couleur}">${echapperTexte(tag)}</span>`;
+}
+function nbClan(n){ return Number(n || 0).toLocaleString('fr-FR'); }
+function renderClan(){
+  const zone = document.getElementById('clanZone');
+  if(!zone || !clanCache) return;
+  const { moi, classement } = clanCache;
+  const c = moi.clan;
+  const rang = c ? classement.findIndex(x => x.clan_id === c.id) : -1;
+  const lignesClassement = classement.length
+    ? classement.map((x, i) => `<div class="cl-ligne${c && x.clan_id === c.id ? ' moi' : ''}"><b>${i + 1}</b>${blasonHtml(x.tag, x.couleur, true)}<span>${echapperTexte(x.nom)}</span><span class="cl-score">${nbClan(x.moyenne)}<small>par membre</small></span></div>`).join('')
+    : '<p class="collection-empty">Aucun clan classé pour l\'instant (il faut 3 membres).</p>';
+  const blocClassement = `<div class="clan-carte"><h2>Classement des clans</h2>${lignesClassement}
+    <p class="clan-note">À la moyenne de communes du Front par membre, jamais au total : un gros clan n'a pas d'avantage.</p></div>`;
+
+  let gauche;
+  if(!c){
+    const invits = (moi.invitations || []).map(i => `<div class="clan-invit">${blasonHtml(i.tag, i.couleur)}<div><b>${echapperTexte(i.nom)}</b><small>${nbClan(i.membres)} membre${i.membres > 1 ? 's' : ''} · invitation de ${echapperTexte(i.par || 'un joueur')}</small></div>
+        <button class="bq-btn" data-clan-oui="${i.clan_id}">Rejoindre</button><button class="bq-btn secondaire" data-clan-non="${i.clan_id}">Refuser</button></div>`).join('');
+    const attente = moi.attente_jusqua ? new Date(moi.attente_jusqua) : null;
+    gauche = `<div class="clan-carte">
+      ${invits ? `<h2>Invitations</h2>${invits}` : ''}
+      <h2>Créer un clan</h2>
+      ${attente ? `<p class="clan-note">Tu as quitté un clan récemment : tu pourras en créer ou en rejoindre un le ${attente.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à ${attente.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}.</p>` : `
+      <div class="clan-form">
+        <label>Nom du clan<input id="clanNom" maxlength="24" placeholder="Les Charentais"></label>
+        <label>Sigle<input id="clanTag" maxlength="4" placeholder="CHA"></label>
+      </div>
+      <div class="clan-couleurs" id="clanCouleurs">${CLAN_COULEURS.map(k => `<button type="button" aria-label="Couleur du clan" data-clan-couleur="${k}" aria-pressed="${k === clanCouleurChoisie}" style="background:${k}"></button>`).join('')}</div>
+      <button class="bq-btn" id="clanCreer">Créer le clan</button>`}
+      <p class="clan-note">Ou attends qu'un chef t'invite : son invitation apparaîtra ici.</p>
+    </div>`;
+  } else {
+    const membres = (c.membres || []).map(m => `<div class="clan-membre"><span class="av" style="--clan:${c.couleur}">${echapperTexte((m.pseudo || '?')[0].toUpperCase())}</span>
+        <div><b>${echapperTexte(m.pseudo)}</b><small>${m.chef ? 'Chef' : 'Membre'}${m.moi ? ' · toi' : ''}</small></div>
+        <span class="clan-nb">${nbClan(m.communes)} communes</span>
+        ${c.chef && !m.moi ? `<button class="bq-btn secondaire" data-clan-exclure="${m.id}">Exclure</button>` : '<span></span>'}</div>`).join('');
+    const total = (c.membres || []).reduce((s, m) => s + (m.communes || 0), 0);
+    const n = (c.membres || []).length;
+    gauche = `<div class="clan-carte">
+      <div class="clan-tete">${blasonHtml(c.tag, c.couleur)}<div><div class="clan-nom">${echapperTexte(c.nom)}</div><small>${n} membre${n > 1 ? 's' : ''} sur 5${n < 3 ? ' · classé à partir de 3' : ''}</small></div></div>
+      <div class="puces"><span class="puce">Communes en Front <b>${nbClan(total)}</b></span><span class="puce">Moyenne par membre <b>${nbClan(n ? Math.round(total / n) : 0)}</b></span>${rang >= 0 ? `<span class="puce">Rang <b>${rang + 1}</b> sur ${classement.length}</span>` : ''}</div>
+      <h2>Membres</h2>${membres}
+      ${c.chef && n < 5 ? `<div class="clan-inviter"><input id="clanPseudo" placeholder="Pseudo du joueur à inviter"><button class="bq-btn" id="clanInviter">Inviter</button></div>` : ''}
+      ${(c.invites || []).length ? `<p class="clan-note">Invitations en attente : ${c.invites.map(echapperTexte).join(', ')}.</p>` : ''}
+      <ul class="clan-regles"><li>Pas d'attaque entre membres : leurs communes n'apparaissent plus dans tes cibles.</li><li>Aucun bonus de combat : le territoire d'un coéquipier ne compte pas dans tes chances.</li><li>Après avoir quitté un clan, il faut attendre 48 h avant d'en rejoindre un autre.</li><li>Pour discuter, demande un salon privé pour ton clan sur le Discord.</li></ul>
+      <button class="bq-btn secondaire" id="clanQuitter" data-prix="0">Quitter le clan</button>
+    </div>`;
+  }
+  zone.innerHTML = `<div class="clan-grille">${gauche}${blocClassement}</div>`;
+}
+async function actionClan(nom, args, succes){
+  const { data, error } = await sb.rpc(nom, args || {});
+  if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); return false; }
+  if(succes) notifier({ type: 'succes', titre: succes });
+  clanCache = clanCache || { classement: [] };
+  clanCache.moi = data || {};
+  await loadClansCarte();
+  await loadClan();
+  return true;
+}
+document.getElementById('panel-clan').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if(!b) return;
+  if(b.dataset.clanCouleur){ clanCouleurChoisie = b.dataset.clanCouleur; document.querySelectorAll('#clanCouleurs button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); return; }
+  if(b.id === 'clanCreer'){
+    const nom = (document.getElementById('clanNom') || {}).value || '';
+    const tag = (document.getElementById('clanTag') || {}).value || '';
+    return actionClan('clan_creer', { p_nom: nom, p_tag: tag, p_couleur: clanCouleurChoisie }, 'Clan créé');
+  }
+  if(b.id === 'clanInviter'){
+    const p = (document.getElementById('clanPseudo') || {}).value || '';
+    if(!p.trim()) return;
+    return actionClan('clan_inviter', { p_pseudo: p.trim() }, 'Invitation envoyée');
+  }
+  if(b.dataset.clanOui) return actionClan('clan_repondre', { p_clan: b.dataset.clanOui, p_accepter: true }, 'Bienvenue dans le clan');
+  if(b.dataset.clanNon) return actionClan('clan_repondre', { p_clan: b.dataset.clanNon, p_accepter: false });
+  if(b.dataset.clanExclure){
+    if(!b.classList.contains('confirmer')){ b.classList.add('confirmer'); b.textContent = 'Confirmer'; return; }
+    return actionClan('clan_exclure', { p_joueur: b.dataset.clanExclure }, 'Joueur exclu');
+  }
+  if(b.id === 'clanQuitter'){
+    if(!b.classList.contains('confirmer')){ b.classList.add('confirmer'); b.textContent = 'Confirmer : quitter (48 h d\'attente)'; return; }
+    return actionClan('clan_quitter', {}, 'Tu as quitté le clan');
+  }
+});
+if(CLANS) setTimeout(loadClansCarte, 1500);

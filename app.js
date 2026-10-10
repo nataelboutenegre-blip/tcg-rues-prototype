@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '542d8b71be69';
+const VERSION_JEU = '9423c4d490a6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8101,6 +8101,8 @@ marquerOngletsDuMenu();
 // patch89 : le selecteur Terra / Front et la barre qui suit le mode
 const ICONE_ENERGIE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.2 2.5 5.5 13.2h5.3l-1 8.3 7.7-10.7h-5.3z"/></svg>';
 function initModes(){
+  // patch104 : les regles de la saison 2 remplacent celles de la saison 1
+  document.body.classList.toggle('saison-2-regles', SAISON2);
   if(!SAISON2 || document.getElementById('modeBascule')) { appliquerMode(); return; }
   const el = document.createElement('div');
   el.className = 'mode-bascule';

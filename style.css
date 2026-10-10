@@ -4592,3 +4592,10 @@ body.mode-front #panel-defense .bourse-section{ display:none !important; }
 .ct-l .ct-qte button{ width:28px; height:28px; padding:0; border-radius:8px; font-size:1rem; font-weight:800; line-height:1; }
 .ct-l .ct-qte button:disabled{ opacity:.35; cursor:default; }
 .ct-ajout{ grid-column:1 / -1; border:1px dashed rgba(169,188,212,.45); background:transparent; color: var(--brume); border-radius:10px; padding:10px; font:inherit; font-size:.8rem; font-weight:700; cursor:pointer; }
+
+/* patch104 : regles de la saison 2 */
+#panel-regles .regles-s2{ display:none; }
+body.saison-2-regles #panel-regles .regles-s2{ display:block; }
+body.saison-2-regles #panel-regles .regles > .essentiel,
+body.saison-2-regles #panel-regles .regles > .sommaire,
+body.saison-2-regles #panel-regles .regles > details.regle{ display:none; }

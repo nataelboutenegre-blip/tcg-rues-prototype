@@ -4599,3 +4599,15 @@ body.saison-2-regles #panel-regles .regles-s2{ display:block; }
 body.saison-2-regles #panel-regles .regles > .essentiel,
 body.saison-2-regles #panel-regles .regles > .sommaire,
 body.saison-2-regles #panel-regles .regles > details.regle{ display:none; }
+
+/* patch105 : accueil de la saison 2 */
+.s2-seul{ display:none !important; }
+html.saison-2 .s1-seul{ display:none !important; }
+html.saison-2 .lp-hero .s2-seul{ display:block !important; }
+html.saison-2 .lp-chiffres.s2-seul, html.saison-2 .lp-etapes.s2-seul, html.saison-2 .lp-rares.s2-seul{ display:grid !important; }
+html.saison-2 .lp-chiffres.s2-seul{ display:flex !important; }
+html.saison-2 .lp-sous.s2-seul{ display:block !important; }
+.lp-etapes-4{ grid-template-columns:repeat(4,1fr); }
+.lp-rares-5{ grid-template-columns:repeat(5,1fr); }
+@media (max-width: 900px){ .lp-etapes-4{ grid-template-columns:1fr 1fr; } .lp-rares-5{ grid-template-columns:1fr 1fr; } }
+@media (max-width: 560px){ .lp-etapes-4, .lp-rares-5{ grid-template-columns:1fr; } }

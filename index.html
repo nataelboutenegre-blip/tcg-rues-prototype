@@ -22,7 +22,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=9423c4d490a6">
+<link rel="stylesheet" href="style.css?v=090b9f27f027">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -39,9 +39,12 @@
 
     <div class="lp-hero">
       <div>
-        <h1 class="lp-h1">Ta ville n'appartient qu'à <em>une seule personne</em>.</h1>
-        <p class="lp-accroche">TerraFront est un jeu de collection sur la carte de France. Chaque commune du pays est une carte unique — et une seule personne peut la posséder à la fois.</p>
-        <p class="lp-precis">Ouvre des paquets, colore ton territoire, prends celles des autres. Gratuit, dans le navigateur, sans rien installer.</p>
+        <h1 class="lp-h1 s1-seul">Ta ville n'appartient qu'à <em>une seule personne</em>.</h1>
+        <p class="lp-accroche s1-seul">TerraFront est un jeu de collection sur la carte de France. Chaque commune du pays est une carte unique — et une seule personne peut la posséder à la fois.</p>
+        <p class="lp-precis s1-seul">Ouvre des paquets, colore ton territoire, prends celles des autres. Gratuit, dans le navigateur, sans rien installer.</p>
+        <h1 class="lp-h1 s2-seul">Collectionne la France. <em>Conquiers-la.</em></h1>
+        <p class="lp-accroche s2-seul">Les 35 000 communes du pays sont des cartes. Complète ta propre France en <b>Terra</b>, et dispute la carte aux autres joueurs en <b>Front</b>, où chaque commune n'a qu'un seul propriétaire.</p>
+        <p class="lp-precis s2-seul">Ouvre des paquets, échange tes doublons, prends les villes des autres. Gratuit, dans le navigateur, sans rien installer.</p>
         <div class="lp-actions">
           <button class="lp-cta" data-jouer>Commencer à jouer</button>
           <span class="lp-gratuit">Gratuit · aucune carte bancaire</span>
@@ -50,7 +53,12 @@
           <button class="lp-invite-btn" data-cdj-invite>Jouer à la Commune du jour, sans compte</button>
           <span>Trouve une commune mystère en six essais, sans t'inscrire.</span>
         </div>
-        <div class="lp-chiffres">
+        <div class="lp-chiffres s2-seul">
+          <div class="lp-chiffre"><b>35 000</b><small>COMMUNES</small></div>
+          <div class="lp-chiffre"><b>2</b><small>MODES DE JEU</small></div>
+          <div class="lp-chiffre"><b>4</b><small>SEMAINES PAR SAISON</small></div>
+        </div>
+        <div class="lp-chiffres s1-seul">
           <div class="lp-chiffre"><b>35 000</b><small>COMMUNES</small></div>
           <div class="lp-chiffre"><b>1</b><small>PROPRIÉTAIRE CHACUNE</small></div>
           <div class="lp-chiffre"><b>20 min</b><small>ENTRE DEUX PAQUETS</small></div>
@@ -66,8 +74,31 @@
   <div class="lp-sec">
     <div class="lp-wrap">
       <h2 class="lp-h2">Comment ça marche</h2>
-      <p class="lp-sous">Trois gestes, et c'est tout le jeu.</p>
-      <div class="lp-etapes">
+      <p class="lp-sous s2-seul">Deux modes, un seul compte.</p>
+      <div class="lp-etapes lp-etapes-4 s2-seul">
+        <div class="lp-etape">
+          <span class="lp-num">1</span>
+          <b>Collectionne</b>
+          <p>En Terra, un paquet gratuit toutes les 20 minutes complète ta propre France. Tes doublons s'échangent, se revendent ou partent en contrat.</p>
+        </div>
+        <div class="lp-etape">
+          <span class="lp-num">2</span>
+          <b>Conquiers</b>
+          <p>En Front, chaque commune n'a qu'un propriétaire. Attaque avec ton énergie : trois victoires d'affilée et elle est à toi.</p>
+        </div>
+        <div class="lp-etape">
+          <span class="lp-num">3</span>
+          <b>Défends</b>
+          <p>Mets tes communes clés en garnison : elles se défendent toutes seules pendant que tu n'es pas là.</p>
+        </div>
+        <div class="lp-etape">
+          <span class="lp-num">4</span>
+          <b>Joue chaque jour</b>
+          <p>Quêtes, Commune du jour et duels Radar rapportent des points et de l'énergie.</p>
+        </div>
+      </div>
+      <p class="lp-sous s1-seul">Trois gestes, et c'est tout le jeu.</p>
+      <div class="lp-etapes s1-seul">
         <div class="lp-etape">
           <span class="lp-num">1</span>
           <b>Tire</b>
@@ -91,7 +122,34 @@
     <div class="lp-wrap">
       <h2 class="lp-h2">Toutes les communes ne se valent pas</h2>
       <p class="lp-sous">La rareté d'une carte suit la population réelle de la commune. Angoulême n'a pas le même poids que Bordeaux.</p>
-      <div class="lp-rares">
+      <div class="lp-rares lp-rares-5 s2-seul">
+        <div class="lp-rar" style="--c:#7E8BA0">
+          <span class="lp-rar-pastille"></span><b>Commune</b>
+          <small>moins de 450 hab.</small>
+          <p>Les villages. La moitié de la carte.</p>
+        </div>
+        <div class="lp-rar" style="--c:#22A06B">
+          <span class="lp-rar-pastille"></span><b>Peu commune</b>
+          <small>à partir de 450</small>
+          <p>Les bourgs. La matière de ton territoire.</p>
+        </div>
+        <div class="lp-rar" style="--c:#2F7CF6">
+          <span class="lp-rar-pastille"></span><b>Rare</b>
+          <small>à partir de 2 300</small>
+          <p>Les petites villes, 3 406 dans tout le pays.</p>
+        </div>
+        <div class="lp-rar" style="--c:#9B5CF6">
+          <span class="lp-rar-pastille"></span><b>Épique</b>
+          <small>à partir de 8 000</small>
+          <p>Les villes moyennes, 1 015 en tout.</p>
+        </div>
+        <div class="lp-rar" style="--c:#F0B429">
+          <span class="lp-rar-pastille"></span><b>Légendaire</b>
+          <small>à partir de 30 000</small>
+          <p>Les grandes villes : 302 dans toute la France.</p>
+        </div>
+      </div>
+      <div class="lp-rares s1-seul">
         <div class="lp-rar" style="--c:#7E8BA0">
           <span class="lp-rar-pastille"></span><b>Commune</b>
           <small data-lp-seuil="commun">moins de 2 000 hab.</small>
@@ -1308,6 +1366,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=9423c4d490a6"></script>
+<script src="app.js?v=090b9f27f027"></script>
 </body>
 </html>

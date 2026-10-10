@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '9423c4d490a6';
+const VERSION_JEU = '090b9f27f027';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8039,6 +8039,7 @@ const ONGLET_PARENT = { defense: 'combat', succes: 'profil', cdj: 'qg', radar: '
 // SAISON2 = false : la saison 1 tourne comme avant, rien de ce bloc ne
 // s'execute. Le passer a true au lancement de la saison 2.
 const SAISON2 = false;
+document.documentElement.classList.toggle('saison-2', SAISON2);
 const ONGLETS_MODE = {
   terra: { nom: 'Terra', barre: ['tirage', 'collection', 'qg', 'contrat'],
            propres: ['tirage', 'collection', 'qg', 'contrat', 'monuments', 'bourse', 'echange'] },
@@ -8103,6 +8104,10 @@ const ICONE_ENERGIE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden=
 function initModes(){
   // patch104 : les regles de la saison 2 remplacent celles de la saison 1
   document.body.classList.toggle('saison-2-regles', SAISON2);
+  // patch105 : le guide de la saison 2, une fois, pour les joueurs deja la
+  if(SAISON2 && accueilDejaVu() && !guideDejaVu() && !document.getElementById('modeBascule')){
+    setTimeout(() => { if(guideIndex < 0) demarrerGuide(); }, 1500);
+  }
   if(!SAISON2 || document.getElementById('modeBascule')) { appliquerMode(); return; }
   const el = document.createElement('div');
   el.className = 'mode-bascule';
@@ -9890,7 +9895,8 @@ function marquerAccueilVu(){
 // ---------- Guidage des nouveaux joueurs ----------
 // Quatre bulles ancrees sur de vrais elements. Sur telephone, ou si la cible est
 // masquee (onglet range dans le menu "Plus"), la bulle se pose en bas de l'ecran.
-const CLE_GUIDE = 'terrafront-guide-vu';
+// patch105 : la saison 2 a son propre guide, montre une fois a tous
+const CLE_GUIDE = SAISON2 ? 'terrafront-guide-s2-vu' : 'terrafront-guide-vu';
 const ETAPES_GUIDE = [
   {
     cible: '#packZone .paquet, #openFreeBtn',
@@ -9913,6 +9919,22 @@ const ETAPES_GUIDE = [
     texte: 'Les communes rares et légendaires des autres joueurs se prennent par la force : trois victoires d\'affilée. Et les tiennes peuvent partir pareil, alors garde un œil sur l\'onglet Défense.'
   },
 ];
+
+const ETAPES_GUIDE_S2 = [
+  { cible: '#modeBascule', titre: 'Deux modes',
+    texte: 'Terra, c\'est ta collection à toi : ta propre France, à compléter. Front, c\'est la carte partagée : chaque commune n\'a qu\'un propriétaire, et se prend au combat.' },
+  { mode: 'terra', cible: '#packZone .paquet, #openFreeBtn', titre: 'Ouvre tes paquets Terra',
+    texte: 'Un paquet gratuit toutes les 20 minutes, 3 en réserve, 5 communes à chaque fois. Celles que tu as déjà deviennent des doublons.' },
+  { mode: 'terra', cible: '.tab[data-tab="collection"]', titre: 'Ta collection',
+    texte: 'Ta France se remplit ici, en cartes ou sur la carte. Tes doublons se revendent, s\'échangent avec les autres joueurs ou partent en contrat.' },
+  { mode: 'front', cible: '#modeBascule [data-mode="front"]', titre: 'Le Front',
+    texte: 'Ici, l\'énergie remplace les points : 40 au maximum, +1 toutes les 10 minutes. Elle sert à attaquer et à défendre.' },
+  { mode: 'front', cible: '.tab[data-tab="combat"]', titre: 'Attaque et défends',
+    texte: 'Trois victoires d\'affilée prennent une commune. Mets tes communes clés en garnison : elles se défendent seules pendant ton absence.' },
+  { cible: '.tab[data-tab="qg"]', titre: 'Chaque jour',
+    texte: 'Les quêtes, la Commune du jour et le Radar rapportent des points Terra et de l\'énergie. Une saison du Front dure 4 semaines.' },
+];
+if(SAISON2) ETAPES_GUIDE.splice(0, ETAPES_GUIDE.length, ...ETAPES_GUIDE_S2);
 
 let guideIndex = -1;
 let guideCibleActuelle = null;
@@ -9960,6 +9982,11 @@ function afficherEtapeGuide(){
   if(!voile || !bulle) return;
 
   if(guideCibleActuelle) guideCibleActuelle.classList.remove('guide-cible');
+  // saison 2 : la bulle parle d'un mode, on y passe
+  if(etape.mode && SAISON2 && modeJeu !== etape.mode){
+    const b = document.querySelector('#modeBascule [data-mode="' + etape.mode + '"]');
+    if(b) b.click();
+  }
   const cible = trouverCibleGuide(etape.cible);
   guideCibleActuelle = cible;
   if(cible) cible.classList.add('guide-cible');

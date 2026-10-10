@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '91143667e31b';
+const VERSION_JEU = 'fa7153ff9581';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -199,6 +199,11 @@ function messageLisible(msg){
     [/invalid format|unable to validate email/i, 'Adresse email invalide.'],
     [/failed to fetch|network/i, 'Connexion impossible. Vérifie ta connexion internet.'],
     [/rate limit|too many requests/i, 'Trop de tentatives. Réessaie dans quelques minutes.'],
+    [/deja achete 3 paquets en boutique/i, 'Tu as déjà acheté 3 paquets en boutique aujourd\'hui. Reviens demain.'],
+    [/^Choisis un departement$/i, 'Choisis d\'abord un département.'],
+    [/^Tu l'as deja$/i, 'Tu l\'as déjà.'],
+    [/^Tu ne l'as pas encore$/i, 'Achète-le d\'abord.'],
+    [/La boutique ouvre avec la saison 2/i, 'La boutique ouvre avec la saison 2.'],
   ];
   for(const [re, trad] of table){
     const x = m.match(re);
@@ -684,6 +689,7 @@ async function showGame(session_){
   chargerRadar();
   verifierVersion();
   if(SAISON2) initModes();
+  if(SAISON2) loadBoutique(true);   // patch107 : le dos de carte choisi
   // arrivee depuis une notification : ?onglet=combat ou ?onglet=tirage
   if(new URLSearchParams(location.search).has('onglet')){
     ouvrirOngletDepuisUrl(location.href);
@@ -6327,6 +6333,16 @@ function fonctionAbsente(error){
   return !!error && (error.code === 'PGRST202' || /could not find the function/i.test(error.message || ''));
 }
 async function payerPaquet(type){
+  if(boutiqueAchat){
+    // patch107 : paquet de la boutique, paye et tire en un seul appel
+    const achat = boutiqueAchat;
+    boutiqueAchat = null;
+    const { data, error } = await sb.rpc('boutique_ouvrir_paquet', { p_article: achat.id, p_departement: achat.dep });
+    terraPaquet = error ? null : (data || []);
+    boutiqueOuvert = !error;
+    viderBilanTerra();
+    return error;
+  }
   if(enTerra()){
     // Terra : le serveur paie et tire les 5 cartes en un seul appel
     const { data, error } = await sb.rpc('terra_ouvrir_paquet', { p_paye: type === 'achete' });
@@ -8051,7 +8067,7 @@ const SAISON2 = false;
 document.documentElement.classList.toggle('saison-2', SAISON2);
 const ONGLETS_MODE = {
   terra: { nom: 'Terra', barre: ['tirage', 'collection', 'qg', 'contrat'],
-           propres: ['tirage', 'collection', 'qg', 'contrat', 'monuments', 'bourse', 'echange'] },
+           propres: ['tirage', 'collection', 'qg', 'contrat', 'monuments', 'bourse', 'echange', 'boutique'] },
   front: { nom: 'Front', barre: ['tirage', 'territoire', 'qg', 'combat'],
            propres: ['tirage', 'territoire', 'qg', 'combat', 'collection'] },
 };
@@ -8089,7 +8105,8 @@ const coutIntensiteTexte = (i) => SAISON2 ? `${ENERGIE_INTENSITE[i.id]} énergie
 // arrive. Un onglet ajoute demain se place tout seul au bon endroit.
 let ONGLETS_MENU = Array.prototype.map
   .call(document.querySelectorAll('.tab[data-tab]'), (t) => t.dataset.tab)
-  .filter((id) => ONGLETS_BARRE.indexOf(id) < 0 && ONGLETS_FUSIONNES.indexOf(id) < 0);
+  .filter((id) => ONGLETS_BARRE.indexOf(id) < 0 && ONGLETS_FUSIONNES.indexOf(id) < 0)
+  .filter((id) => SAISON2 || id !== 'boutique');   // patch107
 const ICONE_PROFIL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20a7.5 7.5 0 0 1 15 0"/></svg>';
 const ICONE_REGLES = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M9 8h7M9 11.5h5"/></svg>';
 const ICONE_SORTIE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M15 4H8a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7"/><path d="M11 12h10m-3-3 3 3-3 3"/></svg>';
@@ -9019,6 +9036,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
     if(tab.dataset.tab === 'communaute'){ loadClassement(); loadJournal(); loadAmis(); }
     if(tab.dataset.tab === 'bourse') loadBourse();
+    if(tab.dataset.tab === 'boutique') loadBoutique();
     if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); }
     if(tab.dataset.tab === 'defense'){ loadMenaces().then(loadReveil); loadCombat(); renderIntensite('defense'); if(SAISON2) chargerGarnisons(); }
     if(tab.dataset.tab === 'combat' && SAISON2) majEnergie();
@@ -11685,3 +11703,161 @@ function entrFin(){
 }
 
 initAuth();
+
+
+// ---------- patch107 : la boutique (points Terra) ----------
+let boutiqueAchat = null;     // { id, dep } : le prochain paquet ouvert vient de la boutique
+let boutiqueOuvert = false;   // le dernier paiement de boutique a reussi
+let boutiqueCache = null;
+const BQ_DOS = [
+  { id: null, nom: 'D\'origine', description: 'Nuit et or, le dos de toujours' },
+];
+function dosCle(id){ return id ? id.replace(/^dos-/, '') : 'origine'; }
+function appliquerDos(id){
+  document.body.dataset.dos = dosCle(id);
+}
+function dosApercuHtml(id){
+  return `<div class="bq-dos-apercu" data-dos="${dosCle(id)}" aria-hidden="true"><div class="bq-dos-echelle">
+      <div class="face face-back">
+        ${DOS_MOTIF_SVG}
+        <span class="dos-coin hg"></span><span class="dos-coin hd"></span><span class="dos-coin bg"></span><span class="dos-coin bd"></span>
+        <div class="dos-embleme">${ICONE_EPINGLE}</div>
+      </div></div></div>`;
+}
+async function loadBoutique(silencieux){
+  if(!SAISON2) return;
+  const { data, error } = await sb.rpc('boutique');
+  if(error){
+    if(!silencieux){
+      const st = document.getElementById('bqStatut');
+      if(st) st.innerHTML = `<span class="puce">${echapperTexte(messageLisible(error.message))}</span>`;
+    }
+    return;
+  }
+  boutiqueCache = data;
+  appliquerDos(data.dos);
+  renderBoutique();
+}
+function bqPrix(n){ return Number(n).toLocaleString('fr-FR') + ' pts'; }
+function renderBoutique(){
+  const b = boutiqueCache;
+  if(!b) return;
+  const st = document.getElementById('bqStatut');
+  const paq = document.getElementById('bqPaquets');
+  const dos = document.getElementById('bqDos');
+  if(!st || !paq || !dos) return;
+  const restants = Math.max(0, b.paquets_max - b.paquets_du_jour);
+  st.innerHTML = `<span class="puce solde">Solde <b>${Number(b.solde).toLocaleString('fr-FR')}</b></span>`
+               + `<span class="puce">Paquets de boutique aujourd'hui <b>${b.paquets_du_jour} sur ${b.paquets_max}</b></span>`;
+
+  const deps = Object.keys(DEPT_NAMES).sort((x, y) => x.localeCompare(y, 'fr', { numeric: true }));
+  paq.innerHTML = b.articles.filter(a => a.type === 'paquet').map(a => {
+    const choixDep = a.id === 'paquet-departement'
+      ? `<select class="bq-dep" id="bqDep" aria-label="Département"><option value="">Choisis un département</option>${
+          deps.map(d => `<option value="${d}">${d} · ${echapperTexte(DEPT_NAMES[d])}</option>`).join('')}</select>` : '';
+    const bouton = restants < 1
+      ? `<button class="bq-btn" disabled>Revient demain</button>`
+      : `<button class="bq-btn" data-bq-paquet="${a.id}" data-prix="${a.prix}"${b.solde < a.prix ? ' data-court="1"' : ''}>${bqPrix(a.prix)}</button>`;
+    return `<div class="bq-article bq-paquet ${a.id}">
+        <div class="bq-paquet-icone" aria-hidden="true">${ICONE_EPINGLE}</div>
+        <b>${echapperTexte(a.nom)}</b>
+        <p>${echapperTexte(a.description)}</p>
+        ${choixDep}
+        ${bouton}
+      </div>`;
+  }).join('');
+
+  const liste = BQ_DOS.map(d => ({ ...d, prix: 0, possede: true }))
+    .concat(b.articles.filter(a => a.type === 'dos'));
+  dos.innerHTML = liste.map(a => {
+    const equipe = (b.dos || null) === a.id;
+    let action;
+    if(equipe) action = `<span class="bq-equipe">Sur tes cartes</span>`;
+    else if(a.possede) action = `<button class="bq-btn secondaire" data-bq-mettre="${a.id || ''}">Mettre</button>`;
+    else action = `<button class="bq-btn" data-bq-dos="${a.id}" data-prix="${a.prix}"${b.solde < a.prix ? ' data-court="1"' : ''}>${bqPrix(a.prix)}</button>`;
+    return `<div class="bq-article bq-dos${equipe ? ' equipe' : ''}">
+        ${dosApercuHtml(a.id)}
+        <b>${echapperTexte(a.nom)}</b>
+        <p>${echapperTexte(a.description)}</p>
+        ${action}
+      </div>`;
+  }).join('');
+}
+
+// achat en deux temps : le premier clic demande confirmation pendant 4 s
+function bqConfirmer(btn){
+  if(btn.dataset.court){
+    notifier({ type: 'erreur', titre: 'Solde insuffisant', texte: 'Il te faut ' + bqPrix(btn.dataset.prix) + '.' });
+    return false;
+  }
+  if(btn.classList.contains('confirmer')) return true;
+  document.querySelectorAll('.bq-btn.confirmer').forEach(x => { x.classList.remove('confirmer'); x.textContent = bqPrix(x.dataset.prix); });
+  btn.classList.add('confirmer');
+  btn.textContent = 'Confirmer l\'achat';
+  clearTimeout(btn._bqMinuteur);
+  btn._bqMinuteur = setTimeout(() => {
+    if(btn.isConnected && btn.classList.contains('confirmer')){
+      btn.classList.remove('confirmer');
+      btn.textContent = bqPrix(btn.dataset.prix);
+    }
+  }, 4000);
+  return false;
+}
+
+async function acheterPaquetBoutique(id){
+  if(paquetEnCours){
+    notifier({ type: 'erreur', titre: 'Un paquet t\'attend déjà', texte: 'Ouvre d\'abord celui qui est sur la table.' });
+    return;
+  }
+  let dep = null;
+  if(id === 'paquet-departement'){
+    const sel = document.getElementById('bqDep');
+    dep = sel ? sel.value : '';
+    if(!dep){
+      notifier({ type: 'erreur', titre: 'Choisis d\'abord un département' });
+      if(sel) sel.focus();
+      return;
+    }
+  }
+  boutiqueAchat = { id, dep };
+  boutiqueOuvert = false;
+  const tirage = document.querySelector('.tab[data-tab="tirage"]');
+  if(tirage) tirage.click();
+  await openPack('achete');
+  boutiqueAchat = null;
+  if(!boutiqueOuvert) return;
+  const bande = document.querySelector('#packZone .paquet .paquet-bande');
+  if(bande) bande.textContent = id === 'paquet-departement'
+    ? (DEPT_NAMES[dep] || dep) + ' (' + dep + ')'
+    : '1 rare ou mieux';
+  const titre = document.querySelector('#packZone .paquet .paquet-titre');
+  if(titre) titre.textContent = id === 'paquet-departement' ? 'Département' : 'Garanti';
+}
+
+async function acheterDosBoutique(id){
+  const { data, error } = await sb.rpc('boutique_acheter', { p_article: id });
+  if(error){ notifier({ type: 'erreur', titre: 'Achat impossible', texte: messageLisible(error.message) }); return loadBoutique(); }
+  boutiqueCache = data;
+  appliquerDos(data.dos);
+  renderBoutique();
+  const a = data.articles.find(x => x.id === id);
+  notifier({ type: 'succes', titre: 'Nouveau dos de carte', texte: (a ? a.nom : 'Ton dos') + ' est sur toutes tes cartes.' });
+}
+
+async function mettreDosBoutique(id){
+  const { data, error } = await sb.rpc('boutique_equiper', { p_article: id || null });
+  if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); return; }
+  boutiqueCache = data;
+  appliquerDos(data.dos);
+  renderBoutique();
+}
+
+document.getElementById('panel-boutique').addEventListener('click', (e) => {
+  const btn = e.target.closest('button.bq-btn');
+  if(!btn || btn.disabled) return;
+  if(btn.dataset.bqMettre !== undefined) return mettreDosBoutique(btn.dataset.bqMettre);
+  if(!bqConfirmer(btn)) return;
+  btn.disabled = true;
+  if(btn.dataset.bqPaquet) acheterPaquetBoutique(btn.dataset.bqPaquet).finally(() => { btn.disabled = false; });
+  else if(btn.dataset.bqDos) acheterDosBoutique(btn.dataset.bqDos).finally(() => { btn.disabled = false; });
+});

@@ -22,7 +22,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=91143667e31b">
+<link rel="stylesheet" href="style.css?v=fa7153ff9581">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -374,6 +374,16 @@
         </div>
         Échange
         <span class="tab-badge" id="echangeBadge" hidden></span>
+      </div>
+
+      <div class="tab" data-tab="boutique">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 9.5h16l-1.2 10a1.6 1.6 0 0 1-1.6 1.5H6.8a1.6 1.6 0 0 1-1.6-1.5z"/>
+            <path d="M8.5 9.5V7a3.5 3.5 0 0 1 7 0v2.5"/>
+          </svg>
+        </div>
+        Boutique
       </div>
 
       <div class="tab" data-tab="profil">
@@ -759,6 +769,21 @@
         <p class="jr-compte" id="jrCompte"></p>
         <button class="jr-plus" id="jrPlus" hidden>Charger 30 lignes de plus</button>
       </div>
+    </section>
+
+    <section class="tab-panel" id="panel-boutique">
+      <h1>Boutique</h1>
+      <div class="sub">Dépense tes points Terra : paquets spéciaux et dos de cartes. Tout s'achète en points, rien en euros.</div>
+      <div class="puces" id="bqStatut"><span class="puce">Chargement…</span></div>
+      <div class="bourse-section bq-section">
+        <h2>Paquets</h2>
+        <div class="bq-grille" id="bqPaquets"></div>
+      </div>
+      <div class="bourse-section bq-section">
+        <h2>Dos de cartes</h2>
+        <div class="bq-grille bq-grille-dos" id="bqDos"></div>
+      </div>
+      <div class="note">3 paquets de boutique par jour au maximum. Ils ne comptent pas pour les quêtes. Un dos de carte change l'arrière de toutes tes cartes, et tu peux revenir au dos d'origine quand tu veux.</div>
     </section>
 
     <section class="tab-panel" id="panel-bourse">
@@ -1366,6 +1391,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=91143667e31b"></script>
+<script src="app.js?v=fa7153ff9581"></script>
 </body>
 </html>

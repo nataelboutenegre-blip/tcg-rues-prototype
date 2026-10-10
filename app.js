@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '090b9f27f027';
+const VERSION_JEU = '91143667e31b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6183,7 +6183,8 @@ function lancerRevelation(zone, scene, tries){
 }
 
 // ---------- Communes libres : le compte a rebours de la saison ----------
-let potLibres = null;   // copie locale : on la fait baisser a chaque paquet sans requete
+let potLibres = null;
+const DUREE_SAISON_JOURS = 28;   // doit rester aligne avec jour-j-4-ouverture.sql   // copie locale : on la fait baisser a chaque paquet sans requete
 function renderPot(){
   const bloc = document.getElementById('potLibres');
   if(!bloc) return;
@@ -6195,7 +6196,15 @@ function renderPot(){
   document.getElementById('potNombre').textContent = libres.toLocaleString('fr-FR');
   document.getElementById('potSeuil').textContent = seuil > 0
     ? `La fin de saison s'enclenche à ${seuil.toLocaleString('fr-FR')}` : '';
-  const pct = total > seuil ? Math.max(0, Math.min(100, (total - libres) / (total - seuil) * 100)) : 100;
+  let pct = total > seuil ? Math.max(0, Math.min(100, (total - libres) / (total - seuil) * 100)) : 100;
+  // patch106 : saison a duree fixe (saison 2) : la date de fin, et le temps qui passe
+  if(s.fin_prevue && s.etat === 'en_cours'){
+    const fin = new Date(s.fin_prevue).getTime();
+    const jours = Math.max(0, Math.ceil((fin - Date.now()) / 86400000));
+    const date = new Date(fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+    document.getElementById('potSeuil').textContent = `Fin de saison dans ${jours} jour${jours > 1 ? 's' : ''} · le ${date}`;
+    pct = Math.max(0, Math.min(100, 100 - (fin - Date.now()) / (DUREE_SAISON_JOURS * 86400000) * 100));
+  }
   document.getElementById('potBarre').style.width = pct.toFixed(1) + '%';
   document.getElementById('potJauge').setAttribute('aria-valuenow', String(Math.round(pct)));
   bloc.hidden = false;

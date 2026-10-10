@@ -272,33 +272,38 @@ def main():
 
 
 def ecrire_liste_sql(codes):
-    valeurs = ',\n'.join('  ' + ', '.join("('%s')" % c for c in codes[i:i + 12]) for i in range(0, len(codes), 12))
+    # Pas de table temporaire : l'éditeur SQL de Supabase ne la garde pas
+    # d'une instruction à l'autre. La liste est écrite en clair, deux fois.
+    liste = ',\n'.join('  ' + ', '.join("'%s'" % c for c in codes[i:i + 12]) for i in range(0, len(codes), 12))
     sql = '''-- s2-18 — Aurore : la liste du serveur = les communes dont la photo est vérifiée.
 -- Écrit par _sql/aurore-telecharger.py, ne pas modifier à la main.
 -- À passer APRÈS s2-17. Rejouable.
 -- Contrôle attendu à la fin : %(n)d | %(n)d | 0
 
-begin;
-create temporary table aurore_photos (code text primary key) on commit drop;
-insert into aurore_photos (code) values
-%(valeurs)s;
-
--- une commune sans photo ne peut plus sortir en Aurore
-delete from public.aurore_communes a where not exists (select 1 from aurore_photos p where p.code = a.code);
--- une commune avec photo qui manquait à la liste y entre
-insert into public.aurore_communes (code)
-select p.code from aurore_photos p where exists (select 1 from public.communes c where c.code = p.code)
-on conflict (code) do nothing;
+do $do$
+declare
+  photos text[] := array[
+%(liste)s
+  ];
+begin
+  -- une commune sans photo ne peut plus sortir en Aurore
+  delete from public.aurore_communes a where not (a.code = any(photos));
+  -- une commune avec photo qui manquait à la liste y entre
+  insert into public.aurore_communes (code)
+  select p from unnest(photos) p where exists (select 1 from public.communes c where c.code = p)
+  on conflict (code) do nothing;
+end $do$;
 
 -- contrôle : %(n)d | %(n)d | 0
-select (select count(*) from aurore_photos) as photos,
+select cardinality(v.photos) as photos,
        (select count(*) from public.aurore_communes) as liste_serveur,
-       (select count(*) from aurore_photos p where not exists (select 1 from public.aurore_communes a where a.code = p.code)) as photos_hors_liste;
-commit;
-''' % {'n': len(codes), 'valeurs': valeurs}
+       (select count(*) from unnest(v.photos) p where not exists (select 1 from public.aurore_communes a where a.code = p)) as photos_hors_liste
+  from (select array[
+%(liste)s
+  ]::text[] as photos) v;
+''' % {'n': len(codes), 'liste': liste}
     with io.open(LISTE_SQL, 'w', encoding='utf-8') as f:
         f.write(sql)
-
 
 if __name__ == '__main__':
     if '--en-ligne' in sys.argv:

@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = '0bf54d90ffb0';
+const VERSION_JEU = '542d8b71be69';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7248,7 +7248,7 @@ let defPrio = [];            // codes de departement, dans l'ordre d'ajout
 let defPrioCharge = false;
 let defFiltre = 'tout';      // 'tout' | 'prio'
 let defAjoutOuvert = false;
-const DEF_PRIO_MAX = 5;
+const DEF_PRIO_MAX = 50;
 
 async function chargerDefPrio(){
   if(defPrioCharge) return;
@@ -7341,7 +7341,7 @@ function renderDefenseLisible(liste){
         <input type="text" id="defDepChamp" maxlength="30" placeholder="Autre : 33 ou Gironde" autocomplete="off"></div>` : '';
     barre = `<div class="df-prio"><div class="df-prio-ligne"><span class="df-prio-t">📍 Mes départements</span>${chips}
         ${(defPrio || []).length < DEF_PRIO_MAX ? `<button type="button" class="df-dep plus" data-def-ajout>${defAjoutOuvert ? 'Fermer' : '+ Ajouter'}</button>` : ''}</div>
-        ${!(defPrio || []).length && !defAjoutOuvert ? '<p class="df-aide">Choisis jusqu\'à 5 départements : leurs communes attaquées passent en tête.</p>' : ''}${sugg}</div>
+        ${!(defPrio || []).length && !defAjoutOuvert ? '<p class="df-aide">Choisis tes départements (jusqu\'à 50) : leurs communes attaquées passent en tête.</p>' : ''}${sugg}</div>
       ${(defPrio || []).length ? `<div class="df-filtres"><button class="filter-pill ${defFiltre === 'tout' ? 'active' : ''}" data-def-filtre="tout">Tout</button><button class="filter-pill ${defFiltre === 'prio' ? 'active' : ''}" data-def-filtre="prio">Mes départements <b class="df-nb">${nbPrio}</b></button></div>` : ''}`;
   }
 

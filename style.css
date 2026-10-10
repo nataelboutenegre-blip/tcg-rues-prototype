@@ -4782,3 +4782,77 @@ html:not(.clans-ouverts) .tab[data-tab="clan"]{ display:none !important; }
 .cl-ligne.moi{ background: rgba(240,180,41,0.08); border-radius:8px; }
 .cl-ligne .cl-score{ font-family: var(--titre); font-size:1.1rem; text-align:right; }
 .cl-ligne .cl-score small{ display:block; font-family: var(--texte); font-size:.68rem; color: var(--brume); }
+
+/* ---------- patch111 : cartes Aurore ---------- */
+.aurore.commun    { --au-t:#9AA8BC; --au-fond:radial-gradient(120% 90% at 40% 30%, #4A5A73, #121A28 70%); --au-a1:#7FF2D0; --au-a2:#8FB4FF; --au-a3:#C9A6FF; }
+.aurore.peucommun { --au-t:var(--c-peucommun); --au-fond:radial-gradient(120% 90% at 40% 30%, #1E7A55, #06231A 70%); --au-a1:#7CFFB2; --au-a2:#3DD6F2; --au-a3:#C4F26B; }
+.aurore.rare      { --au-t:var(--c-rare); --au-fond:radial-gradient(120% 90% at 40% 30%, #1D4FB8, #0A1A3D 70%); --au-a1:#3DF2C0; --au-a2:#5B8CFF; --au-a3:#B06CFF; }
+.aurore.epique    { --au-t:var(--c-epique); --au-fond:radial-gradient(120% 90% at 40% 30%, #5B2BB5, #160B33 70%); --au-a1:#FF6BD6; --au-a2:#8D6BFF; --au-a3:#3DE0F2; }
+.aurore.legendaire{ --au-t:var(--c-legendaire); --au-fond:radial-gradient(120% 90% at 40% 30%, #9A6418, #241505 72%); --au-a1:#FFD86B; --au-a2:#4CF2A6; --au-a3:#FF7AA8; }
+
+.au-fond{ position:absolute; inset:0; z-index:-1; overflow:hidden; background:var(--au-fond); pointer-events:none; border-radius:inherit; }
+.au-photo{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; filter:saturate(1.1) contrast(1.05); }
+.au-teinte{ position:absolute; inset:0; mix-blend-mode:soft-light; background:linear-gradient(180deg, var(--au-t), transparent 55%); opacity:.7; }
+.au-fond::after{ content:''; position:absolute; left:0; right:0; top:0; height:30%; background:linear-gradient(180deg, rgba(5,10,24,.55), transparent); }
+.au-voile{ position:absolute; inset:-30%; mix-blend-mode:screen; filter:blur(22px); opacity:.75; }
+.au-voile i{ position:absolute; border-radius:50%; }
+.au-voile i:nth-child(1){ width:120%; height:28%; left:-10%; top:22%; background:linear-gradient(90deg, transparent, var(--au-a1), transparent); transform:rotate(-14deg); animation:auOndule1 9s ease-in-out infinite alternate; }
+.au-voile i:nth-child(2){ width:110%; height:22%; left:0; top:36%; background:linear-gradient(90deg, transparent, var(--au-a2), transparent); transform:rotate(-8deg); animation:auOndule2 12s ease-in-out infinite alternate; opacity:.8; }
+.au-voile i:nth-child(3){ width:90%; height:18%; left:10%; top:14%; background:linear-gradient(90deg, transparent, var(--au-a3), transparent); transform:rotate(-20deg); animation:auOndule3 15s ease-in-out infinite alternate; opacity:.7; }
+@keyframes auOndule1{ from{ transform:translate(-8%,0) rotate(-14deg) scaleY(1); } to{ transform:translate(8%,6%) rotate(-6deg) scaleY(1.5); } }
+@keyframes auOndule2{ from{ transform:translate(10%,4%) rotate(-8deg) scaleY(1.3); } to{ transform:translate(-10%,-4%) rotate(-16deg) scaleY(.8); } }
+@keyframes auOndule3{ from{ transform:translate(0,-4%) rotate(-20deg); } to{ transform:translate(-12%,8%) rotate(-10deg) scaleY(1.6); } }
+.au-etoiles{ position:absolute; inset:0; }
+.au-etoiles i{ position:absolute; width:2px; height:2px; border-radius:50%; background:#fff; animation:auScintille 3.2s ease-in-out infinite; }
+@keyframes auScintille{ 0%,100%{ opacity:.15; } 50%{ opacity:.95; } }
+.au-reflet{ position:absolute; inset:0; mix-blend-mode:color-dodge; opacity:.3;
+  background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,.55) calc(var(--hx,50%) - 4%), rgba(160,255,230,.35) var(--hx,50%), rgba(200,160,255,.35) calc(var(--hx,50%) + 6%), transparent 70%); }
+.au-sceau{ position:absolute; z-index:2; display:inline-flex; align-items:center; gap:4px; color:#fff;
+  font-size:.6rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+  padding:2px 7px; border-radius:999px; background:rgba(5,10,24,.5); border:1px solid rgba(255,255,255,.45); }
+.au-sceau svg{ width:10px; height:10px; color:var(--au-a1); }
+
+/* grande carte (révélation, fiche) : le fond prend toute la carte */
+.aurore .carte-cadre{ background:var(--au-t); padding:2px;
+  box-shadow:0 14px 28px rgba(0,0,0,.45), 0 0 26px color-mix(in srgb, var(--au-t) 45%, transparent); }
+.aurore .carte-int{ position:relative; isolation:isolate; background:#0A1A3D; color:#fff; }
+.aurore .carte-art{ background:none; }
+/* le dessin reste en place (il donne sa hauteur à l'image de la fiche), invisible */
+.aurore .carte-art > svg{ visibility:hidden; }
+.aurore .carte-art > .art-photo, .aurore .carte-art > .art-voile{ display:none; }
+.aurore .carte-dept{ color:rgba(255,255,255,.18); }
+.aurore .carte-num{ color:rgba(255,255,255,.8); text-shadow:0 1px 3px rgba(0,0,0,.6); }
+.aurore .carte-rarete{ background:var(--au-t); box-shadow:0 2px 8px rgba(0,0,0,.35); }
+.aurore .au-sceau{ top:32px; left:9px; }
+.aurore .carte-infos{ margin-top:-22px; padding-top:30px;
+  background:linear-gradient(180deg, rgba(5,10,24,0), rgba(5,10,24,.72) 34%, rgba(5,10,24,.9)); }
+.aurore .carte-nom{ color:#fff; text-shadow:0 2px 10px rgba(0,0,0,.5); }
+.aurore .carte-departement{ color:rgba(255,255,255,.75); }
+.aurore .carte-stats{ border-top-color:rgba(255,255,255,.2); }
+.aurore .carte-stats span{ color:rgba(255,255,255,.7); }
+.aurore .carte-stats b{ color:#fff; }
+.au-credit{ margin:-4px 0 5px; font-size:.5rem; line-height:1.2; color:rgba(255,255,255,.55);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* la fiche Front : la carte n'a pas de bloc d'infos, on assombrit le bas */
+.fc-carte.aurore .carte-int::after{ content:''; position:absolute; left:0; right:0; bottom:0; height:30%; z-index:-1;
+  background:linear-gradient(180deg, transparent, rgba(5,10,24,.6)); pointer-events:none; }
+
+/* mini-carte (collection, bilan) */
+.mini.aurore{ background:var(--au-t); padding:2px;
+  box-shadow:0 8px 16px rgba(0,0,0,.35), 0 0 14px color-mix(in srgb, var(--au-t) 55%, transparent); }
+.mini.aurore .mini-int{ position:relative; isolation:isolate; background:#0A1A3D; color:#fff; }
+.mini.aurore .mini-art{ background:none; }
+.mini.aurore .mini-art > svg{ visibility:hidden; }
+.mini.aurore .mini-art > .art-photo, .mini.aurore .mini-art > .art-voile{ display:none; }
+.mini.aurore .mini-dept{ color:rgba(255,255,255,.22); text-shadow:none; }
+.mini.aurore .mini-infos{ background:linear-gradient(180deg, rgba(5,10,24,0), rgba(5,10,24,.8) 40%, rgba(5,10,24,.9)); }
+.mini.aurore .mini-nom{ color:#fff; }
+.mini.aurore .mini-num{ color:rgba(255,255,255,.7); }
+.mini.aurore .mini-rarete{ color:#fff; }
+.mini .au-voile{ filter:blur(10px); }
+.mini .au-sceau{ top:5px; left:5px; padding:3px; border-radius:50%; }
+.mini .au-sceau svg{ width:9px; height:9px; }
+/* dans une grille, des dizaines de voiles animés coûteraient cher : ils
+   restent immobiles ; seule la grande carte bouge */
+.mini .au-voile i, .mini .au-etoiles i{ animation:none; }
+@media (prefers-reduced-motion: reduce){ .au-voile i, .au-etoiles i{ animation:none !important; } }

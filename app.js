@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '39c8d874d8d6';
+const VERSION_JEU = '62d8a0925ab4';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4783,8 +4783,9 @@ function renderCollection(){
       ? `<span class="mini-siege" title="${s.nb > 1 ? s.nb + ' joueurs attaquent cette commune' : 'Un joueur attaque cette commune'} — meilleure série ${s.max} sur 3">${s.max}/3${s.nb > 1 ? ' ×' + s.nb : ''}</span>`
       : '';
     return `
-    <div class="mini ${entry.tier.id}${entry.perdue ? ' perdue' : ''}${favorisSet.has(entry.code) ? ' favori' : ''}" data-code="${entry.code}" role="button" tabindex="0" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
+    <div class="mini ${entry.tier.id}${auroreFront(entry.code) ? ' aurore' : ''}${entry.perdue ? ' perdue' : ''}${favorisSet.has(entry.code) ? ' favori' : ''}" data-code="${entry.code}" role="button" tabindex="0" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
       <div class="mini-int">
+        ${auroreFront(entry.code) ? fondAurore(entry.code, entry.tier.id, false) : ''}
         ${entry.perdue ? '<span class="mini-perdue">PERDUE</span>' : ''}${favorisSet.has(entry.code) ? '<span class="mini-fav" title="Gardée à la fin de la saison">★</span>' : ''}
         <div class="mini-art">${artCommune(entry, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}${monumentsNoms.has(entry.code) ? `<span class="mini-monument" title="Monument : ${echapperTexte(monumentsNoms.get(entry.code))}">${ICONE_MONUMENT}</span>` : ''}${entry.etiquette ? `<span class="mini-etiq" title="Ton étiquette">${echapperTexte(entry.etiquette)}</span>` : ''}</div>
         <div class="mini-infos">
@@ -4895,9 +4896,10 @@ function rendreFiche(entry, d){
          role="dialog" aria-modal="true" aria-labelledby="fcNom">
       <button class="fc-fermer" data-fc="fermer" aria-label="Fermer">✕</button>
       <div class="fc-tete">
-        <div class="fc-carte">
+        <div class="fc-carte${auroreFront(entry.code) ? ' aurore ' + tier.id : ''}">
           <div class="carte-cadre">
             <div class="carte-int">
+              ${auroreFront(entry.code) ? fondAurore(entry.code, tier.id, true) : ''}
               <div class="carte-haut">
                 <span class="carte-rarete">${tier.label}</span>
                 ${entry.rank ? `<span class="carte-num">${nb(entry.rank)} / ${nb(entry.tierSize)}</span>` : ''}
@@ -4938,7 +4940,7 @@ function rendreFiche(entry, d){
           </div>
           <div class="fc-etiq-sugg">${suggestionsEtiquette(entry)}</div>
         </div>`}
-        ${creditPhoto(entry)}
+        ${auroreFront(entry.code) ? creditPhoto(photoAurore(entry.code)) : creditPhoto(entry)}
       </div>
     </div>`);
 
@@ -5814,7 +5816,7 @@ document.getElementById('fenetre').addEventListener('click', async (e) => {
 function makeCardEl(draw, onFlip){
   const wrap = document.createElement('div');
   const mon = monumentDe(draw.code);
-  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '');
+  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '') + (draw.aurore ? ' aurore' : '');
   wrap.innerHTML = `
     <div class="card-inner">
       <div class="face face-back">
@@ -5825,6 +5827,7 @@ function makeCardEl(draw, onFlip){
       <div class="face face-front">
         <div class="carte-cadre">
           <div class="carte-int">
+            ${draw.aurore ? fondAurore(draw.code, draw.tier.id, true) : ''}
             <div class="carte-haut">
               <span class="carte-rarete">${draw.tier.label}</span>
               <span class="carte-num">${draw.rank.toLocaleString('fr-FR')} / ${draw.tierSize.toLocaleString('fr-FR')}</span>
@@ -5837,6 +5840,7 @@ function makeCardEl(draw, onFlip){
                 <div><span>Habitants</span><b>${draw.pop.toLocaleString('fr-FR')}</b></div>
                 <div><span>Rang</span><b>${draw.rank.toLocaleString('fr-FR')}</b></div>
               </div>
+              ${draw.aurore ? creditAurore(draw.code) : ''}
             </div>
             <div class="carte-lisere"><span></span><span></span><span></span></div>
           </div>
@@ -6634,7 +6638,8 @@ async function tirerCartesDuPaquet(nbCartes){
     const tier = TIERS.find(t => t.id === row.tier);
     draws.push({
       code: row.code, nom: row.nom, dept: row.departement, pop: row.population,
-      lat: row.latitude, lon: row.longitude, tier, rank: row.rang, tierSize: row.palier_total
+      lat: row.latitude, lon: row.longitude, tier, rank: row.rang, tierSize: row.palier_total,
+      aurore: auroreFront(row.code)
     });
   }
   return draws;
@@ -6648,8 +6653,10 @@ function tirerPaquetTerra(){
     lat: row.latitude, lon: row.longitude, tier: TIERS.find(t => t.id === row.tier),
     rank: row.rang, tierSize: row.palier_total,
     terraNouvelle: !!row.nouvelle, terraExemplaires: Number(row.exemplaires) || 1,
+    aurore: !!row.aurore,
   }));
   terraDernier = draws;
+  prechargerAurore(draws);
   return draws;
 }
 
@@ -6997,7 +7004,7 @@ function renderSellableGrid(){
 
 function renderVenteTerra(grid, searchText){
   let entries = [...terraCollection.values()]
-    .filter(e => e.exemplaires > 1 || myListings.has(e.code))
+    .filter(e => libresTerra(e) > 0 || myListings.has(e.code))
     .sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || b.exemplaires - a.exemplaires || b.pop - a.pop);
   const total = entries.length;
   if(sellFilterTier !== 'tous') entries = entries.filter(e => e.tier.id === sellFilterTier);
@@ -7011,7 +7018,7 @@ function renderVenteTerra(grid, searchText){
     return;
   }
   const ligne = (e) => {
-    const n = e.exemplaires - 1;
+    const n = libresTerra(e);
     const prixAnnonce = myListings.get(e.code);
     const actions = prixAnnonce
       ? `<span class="chip-vente">En vente à ${Number(prixAnnonce).toLocaleString('fr-FR')} pts</span>
@@ -8313,15 +8320,18 @@ function viderBilanTerra(){
 
 function terraCarteRetournee(draw){
   const e = terraCollection.get(draw.code);
-  if(e) e.exemplaires = draw.terraExemplaires;
+  if(e){ e.exemplaires = draw.terraExemplaires; if(draw.aurore) e.aurore = (e.aurore || 0) + 1; }
   else terraCollection.set(draw.code, { code: draw.code, nom: draw.nom, dept: draw.dept, tier: draw.tier,
-    pop: draw.pop, exemplaires: draw.terraExemplaires, rank: draw.rank, tierSize: draw.tierSize });
+    pop: draw.pop, exemplaires: draw.terraExemplaires, rank: draw.rank, tierSize: draw.tierSize,
+    aurore: draw.aurore ? 1 : 0 });
 }
 
 function miniTerra(e){
   const nom = echapperTexte(e.nom);
-  return `<div class="mini ${e.tier.id}" title="${nom} (${e.dept}) — ${e.tier.label}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}">
+  const au = e.aurore > 0;
+  return `<div class="mini ${e.tier.id}${au ? ' aurore' : ''}" title="${nom} (${e.dept}) — ${e.tier.label}${au ? ' — Aurore' + (e.aurore > 1 ? ' ×' + e.aurore : '') : ''}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}${au ? titreCreditAurore(e.code) : ''}">
     <div class="mini-int">
+      ${au ? fondAurore(e.code, e.tier.id, false) : ''}
       ${e.exemplaires > 1 ? `<span class="mini-ex">×${e.exemplaires}</span>` : ''}
       <div class="mini-art">${miniArtSvg(e.code, e.tier.id)}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
       <div class="mini-infos">
@@ -8346,7 +8356,7 @@ function afficherBilanTerra(){
   el.id = 'terraBilan';
   el.className = 'tt-bilan-bloc';
   el.innerHTML = `<p class="tt-bilan">Dernier paquet : <b>${nouv} nouvelle${nouv > 1 ? 's' : ''}</b>, ${dbl} doublon${dbl > 1 ? 's' : ''}</p>
-    <div class="tt-res">${trierPourRevelation(draws).map(d => `<div class="tt-c"><span class="tt-tag ${d.terraNouvelle ? 'neuf' : 'dbl'}">${d.terraNouvelle ? 'NOUVELLE' : 'DOUBLON'}</span>${miniTerra({ code: d.code, nom: d.nom, dept: d.dept, tier: d.tier, exemplaires: d.terraExemplaires, rank: d.rank, tierSize: d.tierSize })}</div>`).join('')}</div>`;
+    <div class="tt-res">${trierPourRevelation(draws).map(d => `<div class="tt-c"><span class="tt-tag ${d.terraNouvelle ? 'neuf' : 'dbl'}">${d.terraNouvelle ? 'NOUVELLE' : 'DOUBLON'}</span>${miniTerra({ code: d.code, nom: d.nom, dept: d.dept, tier: d.tier, exemplaires: d.terraExemplaires, rank: d.rank, tierSize: d.tierSize, aurore: d.aurore ? 1 : 0 })}</div>`).join('')}</div>`;
   zone.insertAdjacentElement('afterend', el);
 }
 
@@ -8358,7 +8368,7 @@ async function chargerCollectionTerra(){
     const tier = TIERS.find(t => t.id === r.tier);
     if(!tier) continue;
     terraCollection.set(r.code, { code: r.code, nom: r.nom, dept: r.departement, tier, pop: r.population,
-      exemplaires: Number(r.exemplaires) || 1, rank: r.rang, tierSize: r.palier_total });
+      exemplaires: Number(r.exemplaires) || 1, aurore: Number(r.aurore) || 0, rank: r.rang, tierSize: r.palier_total });
   }
   terraCharge = true;
   return true;
@@ -8388,8 +8398,8 @@ async function ouvrirCollectionTerra(){
 function doublonsTerra(){
   const parTier = {};
   for(const e of terraCollection.values()){
-    if(e.exemplaires < 2) continue;
-    parTier[e.tier.id] = (parTier[e.tier.id] || 0) + e.exemplaires - 1;
+    if(libresTerra(e) < 1) continue;
+    parTier[e.tier.id] = (parTier[e.tier.id] || 0) + libresTerra(e);
   }
   return parTier;
 }
@@ -8746,7 +8756,7 @@ function renderGrilleTerra(){
   const grille = document.getElementById('tcGrille');
   if(!grille) return;
   const liste = [...terraCollection.values()]
-    .filter(e => terraFiltre === 'tous' || (terraFiltre === 'doublons' ? e.exemplaires > 1 : e.tier.id === terraFiltre))
+    .filter(e => terraFiltre === 'tous' || (terraFiltre === 'doublons' ? libresTerra(e) > 0 : e.tier.id === terraFiltre))
     .filter(e => correspondRecherche(e.nom, e.dept, sansAccents(terraRecherche.trim())))
     .sort((a, b) => RANG_TIER[b.tier.id] - RANG_TIER[a.tier.id] || (b.pop || 0) - (a.pop || 0));
   grille.innerHTML = liste.length
@@ -8790,7 +8800,7 @@ function ouvrirVenteTerra(){
   f.setAttribute('role', 'dialog');
   f.setAttribute('aria-modal', 'true');
   f.setAttribute('aria-labelledby', 'tcVenteTitre');
-  f.innerHTML = `<h3 id="tcVenteTitre">Vendre mes doublons</h3><p>On garde toujours un exemplaire de chaque commune.</p>
+  f.innerHTML = `<h3 id="tcVenteTitre">Vendre mes doublons</h3><p>On garde toujours un exemplaire de chaque commune, et toutes tes cartes Aurore.</p>
     ${lignes.map(t => `<label class="tc-ligne"><input type="checkbox" value="${t.id}" ${t.id === 'commun' || t.id === 'peucommun' ? 'checked' : ''}>
       <i class="pt" style="background:${COULEURS_FILTRE[t.id]}"></i>${t.label} <em>× ${fmtNombre(dbl[t.id])} · ${TERRA_REVENTE[t.id]} pts</em><b>+${fmtNombre(dbl[t.id] * TERRA_REVENTE[t.id])}</b></label>`).join('')}
     <button class="tc-ok" id="tcVenteOk"></button>
@@ -8818,7 +8828,7 @@ function ouvrirVenteTerra(){
     fermer();
     if(error){ notifier({ type: 'erreur', titre: 'Vente impossible', texte: messageLisible(error.message) }); return; }
     const r = data && data[0];
-    for(const e of terraCollection.values()) if(choix.includes(e.tier.id) && e.exemplaires > 1) e.exemplaires = 1;
+    for(const e of terraCollection.values()) if(choix.includes(e.tier.id) && libresTerra(e) > 0) e.exemplaires = Math.max(1, e.aurore || 0);
     if(r && packStatusCache){ packStatusCache.solde = r.solde; majBascule(); }
     notifier({ type: 'succes', titre: 'Doublons vendus', texte: r ? `${fmtNombre(r.vendus)} doublon${r.vendus > 1 ? 's' : ''} · +${fmtNombre(r.gain)} points` : '' });
     renderCollectionTerra();
@@ -9669,9 +9679,9 @@ function renderEchangeMienTerra(zone, rechercheM){
   const promis = {};
   for(const e of echangesEnCours || []) if(e.sens === 'envoye') promis[e.je_donne_code] = (promis[e.je_donne_code] || 0) + 1;
   const duPalier = [...terraCollection.values()]
-    .filter(c => c.tier.id === echangeTier && c.exemplaires > 1);
+    .filter(c => c.tier.id === echangeTier && libresTerra(c) > 0);
   const miennes = duPalier
-    .map(c => Object.assign({}, c, { libres: c.exemplaires - 1 - (promis[c.code] || 0) }))
+    .map(c => Object.assign({}, c, { libres: libresTerra(c) - (promis[c.code] || 0) }))
     .filter(c => c.libres > 0)
     .filter(c => correspondRecherche(c.nom, c.dept, rechercheM))
     .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
@@ -12088,3 +12098,60 @@ document.getElementById('panel-clan').addEventListener('click', (e) => {
   }
 });
 if(CLANS) setTimeout(loadClansCarte, 1500);
+
+
+// ---------- patch111 : les cartes Aurore ----------
+// La liste qui fait foi pour le tirage est cote serveur (aurore_communes).
+// data/aurore.json ne porte que les credits des photos, et sert de liste
+// pour l'affichage en Front.
+const AURORE_V = '1';
+let AURORE = null;   // { code: { a: auteur, l: licence, s: page Commons } }
+async function chargerAurore(){
+  try{
+    const rep = await fetch('data/aurore.json?v=' + AURORE_V);
+    AURORE = rep.ok ? ((await rep.json()).cartes || {}) : {};
+  } catch(e){ AURORE = {}; }
+  // la collection Front a pu s'afficher avant : on la repeint
+  const ouvert = document.querySelector('.tab.active[data-tab]');
+  if(ouvert && ouvert.dataset.tab === 'collection' && !enTerra() && Object.keys(AURORE).length) renderCollection();
+}
+if(SAISON2) chargerAurore();
+const auroreFront = (code) => SAISON2 && !enTerra() && !!(AURORE && AURORE[code]);
+const auroreImage = (code) => AURORE && AURORE[code] ? 'aurore/' + code + '.jpg?v=' + AURORE_V : null;
+// les exemplaires qu'on peut vendre ou echanger : jamais le dernier, jamais une Aurore
+const libresTerra = (e) => e.exemplaires - Math.max(1, e.aurore || 0);
+
+// le fond de la carte : photo, teinte, voile d'aurore, etoiles, reflet, sceau
+function fondAurore(code, tierId, grande){
+  const u = auroreImage(code);
+  const rnd = aleatoireStable(hashTexte('aurore' + code));
+  let etoiles = '';
+  for(let i = 0; i < (grande ? 9 : 4); i++){
+    etoiles += `<i style="left:${(4 + rnd() * 92).toFixed(1)}%;top:${(3 + rnd() * 45).toFixed(1)}%;animation-delay:${(rnd() * 3).toFixed(2)}s"></i>`;
+  }
+  return `<div class="au-fond" aria-hidden="true">`
+    + (u ? `<img class="au-photo" src="${u}" alt=""${grande ? '' : ' loading="lazy"'} decoding="async" onerror="this.remove()">` : '')
+    + `<span class="au-teinte"></span><span class="au-voile"><i></i><i></i><i></i></span>`
+    + `<span class="au-etoiles">${etoiles}</span><span class="au-reflet"></span>`
+    + `<span class="au-sceau"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2H22l-6.2 4.5 2.4 7.3L12 16.5 5.8 21l2.4-7.3L2 9.2h7.6z"/></svg>${grande ? 'Aurore' : ''}</span>`
+    + `</div>`;
+}
+// la grande carte se revele des la fin de la dechirure : l'image doit etre la
+function prechargerAurore(draws){
+  for(const d of draws){
+    const u = d.aurore && auroreImage(d.code);
+    if(u){ const img = new Image(); img.src = u; }
+  }
+}
+function photoAurore(code){
+  const c = AURORE && AURORE[code];
+  return c ? { photo: 1, photoAuteur: c.a, photoLicence: c.l, photoSource: c.s } : null;
+}
+function creditAurore(code){
+  const c = AURORE && AURORE[code];
+  return c ? `<p class="au-credit">Photo : ${echapperTexte(c.a)}${c.l ? ' · ' + echapperTexte(c.l) : ''}</p>` : '';
+}
+function titreCreditAurore(code){
+  const c = AURORE && AURORE[code];
+  return c ? ' — photo : ' + echapperTexte(c.a) + (c.l ? ', ' + echapperTexte(c.l) : '') : '';
+}

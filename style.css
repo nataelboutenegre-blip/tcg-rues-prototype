@@ -4584,3 +4584,11 @@ body.mode-front #panel-defense .bourse-section{ display:none !important; }
 .obj-gain.gain-energie{ color:#5FD39D; }
 .obj-plafond{ margin-left:8px; font-family: var(--corps, inherit); font-size:.72rem; font-weight:600; color:#5FD39D; text-transform:none; letter-spacing:0; }
 .obj-groupe[hidden]{ display:none; }
+
+/* patch102 : lot Terra regroupe */
+.ct-l.ct-gr .hb{ white-space:normal; }
+.ct-qte{ display:inline-flex; align-items:center; gap:6px; flex-shrink:0; }
+.ct-qte b{ min-width:28px; text-align:center; font-family: var(--titre); font-size:1rem; }
+.ct-l .ct-qte button{ width:28px; height:28px; padding:0; border-radius:8px; font-size:1rem; font-weight:800; line-height:1; }
+.ct-l .ct-qte button:disabled{ opacity:.35; cursor:default; }
+.ct-ajout{ grid-column:1 / -1; border:1px dashed rgba(169,188,212,.45); background:transparent; color: var(--brume); border-radius:10px; padding:10px; font:inherit; font-size:.8rem; font-weight:700; cursor:pointer; }

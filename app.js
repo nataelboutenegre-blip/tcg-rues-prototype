@@ -3,7 +3,7 @@ const SUPABASE_URL = 'https://yzcgroprydxhbwaufkdu.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_s829mEa2YUPWr9DOks2FTg_k9gpTQTA';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
-const VERSION_JEU = 'd5448a242ca3';
+const VERSION_JEU = '0bf54d90ffb0';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3904,7 +3904,7 @@ function renderContrat(){
   }
   if(vide) vide.hidden = true;
   if(zone) zone.hidden = false;
-  if(signer){ signer.hidden = false; signer.disabled = contratEnCours; }
+  if(signer){ signer.hidden = false; signer.disabled = contratEnCours || contratLot.length !== contratChoisi.n; }
 
   // dire « favoris exclus » alors qu'on ecarte aussi une liste posee par le
   // joueur, c'est lui cacher la moitie de la regle
@@ -3912,7 +3912,8 @@ function renderContrat(){
     ? `${contratChoisi.n} doublons, les plus nombreux d'abord`
     : `${contratChoisi.n} communes, les moins peuplées — favoris`
     + (contratExclusions.length ? ' et exclusions' : '') + ' exclus';
-  lot.innerHTML = contratLot.map((x, i) => `
+  if(ctTerra()) renderLotTerra(lot);
+  else lot.innerHTML = contratLot.map((x, i) => `
     <div class="ct-l ${contratChoisi.de}">
       <span class="pt"></span>
       <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${badgeDept(x.departement)}</span><span class="hb">${ctNb(x.population || 0)} hab.${ctTerra() ? ` · ${x.dispo} doublon${x.dispo > 1 ? 's' : ''}` : ''}${!ctTerra() && monumentsNoms.has(x.commune_code) ? `<span class="jr-monument ct-mon" title="Ce monument partirait avec la commune">${ICONE_MONUMENT}<span>${echapperTexte(monumentsNoms.get(x.commune_code))}</span></span>` : ''}</span></span>
@@ -3925,6 +3926,90 @@ function renderContrat(){
     : `Les ${contratChoisi.n} communes sacrifiées retournent au pot. C'est définitif.`
     + (nbMon ? ` Attention : ${nbMon > 1 ? nbMon + ' monuments partent' : 'un monument part'} avec elles — « changer » ou le cadenas pour ${nbMon > 1 ? 'les' : 'le'} garder.` : '');
 }
+
+// ---------- patch102 : le lot Terra regroupe par commune ----------
+function renderLotTerra(lot){
+  const groupes = [];
+  for(const x of contratLot){
+    let g = groupes.find(y => y.code === x.commune_code);
+    if(!g){ g = { code: x.commune_code, x, n: 0 }; groupes.push(g); }
+    g.n++;
+  }
+  const manque = contratChoisi.n - contratLot.length;
+  lot.innerHTML = groupes.map(g => `
+    <div class="ct-l ${contratChoisi.de} ct-gr">
+      <span class="pt"></span>
+      <span class="tx"><span class="nm"><i>${echapperTexte(g.x.nom || g.code)}</i>${badgeDept(g.x.departement)}</span><span class="hb">${g.n} de tes ${g.x.dispo} doublon${g.x.dispo > 1 ? 's' : ''}</span></span>
+      <span class="ct-qte"><button type="button" data-ct-moins="${echapperTexte(g.code)}" aria-label="Un de moins">−</button><b>×${g.n}</b><button type="button" data-ct-plus="${echapperTexte(g.code)}" aria-label="Un de plus" ${g.n >= g.x.dispo || manque <= 0 ? 'disabled' : ''}>+</button></span>
+    </div>`).join('')
+    + (manque > 0 ? `<button type="button" class="ct-ajout" data-ct-ajout>+ Choisir ${manque} doublon${manque > 1 ? 's' : ''} de plus</button>` : '');
+}
+
+function ctUniteLibre(code){
+  return (contratDispo[contratChoisi.de] || []).find(u => u.commune_code === code && !contratLot.some(l => l.cle === u.cle));
+}
+
+function ajouterDoublonTerra(){
+  if(!contratChoisi) return;
+  const toutes = (contratDispo[contratChoisi.de] || []).filter(x => x.cle.endsWith('#0'));
+  const dansLot = (code) => contratLot.filter(x => x.commune_code === code).length;
+  const fermer = ouvrirFenetre(`
+    <div class="fenetre ct-pick" role="dialog" aria-modal="true" aria-labelledby="ctPickT">
+      <h2 id="ctPickT">Ajouter un doublon</h2>
+      <p class="ct-sst">${ctNb(toutes.length)} commune${toutes.length > 1 ? 's' : ''} avec des doublons</p>
+      <input type="search" id="ctRech" autocomplete="off" placeholder="Nom ou département…" aria-label="Chercher une commune">
+      <div class="ct-liste" id="ctPickL"></div>
+      <div class="ct-pkp"><button type="button" id="ctPickA">Annuler</button></div>
+    </div>`);
+  const champ = document.getElementById('ctRech');
+  const liste = document.getElementById('ctPickL');
+  const dessiner = () => {
+    const m = sansAccents(champ.value.trim());
+    const vus = m ? toutes.filter(x => correspondRecherche(x.nom || x.commune_code, x.departement, m)) : toutes;
+    if(!vus.length){ liste.innerHTML = '<p class="ct-vide">Aucune commune ne correspond.</p>'; return; }
+    liste.innerHTML = vus.slice(0, 300).map(x => {
+      const n = dansLot(x.commune_code);
+      const plein = n >= x.dispo;
+      return `<button type="button" class="ct-o ${contratChoisi.de}" ${plein ? 'disabled' : ''} data-code="${echapperTexte(x.commune_code)}">
+        <span class="pt"></span>
+        <span class="tx"><span class="nm"><i>${echapperTexte(x.nom || x.commune_code)}</i>${badgeDept(x.departement)}</span><span class="hb">${x.dispo} doublon${x.dispo > 1 ? 's' : ''}</span></span>
+        ${n ? `<span class="dj">${n} dans le lot</span>` : ''}
+      </button>`;
+    }).join('');
+  };
+  dessiner();
+  champ.addEventListener('input', dessiner);
+  document.getElementById('ctPickA').addEventListener('click', () => fermer(null));
+  liste.addEventListener('click', (e) => {
+    const b = e.target.closest('.ct-o');
+    if(!b || b.disabled) return;
+    const u = ctUniteLibre(b.dataset.code);
+    if(u && contratLot.length < contratChoisi.n) contratLot.push(u);
+    fermer(null);
+    renderContrat();
+  });
+  if(!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) champ.focus();
+}
+
+document.getElementById('ctLot').addEventListener('click', (e) => {
+  const moins = e.target.closest('[data-ct-moins]');
+  if(moins){
+    const code = moins.dataset.ctMoins;
+    for(let i = contratLot.length - 1; i >= 0; i--){
+      if(contratLot[i].commune_code === code){ contratLot.splice(i, 1); break; }
+    }
+    renderContrat();
+    return;
+  }
+  const plus = e.target.closest('[data-ct-plus]');
+  if(plus && !plus.disabled){
+    const u = ctUniteLibre(plus.dataset.ctPlus);
+    if(u && contratLot.length < contratChoisi.n) contratLot.push(u);
+    renderContrat();
+    return;
+  }
+  if(e.target.closest('[data-ct-ajout]')) ajouterDoublonTerra();
+});
 
 // ---------- Bandeaux qu'on peut fermer ----------
 // Fermer ne fait pas taire le bandeau pour toujours : on retient la

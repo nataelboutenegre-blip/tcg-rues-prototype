@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '62d8a0925ab4';
+const VERSION_JEU = 'c07ab5c20654';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6362,6 +6362,17 @@ function fonctionAbsente(error){
   return !!error && (error.code === 'PGRST202' || /could not find the function/i.test(error.message || ''));
 }
 async function payerPaquet(type){
+  if(boutiqueAchat && boutiqueAchat.collection){
+    // patch112 : paquet d'une collection thematique
+    const achat = boutiqueAchat;
+    boutiqueAchat = null;
+    const { data, error } = await sb.rpc('boutique_ouvrir_collection', { p_collection: achat.collection });
+    terraPaquet = error ? null : (data || []);
+    boutiqueOuvert = !error;
+    colCache = null;
+    viderBilanTerra();
+    return error;
+  }
   if(boutiqueAchat){
     // patch107 : paquet de la boutique, paye et tire en un seul appel
     const achat = boutiqueAchat;
@@ -8416,6 +8427,7 @@ function renderCollectionTerra(){
   const gainMax = Object.entries(dbl).reduce((s, [t, n]) => s + n * (TERRA_REVENTE[t] || 0), 0);
   const ordre = TIERS.filter(t => tot[t.id] || parTier[t.id]);
   if(terraVue === 'france') return renderMaFranceTerra(el, totalFrance);
+  if(terraVue === 'collections') return renderCollectionsTerra(el);   // patch112
   el.innerHTML = `
     <div class="coll-ligne-titre"><h1>Collection</h1><span class="coll-compteur"><b>${fmtNombre(terraCollection.size)}</b> / ${fmtNombre(totalFrance)} communes</span></div>
     ${selecteurVueTerra()}
@@ -8438,7 +8450,8 @@ function renderCollectionTerra(){
 function selecteurVueTerra(){
   return `<div class="mf-vue" role="tablist" aria-label="Affichage de la collection">
     <button role="tab" data-tcv="cartes" class="${terraVue === 'cartes' ? 'on' : ''}" aria-selected="${terraVue === 'cartes'}">Mes cartes</button>
-    <button role="tab" data-tcv="france" class="${terraVue === 'france' ? 'on' : ''}" aria-selected="${terraVue === 'france'}">Ma France</button></div>`;
+    <button role="tab" data-tcv="france" class="${terraVue === 'france' ? 'on' : ''}" aria-selected="${terraVue === 'france'}">Ma France</button>
+    <button role="tab" data-tcv="collections" class="${terraVue === 'collections' ? 'on' : ''}" aria-selected="${terraVue === 'collections'}">Collections</button></div>`;
 }
 
 // ---------- patch92 : Ma France ----------
@@ -8768,6 +8781,7 @@ function renderGrilleTerra(){
 }
 
 function clicCollectionTerra(e){
+  if(clicCollections(e)) return;   // patch112
   const v = e.target.closest('[data-tcv]');
   if(v){ if(terraVue !== v.dataset.tcv){ terraVue = v.dataset.tcv; renderCollectionTerra(); } return; }
   const z = e.target.closest('[data-mf]');
@@ -12154,4 +12168,144 @@ function creditAurore(code){
 function titreCreditAurore(code){
   const c = AURORE && AURORE[code];
   return c ? ' — photo : ' + echapperTexte(c.a) + (c.l ? ', ' + echapperTexte(c.l) : '') : '';
+}
+
+
+// ---------- patch112 : les collections thematiques (Terra) ----------
+let colCache = null;          // reponse de collections_moi()
+let colOuverte = null;        // id de la collection depliee
+const colDetails = new Map(); // id -> lignes de collection_detail()
+
+async function chargerCollections(){
+  const { data, error } = await sb.rpc('collections_moi');
+  if(error){ console.error(error); return false; }
+  colCache = data || [];
+  return true;
+}
+
+async function renderCollectionsTerra(el){
+  if(!colCache){
+    el.innerHTML = `<div class="coll-ligne-titre"><h1>Collection</h1></div>${selecteurVueTerra()}<p class="collection-empty">Chargement des collections…</p>`;
+    const ok = await chargerCollections();
+    if(terraVue !== 'collections') return;
+    if(!ok){ el.querySelector('.collection-empty').textContent = 'Les collections ne sont pas disponibles pour le moment.'; return; }
+  }
+  const finies = colCache.filter(c => c.reclamee).length;
+  el.innerHTML = `
+    <div class="coll-ligne-titre"><h1>Collection</h1><span class="coll-compteur"><b>${finies}</b> / ${colCache.length} terminées</span></div>
+    ${selecteurVueTerra()}
+    <p class="col-intro">Complète une collection pour gagner des points et un dos de carte. Le paquet d'une collection ne donne que des communes qui te manquent.</p>
+    <div class="col-liste">${colCache.map(carteCollection).join('')}</div>`;
+  if(colOuverte && colDetails.has(colOuverte)) afficherDetailCollection(colOuverte);
+}
+
+function carteCollection(c){
+  const total = Number(c.total) || 0, n = Number(c.possedees) || 0;
+  const manque = Math.max(0, total - n);
+  const pct = total ? Math.round(100 * n / total) : 0;
+  const prix = manque ? Math.ceil(c.prix * Math.min(5, manque) / 5) : 0;
+  const court = packStatusCache && Number(packStatusCache.solde) < prix;
+  let action;
+  if(c.reclamee) action = `<span class="col-finie">✓ Terminée</span>`;
+  else if(!manque) action = `<button class="col-btn or" data-col-reclamer="${c.id}">Réclamer ${fmtNombre(c.recompense)} pts</button>`;
+  else action = `<button class="bq-btn col-paquet" data-col-paquet="${c.id}" data-prix="${prix}"${court ? ' data-court="1"' : ''}>${bqPrix(prix)}</button>`;
+  return `<div class="col-carte${c.reclamee ? ' finie' : ''}${!manque && !c.reclamee ? ' prete' : ''}" data-col="${c.id}">
+      <div class="col-tete">
+        <span class="col-emoji" aria-hidden="true">${c.emoji}</span>
+        <div class="col-titre"><b>${echapperTexte(c.nom)}</b><span>${echapperTexte(c.description)}</span></div>
+        ${dosApercuHtml(c.dos).replace('bq-dos-apercu', 'bq-dos-apercu col-dos')}
+      </div>
+      <div class="col-prog" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${n}"><i style="width:${pct}%"></i></div>
+      <div class="col-chiffres"><span><b>${fmtNombre(n)}</b> / ${fmtNombre(total)} communes</span>
+        <span class="col-rec">${c.reclamee ? 'Récompense reçue' : `Récompense : <b>${fmtNombre(c.recompense)} pts</b> + dos « ${echapperTexte(c.dos_nom || '')} »`}</span></div>
+      <div class="col-actions">
+        <button class="col-btn" data-col-voir="${c.id}" aria-expanded="${colOuverte === c.id}">${colOuverte === c.id ? 'Masquer' : 'Voir les communes'}</button>
+        ${action}
+      </div>
+      <div class="col-detail" id="colDetail-${c.id}"${colOuverte === c.id ? '' : ' hidden'}></div>
+    </div>`;
+}
+
+async function afficherDetailCollection(id){
+  const zone = document.getElementById('colDetail-' + id);
+  if(!zone) return;
+  zone.hidden = false;
+  if(!colDetails.has(id)){
+    zone.innerHTML = '<p class="collection-empty">Chargement…</p>';
+    const { data, error } = await sb.rpc('collection_detail', { p_collection: id });
+    if(error){ zone.innerHTML = `<p class="collection-empty">${echapperTexte(messageLisible(error.message))}</p>`; return; }
+    colDetails.set(id, data || []);
+  }
+  const lignes = colDetails.get(id);
+  const z = document.getElementById('colDetail-' + id);
+  if(!z) return;
+  z.innerHTML = `<div class="col-communes">${lignes.map(r => {
+    const t = TIERS.find(x => x.id === r.tier);
+    return `<span class="col-commune ${r.possedee ? 'a ' + r.tier : 'manque'}${r.aurore > 0 ? ' aurore-chip' : ''}" title="${echapperTexte(r.nom)} (${r.departement})${t ? ' — ' + t.label : ''}${r.possedee ? '' : ' — à trouver'}">
+        <b>${echapperTexte(r.nom)}</b><i>${echapperTexte(r.departement)}</i></span>`;
+  }).join('')}</div>`;
+}
+
+function clicCollections(e){
+  const voir = e.target.closest('[data-col-voir]');
+  if(voir){
+    const id = voir.dataset.colVoir;
+    const zone = document.getElementById('colDetail-' + id);
+    if(colOuverte === id){ colOuverte = null; if(zone) zone.hidden = true; voir.textContent = 'Voir les communes'; voir.setAttribute('aria-expanded', 'false'); }
+    else {
+      document.querySelectorAll('.col-detail').forEach(d => { d.hidden = true; });
+      document.querySelectorAll('[data-col-voir]').forEach(b => { b.textContent = 'Voir les communes'; b.setAttribute('aria-expanded', 'false'); });
+      colOuverte = id; voir.textContent = 'Masquer'; voir.setAttribute('aria-expanded', 'true');
+      afficherDetailCollection(id);
+    }
+    return true;
+  }
+  const paq = e.target.closest('[data-col-paquet]');
+  if(paq){
+    if(!bqConfirmer(paq)) return true;
+    paq.disabled = true;
+    acheterPaquetCollection(paq.dataset.colPaquet).finally(() => { paq.disabled = false; });
+    return true;
+  }
+  const rec = e.target.closest('[data-col-reclamer]');
+  if(rec){
+    rec.disabled = true;
+    reclamerCollection(rec.dataset.colReclamer).finally(() => { rec.disabled = false; });
+    return true;
+  }
+  return false;
+}
+
+async function acheterPaquetCollection(id){
+  if(paquetEnCours){
+    notifier({ type: 'erreur', titre: 'Un paquet t\'attend déjà', texte: 'Ouvre d\'abord celui qui est sur la table.' });
+    return;
+  }
+  const c = (colCache || []).find(x => x.id === id);
+  boutiqueAchat = { collection: id };
+  boutiqueOuvert = false;
+  const tirage = document.querySelector('.tab[data-tab="tirage"]');
+  if(tirage) tirage.click();
+  await openPack('achete');
+  boutiqueAchat = null;
+  colDetails.delete(id);
+  terraCharge = false;
+  if(!boutiqueOuvert) return;
+  const bande = document.querySelector('#packZone .paquet .paquet-bande');
+  if(bande && c) bande.textContent = c.nom;
+  const titre = document.querySelector('#packZone .paquet .paquet-titre');
+  if(titre) titre.textContent = 'Collection';
+}
+
+async function reclamerCollection(id){
+  const { data, error } = await sb.rpc('collection_reclamer', { p_collection: id });
+  if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); return; }
+  const r = data && data[0];
+  if(r && packStatusCache){ packStatusCache.solde = r.solde; majBascule(); }
+  colCache = null;
+  boutiqueCache = null;
+  notifier({ type: 'succes', titre: 'Collection terminée !',
+             texte: r ? `+${fmtNombre(r.points)} points et le dos « ${r.dos_nom} ». Mets-le sur tes cartes depuis la Boutique.` : '' });
+  const el = document.getElementById('terraColl');
+  if(el && terraVue === 'collections') renderCollectionsTerra(el);
 }

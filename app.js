@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'c07ab5c20654';
+const VERSION_JEU = '60810fc9dbd1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1545,12 +1545,14 @@ const SEUIL_CONTOURS = 2.2;       // en dessous, on garde l'affichage simplifie
 const CONTOURS = new Map();        // departement -> { communes } ou 'charge' / 'erreur'
 let contoursEnCours = 0;
 
+// patch113 : monter ce numero quand un fichier de contours change
+const CONTOURS_V = '2';
 async function chargerContours(dep){
   if(CONTOURS.has(dep)) return CONTOURS.get(dep);
   CONTOURS.set(dep, null); // evite de demander deux fois le meme
   contoursEnCours++;
   try{
-    const rep = await fetch(`contours/${dep}.json`, { cache: 'force-cache' });
+    const rep = await fetch(`contours/${dep}.json?v=${CONTOURS_V}`, { cache: 'force-cache' });
     if(!rep.ok) throw new Error('introuvable');
     const data = await rep.json();
     CONTOURS.set(dep, data);
@@ -11200,7 +11202,7 @@ async function radarChargerCommunes(dep){
   try{
     let data = CONTOURS.get(dep);
     if(!data || data === 'erreur'){
-      const r = await fetch(`contours/${dep}.json`, { cache: 'force-cache' });
+      const r = await fetch(`contours/${dep}.json?v=${CONTOURS_V}`, { cache: 'force-cache' });
       if(!r.ok) throw new Error('contours');
       data = await r.json();
       if(!CONTOURS.get(dep)) CONTOURS.set(dep, data);

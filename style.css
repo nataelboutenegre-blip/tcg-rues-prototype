@@ -4917,3 +4917,7 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
   --dos-fond: radial-gradient(circle at 50% 42%, #CDB9E0 0%, #9C83B8 55%, #5E4A7A 100%);
   --dos-liseret: rgba(244,232,210,0.7); --dos-embleme: #4A3A63; --dos-or: #F4E8D2; --dos-anneau: rgba(94,74,122,0.9);
 }
+
+/* patch115 : l'astuce sous la recherche d'echange */
+.ech-astuce{ margin: -4px 0 10px; font-size: .74rem; color: var(--brume); }
+.ech-astuce b{ color: var(--papier); font-weight: 600; }

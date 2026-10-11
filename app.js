@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '262dd31c6363';
+const VERSION_JEU = '8177bb4e5ce4';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9727,7 +9727,7 @@ async function chargerCiblesEchange(){
   zone.innerHTML = '<p class="collection-empty">Chargement…</p>';
   // le serveur ne connait que les numeros de departement : "charente" devient "16"
   const { data, error } = await sb.rpc(marcheTerra() ? 'terra_cibles_echange' : 'cibles_echange', {
-    p_tier: echangeTier, p_recherche: codeDepartement(echangeRecherche) || echangeRecherche
+    p_tier: echangeTier, p_recherche: criteresEchange(echangeRecherche)
   });
   if(error){
     console.error(error);
@@ -12310,4 +12310,13 @@ async function reclamerCollection(id){
              texte: r ? `+${fmtNombre(r.points)} points et le dos « ${r.dos_nom} ». Mets-le sur tes cartes depuis la Boutique.` : '' });
   const el = document.getElementById('terraColl');
   if(el && terraVue === 'collections') renderCollectionsTerra(el);
+}
+
+
+// ---------- patch115 : plusieurs criteres dans la recherche d'echange ----------
+// « 16, Charente-Maritime, Maroli » -> « 16, 17, Maroli » : chaque nom de
+// departement devient son numero, le serveur reconnait les pseudos.
+function criteresEchange(texte){
+  return String(texte || '').split(/[,;]/).map(t => t.trim()).filter(Boolean)
+    .map(t => codeDepartement(t) || t).join(', ');
 }

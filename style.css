@@ -4990,3 +4990,23 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
   background:var(--c-legendaire); color:var(--encre); font-family:var(--titre); font-weight:900; font-size:1.05rem;
   box-shadow:0 4px 10px rgba(0,0,0,.45);
 }
+
+/* patch117 : la carte en plein ecran sur telephone (barre d'onglets visible) */
+.map-reduire{ display:none; }
+@media (max-width: 720px){
+  .map-wrap.plein-ecran{
+    position:fixed; left:0; right:0; top:0; bottom:var(--carte-bas, 0px);
+    width:auto !important; height:auto !important; max-width:none; margin:0;
+    border:0; border-radius:0; box-shadow:none; z-index:39;
+  }
+  body.carte-plein-ecran{ overflow:hidden; }
+  .map-wrap.plein-ecran .map-reduire{
+    display:flex; align-items:center; gap:6px;
+    position:absolute; z-index:9; right:12px; top:calc(12px + env(safe-area-inset-top, 0px));
+    font:inherit; font-size:.8rem; font-weight:600; color:#fff;
+    padding:8px 12px; border-radius:999px; cursor:pointer;
+    background:rgba(10,22,40,.82); border:1px solid rgba(169,188,212,.3);
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    box-shadow:0 6px 16px rgba(0,0,0,.4);
+  }
+}

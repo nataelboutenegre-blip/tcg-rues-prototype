@@ -22,7 +22,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=8177bb4e5ce4">
+<link rel="stylesheet" href="style.css?v=20fa3f196f30">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -710,6 +710,9 @@
           <div class="map-infobulle" id="mapInfobulle" hidden></div>
           <div class="pc" id="mapPanneau" hidden role="dialog" aria-label="Fiche de la commune"></div>
           <div class="map-legende" id="mapLegende"></div>
+          <button type="button" class="map-reduire" id="mapReduire" aria-label="Réduire la carte">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>
+            Réduire</button>
         </div>
         <div id="mapLegendeBas"></div>
         <p class="map-note" style="margin-bottom:24px">Molette ou pincement pour zoomer, cliquer-glisser pour te déplacer. Survole une zone pour voir la commune et son propriétaire.</p>
@@ -1408,6 +1411,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=8177bb4e5ce4"></script>
+<script src="app.js?v=20fa3f196f30"></script>
 </body>
 </html>

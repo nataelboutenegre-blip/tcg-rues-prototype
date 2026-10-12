@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'c85e5e60e9f8';
+const VERSION_JEU = '20fa3f196f30';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -953,6 +953,13 @@ function sizeMapWrap(ratio){
   const wrap = document.getElementById('mapWrap');
   if(!wrap || !ratio) return;
   const parent = wrap.parentElement;
+  // onglet cache : rien a mesurer. L'ouverture de l'onglet rappelle sizeMapWrap.
+  if(!parent.clientWidth) return;
+  if(wrap.classList.contains('plein-ecran')){
+    if(MODE_CANVAS){ redimensionnerCanvas(); demanderDessin(); }
+    applyMapTransform();
+    return;
+  }
   const availWidth = Math.min(parent.clientWidth, 1200);
   const availHeightPx = window.innerHeight * 0.78;
   const widthFromHeight = availHeightPx * ratio;
@@ -1018,8 +1025,15 @@ function clampMapPan(){
   const wrap = document.getElementById('mapWrap');
   if(!wrap) return;
   const w = wrap.clientWidth, h = wrap.clientHeight;
-  mapPanX = Math.min(0, Math.max(w - w * mapZoom, mapPanX));
-  mapPanY = Math.min(0, Math.max(h - h * mapZoom, mapPanY));
+  // patch117 : carte cachee (0 x 0) -> on ne touche a rien, sinon le
+  // deplacement retombait a (0, 0) avec le zoom garde : en pleine mer
+  if(!w || !h) return;
+  // en plein ecran le cadre est plus haut que la carte : on borne sur la
+  // vraie hauteur de la carte, et on la centre si elle est plus petite
+  const cw = w * mapZoom;
+  const ch = (window.__mapAspectRatio ? w / window.__mapAspectRatio : h) * mapZoom;
+  mapPanX = cw > w ? Math.min(0, Math.max(w - cw, mapPanX)) : (w - cw) / 2;
+  mapPanY = ch > h ? Math.min(0, Math.max(h - ch, mapPanY)) : (h - ch) / 2;
 }
 
 // Les gestes envoient souvent plus d'evenements que l'ecran n'affiche d'images :
@@ -1186,6 +1200,7 @@ function setupMapInteraction(){
     } else if(e.touches.length === 0){
       touchPinch = null;
       mapDragging = false;
+      majPleinEcran();   // patch117
     }
   });
 }
@@ -1760,6 +1775,7 @@ function redimensionnerCanvas(){
   const cv = document.getElementById('mapCanvas');
   const wrap = document.getElementById('mapWrap');
   if(!cv || !wrap || !CV.ctx) return;
+  if(!wrap.clientWidth || !wrap.clientHeight) return;   // patch117 : carte cachee
   // au-dela de 2 le gain est invisible et le cout de remplissage double
   CV.dpr = Math.min(window.devicePixelRatio || 1, 2);
   CV.largeur = wrap.clientWidth;
@@ -9097,6 +9113,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     // le panneau vient de devenir visible : on rattrape ce qu'on avait
     // repousse, avant que le joueur ne voie un onglet vide
     faireLesRendusEnAttente(tab.dataset.tab);
+    if(tab.dataset.tab !== 'territoire') quitterPleinEcran();   // patch117
     if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
     if(tab.dataset.tab === 'communaute'){ loadClassement(); loadJournal(); loadAmis(); }
     if(tab.dataset.tab === 'bourse') loadBourse();
@@ -12492,3 +12509,66 @@ async function ouvrirChoixVitrine(actuelle, retour){
     if(retour === 'fiche') setTimeout(() => ouvrirProfil(window.__monId || null), 200);
   });
 }
+
+
+// ---------- patch117 : la carte en plein ecran sur telephone ----------
+// Idee de LeoLesel : des qu'on zoome, la carte prend tout l'ecran, sauf la
+// barre d'onglets du bas. Seulement sur telephone et en mode canvas (le mode
+// SVG de secours garde le cadre fixe).
+const PLEIN_ECRAN_SEUIL = 1.15;
+const pleinEcranPossible = () => canvasActif() && window.matchMedia('(max-width: 720px)').matches;
+const carteEnPleinEcran = () => {
+  const w = document.getElementById('mapWrap');
+  return !!(w && w.classList.contains('plein-ecran'));
+};
+
+// change le cadre en gardant au centre le point qu'on regardait
+function recadrerCarte(changer){
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap) return;
+  const ech = echelleCarte() * mapZoom;
+  const cx = (wrap.clientWidth / 2 - mapPanX) / ech, cy = (wrap.clientHeight / 2 - mapPanY) / ech;
+  changer(wrap);
+  redimensionnerCanvas();
+  const ech2 = echelleCarte() * mapZoom;
+  mapPanX = wrap.clientWidth / 2 - cx * ech2;
+  mapPanY = wrap.clientHeight / 2 - cy * ech2;
+  applyMapTransform();
+  demanderDessin();
+}
+
+function entrerPleinEcran(){
+  if(carteEnPleinEcran() || !pleinEcranPossible()) return;
+  const barre = document.querySelector('.sidebar');
+  const bas = barre ? Math.max(0, window.innerHeight - barre.getBoundingClientRect().top) : 0;
+  recadrerCarte((wrap) => {
+    wrap.style.setProperty('--carte-bas', bas + 'px');
+    wrap.classList.add('plein-ecran');
+    document.body.classList.add('carte-plein-ecran');
+  });
+}
+
+function quitterPleinEcran(){
+  if(!carteEnPleinEcran()) return;
+  recadrerCarte((wrap) => {
+    wrap.classList.remove('plein-ecran');
+    document.body.classList.remove('carte-plein-ecran');
+  });
+  sizeMapWrap(window.__mapAspectRatio);
+}
+
+// a la fin d'un geste : on zoome -> plein ecran ; revenu au depart -> on reduit
+function majPleinEcran(){
+  if(!carteEnPleinEcran() && mapZoom > PLEIN_ECRAN_SEUIL) entrerPleinEcran();
+  else if(carteEnPleinEcran() && mapZoom <= MAP_ZOOM_MIN + 0.01) quitterPleinEcran();
+}
+
+document.getElementById('mapReduire').addEventListener('click', (e) => {
+  e.stopPropagation();
+  mapZoom = MAP_ZOOM_MIN;
+  quitterPleinEcran();
+  renderMapOverlay();
+});
+// le bouton ne doit pas lancer un deplacement de la carte
+['mousedown', 'touchstart'].forEach(t => document.getElementById('mapReduire')
+  .addEventListener(t, (e) => e.stopPropagation(), { passive: true }));

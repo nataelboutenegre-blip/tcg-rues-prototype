@@ -32,17 +32,15 @@ begin;
 
 -- 1. Réglages ---------------------------------------------------------------
 insert into public.config_jeu (cle, valeur) values
-  ('score_s2', '{"victoire": 10, "dep_domine": 100, "dep_controle": 300, "region": 600,
-                 "seuil_domine": 0.10, "seuil_controle": 0.50,
-                 "victoires_par_jour": 10, "par_adversaire_par_jour": 2}'::jsonb),
-  ('exclus_classement', '["Nataël"]'::jsonb)
+  ('score_s2', '{"victoire": 10, "dep_domine": 100, "dep_controle": 300, "region": 600, "seuil_domine": 0.10, "seuil_controle": 0.50, "victoires_par_jour": 10, "par_adversaire_par_jour": 2}'),
+  ('exclus_classement', '["Nataël"]')
 on conflict (cle) do nothing;
 
 create or replace function public.score_reglage(p_cle text)
  returns numeric language sql stable security definer set search_path to 'public'
 as $f$
   select coalesce(
-    (select (c.valeur ->> p_cle)::numeric from config_jeu c where c.cle = 'score_s2'),
+    (select (c.valeur::jsonb ->> p_cle)::numeric from config_jeu c where c.cle = 'score_s2'),
     case p_cle when 'victoire' then 10 when 'dep_domine' then 100 when 'dep_controle' then 300
                when 'region' then 600 when 'seuil_domine' then 0.10 when 'seuil_controle' then 0.50
                when 'victoires_par_jour' then 10 when 'par_adversaire_par_jour' then 2 end);
@@ -52,9 +50,11 @@ $f$;
 create or replace function public.est_exclu_classement(p_pseudo text)
  returns boolean language sql stable security definer set search_path to 'public'
 as $f$
-  select exists (select 1 from config_jeu c, jsonb_array_elements_text(c.valeur) x
-                  where c.cle = 'exclus_classement' and jsonb_typeof(c.valeur) = 'array'
-                    and lower(normalize(x, NFC)) = lower(normalize(coalesce(p_pseudo, ''), NFC)));
+  -- config_jeu.valeur est du texte : on le lit comme du JSON
+  with l as (select (select c.valeur from config_jeu c where c.cle = 'exclus_classement')::jsonb as v)
+  select exists (select 1 from l, jsonb_array_elements_text(case when jsonb_typeof(l.v) = 'array'
+                                                               then l.v else '[]'::jsonb end) x
+                  where lower(normalize(x, NFC)) = lower(normalize(coalesce(p_pseudo, ''), NFC)));
 $f$;
 
 -- les bonus (combats, territoires) ne valent qu'à partir de la saison 2

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '0d013933ba5d';
+const VERSION_JEU = 'da661d4b936c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -960,6 +960,7 @@ function sizeMapWrap(ratio){
     applyMapTransform();
     return;
   }
+  if(wrap.closest('.map-scene.large')){ tailleCarteLarge(wrap, ratio); return; }   // patch119
   const availWidth = Math.min(parent.clientWidth, 1200);
   const availHeightPx = window.innerHeight * 0.78;
   const widthFromHeight = availHeightPx * ratio;
@@ -1030,8 +1031,9 @@ function clampMapPan(){
   if(!w || !h) return;
   // en plein ecran le cadre est plus haut que la carte : on borne sur la
   // vraie hauteur de la carte, et on la centre si elle est plus petite
-  const cw = w * mapZoom;
-  const ch = (window.__mapAspectRatio ? w / window.__mapAspectRatio : h) * mapZoom;
+  const ech = echelleCarte();   // patch119
+  const cw = MAP_W * ech * mapZoom;
+  const ch = MAP_H * ech * mapZoom;
   mapPanX = cw > w ? Math.min(0, Math.max(w - cw, mapPanX)) : (w - cw) / 2;
   mapPanY = ch > h ? Math.min(0, Math.max(h - ch, mapPanY)) : (h - ch) / 2;
 }
@@ -1587,12 +1589,12 @@ function departementsVisibles(liste){
   if(!wrap) return new Set();
   const w = wrap.clientWidth, h = wrap.clientHeight;
   // patch118 : hauteur de la CARTE (et non du cadre, plus haut en plein ecran)
-  const hc = MAP_H * (w / MAP_W);
+  const ech = echelleCarte();   // patch119
   const vus = new Set();
   const ajouter = (c) => {
     if(c.lat == null) return;
     const p = project(c.lat, c.lon);
-    const x = p.x * w * mapZoom + mapPanX, y = p.y * hc * mapZoom + mapPanY;
+    const x = p.x * MAP_W * ech * mapZoom + mapPanX, y = p.y * MAP_H * ech * mapZoom + mapPanY;
     if(x > -60 && x < w + 60 && y > -60 && y < h + 60) vus.add(c.dept);
   };
   for(const c of liste) ajouter(c);
@@ -1759,7 +1761,10 @@ function canvasActif(){
 function echelleCarte(){
   const wrap = document.getElementById('mapWrap');
   if(!wrap || !MAP_W) return 1;
-  return wrap.clientWidth / MAP_W;
+  // patch119 : le cadre peut etre plus large (grand ecran) ou plus haut
+  // (plein ecran) que la carte : la France doit toujours y tenir entiere
+  if(!wrap.clientHeight || !MAP_H) return wrap.clientWidth / MAP_W;
+  return Math.min(wrap.clientWidth / MAP_W, wrap.clientHeight / MAP_H);
 }
 
 function initCanvas(){
@@ -2378,6 +2383,7 @@ function placerLegende(){
   const wrap = document.getElementById('mapWrap');
   const bas = document.getElementById('mapLegendeBas');
   if(!leg || !wrap || !bas) return;
+  if(placerScene()) return;   // patch119 : grand ecran, legende a gauche
   const dessous = surTelephone();
   const parentVoulu = dessous ? bas : wrap;
   if(leg.parentElement !== parentVoulu) parentVoulu.appendChild(leg);
@@ -2866,6 +2872,7 @@ async function lancerAssaut(code){
 // cadre sans le bouger autrement. Sans ca, passer de la fiche au panneau
 // d'attaque, plus haut, le faisait deborder par le bas.
 function recadrerPanneau(el){
+  if(el && el.closest('.map-cote')) return;   // patch119 : fiche dans sa colonne
   if(el && !el.hidden && panneauDeplace){ poserPanneauDeplace(el); return; }
   if(!el || el.hidden || surTelephone()) return;
   const wrap = document.getElementById('mapWrap');
@@ -2893,6 +2900,7 @@ function montrerPanneau(el){
 // Sur telephone le panneau est colle en bas par la feuille de style ; sur
 // ordinateur on le pose a cote du clic sans le laisser sortir du cadre.
 function placerPanneau(el, xCss, yCss){
+  if(el && el.closest('.map-cote')) return;   // patch119 : fiche dans sa colonne
   if(panneauDeplace){ poserPanneauDeplace(el); return; }
   if(surTelephone()){ el.style.left = ''; el.style.top = ''; el.style.bottom = ''; montrerPanneau(el); return; }
   const wrap = document.getElementById('mapWrap');
@@ -2912,6 +2920,7 @@ function placerPanneau(el, xCss, yCss){
 // La position voulue, remise dans le cadre de la carte. Sur téléphone, la
 // bulle garde toute la largeur : seul le haut change.
 function poserPanneauDeplace(el){
+  if(el && el.closest('.map-cote')) return;   // patch119 : fiche dans sa colonne
   const wrap = document.getElementById('mapWrap');
   if(!wrap || !panneauDeplace) return;
   const b = el.getBoundingClientRect(), marge = 8;
@@ -2929,6 +2938,7 @@ function poserPanneauDeplace(el){
   el.addEventListener('pointerdown', (e) => {
     // on attrape par l'en-tête, ou par la petite barre tout en haut
     const enHaut = e.clientY - el.getBoundingClientRect().top < 20;
+    if(el.closest('.map-cote')) return;   // patch119 : rien a deplacer dans la colonne
     if(!(enHaut || e.target.closest('.pc-tete')) || e.target.closest('button, a, input, select, [data-pc], [data-profil]')) return;
     if(e.pointerType === 'mouse' && e.button !== 0) return;
     const wrap = document.getElementById('mapWrap');
@@ -12574,3 +12584,74 @@ document.getElementById('mapReduire').addEventListener('click', (e) => {
 // le bouton ne doit pas lancer un deplacement de la carte
 ['mousedown', 'touchstart'].forEach(t => document.getElementById('mapReduire')
   .addEventListener(t, (e) => e.stopPropagation(), { passive: true }));
+
+
+// ---------- patch119 : grand ecran, legende et fiche sur les cotes ----------
+const SCENE_GAUCHE = 250, SCENE_DROITE = 320, SCENE_ECART = 16;
+let sceneLarge = false;
+
+// La scene large n'est retenue que si la carte y reste au moins aussi grande
+// qu'en affichage classique. null = impossible a mesurer (rien a changer).
+function carteLargePossible(){
+  if(!canvasActif() || surTelephone() || !window.__mapAspectRatio) return false;
+  const panel = document.getElementById('panel-territoire');
+  const main = panel && panel.parentElement;
+  if(!main || !main.clientWidth) return null;
+  const cs = getComputedStyle(main);
+  const dispo = Math.min(1900, main.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0));
+  const cellule = dispo - SCENE_GAUCHE - SCENE_DROITE - 2 * SCENE_ECART;
+  const classique = Math.min(Math.min(dispo, 1200), window.innerHeight * 0.78 * window.__mapAspectRatio);
+  // un peu plus petite qu'avant reste un gain : plus rien ne la recouvre
+  return cellule >= classique * 0.9;
+}
+
+function placerScene(){
+  const wrap = document.getElementById('mapWrap');
+  const leg = document.getElementById('mapLegende');
+  const pan = document.getElementById('mapPanneau');
+  const panel = document.getElementById('panel-territoire');
+  if(!wrap || !leg || !pan || !panel) return false;
+  const large = carteLargePossible();
+  if(large === null) return sceneLarge;
+  let scene = document.getElementById('mapScene');
+  if(!scene){
+    if(!large) return false;
+    scene = document.createElement('div');
+    scene.className = 'map-scene';
+    scene.id = 'mapScene';
+    wrap.parentElement.insertBefore(scene, wrap);
+    scene.innerHTML = `<aside class="map-cote gauche" id="mapCoteG"></aside>`;
+    scene.appendChild(wrap);
+    scene.insertAdjacentHTML('beforeend', `<aside class="map-cote droite" id="mapCoteD">
+      <div class="map-cote-vide"><b>Aucune commune choisie</b>Clique sur une commune ou un département de la carte pour voir sa fiche ici.</div></aside>`);
+  }
+  const change = large !== sceneLarge;
+  sceneLarge = large;
+  scene.classList.toggle('large', large);
+  panel.classList.toggle('carte-large', large);
+  const coteD = document.getElementById('mapCoteD');
+  if(large){
+    if(leg.parentElement.id !== 'mapCoteG') document.getElementById('mapCoteG').appendChild(leg);
+    leg.classList.remove('en-dessous');
+    if(pan.parentElement !== coteD) coteD.insertBefore(pan, coteD.firstChild);
+    pan.style.left = ''; pan.style.top = ''; pan.style.bottom = '';
+  } else if(pan.parentElement !== wrap){
+    wrap.appendChild(pan);
+  }
+  if(change) sizeMapWrap(window.__mapAspectRatio);
+  return large;
+}
+
+// Le cadre prend la colonne du milieu ; sa hauteur reste celle d'un ecran.
+function tailleCarteLarge(wrap, ratio){
+  const scene = wrap.parentElement;
+  const cellule = scene.clientWidth - SCENE_GAUCHE - SCENE_DROITE - 2 * SCENE_ECART;
+  const haut = Math.max(320, Math.min(window.innerHeight * 0.82, cellule / ratio));
+  // au-dela, ce ne serait plus que de la mer sur les cotes
+  const larg = Math.min(cellule, haut * ratio * 1.6);
+  wrap.style.width = Math.round(larg) + 'px';
+  wrap.style.height = Math.round(haut) + 'px';
+  scene.style.setProperty('--carte-h', Math.round(haut) + 'px');
+  if(MODE_CANVAS){ redimensionnerCanvas(); demanderDessin(); }
+  applyMapTransform();
+}

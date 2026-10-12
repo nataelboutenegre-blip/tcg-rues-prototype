@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '20fa3f196f30';
+const VERSION_JEU = '0d013933ba5d';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1586,11 +1586,13 @@ function departementsVisibles(liste){
   const wrap = document.getElementById('mapWrap');
   if(!wrap) return new Set();
   const w = wrap.clientWidth, h = wrap.clientHeight;
+  // patch118 : hauteur de la CARTE (et non du cadre, plus haut en plein ecran)
+  const hc = MAP_H * (w / MAP_W);
   const vus = new Set();
   const ajouter = (c) => {
     if(c.lat == null) return;
     const p = project(c.lat, c.lon);
-    const x = p.x * w * mapZoom + mapPanX, y = p.y * h * mapZoom + mapPanY;
+    const x = p.x * w * mapZoom + mapPanX, y = p.y * hc * mapZoom + mapPanY;
     if(x > -60 && x < w + 60 && y > -60 && y < h + 60) vus.add(c.dept);
   };
   for(const c of liste) ajouter(c);

@@ -12,7 +12,7 @@ select jsonb_pretty(jsonb_build_object(
                            (select jsonb_agg(pseudo || ' (' || points || ')' order by rang) from public.classement_saisons
                              where saison = 'saison-1' and rang <= 3))
                           from public.classement_saisons where saison = 'saison-1'),
-  'raretes_attendu_302_1015_3406_12841_17183', (select jsonb_object_agg(tier, n) from
+  'raretes_attendu_302_1013_3406_12838_17180', (select jsonb_object_agg(tier, n) from
                          (select tier, count(*) n from public.communes group by tier) x),
   'numeros_coherents', (select bool_and(rang between 1 and palier_total) from public.communes),
   'front_possessions', (select jsonb_build_object('communes', count(*), 'joueurs', count(distinct joueur_id),

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'da661d4b936c';
+const VERSION_JEU = '08f76485b531';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1389,6 +1389,24 @@ document.getElementById('journal').addEventListener('click', (e) => {
 let classementMode = 'general';
 let classementComplet = false;
 let classementDonnees = [];
+// patch120 : detail du score de la saison 2 (joueur_id -> {cartes, combats, territoires})
+let scoreDetail = new Map();
+async function chargerScoreDetail(){
+  scoreDetail = new Map();
+  if(!SAISON2 || classementMode !== 'general' || !classementDonnees.length) return;
+  const { data, error } = await sb.rpc('score_detail', { p_joueurs: classementDonnees.map(l => l.joueur_id) });
+  if(error){ console.error('Detail du score :', error.message); return; }
+  (data || []).forEach(d => scoreDetail.set(d.joueur_id, d));
+  if(scoreDetail.size) renderClassement();
+}
+function scoreBarre(id){
+  const d = scoreDetail.get(id);
+  if(!d) return '';
+  const nb = (n) => Number(n || 0).toLocaleString('fr-FR');
+  const part = (v, cl) => Number(v) > 0 ? `<i class="${cl}" style="flex:${Number(v)}"></i>` : '';
+  return `<span class="sc-barre" title="cartes ${nb(d.cartes)} · combats ${nb(d.combats)} · territoires ${nb(d.territoires)}">`
+    + part(d.cartes, 'c') + part(d.combats, 'co') + part(d.territoires, 't') + '</span>';
+}
 let classementOuvert = (() => {
   try{
     const v = localStorage.getItem('tf-classement-ouvert');
@@ -1448,7 +1466,9 @@ async function loadClassement(){
     return;
   }
   classementDonnees = data || [];
+  scoreDetail = new Map();
   renderClassement();
+  chargerScoreDetail();
 }
 
 function renderClassement(){
@@ -1491,6 +1511,16 @@ function renderClassement(){
   }
   const couleur = (l) => l.est_moi ? COULEUR_MOI : colorForPlayer(l.joueur_id);
   const nb = (n) => Number(n).toLocaleString('fr-FR');
+  // patch120 : legende du detail du score (saison 2)
+  let legende = document.getElementById('clLegende');
+  if(!legende){
+    legende = document.createElement('p');
+    legende.id = 'clLegende';
+    legende.className = 'sc-legende';
+    legende.innerHTML = '<i class="sc-pt c"></i>cartes <i class="sc-pt co"></i>combats <i class="sc-pt t"></i>territoires';
+    podium.before(legende);
+  }
+  legende.hidden = scoreDetail.size === 0;
 
   const trois = classementDonnees.filter(l => l.rang <= 3);
   const ordre = [trois.find(l => l.rang === 2), trois.find(l => l.rang === 1), trois.find(l => l.rang === 3)].filter(Boolean);
@@ -1501,6 +1531,7 @@ function renderClassement(){
       <span class="cl-pseudo">${l.est_moi ? 'Toi' : echapperTexte(l.pseudo)}</span>
       <span class="cl-score">${nb(l.score)}<small>pts</small></span>
       <span class="cl-detail">${nb(l.communes)} commune${l.communes > 1 ? 's' : ''}</span>
+      ${scoreBarre(l.joueur_id)}
     </button>`).join('');
 
   const suite = classementDonnees.filter(l => l.rang > 3);
@@ -1508,7 +1539,9 @@ function renderClassement(){
     <button class="cl-ligne ${l.est_moi ? 'moi' : ''}" data-joueur-id="${echapperTexte(l.joueur_id)}" title="Mettre son territoire en évidence">
       <span class="cl-rang">${l.rang}</span>
       <span class="cl-pastille" style="background:${couleur(l)}"></span>
-      <span class="cl-pseudo">${l.est_moi ? '<b>Toi</b>' : echapperTexte(l.pseudo)}</span>
+      ${scoreDetail.size
+        ? `<span class="sc-nom"><span class="cl-pseudo">${l.est_moi ? '<b>Toi</b>' : echapperTexte(l.pseudo)}</span>${scoreBarre(l.joueur_id)}</span>`
+        : `<span class="cl-pseudo">${l.est_moi ? '<b>Toi</b>' : echapperTexte(l.pseudo)}</span>`}
       <span class="cl-mini">${l.legendaires > 0 ? `<i class="cl-etoile">★</i>${nb(l.legendaires)}` : ''}${l.rares > 0 ? `<i class="cl-rond"></i>${nb(l.rares)}` : ''}</span>
       <span class="cl-detail">${nb(l.communes)}</span>
       <span class="cl-score">${nb(l.score)}<small>pts</small></span>

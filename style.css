@@ -4778,10 +4778,11 @@ html:not(.clans-ouverts) .tab[data-tab="clan"]{ display:none !important; }
 .clan-couleurs button[aria-pressed="true"]{ border-color:#fff; box-shadow:0 0 0 2px var(--nuit), 0 0 0 4px #fff; }
 .clan-note{ color: var(--brume); font-size:.82rem; line-height:1.5; margin:10px 0 0; }
 .clan-regles{ margin:14px 0; padding-left:18px; color: var(--brume); font-size:.84rem; line-height:1.55; }
-.cl-ligne{ display:grid; grid-template-columns:22px 30px minmax(0,1fr) auto; gap:10px; align-items:center; padding:8px 4px; border-top:1px solid rgba(169,188,212,0.1); }
-.cl-ligne.moi{ background: rgba(240,180,41,0.08); border-radius:8px; }
-.cl-ligne .cl-score{ font-family: var(--titre); font-size:1.1rem; text-align:right; }
-.cl-ligne .cl-score small{ display:block; font-family: var(--texte); font-size:.68rem; color: var(--brume); }
+/* patch120 : limite aux clans (ces regles deformaient le classement de la Communaute) */
+.clan-carte .cl-ligne{ display:grid; grid-template-columns:22px 30px minmax(0,1fr) auto; gap:10px; align-items:center; padding:8px 4px; border-top:1px solid rgba(169,188,212,0.1); }
+.clan-carte .cl-ligne.moi{ background: rgba(240,180,41,0.08); border-radius:8px; }
+.clan-carte .cl-ligne .cl-score{ font-family: var(--titre); font-size:1.1rem; text-align:right; }
+.clan-carte .cl-ligne .cl-score small{ display:block; font-family: var(--texte); font-size:.68rem; color: var(--brume); }
 
 /* ---------- patch111 : cartes Aurore ---------- */
 .aurore.commun    { --au-t:#9AA8BC; --au-fond:radial-gradient(120% 90% at 40% 30%, #4A5A73, #121A28 70%); --au-a1:#7FF2D0; --au-a2:#8FB4FF; --au-a3:#C9A6FF; }
@@ -5036,3 +5037,16 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
 }
 .map-cote-vide b{ display:block; color:#fff; font-family:var(--titre); font-weight:800; font-size:1.1rem; margin-bottom:4px; }
 .map-cote .pc[hidden] ~ .map-cote-vide{ display:block; }
+
+/* ---------- patch120 : detail du score (saison 2) ---------- */
+.sc-legende{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:.74rem; color: var(--brume); margin:-4px 0 10px; }
+.sc-legende[hidden]{ display:none; }
+.sc-pt{ display:inline-block; width:8px; height:8px; border-radius:2px; margin:0 1px 0 4px; }
+.sc-pt:first-child{ margin-left:0; }
+.sc-pt.c{ background: var(--c-rare); } .sc-pt.co{ background: var(--c-rouge); } .sc-pt.t{ background: var(--c-peucommun); }
+.sc-nom{ flex:1; min-width:0; display:flex; flex-direction:column; gap:4px; }
+.sc-nom .cl-pseudo{ flex:none; }
+.sc-barre{ display:flex; gap:2px; height:5px; width:100%; max-width:160px; border-radius:3px; overflow:hidden; }
+.cl-marche .sc-barre{ max-width:96px; margin-top:4px; }
+.sc-barre i{ display:block; min-width:3px; }
+.sc-barre .c{ background: var(--c-rare); } .sc-barre .co{ background: var(--c-rouge); } .sc-barre .t{ background: var(--c-peucommun); }

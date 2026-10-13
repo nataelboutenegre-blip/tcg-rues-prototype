@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '365d90f08de9';
+const VERSION_JEU = 'dd345cb79dd1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1711,7 +1711,7 @@ const CONTOURS = new Map();        // departement -> { communes } ou 'charge' / 
 let contoursEnCours = 0;
 
 // patch113 : monter ce numero quand un fichier de contours change
-const CONTOURS_V = '2';
+const CONTOURS_V = '3';   // patch130 : communes nouvelles
 async function chargerContours(dep){
   if(CONTOURS.has(dep)) return CONTOURS.get(dep);
   CONTOURS.set(dep, null); // evite de demander deux fois le meme
@@ -11325,7 +11325,10 @@ function rafaleChargerNoms(){
   if(!rafaleNomsEnCours){
     rafaleNomsEnCours = fetch('data/noms-communes.json', { cache: 'force-cache' })
       .then(r => r.json())
-      .then(l => { rafaleNoms = new Map(); for(const [nom, dept] of l){ const k = rafaleNorm(nom); if(k && !rafaleNoms.has(k)) rafaleNoms.set(k, [nom, dept]); } return rafaleNoms; })
+      .then(l => { rafaleNoms = new Map(); for(const [nom, dept] of l){ const k = rafaleNorm(nom); if(k && !rafaleNoms.has(k)) rafaleNoms.set(k, [nom, dept]); }
+        // patch130 : les trois villes a arrondissements
+        rafaleNoms.set('PARIS', ['Paris', '75']); rafaleNoms.set('MARSEILLE', ['Marseille', '13']); rafaleNoms.set('LYON', ['Lyon', '69']);
+        return rafaleNoms; })
       .catch(err => { rafaleNomsEnCours = null; throw err; });
   }
   return rafaleNomsEnCours;

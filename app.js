@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ab7927c7e97f';
+const VERSION_JEU = '365d90f08de9';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11193,7 +11193,7 @@ function rafaleAvant(p, texte, lui, luiInfo, moi){
   document.getElementById('rfVsLui').textContent = lui;
   document.getElementById('rfVsLuiInfo').textContent = luiInfo || '';
   document.getElementById('rfVsMoi').textContent = moi || '';
-  document.getElementById('rfPartir').textContent = p.parti ? 'Reprendre' : 'Partir';
+  document.getElementById('rfPartir').textContent = p.parti ? 'Reprendre' : 'Lancer le chrono';
 }
 
 document.getElementById('rfLancer').addEventListener('click', async (ev) => {

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'cffd08284532';
+const VERSION_JEU = 'd76ab1c51afe';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -697,6 +697,7 @@ async function showGame(session_){
   await loadPackStatus();
   dmMesure('paquets');
   dmFin();
+  demarrerPresence(session_.user.id);   // patch127
   verifierTiragesEnAttente();
   loadMenaces();
   renderNotifications();
@@ -733,6 +734,68 @@ async function showGame(session_){
 // true si on arrive depuis un lien de réinitialisation reçu par email
 let recuperationEnCours = /type=recovery/.test(location.hash)
   || new URLSearchParams(location.search).get('type') === 'recovery';
+
+// ---------- patch127 : qui est en ligne ----------
+let enLigne = new Set();
+let canalPresence = null;
+let horsLigne = (() => { try{ return localStorage.getItem('tf-hors-ligne') === '1'; }catch(e){ return false; } })();
+const POINT_EN_LIGNE = '<i class="en-ligne-point" title="En ligne"></i>';
+const pointEnLigne = (id) => enLigne.has(id) ? POINT_EN_LIGNE : '';
+function demarrerPresence(uid){
+  if(canalPresence || !uid || typeof sb.channel !== 'function') return;
+  try{
+    canalPresence = sb.channel('en-ligne', { config: { presence: { key: uid } } });
+    canalPresence.on('presence', { event: 'sync' }, () => {
+      enLigne = new Set(Object.keys(canalPresence.presenceState()));
+      majEnLigne();
+    });
+    canalPresence.subscribe(async (statut) => {
+      if(statut === 'SUBSCRIBED' && !horsLigne){
+        try{ await canalPresence.track({ depuis: Date.now() }); }catch(e){}
+      }
+    });
+  }catch(e){ console.error('Présence :', e); }
+}
+async function basculerHorsLigne(valeur){
+  horsLigne = valeur;
+  try{ localStorage.setItem('tf-hors-ligne', valeur ? '1' : '0'); }catch(e){}
+  if(!canalPresence) return;
+  try{ valeur ? await canalPresence.untrack() : await canalPresence.track({ depuis: Date.now() }); }catch(e){}
+}
+function majEnLigne(){
+  const n = enLigne.size;
+  let el = document.getElementById('clEnLigne');
+  const tete = document.querySelector('#classement .cl-tete h2');
+  if(!el && tete){
+    el = document.createElement('span');
+    el.id = 'clEnLigne';
+    el.className = 'cl-enligne';
+    tete.after(el);
+  }
+  if(el){
+    el.hidden = n === 0;
+    el.innerHTML = `<i></i>${n} joueur${n > 1 ? 's' : ''} en ligne`;
+  }
+  if(typeof renderClassement === 'function' && typeof classementDonnees !== 'undefined' && classementDonnees.length) renderClassement();
+  if(typeof majLegendeEnLigne === 'function') majLegendeEnLigne();
+}
+// la liste des joueurs de la carte : on pose ou retire le point sans la redessiner
+function majLegendeEnLigne(){
+  document.querySelectorAll('.leg-joueur[data-joueur-id]').forEach(b => {
+    const p = b.querySelector('.leg-pseudo');
+    if(!p) return;
+    const point = p.querySelector('.en-ligne-point');
+    const doit = enLigne.has(b.dataset.joueurId);
+    if(doit && !point) p.insertAdjacentHTML('beforeend', POINT_EN_LIGNE);
+    else if(!doit && point) point.remove();
+  });
+}
+(function brancherHorsLigne(){
+  const c = document.getElementById('horsLigne');
+  if(!c) return;
+  c.checked = horsLigne;
+  c.addEventListener('change', () => basculerHorsLigne(c.checked));
+})();
 
 // ---------- patch122 : ecran de chargement ----------
 const DM_T0 = performance.now();
@@ -1579,7 +1642,7 @@ function renderClassement(){
     <button class="cl-marche r${l.rang} ${l.est_moi ? 'moi' : ''}" data-joueur-id="${echapperTexte(l.joueur_id)}" title="Mettre son territoire en évidence">
       <span class="cl-rang">${l.rang}</span>
       <span class="cl-pastille" style="background:${couleur(l)}"></span>
-      <span class="cl-pseudo">${l.est_moi ? 'Toi' : echapperTexte(l.pseudo)}</span>
+      <span class="cl-pseudo">${l.est_moi ? 'Toi' : echapperTexte(l.pseudo)}${pointEnLigne(l.joueur_id)}</span>
       <span class="cl-score">${nb(l.score)}<small>pts</small></span>
       <span class="cl-detail">${nb(l.communes)} commune${l.communes > 1 ? 's' : ''}</span>
       ${scoreBarre(l.joueur_id)}
@@ -1591,8 +1654,8 @@ function renderClassement(){
       <span class="cl-rang">${l.rang}</span>
       <span class="cl-pastille" style="background:${couleur(l)}"></span>
       ${scoreDetail.size
-        ? `<span class="sc-nom"><span class="cl-pseudo">${l.est_moi ? '<b>Toi</b>' : echapperTexte(l.pseudo)}</span>${scoreBarre(l.joueur_id)}</span>`
-        : `<span class="cl-pseudo">${l.est_moi ? '<b>Toi</b>' : echapperTexte(l.pseudo)}</span>`}
+        ? `<span class="sc-nom"><span class="cl-pseudo">${l.est_moi ? '<b>Toi</b>' : echapperTexte(l.pseudo)}${pointEnLigne(l.joueur_id)}</span>${scoreBarre(l.joueur_id)}</span>`
+        : `<span class="cl-pseudo">${l.est_moi ? '<b>Toi</b>' : echapperTexte(l.pseudo)}${pointEnLigne(l.joueur_id)}</span>`}
       <span class="cl-mini">${l.legendaires > 0 ? `<i class="cl-etoile">★</i>${nb(l.legendaires)}` : ''}${l.rares > 0 ? `<i class="cl-rond"></i>${nb(l.rares)}` : ''}</span>
       <span class="cl-detail">${nb(l.communes)}</span>
       <span class="cl-score">${nb(l.score)}<small>pts</small></span>
@@ -3415,6 +3478,7 @@ function departementsDomines(){
 }
 
 function renderLegendeCarte(joueurs, idSvg){
+  setTimeout(majLegendeEnLigne, 0);   // patch127
   const leg = document.getElementById('mapLegende');
   if(!leg) return;
   const moi = joueurs.get(ID_MOI);

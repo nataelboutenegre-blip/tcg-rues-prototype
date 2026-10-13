@@ -5103,3 +5103,12 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
 /* ---------- patch125 : aide sous la liste du Combat ---------- */
 .combat-aide{ margin:12px 2px 0; font-size:.8rem; line-height:1.5; color:var(--brume); max-width:70ch; }
 .combat-aide[hidden]{ display:none; }
+
+/* ---------- patch127 : qui est en ligne ---------- */
+.cl-enligne{ display:inline-flex; align-items:center; gap:6px; font-size:.78rem; color:var(--brume); }
+.cl-enligne[hidden]{ display:none; }
+.cl-enligne i, .en-ligne-point{ display:inline-block; width:8px; height:8px; border-radius:50%; background:#3DDC84; box-shadow:0 0 8px rgba(61,220,132,.7); flex-shrink:0; }
+.en-ligne-point{ width:7px; height:7px; margin-left:7px; vertical-align:2px; }
+.presence-reglage{ display:flex; gap:10px; align-items:flex-start; margin:12px 0 0; font-size:.84rem; color:var(--brume); line-height:1.45; cursor:pointer; max-width:62ch; }
+.presence-reglage b{ color:#fff; font-weight:600; }
+.presence-reglage input{ margin-top:3px; accent-color: var(--c-legendaire); }

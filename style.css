@@ -5056,3 +5056,26 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
   color:#FF8A8E; border:1px solid rgba(229,72,77,.45); font-size:.56rem; font-weight:800; letter-spacing:.04em; vertical-align:2px; white-space:nowrap; }
 .tg-siege, .ech-face .tg-siege, .ligne-nom .tg-siege{ font-family: var(--texte); color:#FF8A8E; }
 .ech-item > .tg-siege, .ech-face > .tg-siege{ align-self:flex-start; margin:4px 0 0; }
+
+/* ---------- patch122 : ecran de chargement ---------- */
+.demarrage{ position:fixed; inset:0; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px;
+  background:radial-gradient(120% 80% at 50% 38%, #18305A 0%, var(--nuit) 62%); color:#fff; font-family:var(--texte); transition:opacity .45s ease; }
+.demarrage.fini{ opacity:0; pointer-events:none; }
+.dm-scene{ position:relative; width:min(240px,62vw); aspect-ratio:1; }
+.dm-scene > svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+.dm-anneau{ fill:none; stroke:var(--c-legendaire); stroke-width:1.1; stroke-dasharray:1; stroke-dashoffset:1; animation:dmTrace 2.4s ease-out forwards; }
+@keyframes dmTrace{ to{ stroke-dashoffset:0; } }
+.dm-epingle{ position:absolute; left:50%; top:50%; width:74px; height:74px; margin:-37px 0 0 -37px; border-radius:50%; background:var(--nuit);
+  box-shadow:0 0 0 2px var(--c-legendaire), 0 0 0 8px rgba(15,31,56,.92), 0 0 0 9.5px rgba(240,180,41,.4); display:flex; align-items:center; justify-content:center;
+  animation:dmPouls 1.8s ease-in-out infinite; }
+.dm-epingle svg{ width:34px; height:34px; stroke:var(--c-legendaire); }
+@keyframes dmPouls{ 50%{ box-shadow:0 0 0 2px var(--c-legendaire), 0 0 0 8px rgba(15,31,56,.92), 0 0 0 9.5px rgba(240,180,41,.4), 0 0 34px rgba(240,180,41,.35); } }
+.dm-nom{ font-family:var(--titre); font-weight:900; font-size:2.6rem; letter-spacing:.02em; line-height:1; }
+.dm-nom b{ color:var(--c-legendaire); font-weight:900; }
+.dm-etat{ display:flex; flex-direction:column; align-items:center; gap:10px; width:min(260px,70vw); }
+.dm-barre{ width:100%; height:4px; border-radius:2px; background:rgba(169,188,212,.16); overflow:hidden; }
+.dm-barre i{ display:block; height:100%; width:4%; background:var(--c-legendaire); border-radius:2px; transition:width .5s ease; }
+.dm-texte{ font-size:.82rem; color:var(--brume); min-height:1.2em; }
+.dm-astuce{ position:absolute; bottom:calc(28px + env(safe-area-inset-bottom,0px)); left:16px; right:16px; text-align:center; font-size:.78rem; color:var(--brume); opacity:.8; max-width:46ch; margin:0 auto; line-height:1.5; }
+.dm-astuce b{ color:#fff; font-weight:600; }
+@media (prefers-reduced-motion:reduce){ .dm-anneau{ animation:none; stroke-dashoffset:0; } .dm-epingle{ animation:none; } }

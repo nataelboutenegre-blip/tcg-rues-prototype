@@ -22,11 +22,18 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=1cd2e24ca506">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<link rel="stylesheet" href="style.css?v=092df96b4167">
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
 <body>
+<div class="demarrage" id="demarrage" role="status" aria-live="polite">
+  <div class="dm-scene"><svg viewBox="0 0 200 200" id="dmCourbes" aria-hidden="true"></svg>
+    <div class="dm-epingle"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></div></div>
+  <div class="dm-nom">Terra<b>Front</b></div>
+  <div class="dm-etat"><div class="dm-barre"><i id="dmBarre"></i></div><span class="dm-texte" id="dmTexte">Chargement…</span></div>
+  <p class="dm-astuce"><b>Astuce :</b> marque d'une ⭐ les 5 communes que tu veux garder à la fin de la saison.</p>
+</div>
 
 <svg id="fondTopo" aria-hidden="true"></svg>
 
@@ -1411,6 +1418,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script src="app.js?v=1cd2e24ca506"></script>
+<script defer src="app.js?v=092df96b4167"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1cd2e24ca506';
+const VERSION_JEU = '092df96b4167';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -683,11 +683,20 @@ async function showGame(session_){
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('gameScreen').style.display = 'flex';
   document.getElementById('whoami').textContent = session_.user.email;
+  dmEtape(25, 'La carte de France…');
   await loadOutline();
+  dmMesure('carte');
   chargerTotalCommunes();
+  dmEtape(45, 'Tes communes…');
   await loadMyCollection();
+  dmMesure('mes communes');
+  dmEtape(65, 'Les territoires des autres joueurs…');
   await loadOthersPossessions();
+  dmMesure('les autres joueurs');
+  dmEtape(88, 'Tes paquets…');
   await loadPackStatus();
+  dmMesure('paquets');
+  dmFin();
   verifierTiragesEnAttente();
   loadMenaces();
   renderNotifications();
@@ -725,8 +734,50 @@ async function showGame(session_){
 let recuperationEnCours = /type=recovery/.test(location.hash)
   || new URLSearchParams(location.search).get('type') === 'recovery';
 
+// ---------- patch122 : ecran de chargement ----------
+const DM_T0 = performance.now();
+let dmFini = false;
+function dmMesure(etiquette){ try{ console.info(`[démarrage] ${etiquette} : ${Math.round(performance.now() - DM_T0)} ms`); }catch(e){} }
+function dmEtape(pct, texte){
+  if(dmFini) return;
+  const b = document.getElementById('dmBarre'), t = document.getElementById('dmTexte');
+  if(b) b.style.width = pct + '%';
+  if(t) t.textContent = texte;
+}
+function dmFin(){
+  if(dmFini) return;
+  dmFini = true;
+  dmMesure('jeu affiché');
+  const el = document.getElementById('demarrage');
+  if(!el) return;
+  dmEtape(100, 'Prêt');
+  el.classList.add('fini');
+  setTimeout(() => el.remove(), 600);
+}
+(function dmCourbes(){
+  const svg = document.getElementById('dmCourbes');
+  if(!svg) return;
+  const R = aleatoireStable(hashTexte('demarrage')), k1 = 2 + Math.floor(R() * 3), k2 = 3 + Math.floor(R() * 4);
+  const p1 = R() * 6.28, p2 = R() * 6.28, a1 = .08 + R() * .1, a2 = .04 + R() * .06;
+  let h = '';
+  for(let i = 1; i <= 7; i++){
+    const r = i * 12.5, pts = [];
+    for(let k = 0; k < 90; k++){
+      const t = k / 90 * Math.PI * 2, rr = r * (1 + a1 * Math.sin(k1 * t + p1 + i * .35) + a2 * Math.sin(k2 * t + p2 - i * .2));
+      pts.push((100 + rr * Math.cos(t)).toFixed(1) + ',' + (100 + rr * Math.sin(t) * .9).toFixed(1));
+    }
+    h += `<path class="dm-anneau" pathLength="1" d="M${pts.join('L')}Z" style="animation-delay:${(i * .12).toFixed(2)}s;stroke-opacity:${(.55 - i * .06).toFixed(2)}"/>`;
+  }
+  svg.innerHTML = h;
+  dmEtape(12, 'Connexion…');
+})();
+// jamais bloque derriere l'ecran : 15 s au plus
+setTimeout(dmFin, 15000);
+
 async function initAuth(){
   const { data: { session: s } } = await sb.auth.getSession();
+  dmMesure('session');
+  if(!s || recuperationEnCours) dmFin();
   if(recuperationEnCours){ showAuth(); ecranAuth('nouveau'); }
   else if(s) showGame(s);
   else if(new URLSearchParams(location.search).get('onglet') === 'cdj') montrerInviteCdj();
@@ -3463,15 +3514,24 @@ function renderLegendeCarte(joueurs, idSvg){
   ['mousedown', 'touchstart', 'wheel'].forEach(ev => leg.addEventListener(ev, (e) => e.stopPropagation(), { passive: true }));
 })();
 // Supabase plafonne chaque requete a 1000 lignes : on demande par tranches
-async function toutesLesLignes(construireRequete){
-  const TAILLE = 1000;
-  let tout = [], debut = 0;
+async function toutesLesLignes(construireRequete, cle = 'commune_code'){
+  // patch122 : 6 paquets de 1 000 a la fois au lieu d'un seul. Tries sur une
+  // cle unique, pour qu'une ligne ne puisse pas sauter d'un paquet a l'autre.
+  const TAILLE = 1000, EN_PARALLELE = 6;
+  let tout = [], page = 0;
   for(;;){
-    const { data, error } = await construireRequete().range(debut, debut + TAILLE - 1);
-    if(error) return { data: null, error };
-    tout = tout.concat(data || []);
-    if(!data || data.length < TAILLE) return { data: tout, error: null };
-    debut += TAILLE;
+    const lot = [];
+    for(let k = 0; k < EN_PARALLELE; k++){
+      const debut = (page + k) * TAILLE;
+      lot.push(construireRequete().order(cle, { ascending: true }).range(debut, debut + TAILLE - 1));
+    }
+    const reponses = await Promise.all(lot);
+    for(const { data, error } of reponses){
+      if(error) return { data: null, error };
+      tout = tout.concat(data || []);
+      if(!data || data.length < TAILLE) return { data: tout, error: null };
+    }
+    page += EN_PARALLELE;
   }
 }
 

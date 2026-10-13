@@ -5099,3 +5099,7 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
 @media (hover: hover){
   .paquet.appel:hover, .paquet.appel:hover .perfo-masque, .paquet.appel:hover .paquet-corps::after{ animation-play-state: paused; }
 }
+
+/* ---------- patch125 : aide sous la liste du Combat ---------- */
+.combat-aide{ margin:12px 2px 0; font-size:.8rem; line-height:1.5; color:var(--brume); max-width:70ch; }
+.combat-aide[hidden]{ display:none; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ad47a23ec129';
+const VERSION_JEU = 'e8ad5ae31f0e';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7837,6 +7837,9 @@ const tiersCombat = () => ['rare', 'epique', 'legendaire'].concat([...combatBasC
 function combatBasVoulus(){
   if(COMBAT_TIERS_BAS.indexOf(combatFilterTier) >= 0) return [combatFilterTier];
   if(combatProximite && combatFilterTier === 'tous') return COMBAT_TIERS_BAS.slice();
+  // patch125 : une recherche reduit la liste, on peut tout charger
+  const champ = document.getElementById('combatSearch');
+  if(combatFilterTier === 'tous' && champ && champ.value.trim()) return COMBAT_TIERS_BAS.slice();
   return [];
 }
 async function assurerCiblesBas(){
@@ -8086,12 +8089,32 @@ document.getElementById('combatIntensite').addEventListener('click', (e) => {
   demanderChances();
 });
 
+// patch125 : ce que la liste montre, et ce qu'elle ne montre pas
+function majAideCombat(searchText){
+  const grid = document.getElementById('combatGrid');
+  if(!grid) return;
+  let aide = document.getElementById('combatAide');
+  if(!aide){
+    aide = document.createElement('p');
+    aide.id = 'combatAide';
+    aide.className = 'combat-aide';
+    grid.after(aide);
+  }
+  let texte = '';
+  if(combatEnCours) texte = '';
+  else if(searchText) texte = 'Seules les communes qui ont déjà un propriétaire s\'attaquent. Les communes libres se tirent dans les paquets.';
+  else if(combatFilterTier === 'tous' && !combatProximite) texte = '« Toutes » affiche les rares, épiques et légendaires. Pour les communes et peu communes, choisis leur filtre ou tape un département.';
+  aide.textContent = texte;
+  aide.hidden = !texte;
+}
+
 function renderCombatGrid(){
   if(rendreALOuverture('combat', renderCombatGrid)) return;
   renderIntensite();
   const grid = document.getElementById('combatGrid');
   const searchEl = document.getElementById('combatSearch');
   const searchText = sansAccents(searchEl ? searchEl.value.trim() : '');
+  majAideCombat(searchText);
 
   if(combatBasChargement && combatBasVoulus().some(t => !combatBasCharges.has(t))){
     grid.innerHTML = '<p class="collection-empty">Chargement des communes et peu communes…</p>';
@@ -8240,7 +8263,11 @@ setInterval(() => {
   renderCombatGrid();
 }, 30000);
 
-document.getElementById('combatSearch').addEventListener('input', renderCombatGrid);
+document.getElementById('combatSearch').addEventListener('input', () => {
+  // patch125 : la premiere recherche charge aussi les communes et peu communes
+  if(combatBasVoulus().some(t => !combatBasCharges.has(t))) assurerCiblesBas();
+  renderCombatGrid();
+});
 document.getElementById('combatEnCoursToggle').addEventListener('click', () => {
   combatEnCours = !combatEnCours;
   const btn = document.getElementById('combatEnCoursToggle');

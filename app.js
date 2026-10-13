@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd15a2e77fef1';
+const VERSION_JEU = 'ad47a23ec129';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6825,7 +6825,16 @@ function afficherPaquetATirer(type, nbCartes){
   zone.innerHTML = '';
   const pack = makePackEl(type);
   sceneOuverture(zone).echelle.appendChild(pack);
+  appelerPaquet(pack);   // patch124 : le paquet non ouvert appelle aussi
   armerPaquet(pack, () => tirerCartesDuPaquet(nbCartes));   // patch87
+}
+
+// patch123/124 : le paquet appelle le clic. Le survol le met en pause (CSS),
+// le toucher ou le clic l'arrete.
+function appelerPaquet(pack){
+  if(!ouvAnim || REDUCED_MOTION) return;
+  pack.classList.add('appel');
+  pack.addEventListener('pointerdown', () => pack.classList.remove('appel'), { once: true });
 }
 
 // Paquet pose sur l'ecran d'arrivee : un seul clic le paie et le dechire.
@@ -6836,13 +6845,7 @@ function afficherPaquetPret(type){
   const pack = makePackEl(type);
   pack.dataset.pret = '1';
   pack.setAttribute('aria-label', 'Ouvrir un paquet gratuit');
-  // patch123 : il appelle le clic, jusqu'au premier survol ou toucher
-  if(ouvAnim){
-    pack.classList.add('appel');
-    const calmer = () => pack.classList.remove('appel');
-    pack.addEventListener('pointerenter', calmer, { once: true });
-    pack.addEventListener('pointerdown', calmer, { once: true });
-  }
+  appelerPaquet(pack);
   sceneOuverture(zone).echelle.appendChild(pack);
   // patch87 : le premier toucher (ou le debut de la coupe) paie, puis tire
   armerPaquet(pack, async () => {

@@ -5094,3 +5094,8 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
 @keyframes perfoAppel{ 0%, 16%{ width:0; opacity:1; } 34%{ width:188px; opacity:1; } 48%, 100%{ width:188px; opacity:0; } }
 @keyframes refletAppel{ 0%, 14%{ background-position:110% 0; } 32%, 100%{ background-position:-10% 0; } }
 @media (prefers-reduced-motion: reduce){ .paquet.appel, .paquet.appel .perfo-masque, .paquet.appel .paquet-corps::after{ animation:none !important; } }
+
+/* patch124 : le survol met l'appel en pause au lieu de l'arreter */
+@media (hover: hover){
+  .paquet.appel:hover, .paquet.appel:hover .perfo-masque, .paquet.appel:hover .paquet-corps::after{ animation-play-state: paused; }
+}

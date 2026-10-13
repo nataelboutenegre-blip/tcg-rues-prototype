@@ -5112,3 +5112,60 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
 .presence-reglage{ display:flex; gap:10px; align-items:flex-start; margin:12px 0 0; font-size:.84rem; color:var(--brume); line-height:1.45; cursor:pointer; max-width:62ch; }
 .presence-reglage b{ color:#fff; font-weight:600; }
 .presence-reglage input{ margin-top:3px; accent-color: var(--c-legendaire); }
+
+/* ---------- patch128 : Rafale, et le QG filtré par jeu ---------- */
+.qg-jeux{ grid-column:1 / -1; display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px; align-items:stretch; }
+@media (max-width: 1180px){ .qg-jeux{ grid-template-columns:repeat(2, minmax(0,1fr)); } .qg-jeux #qgCdj{ grid-column:1 / -1; } }
+@media (max-width: 900px){ .qg-jeux{ grid-template-columns:minmax(0,1fr); } }
+#qgDefisBloc{ grid-column:1 / -1; }
+.qg-h3-ligne{ display:flex; align-items:center; justify-content:space-between; gap:8px 12px; flex-wrap:wrap; }
+.qg-filtre{ display:inline-flex; padding:3px; gap:2px; border-radius:999px; background: var(--nuit); border:1px solid rgba(169,188,212,.2); }
+.qg-filtre button{ font:inherit; font-size:12.5px; font-weight:600; color: var(--brume); background:transparent; border:0; border-radius:999px; padding:4px 11px; cursor:pointer; }
+.qg-filtre button:hover{ color:#fff; }
+.qg-filtre button[aria-pressed="true"]{ background: var(--c-legendaire); color: var(--nuit); }
+.qg-filtre button:focus-visible{ outline:2px solid #fff; outline-offset:1px; }
+.qg-jeu{ display:inline-block; margin-right:6px; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:1px 6px; border-radius:4px; vertical-align:1px; }
+.qg-jeu.radar{ color:#9DC3FF; background: rgba(77,141,255,.14); }
+.qg-jeu.rafale{ color:#FFD27A; background: rgba(240,180,41,.14); }
+.qg-duels .qg-vide, .qg-classement .qg-vide{ display:block; padding:4px 8px; }
+.rang-rf-pieton{ color: var(--brume); } .rang-rf-cycliste{ color:#9DC3FF; } .rang-rf-motard{ color: var(--c-peucommun); }
+.rang-rf-routier{ color: var(--c-epique, #B07CFF); } .rang-rf-pilote, .rang-rf-as-du-volant{ color: var(--c-legendaire); }
+
+/* le jeu : une lettre sur plaque bleue, un chrono en barre, les communes en panneaux de direction */
+#panel-rafale .rd-ecran{ max-width:640px; }
+.rf-consigne{ margin:0; color: var(--brume); font-size:14px; text-align:center; }
+#rfVs .qg-actions{ justify-content:center; }
+.rf-scene{ background: var(--nuit-2); border:1px solid rgba(169,188,212,.18); border-radius:16px; padding:16px; display:flex; flex-direction:column; gap:14px; }
+.rf-haut{ display:flex; align-items:center; gap:16px; }
+.rf-lettre{ width:88px; height:88px; flex:none; border-radius:13px; background:#1F4FA8; border:3px solid #fff; box-shadow:0 0 0 3px #1F4FA8, 0 12px 26px rgba(0,0,0,.4);
+  display:grid; place-items:center; font-family: var(--titre); font-weight:900; font-size:64px; color:#fff; line-height:1; }
+.rf-compteurs{ flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; }
+.rf-score{ display:flex; align-items:baseline; gap:8px; }
+.rf-score b{ font-family: var(--titre); font-weight:900; font-size:50px; line-height:.85; font-variant-numeric:tabular-nums; }
+.rf-score span{ color: var(--brume); font-size:14px; }
+.rf-chrono{ height:10px; border-radius:6px; background: var(--nuit); overflow:hidden; }
+.rf-chrono i{ display:block; height:100%; background: var(--c-legendaire); transform-origin:left; transition:transform .1s linear; }
+.rf-chrono.urgent i{ background: var(--c-rouge); }
+.rf-temps{ font-size:13px; color: var(--brume); font-variant-numeric:tabular-nums; }
+.rf-temps b{ color:#fff; }
+.rf-form{ display:flex; gap:8px; }
+.rf-form input{ flex:1; min-width:0; font:600 19px var(--texte, inherit); padding:12px 14px; border-radius:11px; border:2px solid rgba(169,188,212,.3); background: var(--nuit); color:#fff; }
+.rf-form input:disabled{ opacity:.5; }
+.rf-form input.non{ border-color: var(--c-rouge); animation: rfSecoue .35s; }
+.rf-form input.oui{ border-color: var(--c-peucommun); }
+@keyframes rfSecoue{ 20%,60%{ transform:translateX(-6px); } 40%,80%{ transform:translateX(6px); } }
+.rf-retour{ min-height:20px; font-size:13.5px; color: var(--brume); }
+.rf-retour.non{ color:#FF9A90; }
+.rf-plaques{ display:flex; flex-wrap:wrap; gap:7px; }
+.rf-plaque{ background:#1F4FA8; color:#fff; border:2px solid #fff; border-radius:5px; padding:3px 8px 2px; font-family: var(--titre); font-weight:800; font-size:16px; text-transform:uppercase; letter-spacing:.04em; line-height:1.2; animation: rfPose .25s ease-out; }
+.rf-plaque small{ font-size:10.5px; opacity:.75; margin-left:5px; }
+.rf-plaques.lui .rf-plaque{ background:#2B3A55; }
+@keyframes rfPose{ from{ transform:translateY(-8px) scale(.9); opacity:0; } }
+.rf-colonnes{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.rf-colonnes.seule{ grid-template-columns:1fr; }
+@media (max-width: 560px){ .rf-colonnes{ grid-template-columns:1fr; } }
+.rf-oubliees{ margin:0; font-size:13.5px; color: var(--brume); }
+.rf-oubliees:empty{ display:none; }
+.rf-oubliees b{ color:#fff; font-weight:600; }
+.rf-mini-lettre{ align-self:center; width:34px; height:34px; border-radius:7px; background:#1F4FA8; border:2px solid #fff; display:grid; place-items:center; font-family: var(--titre); font-weight:900; font-size:22px; color:#fff; }
+@media (prefers-reduced-motion: reduce){ .rf-plaque, .rf-form input.non{ animation:none; } .rf-chrono i{ transition:none; } }

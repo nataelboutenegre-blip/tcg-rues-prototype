@@ -22,7 +22,7 @@
 <meta property="og:image" content="https://terrafront.fr/icon-512.png">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="style.css?v=d76ab1c51afe">
+<link rel="stylesheet" href="style.css?v=ab7927c7e97f">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -328,6 +328,10 @@
         <div class="icon"><svg viewBox="0 0 24 24"></svg></div>
         Radar
       </div>
+      <div class="tab onglet-fusionne" data-tab="rafale" aria-hidden="true">
+        <div class="icon"><svg viewBox="0 0 24 24"></svg></div>
+        Rafale
+      </div>
 
       <div class="tab" data-tab="combat">
         <div class="icon">
@@ -519,6 +523,7 @@
       <div class="sub">Les défis du jour et les duels contre les autres joueurs.</div>
 
       <div class="qg-grille">
+        <div class="qg-jeux">
         <div class="qg-carte" id="qgCdj">
           <div class="qg-tete">
             <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
@@ -545,26 +550,39 @@
           <div class="qg-actions"><button type="button" class="qg-btn plein" id="qgLancer">Lancer un duel</button><button type="button" class="qg-btn" id="qgEntr">S'entraîner</button><button type="button" class="qg-btn" id="qgDefier">Défier un joueur</button><span class="qg-petit" id="qgAttente"></span></div>
         </div>
 
+        <div class="qg-carte" id="qgRafale">
+          <div class="qg-tete">
+            <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 2.5 5 13.5h6l-1.5 8 8.5-11h-6z"/></svg></span>
+            <div class="qg-titre"><h2>Rafale</h2><p>Duel classé · une lettre, 30 s · 20 pts par victoire, 5 par jour</p></div>
+            <span class="qg-etiquette or" id="rfEtiquette"></span>
+          </div>
+          <div class="qg-rang">
+            <div><b id="rfRangNom">—</b><span class="qg-petit" id="rfRangSuivant"></span></div>
+            <span class="qg-elo"><b id="rfElo">—</b> Elo</span>
+          </div>
+          <div>
+            <div class="qg-jauge"><i id="rfJauge"></i></div>
+            <div class="qg-paliers"><span>Piéton</span><span>Cycliste</span><span>Motard</span><span>Routier</span><span>Pilote</span></div>
+          </div>
+          <div class="qg-actions"><button type="button" class="qg-btn plein" id="rfLancer">Lancer un duel</button><button type="button" class="qg-btn" id="rfEntr">S'entraîner</button><button type="button" class="qg-btn" id="rfDefier">Défier un joueur</button><span class="qg-petit" id="rfAttente"></span></div>
+        </div>
+        </div>
+
         <div class="qg-carte" id="qgDefisBloc" hidden>
           <h3 class="qg-h3">Défis</h3>
           <ul class="qg-duels qg-defis" id="qgDefis"></ul>
         </div>
 
-        <div class="qg-carte" id="qgDerniersBloc" hidden>
-          <h3 class="qg-h3">Tes derniers duels</h3>
+        <div class="qg-carte" id="qgDerniersBloc">
+          <div class="qg-h3-ligne"><h3 class="qg-h3">Tes derniers duels</h3>
+            <div class="qg-filtre" role="group" aria-label="Jeu de l'historique"><button type="button" data-hist="tous">Tous</button><button type="button" data-hist="radar">Radar</button><button type="button" data-hist="rafale">Rafale</button></div></div>
           <ul class="qg-duels" id="qgDerniers"></ul>
         </div>
 
         <div class="qg-carte">
-          <h3 class="qg-h3">Classement Radar</h3>
+          <div class="qg-h3-ligne"><h3 class="qg-h3">Classement</h3>
+            <div class="qg-filtre" role="group" aria-label="Jeu du classement"><button type="button" data-cl="radar">Radar</button><button type="button" data-cl="rafale">Rafale</button></div></div>
           <ol class="qg-classement" id="qgClassement"><li class="qg-vide">Aucun duel joué pour l'instant.</li></ol>
-        </div>
-
-        <div class="qg-carte qg-bientot">
-          <div class="qg-tete">
-            <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 12h14M12 5v14"/></svg></span>
-            <div class="qg-titre"><h2>Bientôt</h2><p>D'autres duels arriveront ici</p></div>
-          </div>
         </div>
       </div>
     </section>
@@ -597,6 +615,39 @@
       <div class="rd-ecran" id="rdEntr" hidden></div>
       <div class="rd-ecran" id="rdFin" hidden></div>
       <p class="qg-vide" id="rdIndispo" hidden>Radar n'est pas disponible pour le moment.</p>
+    </section>
+
+    <section class="tab-panel" id="panel-rafale">
+      <h1>Rafale</h1>
+      <div class="rd-ecran" id="rfVs" hidden>
+        <p class="qg-petit" id="rfVsTexte"></p>
+        <div class="rd-vs">
+          <div class="rd-joueur"><b>Toi</b><span id="rfVsMoi"></span></div>
+          <em>VS</em>
+          <div class="rd-joueur"><b id="rfVsLui">?</b><span id="rfVsLuiInfo"></span></div>
+        </div>
+        <p class="rf-consigne">Une lettre va s'afficher. Tape le plus de communes qui commencent par cette lettre, Entrée après chacune. 30 secondes.</p>
+        <div class="qg-actions"><button type="button" class="qg-btn plein" id="rfPartir">Partir</button><button type="button" class="qg-btn" id="rfAnnulerVs">QG</button></div>
+      </div>
+      <div class="rd-ecran" id="rfJeu" hidden>
+        <div class="rf-scene">
+          <div class="rf-haut">
+            <div class="rf-lettre" id="rfLettre" aria-live="polite">?</div>
+            <div class="rf-compteurs">
+              <div class="rf-score"><b id="rfScore">0</b><span id="rfScoreMot">commune</span></div>
+              <div class="rf-chrono" id="rfChronoBarre"><i id="rfBarre"></i></div>
+              <div class="rf-temps" id="rfTemps"><b>30</b> s</div>
+            </div>
+          </div>
+          <form class="rf-form" id="rfForm" autocomplete="off">
+            <input id="rfChamp" type="text" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="send" aria-label="Nom de commune" placeholder="Une commune…">
+            <button class="qg-btn plein" type="submit">OK</button>
+          </form>
+          <div class="rf-retour" id="rfRetour" role="status" aria-live="polite"></div>
+          <div class="rf-plaques" id="rfPlaques"></div>
+        </div>
+      </div>
+      <div class="rd-ecran" id="rfFin" hidden></div>
     </section>
 
     <section class="tab-panel" id="panel-cdj">
@@ -1419,6 +1470,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=d76ab1c51afe"></script>
+<script defer src="app.js?v=ab7927c7e97f"></script>
 </body>
 </html>

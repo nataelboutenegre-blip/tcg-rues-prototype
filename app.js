@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'e8ad5ae31f0e';
+const VERSION_JEU = 'cffd08284532';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8126,7 +8126,9 @@ function renderCombatGrid(){
     cibles = cibles.filter(c => c.communes.tier === combatFilterTier);
   }
   if(searchText){
-    cibles = cibles.filter(c => correspondRecherche(c.communes.nom, c.communes.departement, searchText));
+    // patch126 : le pseudo du proprietaire compte aussi
+    cibles = cibles.filter(c => correspondRecherche(c.communes.nom, c.communes.departement, searchText)
+      || (c.joueurs && c.joueurs.pseudo && sansAccents(c.joueurs.pseudo).includes(searchText)));
   }
   if(combatProximite){
     cibles = cibles

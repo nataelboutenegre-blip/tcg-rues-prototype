@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '092df96b4167';
+const VERSION_JEU = 'd15a2e77fef1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6489,6 +6489,15 @@ function renderPackStatus(){
   }
   dispoPrecedente = dispo;
   majPaquetPret(dispo);
+  // patch123 : le paquet affiche est le bouton ; pas deux facons de faire la meme chose
+  const bouton = document.getElementById('openFreeBtn');
+  if(paquetPretAffiche()){
+    bouton.disabled = true;
+    bouton.title = 'Touche le paquet ci-dessous';
+  } else bouton.removeAttribute('title');
+}
+function paquetPretAffiche(){
+  return !!document.querySelector('#packZone .paquet[data-pret]');
 }
 
 // Si securite.sql n'a pas encore ete execute, les nouvelles fonctions n'existent pas : on utilise les anciennes
@@ -6827,6 +6836,13 @@ function afficherPaquetPret(type){
   const pack = makePackEl(type);
   pack.dataset.pret = '1';
   pack.setAttribute('aria-label', 'Ouvrir un paquet gratuit');
+  // patch123 : il appelle le clic, jusqu'au premier survol ou toucher
+  if(ouvAnim){
+    pack.classList.add('appel');
+    const calmer = () => pack.classList.remove('appel');
+    pack.addEventListener('pointerenter', calmer, { once: true });
+    pack.addEventListener('pointerdown', calmer, { once: true });
+  }
   sceneOuverture(zone).echelle.appendChild(pack);
   // patch87 : le premier toucher (ou le debut de la coupe) paie, puis tire
   armerPaquet(pack, async () => {

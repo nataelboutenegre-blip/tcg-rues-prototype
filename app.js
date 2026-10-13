@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '08f76485b531';
+const VERSION_JEU = '1cd2e24ca506';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6903,6 +6903,7 @@ async function loadBourse(){
   const { data: market } = await sb
     .from('annonces')
     .select('commune_code, prix, joueur_id, communes(nom,departement,tier), joueurs(pseudo)');
+  await chargerSieges((market || []).map(a => a.commune_code));
   renderMarketGrid(market || [], uid);
 }
 
@@ -7070,14 +7071,16 @@ function renderSellableGrid(){
     const actions = listedPrice
       ? `<span class="chip-vente">En vente à ${Number(listedPrice).toLocaleString('fr-FR')} pts</span>
          <div class="ligne-actions"><button class="btn-p contour" data-action="retirer" data-code="${entry.code}">Retirer</button></div>`
-      : `<div class="ligne-actions">${entry.conquiseLe && entry.conquiseLe + REVENTE_BLOQUEE_MS > Date.now()
+      : `<div class="ligne-actions">${finSiegeMienne(entry.code)
+            ? `<button class="btn-p contour" disabled title="Un joueur l'attaque : la vente au jeu reprend 24 h après sa dernière attaque. Tu peux toujours la mettre en vente ou l'échanger, l'attaque suit la commune.">Assiégée · vente au jeu dans ${formatDuree(finSiegeMienne(entry.code) - Date.now())}</button>`
+            : entry.conquiseLe && entry.conquiseLe + REVENTE_BLOQUEE_MS > Date.now()
             ? `<button class="btn-p contour" disabled title="Commune conquise récemment">Revente au jeu dans ${formatDuree(entry.conquiseLe + REVENTE_BLOQUEE_MS - Date.now())}</button>`
             : `<button class="btn-p contour" data-action="vendre-jeu" data-code="${entry.code}">Vendre au jeu <b>${rachat}</b></button>`}
          <button class="btn-p or" data-action="mettre-vente" data-code="${entry.code}">Mettre en vente</button></div>`;
     return `
       <div class="ligne ${entry.tier.id}">
         <div class="ligne-texte">
-          <span class="ligne-nom">${entry.nom}</span>
+          <span class="ligne-nom">${entry.nom}${tagSiege(serieMienne(entry.code))}</span>
           <span class="ligne-detail">${DEPT_NAMES[entry.dept] ? DEPT_NAMES[entry.dept] + ' ' : ''}(${entry.dept}), ${entry.tier.label.toLowerCase()}</span>
         </div>
         ${actions}
@@ -7174,7 +7177,7 @@ function renderMarketGrid(market, myUid){
     return `
       <div class="ligne ${c.tier}">
         <div class="ligne-texte">
-          <span class="ligne-nom">${echapperTexte(c.nom)}${a.je_l_ai === false && !isMine ? TAG_NEUF : ''}</span>
+          <span class="ligne-nom">${echapperTexte(c.nom)}${a.je_l_ai === false && !isMine ? TAG_NEUF : ''}${tagSiege(isMine ? serieMienne(a.commune_code) : siegesConnus.get(a.commune_code))}</span>
           <span class="ligne-detail">${DEPT_NAMES[c.departement] ? DEPT_NAMES[c.departement] + ' ' : ''}(${c.departement}), ${tier.label.toLowerCase()}, ${vendeur}</span>
         </div>
         <span class="ligne-prix">${Number(a.prix).toLocaleString('fr-FR')}<small>pts</small></span>
@@ -7342,6 +7345,37 @@ function formatDuree(ms){
 
 // ---------- Mes communes attaquees ----------
 let menaces = [];
+// patch121 : le siege suit la commune
+// une de mes communes : bloquee pour la vente au jeu tant qu'un attaquant
+// avec au moins une victoire a attaque dans les 24 h (meme regle que
+// commune_assiegee cote serveur). Renvoie la fin du blocage, ou 0.
+function finSiegeMienne(code){
+  let fin = 0;
+  for(const m of menaces){
+    if(m.commune_code !== code || !(m.victoires_consecutives > 0) || !m.dernier_round) continue;
+    fin = Math.max(fin, new Date(m.dernier_round).getTime() + 24 * 3600e3);
+  }
+  return fin > Date.now() ? fin : 0;
+}
+function serieMienne(code){
+  let s = 0;
+  for(const m of menaces) if(m.commune_code === code) s = Math.max(s, Number(m.victoires_consecutives) || 0);
+  return s;
+}
+// communes des autres : commune_code -> serie en cours
+let siegesConnus = new Map();
+async function chargerSieges(codes){
+  if(marcheTerra()) return;
+  const liste = [...new Set(codes)].filter(Boolean).slice(0, 300);
+  if(!liste.length) return;
+  const { data, error } = await sb.rpc('sieges_communes', { p_codes: liste });
+  if(error){ console.error('Sieges :', error.message); return; }
+  liste.forEach(c => siegesConnus.delete(c));
+  (data || []).forEach(s => siegesConnus.set(s.commune_code, Number(s.serie) || 0));
+}
+const tagSiege = (serie) => !marcheTerra() && serie > 0
+  ? `<span class="tg-siege" title="Un joueur l'attaque : sa série continue contre le nouveau propriétaire">⚔ assiégée ${serie}/3</span>`
+  : '';
 let menacesInterval = null;
 let echangesInterval = null;
 
@@ -9598,6 +9632,7 @@ async function chargerEchangesEnCours(){
   const { data, error } = await sb.rpc(marcheTerra() ? 'terra_mes_echanges' : 'mes_echanges');
   if(error){ console.warn('TERRAFRONT echanges indisponibles', error); return; }
   echangesEnCours = data || [];
+  await chargerSieges(echangesEnCours.map(e => e.je_recois_code));
   majBadgeEchange();
   signalerNouveauxEchanges();
 }
@@ -9646,6 +9681,7 @@ async function loadBadgeEchanges(){
   const { data, error } = await sb.rpc(marcheTerra() ? 'terra_mes_echanges' : 'mes_echanges');
   if(error) return;
   echangesEnCours = data || [];
+  await chargerSieges(echangesEnCours.map(e => e.je_recois_code));
   majBadgeEchange();
   // si le joueur est justement sur l'onglet, la liste suit toute seule
   const panneau = document.getElementById('panel-echange');
@@ -9680,12 +9716,12 @@ function ligneEchange(e){
         <div class="ech-face recoit">
           <span>Tu reçois</span>
           <b>${echapperTexte(e.je_recois_nom)}</b>
-          <small>(${echapperTexte(e.je_recois_dept)})</small>${e.nouvelle === true ? TAG_NEUF : ''}
+          <small>(${echapperTexte(e.je_recois_dept)})</small>${e.nouvelle === true ? TAG_NEUF : ''}${tagSiege(siegesConnus.get(e.je_recois_code))}
         </div>
         <div class="ech-face donne">
           <span>Tu donnes</span>
           <b>${echapperTexte(e.je_donne_nom)}</b>
-          <small>(${echapperTexte(e.je_donne_dept)})</small>
+          <small>(${echapperTexte(e.je_donne_dept)})</small>${tagSiege(serieMienne(e.je_donne_code))}
         </div>
       </div>
       <div class="ech-prop-pied">
@@ -9757,7 +9793,7 @@ function renderEchangeMien(){
   zone.innerHTML = miennes.map(c => `
     <button class="ech-item ${echangeTier} ${echangeMien === c.code ? 'choisi' : ''}" data-mien="${echapperTexte(c.code)}">
       <b>${echapperTexte(c.nom)}</b>
-      <small>${echapperTexte(DEPT_NAMES[c.dept] || '')} (${echapperTexte(c.dept)})</small>
+      <small>${echapperTexte(DEPT_NAMES[c.dept] || '')} (${echapperTexte(c.dept)})</small>${tagSiege(serieMienne(c.code))}
     </button>`).join('');
   majResumeEchange();
 }
@@ -9808,6 +9844,7 @@ async function chargerCiblesEchange(){
     return;
   }
   echangeCibles = data || [];
+  await chargerSieges(echangeCibles.map(c => c.commune_code));
   renderEchangeCibles();
 }
 
@@ -9825,7 +9862,7 @@ function renderEchangeCibles(){
   zone.innerHTML = echangeCibles.map(c => `
     <button class="ech-item ${echangeTier} ${echangeCible && cleCible(echangeCible) === cleCible(c) ? 'choisi' : ''}" data-cible="${echapperTexte(cleCible(c))}">
       <b>${echapperTexte(c.nom)}${c.nouvelle === true ? TAG_NEUF : ''}</b>
-      <small>${echapperTexte(c.departement)} · ${echapperTexte(c.pseudo || 'un joueur')}</small>
+      <small>${echapperTexte(c.departement)} · ${echapperTexte(c.pseudo || 'un joueur')}</small>${tagSiege(siegesConnus.get(c.commune_code))}
     </button>`).join('');
   majResumeEchange();
 }

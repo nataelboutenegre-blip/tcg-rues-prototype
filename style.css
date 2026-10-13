@@ -5050,3 +5050,9 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
 .cl-marche .sc-barre{ max-width:96px; margin-top:4px; }
 .sc-barre i{ display:block; min-width:3px; }
 .sc-barre .c{ background: var(--c-rare); } .sc-barre .co{ background: var(--c-rouge); } .sc-barre .t{ background: var(--c-peucommun); }
+
+/* ---------- patch121 : le siege suit la commune ---------- */
+.tg-siege{ display:inline-block; margin-left:7px; padding:2px 7px; border-radius:999px; background:rgba(229,72,77,.16);
+  color:#FF8A8E; border:1px solid rgba(229,72,77,.45); font-size:.56rem; font-weight:800; letter-spacing:.04em; vertical-align:2px; white-space:nowrap; }
+.tg-siege, .ech-face .tg-siege, .ligne-nom .tg-siege{ font-family: var(--texte); color:#FF8A8E; }
+.ech-item > .tg-siege, .ech-face > .tg-siege{ align-self:flex-start; margin:4px 0 0; }

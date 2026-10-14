@@ -16,7 +16,7 @@
 --    obstine        le plus d'assauts ratés             (journal defense, cible)
 --    malchanceux    le plus de communes perdues         (journal conquete, cible)
 --    marchand       le plus de ventes à la Bourse       (journal achat, cible = le vendeur)
---    diplomate      le plus d'échanges conclus          (journal echange, acteur ou cible)
+--    diplomate      le plus d'échanges conclus          (journal echange, une ligne par joueur et par échange)
 --    collectionneur le plus de communes                 (possessions, au moment du calcul)
 --    geographe      la plus longue série de Communes du jour trouvées
 --    navigateur     le meilleur Elo Radar (5 duels au moins)
@@ -55,9 +55,9 @@ as $f$
     union all select 'obstine', cible, count(*)::int from journal where type = 'defense' and cible is not null group by cible
     union all select 'malchanceux', cible, count(*)::int from journal where type = 'conquete' and cible is not null group by cible
     union all select 'marchand', cible, count(*)::int from journal where type = 'achat' and cible is not null group by cible
-    union all select 'diplomate', x.jid, count(*)::int from (
-        select acteur as jid from journal where type = 'echange' and acteur is not null
-        union all select cible from journal where type = 'echange' and cible is not null) x group by x.jid
+    -- un échange écrit deux lignes (une par joueur, chacun acteur de la sienne) :
+    -- on ne compte que les lignes où le joueur est l'acteur (corrigé le 14 octobre)
+    union all select 'diplomate', acteur, count(*)::int from journal where type = 'echange' and acteur is not null group by acteur
     union all select 'collectionneur', p.joueur_id, count(*)::int from possessions p where p.joueur_id is not null group by p.joueur_id
     union all select 'navigateur', r.joueur_id, r.elo from radar_joueurs r where r.parties >= 5
     union all select 'geographe', s.joueur_id, max(s.n)::int from (

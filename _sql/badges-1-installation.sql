@@ -4,8 +4,9 @@
 --
 --  1. Table joueur_badges (joueur, badge, saison, valeur).
 --  2. distinctions_calcul(saison) : qui gagne quoi, À PARTIR DES DONNÉES
---     ACTUELLES (lecture seule). Les égalités donnent le badge à tous les
---     ex aequo. Les joueurs exclus du classement (est_exclu_classement)
+--     ACTUELLES (lecture seule). UNE distinction par joueur au plus (14 octobre) :
+--     la catégorie où l'avance est la plus nette d'abord. Les ex aequo en tête
+--     partagent le badge. Les joueurs exclus du classement (est_exclu_classement)
 --     n'ont pas de distinction ; ils ont l'OG s'ils ont joué.
 --  3. badges_joueur(joueur) : les badges d'un joueur, pour sa fiche.
 --
@@ -39,8 +40,8 @@ create table if not exists public.joueur_badges(
 alter table public.joueur_badges enable row level security;
 revoke all on public.joueur_badges from public, anon, authenticated;
 
-create or replace function public.distinctions_calcul(p_saison text default 'saison-1')
- returns table(badge text, joueur_id uuid, pseudo text, valeur integer)
+create or replace function public.distinctions_chiffres()
+ returns table(badge text, joueur_id uuid, valeur integer)
  language sql stable security definer set search_path to 'public'
 as $f$
   with j as (
@@ -68,17 +69,48 @@ as $f$
   ),
   eligibles as (
     select c.badge, c.jid, c.v from chiffres c join j on j.id = c.jid where not j.exclu and c.v > 0
-  ),
-  gagnants as (
-    select e.badge, e.jid, e.v from eligibles e
-     where e.v = (select max(e2.v) from eligibles e2 where e2.badge = e.badge)
   )
-  select g.badge, g.jid, j.pseudo, g.v from gagnants g join j on j.id = g.jid
-  union all
-  select 'og', j.id, j.pseudo, null::int from j
-   where exists (select 1 from historique h where h.joueur_id = j.id)
-  order by 1, 3;
+  select e.badge, e.jid, e.v from eligibles e;
 $f$;
+
+-- Une distinction par joueur (décision du 14 octobre) : à chaque tour, la
+-- catégorie dont le meilleur joueur encore libre a l'avance la plus nette
+-- (son chiffre divisé par celui du suivant) est attribuée ; ce joueur et
+-- cette catégorie sortent du jeu. Les ex aequo en tête partagent le badge.
+create or replace function public.distinctions_calcul(p_saison text default 'saison-1')
+ returns table(badge text, joueur_id uuid, pseudo text, valeur integer)
+ language plpgsql volatile security definer set search_path to 'public'
+as $f$
+declare
+  v_badges text[] := array['conquerant','rempart','cible','obstine','malchanceux','marchand','diplomate','collectionneur','geographe','navigateur'];
+  v_pris uuid[] := '{}';
+  r record;
+begin
+  create temp table if not exists tmp_dist(badge text, jid uuid, v integer) on commit drop;
+  truncate tmp_dist;
+  insert into tmp_dist select * from distinctions_chiffres();
+  loop
+    select x.badge, x.v1 into r from (
+      select d.badge,
+             max(d.v) as v1,
+             (select max(d2.v) from tmp_dist d2 where d2.badge = d.badge and not (d2.jid = any(v_pris))
+                and d2.v < max(d.v)) as v2
+        from tmp_dist d
+       where d.badge = any(v_badges) and not (d.jid = any(v_pris))
+       group by d.badge) x
+     order by case when x.v2 is null then 1e12 else x.v1::numeric / greatest(x.v2, 1) end desc, x.v1 desc, x.badge
+     limit 1;
+    exit when r.badge is null;
+    return query select r.badge, d.jid, j.pseudo, d.v from tmp_dist d join joueurs j on j.id = d.jid
+                  where d.badge = r.badge and d.v = r.v1 and not (d.jid = any(v_pris));
+    v_pris := v_pris || array(select d.jid from tmp_dist d where d.badge = r.badge and d.v = r.v1 and not (d.jid = any(v_pris)));
+    v_badges := array_remove(v_badges, r.badge);
+  end loop;
+  return query select 'og'::text, j.id, j.pseudo, null::int from joueurs j
+                where exists (select 1 from historique h where h.joueur_id = j.id);
+end;
+$f$;
+revoke all on function public.distinctions_chiffres() from public, anon, authenticated;
 revoke all on function public.distinctions_calcul(text) from public, anon, authenticated;
 
 -- les badges d'un joueur, pour sa fiche (ouvert à tous les joueurs connectés)
@@ -98,3 +130,4 @@ select badge, count(*) as joueurs,
   from public.distinctions_calcul('saison-1')
  group by badge
  order by badge = 'og', badge;
+

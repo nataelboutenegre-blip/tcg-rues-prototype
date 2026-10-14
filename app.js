@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1999e7014165';
+const VERSION_JEU = '43583a55dec3';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2694,6 +2694,7 @@ const ICONES_PC = {
 // cotes : meme icone.
 ICONES_PC['voir-echange'] = ICONES_PC.echange;
 ICONES_PC['gn-poser'] = ICONES_PC.bouclier;
+ICONES_PC.favori = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg>';
 
 const nbFr = (n) => Number(n).toLocaleString('fr-FR');
 
@@ -2844,6 +2845,14 @@ function ouvrirPanneau(code, xCss, yCss){
   if(mienne && (c.tier.id === 'rare' || c.tier.id === 'legendaire') && !protegee)
     actions.push(['', 'bouclier', 'Poser un bouclier', 'Protéger ' + c.nom]);
   if(mienne && enVente == null) actions.push(['', 'vente', 'Mettre en vente', 'Vendre ' + c.nom]);
+  // patch133 : garder la commune en fin de saison, depuis la carte (idee de Wally)
+  const gardee = mienne && favorisCharges && favorisSet.has(code);
+  if(mienne && favorisCharges && !c.perdue)
+    actions.push([gardee ? 'favori actif' : 'favori', 'favori',
+      gardee ? `Gardée en fin de saison <span class="pc-gn-nb">${favorisSet.size} / ${FAV_MAX}</span>`
+             : `Garder en fin de saison <span class="pc-gn-nb">${favorisSet.size} / ${FAV_MAX}</span>`,
+      gardee ? 'Retirer l’étoile de ' + c.nom : 'Garder ' + c.nom + ' à la fin de la saison']);
+  if(mienne && !favorisCharges) chargerFavoris().then(() => { if(panneauCommune === code && favorisCharges){ const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); } });
   // patch91 : en saison 2, le Front n'a ni bouclier, ni echange, ni vente ; il a la garnison
   let gnBloc = '';
   if(SAISON2){
@@ -2864,7 +2873,7 @@ function ouvrirPanneau(code, xCss, yCss){
   el.innerHTML = `
     <div class="pc-tete">
       <div class="pc-titre">
-        <b>${echapperHtml(c.nom)}</b>
+        <b>${echapperHtml(c.nom)}${gardee ? ' <span class="pc-etoile" title="Gardée en fin de saison">★</span>' : ''}</b>
         <span class="pc-dep">${echapperHtml(DEPT_NAMES[c.dept] || '')} (${echapperHtml(c.dept)})</span>
       </div>
       <span class="pc-rarete ${c.tier.id}">${c.tier.label || LIBELLE_TIER[c.tier.id]}</span>
@@ -3161,6 +3170,11 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
     return;
   }
   if(quoi === 'attaque'){ ouvrirAttaque(code); return; }
+  if(quoi === 'favori'){   // patch133
+    b.disabled = true;
+    basculerFavori(c).then(() => { const a = panneauAncre; if(panneauCommune === code) ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); });
+    return;
+  }
   if(quoi === 'voir-echange'){
     // les propositions sont listees en haut de l'onglet : inutile de remplir
     // une recherche, il n'y a rien a chercher
@@ -5527,7 +5541,19 @@ document.getElementById('amResultats').addEventListener('click', async (e) => {
 async function monEtat(){
   const { data, error } = await sb.rpc('mon_etat');
   if(error) return null;
-  return Array.isArray(data) ? (data[0] || null) : data;
+  const row = Array.isArray(data) ? (data[0] || null) : data;
+  if(row) majSoldeGlobal(row.solde);   // patch133
+  return row;
+}
+
+// patch133 : le solde toujours au meme endroit (saison 1 ; en saison 2 la
+// barre Terra / Front le montre deja)
+function majSoldeGlobal(solde){
+  document.querySelectorAll('.solde-global').forEach(el => {
+    if(SAISON2 || solde == null || isNaN(Number(solde))){ el.hidden = true; return; }
+    el.querySelector('b').textContent = fmtNombre(Number(solde));
+    el.hidden = false;
+  });
 }
 
 // ---------- Profil d'un joueur ----------
@@ -6548,6 +6574,7 @@ async function loadPackStatus(){
   const { data, error } = await sb.rpc('statut_paquets');
   if(error){ console.error(error); return; }
   packStatusCache = data[0];
+  if(packStatusCache) majSoldeGlobal(packStatusCache.solde);   // patch133
   packStatusFetchedAt = Date.now();
   majBascule();
   renderPackStatus();

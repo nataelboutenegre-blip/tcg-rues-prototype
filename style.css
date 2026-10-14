@@ -5189,3 +5189,14 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
   background: linear-gradient(115deg, #8FF3FF, #C7A6FF 35%, #FFB7E3 55%, #FFE7A3 80%); background-size:220% 220%; animation: ogHolo 6s ease-in-out infinite; }
 @keyframes ogHolo{ 0%, 100%{ background-position:0% 50%; } 50%{ background-position:100% 50%; } }
 @media (prefers-reduced-motion: reduce){ .bg-badge.og .bg-medaille, .bg-og-marque{ animation:none; } }
+
+/* ---------- patch133 : solde fixe, favoris depuis la carte ---------- */
+.solde-global{ display:inline-flex; align-items:baseline; gap:4px; padding:5px 11px; border-radius:999px; font-size:.8rem; color: var(--brume);
+  background: rgba(240,180,41,.1); border:1px solid rgba(240,180,41,.35); white-space:nowrap; font-variant-numeric:tabular-nums; }
+.solde-global b{ font-family: var(--titre); font-weight:800; font-size:1.05rem; color: var(--c-legendaire); letter-spacing:.02em; }
+.solde-global[hidden]{ display:none; }
+.solde-fixe{ position:fixed; top:16px; right:22px; z-index:40; box-shadow:0 6px 18px rgba(0,0,0,.35); background: rgba(22,44,75,.92); backdrop-filter: blur(6px); }
+@media (max-width: 720px){ .solde-fixe{ display:none !important; } }
+.pc-action.favori.actif{ background: rgba(240,180,41,.16); color: var(--c-legendaire); }
+.pc-action.favori.actif svg{ fill: var(--c-legendaire); }
+.pc-etoile{ color: var(--c-legendaire); }

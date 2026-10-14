@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'dd345cb79dd1';
+const VERSION_JEU = '1999e7014165';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -5628,6 +5628,43 @@ function anneauNiveau(p, taille){
 
 // Les blocs de statistiques, communs au panneau et a la fenetre : une
 // seule source, pour ne pas voir les deux rendus diverger.
+// ---------- patch132 : distinctions et badge OG ----------
+const BADGES = {
+  og:            { ico: 'OG', nom: 'OG',               texte: 'A joué la saison 1' },
+  conquerant:    { ico: '🗺️', nom: 'Le Conquérant',    texte: 'Le plus de conquêtes', u: 'conquêtes' },
+  rempart:       { ico: '🛡️', nom: 'Le Rempart',       texte: 'Le plus de défenses réussies', u: 'défenses' },
+  cible:         { ico: '🎯', nom: 'La Cible',         texte: 'Le plus attaqué', u: 'attaques subies' },
+  obstine:       { ico: '🪨', nom: 'L’Obstiné',        texte: 'Le plus d’assauts ratés', u: 'assauts ratés' },
+  malchanceux:   { ico: '🍀', nom: 'Le Malchanceux',   texte: 'Le plus de communes perdues', u: 'communes perdues' },
+  marchand:      { ico: '💰', nom: 'Le Marchand',      texte: 'Le plus de ventes à la Bourse', u: 'ventes' },
+  diplomate:     { ico: '🤝', nom: 'Le Diplomate',     texte: 'Le plus d’échanges conclus', u: 'échanges' },
+  collectionneur:{ ico: '🃏', nom: 'Le Collectionneur', texte: 'Le plus de communes', u: 'communes' },
+  geographe:     { ico: '📍', nom: 'Le Géographe',     texte: 'La plus longue série à la Commune du jour', u: 'jours de série' },
+  navigateur:    { ico: '📡', nom: 'Le Navigateur',    texte: 'Le meilleur Elo au Radar', u: 'Elo' },
+};
+const nomSaison = (s) => { const m = /(\d+)$/.exec(String(s || '')); return m ? 'Saison ' + m[1] : ''; };
+const estOG = (p) => (p.badges || []).some(b => b.badge === 'og');
+const marqueOG = (p) => estOG(p) ? '<span class="bg-og-marque" title="A joué la saison 1">OG</span>' : '';
+// sans badges-1-installation.sql, la fonction n'existe pas : liste vide
+async function chargerBadges(id){
+  try{ const { data, error } = await sb.rpc('badges_joueur', { p_joueur: id }); return error ? [] : (data || []); }
+  catch(e){ return []; }
+}
+function blocBadges(p, fiche){
+  const liste = (p.badges || []).filter(b => BADGES[b.badge])
+    .sort((a, b) => (a.badge === 'og' ? -1 : b.badge === 'og' ? 1 : 0));
+  if(!liste.length) return '';
+  const items = liste.map(b => {
+    const d = BADGES[b.badge];
+    return `<div class="bg-badge ${b.badge === 'og' ? 'og' : ''}" title="${echapperTexte(d.texte)}">
+      <span class="bg-medaille">${d.ico}</span>
+      <span class="bg-txt"><b>${echapperTexte(d.nom)}</b><small>${echapperTexte(nomSaison(b.saison))}${b.valeur != null && b.badge !== 'og' ? ' · ' + Number(b.valeur).toLocaleString('fr-FR') + (d.u ? ' ' + d.u : '') : ''}</small></span>
+    </div>`;
+  }).join('');
+  return fiche ? `<h3>Distinctions</h3><div class="bg-liste">${items}</div>`
+               : `<div class="pf-bloc"><h3>Distinctions</h3><div class="bg-liste">${items}</div></div>`;
+}
+
 function blocsProfil(p){
   const nb = (x) => Number(x || 0).toLocaleString('fr-FR');
   const pct = (a, b) => (a + b) > 0 ? Math.round(100 * a / (a + b)) : null;
@@ -5702,7 +5739,7 @@ async function loadProfilPanneau(){
       return;
     }
     profilPanneau = data;
-    profilPanneau.vitrine = await chargerVitrine(id);
+    [profilPanneau.vitrine, profilPanneau.badges] = await Promise.all([chargerVitrine(id), chargerBadges(id)]);
   }
   if(vide) vide.hidden = true;
   rendreProfilPanneau();
@@ -5722,7 +5759,7 @@ function rendreProfilPanneau(){
     <div class="pf-tete" style="--joueur:${COULEUR_MOI}">
       ${anneauNiveau(p, 112)}
       <div class="pf-id">
-        <h2>${echapperTexte(p.pseudo)}</h2>
+        <h2>${echapperTexte(p.pseudo)}${marqueOG(p)}</h2>
         <div class="pf-rangs">
           ${g ? `<span class="pf-grade" style="background:${g.couleur}22;color:${g.couleur}">${g.nom}</span>` : ''}
           <span class="pf-titre"><b>${echapperTexte(titreDepuisDeps(p.deps))}</b></span>
@@ -5739,6 +5776,7 @@ function rendreProfilPanneau(){
       </div>
     </div>
     ${blocVitrine(p.vitrine || [], true)}
+    ${blocBadges(p, false)}
     ${blocsProfil(p)}
     <div class="pf-boutons">
       <button class="pr-btn" data-pf="editer">Changer d'avatar ou de pseudo</button>
@@ -5833,8 +5871,8 @@ function boutonAmiProfil(id){
 
 async function ouvrirProfil(joueurId){
   if(!joueurId) return;
-  const [{ data, error }, vitrine] = await Promise.all([
-    sb.rpc('profil_joueur', { p_joueur: joueurId }), chargerVitrine(joueurId)]);
+  const [{ data, error }, vitrine, badges] = await Promise.all([
+    sb.rpc('profil_joueur', { p_joueur: joueurId }), chargerVitrine(joueurId), chargerBadges(joueurId)]);
   if(error || !data){
     // profil-joueur.sql pas encore execute : on le dit au lieu d'ouvrir un vide
     notifier({ type: 'info', titre: 'Profil indisponible',
@@ -5843,6 +5881,7 @@ async function ouvrirProfil(joueurId){
   }
   profilEnCours = data;
   profilEnCours.vitrine = vitrine;
+  profilEnCours.badges = badges;
   rendreProfil();
 }
 
@@ -5884,7 +5923,7 @@ function rendreProfil(){
         ${moi ? '' : boutonAmiProfil(p.id)}
         <button class="pr-fermer" data-pr="fermer" aria-label="Fermer">✕</button>
         <div class="pr-avatar-niv">${anneauNiveau(p, 92)}</div>
-        <h2 id="prNom">${echapperTexte(p.pseudo)}</h2>
+        <h2 id="prNom">${echapperTexte(p.pseudo)}${marqueOG(p)}</h2>
         <p class="pr-sous">${p.niveau ? `<span class="pf-grade" style="background:${
           gradeDe(Number(p.niveau)).couleur}22;color:${gradeDe(Number(p.niveau)).couleur}">${
           gradeDe(Number(p.niveau)).nom}</span> ` : ''}<b>${echapperTexte(titreDepuisDeps(p.deps))}</b>${
@@ -5899,6 +5938,7 @@ function rendreProfil(){
         </div>
 
         ${blocVitrine(p.vitrine || [], moi)}
+        ${blocBadges(p, true)}
 
         <h3>Territoire</h3>
         <div class="pr-puces">${puces}</div>

@@ -5212,3 +5212,7 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
 /* ---------- patch138 : bloc Échanges du profil ---------- */
 /* Assiduité sur deux rangées : Échanges remonte sous Défense (sans effet sur une colonne) */
 .pf-bloc.pf-assid{ grid-row: span 2; }
+
+/* ---------- patch140 : chance de prendre la commune ---------- */
+.pc-conquete{ margin:8px 0 0; font-size:.74rem; line-height:1.4; color:#8FA4BF; }
+.pc-conquete b{ color:#fff; font-weight:600; }

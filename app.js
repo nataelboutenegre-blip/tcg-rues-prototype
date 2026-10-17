@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '2d2e5b0de3fe';
+const VERSION_JEU = 'ed4707a83458';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3011,8 +3011,9 @@ function rendreAttaque(code, a, siege){
     <div class="pc-ints">${pastilles}</div>
 
     <div class="pc-jauge">
-      <div class="pc-jauge-tete"><span>Chances de victoire</span><b>${a.chances} %</b></div>
+      <div class="pc-jauge-tete"><span>Chances de victoire (par round)</span><b>${a.chances} %</b></div>
       <div class="pc-jauge-barre"><i style="width:${a.chances}%"></i></div>
+      ${ligneConquete(a.chances, serie)}
     </div>
 
     <div class="pc-actions">
@@ -3024,6 +3025,17 @@ function rendreAttaque(code, a, siege){
   // 16 px a chaque assaut et a chaque changement d'intensite
   recadrerPanneau(el);
   montrerPanneau(el);
+}
+
+// patch140 : la chance de PRENDRE la commune, pas seulement de gagner le round
+function ligneConquete(chances, serie){
+  const reste = Math.max(1, 3 - (Number(serie) || 0));
+  const p = Math.max(0, Math.min(100, Number(chances) || 0)) / 100;
+  const proba = Math.round(100 * Math.pow(p, reste));
+  const txt = reste === 3 ? `Il faut 3 victoires d’affilée pour la prendre : <b>${proba}\u00A0%</b> de chances d’y arriver sans perdre un round.`
+            : reste === 2 ? `Encore 2 victoires d’affilée pour la prendre : <b>${proba}\u00A0%</b> de chances.`
+            :               `Une dernière victoire pour la prendre : <b>${proba}\u00A0%</b> de chances.`;
+  return `<p class="pc-conquete">${txt}</p>`;
 }
 
 async function lancerAssaut(code){

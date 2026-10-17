@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'aba1ae1500b1';
+const VERSION_JEU = 'fd6055df65b5';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -483,7 +483,17 @@ function afficherGrandeConquete(x){
   requestAnimationFrame(() => el.classList.add('visible'));
   setTimeout(() => { el.classList.remove('visible'); setTimeout(() => el.remove(), 400); }, 6000);
 }
-setInterval(surveillerGrandesConquetes, 60000);
+// patch136 : une verification reguliere ne part que si le jeu est a l'ecran
+const siVisible = (f) => () => { if(!document.hidden) f(); };
+const VERIF_AU_RETOUR = [];
+let dernierRetour = 0;
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden || Date.now() - dernierRetour < 20000) return;
+  dernierRetour = Date.now();
+  VERIF_AU_RETOUR.forEach(f => { try{ f(); }catch(e){} });
+});
+VERIF_AU_RETOUR.push(surveillerGrandesConquetes);
+setInterval(siVisible(surveillerGrandesConquetes), 60000);
 setTimeout(surveillerGrandesConquetes, 5000);
 
 function celebrerConquete({ nom, tier, dept, bonus, code }){
@@ -726,9 +736,10 @@ async function showGame(session_){
   loadBadgeEchanges();
   if(!menacesInterval){
     // verifie toutes les minutes si une de mes communes est attaquee (pastille rouge sur l'onglet Combat)
-    menacesInterval = setInterval(loadMenaces, 60000);
+    menacesInterval = setInterval(siVisible(loadMenaces), 60000);
     // meme cadence pour les propositions d'echange recues
-    echangesInterval = setInterval(loadBadgeEchanges, 60000);
+    echangesInterval = setInterval(siVisible(loadBadgeEchanges), 60000);
+    VERIF_AU_RETOUR.push(loadMenaces, loadBadgeEchanges);   // patch136
   }
 }
 
@@ -8597,7 +8608,7 @@ function initModes(){
   });
   appliquerMode();
   majEnergie();
-  if(!energieTimer) energieTimer = setInterval(majEnergie, 60000);
+  if(!energieTimer){ energieTimer = setInterval(siVisible(majEnergie), 60000); VERIF_AU_RETOUR.push(majEnergie); }
   // patch91 : la jauge d'energie en tete de Combat, les garnisons dans Defendre
   const combat = document.getElementById('panel-combat');
   if(combat && !document.getElementById('jaugeEnergie')){
@@ -10306,7 +10317,7 @@ async function appliquerMiseAJour(){
 
 // au demarrage, puis a chaque retour dans le jeu et toutes les 30 min
 document.addEventListener('visibilitychange', () => { if(!document.hidden) verifierVersion(); });
-setInterval(() => verifierVersion(), 30 * 60 * 1000);
+setInterval(siVisible(() => verifierVersion()), 30 * 60 * 1000);
 
 // Tirer la page vers le bas pour rafraichir (comme dans une vraie application)
 (function tirerPourRafraichir(){

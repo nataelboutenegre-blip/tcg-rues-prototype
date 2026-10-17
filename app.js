@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '43583a55dec3';
+const VERSION_JEU = '885a4d7fcb40';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6898,15 +6898,25 @@ function armerPaquet(pack, demarrer){
   pack.addEventListener('click', (e) => { if(e.detail === 0 && !fini) finir(520); });
 }
 
+// patch134 : un seul tirage a la fois. Deux tirages simultanes se
+// partageaient les cartes du paquet et chacun n'en montrait qu'une partie.
+let tirageEnVol = null;
+function tirerCartesDuPaquet(nbCartes){
+  if(tirageEnVol) return tirageEnVol;
+  tirageEnVol = tirerCartesDuPaquetSeul(nbCartes).finally(() => { tirageEnVol = null; });
+  return tirageEnVol;
+}
+
 // Les cinq tirages, l'un apres l'autre, avec la gestion d'erreur d'origine.
-async function tirerCartesDuPaquet(nbCartes){
+async function tirerCartesDuPaquetSeul(nbCartes){
   if(enTerra()) return tirerPaquetTerra();
   const draws = [];
   for(let i = 0; i < nbCartes; i++){
     const { row, error } = await tirerUneCarte();
     if(error || !row){
       if(error){
-        notifier({ type: 'erreur', titre: 'Tirage interrompu', texte: messageLisible(error.message) });
+        notifier({ type: 'erreur', titre: 'Tirage interrompu',
+                   texte: messageLisible(error.message) + (i > 0 ? ` Les ${i} carte${i > 1 ? 's' : ''} déjà tirée${i > 1 ? 's sont' : ' est'} dans ta collection.` : '') });
       } else {
         // Le serveur a repondu sans erreur et sans carte. C'est ce cas-la qui
         // produit les paquets courts depuis le 19 septembre, et jusqu'ici il
@@ -7013,6 +7023,8 @@ async function verifierTiragesEnAttente(){
   if(!u || !u.user) return;
   const data = await monEtat();
   if(!data || !(data.tirages_restants > 0)) return;
+  // patch134 : un paquet a pu etre ouvert pendant qu'on interrogeait le serveur
+  if(paquetEnCours || tirageEnVol) return;
   paquetEnCours = true;
   renderPackStatus();
   afficherPaquetATirer('gratuit', Math.min(5, data.tirages_restants));

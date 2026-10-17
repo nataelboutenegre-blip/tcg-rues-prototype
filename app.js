@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '9ac1b8bf7df9';
+const VERSION_JEU = '2d2e5b0de3fe';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -5703,6 +5703,11 @@ const BADGES = {
 const nomSaison = (s) => { const m = /(\d+)$/.exec(String(s || '')); return m ? 'Saison ' + m[1] : ''; };
 const estOG = (p) => (p.badges || []).some(b => b.badge === 'og');
 const marqueOG = (p) => estOG(p) ? '<span class="bg-og-marque" title="A joué la saison 1">OG</span>' : '';
+// patch138 : sans echanges-profil.sql, la fonction n'existe pas : null, pas de bloc
+async function chargerStatEchanges(id){
+  try{ const { data, error } = await sb.rpc('echanges_joueur', { p_joueur: id }); return error ? null : (data || null); }
+  catch(e){ return null; }
+}
 // sans badges-1-installation.sql, la fonction n'existe pas : liste vide
 async function chargerBadges(id){
   try{ const { data, error } = await sb.rpc('badges_joueur', { p_joueur: id }); return error ? [] : (data || []); }
@@ -5748,14 +5753,21 @@ function blocsProfil(p){
       </div>
       <p class="pf-ratio">${def === null ? '' : `Tu tiens <b>${def} %</b> des assauts contre toi`}</p>
     </div>
-    <div class="pf-bloc">
+    <div class="pf-bloc pf-assid">
       <h3>Assiduité</h3>
       ${depuis ? `<div class="pf-ligne"><span>Membre depuis</span><b>${echapperTexte(depuis)}</b></div>` : ''}
       <div class="pf-ligne"><span>Jours actifs</span><b>${nb(p.jours_actifs)}</b></div>
       <div class="pf-ligne"><span>Série en cours</span><b>${nb(p.serie)} jour${Number(p.serie) > 1 ? 's' : ''}</b></div>
       <div class="pf-ligne"><span>Contrats signés</span><b>${nb(p.contrats)}</b></div>
       <div class="pf-ligne"><span>Cartes tirées</span><b>${nb(p.cartes_tirees)}</b></div>
-    </div>` : '';
+    </div>
+    ${p.echanges ? `<div class="pf-bloc">
+      <h3>Échanges</h3>
+      <div class="pf-paire">
+        <div class="pf-ch"><b style="color:var(--c-legendaire)">${nb(p.echanges.echanges)}</b><span>échange${Number(p.echanges.echanges) > 1 ? 's' : ''} conclu${Number(p.echanges.echanges) > 1 ? 's' : ''}</span></div>
+        <div class="pf-ch"><b>${nb(p.echanges.partenaires)}</b><span>joueur${Number(p.echanges.partenaires) > 1 ? 's' : ''} différent${Number(p.echanges.partenaires) > 1 ? 's' : ''}</span></div>
+      </div>
+    </div>` : ''}` : '';
   return `
     <div class="pf-grille">
       <div class="pf-bloc">
@@ -5797,7 +5809,7 @@ async function loadProfilPanneau(){
       return;
     }
     profilPanneau = data;
-    [profilPanneau.vitrine, profilPanneau.badges] = await Promise.all([chargerVitrine(id), chargerBadges(id)]);
+    [profilPanneau.vitrine, profilPanneau.badges, profilPanneau.echanges] = await Promise.all([chargerVitrine(id), chargerBadges(id), chargerStatEchanges(id)]);
   }
   if(vide) vide.hidden = true;
   rendreProfilPanneau();
@@ -5929,8 +5941,9 @@ function boutonAmiProfil(id){
 
 async function ouvrirProfil(joueurId){
   if(!joueurId) return;
-  const [{ data, error }, vitrine, badges] = await Promise.all([
-    sb.rpc('profil_joueur', { p_joueur: joueurId }), chargerVitrine(joueurId), chargerBadges(joueurId)]);
+  const [{ data, error }, vitrine, badges, echanges] = await Promise.all([
+    sb.rpc('profil_joueur', { p_joueur: joueurId }), chargerVitrine(joueurId), chargerBadges(joueurId),
+    chargerStatEchanges(joueurId)]);
   if(error || !data){
     // profil-joueur.sql pas encore execute : on le dit au lieu d'ouvrir un vide
     notifier({ type: 'info', titre: 'Profil indisponible',
@@ -5940,6 +5953,7 @@ async function ouvrirProfil(joueurId){
   profilEnCours = data;
   profilEnCours.vitrine = vitrine;
   profilEnCours.badges = badges;
+  profilEnCours.echanges = echanges;
   rendreProfil();
 }
 
@@ -6009,6 +6023,7 @@ function rendreProfil(){
           ${depuis ? `<span class="pr-puce">📅 Depuis le ${echapperTexte(depuis)}</span>` : ''}
           <span class="pr-puce">⚔️ ${nb(p.conquetes)} conquête${p.conquetes > 1 ? 's' : ''}</span>
           <span class="pr-puce">🛡️ ${nb(p.communes_perdues)} perdue${p.communes_perdues > 1 ? 's' : ''} au combat</span>
+          ${p.echanges ? `<span class="pr-puce">🤝 ${nb(p.echanges.echanges)} échange${Number(p.echanges.echanges) > 1 ? 's' : ''}</span>` : ''}<!-- patch139 : pastille echanges -->
           <span class="pr-puce">👥 ${nb(p.habitants)} habitants</span>
         </div>
 

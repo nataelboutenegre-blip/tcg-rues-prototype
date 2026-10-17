@@ -5208,3 +5208,7 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
 .annonce-bandeau span{ flex:1; }
 .annonce-bandeau button{ flex:none; background:none; border:0; color: var(--brume); font-size:20px; line-height:1; cursor:pointer; padding:0 2px; }
 .annonce-bandeau button:hover{ color:#fff; }
+
+/* ---------- patch138 : bloc Échanges du profil ---------- */
+/* Assiduité sur deux rangées : Échanges remonte sous Défense (sans effet sur une colonne) */
+.pf-bloc.pf-assid{ grid-row: span 2; }

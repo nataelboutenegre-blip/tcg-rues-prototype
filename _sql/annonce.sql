@@ -18,7 +18,7 @@ grant execute on function public.annonce() to anon, authenticated;
 insert into public.config_jeu(cle, valeur)
 values ('annonce', to_jsonb(
   -- ▼ le texte du bandeau
-  '🛠️ Maintenance ce soir à 23 h : le jeu sera coupé quelques minutes pour passer sur un serveur plus puissant et réduire les lenteurs.'::text
+  '🛠️ Maintenance ce soir à 21 h 30 : le jeu sera coupé quelques minutes pour passer sur un serveur plus puissant et réduire les lenteurs.'::text
 )::text)
 on conflict (cle) do update set valeur = excluded.valeur;
 

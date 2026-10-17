@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ed4707a83458';
+const VERSION_JEU = 'adf713196fd9';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6702,6 +6702,7 @@ async function payerPaquet(type){
     boutiqueAchat = null;
     const { data, error } = await sb.rpc('boutique_ouvrir_collection', { p_collection: achat.collection });
     terraPaquet = error ? null : (data || []);
+    terraPaquetBloque = true;
     boutiqueOuvert = !error;
     colCache = null;
     viderBilanTerra();
@@ -6713,6 +6714,7 @@ async function payerPaquet(type){
     boutiqueAchat = null;
     const { data, error } = await sb.rpc('boutique_ouvrir_paquet', { p_article: achat.id, p_departement: achat.dep });
     terraPaquet = error ? null : (data || []);
+    terraPaquetBloque = true;
     boutiqueOuvert = !error;
     viderBilanTerra();
     return error;
@@ -6721,6 +6723,7 @@ async function payerPaquet(type){
     // Terra : le serveur paie et tire les 5 cartes en un seul appel
     const { data, error } = await sb.rpc('terra_ouvrir_paquet', { p_paye: type === 'achete' });
     terraPaquet = error ? null : (data || []);
+    terraPaquetBloque = type === 'achete';
     viderBilanTerra();
     return error;
   }
@@ -7389,17 +7392,18 @@ function renderVenteTerra(grid, searchText){
   }
   const ligne = (e) => {
     const n = libresTerra(e);
+    const ach = achetesTerra(e);
     const prixAnnonce = myListings.get(e.code);
     const actions = prixAnnonce
       ? `<span class="chip-vente">En vente à ${Number(prixAnnonce).toLocaleString('fr-FR')} pts</span>
          <div class="ligne-actions"><button class="btn-p contour" data-action="retirer" data-code="${e.code}">Retirer</button></div>`
       : `<div class="ligne-actions"><button class="btn-p contour" data-action="vendre-jeu" data-code="${e.code}">Vendre au jeu <b>${TERRA_REVENTE[e.tier.id]}</b></button>
-         <button class="btn-p or" data-action="mettre-vente" data-code="${e.code}">Mettre en vente</button></div>`;
+         ${echangeablesTerra(e) > 0 ? `<button class="btn-p or" data-action="mettre-vente" data-code="${e.code}">Mettre en vente</button>` : ''}</div>`;
     return `
       <div class="ligne ${e.tier.id}">
         <div class="ligne-texte">
           <span class="ligne-nom">${echapperTexte(e.nom)}</span>
-          <span class="ligne-detail">${DEPT_NAMES[e.dept] ? DEPT_NAMES[e.dept] + ' ' : ''}(${e.dept}), ${e.tier.label.toLowerCase()} · ${n > 0 ? n + ' doublon' + (n > 1 ? 's' : '') : 'plus de doublon'}</span>
+          <span class="ligne-detail">${DEPT_NAMES[e.dept] ? DEPT_NAMES[e.dept] + ' ' : ''}(${e.dept}), ${e.tier.label.toLowerCase()} · ${n > 0 ? n + ' doublon' + (n > 1 ? 's' : '') : 'plus de doublon'}${ach > 0 ? ` · <span class="bq-achete">🔒 ${ach} acheté${ach > 1 ? 's' : ''}, vente au jeu seulement</span>` : ''}</span>
         </div>
         ${actions}
       </div>`;
@@ -8580,6 +8584,7 @@ let energieTimer = null;
 // patch90 : Terra
 const enTerra = () => SAISON2 && modeJeu === 'terra';
 const TERRA_REVENTE = { commun: 5, peucommun: 20, rare: 100, epique: 300, legendaire: 600 };
+let terraPaquetBloque = false;     // patch141 : paquet paye en points -> cartes non echangeables
 let terraPaquet = null;            // reponse de terra_ouvrir_paquet, en attente de revelation
 let terraCollection = new Map();   // code -> carte de la collection Terra
 let terraCharge = false;
@@ -8787,10 +8792,11 @@ function viderBilanTerra(){
 
 function terraCarteRetournee(draw){
   const e = terraCollection.get(draw.code);
-  if(e){ e.exemplaires = draw.terraExemplaires; if(draw.aurore) e.aurore = (e.aurore || 0) + 1; }
+  if(e){ e.exemplaires = draw.terraExemplaires; if(draw.aurore) e.aurore = (e.aurore || 0) + 1;
+         if(terraPaquetBloque) e.bloques = (e.bloques || 0) + 1; }
   else terraCollection.set(draw.code, { code: draw.code, nom: draw.nom, dept: draw.dept, tier: draw.tier,
     pop: draw.pop, exemplaires: draw.terraExemplaires, rank: draw.rank, tierSize: draw.tierSize,
-    aurore: draw.aurore ? 1 : 0 });
+    aurore: draw.aurore ? 1 : 0, bloques: terraPaquetBloque ? 1 : 0 });
 }
 
 function miniTerra(e){
@@ -8837,6 +8843,13 @@ async function chargerCollectionTerra(){
     terraCollection.set(r.code, { code: r.code, nom: r.nom, dept: r.departement, tier, pop: r.population,
       exemplaires: Number(r.exemplaires) || 1, aurore: Number(r.aurore) || 0, rank: r.rang, tierSize: r.palier_total });
   }
+  // patch141 : exemplaires achetes en points (non echangeables). Sans
+  // s2-23, la fonction manque : tout reste echangeable cote affichage, le
+  // serveur tranche de toute facon.
+  try{
+    const { data: bl, error: eb } = await sb.rpc('terra_bloques_moi');
+    if(!eb) for(const b of bl || []){ const e = terraCollection.get(b.code); if(e) e.bloques = Number(b.bloques) || 0; }
+  }catch(err){}
   terraCharge = true;
   return true;
 }
@@ -9298,7 +9311,11 @@ function ouvrirVenteTerra(){
     fermer();
     if(error){ notifier({ type: 'erreur', titre: 'Vente impossible', texte: messageLisible(error.message) }); return; }
     const r = data && data[0];
-    for(const e of terraCollection.values()) if(choix.includes(e.tier.id) && libresTerra(e) > 0) e.exemplaires = Math.max(1, e.aurore || 0);
+    for(const e of terraCollection.values()) if(choix.includes(e.tier.id) && libresTerra(e) > 0){
+      const vendus = libresTerra(e);
+      e.exemplaires = Math.max(1, e.aurore || 0);
+      e.bloques = Math.min(Math.max(0, (e.bloques || 0) - vendus), e.exemplaires);
+    }
     if(r && packStatusCache){ packStatusCache.solde = r.solde; majBascule(); }
     notifier({ type: 'succes', titre: 'Doublons vendus', texte: r ? `${fmtNombre(r.vendus)} doublon${r.vendus > 1 ? 's' : ''} · +${fmtNombre(r.gain)} points` : '' });
     renderCollectionTerra();
@@ -9735,10 +9752,15 @@ const MONUMENTS_FRAIS = 60000;          // au-dela, on redemande
 async function loadMonuments(){
   const grille = document.getElementById('monGrille');
   if(!grille) return;
+  if(SAISON2){
+    const sub = document.querySelector('#panel-monuments .sub');
+    if(sub) sub.textContent = 'Les monuments des communes de France. Un monument entre dans ton album dès que sa commune entre dans ta collection Terra, et il y reste : personne ne peut te le prendre. Les cartes en gris sont celles qu\u2019il te reste à trouver.';
+  }
   if(monuments.length && Date.now() - monumentsLe < MONUMENTS_FRAIS){
     renderMonuments(); return;
   }
-  const { data, error } = await sb.rpc('monuments_catalogue');
+  // patch141 : en saison 2, l'album est celui de Terra
+  const { data, error } = await sb.rpc(SAISON2 ? 'monuments_terra' : 'monuments_catalogue');
   if(error){
     console.error(error);
     grille.innerHTML = '<p class="collection-empty">L\'album des monuments n\'est pas encore disponible.</p>';
@@ -9753,11 +9775,13 @@ function carteMonument(m){
   const u = urlPhoto(m.photo);
   const dept = m.departement || '';
   const etat = m.a_moi ? 'amoi' : (m.libre ? 'libre' : 'pris');
-  const qui = m.a_moi ? 'à toi'
+  const qui = SAISON2 ? (m.a_moi ? 'dans ta collection' : 'à trouver dans un paquet')
+            : m.a_moi ? 'à toi'
             : (m.libre ? 'personne ne l\'a' : echapperTexte(m.proprietaire || 'un joueur'));
   // une commune libre ne s'attaque pas : elle sort d'un paquet ou d'un
-  // contrat. Pas d'action, donc pas d'apparence cliquable.
-  const action = m.a_moi ? 'fiche' : (m.libre ? '' : 'attaquer');
+  // contrat. Pas d'action, donc pas d'apparence cliquable. En Terra
+  // (patch141), rien ne s'attaque : pas d'action du tout.
+  const action = SAISON2 ? '' : m.a_moi ? 'fiche' : (m.libre ? '' : 'attaquer');
   return `
     <article class="mon ${etat}"
              ${action ? 'data-mon="' + action + '" data-code="' + echapperTexte(m.commune_code) + '" role="button" tabindex="0"' : ''}
@@ -9792,8 +9816,9 @@ function renderMonuments(){
   if(cpt) cpt.textContent = compte.moi.toLocaleString('fr-FR') + ' / ' + compte.tous.toLocaleString('fr-FR');
 
   if(filtres){
-    filtres.innerHTML = [['tous', 'Tous'], ['moi', 'À toi'],
-                         ['pris', 'Chez les autres'], ['libres', 'Libres']]
+    filtres.innerHTML = (SAISON2 ? [['tous', 'Tous'], ['moi', 'À toi'], ['libres', 'À trouver']]
+                                 : [['tous', 'Tous'], ['moi', 'À toi'],
+                         ['pris', 'Chez les autres'], ['libres', 'Libres']])
       .map(([id, lab]) => `<button class="coll-filtre ${monumentFiltre === id ? 'actif' : ''}" data-monf="${id}">${lab} <span class="nb">${compte[id].toLocaleString('fr-FR')}</span></button>`)
       .join('');
   }
@@ -10156,9 +10181,9 @@ function renderEchangeMienTerra(zone, rechercheM){
   const promis = {};
   for(const e of echangesEnCours || []) if(e.sens === 'envoye') promis[e.je_donne_code] = (promis[e.je_donne_code] || 0) + 1;
   const duPalier = [...terraCollection.values()]
-    .filter(c => c.tier.id === echangeTier && libresTerra(c) > 0);
+    .filter(c => c.tier.id === echangeTier && echangeablesTerra(c) > 0);
   const miennes = duPalier
-    .map(c => Object.assign({}, c, { libres: libresTerra(c) - (promis[c.code] || 0) }))
+    .map(c => Object.assign({}, c, { libres: echangeablesTerra(c) - (promis[c.code] || 0) }))
     .filter(c => c.libres > 0)
     .filter(c => correspondRecherche(c.nom, c.dept, rechercheM))
     .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
@@ -10176,8 +10201,10 @@ function renderEchangeMienTerra(zone, rechercheM){
   zone.innerHTML = miennes.map(c => `
     <button class="ech-item ${echangeTier} ${echangeMien === c.code ? 'choisi' : ''}" data-mien="${echapperTexte(c.code)}">
       <b>${echapperTexte(c.nom)}</b>
-      <small>${echapperTexte(c.dept)} · ${c.libres} doublon${c.libres > 1 ? 's' : ''}</small>
+      <small>${echapperTexte(c.dept)} · ${c.libres} doublon${c.libres > 1 ? 's' : ''} échangeable${c.libres > 1 ? 's' : ''}</small>
     </button>`).join('');
+  if([...terraCollection.values()].some(c => c.tier.id === echangeTier && achetesTerra(c) > 0))
+    zone.insertAdjacentHTML('afterbegin', '<p class="ech-note">🔒 Les cartes des paquets achetés en points ne s\u2019échangent pas : elles restent dans ta collection ou se revendent au jeu.</p>');
   majResumeEchange();
 }
 const cleCible = (c) => c.commune_code + '|' + (c.proprietaire || '');
@@ -13041,6 +13068,10 @@ const auroreFront = (code) => SAISON2 && !enTerra() && !!(AURORE && AURORE[code]
 const auroreImage = (code) => AURORE && AURORE[code] ? 'aurore/' + code + '.jpg?v=' + AURORE_V : null;
 // les exemplaires qu'on peut vendre ou echanger : jamais le dernier, jamais une Aurore
 const libresTerra = (e) => e.exemplaires - Math.max(1, e.aurore || 0);
+// patch141 : ceux qu'on peut ECHANGER ou mettre en Bourse : ni Aurore, ni achetes en points
+const echangeablesTerra = (e) => Math.max(0, e.exemplaires - Math.max(1, (e.aurore || 0) + (e.bloques || 0)));
+// les doublons qui ne partent qu'au jeu : achetes en points
+const achetesTerra = (e) => Math.max(0, libresTerra(e) - echangeablesTerra(e));
 
 // le fond de la carte : photo, teinte, voile d'aurore, etoiles, reflet, sceau
 function fondAurore(code, tierId, grande){

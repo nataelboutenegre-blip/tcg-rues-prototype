@@ -5216,3 +5216,7 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
 /* ---------- patch140 : chance de prendre la commune ---------- */
 .pc-conquete{ margin:8px 0 0; font-size:.74rem; line-height:1.4; color:#8FA4BF; }
 .pc-conquete b{ color:#fff; font-weight:600; }
+
+/* ---------- patch141 : cartes achetees, Monuments en Terra ---------- */
+.bq-achete{ color:#A9BCD4; }
+.ech-note{ grid-column:1 / -1; width:100%; font-size:.76rem; color:#8FA4BF; margin:0 0 8px; }

@@ -5200,3 +5200,11 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
 .pc-action.favori.actif{ background: rgba(240,180,41,.16); color: var(--c-legendaire); }
 .pc-action.favori.actif svg{ fill: var(--c-legendaire); }
 .pc-etoile{ color: var(--c-legendaire); }
+
+/* ---------- patch137 : bandeau d'annonce ---------- */
+.annonce-bandeau{ display:flex; align-items:flex-start; gap:12px; margin:0 0 14px; padding:11px 14px; border-radius:12px;
+  background: rgba(240,180,41,.12); border:1px solid rgba(240,180,41,.45); color:#fff; font-size:.92rem; line-height:1.45; }
+.annonce-bandeau[hidden]{ display:none; }
+.annonce-bandeau span{ flex:1; }
+.annonce-bandeau button{ flex:none; background:none; border:0; color: var(--brume); font-size:20px; line-height:1; cursor:pointer; padding:0 2px; }
+.annonce-bandeau button:hover{ color:#fff; }

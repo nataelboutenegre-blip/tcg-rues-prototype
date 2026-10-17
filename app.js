@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'fd6055df65b5';
+const VERSION_JEU = '9ac1b8bf7df9';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -708,6 +708,7 @@ async function showGame(session_){
   dmMesure('paquets');
   dmFin();
   demarrerPresence(session_.user.id);   // patch127
+  chargerAnnonce();   // patch137
   verifierTiragesEnAttente();
   loadMenaces();
   renderNotifications();
@@ -808,6 +809,26 @@ function majLegendeEnLigne(){
   c.checked = horsLigne;
   c.addEventListener('change', () => basculerHorsLigne(c.checked));
 })();
+
+// ---------- patch137 : bandeau d'annonce ----------
+async function chargerAnnonce(){
+  let texte = null;
+  try{ const { data, error } = await sb.rpc('annonce'); if(!error) texte = data; }catch(e){}
+  const el = document.getElementById('annonceBandeau');
+  if(!el) return;
+  let fermee = null;
+  try{ fermee = localStorage.getItem('tf-annonce-fermee'); }catch(e){}
+  if(!texte || fermee === texte){ el.hidden = true; return; }
+  document.getElementById('annonceTexte').textContent = texte;
+  el.dataset.texte = texte;
+  el.hidden = false;
+}
+document.getElementById('annonceFermer').addEventListener('click', () => {
+  const el = document.getElementById('annonceBandeau');
+  try{ localStorage.setItem('tf-annonce-fermee', el.dataset.texte || ''); }catch(e){}
+  el.hidden = true;
+});
+setInterval(() => { if(!document.hidden && window.__monId) chargerAnnonce(); }, 5 * 60 * 1000);
 
 // ---------- patch122 : ecran de chargement ----------
 const DM_T0 = performance.now();

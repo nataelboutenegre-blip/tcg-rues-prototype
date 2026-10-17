@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '885a4d7fcb40';
+const VERSION_JEU = 'aba1ae1500b1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -201,7 +201,7 @@ function messageLisible(msg){
     [/known to be weak|easy to guess|pwned|leaked/i, 'Ce mot de passe est apparu dans une fuite de données connue : choisis-en un autre.'],
     [/email not confirmed/i, 'Confirme ton adresse email avant de te connecter (regarde tes mails).'],
     [/invalid format|unable to validate email/i, 'Adresse email invalide.'],
-    [/failed to fetch|network/i, 'Connexion impossible. Vérifie ta connexion internet.'],
+    [/load failed|failed to fetch|network/i, 'Connexion interrompue. Vérifie ta connexion, puis réessaie.'],
     [/rate limit|too many requests/i, 'Trop de tentatives. Réessaie dans quelques minutes.'],
     [/deja achete 3 paquets en boutique/i, 'Tu as déjà acheté 3 paquets en boutique aujourd\'hui. Reviens demain.'],
     [/^Choisis un departement$/i, 'Choisis d\'abord un département.'],
@@ -7478,13 +7478,12 @@ document.addEventListener('click', async (e) => {
         const cible = combatCibles.find(x => x.commune_code === code);
         // patch86 : l'assaut mis en scene remplace les notifications
         mettreEnSceneAssaut(cibleVueCombat, result);
-        if(result.conquise){
-          await loadMyCollection();
-          await loadOthersPossessions();
-        }
-        await loadCombat();
-        loadPackStatus();
-        loadObjectifs();
+        // patch135 : la carte se met a jour sur place, le reste plus tard
+        combatApresAssaut(code, result);
+      } catch(err){
+        // connexion coupee : l'assaut a pu passer, la liste se relira
+        combatRafraichirPlusTard(false);
+        throw err;
       } finally {
         combatActionEnCours = false;
       }
@@ -7508,6 +7507,43 @@ document.getElementById('sellFilters').addEventListener('click', (e) => {
   sellFilterTier = pill.dataset.tier;
   renderSellableGrid();
 });
+
+// ---------- patch135 : Combat plus leger ----------
+let combatChargeLe = 0;
+let combatRafraichTimer = null, combatConquisePendante = false;
+// la reponse du serveur suffit a mettre la carte a jour : pas de rechargement
+function combatApresAssaut(code, r){
+  const s = combatSieges.get(code) || { commune_code: code, victoires_consecutives: 0 };
+  s.victoires_consecutives = r.conquise ? 0 : Number(r.victoires_consecutives || 0);
+  s.dernier_round = new Date().toISOString();
+  combatSieges.set(code, s);
+  if(r.conquise){
+    combatCibles = combatCibles.filter(c => c.commune_code !== code);
+    combatSieges.delete(code);
+    othersMap.delete(code);
+  }
+  renderCombatGrid();
+  monEtat().then(row => {
+    if(!row) return;
+    ['soldeValueCombat', 'soldeValueDefense'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = row.solde; });
+  });
+  combatRafraichirPlusTard(!!r.conquise);
+}
+// un seul rechargement complet, 8 s apres le dernier assaut
+function combatRafraichirPlusTard(conquise){
+  if(conquise) combatConquisePendante = true;
+  clearTimeout(combatRafraichTimer);
+  combatRafraichTimer = setTimeout(async () => {
+    combatRafraichTimer = null;
+    if(combatActionEnCours){ combatRafraichirPlusTard(false); return; }
+    const avecConquete = combatConquisePendante;
+    combatConquisePendante = false;
+    if(avecConquete){ await loadMyCollection(); await loadOthersPossessions(); renderMapOverlay(); }
+    await loadCombat();
+    loadPackStatus();
+    loadObjectifs();
+  }, 8000);
+}
 
 // ---------- Combat ----------
 // Ces deux valeurs doivent rester alignees avec le SQL (fonctions attaquer et delai_attaque)
@@ -8095,6 +8131,7 @@ async function loadCombat(){
   calculerDistancesCibles();
   loadMenaces();
   combatSieges = new Map((mesSieges || []).map(s => [s.commune_code, s]));
+  combatChargeLe = Date.now();   // patch135
   renderCombatGrid();
   demanderChances();
 }
@@ -9453,7 +9490,11 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); }
     if(tab.dataset.tab === 'defense'){ loadMenaces().then(loadReveil); loadCombat(); renderIntensite('defense'); if(SAISON2) chargerGarnisons(); }
     if(tab.dataset.tab === 'combat' && SAISON2) majEnergie();
-    if(tab.dataset.tab === 'combat') loadCombat();
+    if(tab.dataset.tab === 'combat'){
+      // patch135 : la liste connue s'affiche tout de suite ; rechargee si elle a plus d'une minute
+      if(combatCibles.length) renderCombatGrid();
+      if(!combatRafraichTimer && Date.now() - combatChargeLe > 60000) loadCombat();
+    }
     if(tab.dataset.tab === 'succes') loadSucces();
     if(tab.dataset.tab === 'monuments') loadMonuments();
     if(tab.dataset.tab === 'collection' && enTerra()) ouvrirCollectionTerra();

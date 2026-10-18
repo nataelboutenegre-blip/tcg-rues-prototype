@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '490041341091';
+const VERSION_JEU = '669c67c1af7c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11271,6 +11271,7 @@ function rafaleRangDe(elo){
 }
 
 async function chargerRafale(){
+  await chargerGainsJour();
   const { data, error } = await sb.rpc('rafale_etat');
   if(error){ console.warn('TERRAFRONT rafale indisponible', error); rafaleEtat = null; }
   else rafaleEtat = data;
@@ -11302,10 +11303,13 @@ function renderRafaleCarte(){
     : (suiv ? `encore ${suiv[1] - elo} pts pour ${suiv[0]}` : 'rang le plus haut');
   document.getElementById('rfElo').textContent = elo.toLocaleString('fr-FR');
   document.getElementById('rfJauge').style.width = Math.max(2, Math.min(100, (elo - 800) / 500 * 100)) + '%';
-  document.getElementById('rfEtiquette').textContent = r.en_cours ? 'partie en cours' : '';
+  document.getElementById('rfEtiquette').textContent = r.en_cours ? 'partie en cours'
+    : (gainsJour ? etiquetteGains(Number(gainsJour.rafale) || 0, Number(gainsJour.max_rafale) || 5) : '');
+
   lancer.textContent = r.en_cours ? 'Reprendre la partie' : 'Lancer un duel';
   document.getElementById('rfAttente').textContent = r.en_attente > 0
-    ? `${r.en_attente} partie${r.en_attente > 1 ? 's' : ''} en attente d’un adversaire` : '';
+    ? `${r.en_attente} partie${r.en_attente > 1 ? 's' : ''} en attente d’un adversaire`
+    : (gainsJour && Number(gainsJour.rafale) >= Number(gainsJour.max_rafale || 5) ? 'Les duels restent ouverts, sans points jusqu’à demain' : '');
 }
 
 // une ligne de l'historique, quel que soit le jeu
@@ -11747,7 +11751,16 @@ function majBadgeQG(){
   majBadgePlus();
 }
 
+// patch143 : victoires payees aujourd'hui (Radar, Rafale) et gain de la Commune du jour
+let gainsJour = null;
+async function chargerGainsJour(){
+  try{ const { data, error } = await sb.rpc('gains_du_jour'); gainsJour = error ? null : data; }
+  catch(e){ gainsJour = null; }
+}
+const etiquetteGains = (n, max) => n >= max ? `${max} / ${max} · reviens demain` : `${n} / ${max} victoire${max > 1 ? 's' : ''} payée${max > 1 ? 's' : ''}`;
+
 async function chargerRadar(){
+  chargerGainsJour().then(() => { const qg = document.getElementById('panel-qg'); if(qg && qg.classList.contains('active')) renderQG(); });
   const { data, error } = await sb.rpc('radar_etat');
   if(error){ console.warn('TERRAFRONT radar indisponible', error); radarEtat = null; }
   else radarEtat = data;
@@ -11789,7 +11802,9 @@ function renderQG(){
     etat.textContent = e.fini ? (e.trouve ? `Trouvée en ${nb}` : 'Pas trouvée') : (nb ? `${nb} essai${nb > 1 ? 's' : ''} sur 6` : 'À jouer');
     btn.textContent = e.fini ? 'Revoir' : (nb ? 'Continuer' : 'Jouer');
     btn.classList.toggle('plein', !e.fini);
-    info.textContent = (e.serie > 0 ? `Série de ${e.serie} jour${e.serie > 1 ? 's' : ''} · ` : '') + 'nouvelle commune à minuit';
+    const gainCdj = gainsJour && gainsJour.cdj ? Number(gainsJour.cdj) : 0;
+    info.textContent = (e.serie > 0 ? `Série de ${e.serie} jour${e.serie > 1 ? 's' : ''} · ` : '')
+      + (gainCdj > 0 ? `+${gainCdj} pts gagnés · ` : '') + 'nouvelle commune à minuit';
   }
 
   // Radar
@@ -11816,12 +11831,13 @@ function renderQG(){
   // restants null : pas de limite, pas de compteur (l'etiquette vide est cachee)
   const sansLimite = r.restants === null || r.restants === undefined;
   document.getElementById('qgRestants').textContent = r.en_cours ? 'partie en cours'
-    : sansLimite ? ''
+    : sansLimite ? (gainsJour ? etiquetteGains(Number(gainsJour.radar) || 0, Number(gainsJour.max_radar) || 5) : '')
     : (r.restants > 0 ? `${r.restants} duel${r.restants > 1 ? 's' : ''} aujourd’hui` : 'reviens demain');
   lancer.textContent = r.en_cours ? 'Reprendre la partie' : 'Lancer un duel';
   lancer.disabled = !r.en_cours && !sansLimite && r.restants <= 0;
   document.getElementById('qgAttente').textContent = r.en_attente > 0
-    ? `${r.en_attente} partie${r.en_attente > 1 ? 's' : ''} en attente d’un adversaire` : '';
+    ? `${r.en_attente} partie${r.en_attente > 1 ? 's' : ''} en attente d’un adversaire`
+    : (gainsJour && Number(gainsJour.radar) >= Number(gainsJour.max_radar || 5) ? 'Les duels restent ouverts, sans points jusqu’à demain' : '');
 
   // patch128 : la carte Rafale, puis les listes des deux jeux, filtrees
   renderRafaleCarte();

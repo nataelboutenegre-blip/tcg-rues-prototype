@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'adf713196fd9';
+const VERSION_JEU = '490041341091';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3794,6 +3794,13 @@ function correspondRecherche(nom, dept, recherche){
   return sansAccents(nom).includes(recherche)
       || String(dept).toLowerCase().includes(recherche)
       || sansAccents(DEPT_NAMES[dept] || '').includes(recherche);
+}
+
+// patch142 : « Bordeaux, Angouleme, 16 » -> la commune correspond a l'un des termes
+function correspondUnTerme(nom, dept, recherche){
+  const termes = String(recherche || '').split(/[,;]/).map(t => t.trim()).filter(Boolean);
+  if(!termes.length) return true;
+  return termes.some(t => correspondRecherche(nom, dept, t));
 }
 
 // Sieges en cours sur mes communes, regroupes : combien d'attaquants, meilleure serie
@@ -10149,7 +10156,7 @@ function renderEchangeMien(){
     .filter(c => !myListings.has(c.code));
   const miennes = duPalier
     .filter(c => !engagees.has(c.code))
-    .filter(c => correspondRecherche(c.nom, c.dept, rechercheM))
+    .filter(c => correspondUnTerme(c.nom, c.dept, rechercheM))
     .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
 
   if(miennes.length === 0){
@@ -10185,7 +10192,7 @@ function renderEchangeMienTerra(zone, rechercheM){
   const miennes = duPalier
     .map(c => Object.assign({}, c, { libres: echangeablesTerra(c) - (promis[c.code] || 0) }))
     .filter(c => c.libres > 0)
-    .filter(c => correspondRecherche(c.nom, c.dept, rechercheM))
+    .filter(c => correspondUnTerme(c.nom, c.dept, rechercheM))
     .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
   if(!miennes.length){
     zone.innerHTML = rechercheM

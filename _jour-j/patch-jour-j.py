@@ -18,4 +18,11 @@ for avant, apres in [(u"const SAISON2 = false;", u"const SAISON2 = true;"),
     assert js.count(avant) == 1, avant
     js = js.replace(avant, apres)
 with io.open(p, 'w', encoding='utf-8') as f: f.write(js)
+# image de partage sans date (patch144)
+ph = os.path.join(BASE, 'index.html')
+with io.open(ph, encoding='utf-8') as f: h = f.read()
+if 'og-saison-2.png' in h:
+    h = h.replace('og-saison-2.png', 'og-terrafront.png')
+    with io.open(ph, 'w', encoding='utf-8') as f: f.write(h)
+    print(u'image de partage : version sans date')
 print(u'saison 2 ouverte cote jeu')

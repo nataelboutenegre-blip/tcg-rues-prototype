@@ -121,6 +121,8 @@ revoke all on public.euros_reglages from public, anon, authenticated;
 insert into public.euros_reglages(cle, valeur) values
   -- à changer à chaque nouvelle version publiée des CGV
   ('cgv_version',             '"2026-10-19-v3"'),
+  -- adresse publique du PDF des CGV, jointe à l'email de confirmation (support durable)
+  ('cgv_pdf_url',             'null'),
   -- CGV art. 3 : 15 € par mois civil avant 18 ans
   ('plafond_mineur_centimes', '1500'),
   ('age_minimum',             '15'),

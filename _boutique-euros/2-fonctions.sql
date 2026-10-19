@@ -16,6 +16,7 @@
 --   - euros_livrer_differees()   : livre les commandes dont les 14 j sont passés
 --   - euros_annuler_remboursee() : remboursement ou contestation -> objet retiré
 --   - euros_expirer()            : paiement abandonné
+--   - euros_commande_pour_email(): le contenu de l'email de confirmation
 --
 --  Règles de sécurité :
 --   - le prix vient TOUJOURS de euros_articles, jamais du navigateur ;
@@ -343,6 +344,18 @@ begin
 end;
 $f$;
 
+-- les informations de l'email de confirmation (fonction Edge stripe-webhook)
+create or replace function public.euros_commande_pour_email(p_session text)
+ returns jsonb language sql stable security definer set search_path to 'public'
+as $f$
+  select jsonb_build_object(
+           'commande_id', c.id, 'article', c.nom_article, 'prix_centimes', c.prix_centimes,
+           'livraison', c.livraison, 'statut', c.statut, 'payee_le', c.payee_le,
+           'livrer_apres', c.livrer_apres, 'cgv_version', c.cgv_version,
+           'cgv_pdf_url', euros_reglage('cgv_pdf_url') #>> '{}')
+    from euros_commandes c where c.stripe_session = p_session
+$f$;
+
 -- ---------- droits ----------
 -- Par défaut, PostgreSQL laisse tout le monde exécuter une fonction : on
 -- retire tout, puis on redonne seulement ce qu'il faut.
@@ -361,6 +374,7 @@ revoke all on function public.euros_confirmer_paiement(text, text, text, integer
 revoke all on function public.euros_livrer_differees()                 from public, anon, authenticated;
 revoke all on function public.euros_annuler_remboursee(text, text, text) from public, anon, authenticated;
 revoke all on function public.euros_expirer(text, text)                from public, anon, authenticated;
+revoke all on function public.euros_commande_pour_email(text)          from public, anon, authenticated;
 
 grant execute on function public.euros_catalogue()                     to authenticated;
 grant execute on function public.euros_preparer_commande(text, text, boolean, boolean, boolean, text, date) to authenticated;
@@ -372,6 +386,7 @@ grant execute on function public.euros_confirmer_paiement(text, text, text, inte
 grant execute on function public.euros_livrer_differees()              to service_role;
 grant execute on function public.euros_annuler_remboursee(text, text, text) to service_role;
 grant execute on function public.euros_expirer(text, text)             to service_role;
+grant execute on function public.euros_commande_pour_email(text)       to service_role;
 
 -- contrôle : aucune fonction serveur ne doit être ouverte aux joueurs
 select 'fonctions boutique en euros : OK' as resultat,
@@ -380,4 +395,5 @@ select 'fonctions boutique en euros : OK' as resultat,
   from pg_proc p
  where p.pronamespace = 'public'::regnamespace
    and p.proname in ('euros_lier_session', 'euros_confirmer_paiement', 'euros_livrer_differees',
-                     'euros_annuler_remboursee', 'euros_expirer', 'euros_livrer');
+                     'euros_annuler_remboursee', 'euros_expirer', 'euros_livrer',
+                     'euros_commande_pour_email');

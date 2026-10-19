@@ -19,5 +19,6 @@
 # avertissement.
 exclude:
   - _sql
+  - _boutique-euros
   - "*.py"
   - README.md

@@ -5220,3 +5220,10 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
 /* ---------- patch141 : cartes achetees, Monuments en Terra ---------- */
 .bq-achete{ color:#A9BCD4; }
 .ech-note{ grid-column:1 / -1; width:100%; font-size:.76rem; color:#8FA4BF; margin:0 0 8px; }
+
+/* ---------- patch145 : fenetre plus haute que l'ecran (LeoLesel) ----------
+   Centree dans un fond fixe, une fenetre trop haute debordait par le haut :
+   la croix sortait de l'ecran et on ne pouvait plus y revenir. Le fond
+   defile ; la marge automatique ne centre que quand la fenetre tient. */
+.fenetre-fond{ overflow-y:auto; overscroll-behavior:contain; align-items:flex-start; }
+.fenetre-fond > .fenetre{ margin:auto; flex-shrink:0; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1074fe5147d0';
+const VERSION_JEU = 'b078519161fe';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1193,7 +1193,7 @@ function applyMapTransform(){
   clampMapPan();
   // en canvas le deplacement est un simple changement de repere : pas de couche
   // promue par le navigateur, donc pas de flou et aucun redessin differe
-  if(canvasActif()){ demanderDessin(); return; }
+  if(canvasActif()){ signalerGesteCanvas(); demanderDessin(); return; }   // patch145
   signalerMouvementCarte();
   if(mapTransformPlanifie) return;
   mapTransformPlanifie = true;
@@ -1773,8 +1773,10 @@ function departementsVisibles(liste){
   const vus = new Set();
   const ajouter = (c) => {
     if(c.lat == null) return;
-    const p = project(c.lat, c.lon);
-    const x = p.x * MAP_W * ech * mapZoom + mapPanX, y = p.y * MAP_H * ech * mapZoom + mapPanY;
+    // patch145 : la liste de la carte porte deja ses coordonnees projetees
+    let mx = c.x, my = c.y;
+    if(mx == null){ const p = project(c.lat, c.lon); mx = p.x * MAP_W; my = p.y * MAP_H; }
+    const x = mx * ech * mapZoom + mapPanX, y = my * ech * mapZoom + mapPanY;
     if(x > -60 && x < w + 60 && y > -60 && y < h + 60) vus.add(c.dept);
   };
   for(const c of liste) ajouter(c);
@@ -1935,6 +1937,100 @@ function canvasActif(){
   return MODE_CANVAS && CV.ctx;
 }
 
+// ---------- patch145 : la carte ne gele plus pendant un geste ----------
+// Repeindre 15 000 communes a chaque image d'un deplacement faisait geler les
+// telephones. Pendant le geste on deplace (et agrandit) l'image deja peinte ;
+// 160 ms apres le dernier mouvement, la carte nette est repeinte une fois.
+// ?rendu=complet : porte de sortie, tout est repeint a chaque image comme avant.
+const RENDU_INSTANTANE = new URLSearchParams(location.search).get('rendu') !== 'complet';
+CV.instantane = null;          // { cv, k, tx, ty } : la derniere carte nette
+CV.geste = false;
+CV.finGeste = null;
+CV.boitesCommunes = new Map(); // code commune -> [x0, y0, x1, y1] en unites de carte
+
+function signalerGesteCanvas(){
+  if(!RENDU_INSTANTANE) return;
+  CV.geste = true;
+  clearTimeout(CV.finGeste);
+  CV.finGeste = setTimeout(() => { CV.geste = false; demanderDessin(); }, 160);
+}
+
+function peindreMer(ctx){
+  const L = CV.largeur * CV.dpr, H = CV.hauteur * CV.dpr;
+  const g = ctx.createRadialGradient(L * 0.45, H * 0.4, 0, L * 0.45, H * 0.4, L * 0.75);
+  g.addColorStop(0, '#12294A');
+  g.addColorStop(1, '#081427');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, L, H);
+}
+
+// Renvoie false quand l'image gardee ne convient pas : on repeint alors tout.
+function dessinerInstantane(k, tx, ty){
+  const s = CV.instantane, ctx = CV.ctx;
+  if(!s || s.cv.width !== ctx.canvas.width || s.cv.height !== ctx.canvas.height) return false;
+  const r = k / s.k;
+  if(!(r > 1 / 6 && r < 6)) return false;   // trop loin de l'image gardee : flou illisible
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  peindreMer(ctx);
+  // ce que l'image ne couvre pas (le bord decouvert en glissant) montre la
+  // terre sans territoires plutot que la mer
+  const fond = cheminsDuFond();
+  if(fond){
+    ctx.setTransform(k, 0, 0, k, tx, ty);
+    ctx.fillStyle = '#1C3860';
+    ctx.fill(fond.terre);
+  }
+  // un point de l'image gardee : u = s.k * m + s.tx ; a l'ecran : k * m + tx
+  ctx.setTransform(r, 0, 0, r, tx - r * s.tx, ty - r * s.ty);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(s.cv, 0, 0);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  return true;
+}
+
+function memoriserInstantane(k, tx, ty){
+  if(!RENDU_INSTANTANE) return;
+  const cv = CV.ctx.canvas;
+  if(!CV.instantane) CV.instantane = { cv: document.createElement('canvas') };
+  const s = CV.instantane;
+  if(s.cv.width !== cv.width || s.cv.height !== cv.height){ s.cv.width = cv.width; s.cv.height = cv.height; }
+  s.cv.getContext('2d').drawImage(cv, 0, 0);
+  s.k = k; s.tx = tx; s.ty = ty;
+}
+
+// La partie de la carte a l'ecran, en unites de carte, avec une marge en pixels
+function vueCarteUnites(marge){
+  const e = echelleCarte() * mapZoom;
+  return [(-marge - mapPanX) / e, (-marge - mapPanY) / e,
+          (CV.largeur + marge - mapPanX) / e, (CV.hauteur + marge - mapPanY) / e];
+}
+
+function boiteCommune(code, poly){
+  let b = CV.boitesCommunes.get(code);
+  if(b) return b;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for(const anneau of poly) for(const pt of anneau){
+    const p = project(pt[1], pt[0]);
+    const x = p.x * MAP_W, y = p.y * MAP_H;
+    if(x < x0) x0 = x; if(x > x1) x1 = x;
+    if(y < y0) y0 = y; if(y > y1) y1 = y;
+  }
+  b = [x0, y0, x1, y1];
+  CV.boitesCommunes.set(code, b);
+  return b;
+}
+
+// Un numero par objet Map : une liste rechargee (meme de meme taille) change
+// la signature des donnees de la carte.
+const JETONS_CARTE = new WeakMap();
+let jetonCarteSuivant = 1;
+function jetonCarte(o){
+  if(!o) return 0;
+  let j = JETONS_CARTE.get(o);
+  if(!j){ j = jetonCarteSuivant++; JETONS_CARTE.set(o, j); }
+  return j;
+}
+
 // L'echelle entre les coordonnees de la carte et les pixels du cadre.
 // Le SVG utilise un viewBox 0 0 MAP_W MAP_H etire sur toute la largeur du cadre :
 // on reproduit exactement le meme rapport pour que les deux rendus coincident.
@@ -2009,18 +2105,13 @@ function dessinerCanvas(){
   const ctx = CV.ctx;
   const k = echelleCarte() * mapZoom * CV.dpr;
   const tx = mapPanX * CV.dpr, ty = mapPanY * CV.dpr;
+  if(CV.geste && dessinerInstantane(k, tx, ty)) return;   // patch145
 
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.clearRect(0, 0, CV.largeur * CV.dpr, CV.hauteur * CV.dpr);
 
   // la mer, en degrade comme dans le SVG
-  const g = ctx.createRadialGradient(
-    CV.largeur * CV.dpr * 0.45, CV.hauteur * CV.dpr * 0.4, 0,
-    CV.largeur * CV.dpr * 0.45, CV.hauteur * CV.dpr * 0.4, CV.largeur * CV.dpr * 0.75);
-  g.addColorStop(0, '#12294A');
-  g.addColorStop(1, '#081427');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, CV.largeur * CV.dpr, CV.hauteur * CV.dpr);
+  peindreMer(ctx);
 
   const fond = cheminsDuFond();
   if(!fond) return;
@@ -2057,6 +2148,7 @@ function dessinerCanvas(){
   }
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   dessinerNomsRegions(ctx);
+  memoriserInstantane(k, tx, ty);   // patch145
 }
 
 // Reprend le meme decoupage que le rendu SVG : de loin les departements,
@@ -2072,7 +2164,8 @@ function bandeDeZoom(){
 }
 
 function territoiresVisiblesCache(){
-  const signature = [collectionMap.size, othersMap.size, showOthers ? 1 : 0, bandeDeZoom(),
+  const signature = [jetonCarte(collectionMap), collectionMap.size, jetonCarte(othersMap), othersMap.size,   // patch145
+                     showOthers ? 1 : 0, bandeDeZoom(),
                      CLANS && CALQUES.clans ? 'c' + clansCarteVersion : ''].join('|');
   if(CV.donnees && CV.donneesSignature === signature) return CV.donnees;
   CV.donneesSignature = signature;
@@ -2082,13 +2175,20 @@ function territoiresVisiblesCache(){
   return CV.donnees;
 }
 
+// patch145 : projetee une fois par chargement, et non plus a chaque image
+function entreeCarte(e, joueur){
+  const p = project(e.lat, e.lon);
+  return { code: e.code, nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur,
+           x: p.x * MAP_W, y: p.y * MAP_H };
+}
+
 function territoiresVisibles(){
   const joueurs = new Map();
   joueurs.set(ID_MOI, { id: ID_MOI, pseudo: 'Toi', couleur: COULEUR_MOI, fonce: couleurFoncee(COULEUR_MOI), moi: true, nb: 0 });
   const liste = [];
   for(const e of collectionMap.values()){
     if(!METRO_DEPT_RE.test(e.dept) || e.lat == null) continue;
-    liste.push({ code: e.code, nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: ID_MOI });
+    liste.push(entreeCarte(e, ID_MOI));   // patch145
     joueurs.get(ID_MOI).nb++;
   }
   MASQUEES_PAR_ZOOM.commun = 0;
@@ -2102,7 +2202,7 @@ function territoiresVisibles(){
       joueurs.set(e.joueurId, { id: e.joueurId, pseudo: e.pseudo, couleur, fonce: couleurFoncee(couleur), moi: false, nb: 0 });
     }
     joueurs.get(e.joueurId).nb++;
-    if(showOthers && visible) liste.push({ code: e.code, nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: e.joueurId });
+    if(showOthers && visible) liste.push(entreeCarte(e, e.joueurId));   // patch145
   }
   return { liste, joueurs };
 }
@@ -2173,7 +2273,10 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
       else if(c && c !== 'erreur') pretes++;
     }
     if(pretes > 0){
-      const possedees = new Map(liste.map(c => [c.code, c]));
+      // patch145 : la table ne change qu'avec les donnees, pas a chaque image
+      if(CV.possedeesDe !== liste){ CV.possedeesDe = liste; CV.possedees = new Map(liste.map(c => [c.code, c])); }
+      const possedees = CV.possedees;
+      const vue = vueCarteUnites(12);
       const parJoueur = new Map();
       // les communes libres, en un seul chemin
       const libres = new Path2D();
@@ -2187,6 +2290,9 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
         const contours = CONTOURS.get(dep);
         if(!contours || contours === 'erreur') continue;
         for(const code in contours){
+          // patch145 : une commune hors de l'ecran ne coute plus rien
+          const b = boiteCommune(code, contours[code]);
+          if(b[2] < vue[0] || b[0] > vue[2] || b[3] < vue[1] || b[1] > vue[3]) continue;
           const p = cheminCommuneCanvas(code, contours[code]);
           const c = possedees.get(code);
           const etaitAMoi = passage && perduesMap.has(code);
@@ -2248,8 +2354,7 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
         if(etat && etat !== 'erreur') continue;
         if(!joueurs.has(c.joueur)) continue;
         if(!pastilles.has(c.joueur)) pastilles.set(c.joueur, new Path2D());
-        const pt = project(c.lat, c.lon);
-        const x = pt.x * MAP_W, y = pt.y * MAP_H, r = RAYON_ZONE[c.tier] * ep;
+        const x = c.x, y = c.y, r = RAYON_ZONE[c.tier] * ep;   // patch145
         const chemin = pastilles.get(c.joueur);
         chemin.moveTo(x + r, y);
         chemin.arc(x, y, r, 0, Math.PI * 2);
@@ -2343,12 +2448,13 @@ function dessinerCellulesCanvas(ctx, trait, liste, joueurs, ordre){
 // Etoiles et pastilles : taille constante a l'ecran, comme dans le SVG
 function dessinerMarqueursCanvas(ctx, liste, joueurs, k, legendairesSeules){
   const e = 1 / Math.max(1, mapZoom);
+  const vue = vueCarteUnites(12);   // patch145
   for(const c of liste){
     if(c.tier !== 'legendaire' && (legendairesSeules || (c.tier !== 'rare' && c.tier !== 'epique'))) continue;
+    const x = c.x, y = c.y;
+    if(x < vue[0] || x > vue[2] || y < vue[1] || y > vue[3]) continue;
     const j = joueurs.get(c.joueur);
     if(!j) continue;
-    const p = project(c.lat, c.lon);
-    const x = p.x * MAP_W, y = p.y * MAP_H;
     ctx.globalAlpha = opaciteJoueur(c.joueur, 1);
     if(c.tier === 'legendaire'){
       const r = (j.moi ? 7 : 6) * e;
@@ -3038,6 +3144,21 @@ function ligneConquete(chances, serie){
   return `<p class="pc-conquete">${txt}</p>`;
 }
 
+// patch145 : la commune prise passe dans ma collection sans attendre le serveur
+function conquerirSurPlace(code){
+  const c = othersMap.get(code);
+  if(!c) return;
+  othersMap.delete(code);
+  const maintenant = Date.now();
+  collectionMap.set(code, {
+    code: c.code, nom: c.nom, dept: c.dept, pop: c.pop, lat: c.lat, lon: c.lon, tier: c.tier,
+    rank: c.rank, tierSize: c.tierSize,
+    acquiredAt: maintenant, bouclierDebut: 0, bouclierJusqua: 0, conquiseLe: maintenant,
+    etiquette: '', photo: '', photoAuteur: '', photoLicence: '', photoSource: ''
+  });
+  if(c.tier && session[c.tier.id] !== undefined){ session[c.tier.id]++; session.total++; }
+}
+
 async function lancerAssaut(code){
   if(attaqueEnCours) return;
   const c = othersMap.get(code);
@@ -3053,9 +3174,11 @@ async function lancerAssaut(code){
     // patch86 : l'assaut mis en scene remplace les notifications
     mettreEnSceneAssaut(cibleVue, r);
     if(r.conquise){
-      await loadMyCollection();
-      await loadOthersPossessions();
+      // patch145 : la commune change de couleur tout de suite ; le
+      // rechargement complet passe 8 s apres le dernier assaut, sans bloquer
+      conquerirSurPlace(code);
       fermerPanneau();
+      combatRafraichirPlusTard(true);
     }
     loadPackStatus();
     loadObjectifs();

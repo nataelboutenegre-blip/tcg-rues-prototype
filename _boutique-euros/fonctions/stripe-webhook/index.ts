@@ -91,6 +91,7 @@ async function envoyerConfirmation(session: Stripe.Checkout.Session): Promise<vo
 <p>Cet objet d'apparence ne donne aucun avantage de jeu. Tu bénéficies de la garantie légale de conformité
 des contenus numériques (articles L224-25-12 et suivants du Code de la consommation).</p>
 <p>${cgv}</p>
+<p style="font-size:12px;color:#5b6475">En cas de litige, écris d'abord à contact@terrafront.fr. Si ta réclamation n'aboutit pas, tu peux saisir gratuitement le médiateur CM2C, 49 rue de Ponthieu, 75008 Paris — https://www.cm2c.net/declarer-un-litige.php</p>
 <p style="font-size:12px;color:#5b6475">TVA non applicable, article 293 B du CGI.<br>${echapper(VENDEUR)}</p>
 </div>`;
 

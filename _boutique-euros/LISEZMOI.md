@@ -46,10 +46,16 @@ signature Stripe rejette un message modifié ou non signé.
 ## Ce qui reste à faire avant les vraies ventes
 
 - [ ] L'écran de la boutique et de la garde-robe dans le jeu (aperçu d'abord).
-- [ ] **L'email de confirmation** promis par les CGV (objet, prix, date, CGV,
-      choix sur la rétractation). Le reçu de Stripe ne suffit pas : il ne
-      contient ni les CGV ni la renonciation. Il faut un service d'envoi
-      d'emails (Resend, Brevo…) appelé depuis `stripe-webhook`.
+- [ ] **Email de confirmation (Resend)** : le code est prêt dans
+      `stripe-webhook` (objet, prix, date, choix sur la rétractation, CGV
+      jointes). À faire : vérifier le domaine terrafront.fr dans Resend
+      (enregistrements DNS à ajouter chez OVH), créer une clé « envoi
+      seulement », puis ajouter les secrets `RESEND_API_KEY` et
+      `EMAIL_EXPEDITEUR` (`TerraFront <boutique@terrafront.fr>`).
+- [ ] Publier le PDF des CGV définitives (par exemple
+      `https://terrafront.fr/cgv/cgv-2026-10-19-v3.pdf`) et mettre son
+      adresse dans `euros_reglages` (`cgv_pdf_url`) : il est joint à chaque
+      email (support durable). Changer de PDF à chaque nouvelle version.
 - [ ] Le bandeau de financement (`euros_bandeau()` est prêt).
 - [ ] L'avertissement avant suppression de compte (CGV art. 4).
 - [ ] Le pass de saison : la progression n'existe pas encore ; ne pas

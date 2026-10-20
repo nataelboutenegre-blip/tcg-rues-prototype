@@ -10,13 +10,26 @@
 // Secrets à définir dans Supabase (Edge Functions > Secrets) :
 //   STRIPE_SECRET_KEY   sk_test_... (puis sk_live_... le jour de l'ouverture)
 //   SITE_URL            https://terrafront.fr
-// SUPABASE_URL, SUPABASE_ANON_KEY et SUPABASE_SERVICE_ROLE_KEY sont fournis
-// automatiquement par Supabase.
+// SUPABASE_URL et les clés Supabase sont fournies automatiquement par Supabase.
 //
-// Déploiement : vérification du JWT ACTIVÉE (réglage par défaut).
+// Déploiement : vérification du JWT DÉSACTIVÉE. La fonction vérifie elle-même
+// le joueur (auth.getUser), ce qui marche aussi avec les nouvelles clés Supabase.
 
 import Stripe from "npm:stripe@16.12.0";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+
+// Clés Supabase : anciennes variables (SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY)
+// ou nouvelles clés (SUPABASE_PUBLISHABLE_KEYS / SUPABASE_SECRET_KEYS, en JSON).
+function cleSupabase(ancienne: string, nouvelles: string): string {
+  const v = Deno.env.get(ancienne);
+  if (v) return v;
+  try {
+    const liste = JSON.parse(Deno.env.get(nouvelles) ?? "{}");
+    const premiere = Object.values(liste)[0];
+    if (typeof premiere === "string" && premiere) return premiere;
+  } catch { /* rien */ }
+  throw new Error(`Clé Supabase introuvable (${ancienne} / ${nouvelles})`);
+}
 
 const SITE_URL = Deno.env.get("SITE_URL") ?? "https://terrafront.fr";
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
@@ -50,7 +63,7 @@ Deno.serve(async (req) => {
   }
 
   // 1. le joueur, avec son propre jeton : auth.uid() côté base = ce joueur
-  const commeJoueur = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+  const commeJoueur = createClient(Deno.env.get("SUPABASE_URL")!, cleSupabase("SUPABASE_ANON_KEY", "SUPABASE_PUBLISHABLE_KEYS"), {
     global: { headers: { Authorization: jeton } },
     auth: { persistSession: false },
   });
@@ -102,7 +115,7 @@ Deno.serve(async (req) => {
   }
 
   // 3. relier la commande à la session, avec la clé service (côté serveur seulement)
-  const commeServeur = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
+  const commeServeur = createClient(Deno.env.get("SUPABASE_URL")!, cleSupabase("SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SECRET_KEYS"), {
     auth: { persistSession: false },
   });
   const { error: liaison } = await commeServeur.rpc("euros_lier_session", {

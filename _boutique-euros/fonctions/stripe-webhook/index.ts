@@ -26,12 +26,25 @@
 import Stripe from "npm:stripe@16.12.0";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
+// Clés Supabase : anciennes variables (SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY)
+// ou nouvelles clés (SUPABASE_PUBLISHABLE_KEYS / SUPABASE_SECRET_KEYS, en JSON).
+function cleSupabase(ancienne: string, nouvelles: string): string {
+  const v = Deno.env.get(ancienne);
+  if (v) return v;
+  try {
+    const liste = JSON.parse(Deno.env.get(nouvelles) ?? "{}");
+    const premiere = Object.values(liste)[0];
+    if (typeof premiere === "string" && premiere) return premiere;
+  } catch { /* rien */ }
+  throw new Error(`Clé Supabase introuvable (${ancienne} / ${nouvelles})`);
+}
+
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, {
   apiVersion: "2024-06-20",
   httpClient: Stripe.createFetchHttpClient(),
 });
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
-const base = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
+const base = createClient(Deno.env.get("SUPABASE_URL")!, cleSupabase("SUPABASE_SERVICE_ROLE_KEY", "SUPABASE_SECRET_KEYS"), {
   auth: { persistSession: false },
 });
 

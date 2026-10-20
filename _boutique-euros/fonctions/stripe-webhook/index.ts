@@ -50,7 +50,7 @@ async function appeler(fonction: string, args: Record<string, unknown>): Promise
 // ---------- email de confirmation (CGV art. 2 et 3 : support durable) ----------
 
 const VENDEUR = "Nataël Boutenegre, entrepreneur individuel, nom commercial TerraFront — " +
-  "RCS Angoulême 131 743 601 — 22 rue Pasteur, 16160 Gond-Pontouvre — contact@terrafront.fr";
+  "RCS Angoulême 131 743 601 — SIRET 131 743 601 00018 — 22 rue Pasteur, 16160 Gond-Pontouvre — contact@terrafront.fr";
 
 const euros = (c: number) => (c / 100).toFixed(2).replace(".", ",") + " €";
 const dateFr = (iso: string) => new Date(iso).toLocaleString("fr-FR", {

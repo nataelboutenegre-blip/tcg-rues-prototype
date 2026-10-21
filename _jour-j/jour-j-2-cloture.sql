@@ -5,4 +5,8 @@
 --  5 communes gardées versés en Terra, communes rendues au pot, soldes remis
 --  à 100 (comme un nouveau joueur), Radar remis à zéro, garnisons et sièges vidés, saison 2 ouverte.
 -- ===========================================================================
-select * from cloturer_saison('saison-1', 'saison-2', 'Saison 2', p_confirmer => true, p_solde_depart => 100);
+select * from cloturer_saison('saison-1', 'saison-2', 'Saison 2', p_confirmer => true, p_solde_depart => 100,
+                               -- 45 % pile compte (décision du 21 octobre) : la fonction compare
+                               -- en « strictement plus que » ; aucun département de moins de
+                               -- 1 000 communes ne tombe entre 44,9999 et 45 %
+                               p_seuil_terra => 44.9999);

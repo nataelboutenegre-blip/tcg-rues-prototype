@@ -1,6 +1,6 @@
 # Boutique en euros — mise en place
 
-Préparé le 19 octobre 2026. **Rien n'est en vente** : tous les articles sont
+Préparé le 19 octobre 2026. **Installé le 20 octobre 2026 en mode test** (SQL passé, fonctions déployées, webhook Stripe de test créé et vérifié). **Rien n'est en vente** : tous les articles sont
 créés inactifs, et rien ne fonctionne sans les clés Stripe. Ce dossier ne
 touche à aucune table ni fonction existante du jeu, et n'est pas publié par
 GitHub Pages.
@@ -33,9 +33,10 @@ signature Stripe rejette un message modifié ou non signé.
 3. **Supabase > Edge Functions > Secrets** : ajouter `STRIPE_SECRET_KEY`
    et `SITE_URL` (`https://terrafront.fr`). La clé secrète ne va JAMAIS
    dans le code ni sur GitHub.
-4. **Supabase > Edge Functions** : créer `creer-paiement` (vérification du
-   JWT activée) et `stripe-webhook` (vérification du JWT **désactivée**),
-   en collant le contenu des fichiers `fonctions/…/index.ts`.
+4. **Supabase > Edge Functions** : créer `creer-paiement` et `stripe-webhook`
+   en collant le contenu des fichiers `fonctions/…/index.ts`, avec la
+   vérification du JWT **désactivée pour les deux** (le projet utilise les
+   nouvelles clés Supabase ; `creer-paiement` vérifie le joueur elle-même).
 5. **Stripe > Développeurs > Webhooks** : ajouter l'adresse
    `https://<projet>.supabase.co/functions/v1/stripe-webhook`, cocher les
    5 événements listés en tête de `stripe-webhook/index.ts`, puis copier le

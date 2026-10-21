@@ -19,8 +19,8 @@ self.addEventListener('push', (event) => {
   // sur iPhone, chaque notification recue DOIT etre affichee, sinon Apple coupe l'abonnement
   event.waitUntil(self.registration.showNotification(d.titre || 'TerraFront', {
     body: d.texte || '',
-    icon: 'icon-192.png',
-    badge: 'icon-192.png',
+    icon: 'icon-192.png?v=2',
+    badge: 'badge-96.png',
     tag: d.tag || undefined,
     data: { url }
   }));

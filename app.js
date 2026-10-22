@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '7b8d94154d2a';
+const VERSION_JEU = 'ebbf272c2f3d';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3937,6 +3937,25 @@ function correspondUnTerme(nom, dept, recherche){
   const termes = String(recherche || '').split(/[,;]/).map(t => t.trim()).filter(Boolean);
   if(!termes.length) return true;
   return termes.some(t => correspondRecherche(nom, dept, t));
+}
+
+// patch149 : « 25 /Maroli » -> le Doubs sauf Maroli. Tout ce qui suit un / est exclu.
+function separerExclusions(texte){
+  const morceaux = String(texte || '').split('/');
+  const exclus = morceaux.slice(1).join(',').split(/[,;]/)
+    .map(t => sansAccents(t.trim())).filter(Boolean);
+  return { recherche: morceaux[0].trim(), exclus };
+}
+// un departement (numero ou nom) retire ce departement ; sinon le pseudo ou le nom qui le contient
+function estExclu(nom, dept, pseudo, exclus){
+  if(!exclus.length) return false;
+  const p = sansAccents(pseudo || ''), n = sansAccents(nom || ''), d = String(dept || '').toUpperCase();
+  return exclus.some(t => {
+    const brut = /^\d$/.test(t) ? '0' + t : t.toUpperCase();
+    const code = DEPT_NAMES[brut] ? brut : codeDepartement(t);
+    if(code) return d === code || p === t;
+    return (p && p.includes(t)) || n.includes(t);
+  });
 }
 
 // Sieges en cours sur mes communes, regroupes : combien d'attaquants, meilleure serie
@@ -8224,8 +8243,9 @@ function combatBasVoulus(){
   if(COMBAT_TIERS_BAS.indexOf(combatFilterTier) >= 0) return [combatFilterTier];
   if(combatProximite && combatFilterTier === 'tous') return COMBAT_TIERS_BAS.slice();
   // patch125 : une recherche reduit la liste, on peut tout charger
+  // (patch149 : des exclusions seules ne reduisent rien, comme un champ vide)
   const champ = document.getElementById('combatSearch');
-  if(combatFilterTier === 'tous' && champ && champ.value.trim()) return COMBAT_TIERS_BAS.slice();
+  if(combatFilterTier === 'tous' && champ && separerExclusions(champ.value).recherche) return COMBAT_TIERS_BAS.slice();
   return [];
 }
 async function assurerCiblesBas(){
@@ -8500,7 +8520,8 @@ function renderCombatGrid(){
   renderIntensite();
   const grid = document.getElementById('combatGrid');
   const searchEl = document.getElementById('combatSearch');
-  const searchText = sansAccents(searchEl ? searchEl.value.trim() : '');
+  const { recherche: rechercheCombat, exclus: exclusCombat } = separerExclusions(searchEl ? searchEl.value : '');
+  const searchText = sansAccents(rechercheCombat);
   majAideCombat(searchText);
 
   if(combatBasChargement && combatBasVoulus().some(t => !combatBasCharges.has(t))){
@@ -8513,9 +8534,13 @@ function renderCombatGrid(){
     cibles = cibles.filter(c => c.communes.tier === combatFilterTier);
   }
   if(searchText){
-    // patch126 : le pseudo du proprietaire compte aussi
-    cibles = cibles.filter(c => correspondRecherche(c.communes.nom, c.communes.departement, searchText)
-      || (c.joueurs && c.joueurs.pseudo && sansAccents(c.joueurs.pseudo).includes(searchText)));
+    // patch126 : le pseudo du proprietaire compte aussi ; patch149 : plusieurs termes, separes par des virgules
+    const termes = searchText.split(/[,;]/).map(t => t.trim()).filter(Boolean);
+    cibles = cibles.filter(c => termes.some(t => correspondRecherche(c.communes.nom, c.communes.departement, t)
+      || (c.joueurs && c.joueurs.pseudo && sansAccents(c.joueurs.pseudo).includes(t))));
+  }
+  if(exclusCombat.length){
+    cibles = cibles.filter(c => !estExclu(c.communes.nom, c.communes.departement, c.joueurs && c.joueurs.pseudo, exclusCombat));
   }
   if(combatProximite){
     cibles = cibles
@@ -10143,6 +10168,7 @@ let echangeMien = null;    // code de ma commune
 let echangeCible = null;   // { commune_code, nom, departement, pseudo }
 let echangeCibles = [];
 let echangeRecherche = '';
+let echangeCoupee = false;   // patch149 : le serveur a renvoye son maximum et des exclusions ont retire des communes
 let echangeMinuteur = null;
 
 // Les propositions seules, sans rien dessiner : le demarrage en a besoin pour
@@ -10357,15 +10383,19 @@ async function chargerCiblesEchange(){
   if(!zone) return;
   zone.innerHTML = '<p class="collection-empty">Chargement…</p>';
   // le serveur ne connait que les numeros de departement : "charente" devient "16"
+  const { recherche: rechercheEch, exclus: exclusEch } = separerExclusions(echangeRecherche);
   const { data, error } = await sb.rpc(marcheTerra() ? 'terra_cibles_echange' : 'cibles_echange', {
-    p_tier: echangeTier, p_recherche: criteresEchange(echangeRecherche)
+    p_tier: echangeTier, p_recherche: criteresEchange(rechercheEch)
   });
   if(error){
     console.error(error);
     zone.innerHTML = '<p class="collection-empty">Impossible de charger les communes des autres joueurs.</p>';
     return;
   }
-  echangeCibles = data || [];
+  const recues = data || [];
+  echangeCibles = exclusEch.length ? recues.filter(c => !estExclu(c.nom, c.departement, c.pseudo, exclusEch)) : recues;
+  // le serveur s'arrete a 120 : apres des exclusions, d'autres communes peuvent exister plus loin
+  echangeCoupee = recues.length >= 120 && echangeCibles.length < recues.length;
   await chargerSieges(echangeCibles.map(c => c.commune_code));
   renderEchangeCibles();
 }
@@ -10374,7 +10404,9 @@ function renderEchangeCibles(){
   const zone = document.getElementById('echCibles');
   if(!zone) return;
   if(echangeCibles.length === 0){
-    zone.innerHTML = '<p class="collection-empty">Aucune commune disponible de cette rareté.</p>';
+    zone.innerHTML = echangeCoupee
+      ? '<p class="collection-empty">Rien dans les 120 premières communes une fois les exclusions retirées : ajoute un département pour chercher plus loin.</p>'
+      : '<p class="collection-empty">Aucune commune disponible de cette rareté.</p>';
     echangeCible = null;
     majResumeEchange();
     return;
@@ -10385,7 +10417,8 @@ function renderEchangeCibles(){
     <button class="ech-item ${echangeTier} ${echangeCible && cleCible(echangeCible) === cleCible(c) ? 'choisi' : ''}" data-cible="${echapperTexte(cleCible(c))}">
       <b>${echapperTexte(c.nom)}${c.nouvelle === true ? TAG_NEUF : ''}</b>
       <small>${echapperTexte(c.departement)} · ${echapperTexte(c.pseudo || 'un joueur')}</small>${tagSiege(siegesConnus.get(c.commune_code))}
-    </button>`).join('');
+    </button>`).join('')
+    + (echangeCoupee ? '<p class="ech-astuce">Liste limitée aux 120 premières communes : ajoute un département pour voir les autres.</p>' : '');
   majResumeEchange();
 }
 

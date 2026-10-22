@@ -26,7 +26,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-saison-2.png?v=2">
-<link rel="stylesheet" href="style.css?v=7b8d94154d2a">
+<link rel="stylesheet" href="style.css?v=ebbf272c2f3d">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -924,7 +924,7 @@
         <button class="filter-pill" data-tier="peucommun"><span class="pill-point" style="background:#22A06B"></span>Peu commun</button>
         <button class="filter-pill" data-tier="commun"><span class="pill-point" style="background:#7E8BA0"></span>Commun</button>
       </div>
-      <input type="text" id="combatSearch" class="bourse-search" placeholder="Rechercher une commune ou un département…">
+      <input type="text" id="combatSearch" class="bourse-search" placeholder="Commune, département ou joueur · /pseudo pour exclure">
       <div id="combatGrid" class="cibles-grille"><p class="collection-empty">Aucune cible disponible pour le moment.</p></div>
     </section>
 
@@ -977,7 +977,7 @@
 
         <p class="ech-label">Tu reçois</p>
         <input type="text" id="echSearch" class="bourse-search" placeholder="Commune, département ou joueur…">
-        <p class="ech-astuce">Combine avec des virgules : <b>16, 17, Maroli</b></p>
+        <p class="ech-astuce">Combine avec des virgules : <b>16, 17, Maroli</b> · exclus avec / : <b>25 /Maroli</b></p>
         <div class="ech-choix" id="echCibles"></div>
 
         <div class="ech-resume" id="echResume" hidden></div>
@@ -1478,6 +1478,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=7b8d94154d2a"></script>
+<script defer src="app.js?v=ebbf272c2f3d"></script>
 </body>
 </html>

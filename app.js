@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ef69d1ee7f37';
+const VERSION_JEU = '7b8d94154d2a';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11615,15 +11615,30 @@ function rafalePlaque(nom, dept){
 }
 const RAFALE_RAISONS = { lettre: (l) => `ne commence pas par ${l}`, inconnue: () => 'pas de commune de ce nom', deja: () => 'déjà comptée', vite: () => 'trop vite, renvoie-la', vide: () => 'vide', trop: () => 'trop d’envois', fini: () => 'temps écoulé' };
 
-document.getElementById('rfForm').addEventListener('submit', (e) => {
-  e.preventDefault();
+// Sur telephone, le clavier doit rester ouvert d'une commune a l'autre (patch148) :
+// Entree est traitee dans le champ (l'envoi du formulaire refermait le clavier sur
+// certains telephones), OK ne prend pas le focus, et le champ le reprend apres l'envoi.
+function rafaleSoumettre(){
   const champ = document.getElementById('rfChamp');
   const brut = champ.value.trim();
   champ.value = '';
+  if(!champ.disabled && document.activeElement !== champ) champ.focus({ preventScroll: true });
   if(!brut || !rafalePartie || Date.now() > rafaleFin) return;
   rafaleFile.push(brut);
   rafaleEnvoyer();
+}
+document.getElementById('rfForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  rafaleSoumettre();
 });
+document.getElementById('rfChamp').addEventListener('keydown', (e) => {
+  // pendant une composition (clavier Android qui souligne le mot), on laisse le formulaire faire
+  if(e.key !== 'Enter' || e.isComposing || e.keyCode === 229) return;
+  e.preventDefault();
+  rafaleSoumettre();
+});
+['pointerdown', 'mousedown'].forEach(t => document.querySelector('#rfForm button[type="submit"]')
+  .addEventListener(t, (e) => e.preventDefault()));
 // un nom a la fois, et au moins 0,55 s apres le dernier accepte (le serveur en veut 0,5)
 async function rafaleEnvoyer(){
   if(rafaleEnvoi || !rafaleFile.length) return;

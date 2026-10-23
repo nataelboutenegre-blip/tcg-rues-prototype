@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '84caa332a57a';
+const VERSION_JEU = 'be815772c2ca';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7630,8 +7630,10 @@ function renderSellableGrid(){
   if(rendreALOuverture('bourse', renderSellableGrid)) return;
   const grid = document.getElementById('sellableGrid');
   const searchEl = document.getElementById('sellSearch');
-  const searchText = sansAccents(searchEl ? searchEl.value.trim() : '');
-  if(marcheTerra()) return renderVenteTerra(grid, searchText);
+  // patch155 : plusieurs termes (virgules) et exclusions apres un /
+  const { recherche: rechVente, exclus: exclusVente } = separerExclusions(searchEl ? searchEl.value : '');
+  const searchText = sansAccents(rechVente);
+  if(marcheTerra()) return renderVenteTerra(grid, searchText, exclusVente);
 
   let entries = Array.from(collectionMap.values()).sort((a,b) => {
     const ra = TIERS.indexOf(a.tier), rb = TIERS.indexOf(b.tier);
@@ -7643,8 +7645,9 @@ function renderSellableGrid(){
     entries = entries.filter(e => e.tier.id === sellFilterTier);
   }
   if(searchText){
-    entries = entries.filter(e => correspondRecherche(e.nom, e.dept, searchText));
+    entries = entries.filter(e => correspondUnTerme(e.nom, e.dept, searchText));
   }
+  if(exclusVente.length) entries = entries.filter(e => !estExclu(e.nom, e.dept, '', exclusVente));
 
   if(collectionMap.size === 0){
     grid.innerHTML = '<p class="collection-empty">Tu ne possèdes aucune commune pour l\'instant.</p>';
@@ -7679,13 +7682,14 @@ function renderSellableGrid(){
                   [sellFilterTier, searchText, entries.length].join('|'));
 }
 
-function renderVenteTerra(grid, searchText){
+function renderVenteTerra(grid, searchText, exclus = []){
   let entries = [...terraCollection.values()]
     .filter(e => libresTerra(e) > 0 || myListings.has(e.code))
     .sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || b.exemplaires - a.exemplaires || b.pop - a.pop);
   const total = entries.length;
   if(sellFilterTier !== 'tous') entries = entries.filter(e => e.tier.id === sellFilterTier);
-  if(searchText) entries = entries.filter(e => correspondRecherche(e.nom, e.dept, searchText));
+  if(searchText) entries = entries.filter(e => correspondUnTerme(e.nom, e.dept, searchText));
+  if(exclus.length) entries = entries.filter(e => !estExclu(e.nom, e.dept, '', exclus));
   if(!total){
     grid.innerHTML = '<p class="collection-empty">Tu n\'as aucun doublon pour l\'instant. Ils arrivent en ouvrant des paquets.</p>';
     return;

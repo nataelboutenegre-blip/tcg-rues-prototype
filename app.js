@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b3de3051f19d';
+const VERSION_JEU = '84caa332a57a';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4050,6 +4050,10 @@ let contratDispo = {};            // { tier: [candidates] } renvoye par la base
 let contratEnCours = false;
 let contratSauterTjs = false;     // retenu apres deux « Passer » d'affilee
 let contratSautes = 0;
+let contratNb = 1;                // patch154 : combien de contrats d'un coup
+const CT_NB_CHOIX = [1, 2, 5, 10];
+const ctMaxNb = () => contratChoisi
+  ? Math.min(10, Math.floor((contratDispo[contratChoisi.de] || []).length / contratChoisi.n)) : 0;
 
 // patch93 : en Terra, le contrat se fait sur les doublons de la collection
 // Terra. Une ligne du lot = un exemplaire en trop ; une commune avec quatre
@@ -4135,7 +4139,8 @@ async function loadContratEtExclusions(){
 // Le lot par defaut : les moins peuplees, dans l'ordre rendu par la base.
 function composerLot(){
   if(!contratChoisi){ contratLot = []; return; }
-  contratLot = (contratDispo[contratChoisi.de] || []).slice(0, contratChoisi.n);
+  contratNb = Math.max(1, Math.min(contratNb, ctMaxNb()));   // patch154
+  contratLot = (contratDispo[contratChoisi.de] || []).slice(0, contratChoisi.n * contratNb);
 }
 
 // La pastille du departement, commune au contrat, au combat et a la
@@ -4346,15 +4351,22 @@ function renderContrat(){
   }
   if(vide) vide.hidden = true;
   if(zone) zone.hidden = false;
-  if(signer){ signer.hidden = false; signer.disabled = contratEnCours || contratLot.length !== contratChoisi.n; }
+  const total = contratChoisi.n * contratNb;   // patch154
+  if(signer){
+    signer.hidden = false;
+    signer.disabled = contratEnCours || contratLot.length !== total;
+    if(!contratEnCours) signer.textContent = contratNb > 1 ? `Signer les ${contratNb} contrats` : 'Signer le contrat';
+  }
+  renderCombien();
 
   // dire « favoris exclus » alors qu'on ecarte aussi une liste posee par le
   // joueur, c'est lui cacher la moitie de la regle
   document.getElementById('ctInfo').textContent = ctTerra()
-    ? `${contratChoisi.n} doublons, les plus nombreux d'abord`
-    : `${contratChoisi.n} communes, les moins peuplées — favoris`
+    ? `${total} doublons, les plus nombreux d'abord`
+    : `${total} communes, les moins peuplées — favoris`
     + (contratExclusions.length ? ' et exclusions' : '') + ' exclus';
-  if(ctTerra()) renderLotTerra(lot);
+  if(contratNb > 1) lot.innerHTML = resumeLot();   // patch154
+  else if(ctTerra()) renderLotTerra(lot);
   else lot.innerHTML = contratLot.map((x, i) => `
     <div class="ct-l ${contratChoisi.de}">
       <span class="pt"></span>
@@ -4364,8 +4376,8 @@ function renderContrat(){
     </div>`).join('');
   const nbMon = contratLot.filter(x => monumentsNoms.has(x.commune_code)).length;
   if(avert) avert.textContent = ctTerra()
-    ? `Les ${contratChoisi.n} doublons sont échangés, c'est définitif. Tu gardes au moins un exemplaire de chaque commune.`
-    : `Les ${contratChoisi.n} communes sacrifiées retournent au pot. C'est définitif.`
+    ? `Les ${total} doublons sont échangés, c'est définitif. Tu gardes au moins un exemplaire de chaque commune.`
+    : `Les ${total} communes sacrifiées retournent au pot. C'est définitif.`
     + (nbMon ? ` Attention : ${nbMon > 1 ? nbMon + ' monuments partent' : 'un monument part'} avec elles — « changer » ou le cadenas pour ${nbMon > 1 ? 'les' : 'le'} garder.` : '');
 }
 
@@ -4550,6 +4562,7 @@ const CT_IDX = 38;        // la gagnante, avec des cartes derriere elle
 
 async function signerContrat(){
   if(contratEnCours || !contratChoisi) return;
+  if(contratNb > 1) return signerContratsEnLot();   // patch154
   contratEnCours = true;
   const bouton = document.getElementById('ctSigner');
   if(bouton){ bouton.disabled = true; bouton.textContent = 'Signature…'; }
@@ -4678,6 +4691,111 @@ function montrerRevelation(c, carte, decor){
     }
     fermer(null);
   });
+}
+
+// ---------- patch154 : contrats en lot ----------
+function renderCombien(){
+  const zone = document.getElementById('ctCombien');
+  if(!zone) return;
+  const max = ctMaxNb();
+  if(!contratChoisi || max < 2){ zone.hidden = true; zone.innerHTML = ''; return; }
+  zone.hidden = false;
+  const n = contratChoisi.n;
+  zone.innerHTML = `<div class="ct-cb-t"><b>Combien de contrats ?</b><span>jusqu'à ${max} d'un coup</span></div>
+    <div class="ct-puces" role="group" aria-label="Nombre de contrats">${CT_NB_CHOIX.map(k => `
+      <button type="button" data-ct-nb="${k}" aria-pressed="${k === contratNb}" ${k > max || contratEnCours ? 'disabled' : ''}>×${k}<small>${k * n}${k === 1 ? ' cartes' : ''}</small></button>`).join('')}
+    </div>`;
+}
+document.getElementById('ctCombien').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-ct-nb]');
+  if(!b || b.disabled || contratEnCours) return;
+  contratNb = Number(b.dataset.ctNb) || 1;
+  composerLot();
+  renderContrat();
+});
+
+function resumeLot(){
+  const terra = ctTerra();
+  const pops = contratLot.map(x => Number(x.population || 0));
+  const nbMon = terra ? 0 : contratLot.filter(x => monumentsNoms.has(x.commune_code)).length;
+  // Terra : une ligne par commune, avec le nombre de doublons pris
+  const noms = [];
+  for(const x of contratLot){
+    const g = noms.find(y => y.code === x.commune_code);
+    if(g) g.n++; else noms.push({ code: x.commune_code, nom: x.nom || x.commune_code, n: 1 });
+  }
+  const ch = terra
+    ? `<div><b>${ctNb(contratLot.length)}</b><span>doublons</span></div><div><b>${ctNb(noms.length)}</b><span>communes</span></div><div><b>${ctNb(contratNb)}</b><span>contrats</span></div>`
+    : `<div><b>${ctNb(contratLot.length)}</b><span>communes</span></div><div><b>${ctNb(Math.min(...pops))}</b><span>hab. la plus petite</span></div><div><b>${ctNb(Math.max(...pops))}</b><span>hab. la plus grande</span></div>`;
+  return `<div class="ct-resume">
+    <div class="ct-res-ch">${ch}</div>
+    <details class="ct-res-liste"><summary>Voir ${terra ? 'les ' + ctNb(noms.length) + ' communes' : 'les ' + ctNb(contratLot.length) + ' communes'}${nbMon ? ` · ${nbMon} monument${nbMon > 1 ? 's' : ''}` : ''}</summary>
+      <div class="ct-res-noms">${noms.map(x => `<span>${echapperTexte(x.nom)}${x.n > 1 ? ' ×' + x.n : ''}${!terra && monumentsNoms.has(x.code) ? ' ★' : ''}</span>`).join('')}</div>
+    </details>
+    <p class="ct-res-astuce">Pour choisir ${terra ? 'doublon par doublon' : 'commune par commune'}, reste à ×1.</p>
+  </div>`;
+}
+
+async function signerContratsEnLot(){
+  contratEnCours = true;
+  const bouton = document.getElementById('ctSigner');
+  const c = contratChoisi, nb = contratNb, terra = ctTerra();
+  const lot = contratLot.slice();
+  renderCombien();
+  const cartes = [];
+  let erreur = null;
+  for(let i = 0; i < nb; i++){
+    if(bouton){ bouton.disabled = true; bouton.textContent = `Signature ${i + 1} / ${nb}…`; }
+    const codes = lot.slice(i * c.n, (i + 1) * c.n).map(x => x.commune_code);
+    if(codes.length !== c.n) break;
+    try{
+      const { data, error } = await sb.rpc(terra ? 'terra_signer_contrat' : 'signer_contrat', { p_codes: codes, p_vers: c.vers });
+      if(error) throw error;
+      if(data) cartes.push(data);
+    }catch(e){ erreur = e; break; }
+  }
+  if(!cartes.length){
+    contratEnCours = false;
+    if(bouton){ bouton.disabled = false; }
+    notifier({ type: 'erreur', titre: 'Contrat refusé', texte: messageLisible(erreur ? erreur.message : 'Aucun contrat signé') });
+    loadContrat();
+    return;
+  }
+  montrerRevelationLot(c, cartes, nb, erreur);
+}
+
+function montrerRevelationLot(c, cartes, nb, erreur){
+  const terra = ctTerra();
+  const lib = libelleTier(c.vers).toLowerCase();
+  const neuves = terra ? cartes.filter(x => x.nouvelle !== false).length : 0;
+  const titre = `<span style="color:var(--c-${c.vers})">${cartes.length}</span> ${echapperTexte(lib)}s obtenus`;
+  const texte = (terra
+      ? `${cartes.length * c.n} doublons échangés.${neuves ? ` ${neuves} nouvelle${neuves > 1 ? 's' : ''} dans ta collection, entourée${neuves > 1 ? 's' : ''} d'or.` : ''}`
+      : `${cartes.length * c.n} communes sont retournées au pot. Celles-ci sont à toi.`)
+    + (erreur ? ` ${cartes.length} contrat${cartes.length > 1 ? 's' : ''} sur ${nb} signé${cartes.length > 1 ? 's' : ''} : ${messageLisible(erreur.message)}` : '');
+  const grille = cartes.map(x => carteDefile(c.vers, x.nom, x.departement, x.population, false, x.code)
+    .replace('class="mini ', `class="mini${terra && x.nouvelle !== false ? ' neuve' : ''} `)).join('');
+  ouvrirFenetre(`<div class="fenetre contrat-rev contrat-lot" role="dialog" aria-modal="true" aria-labelledby="ctlT">
+      <div class="ctl-haut"><h3 id="ctlT">${titre}</h3><p>${echapperTexte(texte)}</p></div>
+      <div class="ctl-grille" id="ctlGrille">${grille}</div>
+      <div class="fc-actions empilees ctl-pied"><button class="fc-btn principal" data-ctl="continuer">Continuer</button></div>
+    </div>`, () => terminerContratsEnLot(cartes));
+  const g = document.getElementById('ctlGrille');
+  const calme = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  [...(g ? g.children : [])].forEach((el, i) => setTimeout(() => el.classList.add('on'), calme ? 0 : 200 + i * 150));
+  const b = document.querySelector('#fenetre [data-ctl="continuer"]');
+  if(b){ b.addEventListener('click', () => document.getElementById('fenetre').click()); b.focus(); }
+}
+
+async function terminerContratsEnLot(cartes){
+  contratEnCours = false;
+  const terra = ctTerra();
+  if(terra){ terraCharge = false; await chargerCollectionTerra(); }
+  else await loadMyCollection();
+  await loadContrat();
+  notifier({ type: 'succes', titre: 'Contrats honorés',
+    texte: `${cartes.length} commune${cartes.length > 1 ? 's rejoignent' : ' rejoint'} ta collection${terra ? ' Terra' : ''}.` });
+  if(!terra) cartes.forEach(x => { if(x.code) annoncerMonument(x.code, x.nom); });
 }
 
 async function terminerContrat(carte){

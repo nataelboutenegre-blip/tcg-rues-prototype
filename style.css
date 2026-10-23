@@ -2866,6 +2866,39 @@
   .titre-choix input{ accent-color: var(--c-legendaire); width:18px; height:18px; }
   .titre-choix small{ display:block; color: var(--brume); font-size:.75rem; }
   .titre-choix:has(input:checked){ border-color: rgba(240,180,41,.6); background: rgba(240,180,41,.08); }
+  /* ---------- patch154 : contrats en lot ---------- */
+  .ct-combien{ background: var(--nuit-2); border:1px solid rgba(169,188,212,0.16); border-radius:14px; padding:12px 14px; margin-bottom:12px; }
+  .ct-combien[hidden]{ display:none; }
+  .ct-cb-t{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:9px; flex-wrap:wrap; }
+  .ct-cb-t b{ font:700 .68rem/1 var(--texte); letter-spacing:.1em; text-transform:uppercase; color: var(--brume); }
+  .ct-cb-t span{ font-size:.75rem; color:#7F91AB; }
+  .ct-puces{ display:flex; gap:7px; flex-wrap:wrap; }
+  .ct-puces button{ appearance:none; border:1px solid rgba(169,188,212,.3); background: var(--nuit); color:#fff; font:800 1.05rem/1 var(--titre); letter-spacing:.03em; border-radius:10px; padding:9px 14px; min-height:44px; min-width:58px; cursor:pointer; }
+  .ct-puces button small{ display:block; font:500 .66rem/1.2 var(--texte); color: var(--brume); margin-top:3px; letter-spacing:0; }
+  .ct-puces button[aria-pressed="true"]{ background: var(--c-legendaire); color: var(--encre); border-color: var(--c-legendaire); }
+  .ct-puces button[aria-pressed="true"] small{ color: var(--encre); }
+  .ct-puces button:disabled{ opacity:.35; cursor:default; }
+  .ct-puces button:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+  .ct-resume{ grid-column:1 / -1; display:grid; gap:10px; }
+  .ct-res-ch{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px; }
+  .ct-res-ch div{ background: var(--nuit); border-radius:10px; padding:9px 10px; min-width:0; }
+  .ct-res-ch b{ display:block; font:900 1.4rem/1 var(--titre); }
+  .ct-res-ch span{ font-size:.7rem; color:#7F91AB; }
+  .ct-res-liste{ background: var(--nuit); border-radius:10px; padding:9px 11px; }
+  .ct-res-liste summary{ cursor:pointer; font-size:.8rem; color: var(--brume); }
+  .ct-res-noms{ display:flex; flex-wrap:wrap; gap:5px; margin-top:9px; max-height:170px; overflow:auto; }
+  .ct-res-noms span{ font-size:.72rem; background: var(--nuit-2); border-radius:6px; padding:3px 7px; color: var(--papier); }
+  .ct-res-astuce{ font-size:.75rem; color:#7F91AB; margin:0; }
+  .fenetre.contrat-lot{ width:min(820px, 94vw); max-width:none; }
+  .ctl-haut{ text-align:center; margin-bottom:12px; }
+  .ctl-haut h3{ margin:0; font-family: var(--titre); font-weight:900; font-size:1.7rem; line-height:1; }
+  .ctl-haut p{ margin:6px 0 0; color: var(--brume); font-size:.84rem; }
+  .ctl-grille{ display:grid; grid-template-columns:repeat(auto-fill, minmax(118px, 1fr)); gap:9px; max-height:min(62vh, 560px); overflow:auto; padding:4px; }
+  .ctl-grille .mini{ width:100%; opacity:0; transform: translateY(10px) scale(.94); transition: opacity .3s, transform .35s cubic-bezier(.2,.9,.3,1.25); }
+  .ctl-grille .mini.on{ opacity:1; transform:none; }
+  .ctl-grille .mini.neuve{ box-shadow:0 0 0 2px var(--c-legendaire), 0 8px 16px rgba(0,0,0,0.35); }
+  .ctl-pied{ margin-top:14px; }
+  @media (prefers-reduced-motion: reduce){ .ctl-grille .mini{ transition:none; opacity:1; transform:none; } }
   /* ---------- Mot de passe oublié ---------- */
   .auth-champ-tete{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
   .auth-lien{

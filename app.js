@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '24ca3b3516b6';
+const VERSION_JEU = 'b3de3051f19d';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4620,6 +4620,7 @@ function montrerRevelation(c, carte, decor){
 
   const direct = () => {
     rail.style.transition = 'none';
+    rail.style.transform = 'none';   // patch153 : sinon la carte reste decalee hors de la piste
     rail.style.justifyContent = 'center';
     rail.innerHTML = carteDefile(c.vers, carte.nom, carte.departement, carte.population, true, carte.code);
     requestAnimationFrame(() => requestAnimationFrame(() =>

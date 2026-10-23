@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ebbf272c2f3d';
+const VERSION_JEU = '0f1722e543d3';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -712,7 +712,7 @@ async function showGame(session_){
   verifierTiragesEnAttente();
   loadMenaces();
   renderNotifications();
-  peutEtreAfficherAccueil();
+  peutEtreMontrerBandeAnnonce().then(peutEtreAfficherAccueil);   // patch150 : la bande-annonce d'abord
   loadObjectifs();
   loadClassement();
   loadJournal();
@@ -10626,6 +10626,63 @@ async function rafraichirDonnees(){
   const actif = document.querySelector('.tab-panel.active');
   if(actif && actif.id === 'panel-bourse') await loadBourse();
   if(actif && (actif.id === 'panel-combat' || actif.id === 'panel-defense')) await loadCombat();
+}
+
+// ---------- patch150 : bande-annonce de la saison 2 ----------
+// Une fois par appareil, jusqu'au dimanche 25 octobre 10 h de Paris (9 h UTC :
+// on repasse a l'heure d'hiver cette nuit-la). La promesse se resout a la
+// fermeture, pour que le mot d'accueil des nouveaux comptes passe apres.
+const CLE_BA = 'tf-bande-annonce-s2-vue';
+const FIN_BA = Date.UTC(2026, 9, 25, 9, 0, 0);
+function peutEtreMontrerBandeAnnonce(){
+  return new Promise((fini) => {
+    const force = new URLSearchParams(location.search).get('bandeannonce') === '1';
+    let vue = false;
+    try{ vue = localStorage.getItem(CLE_BA) === '1'; } catch(e){}
+    const voile = document.getElementById('voileBA'), video = document.getElementById('baVideo');
+    if(!voile || !video || (!force && (SAISON2 || Date.now() >= FIN_BA || vue))){ fini(); return; }
+    try{ localStorage.setItem(CLE_BA, '1'); } catch(e){}
+    const son = document.getElementById('baSon'), fin = document.getElementById('baFin');
+    const passer = document.getElementById('baPasser'), barre = document.getElementById('baBarre');
+    const calme = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    video.poster = 'video/bande-annonce-s2.jpg';
+    video.src = 'video/bande-annonce-s2.mp4';
+    video.muted = true;
+    voile.hidden = false;
+    requestAnimationFrame(() => voile.classList.add('ouvert'));
+    const majBarre = () => { if(video.duration) barre.style.width = (100 * video.currentTime / video.duration) + '%'; };
+    video.addEventListener('timeupdate', majBarre);
+    const lancer = (avecSon) => {
+      video.muted = !avecSon;
+      try{ video.currentTime = 0; } catch(e){}
+      fin.hidden = true; passer.hidden = false; son.hidden = avecSon;
+      const p = video.play();
+      if(p && p.catch) p.catch(() => { son.hidden = false; });
+    };
+    // sans le son, la lecture automatique est permise ; avec « réduire les animations », on attend un appui
+    if(!calme){ const p = video.play(); if(p && p.catch) p.catch(() => {}); }
+    let ferme = false;
+    const echap = (e) => { if(e.key === 'Escape') fermer(); };
+    function fermer(){
+      if(ferme) return; ferme = true;
+      video.pause();
+      voile.classList.remove('ouvert');
+      document.removeEventListener('keydown', echap);
+      setTimeout(() => {
+        voile.hidden = true;
+        video.removeEventListener('timeupdate', majBarre);
+        video.removeAttribute('src'); video.load();
+        fini();
+      }, 230);
+    }
+    son.onclick = () => lancer(true);
+    video.onended = () => { fin.hidden = false; son.hidden = true; passer.hidden = true; barre.style.width = '100%'; document.getElementById('baGo').focus(); };
+    passer.onclick = fermer;
+    document.getElementById('baGo').onclick = fermer;
+    document.getElementById('baRevoir').onclick = () => lancer(true);
+    document.addEventListener('keydown', echap);
+    passer.focus();
+  });
 }
 
 // ---------- Mot d'accueil, au tout premier lancement ----------

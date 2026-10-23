@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '0f1722e543d3';
+const VERSION_JEU = '3289fad8d183';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6804,10 +6804,13 @@ async function loadPackStatus(){
   }
 }
 
+// patch151 : Terra recharge un paquet en 30 min, le Front en 20 (le serveur fait foi)
+const MIN_PAQUET_TERRA = 30, MIN_PAQUET_FRONT = 20;
+function minParPaquet(){ return enTerra() ? MIN_PAQUET_TERRA : MIN_PAQUET_FRONT; }
 function liveJetons(){
   if(!packStatusCache) return 0;
   const elapsedMin = (Date.now() - packStatusFetchedAt) / 60000;
-  return Math.min(3, packStatusCache.jetons_actuels + elapsedMin / 20);
+  return Math.min(3, packStatusCache.jetons_actuels + elapsedMin / minParPaquet());
 }
 
 function renderPackStatus(){
@@ -6819,7 +6822,7 @@ function renderPackStatus(){
 
   const puces = [`<span class="puce"><b>${dispo} sur 3</b> paquets gratuits</span>`];
   if(dispo < 3){
-    const minutes = Math.ceil((1 - (live % 1)) * 20);
+    const minutes = Math.ceil((1 - (live % 1)) * minParPaquet());
     puces.push(`<span class="puce">Prochain dans <b>${minutes} min</b></span>`);
   }
   if(!SAISON2 || enTerra()){
@@ -10727,7 +10730,7 @@ const ETAPES_GUIDE_S2 = [
   { cible: '#modeBascule', titre: 'Deux modes',
     texte: 'Terra, c\'est ta collection à toi : ta propre France, à compléter. Front, c\'est la carte partagée : chaque commune n\'a qu\'un propriétaire, et se prend au combat.' },
   { mode: 'terra', cible: '#packZone .paquet, #openFreeBtn', titre: 'Ouvre tes paquets Terra',
-    texte: 'Un paquet gratuit toutes les 20 minutes, 3 en réserve, 5 communes à chaque fois. Celles que tu as déjà deviennent des doublons.' },
+    texte: 'Un paquet gratuit toutes les 30 minutes, 3 en réserve, 5 communes à chaque fois. Celles que tu as déjà deviennent des doublons.' },
   { mode: 'terra', cible: '.tab[data-tab="collection"]', titre: 'Ta collection',
     texte: 'Ta France se remplit ici, en cartes ou sur la carte. Tes doublons se revendent, s\'échangent avec les autres joueurs ou partent en contrat.' },
   { mode: 'front', cible: '#modeBascule [data-mode="front"]', titre: 'Le Front',

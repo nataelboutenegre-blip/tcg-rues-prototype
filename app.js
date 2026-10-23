@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '3289fad8d183';
+const VERSION_JEU = '24ca3b3516b6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -712,7 +712,10 @@ async function showGame(session_){
   verifierTiragesEnAttente();
   loadMenaces();
   renderNotifications();
-  peutEtreMontrerBandeAnnonce().then(peutEtreAfficherAccueil);   // patch150 : la bande-annonce d'abord
+  // patch150 : la bande-annonce d'abord ; patch152 : le parrain est declare avant l'accueil
+  const parrainDeclare = declarerParrainSiBesoin();
+  Promise.all([peutEtreMontrerBandeAnnonce(), parrainDeclare]).then(peutEtreAfficherAccueil);
+  parrainDeclare.then(parrainageDuJour);
   loadObjectifs();
   loadClassement();
   loadJournal();
@@ -5873,7 +5876,14 @@ const BADGES = {
   collectionneur:{ ico: '🃏', nom: 'Le Collectionneur', texte: 'Le plus de communes', u: 'communes' },
   geographe:     { ico: '📍', nom: 'Le Géographe',     texte: 'La plus longue série à la Commune du jour', u: 'jours de série' },
   navigateur:    { ico: '📡', nom: 'Le Navigateur',    texte: 'Le meilleur Elo au Radar', u: 'Elo' },
+  // patch152 : parrainage (saison « parrainage » : gardes d'une saison a l'autre)
+  recruteur:     { ico: '✉️', nom: 'Le Recruteur',     texte: '1 ami invité et actif', u: 'amis actifs' },
+  parrain:       { ico: '🎩', nom: 'Le Parrain',       texte: '5 amis invités et actifs', u: 'amis actifs' },
+  ambassadeur:   { ico: '🌍', nom: 'L’Ambassadeur',    texte: '10 amis invités et actifs', u: 'amis actifs' },
 };
+// patch152 : titres a choisir a la place du titre de region (l'id vient du serveur)
+const TITRES = { parrain: 'Le Parrain' };
+const titreAffiche = (p, choisi) => TITRES[choisi] || titreDepuisDeps(p.deps);
 const nomSaison = (s) => { const m = /(\d+)$/.exec(String(s || '')); return m ? 'Saison ' + m[1] : ''; };
 const estOG = (p) => (p.badges || []).some(b => b.badge === 'og');
 const marqueOG = (p) => estOG(p) ? '<span class="bg-og-marque" title="A joué la saison 1">OG</span>' : '';
@@ -5895,7 +5905,7 @@ function blocBadges(p, fiche){
     const d = BADGES[b.badge];
     return `<div class="bg-badge ${b.badge === 'og' ? 'og' : ''}" title="${echapperTexte(d.texte)}">
       <span class="bg-medaille">${d.ico}</span>
-      <span class="bg-txt"><b>${echapperTexte(d.nom)}</b><small>${echapperTexte(nomSaison(b.saison))}${b.valeur != null && b.badge !== 'og' ? ' · ' + Number(b.valeur).toLocaleString('fr-FR') + (d.u ? ' ' + d.u : '') : ''}</small></span>
+      <span class="bg-txt"><b>${echapperTexte(d.nom)}</b><small>${echapperTexte([nomSaison(b.saison), b.valeur != null && b.badge !== 'og' ? Number(b.valeur).toLocaleString('fr-FR') + (d.u ? ' ' + d.u : '') : ''].filter(Boolean).join(' · '))}</small></span>
     </div>`;
   }).join('');
   return fiche ? `<h3>Distinctions</h3><div class="bg-liste">${items}</div>`
@@ -5983,7 +5993,8 @@ async function loadProfilPanneau(){
       return;
     }
     profilPanneau = data;
-    [profilPanneau.vitrine, profilPanneau.badges, profilPanneau.echanges] = await Promise.all([chargerVitrine(id), chargerBadges(id), chargerStatEchanges(id)]);
+    [profilPanneau.vitrine, profilPanneau.badges, profilPanneau.echanges, profilPanneau.titres, profilPanneau.parrainage] =
+      await Promise.all([chargerVitrine(id), chargerBadges(id), chargerStatEchanges(id), chargerMesTitres(), chargerParrainage()]);
   }
   if(vide) vide.hidden = true;
   rendreProfilPanneau();
@@ -6006,7 +6017,8 @@ function rendreProfilPanneau(){
         <h2>${echapperTexte(p.pseudo)}${marqueOG(p)}</h2>
         <div class="pf-rangs">
           ${g ? `<span class="pf-grade" style="background:${g.couleur}22;color:${g.couleur}">${g.nom}</span>` : ''}
-          <span class="pf-titre"><b>${echapperTexte(titreDepuisDeps(p.deps))}</b></span>
+          <span class="pf-titre"><b>${echapperTexte(titreAffiche(p, (p.titres || {}).choisi))}</b></span>
+          ${((p.titres || {}).disponibles || []).length ? '<button type="button" class="pf-titre-btn" data-pf="titre">Changer de titre</button>' : ''}
           ${p.rang > 0 ? `<span class="pf-place">${p.rang}${p.rang === 1 ? 'er' : 'e'}</span>` : ''}
         </div>
         ${p.niveau ? `<div class="pf-xp">
@@ -6021,6 +6033,7 @@ function rendreProfilPanneau(){
     </div>
     ${blocVitrine(p.vitrine || [], true)}
     ${blocBadges(p, false)}
+    ${blocParrainage(p.parrainage)}
     ${blocsProfil(p)}
     <div class="pf-boutons">
       <button class="pr-btn" data-pf="editer">Changer d'avatar ou de pseudo</button>
@@ -6036,6 +6049,10 @@ function rendreProfilPanneau(){
 document.getElementById('pfCorps').addEventListener('click', (e) => {
   if(e.target.closest('[data-pf="editer"]')) ouvrirProfil(window.__monId || null);
   if(e.target.closest('[data-pf="supprimer"]')) ouvrirSuppressionCompte();
+  const cp = e.target.closest('[data-pf="copier-ref"]');
+  if(cp) copierLienParrain(cp);
+  if(e.target.closest('[data-pf="partager-ref"]')) partagerLienParrain();
+  if(e.target.closest('[data-pf="titre"]')) ouvrirChoixTitre();
   const vt = (profilPanneau || {}).vitrine || [];
   if(e.target.closest('[data-pr="vitrine"]')) ouvrirChoixVitrine(vt, 'panneau');
   if(e.target.closest('[data-vt-voir]')) ouvrirGrandeVitrine(vt, true, (profilPanneau || {}).pseudo, (v) => {
@@ -6115,9 +6132,9 @@ function boutonAmiProfil(id){
 
 async function ouvrirProfil(joueurId){
   if(!joueurId) return;
-  const [{ data, error }, vitrine, badges, echanges] = await Promise.all([
+  const [{ data, error }, vitrine, badges, echanges, titre] = await Promise.all([
     sb.rpc('profil_joueur', { p_joueur: joueurId }), chargerVitrine(joueurId), chargerBadges(joueurId),
-    chargerStatEchanges(joueurId)]);
+    chargerStatEchanges(joueurId), chargerTitreJoueur(joueurId)]);
   if(error || !data){
     // profil-joueur.sql pas encore execute : on le dit au lieu d'ouvrir un vide
     notifier({ type: 'info', titre: 'Profil indisponible',
@@ -6128,6 +6145,7 @@ async function ouvrirProfil(joueurId){
   profilEnCours.vitrine = vitrine;
   profilEnCours.badges = badges;
   profilEnCours.echanges = echanges;
+  profilEnCours.titre = titre;
   rendreProfil();
 }
 
@@ -6172,7 +6190,7 @@ function rendreProfil(){
         <h2 id="prNom">${echapperTexte(p.pseudo)}${marqueOG(p)}</h2>
         <p class="pr-sous">${p.niveau ? `<span class="pf-grade" style="background:${
           gradeDe(Number(p.niveau)).couleur}22;color:${gradeDe(Number(p.niveau)).couleur}">${
-          gradeDe(Number(p.niveau)).nom}</span> ` : ''}<b>${echapperTexte(titreDepuisDeps(p.deps))}</b>${
+          gradeDe(Number(p.niveau)).nom}</span> ` : ''}<b>${echapperTexte(titreAffiche(p, p.titre))}</b>${
           p.rang > 0 ? ` · <span class="pr-rang">${p.rang}${p.rang === 1 ? 'er' : 'e'}</span>` : ''}</p>
       </div>
       <div class="pr-corps">
@@ -6810,7 +6828,9 @@ function minParPaquet(){ return enTerra() ? MIN_PAQUET_TERRA : MIN_PAQUET_FRONT;
 function liveJetons(){
   if(!packStatusCache) return 0;
   const elapsedMin = (Date.now() - packStatusFetchedAt) / 60000;
-  return Math.min(3, packStatusCache.jetons_actuels + elapsedMin / minParPaquet());
+  const j = Number(packStatusCache.jetons_actuels);
+  if(j >= 3) return j;   // patch152 : un paquet offert peut faire depasser la reserve de 3
+  return Math.min(3, j + elapsedMin / minParPaquet());
 }
 
 function renderPackStatus(){
@@ -6820,7 +6840,7 @@ function renderPackStatus(){
   const achetesJour = (packStatusCache.paquets_achetes_date === new Date().toISOString().slice(0,10))
     ? packStatusCache.paquets_achetes_jour : 0;
 
-  const puces = [`<span class="puce"><b>${dispo} sur 3</b> paquets gratuits</span>`];
+  const puces = [`<span class="puce"><b>${dispo > 3 ? dispo : dispo + ' sur 3'}</b> paquets gratuits</span>`];
   if(dispo < 3){
     const minutes = Math.ceil((1 - (live % 1)) * minParPaquet());
     puces.push(`<span class="puce">Prochain dans <b>${minutes} min</b></span>`);
@@ -10688,6 +10708,178 @@ function peutEtreMontrerBandeAnnonce(){
   });
 }
 
+// ---------- patch152 : parrainage ----------
+// Le lien : ?ref=<pseudo>. Garde dans le navigateur 7 jours, le temps de
+// creer son compte (la confirmation par e-mail recharge la page sans ?ref).
+const CLE_REF = 'tf-parrain-ref';
+(function memoriserRef(){
+  try{
+    const r = (new URLSearchParams(location.search).get('ref') || '').trim();
+    if(r.length >= 3 && r.length <= 20) localStorage.setItem(CLE_REF, JSON.stringify({ p: r, t: Date.now() }));
+  } catch(e){}
+})();
+let parrainAccueil = null;
+
+async function declarerParrainSiBesoin(){
+  let ref = null;
+  try{
+    const v = JSON.parse(localStorage.getItem(CLE_REF) || 'null');
+    if(v && v.p && Date.now() - Number(v.t) < 7 * 864e5) ref = v.p;
+    else if(v) localStorage.removeItem(CLE_REF);
+  } catch(e){}
+  if(!ref) return;
+  try{
+    const { data, error } = await sb.rpc('declarer_parrain', { p_ref: ref });
+    if(error){ console.error(error); return; }   // fonction absente : on garde le lien pour plus tard
+    try{ localStorage.removeItem(CLE_REF); } catch(e){}
+    const r = data && data[0];
+    if(r && r.statut === 'ok'){
+      parrainAccueil = r.parrain;
+      loadPackStatus();
+      majEnergie();
+    }
+  } catch(e){ console.error(e); }
+}
+
+async function chargerParrainage(){
+  try{ const { data, error } = await sb.rpc('mon_parrainage'); return error ? null : data; }
+  catch(e){ return null; }
+}
+async function chargerMesTitres(){
+  try{ const { data, error } = await sb.rpc('mes_titres'); return error ? null : data; }
+  catch(e){ return null; }
+}
+async function chargerTitreJoueur(id){
+  try{ const { data, error } = await sb.rpc('titre_joueur', { p_joueur: id }); return error ? null : data; }
+  catch(e){ return null; }
+}
+
+// Note le jour joue (le 3e jour valide l'ami aupres de son parrain), puis
+// montre au parrain ce qu'il a recu depuis sa derniere visite.
+async function parrainageDuJour(){
+  try{ const { error } = await sb.rpc('parrainage_jour'); if(error) return; } catch(e){ return; }
+  const d = await chargerParrainage();
+  if(!d) return;
+  const nv = d.nouveaux || [];
+  if(!nv.length) return;
+  const actifs = Number(d.actifs || 0), avant = actifs - nv.length;
+  let t = 1800;
+  for(const n of nv){
+    const paye = Number(n.energie) > 0;
+    setTimeout(() => notifier({ type: 'succes', titre: n.pseudo + ' a joué 3 jours', duree: 6000,
+      texte: paye ? "Merci de l'avoir invité : +10 énergie" : "Merci de l'avoir invité ! L'énergie est limitée à 5 amis par saison." }), t);
+    t += 1400;
+  }
+  for(const [seuil, nom] of [[1, 'Le Recruteur'], [5, 'Le Parrain'], [10, 'L’Ambassadeur']]){
+    if(avant < seuil && actifs >= seuil){
+      setTimeout(() => notifier({ type: 'succes', titre: 'Badge « ' + nom + ' »', duree: 7000,
+        texte: seuil === 5 ? '5 amis actifs : choisis le titre « Le Parrain » dans ton profil.'
+                           : seuil + ' ami' + (seuil > 1 ? 's' : '') + ' invité' + (seuil > 1 ? 's' : '') + ' et actif' + (seuil > 1 ? 's' : '') }), t);
+      t += 1400;
+    }
+  }
+  majEnergie();
+  profilPanneau = null;   // le profil se rechargera avec les nouveaux chiffres
+}
+
+function lienParrain(pseudo){ return location.origin + '/?ref=' + encodeURIComponent(pseudo || ''); }
+
+function blocParrainage(d){
+  if(!d) return '';
+  const nb = (x) => Number(x || 0).toLocaleString('fr-FR');
+  const lien = lienParrain(d.pseudo);
+  const lisible = location.host + '/?ref=' + (d.pseudo || '');
+  const actifs = Number(d.actifs || 0);
+  const palier = actifs < 1 ? 1 : actifs < 5 ? 5 : 10;
+  const part = Math.min(100, Math.round(100 * actifs / palier));
+  const nomPalier = { 1: '« Le Recruteur »', 5: '« Le Parrain »', 10: '« L’Ambassadeur »' }[palier];
+  const amis = (d.amis || []).slice(0, 30).map(a => `<li><span class="pp-pseudo">${echapperTexte(a.pseudo)}</span>${
+    a.valide ? `<span class="pp-etat ok">Actif${Number(a.energie) > 0 ? ' · +10 ⚡' : ''}</span>`
+             : `<span class="pp-etat att">${nb(a.jours)} / 3 jours</span>`}</li>`).join('');
+  const haut = d.peut_parrainer ? `
+      <div class="pp-lien">
+        <code>${echapperTexte(lisible)}</code>
+        <button type="button" class="pp-btn" data-pf="copier-ref" data-lien="${echapperTexte(lien)}">Copier</button>
+        ${navigator.share ? '<button type="button" class="pp-btn second" data-pf="partager-ref">Partager</button>' : ''}
+      </div>` : `<p class="pp-note" style="margin-top:0">Tu pourras inviter des amis 3 jours après ton inscription.</p>`;
+  return `<div class="pf-bloc pf-parrain">
+      <h3>Inviter des amis</h3>
+      ${haut}
+      <div class="pp-gains">
+        <div class="pp-gain"><svg viewBox="0 0 24 24" fill="none" stroke="#F0B429" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h18v10H3zM3 6h18v4H3zM12 6v14"/></svg><span>Ton ami reçoit <b>1 paquet Terra</b> et <b>10 énergie</b> en Front.</span></div>
+        <div class="pp-gain"><svg viewBox="0 0 24 24" fill="none" stroke="#3DD68C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg><span>Toi, <b>+10 énergie</b> quand il a joué <b>3 jours</b>. Jusqu'à 5 amis par saison (${nb(d.payes_saison)} / 5).</span></div>
+      </div>
+      <div class="pp-progres">
+        <div class="pp-ligne"><span>${actifs >= 10 ? 'Amis actifs · tous les badges obtenus' : 'Amis actifs · prochain badge ' + nomPalier}</span><b>${actifs >= 10 ? nb(actifs) : nb(actifs) + ' / ' + palier}</b></div>
+        <div class="pp-jauge" role="img" aria-label="${nb(actifs)} amis actifs sur ${palier}"><i style="width:${part}%"></i></div>
+        ${amis ? `<ul class="pp-amis">${amis}</ul>` : ''}
+        <p class="pp-note">Un ami compte quand il a joué 3 jours différents.</p>
+      </div>
+    </div>`;
+}
+
+function copierLienParrain(bouton){
+  const lien = bouton.getAttribute('data-lien') || '';
+  const fait = () => { bouton.textContent = 'Copié'; bouton.classList.add('copie');
+    setTimeout(() => { bouton.textContent = 'Copier'; bouton.classList.remove('copie'); }, 1600); };
+  const secours = () => {
+    const code = bouton.parentElement && bouton.parentElement.querySelector('code');
+    if(code){ const r = document.createRange(); r.selectNodeContents(code); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+    notifier({ type: 'info', titre: 'Lien sélectionné', texte: 'Copie-le pour l’envoyer à tes amis.' });
+  };
+  try{ navigator.clipboard.writeText(lien).then(fait, secours); } catch(e){ secours(); }
+}
+function partagerLienParrain(){
+  const d = (profilPanneau || {}).parrainage;
+  if(!d || !navigator.share) return;
+  navigator.share({ title: 'TerraFront', text: 'Viens jouer à TerraFront avec moi : les communes de France en cartes à collectionner.',
+                    url: lienParrain(d.pseudo) }).catch(() => {});
+}
+
+function ouvrirChoixTitre(){
+  const p = profilPanneau;
+  if(!p || !p.titres) return;
+  const choisi = p.titres.choisi || 'region';
+  const options = [['region', titreDepuisDeps(p.deps), 'Selon la région où tu as le plus de communes']]
+    .concat((p.titres.disponibles || []).filter(t => TITRES[t]).map(t => [t, TITRES[t], t === 'parrain' ? '5 amis invités et actifs' : '']));
+  const fermer = ouvrirFenetre(`
+    <form class="fenetre prix" role="dialog" aria-modal="true" aria-labelledby="titreChoixT" novalidate>
+      <h2 id="titreChoixT">Ton titre</h2>
+      <p class="prix-aide" style="margin:4px 0 0">Il s'affiche sous ton pseudo, pour tous les joueurs.</p>
+      <div class="titres-liste">${options.map(([id, nom, aide]) => `
+        <label class="titre-choix"><input type="radio" name="titre" value="${echapperTexte(id)}"${id === choisi ? ' checked' : ''}>
+          <span><b>${echapperTexte(nom)}</b>${aide ? `<small>${echapperTexte(aide)}</small>` : ''}</span></label>`).join('')}
+      </div>
+      <div class="prix-boutons">
+        <button type="button" class="open-btn secondary" data-t="annuler">Annuler</button>
+        <button type="submit" class="open-btn">Choisir</button>
+      </div>
+    </form>`);
+  const f = document.querySelector('#fenetre form');
+  f.querySelector('[data-t="annuler"]').addEventListener('click', () => fermer(null));
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const v = (f.querySelector('input[name="titre"]:checked') || {}).value || 'region';
+    const { data, error } = await sb.rpc('choisir_titre', { p_titre: v });
+    if(error){ notifier({ type: 'erreur', titre: 'Titre non changé', texte: messageLisible(error.message) }); return; }
+    p.titres.choisi = data || null;
+    fermer(true);
+    rendreProfilPanneau();
+    notifier({ type: 'succes', titre: 'Titre choisi', texte: titreAffiche(p, p.titres.choisi) });
+  });
+}
+
+function remplirAccueilInvite(pseudo){
+  const qui = document.getElementById('accueilInvite');
+  const cadeaux = document.getElementById('accueilInviteCadeaux');
+  const note = document.getElementById('accueilInviteNote');
+  if(!qui || !cadeaux || !note) return;
+  const init = String(pseudo || '?').trim().charAt(0).toUpperCase();
+  qui.innerHTML = `<span class="acc-av" aria-hidden="true">${echapperTexte(init)}</span><span><b>${echapperTexte(pseudo)}</b> t'a invité</span>`;
+  note.textContent = 'Joue 3 jours et ' + pseudo + ' reçoit lui aussi un petit coup de pouce.';
+  qui.hidden = false; cadeaux.hidden = false; note.hidden = false;
+}
+
 // ---------- Mot d'accueil, au tout premier lancement ----------
 const CLE_ACCUEIL = 'tf-accueil-vu';
 
@@ -10863,6 +11055,7 @@ async function peutEtreAfficherAccueil(){
   }
   const voile = document.getElementById('voileAccueil');
   if(!voile) return;
+  if(parrainAccueil) remplirAccueilInvite(parrainAccueil);   // patch152
   voile.hidden = false;
   requestAnimationFrame(() => voile.classList.add('ouvert'));
   const go = document.getElementById('accueilGo');

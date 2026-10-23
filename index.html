@@ -26,7 +26,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-saison-2.png?v=2">
-<link rel="stylesheet" href="style.css?v=3289fad8d183">
+<link rel="stylesheet" href="style.css?v=24ca3b3516b6">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -1449,12 +1449,18 @@
   <div class="accueil" id="accueil" role="dialog" aria-modal="true" aria-labelledby="accueilTitre">
     <div class="acc-eclat" aria-hidden="true"></div>
     <p class="acc-marque" id="accueilTitre">Terra<span>Front</span></p>
+    <p class="acc-invite" id="accueilInvite" hidden></p>
     <p class="acc-accroche">Les 35 000 communes de France sont des cartes à collectionner.<br>Une commune n'appartient qu'à un seul joueur à la fois.</p>
     <div class="acc-etapes">
       <div class="acc-etape"><span class="acc-num">1</span><div><b>Ouvre des paquets</b><span>5 vraies communes à chaque fois. Plus une ville est peuplée, plus elle est rare.</span></div></div>
       <div class="acc-etape"><span class="acc-num">2</span><div><b>Construis ton territoire</b><span>Tes communes s'affichent sur la carte de France et se rejoignent quand elles sont voisines.</span></div></div>
       <div class="acc-etape"><span class="acc-num">3</span><div><b>Attaque et défends</b><span>Prends les communes des autres joueurs — d'autant plus facilement qu'elles sont près de chez toi — et protège les tiennes.</span></div></div>
     </div>
+    <div class="acc-invite-cadeaux" id="accueilInviteCadeaux" hidden>
+      <div class="acc-ic"><b>+1</b><span>paquet Terra</span><small>en plus des 3 gratuits</small></div>
+      <div class="acc-ic"><b>+10</b><span>énergie en Front</span><small>pour tes premiers assauts</small></div>
+    </div>
+    <p class="acc-invite-note" id="accueilInviteNote" hidden></p>
     <div class="acc-cadeau">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h18v10H3zM3 6h18v4H3zM12 6v14"/><path d="M12 6S9.5 2.5 7.5 4s1 2 4.5 2 6.5 0 4.5-2S12 6 12 6z"/></svg>
       <span>Tu commences avec <b>100 points</b> et <b>3 paquets gratuits</b>. Un nouveau paquet arrive toutes les 20 minutes.</span>
@@ -1487,6 +1493,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=3289fad8d183"></script>
+<script defer src="app.js?v=24ca3b3516b6"></script>
 </body>
 </html>

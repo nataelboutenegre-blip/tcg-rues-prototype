@@ -26,7 +26,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-saison-2.png?v=2">
-<link rel="stylesheet" href="style.css?v=be815772c2ca">
+<link rel="stylesheet" href="style.css?v=ac798963ab8e">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -498,7 +498,11 @@
       </div>
       <div class="pack-buttons">
         <button class="open-btn" id="openFreeBtn">Ouvrir un paquet gratuit</button>
-        <button class="open-btn secondary" id="openBuyBtn">Acheter un paquet (200 pts)</button>
+        <div class="glisser" id="glisserAchat">
+          <span class="glisser-rempli" id="glisserRempli"></span>
+          <span class="glisser-texte" id="glisserTexte">Glisse pour acheter<small>200 pts</small></span>
+          <button type="button" class="glisser-bouton" id="openBuyBtn" aria-label="Glisse jusqu'au bout pour acheter un paquet à 200 points"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h12M13 6l6 6-6 6"/></svg></button>
+        </div>
         <div class="ouv-reglages" aria-label="Réglages de l'ouverture">
           <button type="button" class="ouv-bascule" id="ouvSon" aria-pressed="true">Son</button>
           <button type="button" class="ouv-bascule" id="ouvAnim" aria-pressed="true">Animation</button>
@@ -1494,6 +1498,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=be815772c2ca"></script>
+<script defer src="app.js?v=ac798963ab8e"></script>
 </body>
 </html>

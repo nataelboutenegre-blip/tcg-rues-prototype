@@ -2899,6 +2899,34 @@
   .ctl-grille .mini.neuve{ box-shadow:0 0 0 2px var(--c-legendaire), 0 8px 16px rgba(0,0,0,0.35); }
   .ctl-pied{ margin-top:14px; }
   @media (prefers-reduced-motion: reduce){ .ctl-grille .mini{ transition:none; opacity:1; transform:none; } }
+  /* ---------- patch156 : glisser pour acheter ---------- */
+  .glisser{ position:relative; width:min(330px, 100%); height:48px; border-radius:14px; user-select:none; -webkit-user-select:none; overflow:hidden;
+    background: rgba(7,16,31,.55); box-shadow: inset 0 0 0 2px rgba(169,188,212,.35), 0 5px 0 rgba(0,0,0,.25); align-self:center; }
+  .glisser-rempli{ position:absolute; left:0; top:0; bottom:0; width:0; border-radius:14px; background: linear-gradient(90deg, rgba(240,180,41,.08), rgba(240,180,41,.32)); pointer-events:none; }
+  .glisser-texte{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding-left:52px; padding-right:12px;
+    font-family: var(--titre); font-weight:800; font-size:1.1rem; letter-spacing:.03em; white-space:nowrap; pointer-events:none;
+    background: linear-gradient(90deg, rgba(255,255,255,.45) 0%, rgba(255,255,255,.45) 40%, #fff 50%, rgba(255,255,255,.45) 60%, rgba(255,255,255,.45) 100%);
+    background-size:300% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation: glisserReflet 2.6s linear infinite; }
+  .glisser-texte small{ font-family: var(--texte); font-weight:600; font-size:.8rem; margin-left:8px; letter-spacing:0; }
+  @keyframes glisserReflet{ from{ background-position:100% 0; } to{ background-position:-50% 0; } }
+  .glisser-bouton{ position:absolute; left:4px; top:4px; width:40px; height:40px; padding:0; border:none; border-radius:11px; background: var(--c-legendaire); color: var(--encre);
+    display:grid; place-items:center; box-shadow:0 3px 0 #B7791F, 0 4px 12px rgba(0,0,0,.35); cursor:grab; touch-action:none; }
+  .glisser-bouton:active:not(:disabled){ cursor:grabbing; }
+  .glisser-bouton:focus-visible{ outline:none; box-shadow:0 0 0 3px #fff, 0 3px 0 #B7791F; }
+  .glisser-bouton svg{ width:22px; height:22px; pointer-events:none; }
+  .glisser.retour .glisser-bouton, .glisser.retour .glisser-rempli{ transition: transform .35s cubic-bezier(.3,1.5,.5,1), width .35s cubic-bezier(.3,1.5,.5,1); }
+  .glisser.fait{ box-shadow: inset 0 0 0 2px rgba(61,214,140,.7), 0 5px 0 rgba(0,0,0,.25); }
+  .glisser.fait .glisser-rempli{ background: linear-gradient(90deg, rgba(61,214,140,.15), rgba(61,214,140,.35)); }
+  .glisser.fait .glisser-texte{ animation:none; color:#9CF7C9; background:none; padding-left:12px; }
+  .glisser.fait .glisser-bouton{ background:#3DD68C; box-shadow:0 3px 0 #1E8E58; }
+  .glisser.off{ opacity:.45; }
+  .glisser.off .glisser-texte{ animation:none; color: rgba(255,255,255,.75); background:none; }
+  .glisser.off .glisser-bouton{ background:#5B6673; box-shadow:none; cursor:default; }
+  body.mode-front #glisserAchat{ display:none !important; }
+  @media (prefers-reduced-motion: reduce){
+    .glisser-texte{ animation:none; color:#fff; background:none; }
+    .glisser.retour .glisser-bouton, .glisser.retour .glisser-rempli{ transition:none; }
+  }
   /* ---------- Mot de passe oublié ---------- */
   .auth-champ-tete{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
   .auth-lien{

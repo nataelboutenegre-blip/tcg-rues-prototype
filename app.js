@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'be815772c2ca';
+const VERSION_JEU = 'ac798963ab8e';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6973,6 +6973,8 @@ function renderPackStatus(){
   // pendant l'ouverture d'un paquet, on ne peut pas en relancer un autre
   document.getElementById('openFreeBtn').disabled = paquetEnCours || dispo < 1;
   document.getElementById('openBuyBtn').disabled = paquetEnCours || achetesJour >= 5 || packStatusCache.solde < 200;
+  majGlisserAchat(paquetEnCours ? 'Paquet en cours…' : achetesJour >= 5 ? '5 paquets achetés aujourd\'hui'
+    : packStatusCache.solde < 200 ? 'Solde insuffisant' : null);   // patch156
 
   // un jeton vient de se recharger pendant que le joueur est sur le jeu
   if(dispoPrecedente !== null && dispo > dispoPrecedente && !paquetEnCours){
@@ -7428,7 +7430,73 @@ async function proposerPaquetSuivant(){
 }
 
 document.getElementById('openFreeBtn').addEventListener('click', () => openPack('gratuit'));
-document.getElementById('openBuyBtn').addEventListener('click', () => openPack('achete'));
+// ---------- patch156 : glisser pour acheter ----------
+// Le paquet achete part seulement quand la poignee arrive au bout (92 %).
+// Un clic, Entree ou Espace ne font rien : c'est tout l'interet.
+var GLISSER = (() => {
+  const zone = document.getElementById('glisserAchat');
+  const bouton = document.getElementById('openBuyBtn');
+  const rempli = document.getElementById('glisserRempli');
+  const texte = document.getElementById('glisserTexte');
+  const FLECHE = bouton.innerHTML;
+  const COCHE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
+  const SEUIL = 0.92;
+  let depart = null, x = 0, fini = false, raison = null;
+  const course = () => Math.max(1, zone.clientWidth - bouton.offsetWidth - 8);
+  const poser = (v) => {
+    x = Math.max(0, Math.min(course(), v));
+    bouton.style.transform = 'translateX(' + x + 'px)';
+    rempli.style.width = x > 0 ? (x + bouton.offsetWidth / 2 + 4) + 'px' : '0';
+  };
+  const revenir = () => { zone.classList.add('retour'); poser(0); setTimeout(() => zone.classList.remove('retour'), 360); };
+  const texteRepos = () => { texte.innerHTML = raison ? echapperTexte(raison) : 'Glisse pour acheter<small>200 pts</small>'; };
+  const valider = () => {
+    fini = true; depart = null;
+    poser(course());
+    zone.classList.add('fait');
+    texte.textContent = 'Paquet acheté !';
+    bouton.innerHTML = COCHE;
+    try{ if(navigator.vibrate) navigator.vibrate(30); }catch(e){}
+    openPack('achete');
+    setTimeout(() => {
+      fini = false;
+      zone.classList.remove('fait');
+      bouton.innerHTML = FLECHE;
+      texteRepos();
+      revenir();
+    }, 1300);
+  };
+  bouton.addEventListener('pointerdown', (e) => {
+    if(fini || bouton.disabled) return;
+    depart = e.clientX - x;
+    try{ bouton.setPointerCapture(e.pointerId); }catch(err){}
+    zone.classList.remove('retour');
+  });
+  bouton.addEventListener('pointermove', (e) => { if(depart !== null) poser(e.clientX - depart); });
+  const lacher = () => {
+    if(depart === null) return;
+    depart = null;
+    if(x >= course() * SEUIL) valider(); else revenir();
+  };
+  bouton.addEventListener('pointerup', lacher);
+  bouton.addEventListener('pointercancel', lacher);
+  bouton.addEventListener('keydown', (e) => {
+    if(fini || bouton.disabled) return;
+    if(e.key === 'ArrowRight'){ e.preventDefault(); zone.classList.remove('retour'); poser(x + course() / 6); if(x >= course() * SEUIL) valider(); }
+    else if(e.key === 'ArrowLeft' || e.key === 'Escape'){ e.preventDefault(); revenir(); }
+  });
+  bouton.addEventListener('blur', () => { if(!fini && depart === null && x > 0) revenir(); });
+  return {
+    maj(r){
+      raison = r;
+      if(fini || depart !== null) return;   // pas pendant un geste
+      zone.classList.toggle('off', !!r);
+      texteRepos();
+      if(r && x > 0) revenir();
+    }
+  };
+})();
+function majGlisserAchat(raison){ if(typeof GLISSER !== 'undefined' && GLISSER) GLISSER.maj(raison); }
 
 document.getElementById('toggleOthersBtn').addEventListener('click', () => {
   showOthers = !showOthers;

@@ -4533,7 +4533,8 @@ svg.rd-zoom .cdj-fr{ fill:#172D4C; }
 /* =====================================================================
    patch89 — Saison 2 : selecteur Terra / Front (n'existe qu'avec SAISON2)
    ===================================================================== */
-.mode-bascule{ display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; margin:0 0 16px;
+/* patch164 : devant l'en-tete collant de la Collection */
+.mode-bascule{ position:relative; z-index:4; display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:4px; margin:0 0 16px;
   width:100%; max-width:440px; min-width:0; align-self:flex-start;
   background:rgba(169,188,212,.08); border:1px solid rgba(169,188,212,.16); border-radius:14px; }
 .mode-bascule button{ display:flex; flex-direction:column; align-items:flex-start; gap:1px; padding:8px 12px; border:none;

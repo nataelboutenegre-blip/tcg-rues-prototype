@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'c9c1bcb2d6bf';
+const VERSION_JEU = '666536332456';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9262,6 +9262,12 @@ function appliquerMode(){
     if(tirage) tirage.click();
   }
   majBadgePlus();
+  // patch187 : les cartes tirees dans l'autre mode ne restent pas a l'ecran
+  if(!paquetEnCours){
+    const zoneP = document.getElementById('packZone');
+    if(zoneP) zoneP.innerHTML = '';
+    dispoPrecedente = null;   // pas de fausse notification « paquet gratuit »
+  }
   // patch90 : le statut des paquets et la collection suivent le mode
   loadPackStatus();
   if(quetesTout.length) renderObjectifs(); else loadObjectifs();

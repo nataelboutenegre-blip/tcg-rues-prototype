@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '666536332456';
+const VERSION_JEU = '80e592c14f68';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9117,6 +9117,7 @@ function initModes(){
     modeJeu = b.dataset.mode;
     try { localStorage.setItem('tf-mode', modeJeu); } catch(err){}
     appliquerMode();
+    balayerMode();   // patch188
   });
   appliquerMode();
   majEnergie();
@@ -9827,6 +9828,20 @@ function ouvrirVenteTerra(){
   });
 }
 
+// patch188 : le balayage au changement de mode
+function balayerMode(){
+  let el = document.getElementById('modeBalayage');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'modeBalayage';
+    el.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(el);
+  }
+  const terra = modeJeu === 'terra';
+  el.className = terra ? 'terra' : 'front';
+  el.innerHTML = `<div><b>${terra ? 'Terra' : 'Front'}</b><small>${terra ? 'Ta collection' : 'La conquête'}</small></div>`;
+  el.classList.remove('passe'); void el.offsetWidth; el.classList.add('passe');
+}
 function majBascule(){
   if(!SAISON2) return;
   const el = document.getElementById('mbPoints');

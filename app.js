@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'da697d10cbb1';
+const VERSION_JEU = '1d2dd62db62c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4131,8 +4131,9 @@ async function loadContrat(){
   ctTextes();
   try{
     const terra = ctTerra();
-    const res = await Promise.all(CONTRATS.map(c =>
-      sb.rpc(terra ? 'terra_contrat_candidates' : 'contrat_candidates', { p_tier: c.de })));
+    // patch163 : par pages, sinon la liste s'arrete a 1000 doublons
+    const res = await Promise.all(CONTRATS.map(c => toutesLesLignes(() =>
+      sb.rpc(terra ? 'terra_contrat_candidates' : 'contrat_candidates', { p_tier: c.de }), 'commune_code')));
     if(res.some(r => r.error)) throw res.find(r => r.error).error;
     contratDispo = {};
     CONTRATS.forEach((c, i) => {

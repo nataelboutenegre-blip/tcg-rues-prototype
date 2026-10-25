@@ -14,7 +14,8 @@ Ce que fait le script (sans jamais rien supprimer) :
   3. crée les catégories, renomme les salons existants, crée ceux qui manquent,
      pose les sujets et la lecture seule ;
   4. poste et épingle les messages d'accueil, de règles et du guide (une seule
-     fois : s'il les a déjà postés, il ne recommence pas).
+     fois : s'il les a déjà postés, il ne recommence pas ; si leur texte a
+     changé dans messages.json, il modifie le message déjà posté).
 Rejouable : un deuxième passage ne refait que ce qui manque.
 """
 import base64, json, os, subprocess, sys, time
@@ -32,7 +33,7 @@ def lire_jeton():
     return j
 JETON = lire_jeton()
 
-def appel(methode, chemin, corps=None):
+def appel(methode, chemin, corps=None, fatal=True):
     """Appel à l'API Discord par curl (les certificats du Mac, sans module à installer)."""
     for essai in range(6):
         cmd = ['curl', '-sS', '-X', methode, API + chemin,
@@ -55,7 +56,10 @@ def appel(methode, chemin, corps=None):
             except Exception: pass
             time.sleep(attente); continue
         if code >= 400:
-            sys.exit(u'Discord a refusé %s %s (%d) : %s' % (methode, chemin, code, texte[:400]))
+            msg = u'Discord a refusé %s %s (%d) : %s' % (methode, chemin, code, texte[:400])
+            if fatal: sys.exit(msg)
+            print(u'  (ignoré) ' + msg)
+            return None
         time.sleep(0.35)   # rester poli avec les limites de Discord
         return json.loads(texte) if texte.strip() else None
     sys.exit(u'Discord limite trop les appels : réessaie dans une minute.')
@@ -178,7 +182,7 @@ for nom_cat, liste in PLAN:
             s = faire(u'nouveau salon %s' % nom, lambda: appel('POST', '/guilds/%s/channels' % G, corps))
         if s:
             IDS[nom] = s['id']
-            ordre.append({'id': s['id'], 'position': i, 'parent_id': cat['id'] if cat else None})
+            ordre.append({'id': s['id'], 'position': i})
             if lecture:
                 ow = next((o for o in s.get('permission_overwrites', []) if o['id'] == EVERYONE), None)
                 deny = int(ow['deny']) if ow else 0
@@ -186,12 +190,12 @@ for nom_cat, liste in PLAN:
                 if not deny & LECTURE:
                     faire(u'   lecture seule sur %s' % nom, lambda: appel('PUT', '/channels/%s/permissions/%s' % (s['id'], EVERYONE),
                           {'type': 0, 'allow': str(allow & ~LECTURE), 'deny': str(deny | LECTURE)}))
-                # le bot garde le droit d'écrire et d'épingler
-                faire(u'   le bot peut écrire dans %s' % nom, lambda: appel('PUT', '/channels/%s/permissions/%s' % (s['id'], moi['id']),
+                # le bot garde le droit d'écrire et d'épingler (seulement s'il manque)
+                if not any(o['id'] == moi['id'] for o in s.get('permission_overwrites', [])): faire(u'   le bot peut écrire dans %s' % nom, lambda: appel('PUT', '/channels/%s/permissions/%s' % (s['id'], moi['id']),
                       {'type': 1, 'allow': str(VOIR_ECRIRE), 'deny': '0'}))
 if VRAI and ordre:
-    appel('PATCH', '/guilds/%s/channels' % G, ordre)
-    dire(u'  salons rangés dans l\'ordre')
+    appel('PATCH', '/guilds/%s/channels' % G, ordre, fatal=False)
+    dire(u'  ordre des salons envoyé (si un « ignoré » s\'affiche au-dessus, range-les à la main : rien de grave)')
 vieilles = [c['name'] for c in salons if c['type'] == 4 and c['name'] not in [p[0] for p in PLAN]]
 if vieilles: dire(u'  (les anciennes catégories %s resteront vides : supprime-les à la main si tu veux)' % ', '.join(vieilles))
 
@@ -209,13 +213,24 @@ for m in MESSAGES:
     if not cid:
         dire(u'  SIMULÉ  « %s » dans %s (le salon sera créé avant)' % (m['titre'], m['salon'])); continue
     deja = appel('GET', '/channels/%s/messages?limit=50' % cid) if cid else []
-    if any(x['author']['id'] == moi['id'] and m['repere'] in x.get('content', '') for x in (deja or [])):
-        dire(u'  déjà posté  « %s »' % m['titre']); continue
+    ancien = next((x for x in (deja or []) if x['author']['id'] == moi['id'] and m['repere'] in x.get('content', '')), None)
+    if ancien:
+        # 25 octobre : le texte a changé dans messages.json -> on modifie le message déjà posté
+        nouveau = preparer(m['texte'])
+        if ancien.get('content') != nouveau:
+            if len(nouveau) > 2000: sys.exit(u'Message « %s » trop long (%d caractères)' % (m['titre'], len(nouveau)))
+            faire(u'mettre à jour « %s » (texte modifié)' % m['titre'], lambda: appel('PATCH', '/channels/%s/messages/%s' % (cid, ancien['id']),
+                  {'content': nouveau, 'allowed_mentions': {'parse': []}}))
+        if not ancien.get('pinned'):
+            ok = faire(u'épingler « %s » (déjà posté)' % m['titre'], lambda: appel('PUT', '/channels/%s/pins/%s' % (cid, ancien['id']), fatal=False) is not None or True)
+        else:
+            dire(u'  déjà posté et épinglé  « %s »' % m['titre'])
+        continue
     contenu = preparer(m['texte'])
     if len(contenu) > 2000: sys.exit(u'Message « %s » trop long (%d caractères)' % (m['titre'], len(contenu)))
     def poster(cid=cid, contenu=contenu):
         msg = appel('POST', '/channels/%s/messages' % cid, {'content': contenu, 'allowed_mentions': {'parse': []}})
-        appel('PUT', '/channels/%s/pins/%s' % (cid, msg['id']))
+        appel('PUT', '/channels/%s/pins/%s' % (cid, msg['id']), fatal=False)
         return msg
     faire(u'« %s » dans %s, épinglé' % (m['titre'], m['salon']), poster)
 

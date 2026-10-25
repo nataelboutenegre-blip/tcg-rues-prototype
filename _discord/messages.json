@@ -1,26 +1,26 @@
 [
- {
-  "titre": "Bienvenue",
-  "salon": "👋│bienvenue",
-  "repere": "Bienvenue sur le Discord de TerraFront",
-  "texte": ":tf_tf: **Bienvenue sur le Discord de TerraFront !**\n\nLes 35 000 communes de France sont des cartes à collectionner. Ta ville, ton village, la commune de tes grands-parents : elles sont toutes dans le jeu.\n\n:tf_terra: **Terra** : ta France à toi. Ouvre des paquets et complète ta collection.\n:tf_front: **Front** : la carte partagée. Chaque commune n'a qu'un seul propriétaire, et se prend au combat.\n\n👉 **Jouer** : https://terrafront.fr (gratuit, dans le navigateur, sans rien installer)\n\n**Pour bien commencer**\n1️⃣ Lis 📜│règles\n2️⃣ Choisis tes rôles (Terra, Front, notifications)\n3️⃣ Montre ton premier paquet dans 🃏│tirages\n\nUne question ? ❓│questions. Un bug ? 🐛│bugs. Une idée ? 💡│idées : les meilleures finissent dans le jeu.\n\nBon jeu, et bonne conquête :tf_conquete:"
- },
- {
-  "titre": "Règles",
-  "salon": "📜│règles",
-  "repere": "Les règles du serveur",
-  "texte": "📜 **Les règles du serveur**\n\n**1. Respect.** Pas d'insultes, de harcèlement ni de propos discriminants. On se chambre sur le Front, on reste sympa en dehors.\n\n**2. Un seul compte par joueur.** Les comptes multiples et les échanges avec ses propres comptes sont interdits. Ils faussent le jeu pour tout le monde.\n\n**3. Une faille, on la signale.** Un bug qui rapporte des points ou des cartes se signale dans 🐛│bugs, il ne s'exploite pas. Les joueurs qui signalent sont remerciés, ceux qui abusent sont exclus du classement.\n\n**4. Pas de spoil.** La réponse de la Commune du jour se cache entre || deux barres ||.\n\n**5. Pas de pub** pour un autre serveur, un autre jeu ou une chaîne sans accord.\n\n**6. Chaque chose à sa place** : les salons ont un sujet, merci de le suivre.\n\nEn cas de problème, mentionne @Fondateur. Les sanctions vont du simple avertissement à l'exclusion du serveur et du jeu."
- },
- {
-  "titre": "Guide du jeu",
-  "salon": "📖│guide-du-jeu",
-  "repere": "TerraFront en un écran",
-  "texte": "📖 **TerraFront en un écran · Saison 2**\n\n:tf_terra: **TERRA, ta collection**\n:tf_paquet: Un paquet gratuit toutes les 30 min (3 en réserve), ou acheté en points.\n5 vraies communes par paquet. Une carte que tu as déjà devient un doublon : revends-le, échange-le ou mets-le en :tf_contrat: contrat (10 doublons → 1 carte du palier au-dessus).\nPersonne ne peut te prendre une carte de Terra.\n\n:tf_front: **FRONT, la conquête**\nChaque commune n'a qu'un seul propriétaire. Pour la prendre : 3 victoires d'affilée.\n:tf_energie: On attaque avec de l'énergie : +1 toutes les 10 min, 40 au maximum.\n:tf_conquete: Avoir des communes autour de la cible augmente tes chances.\nLa saison dure 4 semaines. À la fin, tu gardes 5 communes.\n\n**LES RARETÉS** (selon le nombre d'habitants)\n:tf_commun: Commune · :tf_peucommun: Peu commune · :tf_rare: Rare · :tf_epique: Épique · :tf_legendaire: Légendaire\n\n**CHAQUE JOUR**\nDes quêtes qui rapportent des points et de l'énergie.\n:tf_cdj: La Commune du jour · :tf_radar: le Radar · ⚡ la Rafale\n\n:tf_parrain: **Invite tes potes** : ton lien est dans ton profil. Ton ami reçoit un paquet en plus, et toi de l'énergie.\n\nToutes les règles détaillées sont dans le jeu (menu Règles)."
- },
- {
-  "titre": "Message des rôles",
-  "salon": "👋│bienvenue",
-  "repere": "Choisis tes rôles",
-  "texte": "🎭 **Choisis tes rôles**\n\nVa dans **Parcourir les salons › Salons et rôles** et choisis :\n:tf_terra: **Terra** si tu joues surtout ta collection\n:tf_front: **Front** si tu vis pour la conquête\n🔔 **Nouveautés** pour être prévenu à chaque mise à jour\n:tf_cdj: **Commune du jour** pour la notification du matin\n\nLes rôles :tf_og: **OG**, 🏆 **Champion** et :tf_parrain: **Le Parrain**, eux, se méritent dans le jeu 😉"
- }
+  {
+    "titre": "Bienvenue",
+    "salon": "👋│bienvenue",
+    "repere": "Bienvenue sur le Discord de TerraFront",
+    "texte": ":tf_tf: **Bienvenue sur le Discord de TerraFront !**\n\nLes 35 000 communes de France sont des cartes à collectionner. Ta ville, ton village, la commune de tes grands-parents : elles sont toutes dans le jeu.\n\n:tf_terra: **Terra** : ta France à toi. Ouvre des paquets et complète ta collection.\n:tf_front: **Front** : la carte partagée. Chaque commune n'a qu'un seul propriétaire, et se prend au combat.\n\n👉 **Jouer** : https://terrafront.fr (gratuit, dans le navigateur, sans rien installer)\n\n**Pour bien commencer**\n1️⃣ Lis 📜│règles\n2️⃣ Choisis tes rôles (Terra, Front, notifications)\n3️⃣ Montre ton premier paquet dans 🃏│tirages\n\nUne question ? ❓│questions. Un bug ? 🐛│bugs. Une idée ? 💡│idées : les meilleures finissent dans le jeu.\n\nBon jeu, et bonne conquête :tf_conquete:"
+  },
+  {
+    "titre": "Règles",
+    "salon": "📜│règles",
+    "repere": "Les règles du serveur",
+    "texte": "📜 **Les règles du serveur**\n\n**1. Respect.** Pas d'insultes, de harcèlement ni de propos discriminants. On se chambre sur le Front, on reste sympa en dehors.\n\n**2. Un seul compte par joueur.** Les comptes multiples et les échanges avec ses propres comptes sont interdits. Ils faussent le jeu pour tout le monde.\n\n**3. Une faille, on la signale.** Un bug qui rapporte des points ou des cartes se signale dans 🐛│bugs, il ne s'exploite pas. Les joueurs qui signalent sont remerciés, ceux qui abusent sont exclus du classement.\n\n**4. Pas de spoil.** La réponse de la Commune du jour se cache entre || deux barres ||.\n\n**5. Pas de pub** pour un autre serveur, un autre jeu ou une chaîne sans accord.\n\n**6. Chaque chose à sa place** : les salons ont un sujet, merci de le suivre.\n\nEn cas de problème, mentionne @Fondateur. Les sanctions vont du simple avertissement à l'exclusion du serveur et du jeu."
+  },
+  {
+    "titre": "Guide du jeu",
+    "salon": "📖│guide-du-jeu",
+    "repere": "TerraFront en un écran",
+    "texte": "📖 **TerraFront en un écran · Saison 2**\n\n:tf_terra: **TERRA, ta collection**\n:tf_paquet: Un paquet gratuit toutes les 30 min (3 en réserve), ou acheté en points.\n5 vraies communes par paquet. Une carte que tu as déjà devient un doublon : revends-le, échange-le ou mets-le en :tf_contrat: contrat (10 doublons → 1 carte du palier au-dessus).\nPersonne ne peut te prendre une carte de Terra.\n\n:tf_front: **FRONT, la conquête**\nChaque commune n'a qu'un seul propriétaire. Pour la prendre : 3 victoires d'affilée.\n:tf_paquet: Un paquet gratuit toutes les 20 min (pas d'achat en Front).\n:tf_energie: On attaque avec de l'énergie : +1 toutes les 10 min, 40 au maximum.\n:tf_conquete: Avoir des communes autour de la cible augmente tes chances.\nLa saison dure 4 semaines. À la fin, tes 5 communes gardées et les départements où tu tiens plus de 45 % passent dans ta collection Terra.\n\n**LES RARETÉS** (selon le nombre d'habitants)\n:tf_commun: Commune · :tf_peucommun: Peu commune · :tf_rare: Rare · :tf_epique: Épique · :tf_legendaire: Légendaire\n\n**CHAQUE JOUR**\nDes quêtes qui rapportent des points et de l'énergie.\n:tf_cdj: La Commune du jour · ↕️ Plus ou moins · :tf_radar: le Radar · ⚡ la Rafale\n\n:tf_parrain: **Invite tes potes** : ton lien est dans ton profil. Ton ami reçoit un paquet en plus, et toi de l'énergie.\n\nToutes les règles détaillées sont dans le jeu (menu Règles)."
+  },
+  {
+    "titre": "Message des rôles",
+    "salon": "👋│bienvenue",
+    "repere": "Choisis tes rôles",
+    "texte": "🎭 **Choisis tes rôles**\n\nVa dans **Parcourir les salons › Salons et rôles** et choisis :\n:tf_terra: **Terra** si tu joues surtout ta collection\n:tf_front: **Front** si tu vis pour la conquête\n🔔 **Nouveautés** pour être prévenu à chaque mise à jour\n:tf_cdj: **Commune du jour** pour la notification du matin\n\nLes rôles :tf_og: **OG**, 🏆 **Champion** et :tf_parrain: **Le Parrain**, eux, se méritent dans le jeu 😉"
+  }
 ]

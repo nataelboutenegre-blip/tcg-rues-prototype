@@ -11,6 +11,9 @@ Ce que fait le script, dans la catégorie « 🏰 Clans » :
     et un salon privé que seuls les membres du clan (et le bot) voient ;
   - donne le rôle aux membres du clan présents sur le Discord, et le RETIRE
     à ceux qui ont quitté le clan (sinon ils garderaient l'accès au salon).
+  - le chef du clan reçoit « Gérer les permissions » sur SON salon : il peut y
+    ajouter qui il veut (Modifier le salon › Permissions). Les personnes qu'il a
+    ajoutées sont gardées quand le script repasse ; un ancien chef perd ce droit.
   - un clan dissous : son rôle est vidé (plus personne ne voit le salon) ;
     le salon reste, à supprimer à la main si tu veux.
 
@@ -38,6 +41,7 @@ PREFIXE_ROLE = u'🏰 ['
 VOIR, ECRIRE, GERER_MSG, LIENS, FICHIERS, HISTORIQUE, REACTIONS = 0x400, 0x800, 0x2000, 0x4000, 0x8000, 0x10000, 0x40
 DROITS_MEMBRE = VOIR | ECRIRE | LIENS | FICHIERS | HISTORIQUE | REACTIONS
 DROITS_BOT = VOIR | ECRIRE | GERER_MSG | HISTORIQUE
+GERER_PERMS = 0x10000000   # « Gérer les permissions » sur le salon : donné au chef du clan
 
 def lire_jeton():
     if not os.path.exists(JETON_FICHIER):
@@ -170,19 +174,42 @@ for clan in CLANS:
     marque = u'[%s]' % tag
     sujet = u'Salon privé du clan %s %s : seuls ses membres le voient.' % (marque, clan['nom'])
     salon = next((s for s in salons if s['type'] == 0 and s.get('parent_id') == CAT_ID and marque in (s.get('topic') or '')), None)
-    perms = ([{'id': EVERYONE, 'type': 0, 'allow': '0', 'deny': str(VOIR)},
-              {'id': moi['id'], 'type': 1, 'allow': str(DROITS_BOT), 'deny': '0'}]
-             + ([{'id': rid, 'type': 0, 'allow': str(DROITS_MEMBRE), 'deny': '0'}] if rid else []))
+    # le chef du clan peut gérer les permissions de SON salon : il y ajoute qui il veut
+    ids_chef = trouver(clan['chef']) if clan.get('chef') else []
+    chef_id = ids_chef[0] if len(ids_chef) == 1 else None
+    if clan.get('chef') and not chef_id: print(u'  ?        chef %s : pas trouvé sur le Discord, il ne pourra pas inviter' % clan['chef'])
+    voulues = {EVERYONE: {'id': EVERYONE, 'type': 0, 'allow': '0', 'deny': str(VOIR)},
+               moi['id']: {'id': moi['id'], 'type': 1, 'allow': str(DROITS_BOT), 'deny': '0'}}
+    if rid: voulues[rid] = {'id': rid, 'type': 0, 'allow': str(DROITS_MEMBRE), 'deny': '0'}
+    if chef_id: voulues[chef_id] = {'id': chef_id, 'type': 1, 'allow': str(DROITS_MEMBRE | GERER_PERMS), 'deny': '0'}
+    # on garde les personnes que le chef a ajoutées ; un ancien chef perd seulement le droit d'inviter
+    finales = dict(voulues)
+    for o in (salon.get('permission_overwrites', []) if salon else []):
+        if o['id'] in voulues: continue
+        o = {'id': o['id'], 'type': o['type'], 'allow': str(o['allow']), 'deny': str(o['deny'])}
+        if o['type'] == 1 and int(o['allow']) & GERER_PERMS:
+            o['allow'] = str(int(o['allow']) & ~GERER_PERMS)
+        finales[o['id']] = o
+    perms = list(finales.values())
     if salon:
-        ok = {o['id']: o for o in salon.get('permission_overwrites', [])}
-        ferme = EVERYONE in ok and int(ok[EVERYONE]['deny']) & VOIR
-        if salon['name'] != nom_salon(clan) or salon.get('topic') != sujet or not ferme or (rid and rid not in ok):
-            faire(u'salon mis à jour : %s' % nom_salon(clan), lambda: appel('PATCH', '/channels/%s' % salon['id'],
+        avant = {(o['id'], int(o['type']), int(o['allow']), int(o['deny'])) for o in salon.get('permission_overwrites', [])}
+        apres = {(o['id'], int(o['type']), int(o['allow']), int(o['deny'])) for o in perms}
+        if salon['name'] != nom_salon(clan) or salon.get('topic') != sujet or avant != apres:
+            faire(u'salon mis à jour : %s%s' % (nom_salon(clan), u' (chef : %s)' % par_id[chef_id]['user']['username'] if chef_id else ''),
+                  lambda: appel('PATCH', '/channels/%s' % salon['id'],
                   {'name': nom_salon(clan), 'topic': sujet, 'permission_overwrites': perms}))
         else: print(u'  déjà là  salon %s' % salon['name'])
     else:
-        faire(u'salon privé %s' % nom_salon(clan), lambda: appel('POST', '/guilds/%s/channels' % G,
+        nouveau = faire(u'salon privé %s%s' % (nom_salon(clan), u' (chef : %s)' % par_id[chef_id]['user']['username'] if chef_id else ''),
+                        lambda: appel('POST', '/guilds/%s/channels' % G,
               {'name': nom_salon(clan), 'type': 0, 'topic': sujet, 'parent_id': CAT_ID, 'permission_overwrites': perms}))
+        if nouveau and nouveau.get('id'):
+            appel('POST', '/channels/%s/messages' % nouveau['id'], {'allowed_mentions': {'parse': []}, 'content':
+                u"🏰 **Salon privé du clan %s %s**\n"
+                u"Seuls les membres du clan le voient. Le bot donne l'accès aux membres du jeu qui sont sur le Discord.\n\n"
+                u"**Chef du clan** : tu peux inviter quelqu'un d'autre ici. Clic droit sur le salon (ou appui long sur téléphone) "
+                u"› Modifier le salon › Permissions › Ajouter des membres ou des rôles › choisis la personne › autorise « Voir le salon ».\n"
+                u"Un membre qui n'est pas encore sur le Discord doit d'abord rejoindre le serveur." % (marque, clan['nom'])}, fatal=False)
 
     # les membres
     voulus = set()

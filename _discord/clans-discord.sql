@@ -7,6 +7,7 @@ select jsonb_pretty(coalesce(jsonb_agg(jsonb_build_object(
          'tag', c.tag,
          'nom', c.nom,
          'couleur', c.couleur,
+         'chef', (select j.pseudo from public.joueurs j where j.id = c.chef),
          'membres', coalesce((select jsonb_agg(j.pseudo order by j.pseudo)
                                 from public.clan_membres m join public.joueurs j on j.id = m.joueur_id
                                where m.clan_id = c.id), '[]'::jsonb))

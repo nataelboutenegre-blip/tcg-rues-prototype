@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '993b71f7ae86';
+const VERSION_JEU = 'b33830e5224b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -254,6 +254,20 @@ function messageLisible(msg){
     [/Le clan est complet/i, 'Le clan est complet (6 membres).'],
     [/Invitation introuvable ou expiree/i, 'Cette invitation a expiré.'],
     [/Tu ne peux pas attaquer un membre de ton clan/i, 'Tu ne peux pas attaquer un membre de ton clan.'],
+    // patch175 : boutique en euros
+    [/La boutique ouvre bientot/i, 'La boutique ouvre bientôt.'],
+    [/Article introuvable/i, 'Cet objet n\'est pas en vente pour le moment.'],
+    [/Les conditions de vente ont change/i, 'Les conditions de vente ont changé : recharge la page.'],
+    [/Coche l'acceptation des conditions de vente/i, 'Coche l\'acceptation des conditions de vente.'],
+    [/Pour recevoir l'objet tout de suite, coche les deux cases/i, 'Pour recevoir l\'objet tout de suite, coche les deux cases.'],
+    [/Cet objet est reserve aux joueurs OG/i, 'Cet objet est réservé aux joueurs OG.'],
+    [/Tu as deja paye cet objet, il arrive bientot/i, 'Tu as déjà payé cet objet : il arrive bientôt.'],
+    [/Indique ta date de naissance/i, 'Indique ta date de naissance.'],
+    [/Date de naissance invalide/i, 'Date de naissance invalide.'],
+    [/La boutique est reservee aux joueurs de (\d+) ans/i, (x) => `La boutique est ouverte à partir de ${x[1]} ans.`],
+    [/Plafond de ([\d,]+) € par mois atteint pour les moins de 18 ans \(reste ([\d,]+) €\)/i, (x) => `Avant 18 ans, c'est ${x[1]} € par mois au plus : il te reste ${x[2]} € ce mois-ci.`],
+    [/Le delai de 14 jours est passe ou l'objet est deja livre/i, 'Le délai de 14 jours est passé, ou l\'objet est déjà livré.'],
+    [/Commande introuvable/i, 'Commande introuvable.'],
   ];
   for(const [re, trad] of table){
     const x = m.match(re);
@@ -765,6 +779,7 @@ async function showGame(session_){
   verifierVersion();
   if(SAISON2) initModes();
   if(SAISON2) loadBoutique(true);   // patch107 : le dos de carte choisi
+  if(SAISON2) bqeRetourPaiement();   // patch175 : retour de la page de paiement Stripe
   // arrivee depuis une notification : ?onglet=combat ou ?onglet=tirage
   if(new URLSearchParams(location.search).has('onglet')){
     ouvrirOngletDepuisUrl(location.href);
@@ -6931,23 +6946,29 @@ function potRetirer(n){
 
 // Paquet bleu pour le gratuit, dore pour celui achete
 function makePackEl(type){
-  const og = document.body.dataset.dos === 'og';   // patch159 : le paquet suit le dos OG
-  const motif = paquetMotifSvg(og ? 'og' : type);
+  // patch175 : l'habillage choisi dans la garde-robe (Nacre : patch159)
+  const hab = document.body.dataset.habillage || '';
+  const og = hab === 'nacre';
+  const gl = HAB_PAQ[hab] != null;
+  const motif = gl ? habCanvas(hab, false) : paquetMotifSvg(og ? 'og' : type);
+  const embleme = og || hab.startsWith('og-') ? '<span class="paquet-hexa"><b>OG</b></span>'
+    : hab === 'kraft' ? '<span class="paquet-cachet" aria-hidden="true">' + ICONE_EPINGLE + '</span>' : ICONE_EPINGLE;
   const pack = document.createElement('button');
-  pack.className = 'paquet ' + (type === 'achete' ? 'achete' : 'gratuit') + (og ? ' og' : '');
+  pack.className = 'paquet ' + (type === 'achete' ? 'achete' : 'gratuit') + (og ? ' og' : '') + (gl ? ' hab hab-' + hab : '');
   pack.setAttribute('aria-label', 'Ouvrir le paquet');
   pack.innerHTML = `
     <div class="paquet-languette">${motif}</div>
     <svg class="paquet-perfo" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><polyline class="perfo-base" points="${PERFO_POINTS}"/></svg>
     <div class="perfo-masque"><svg class="paquet-perfo perfo-lueur" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><polyline class="perfo-trace" points="${PERFO_POINTS}"/></svg></div>
     <div class="paquet-corps">${motif}
-      <div class="paquet-etiquette">${og ? '<span class="paquet-hexa"><b>OG</b></span>' : ICONE_EPINGLE}<span class="paquet-titre">Paquet</span></div>
+      <div class="paquet-etiquette">${embleme}<span class="paquet-titre">Paquet</span></div>
       <div class="paquet-bande">5 communes</div>
     </div>
     <div class="paquet-eclat"></div>
     <div class="paquet-bouts">${MORCEAUX_PAQUET}</div>
     <div class="coupe-lueur"></div><div class="coupe-trace"></div><div class="coupe-tete"></div><div class="coupe-eclair"></div>
     <span class="coupe-consigne" aria-hidden="true">Touche le paquet · ou coupe les pointillés</span>`;
+  if(gl) setTimeout(() => habGl.demarrer(), 0);
   return pack;
 }
 
@@ -8998,9 +9019,9 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // revient a Collection. L'onglet Defense reste dans la page, cache, et
 // n'apparait ni dans la barre ni dans le menu.
 let ONGLETS_BARRE = ['tirage', 'territoire', 'qg', 'combat'];
-const ONGLETS_FUSIONNES = ['defense', 'succes', 'cdj', 'radar', 'rafale'];
+const ONGLETS_FUSIONNES = ['defense', 'succes', 'cdj', 'radar', 'rafale', 'boutiqueeuros', 'personnaliser'];
 // l'onglet qui s'allume quand on ouvre un volet fusionne
-const ONGLET_PARENT = { defense: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg' };
+const ONGLET_PARENT = { defense: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg', boutiqueeuros: 'boutique', personnaliser: 'profil' };
 
 // ---------- patch89 : saison 2, deux modes ----------
 // SAISON2 = false : la saison 1 tourne comme avant, rien de ce bloc ne
@@ -10038,6 +10059,8 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'communaute'){ loadClassement(); loadJournal(); loadAmis(); }
     if(tab.dataset.tab === 'bourse') loadBourse();
     if(tab.dataset.tab === 'boutique') loadBoutique();
+    if(tab.dataset.tab === 'boutiqueeuros') loadBoutiqueEuros();   // patch175
+    if(tab.dataset.tab === 'personnaliser') loadGardeRobe();
     if(tab.dataset.tab === 'clan') loadClan();
     if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); }
     if(tab.dataset.tab === 'defense'){ loadMenaces().then(loadReveil); loadCombat(); renderIntensite('defense'); if(SAISON2) chargerGarnisons(); }
@@ -13917,6 +13940,9 @@ async function loadBoutique(silencieux){
   }
   boutiqueCache = data;
   appliquerDos(data.dos);
+  // patch175 : l'habillage de paquet se regle a part ; sans le SQL 6, le paquet Nacre suit le dos OG
+  appliquerHabillage(data.habillage === undefined ? (data.dos === 'dos-og' ? 'nacre' : null) : data.habillage);
+  bqeVerifierAcces();
   renderBoutique();
   // patch159 : prevenir les OG une fois (par appareil)
   try{
@@ -14762,3 +14788,489 @@ function tailleCarteLarge(wrap, ratio){
   if(MODE_CANVAS){ redimensionnerCanvas(); demanderDessin(); }
   applyMapTransform();
 }
+
+
+// ---------- patch175 : boutique en euros, garde-robe, habillages de paquet ----------
+// Les habillages en euros : dessin WebGL du 18 octobre (aperçu « Paquets et dos OG »),
+// surface du paquet seulement. Un seul canevas WebGL hors écran dessine, puis on recopie
+// l'image dans les canevas des paquets (languette et corps). Un dessin par habillage
+// et par image, et seulement pour les paquets visibles.
+const HAB_PAQ = { 'og-prisme': 2, 'og-or-noir': 3, kraft: 4, lave: 5, neon: 6, comete: 7, maree: 8, orage: 9 };
+function habCle(id){ return !id ? '' : id === 'nacre' ? 'nacre' : String(id).replace(/^og-paquet-/, 'og-').replace(/^paquet-/, ''); }
+function habCanvas(hab, fixe, w, h){
+  return `<canvas class="paquet-motif paquet-gl" data-hab="${hab}"${fixe ? ' data-fixe="1"' : ''} width="${w || 400}" height="${h || 560}" aria-hidden="true"></canvas>`;
+}
+function appliquerHabillage(id){
+  const avant = document.body.dataset.habillage || '';
+  const k = habCle(id);
+  document.body.dataset.habillage = k;
+  if(avant !== k && !paquetEnCours){
+    const zone = document.getElementById('packZone');
+    if(zone && zone.querySelector('.paquet[data-pret]')){ zone.innerHTML = ''; afficherPaquetPret('gratuit'); }
+  }
+}
+
+const HAB_GLSL = `#version 300 es
+precision highp float;
+uniform vec2 u_res; uniform float u_time; uniform vec2 u_tilt; uniform int u_paq;
+out vec4 fragColor;
+const float PI=3.14159265, TAU=6.28318531;
+float UPX=.01;
+const float PH=1.5; const float PW=1.5*200./280.; const float YT=.75;
+float h21(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+vec2 h22(vec2 p){ float n=h21(p); return vec2(n,h21(p+n+.17)); }
+float vnoise(vec2 p){ vec2 i=floor(p),f=fract(p); vec2 u=f*f*(3.-2.*f);
+  return mix(mix(h21(i),h21(i+vec2(1.,0.)),u.x),mix(h21(i+vec2(0.,1.)),h21(i+vec2(1.,1.)),u.x),u.y); }
+float fbm(vec2 p){ float v=0.,a=.5; mat2 m=mat2(1.6,1.2,-1.2,1.6); for(int i=0;i<4;i++){ v+=a*vnoise(p); p=m*p+3.1; a*=.5; } return v; }
+float fbm3(vec2 p){ float v=0.,a=.5; mat2 m=mat2(1.6,1.2,-1.2,1.6); for(int i=0;i<3;i++){ v+=a*vnoise(p); p=m*p+3.1; a*=.5; } return v; }
+vec3 spectral(float x){ return .5+.5*cos(TAU*(x+vec3(0.,.33,.67))); }
+float lineW(float d,float w){ return clamp((w-abs(d))/UPX+.5,0.,1.); }
+vec3 fire(float x){ return vec3(.9,.12,.02)*smoothstep(0.,.35,x)+vec3(.1,.35,.05)*smoothstep(.3,.7,x)+vec3(0.,.35,.25)*smoothstep(.65,1.05,x)+vec3(0.,0.,.35)*smoothstep(1.,1.4,x); }
+vec3 Ldir(float t){ return normalize(vec3(u_tilt.x*1.3+.3*cos(t*.5)-.15,-u_tilt.y*1.3+.3*sin(t*.5)+.35,.9)); }
+float sdBox(vec2 p,vec2 b,float r){ vec2 d=abs(p)-b+r; return length(max(d,0.))+min(max(d.x,d.y),0.)-r; }
+float crH(vec2 p){ return abs(fbm3(p*3.4)-.5)*1.4+fbm3(p*10.)*.22; }
+vec3 froisse(vec2 q,float k){ float e=.006; float h0=crH(q), hx=crH(q+vec2(e,0.)), hy=crH(q+vec2(0.,e)); return vec3(-(hx-h0)/e,-(hy-h0)/e,0.)*k; }
+float anneaux(vec2 q,float n){ vec2 c=q-vec2(-.12,.1); float r=length(c*vec2(1.,.82)); float a=atan(c.y,c.x); float f=r*n+.35*sin(3.*a+1.)+.2*sin(5.*a-2.); return 1.-smoothstep(.0,1.3,abs(fract(f)-.5)/max(fwidth(f),1e-4)); }
+float caustic(vec2 p0,float t){ vec2 p=p0-250.; vec2 i=p; float c=1.; float inten=.005;
+  for(int n=0;n<5;n++){ float tt=t*(1.-3.5/float(n+1)); i=p+vec2(cos(tt-i.x)+sin(tt+i.y),sin(tt-i.y)+cos(tt+i.x));
+    c+=1./length(vec2(p.x/(sin(i.x+tt)/inten),p.y/(cos(i.y+tt)/inten))); }
+  c/=5.; c=1.17-pow(c,1.4); return pow(abs(c),8.); }
+vec3 matiere(vec2 q,float t){
+  vec2 uv=vec2((q.x+PW*.5)/PW,(YT-q.y)/PH);
+  vec3 Ld=Ldir(t);
+  float kf=u_paq==2?.7:(u_paq==3?.55:(u_paq==4?.12:(u_paq==5?.2:(u_paq==8?.3:.9))));
+  vec3 Nf=froisse(q,.06*kf);
+  float sx=2.*uv.x-1.; Nf.x+=sx*sx*sx*.55;
+  float crimp=max(1.-smoothstep(.0,.07,uv.y),smoothstep(.93,1.,uv.y));
+  Nf.y+=sin(uv.y*PH*260.)*.35*crimp;
+  vec3 N=normalize(vec3(Nf.xy,1.));
+  float shin=u_paq==4?6.:(u_paq==5?10.:40.);
+  float dif=max(dot(N,Ld),0.), sp=pow(max(reflect(-Ld,N).z,0.),shin);
+  float rg=anneaux(q,13.);
+  vec3 col;
+  if(u_paq==2){ float ph=dot(N.xy,vec2(1.8,1.2))*.55+uv.x*.8+uv.y*.55+u_tilt.x*.8+u_tilt.y*.4+t*.05;
+    col=mix(vec3(.8,.82,.9),spectral(ph),.72)*(.6+.5*dif)+sp*1.1; col=mix(col,vec3(1.),rg*.3);
+    vec2 id=floor(q*24.); vec2 h=h22(id+6.); vec2 dv=(q*24.-id-.2-h*.6)/24.;
+    float on=step(.8,h.x)*smoothstep(.88,1.,sin(t*1.7+h.y*TAU+dot(u_tilt,h-.5)*12.));
+    col+=on*(exp(-dot(dv,dv)*40000.)*1.4+(exp(-abs(dv.x)*900.)*exp(-abs(dv.y)*90.)+exp(-abs(dv.y)*900.)*exp(-abs(dv.x)*90.))*.6); }
+  else if(u_paq==3){ col=vec3(.035,.035,.045)*(.6+.6*dif)+sp*vec3(1.,.93,.75)*1.2; float env=pow(.5+.5*sin(N.x*6.+N.y*3.+t*.3+u_tilt.x*2.),6.); col+=vec3(.3,.25,.15)*env*.5;
+    col=mix(col,vec3(.95,.72,.28)*(.6+.6*dif),rg*.75); }
+  else if(u_paq==4){
+    float fib=fbm(q*vec2(70.,9.))*.5+fbm(q*vec2(9.,70.))*.3; float spk=step(.975,h21(floor(q*260.)));
+    col=vec3(.7,.54,.35)*(.8+.28*fib)*(.86+.2*dif)-spk*.14;
+    col=mix(col,vec3(.3,.18,.08),rg*.5*(.55+.45*fbm(q*30.))); }
+  else if(u_paq==5){
+    float n=fbm(q*3.2+vec2(0.,-t*.05)); float cr=abs(fbm(q*3.6+3.)-.5); float vein=1.-smoothstep(0.,.022,cr);
+    float calme=1.-.75*(1.-smoothstep(.03,.2,abs(q.y)))*(1.-smoothstep(.45,.6,abs(q.x)));
+    float pulse=.75+.25*sin(t*2.+q.y*3.);
+    col=vec3(.075,.06,.055)*(.55+.7*dif)+sp*.12;
+    col+=fire((vein*(.8+.5*n)+rg*.22)*pulse*1.1*calme); }
+  else if(u_paq==6){
+    col=mix(vec3(.05,.02,.1),vec3(.1,.03,.17),uv.y)*(.7+.4*dif)+sp*.3; col+=vec3(.13,.89,1.)*rg*.14;
+    float ed=sdBox(q,vec2(PW*.5-.065,PH*.5-.12),.07); float fl=.85+.15*sin(t*11.)*step(.95,fract(t*.31));
+    vec3 tc=mix(vec3(1.,.17,.84),vec3(.13,.89,1.),.5+.5*sin(atan(q.y,q.x)*2.-t*1.2));
+    col+=tc*(exp(-pow(ed/.011,2.))*1.2+exp(-abs(ed)/.045)*.35)*fl+vec3(1.)*exp(-pow(ed/.004,2.))*.5*fl;
+    col*=.9+.1*step(.5,fract(gl_FragCoord.y/3.)); }
+  else if(u_paq==7){
+    col=mix(vec3(.02,.04,.12),vec3(.08,.13,.32),1.-uv.y*.8)*(.8+.3*dif)+sp*.45;
+    col+=vec3(.32,.2,.62)*pow(fbm(q*2.+t*.02),3.)*1.3;
+    vec2 sq=q*34.; vec2 id=floor(sq); vec2 h=h22(id); float d=length(sq-id-.2-h*.6);
+    col+=step(.78,h.x)*exp(-d*d*14.)*(.5+.5*sin(t*(1.5+h.y*3.)+h.y*40.))*vec3(.9,.95,1.);
+    float P=4.5, ph=mod(t,P)/P; vec2 A=vec2(-.75,.8), B=vec2(.75,-.35); vec2 hp=mix(A,B,ph/.4);
+    if(ph<.42){ vec2 dir=normalize(A-B); vec2 lq=q-hp; float al=dot(lq,dir), pe=dot(lq,vec2(-dir.y,dir.x));
+      if(al>0.){ float w=.006+al*.03; col+=vec3(.75,.88,1.)*exp(-al*2.2)*exp(-pe*pe/(w*w))*1.3; }
+      float hl=length(lq); col+=vec3(1.)*(exp(-hl*hl*6000.)*1.6+.2/(1.+hl*hl*900.)); }
+    col=mix(col,vec3(.8,.86,1.),rg*.18); }
+  else if(u_paq==8){
+    float ca=caustic(q*2.6,t*.45);
+    col=mix(vec3(.04,.34,.46),vec3(.1,.62,.72),1.-uv.y)*(.72+.32*dif)+vec3(.6,.95,1.)*ca*.45+sp*1.3;
+    vec2 bq=q-vec2(0.,t*.12); vec2 id=floor(bq/.07); vec2 h=h22(id+2.); vec2 bc=(id+.2+h*.6)*.07; float bd=length(bq-bc); float rr=.006+h.x*.01;
+    col+=step(.72,h.y)*lineW(bd-rr*.8,.0018)*.6;
+    col=mix(col,vec3(.85,1.,1.),rg*.22); }
+  else {
+    float P=3.7; float cy=floor(t/P), ph=t-cy*P;
+    float fl=smoothstep(0.,.02,ph)*(1.-smoothstep(.06,.14,ph))+.6*smoothstep(.2,.22,ph)*(1.-smoothstep(.28,.38,ph));
+    float cl=fbm(q*2.4+vec2(t*.06,0.));
+    col=mix(vec3(.07,.09,.14),vec3(.3,.35,.46),smoothstep(.35,.8,cl))*(.75+.35*dif)*(1.+fl*1.5)+sp*.2;
+    float bx=(h21(vec2(cy,1.))-.5)*.5+(fbm3(vec2(q.y*2.2,cy))-.5)*.4; float bd=abs(q.x-bx);
+    col+=vec3(.82,.9,1.)*(exp(-pow(bd/.006,2.))*1.6+exp(-bd/.04)*.3)*fl*step(-.1,q.y);
+    vec2 rq=mat2(cos(.2),-sin(.2),sin(.2),cos(.2))*q; float cw=.02; float cx=floor(rq.x/cw); float hh=h21(vec2(cx,4.));
+    float seg=fract((rq.y+t*1.6+hh*7.)/.22); col+=vec3(.6,.7,.85)*step(.5,hh)*(1.-smoothstep(0.,.16,seg))*smoothstep(0.,.02,seg)*exp(-pow((fract(rq.x/cw)-.5)*cw/.0016,2.))*.25;
+    col=mix(col,vec3(.75,.82,.95),rg*(.12+.4*fl)); }
+  col*=1.-.25*crimp;
+  float bord=-sdBox(q,vec2(PW*.5,PH*.5),.0); col*=.85+.15*smoothstep(0.,.03,bord);
+  return col;
+}
+void main(){
+  vec2 uv=gl_FragCoord.xy/u_res; uv.y=1.-uv.y; UPX=PH/u_res.y;
+  vec2 q=vec2((uv.x-.5)*PW, YT-uv.y*PH);
+  fragColor=vec4(clamp(matiere(q,u_time),0.,1.),1.);
+}`;
+
+const habGl = (() => {
+  let gl = null, essaye = false, enMarche = false, toile = null, prog = null, loc = {}, echelle = 1, couts = [], avant = 0;
+  const reduit = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function init(){
+    if(essaye) return !!gl;
+    essaye = true;
+    try{
+      toile = document.createElement('canvas');
+      gl = toile.getContext('webgl2', { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: false, powerPreference: 'low-power' });
+      if(!gl) return false;
+      const sh = (type, src) => { const o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o);
+        if(!gl.getShaderParameter(o, gl.COMPILE_STATUS)){ console.error('habillage', gl.getShaderInfoLog(o)); return null; } return o; };
+      const vs = sh(gl.VERTEX_SHADER, '#version 300 es\nin vec2 p; void main(){ gl_Position=vec4(p,0.,1.); }');
+      const fs = sh(gl.FRAGMENT_SHADER, HAB_GLSL);
+      if(!vs || !fs){ gl = null; return false; }
+      prog = gl.createProgram(); gl.attachShader(prog, vs); gl.attachShader(prog, fs); gl.bindAttribLocation(prog, 0, 'p'); gl.linkProgram(prog);
+      if(!gl.getProgramParameter(prog, gl.LINK_STATUS)){ gl = null; return false; }
+      gl.useProgram(prog);
+      const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      for(const n of ['u_res', 'u_time', 'u_tilt', 'u_paq']) loc[n] = gl.getUniformLocation(prog, n);
+      document.addEventListener('visibilitychange', () => { if(!document.hidden) demarrer(); });
+    }catch(e){ gl = null; }
+    return !!gl;
+  }
+  function rendre(hab, t, w, h){
+    if(toile.width !== w || toile.height !== h){ toile.width = w; toile.height = h; }
+    gl.viewport(0, 0, w, h);
+    gl.uniform2f(loc.u_res, w, h); gl.uniform1f(loc.u_time, t); gl.uniform1i(loc.u_paq, HAB_PAQ[hab]);
+    gl.uniform2f(loc.u_tilt, reduit ? .15 : Math.sin(t * .7) * .45, reduit ? -.1 : Math.sin(t * .53 + 1) * .3);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  function image(now){
+    const toutes = [...document.querySelectorAll('canvas.paquet-gl:not([data-fait])')];
+    if(!toutes.length || document.hidden){ enMarche = false; return; }
+    const t = reduit ? 2.4 : now / 1000;
+    const groupes = new Map();
+    for(const c of toutes){
+      const r = c.getBoundingClientRect();
+      if(!r.width || r.bottom < 0 || r.top > innerHeight) continue;   // cache ou hors de l'ecran
+      const cle = c.dataset.hab + '|' + (c.dataset.fixe ? 1 : 0) + '|' + c.width;
+      if(!groupes.has(cle)) groupes.set(cle, []);
+      groupes.get(cle).push(c);
+    }
+    let anime = false;
+    for(const [cle, liste] of groupes){
+      const [hab, fixe] = cle.split('|');
+      if(HAB_PAQ[hab] == null) continue;
+      const w = Math.round(liste[0].width * echelle), h = Math.round(liste[0].height * echelle);
+      rendre(hab, fixe === '1' ? 2.4 : t, w, h);
+      for(const c of liste){
+        const x = c.getContext('2d'); x.drawImage(toile, 0, 0, w, h, 0, 0, c.width, c.height);
+        if(fixe === '1' || reduit) c.dataset.fait = '1'; else anime = true;
+      }
+    }
+    // un appareil qui peine : on dessine moins de pixels
+    if(anime && avant){ couts.push(now - avant);
+      if(couts.length >= 60){ const m = couts.reduce((a, b) => a + b, 0) / couts.length; couts = [];
+        if(m > 40 && echelle > .5) echelle -= .25; } }
+    avant = anime ? now : 0;
+    if(anime) requestAnimationFrame(image);
+    else setTimeout(() => requestAnimationFrame(image), groupes.size ? 0 : 400);
+  }
+  function demarrer(){ if(!init()) return; if(!enMarche){ enMarche = true; avant = 0; requestAnimationFrame(image); } }
+  return { demarrer };
+})();
+
+// ---------- la boutique en euros ----------
+let bqeAcces = null, bqeCat = null, bqeBandeau = null, bqeCommandes = [];
+const euros = (c) => (Number(c) / 100).toFixed(2).replace('.', ',') + ' €';
+const dateLongue = (d) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+function bqeNomCourt(a){ return String(a.nom || '').replace(/^(Paquet|Dos) (OG )?/, ''); }
+
+async function bqeVerifierAcces(){
+  if(bqeAcces === null){
+    try{
+      const { data, error } = await sb.rpc('euros_catalogue');
+      bqeAcces = !error && !!data && data.peut_acheter === true;
+      if(bqeAcces) bqeCat = data;
+    }catch(e){ bqeAcces = false; }
+  }
+  const v = document.getElementById('bqVolets');
+  if(v) v.hidden = !bqeAcces;
+}
+
+async function loadBoutiqueEuros(){
+  const corps = document.getElementById('bqeCorps');
+  if(!corps) return;
+  const [c, b, m] = await Promise.all([sb.rpc('euros_catalogue'), sb.rpc('euros_bandeau'), sb.rpc('euros_mes_commandes')]);
+  if(c.error || !c.data){ corps.innerHTML = '<p class="collection-empty">La boutique est indisponible pour le moment.</p>'; return; }
+  bqeCat = c.data; bqeBandeau = b.error ? null : b.data; bqeCommandes = m.error ? [] : (m.data || []);
+  renderBoutiqueEuros();
+}
+
+function bqeBandeauHtml(){
+  const b = bqeBandeau;
+  if(!b || b.mois_pourcent == null) return '';
+  const mois = new Date().toLocaleDateString('fr-FR', { month: 'long' });
+  const trois = b.conformite_pourcent != null;
+  let etape, titre, pct, note = '';
+  if(b.mois_pourcent < 100){ etape = 1; titre = `Objectif de ${mois} · les frais du jeu`; pct = b.mois_pourcent; }
+  else if(trois && b.conformite_pourcent < 100){ etape = 2; titre = 'Mise en conformité · juriste, données personnelles, marque'; pct = b.conformite_pourcent; note = `Les frais de ${mois} sont couverts, merci !`; }
+  else { etape = trois ? 3 : 2; titre = 'TerraFront sur iPhone et Android'; pct = b.app_pourcent || 0; note = `Les frais de ${mois} sont couverts, merci !`; }
+  const nb = trois ? 3 : 2;
+  return `<div class="bqe-bandeau">
+    <div class="bqe-l1"><b>${titre}</b><span class="bqe-pc">${pct} %</span></div>
+    <div class="bqe-barre"><i style="width:${Math.max(0, Math.min(100, pct))}%"></i></div>
+    <div class="bqe-etapes" aria-label="Étape ${etape} sur ${nb}">${Array.from({ length: nb }, (_, i) => `<span class="${i < etape ? 'on' : ''}"></span>`).join('')}</div>
+    <small>${note ? note + ' ' : ''}Étape ${etape} sur ${nb}. Ce que rapporte la boutique paie d'abord les frais du jeu.</small>
+  </div>`;
+}
+
+function habVignette(k, w){
+  const gl = HAB_PAQ[k] != null;
+  return `<div class="hab-vignette" data-hab="${k}"${w ? ` style="width:${w}px"` : ''} aria-hidden="true">${gl ? habCanvas(k, true, 200, 280) : ''}<span class="hv-bande"></span></div>`;
+}
+function bqeVignette(a){ return a.type === 'dos' ? dosApercuHtml(a.id) : habVignette(habCle(a.id)); }
+
+function bqeCarte(a){
+  const attente = !a.possede && a.livraison_le;
+  const bas = a.possede ? '<span class="bqe-etat ok">Dans ta garde-robe</span>'
+    : attente ? `<span class="bqe-etat">Arrive le ${dateLongue(a.livraison_le)}</span>`
+    : `<span class="bq-btn bqe-prix">${euros(a.prix_centimes)}</span>`;
+  return `<button type="button" class="bq-article bqe-article" data-bqe="${echapperTexte(a.id)}">
+      ${bqeVignette(a)}
+      <b>${echapperTexte(bqeNomCourt(a))}</b>
+      <p>${echapperTexte(a.description)}</p>
+      ${bas}
+    </button>`;
+}
+
+function bqeCommandeHtml(c){
+  let etat = '', action = '';
+  if(c.statut === 'livree') etat = `Payé le ${dateLongue(c.payee_le)} · livré`;
+  else if(c.statut === 'payee' && c.retractation_le) etat = 'Annulation demandée · tu seras remboursé sous quelques jours';
+  else if(c.statut === 'payee'){
+    etat = `Payé le ${dateLongue(c.payee_le)} · arrive le ${dateLongue(c.livrer_apres)}`;
+    if(c.livraison === 'differee') action = `<button type="button" class="bqe-lien" data-retract="${c.id}">Changer d'avis et être remboursé</button>`;
+  }
+  else if(c.statut === 'remboursee') etat = 'Remboursé';
+  else if(c.statut === 'contestee') etat = 'Paiement contesté auprès de la banque';
+  else if(c.statut === 'a_verifier') etat = 'Paiement en cours de vérification';
+  return `<div class="bqe-achat"><div><b>${echapperTexte(c.article)} · ${euros(c.prix_centimes)}</b><small>${etat}</small></div>${action}</div>`;
+}
+
+function renderBoutiqueEuros(){
+  const corps = document.getElementById('bqeCorps');
+  const cat = bqeCat;
+  if(!corps || !cat) return;
+  const arts = (cat.articles || []).filter(a => a.type === 'dos' || a.type === 'habillage');
+  const og = arts.filter(a => a.reserve_og);
+  const hab = arts.filter(a => !a.reserve_og && a.type === 'habillage');
+  const dos = arts.filter(a => !a.reserve_og && a.type === 'dos');
+  const section = (titre, mot, liste, badge) => liste.length ? `<div class="bourse-section bq-section">
+      <h2>${titre}${badge ? ' <span class="bqe-og">OG</span>' : ''}${mot ? ` <small class="bqe-mot">${mot}</small>` : ''}</h2>
+      <div class="bq-grille bq-grille-dos">${liste.map(bqeCarte).join('')}</div></div>` : '';
+  corps.innerHTML = bqeBandeauHtml()
+    + (cat.ouverte ? '' : '<p class="bqe-test">Mode test : la boutique n\'est visible que des comptes testeurs. Paie avec une carte de test Stripe.</p>')
+    + (cat.og ? section('Réservé aux OG', 'pour les joueurs de la saison 1', og, true) : '')
+    + section('Habillages de paquet', 'l\'emballage de tes paquets', hab)
+    + section('Dos de cartes', '', dos)
+    + (!arts.length ? '<p class="collection-empty">Rien en vente pour le moment.</p>' : '')
+    + (bqeCommandes.length ? `<div class="bourse-section bq-section"><h2>Mes achats</h2><div class="bqe-achats">${bqeCommandes.map(bqeCommandeHtml).join('')}</div></div>` : '')
+    + `<p class="bqe-pied">Paiement par Stripe · TerraFront, entrepreneur individuel · <a href="cgv.html" target="_blank" rel="noopener">Conditions de vente</a> · <a href="mentions-legales.html" target="_blank" rel="noopener">Mentions légales</a></p>`;
+  habGl.demarrer();
+}
+
+function bqeAge(iso){
+  const n = new Date(iso + 'T12:00:00'), auj = new Date();
+  let a = auj.getFullYear() - n.getFullYear();
+  if(auj.getMonth() < n.getMonth() || (auj.getMonth() === n.getMonth() && auj.getDate() < n.getDate())) a--;
+  return a;
+}
+
+function bqeOuvrirFiche(id){
+  const cat = bqeCat;
+  const a = cat && (cat.articles || []).find(x => x.id === id);
+  if(!a) return;
+  if(a.possede){ notifier({ type: 'info', titre: 'Tu l\'as déjà', texte: 'Il est dans Profil › Personnaliser.' }); return; }
+  if(a.livraison_le){ notifier({ type: 'info', titre: 'Déjà payé', texte: 'Il arrive le ' + dateLongue(a.livraison_le) + '.' }); return; }
+  const nom = bqeNomCourt(a), prix = euros(a.prix_centimes);
+  const date14 = dateLongue(Date.now() + 14 * 86400000);
+  const quoi = a.type === 'habillage' ? `<b>l'habillage ${echapperTexte(nom)}</b> sur tous tes paquets` : `<b>le dos ${echapperTexte(nom)}</b> sur toutes tes cartes`;
+  const plafondBloque = cat.mineur && cat.plafond_restant != null && Number(cat.plafond_restant) < Number(a.prix_centimes);
+  const grand = a.type === 'dos' ? dosApercuHtml(a.id) : `<div class="hab-grand">${habVignette(habCle(a.id), 92).replace('data-fixe="1" ', '')}</div>`;
+  const aujourdhui = new Date().toISOString().slice(0, 10);
+  const fermer = ouvrirFenetre(`
+    <div class="fenetre bqe-fiche" role="dialog" aria-modal="true" aria-labelledby="bqeNom">
+      <button type="button" class="bqe-fermer" aria-label="Fermer">×</button>
+      <div class="bqe-tete"><div class="bqe-grand">${grand}</div>
+        <div><small>${a.type === 'dos' ? 'Dos de carte' : 'Habillage de paquet'}${a.reserve_og ? ' · réservé aux OG' : ''}</small>
+          <h2 id="bqeNom">${echapperTexte(nom)}</h2><b class="bqe-gros-prix">${prix}</b></div></div>
+      <p class="bqe-recoit">Tu reçois ${quoi}, gardé à vie et associé à ton compte. Ça ne change ni le contenu des paquets ni tes chances. Il ne s'échange pas et ne se revend pas.</p>
+      <fieldset class="bqe-liv"><legend>Quand veux-tu le recevoir ?</legend>
+        <label><input type="radio" name="bqeLiv" value="immediate" checked><b>Tout de suite</b><span>Tu renonces au délai de rétractation.</span></label>
+        <label><input type="radio" name="bqeLiv" value="differee"><b>Le ${date14}</b><span>Tu peux changer d'avis pendant 14 jours.</span></label>
+      </fieldset>
+      <div class="bqe-cases" id="bqeCasesImm">
+        <label class="bqe-case"><input type="checkbox" id="bqeImm"><span>Je demande à recevoir l'objet tout de suite, avant la fin du délai de rétractation de 14 jours.</span></label>
+        <label class="bqe-case"><input type="checkbox" id="bqeRen"><span>Je reconnais qu'en le recevant tout de suite, je perds mon droit de rétractation.</span></label>
+      </div>
+      <p class="bqe-info" id="bqeInfoDiff" hidden>L'objet arrivera le ${date14}. D'ici là, tu peux annuler depuis « Mes achats » et être remboursé en entier.</p>
+      ${cat.naissance_connue ? '' : `<div class="bqe-naissance"><label for="bqeNaiss">Ta date de naissance</label>
+        <input type="date" id="bqeNaiss" min="1920-01-01" max="${aujourdhui}">
+        <p class="bqe-info" id="bqeInfoAge">Demandée une seule fois. Avant 18 ans, les achats sont limités à 15 € par mois.</p></div>`}
+      ${plafondBloque ? `<p class="bqe-info rouge">Avant 18 ans, c'est 15 € par mois au plus : il te reste ${euros(cat.plafond_restant)} ce mois-ci.</p>` : ''}
+      ${cat.mineur && !plafondBloque ? `<p class="bqe-info">Il te reste ${euros(cat.plafond_restant)} ce mois-ci. Demande l'accord d'un parent avant de payer.</p>` : ''}
+      <label class="bqe-case"><input type="checkbox" id="bqeCgv"><span>J'ai lu et j'accepte les <a href="cgv.html" target="_blank" rel="noopener">conditions générales de vente</a>.</span></label>
+      <button type="button" class="bqe-payer" id="bqePayer" disabled>Payer et recevoir l'objet · ${prix}</button>
+      <p class="bqe-erreur" id="bqeErreur" role="alert" hidden></p>
+      <p class="bqe-securite">Tu passes un instant sur la page de paiement sécurisée de Stripe. TerraFront ne voit jamais ta carte bancaire. TVA non applicable, art. 293 B du CGI.</p>
+    </div>`);
+  const f = document.querySelector('.bqe-fiche');
+  if(!f) return;
+  f.querySelector('.bqe-fermer').addEventListener('click', () => fermer(null));
+  habGl.demarrer();
+  const liv = () => f.querySelector('input[name="bqeLiv"]:checked').value;
+  const verifier = () => {
+    const imm = liv() === 'immediate';
+    f.querySelector('#bqeCasesImm').hidden = !imm;
+    f.querySelector('#bqeInfoDiff').hidden = imm;
+    let ageOk = cat.naissance_connue;
+    const n = f.querySelector('#bqeNaiss'), info = f.querySelector('#bqeInfoAge');
+    if(n){
+      if(!n.value){ info.className = 'bqe-info'; info.textContent = 'Demandée une seule fois. Avant 18 ans, les achats sont limités à 15 € par mois.'; }
+      else{
+        const age = bqeAge(n.value);
+        if(age < 15){ info.className = 'bqe-info rouge'; info.textContent = 'La boutique est ouverte à partir de 15 ans. Tout le jeu reste gratuit.'; }
+        else if(age < 18){
+          ageOk = Number(a.prix_centimes) <= 1500;
+          info.className = 'bqe-info' + (ageOk ? '' : ' rouge');
+          info.textContent = ageOk ? 'Avant 18 ans, 15 € par mois au plus. Demande l\'accord d\'un parent avant de payer.' : 'Avant 18 ans, 15 € par mois au plus.';
+        } else { ageOk = true; info.className = 'bqe-info vert'; info.textContent = 'C\'est noté, on ne te la redemandera plus.'; }
+        if(age < 15) ageOk = false;
+      }
+    }
+    const cases = !imm || (f.querySelector('#bqeImm').checked && f.querySelector('#bqeRen').checked);
+    f.querySelector('#bqePayer').disabled = !(cases && ageOk && !plafondBloque && f.querySelector('#bqeCgv').checked);
+  };
+  f.addEventListener('change', verifier);
+  f.addEventListener('input', verifier);
+  verifier();
+  f.querySelector('#bqePayer').addEventListener('click', async () => {
+    const btn = f.querySelector('#bqePayer'), err = f.querySelector('#bqeErreur');
+    const imm = liv() === 'immediate';
+    const n = f.querySelector('#bqeNaiss');
+    btn.disabled = true; btn.textContent = 'Ouverture du paiement sécurisé…'; err.hidden = true;
+    let url = null, msg = null;
+    try{
+      const { data, error } = await sb.functions.invoke('creer-paiement', { body: {
+        article: a.id, livraison: imm ? 'immediate' : 'differee', case_cgv: f.querySelector('#bqeCgv').checked,
+        case_immediate: imm && f.querySelector('#bqeImm').checked, case_renonciation: imm && f.querySelector('#bqeRen').checked,
+        cgv_version: cat.cgv_version, date_naissance: n && n.value ? n.value : null } });
+      if(error){ try{ msg = (await error.context.json()).erreur; }catch(e){ msg = error.message; } }
+      else url = data && data.url;
+    }catch(e){ msg = e.message; }
+    if(url){ location.href = url; return; }
+    err.textContent = messageLisible(msg || 'Le paiement est indisponible pour le moment.');
+    err.hidden = false;
+    btn.textContent = 'Payer et recevoir l\'objet · ' + prix;
+    verifier();
+  });
+}
+
+async function bqeRetourPaiement(){
+  const q = new URLSearchParams(location.search).get('paiement');
+  if(!q) return;
+  history.replaceState(null, '', location.pathname);
+  if(q === 'annule'){ notifier({ type: 'info', titre: 'Paiement annulé', texte: 'Rien n\'a été débité.' }); return; }
+  if(q !== 'ok') return;
+  notifier({ type: 'succes', titre: 'Paiement reçu, merci !', texte: 'Ton objet arrive dans quelques secondes.', duree: 6000 });
+  const tab = document.querySelector('.tab[data-tab="boutiqueeuros"]');
+  if(tab) tab.click();
+  // la confirmation de Stripe arrive en général en quelques secondes
+  for(let i = 0; i < 6; i++){
+    await new Promise(r => setTimeout(r, 2500));
+    await loadBoutiqueEuros();
+    const derniere = bqeCommandes[0];
+    if(derniere && derniere.statut !== 'creee') break;
+  }
+  loadBoutique(true);
+}
+
+document.getElementById('bqeCorps').addEventListener('click', async (e) => {
+  const art = e.target.closest('[data-bqe]');
+  if(art){ bqeOuvrirFiche(art.dataset.bqe); return; }
+  const r = e.target.closest('[data-retract]');
+  if(!r || r.disabled) return;
+  if(!r.classList.contains('confirmer')){
+    r.classList.add('confirmer'); r.textContent = 'Confirmer : annuler l\'achat';
+    setTimeout(() => { if(r.isConnected){ r.classList.remove('confirmer'); r.textContent = 'Changer d\'avis et être remboursé'; } }, 4000);
+    return;
+  }
+  r.disabled = true;
+  const { data, error } = await sb.rpc('euros_demander_retractation', { p_commande: r.dataset.retract });
+  if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); r.disabled = false; return; }
+  bqeCommandes = data || [];
+  renderBoutiqueEuros();
+  notifier({ type: 'succes', titre: 'Achat annulé', texte: 'L\'objet ne sera pas livré. Tu seras remboursé sous quelques jours.' });
+});
+
+// ---------- Profil › Personnaliser ----------
+let gardeRobe = null, grVitrine = null;
+async function loadGardeRobe(){
+  const corps = document.getElementById('grCorps');
+  if(!corps) return;
+  const { data, error } = await sb.rpc('garde_robe');
+  if(error || !data){ corps.innerHTML = '<p class="collection-empty">La garde-robe arrive bientôt.</p>'; return; }
+  gardeRobe = data;
+  renderGardeRobe();
+  try{
+    const r = await sb.rpc('terra_vitrine', { p_joueur: window.__monId });
+    grVitrine = r.error ? null : (r.data || []).length;
+  }catch(e){ grVitrine = null; }
+  renderGardeRobe();
+}
+function renderGardeRobe(){
+  const corps = document.getElementById('grCorps');
+  const g = gardeRobe;
+  if(!corps || !g) return;
+  const tuile = (rangee, o, vignette) => {
+    const eq = (g[rangee] || null) === (o.id || null);
+    const nom = rangee === 'dos' ? String(o.nom).replace(/^Dos /, '') : String(o.nom).replace(/^Paquet /, '');
+    return `<div class="gr-objet${eq ? ' equipe' : ''}">${vignette}<span class="gr-nom">${echapperTexte(nom)}</span>
+      ${eq ? '<span class="bq-equipe">Équipé</span>' : `<button type="button" class="bq-btn secondaire" data-gr-r="${rangee}" data-gr-id="${echapperTexte(o.id || '')}">Équiper</button>`}</div>`;
+  };
+  const dos = g.dos_liste || [], habs = g.habillages || [];
+  corps.innerHTML = `
+    <div class="bourse-section gr-bloc">
+      <h2>Mes cartes</h2>
+      <div class="gr-titre">Dos de carte <span>${dos.length} possédé${dos.length > 1 ? 's' : ''}</span></div>
+      <div class="gr-objets">${dos.map(o => tuile('dos', o, dosApercuHtml(o.id))).join('')}</div>
+      <div class="gr-titre">Habillage de paquet <span>${habs.length} possédé${habs.length > 1 ? 's' : ''}</span></div>
+      <div class="gr-objets">${habs.map(o => tuile('habillage', o, habVignette(habCle(o.id), 66))).join('')}</div>
+      <div class="gr-voir"><p>D'autres dos et habillages t'attendent : à gagner en jouant ou dans la boutique.</p>
+        <button type="button" class="bq-btn secondaire" data-gr-boutique>Voir la boutique</button></div>
+    </div>
+    <div class="bourse-section gr-bloc">
+      <h2>Ma vitrine</h2>
+      <div class="gr-vitrine"><span>${grVitrine == null ? 'Tes plus belles cartes Terra, sur ton profil' : `<b>${grVitrine} / ${VITRINE_MAX}</b> cartes exposées`}</span>
+        <button type="button" class="bq-btn secondaire" data-gr-vitrine>Modifier</button></div>
+    </div>`;
+  habGl.demarrer();
+}
+document.getElementById('grCorps').addEventListener('click', async (e) => {
+  if(e.target.closest('[data-gr-boutique]')){
+    const t = document.querySelector(`.tab[data-tab="${bqeAcces ? 'boutiqueeuros' : 'boutique'}"]`);
+    if(t) t.click();
+    return;
+  }
+  if(e.target.closest('[data-gr-vitrine]')){
+    const vt = await chargerVitrine(window.__monId);
+    ouvrirChoixVitrine(vt, 'panneau');
+    return;
+  }
+  const b = e.target.closest('[data-gr-r]');
+  if(!b || b.disabled) return;
+  b.disabled = true;
+  const { data, error } = await sb.rpc('garde_robe_equiper', { p_rangee: b.dataset.grR, p_id: b.dataset.grId || null });
+  if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); b.disabled = false; return; }
+  gardeRobe = data;
+  appliquerDos(data.dos);
+  appliquerHabillage(data.habillage);
+  if(boutiqueCache){ boutiqueCache.dos = data.dos; boutiqueCache.habillage = data.habillage; renderBoutique(); }
+  renderGardeRobe();
+});

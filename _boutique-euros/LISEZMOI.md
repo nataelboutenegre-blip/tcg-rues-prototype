@@ -44,6 +44,29 @@ signature Stripe rejette un message modifié ou non signé.
 6. **Tester** avec les cartes de test Stripe (4242 4242 4242 4242, 3D Secure
    4000 0027 6000 3184, refusée 4000 0000 0000 0002).
 
+## Ajouts du 25 octobre 2026
+
+- `5-prix-25-octobre.sql` : nouvelle grille (Kraft et Néon 2,99 ; Comète et
+  Marée 3,49 ; Lave et Orage 3,99 ; paquets OG 2,99 ; dos OG 3,99).
+- `6-garde-robe.sql` (après 1, 2, 4 et 5) :
+  - **boutique fermée à tous sauf aux testeurs** tant que
+    `boutique_ouverte` vaut `false` (réglage `testeurs` : liste d'identifiants
+    de joueurs, le compte « Nataël » au départ). En mode test Stripe, c'est
+    indispensable : sinon n'importe qui paierait avec une carte de test.
+  - garde-robe : dos et habillage de paquet réglés à part
+    (`garde_robe()`, `garde_robe_equiper()`), le paquet Nacre offert aux OG.
+  - rétractation depuis « Mes achats » (`euros_demander_retractation`) pour
+    une livraison à 14 jours : l'objet n'est plus livré. **Le remboursement se
+    fait à la main dans Stripe** ; le webhook passe alors la commande en
+    `remboursee`. Les demandes en attente :
+    `select id, nom_article, prix_centimes, stripe_paiement, retractation_le from euros_commandes where retractation_le is not null and statut = 'payee';`
+- Écran : patch175 (volet « Objets TerraFront » de la Boutique, Profil ›
+  Personnaliser). Le volet n'apparaît qu'aux joueurs qui peuvent acheter.
+- Pour ouvrir à tous, le jour J : clés live, articles actifs, puis
+  `update euros_reglages set valeur = 'true' where cle = 'boutique_ouverte';`
+- **Manque encore la page `cgv.html`** : le lien « conditions générales de
+  vente » de la fiche d'achat y renvoie.
+
 ## Ce qui reste à faire avant les vraies ventes
 
 - [ ] L'écran de la boutique et de la garde-robe dans le jeu (aperçu d'abord).

@@ -36,19 +36,19 @@ create table if not exists public.euros_articles(
 alter table public.euros_articles enable row level security;
 revoke all on public.euros_articles from public, anon, authenticated;
 
--- Catalogue de départ : prix des aperçus du 18 octobre, INDICATIFS.
+-- Catalogue de départ : grille du 25 octobre (5-prix-25-octobre.sql), INDICATIFS.
 -- Tous inactifs : on active article par article quand tout est prêt.
 insert into public.euros_articles(id, type, nom, description, prix_centimes, reserve_og, ordre) values
-  ('og-paquet-prisme',      'habillage', 'Paquet OG Prisme',      'Habillage de paquet irisé, réservé aux OG',        249, true,  10),
-  ('og-paquet-or-noir',     'habillage', 'Paquet OG Or noir',     'Habillage de paquet noir et or, réservé aux OG',   249, true,  20),
-  ('og-dos-prisme',         'dos',       'Dos OG Prisme',         'Dos de carte irisé, réservé aux OG',               299, true,  30),
-  ('og-dos-constellation',  'dos',       'Dos OG Constellation',  'Dos de carte étoilé, réservé aux OG',              299, true,  40),
-  ('paquet-kraft',          'habillage', 'Paquet Kraft',          'Papier kraft et cachet de cire',                   199, false, 50),
-  ('paquet-neon',           'habillage', 'Paquet Néon',           'Tubes de néon qui s''allument à l''ouverture',     199, false, 60),
-  ('paquet-comete',         'habillage', 'Paquet Comète',         'Traînée d''étoiles',                               249, false, 70),
-  ('paquet-maree',          'habillage', 'Paquet Marée',          'Reflets d''eau et écume',                          249, false, 80),
-  ('paquet-lave',           'habillage', 'Paquet Lave',           'Fissures incandescentes',                          299, false, 90),
-  ('paquet-orage',          'habillage', 'Paquet Orage',          'Éclairs dans les nuages',                          299, false, 100)
+  ('og-paquet-prisme',      'habillage', 'Paquet OG Prisme',      'Habillage de paquet irisé, réservé aux OG',        299, true,  10),
+  ('og-paquet-or-noir',     'habillage', 'Paquet OG Or noir',     'Habillage de paquet noir et or, réservé aux OG',   299, true,  20),
+  ('og-dos-prisme',         'dos',       'Dos OG Prisme',         'Dos de carte irisé, réservé aux OG',               399, true,  30),
+  ('og-dos-constellation',  'dos',       'Dos OG Constellation',  'Dos de carte étoilé, réservé aux OG',              399, true,  40),
+  ('paquet-kraft',          'habillage', 'Paquet Kraft',          'Papier kraft et cachet de cire',                   299, false, 50),
+  ('paquet-neon',           'habillage', 'Paquet Néon',           'Tubes de néon qui s''allument à l''ouverture',     299, false, 60),
+  ('paquet-comete',         'habillage', 'Paquet Comète',         'Traînée d''étoiles',                               349, false, 70),
+  ('paquet-maree',          'habillage', 'Paquet Marée',          'Reflets d''eau et écume',                          349, false, 80),
+  ('paquet-lave',           'habillage', 'Paquet Lave',           'Fissures incandescentes',                          399, false, 90),
+  ('paquet-orage',          'habillage', 'Paquet Orage',          'Éclairs dans les nuages',                          399, false, 100)
 on conflict (id) do nothing;   -- rejouable : ne réécrit pas un prix modifié à la main
 
 create table if not exists public.euros_naissances(

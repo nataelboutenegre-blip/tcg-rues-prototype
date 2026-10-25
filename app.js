@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '4eaf3d0c0932';
+const VERSION_JEU = '401f169c2657';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9248,7 +9248,7 @@ function miniTerra(e){
       <div class="mini-infos">
         <p class="mini-nom ${e.nom.length > 14 ? 'long' : ''}">${nom}</p>
         ${e.rank ? `<span class="mini-num">n° ${Number(e.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(e.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
-        <span class="mini-rarete">${e.tier.label}</span>
+        <span class="mini-rarete">${e.tier.label}${e.auroreS1 ? '<span class="mini-origine" title="Aurore gagnée dans le Front, saison 1">Front S1</span>' : ''}</span>
       </div>
       <div class="mini-lisere"><span></span><span></span><span></span></div>
     </div>
@@ -9288,6 +9288,11 @@ async function chargerCollectionTerra(){
   try{
     const { data: bl, error: eb } = await toutesLesLignes(() => sb.rpc('terra_bloques_moi'), 'code');
     if(!eb) for(const b of bl || []){ const e = terraCollection.get(b.code); if(e) e.bloques = Number(b.bloques) || 0; }
+  }catch(err){}
+  // patch170 : les Aurore venues du Front S1
+  try{
+    const { data: s1, error: es } = await sb.rpc('terra_aurores_s1', { p_joueur: window.__monId });
+    if(!es) for(const code of s1 || []){ const e = terraCollection.get(code); if(e) e.auroreS1 = true; }
   }catch(err){}
   terraCharge = true;
   return true;
@@ -14426,9 +14431,11 @@ async function chargerVitrine(id){
   if(!SAISON2 || !id) return [];
   const { data, error } = await sb.rpc('terra_vitrine', { p_joueur: id });
   if(error){ console.error(error); return []; }
+  let s1 = new Set();   // patch170
+  try{ const r2 = await sb.rpc('terra_aurores_s1', { p_joueur: id }); if(!r2.error) s1 = new Set(r2.data || []); }catch(err){}
   return (data || []).map(r => ({ code: r.code, nom: r.nom, dept: r.departement,
     tier: TIERS.find(t => t.id === r.tier) || TIERS[TIERS.length - 1], pop: r.population,
-    exemplaires: 1, rank: r.rang, tierSize: r.palier_total, aurore: r.aurore ? 1 : 0 }));
+    exemplaires: 1, rank: r.rang, tierSize: r.palier_total, aurore: r.aurore ? 1 : 0, auroreS1: s1.has(r.code) }));
 }
 
 // cinq cartes cote a cote : un nom de plus de 8 lettres passe en plus petit

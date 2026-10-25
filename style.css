@@ -5181,6 +5181,10 @@ body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme svg, 
 .pom-score.pom-victoire{ color:#3DD68C; } .pom-score.pom-defaite{ color:#E5484D; }
 .pom-score.pom-victoire, .pom-score.pom-defaite, .pom-score.pom-egalite{ font-size:2.4rem; }
 
+/* patch170 : l'Aurore venue du Front S1 */
+.mini-origine{ display:inline-block; margin-left:4px; padding:0 4px; border-radius:3px; background:#E5484D; color:#fff;
+  font-size:.82em; font-weight:800; letter-spacing:.02em; line-height:1.4; vertical-align:1px; text-transform:none; }
+
 /* patch115 : l'astuce sous la recherche d'echange */
 .ech-astuce{ margin: -4px 0 10px; font-size: .74rem; color: var(--brume); }
 .ech-astuce b{ color: var(--papier); font-weight: 600; }

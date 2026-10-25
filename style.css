@@ -5729,3 +5729,16 @@ body.mode-front .bq-terra-seul{ display: none !important; }
 .fiche-terra .fc-actions{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 @media (prefers-reduced-motion: reduce){ .c3d-tourne{ transition: none; } }
 @media (max-width: 420px){ .c3d{ --s: 1.5 !important; } }
+
+/* patch180 : les onglets Terra / Front de la vitrine */
+.vt-titre{ gap:10px; align-items:center; }
+.vt-titre h3{ margin-right:auto; }
+.vt-onglets{ display:inline-flex; gap:2px; padding:2px; border-radius:999px; background:rgba(255,255,255,.07); margin-bottom:9px; }
+.vt-onglet{ font:inherit; font-size:.74rem; font-weight:600; color:var(--brume); background:none; border:0; border-radius:999px; padding:4px 11px; cursor:pointer; display:inline-flex; gap:5px; align-items:baseline; }
+.vt-onglet span{ font-size:.66rem; opacity:.7; font-weight:500; }
+.vt-onglet.actif{ background:var(--c-legendaire); color:var(--encre); }
+.vt-onglet.actif span{ opacity:.75; }
+.vt-titre .vt-modifier{ margin-left:0; }
+
+/* patch181 : la bande du choix de vitrine part de la place 1 */
+.vt-etagere.vt-bande{ justify-content:flex-start; }

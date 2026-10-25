@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd59116c2830f';
+const VERSION_JEU = 'e275ac9072ea';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6239,10 +6239,11 @@ document.getElementById('pfCorps').addEventListener('click', (e) => {
     try{ renderMapOverlay(); }catch(err){}
   }
   const vt = (profilPanneau || {}).vitrine || [];
-  if(e.target.closest('[data-pr="vitrine"]')) ouvrirChoixVitrine(vt, 'panneau');
-  if(e.target.closest('[data-vt-voir]')) ouvrirGrandeVitrine(vt, true, (profilPanneau || {}).pseudo, (v) => {
-    if(v === 'modifier') setTimeout(() => ouvrirChoixVitrine(vt, 'panneau'), 200);
-  });
+  const src = sourceVitrine(e.target);
+  if(e.target.closest('[data-pr="vitrine"]')) ouvrirChoixVitrine(vt, 'panneau', src);
+  if(e.target.closest('[data-vt-voir]')) ouvrirGrandeVitrine(vitrineDe(vt, src), true, (profilPanneau || {}).pseudo, (v) => {
+    if(v === 'modifier') setTimeout(() => ouvrirChoixVitrine(vt, 'panneau', src), 200);
+  }, src);
 });
 
 // Suppression de compte (patch75) : le joueur retape son pseudo, le serveur
@@ -14508,7 +14509,9 @@ async function chargerVitrine(id){
   try{ const r2 = await sb.rpc('terra_aurores_s1', { p_joueur: id }); if(!r2.error) s1 = new Set(r2.data || []); }catch(err){}
   return (data || []).map(r => ({ code: r.code, nom: r.nom, dept: r.departement,
     tier: TIERS.find(t => t.id === r.tier) || TIERS[TIERS.length - 1], pop: r.population,
-    exemplaires: 1, rank: r.rang, tierSize: r.palier_total, aurore: r.aurore ? 1 : 0, auroreS1: s1.has(r.code), photo: photos.get(r.code) || '' }));
+    exemplaires: 1, rank: r.rang, tierSize: r.palier_total, aurore: r.aurore ? 1 : 0,
+    source: r.source === 'front' ? 'front' : 'terra',   // patch180
+    auroreS1: r.source !== 'front' && s1.has(r.code), photo: photos.get(r.code) || '' }));
 }
 
 // cinq cartes cote a cote : un nom de plus de 8 lettres passe en plus petit
@@ -14521,8 +14524,27 @@ const VITRINE_FICHE = 5;   // cartes montrees sur la fiche
 
 // Sur la fiche : les 5 premieres. Au-dela, la 5e case montre « +N » et
 // invite a ouvrir la grande vitrine.
-function blocVitrine(cartes, moi){
-  if(!SAISON2 || (!cartes.length && !moi)) return '';
+// patch180 : deux vitrines, Terra et Front. L'onglet choisi est retenu.
+let vitrineVue = 'terra';
+const vitrineBlocs = new Map();
+let vitrineBlocN = 0;
+const vitrineDe = (cartes, source) => (cartes || []).filter(c => (c.source || 'terra') === source);
+function blocVitrine(toutes, moi){
+  if(!SAISON2 || (!toutes.length && !moi)) return '';
+  const id = ++vitrineBlocN;
+  vitrineBlocs.set(id, { toutes, moi });
+  if(vitrineBlocs.size > 30) vitrineBlocs.delete(vitrineBlocs.keys().next().value);
+  const nT = vitrineDe(toutes, 'terra').length, nF = vitrineDe(toutes, 'front').length;
+  let vue = vitrineVue;
+  // chez un autre joueur, on ne montre pas une vitrine vide si l'autre est remplie
+  if(!moi && vue === 'terra' && !nT && nF) vue = 'front';
+  if(!moi && vue === 'front' && !nF && nT) vue = 'terra';
+  const cartes = vitrineDe(toutes, vue);
+  const onglet = (s, nom, n) => `<button type="button" role="tab" class="vt-onglet${vue === s ? ' actif' : ''}" aria-selected="${vue === s}" data-vt-onglet="${s}" data-vt-bloc="${id}">${nom}<span>${n}</span></button>`;
+  const onglets = (moi || (nT && nF)) ? `<div class="vt-onglets" role="tablist">${onglet('terra', 'Terra', nT)}${onglet('front', 'Front', nF)}</div>` : '';
+  const aide = vue === 'front'
+    ? `Expose jusqu'à ${VITRINE_MAX} communes que tu tiens dans le Front. Si on t'en prend une, elle quitte ta vitrine.`
+    : `Expose jusqu'à ${VITRINE_MAX} cartes de ta collection Terra : tout le monde les verra sur ton profil.`;
   const cases = [];
   const reste = cartes.length - (VITRINE_FICHE - 1);
   for(let i = 0; i < VITRINE_FICHE; i++){
@@ -14534,21 +14556,30 @@ function blocVitrine(cartes, moi){
   const lien = cartes.length
     ? `<button type="button" class="vt-modifier" data-vt-voir>Tout voir <span>${cartes.length}/${VITRINE_MAX}</span> ›</button>`
     : (moi ? '<button type="button" class="vt-modifier" data-pr="vitrine">Remplir</button>' : '');
-  return `<div class="vt-bloc">
-      <div class="vt-titre"><h3>Vitrine</h3>${lien}</div>
+  return `<div class="vt-bloc" data-vt-source="${vue}">
+      <div class="vt-titre"><h3>Vitrine</h3>${onglets}${lien}</div>
       <div class="vt-etagere${cartes.length ? ' cliquable' : ''}"${cartes.length ? ' data-vt-voir' : ''}>${cases.join('')}</div>
-      ${moi && !cartes.length ? `<p class="vt-aide">Expose jusqu'à ${VITRINE_MAX} cartes de ta collection : tout le monde les verra sur ton profil.</p>` : ''}
+      ${moi && !cartes.length ? `<p class="vt-aide">${aide}</p>` : ''}
     </div>`;
 }
+const sourceVitrine = (el) => { const b = el && el.closest('.vt-bloc'); return b && b.dataset.vtSource === 'front' ? 'front' : 'terra'; };
+document.addEventListener('click', (e) => {
+  const o = e.target.closest('[data-vt-onglet]');
+  if(!o) return;
+  vitrineVue = o.dataset.vtOnglet === 'front' ? 'front' : 'terra';
+  const d = vitrineBlocs.get(Number(o.dataset.vtBloc));
+  const bloc = o.closest('.vt-bloc');
+  if(d && bloc) bloc.outerHTML = blocVitrine(d.toutes, d.moi);
+});
 
 // La grande vitrine : toutes les cartes exposees, en grand. Pour moi, les
 // places libres restent visibles, pour donner envie de les remplir.
-function ouvrirGrandeVitrine(cartes, moi, pseudo, apres){
+function ouvrirGrandeVitrine(cartes, moi, pseudo, apres, source){
   const vides = moi ? VITRINE_MAX - cartes.length : 0;
   const fermer = ouvrirFenetre(`
     <div class="fenetre vt-grande" role="dialog" aria-modal="true" aria-labelledby="vtgTitre">
       <button class="pr-fermer" data-vtg="fermer" aria-label="Fermer">✕</button>
-      <p class="vt-surtitre">Vitrine</p>
+      <p class="vt-surtitre">Vitrine ${source === 'front' ? 'Front' : 'Terra'}</p>
       <h2 id="vtgTitre">${echapperTexte(pseudo || '')}</h2>
       <p class="vt-compte"><b>${cartes.length}</b> carte${cartes.length > 1 ? 's' : ''} exposée${cartes.length > 1 ? 's' : ''}${moi ? ` sur ${VITRINE_MAX}` : ''}</p>
       <div class="vt-mur">
@@ -14572,27 +14603,32 @@ document.getElementById('fenetre').addEventListener('click', (e) => {
   if(!voir && !(modif && profilEnCours.est_moi)) return;
   const p = profilEnCours;
   const cartes = p.vitrine || [];
+  const src = sourceVitrine(voir || modif);
   if(fermerProfil) fermerProfil(null);
   setTimeout(() => {
-    if(modif){ ouvrirChoixVitrine(cartes, 'fiche'); return; }
-    ouvrirGrandeVitrine(cartes, !!p.est_moi, p.pseudo, (v) => {
-      if(v === 'modifier') setTimeout(() => ouvrirChoixVitrine(cartes, 'fiche'), 200);
+    if(modif){ ouvrirChoixVitrine(cartes, 'fiche', src); return; }
+    ouvrirGrandeVitrine(vitrineDe(cartes, src), !!p.est_moi, p.pseudo, (v) => {
+      if(v === 'modifier') setTimeout(() => ouvrirChoixVitrine(cartes, 'fiche', src), 200);
       else setTimeout(() => { profilEnCours = p; rendreProfil(); }, 200);
-    });
+    }, src);
   }, 200);
 });
 
-async function ouvrirChoixVitrine(actuelle, retour){
-  if(!terraCharge) await chargerCollectionTerra();
-  let choix = actuelle.map(c => c.code).filter(code => terraCollection.has(code));
+async function ouvrirChoixVitrine(actuelle, retour, source){
+  const front = source === 'front';   // patch180
+  if(!front && !terraCharge) await chargerCollectionTerra();
+  const reserve = front
+    ? new Map([...collectionMap.values()].map(e => [e.code, { ...e, exemplaires: 1, aurore: AURORE && AURORE[e.code] ? 1 : 0 }]))
+    : terraCollection;
+  let choix = vitrineDe(actuelle, front ? 'front' : 'terra').map(c => c.code).filter(code => reserve.has(code));
   let recherche = '';
   const rangTier = (t) => TIERS.findIndex(x => x.id === t.id);
-  const toutes = [...terraCollection.values()].sort((a, b) =>
+  const toutes = [...reserve.values()].sort((a, b) =>
     (b.aurore > 0) - (a.aurore > 0) || rangTier(a.tier) - rangTier(b.tier) || a.nom.localeCompare(b.nom, 'fr'));
   const fermer = ouvrirFenetre(`
     <div class="fenetre vt-choix" role="dialog" aria-modal="true" aria-labelledby="vtTitre">
-      <h2 id="vtTitre">Ma vitrine</h2>
-      <p class="vt-aide">Choisis jusqu'à ${VITRINE_MAX} cartes, dans l'ordre où tu veux les montrer : les ${VITRINE_FICHE} premières s'affichent sur ton profil. Touche une carte de la vitrine pour la retirer.</p>
+      <h2 id="vtTitre">Ma vitrine ${front ? 'Front' : 'Terra'}</h2>
+      <p class="vt-aide">Choisis jusqu'à ${VITRINE_MAX} cartes, dans l'ordre où tu veux les montrer : les ${VITRINE_FICHE} premières s'affichent sur ton profil. Touche une carte de la vitrine pour la retirer.${front ? ' Si on te prend une commune, elle quitte ta vitrine.' : ''}</p>
       <p class="vt-compte" id="vtCompte"></p>
       <div class="vt-etagere vt-bande" id="vtApercu"></div>
       <input type="search" id="vtRecherche" class="bourse-search" placeholder="Rechercher une commune ou un département…" autocomplete="off">
@@ -14608,7 +14644,7 @@ async function ouvrirChoixVitrine(actuelle, retour){
   const dessiner = () => {
     const cases = [];
     for(let i = 0; i < VITRINE_MAX; i++){
-      const c = choix[i] && terraCollection.get(choix[i]);
+      const c = choix[i] && reserve.get(choix[i]);
       cases.push(c ? `<button type="button" class="vt-case" data-vt-retirer="${echapperTexte(c.code)}" aria-label="Retirer ${echapperTexte(c.nom)}">${miniVitrine(c)}</button>`
                    : `<div class="vt-case vide"><span>${i + 1}</span></div>`);
     }
@@ -14619,7 +14655,8 @@ async function ouvrirChoixVitrine(actuelle, retour){
     document.getElementById('vtCompte').innerHTML = `<b>${choix.length}</b> / ${VITRINE_MAX}`;
     const q = recherche.trim().toLowerCase();
     const dep = q ? codeDepartement(q) : null;
-    const liste = toutes.filter(c => !q || c.nom.toLowerCase().includes(q) || c.dept === dep || c.dept.toLowerCase() === q).slice(0, 150);
+    const qs = sansAccents(recherche.trim());
+    const liste = toutes.filter(c => !q || correspondRecherche(c.nom, c.dept, qs) || c.dept === dep).slice(0, 150);
     document.getElementById('vtGrille').innerHTML = liste.map(c => {
       const n = choix.indexOf(c.code);
       return `<button type="button" class="vt-carte${n >= 0 ? ' pris' : ''}" data-vt-code="${echapperTexte(c.code)}">
@@ -14649,7 +14686,7 @@ async function ouvrirChoixVitrine(actuelle, retour){
     if(!b) return;
     if(b.dataset.vt === 'annuler'){ fermer(null); return; }
     b.disabled = true; b.textContent = 'Enregistrement…';
-    const { error } = await sb.rpc('terra_vitrine_definir', { p_codes: choix });
+    const { error } = await sb.rpc(front ? 'terra_vitrine_definir_front' : 'terra_vitrine_definir', { p_codes: choix });
     if(error){ erreur.textContent = messageLisible(error.message); b.disabled = false; b.textContent = 'Enregistrer'; return; }
     fermer(null);
     notifier({ type: 'info', titre: 'Vitrine enregistrée',
@@ -15224,7 +15261,7 @@ async function loadGardeRobe(){
   renderGardeRobe();
   try{
     const r = await sb.rpc('terra_vitrine', { p_joueur: window.__monId });
-    grVitrine = r.error ? null : (r.data || []).length;
+    grVitrine = r.error ? null : (r.data || []).filter(x => x.source !== 'front').length;
   }catch(e){ grVitrine = null; }
   renderGardeRobe();
 }

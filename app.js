@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'f6962e57fff5';
+const VERSION_JEU = '59e1c5b352f1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -12202,6 +12202,14 @@ const QG_JEUX = [
     explic: 'Une lettre s\'affiche : tape le plus de communes qui commencent par cette lettre en 30 secondes. Celui qui en trouve le plus gagne.' },
 ];
 let qgJeuChoisi = (() => { try{ const v = localStorage.getItem('tf-qg-jeu'); return ['cdj', 'pom', 'radar', 'rafale'].includes(v) ? v : 'radar'; }catch(e){ return 'radar'; } })();
+let qgClOuvert = (() => { try{ return localStorage.getItem('tf-qg-cl-ouvert') === '1'; }catch(e){ return false; } })();   // patch193
+function majClassementQG(){
+  const bloc = document.getElementById('qgClassementBloc');
+  if(!bloc) return;
+  bloc.classList.toggle('replie', !qgClOuvert);
+  const b = bloc.querySelector('.qg-cl-bascule');
+  if(b) b.setAttribute('aria-expanded', String(qgClOuvert));
+}
 function choixQG(){
   const panneau = document.getElementById('panel-qg');
   const grille = panneau ? panneau.querySelector('.qg-grille') : null;
@@ -12229,7 +12237,25 @@ function choixQG(){
       if(tete && !c.querySelector('.qg-explic')) tete.insertAdjacentHTML('afterend', `<p class="qg-explic">${j.explic}</p>`);
     }
     const cl = document.getElementById('qgClassement');
-    if(cl && cl.closest('.qg-carte')) cl.closest('.qg-carte').id = 'qgClassementBloc';
+    if(cl && cl.closest('.qg-carte')){
+      const bloc = cl.closest('.qg-carte');
+      bloc.id = 'qgClassementBloc';
+      // patch193 : un menu deroulant, replie par defaut
+      const ligne = bloc.querySelector('.qg-h3-ligne');
+      if(ligne){
+        const bouton = document.createElement('button');
+        bouton.type = 'button';
+        bouton.className = 'qg-cl-bascule';
+        bouton.setAttribute('aria-controls', 'qgClassement');
+        bouton.innerHTML = '<h3 class="qg-h3">Classement</h3><svg class="qg-cl-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>';
+        ligne.replaceWith(bouton);
+        bouton.addEventListener('click', () => {
+          qgClOuvert = !qgClOuvert;
+          try{ localStorage.setItem('tf-qg-cl-ouvert', qgClOuvert ? '1' : ''); }catch(err){}
+          majClassementQG();
+        });
+      }
+    }
     const note = document.createElement('div');
     note.className = 'qg-carte';
     note.id = 'qgCdjNote';
@@ -12259,6 +12285,7 @@ function choixQG(){
   if(titreD) titreD.innerHTML = `Tes dernières parties <small>${nom}</small>`;
   const titreC = document.querySelector('#qgClassementBloc .qg-h3');
   if(titreC) titreC.innerHTML = `Classement <small>${nom}</small>`;
+  majClassementQG();   // patch193
 }
 function renderQGListes(){
   choixQG();   // patch192

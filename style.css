@@ -5907,3 +5907,24 @@ body.mode-terra .coll-entete, body.mode-front .coll-entete{
   .qg-choix-actif .qg-jeux, .qg-choix-actif #qgDefisBloc, .qg-choix-actif #qgDerniersBloc,
   .qg-choix-actif #qgClassementBloc, .qg-choix-actif #qgCdjNote{ grid-column:1; grid-row:auto; }
 }
+
+
+/* ---------- patch193 : le classement sous le jeu, en menu deroulant ---------- */
+.qg-choix-actif .qg-jeux{ grid-row:2; }
+.qg-choix-actif #qgClassementBloc{ grid-column:1; grid-row:3; }
+.qg-choix-actif #qgDerniersBloc{ grid-column:2; grid-row:2 / span 2; }
+.qg-choix-actif #qgCdjNote{ grid-row:2 / span 2; }
+.qg-cl-bascule{ display:flex; align-items:center; justify-content:space-between; gap:12px; width:100%; min-height:44px;
+  background:none; border:0; padding:0; color:#fff; font:inherit; text-align:left; cursor:pointer; }
+.qg-cl-bascule:focus-visible{ outline:2px solid var(--c-legendaire); outline-offset:4px; border-radius:6px; }
+.qg-cl-bascule .qg-h3{ margin:0; }
+.qg-cl-chevron{ width:20px; height:20px; color: var(--brume); flex:none; transition: transform .18s ease; }
+.qg-cl-bascule[aria-expanded="true"] .qg-cl-chevron{ transform: rotate(180deg); color: var(--c-legendaire); }
+#qgClassementBloc.replie #qgClassement{ display:none; }
+#qgClassementBloc.replie{ gap:0; }
+@media (prefers-reduced-motion: reduce){ .qg-cl-chevron{ transition:none; } }
+@media (max-width: 900px){
+  .qg-choix-actif .qg-jeux{ order:1; } .qg-choix-actif #qgClassementBloc{ order:2; }
+  .qg-choix-actif #qgDerniersBloc, .qg-choix-actif #qgCdjNote{ order:3; grid-row:auto; }
+  .qg-choix-actif #qgDefisBloc{ order:0; }
+}

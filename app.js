@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '57e520dc8a64';
+const VERSION_JEU = '09c64fa7a31c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9019,9 +9019,9 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // revient a Collection. L'onglet Defense reste dans la page, cache, et
 // n'apparait ni dans la barre ni dans le menu.
 let ONGLETS_BARRE = ['tirage', 'territoire', 'qg', 'combat'];
-const ONGLETS_FUSIONNES = ['defense', 'succes', 'cdj', 'radar', 'rafale', 'boutiqueeuros', 'personnaliser'];
+const ONGLETS_FUSIONNES = ['defense', 'succes', 'cdj', 'radar', 'rafale', 'boutiqueeuros', 'personnaliser', 'monuments'];   // patch191 : monuments
 // l'onglet qui s'allume quand on ouvre un volet fusionne
-const ONGLET_PARENT = { defense: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg', boutiqueeuros: 'boutique', personnaliser: 'profil' };
+const ONGLET_PARENT = { defense: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg', boutiqueeuros: 'boutique', personnaliser: 'profil', monuments: 'collection' };
 
 // ---------- patch89 : saison 2, deux modes ----------
 // SAISON2 = false : la saison 1 tourne comme avant, rien de ce bloc ne
@@ -9030,11 +9030,42 @@ const SAISON2 = true;
 document.documentElement.classList.toggle('saison-2', SAISON2);
 const ONGLETS_MODE = {
   terra: { nom: 'Terra', barre: ['tirage', 'collection', 'qg', 'contrat'],
-           propres: ['tirage', 'collection', 'qg', 'contrat', 'monuments', 'bourse', 'echange', 'boutique'] },
-  front: { nom: 'Front', barre: ['tirage', 'territoire', 'qg', 'combat'],
+           propres: ['tirage', 'collection', 'qg', 'contrat', 'bourse', 'echange', 'boutique'] },   // patch191 : monuments dans Collection
+  front: { nom: 'Front', barre: ['tirage', 'territoire', 'combat', 'qg'],
            propres: ['tirage', 'territoire', 'qg', 'combat', 'collection', 'boutique'] },   // patch178 : boutique sans paquets
 };
 const ONGLETS_COMMUNS = CLANS ? ['profil', 'communaute', 'clan'] : ['profil', 'communaute'];
+// patch191 : les onglets ranges en groupes (rail PC et menu Plus)
+const ONGLETS_GROUPES = {
+  terra: [['Jouer', ['tirage', 'collection', 'qg']], ['Marché', ['contrat', 'bourse', 'echange', 'boutique']],
+          ['Joueurs', ['communaute', 'clan']], ['Moi', ['profil']]],
+  front: [['Jouer', ['tirage', 'territoire', 'combat', 'qg']], ['Mes cartes', ['collection', 'boutique']],
+          ['Joueurs', ['communaute', 'clan']], ['Moi', ['profil']]],
+};
+function groupesDuMode(){
+  return ONGLETS_GROUPES[modeJeu].map(([t, ids]) => [t, ids.filter(id => CLANS || id !== 'clan')]);
+}
+function rangerGroupes(){
+  const rangee = document.getElementById('tabsRow');
+  if(!rangee) return;
+  const mon = rangee.querySelector('.tab[data-tab="monuments"]');
+  if(mon) mon.classList.add('onglet-fusionne');
+  rangee.querySelectorAll('.tab-groupe').forEach(el => el.remove());
+  let n = 0;
+  groupesDuMode().forEach(([titre, ids], i) => {
+    const h = document.createElement('div');
+    h.className = 'tab-groupe' + (i ? '' : ' premier');
+    h.textContent = titre;
+    h.setAttribute('aria-hidden', 'true');
+    h.style.setProperty('--ordre-pc', n++);
+    rangee.appendChild(h);
+    ids.forEach(id => { const t = rangee.querySelector(`.tab[data-tab="${id}"]`); if(t) t.style.setProperty('--ordre-pc', n++); });
+  });
+  // les Regles descendent en bas du rail, a cote du Discord (une seule fois)
+  const regles = document.getElementById('reglesBtn');
+  const pied = document.querySelector('.sidebar-footer');
+  if(regles && pied && regles.parentElement !== pied) pied.insertBefore(regles, pied.firstChild);
+}
 let modeJeu = (() => {
   try { return localStorage.getItem('tf-mode') === 'front' ? 'front' : 'terra'; }
   catch(e){ return 'terra'; }
@@ -9254,6 +9285,7 @@ function appliquerMode(){
     b.setAttribute('aria-selected', String(on));
   });
   majBascule();
+  rangerGroupes();   // patch191
   // l'onglet ouvert n'existe pas dans ce mode : retour au Tirage
   const actif = document.querySelector('.tab.active[data-tab]');
   const idActif = actif ? actif.dataset.tab : null;
@@ -9420,11 +9452,31 @@ function renderCollectionTerra(){
   renderGrilleTerra();
 }
 
-function selecteurVueTerra(){
+function selecteurVueTerra(actif){
+  const a = actif || terraVue;   // patch191 : 'monuments' depuis l'onglet Monuments
+  const b = (id, nom) => `<button role="tab" data-tcv="${id}" class="${a === id ? 'on' : ''}" aria-selected="${a === id}">${nom}</button>`;
   return `<div class="mf-vue" role="tablist" aria-label="Affichage de la collection">
-    <button role="tab" data-tcv="cartes" class="${terraVue === 'cartes' ? 'on' : ''}" aria-selected="${terraVue === 'cartes'}">Mes cartes</button>
-    <button role="tab" data-tcv="france" class="${terraVue === 'france' ? 'on' : ''}" aria-selected="${terraVue === 'france'}">Ma France</button>
-    <button role="tab" data-tcv="collections" class="${terraVue === 'collections' ? 'on' : ''}" aria-selected="${terraVue === 'collections'}">Collections</button></div>`;
+    ${b('cartes', 'Mes cartes')}${b('france', 'Ma France')}${b('collections', 'Collections')}${SAISON2 ? b('monuments', 'Monuments') : ''}</div>`;
+}
+// patch191 : l'onglet Monuments porte le meme selecteur, Monuments allume
+function vuesMonuments(){
+  const panneau = document.getElementById('panel-monuments');
+  if(!panneau || !enTerra()) return;
+  let z = document.getElementById('monVues');
+  if(!z){
+    z = document.createElement('div');
+    z.id = 'monVues';
+    const titre = panneau.querySelector('h1');
+    if(titre) titre.insertAdjacentElement('afterend', z); else panneau.prepend(z);
+    z.addEventListener('click', (e) => {
+      const v = e.target.closest('[data-tcv]');
+      if(!v || v.dataset.tcv === 'monuments') return;
+      terraVue = v.dataset.tcv;
+      const t = document.querySelector('.tab[data-tab="collection"]');
+      if(t) t.click();
+    });
+  }
+  z.innerHTML = selecteurVueTerra('monuments');
 }
 
 // ---------- patch92 : Ma France ----------
@@ -9758,6 +9810,7 @@ function clicCollectionTerra(e){
   const carteT = e.target.closest('[data-tcode]');   // patch179
   if(carteT){ ouvrirCarteTerra(carteT.dataset.tcode); return; }
   const v = e.target.closest('[data-tcv]');
+  if(v && v.dataset.tcv === 'monuments'){ const t = document.querySelector('.tab[data-tab="monuments"]'); if(t) t.click(); return; }   // patch191
   if(v){ if(terraVue !== v.dataset.tcv){ terraVue = v.dataset.tcv; renderCollectionTerra(); } return; }
   const z = e.target.closest('[data-mf]');
   if(z){
@@ -9882,10 +9935,14 @@ function construireMenuPlus(){
     const nom = tab.childNodes[2] ? tab.childNodes[2].textContent.trim() : id;
     const badge = tab.querySelector('.tab-badge');
     const nb = badge && !badge.hidden ? `<span class="fp-badge">${badge.textContent}</span>` : '';
-    return `<button class="fp-item" data-aller="${id}">${icone}${nom}${nb}</button>`;
+    return `<button class="fp-item fp-tuile" data-aller="${id}">${icone}<span>${nom}</span>${nb}</button>`;
   };
   let entrees;
-  if(SAISON2){
+  if(SAISON2){   // patch191 : les groupes du rail
+    entrees = groupesDuMode().map(([t, ids]) => [t, ids.filter(id => ONGLETS_MENU.indexOf(id) >= 0)])
+      .filter(([, ids]) => ids.length)
+      .map(([t, ids]) => `<p class="fp-titre">${t}</p><div class="fp-grille">${ids.map(entree).join('')}</div>`).join('');
+  } else if(false){
     const propres = ONGLETS_MENU.filter(id => ONGLETS_COMMUNS.indexOf(id) < 0);
     const communs = ONGLETS_MENU.filter(id => ONGLETS_COMMUNS.indexOf(id) >= 0);
     entrees = (propres.length ? `<p class="fp-titre">${ONGLETS_MODE[modeJeu].nom}</p>` + propres.map(entree).join('') : '')
@@ -10094,7 +10151,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
       if(!combatRafraichTimer && Date.now() - combatChargeLe > 60000) loadCombat();
     }
     if(tab.dataset.tab === 'succes') loadSucces();
-    if(tab.dataset.tab === 'monuments') loadMonuments();
+    if(tab.dataset.tab === 'monuments'){ vuesMonuments(); loadMonuments(); }   // patch191
     if(tab.dataset.tab === 'collection' && enTerra()) ouvrirCollectionTerra();
     if(tab.dataset.tab === 'cdj') ouvrirCdj();
     if(tab.dataset.tab === 'qg') ouvrirQG();

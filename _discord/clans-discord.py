@@ -174,35 +174,52 @@ for clan in CLANS:
     marque = u'[%s]' % tag
     sujet = u'Salon privé du clan %s %s : seuls ses membres le voient.' % (marque, clan['nom'])
     salon = next((s for s in salons if s['type'] == 0 and s.get('parent_id') == CAT_ID and marque in (s.get('topic') or '')), None)
-    # le chef du clan peut gérer les permissions de SON salon : il y ajoute qui il veut
+    # Droits du salon, un par un (jamais la liste entière : les personnes que le
+    # chef a ajoutées ne sont jamais touchées). Le chef reçoit « Gérer les
+    # permissions » sur SON salon pour y inviter qui il veut ; Discord refuse
+    # parfois qu'un bot donne ce droit-là : il faut alors le donner à la main.
     ids_chef = trouver(clan['chef']) if clan.get('chef') else []
     chef_id = ids_chef[0] if len(ids_chef) == 1 else None
     if clan.get('chef') and not chef_id: print(u'  ?        chef %s : pas trouvé sur le Discord, il ne pourra pas inviter' % clan['chef'])
-    voulues = {EVERYONE: {'id': EVERYONE, 'type': 0, 'allow': '0', 'deny': str(VOIR)},
-               moi['id']: {'id': moi['id'], 'type': 1, 'allow': str(DROITS_BOT), 'deny': '0'}}
-    if rid: voulues[rid] = {'id': rid, 'type': 0, 'allow': str(DROITS_MEMBRE), 'deny': '0'}
-    if chef_id: voulues[chef_id] = {'id': chef_id, 'type': 1, 'allow': str(DROITS_MEMBRE | GERER_PERMS), 'deny': '0'}
-    # on garde les personnes que le chef a ajoutées ; un ancien chef perd seulement le droit d'inviter
-    finales = dict(voulues)
-    for o in (salon.get('permission_overwrites', []) if salon else []):
-        if o['id'] in voulues: continue
-        o = {'id': o['id'], 'type': o['type'], 'allow': str(o['allow']), 'deny': str(o['deny'])}
-        if o['type'] == 1 and int(o['allow']) & GERER_PERMS:
-            o['allow'] = str(int(o['allow']) & ~GERER_PERMS)
-        finales[o['id']] = o
-    perms = list(finales.values())
+    existantes = {o['id']: o for o in (salon.get('permission_overwrites', []) if salon else [])}
+    base = [{'id': EVERYONE, 'type': 0, 'allow': '0', 'deny': str(VOIR)},
+            {'id': moi['id'], 'type': 1, 'allow': str(DROITS_BOT), 'deny': '0'}]
+    if rid: base.append({'id': rid, 'type': 0, 'allow': str(DROITS_MEMBRE), 'deny': '0'})
+    nouveau, sid = None, None
     if salon:
-        avant = {(o['id'], int(o['type']), int(o['allow']), int(o['deny'])) for o in salon.get('permission_overwrites', [])}
-        apres = {(o['id'], int(o['type']), int(o['allow']), int(o['deny'])) for o in perms}
-        if salon['name'] != nom_salon(clan) or salon.get('topic') != sujet or avant != apres:
-            faire(u'salon mis à jour : %s%s' % (nom_salon(clan), u' (chef : %s)' % par_id[chef_id]['user']['username'] if chef_id else ''),
-                  lambda: appel('PATCH', '/channels/%s' % salon['id'],
-                  {'name': nom_salon(clan), 'topic': sujet, 'permission_overwrites': perms}))
+        if salon['name'] != nom_salon(clan) or salon.get('topic') != sujet:
+            faire(u'salon renommé : %s' % nom_salon(clan), lambda: appel('PATCH', '/channels/%s' % salon['id'], {'name': nom_salon(clan), 'topic': sujet}))
         else: print(u'  déjà là  salon %s' % salon['name'])
+        sid = salon['id']
+        for o in base:
+            e = existantes.get(o['id'])
+            if not e or (int(e['allow']), int(e['deny'])) != (int(o['allow']), int(o['deny'])):
+                quoi = u'tout le monde : caché' if o['id'] == EVERYONE else u'le bot' if o['id'] == moi['id'] else u'le rôle du clan'
+                faire(u'   droits du salon (%s)' % quoi, lambda: appel('PUT', '/channels/%s/permissions/%s' % (sid, o['id']),
+                      {'type': o['type'], 'allow': o['allow'], 'deny': o['deny']}))
     else:
-        nouveau = faire(u'salon privé %s%s' % (nom_salon(clan), u' (chef : %s)' % par_id[chef_id]['user']['username'] if chef_id else ''),
-                        lambda: appel('POST', '/guilds/%s/channels' % G,
-              {'name': nom_salon(clan), 'type': 0, 'topic': sujet, 'parent_id': CAT_ID, 'permission_overwrites': perms}))
+        nouveau = faire(u'salon privé %s' % nom_salon(clan), lambda: appel('POST', '/guilds/%s/channels' % G,
+                        {'name': nom_salon(clan), 'type': 0, 'topic': sujet, 'parent_id': CAT_ID, 'permission_overwrites': base}))
+        sid = nouveau['id'] if nouveau else None
+    # le chef
+    if chef_id:
+        e = existantes.get(chef_id)
+        if e and int(e['allow']) & GERER_PERMS: print(u'  déjà là  %s peut inviter dans le salon' % par_id[chef_id]['user']['username'])
+        else:
+            allow = (int(e['allow']) if e else 0) | DROITS_MEMBRE | GERER_PERMS
+            r = faire(u'%s (chef) peut inviter dans le salon' % par_id[chef_id]['user']['username'],
+                      lambda: appel('PUT', '/channels/%s/permissions/%s' % (sid, chef_id),
+                                    {'type': 1, 'allow': str(allow), 'deny': str(int(e['deny']) if e else 0)}, fatal=False) if sid else None)
+            if VRAI and r is None:
+                print(u"  !        Discord refuse que le bot donne ce droit. Fais-le à la main, une fois : clic droit sur %s"
+                      u" › Modifier le salon › Permissions › + %s › « Gérer les permissions » ✓" % (nom_salon(clan), par_id[chef_id]['user']['username']))
+    # un ancien chef garde l'accès mais ne peut plus inviter
+    for uid, e in existantes.items():
+        if int(e['type']) == 1 and uid not in (chef_id, moi['id']) and int(e['allow']) & GERER_PERMS:
+            nom = par_id[uid]['user']['username'] if uid in par_id else uid
+            r = faire(u"%s n'est plus chef : il ne peut plus inviter" % nom, lambda: appel('PUT', '/channels/%s/permissions/%s' % (sid, uid),
+                      {'type': 1, 'allow': str(int(e['allow']) & ~GERER_PERMS), 'deny': str(e['deny'])}, fatal=False))
+            if VRAI and r is None: print(u"  !        retire-lui « Gérer les permissions » à la main sur %s" % nom_salon(clan))
         if nouveau and nouveau.get('id'):
             appel('POST', '/channels/%s/messages' % nouveau['id'], {'allowed_mentions': {'parse': []}, 'content':
                 u"🏰 **Salon privé du clan %s %s**\n"

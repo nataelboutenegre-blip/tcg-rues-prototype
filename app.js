@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '2ceb0a282f30';
+const VERSION_JEU = '271ff197e575';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2221,7 +2221,16 @@ function territoiresVisiblesCache(){
   if(CV.donnees && CV.donneesSignature === signature) return CV.donnees;
   CV.donneesSignature = signature;
   CV.donnees = territoiresVisibles();
-  if(CLANS && CALQUES.clans) peindreClans(CV.donnees.joueurs);   // patch110
+  if(CLANS && CALQUES.clans){
+    peindreClans(CV.donnees.joueurs);   // patch110
+    // patch177 : le filtre Clans ne montre que les joueurs qui sont dans un clan
+    const { liste, joueurs } = CV.donnees;
+    for(const [id, j] of [...joueurs]){
+      if(j.clan) continue;
+      if(id === ID_MOI) j.nb = 0; else joueurs.delete(id);
+    }
+    CV.donnees.liste = liste.filter(e => { const j = joueurs.get(e.joueur); return j && j.clan; });
+  }
   majReperage(CV.donnees.liste, CV.donnees.joueurs);
   return CV.donnees;
 }

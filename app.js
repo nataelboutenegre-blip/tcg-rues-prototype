@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd943201e849b';
+const VERSION_JEU = '9a2709870e1c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -26,9 +26,42 @@ const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
 
 // Couleurs des autres joueurs sur la carte (toi = dore). Au-dela de 12 joueurs, des couleurs se repetent.
 const OPPONENT_COLORS = ['#E5484D','#8E7CF6','#2EC4B6','#F76B15','#E93D82','#3DD68C','#5EB1EF','#FF977D','#9EB1FF','#12A594','#D6409F','#C2A383'];
-const COULEUR_MOI = '#F0B429';
+const COULEUR_DORE = '#F0B429';
+let COULEUR_MOI = COULEUR_DORE;
+// patch158 : 24 couleurs au choix (Profil > Ma couleur). Meme liste que
+// palette_territoire() en base. Le dore n'y est pas : c'est « moi ».
+const PALETTE_TERRITOIRE = ['#E5484D','#8E7CF6','#2EC4B6','#F76B15','#E93D82','#3DD68C','#5EB1EF','#FF977D',
+  '#9EB1FF','#12A594','#D6409F','#C2A383','#B42318','#6E56CF','#0090A8','#A4D63A',
+  '#F2E8D5','#7A4B2A','#00C2FF','#C77DFF','#8A9A5B','#FF5C8A','#4C6EF5','#B07A54'];
+const NOMS_COULEURS = ['Rouge','Violet','Turquoise','Orange','Rose','Vert','Ciel','Corail','Lavande','Émeraude','Fuchsia','Sable',
+  'Bordeaux','Indigo','Pétrole','Citron vert','Ivoire','Chocolat','Cyan','Mauve','Olive','Framboise','Bleu roi','Caramel'];
+const COULEURS_CHOISIES = new Map();
+let maCouleurChoisie = null, couleursDispo = null;   // null = pas encore su
+const CLE_DORE = 'tf-me-voir-dore';
+function meVoirDore(){ try{ return localStorage.getItem(CLE_DORE) !== '0'; }catch(e){ return true; } }
+function appliquerCouleurMoi(){ COULEUR_MOI = (!meVoirDore() && maCouleurChoisie) ? maCouleurChoisie : COULEUR_DORE; }
+async function chargerCouleursTerritoire(){
+  try{
+    const { data, error } = await sb.rpc('couleurs_territoire');
+    if(error){ if(fonctionAbsente(error)) couleursDispo = false; return; }
+    couleursDispo = true;
+    COULEURS_CHOISIES.clear();
+    for(const r of data || []) if(r.couleur) COULEURS_CHOISIES.set(r.joueur_id, r.couleur);
+    maCouleurChoisie = window.__monId ? (COULEURS_CHOISIES.get(window.__monId) || null) : null;
+    appliquerCouleurMoi();
+  }catch(e){}
+}
+function couleurAuto(id){
+  let hash = 0;
+  for(let i = 0; i < id.length; i++){
+    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  }
+  return OPPONENT_COLORS[hash % OPPONENT_COLORS.length];
+}
 
 function colorForPlayer(id){
+  const choisie = id && COULEURS_CHOISIES.get(id);
+  if(choisie) return choisie;
   let hash = 0;
   for(let i = 0; i < id.length; i++){
     hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
@@ -3801,6 +3834,7 @@ async function loadOthersPossessions(){
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
   window.__monId = uid;
+  await chargerCouleursTerritoire();   // patch158
   // Sans pagination, l'API s'arrete a 1000 lignes et une partie du territoire
   // des autres joueurs n'apparait jamais sur la carte.
   const { data, error } = await toutesLesLignes(() => sb
@@ -6153,6 +6187,7 @@ function rendreProfilPanneau(){
     ${blocVitrine(p.vitrine || [], true)}
     ${blocBadges(p, false)}
     ${blocParrainage(p.parrainage)}
+    ${blocCouleur()}
     ${blocsProfil(p)}
     <div class="pf-boutons">
       <button class="pr-btn" data-pf="editer">Changer d'avatar ou de pseudo</button>
@@ -6172,6 +6207,14 @@ document.getElementById('pfCorps').addEventListener('click', (e) => {
   if(cp) copierLienParrain(cp);
   if(e.target.closest('[data-pf="partager-ref"]')) partagerLienParrain();
   if(e.target.closest('[data-pf="titre"]')) ouvrirChoixTitre();
+  const pc = e.target.closest('[data-pf="couleur"]');   // patch158
+  if(pc) choisirCouleur(pc.dataset.couleur);
+  const dr = e.target.closest('[data-pf="dore"]');
+  if(dr){
+    try{ localStorage.setItem(CLE_DORE, dr.checked ? '1' : '0'); }catch(err){}
+    appliquerCouleurMoi();
+    try{ renderMapOverlay(); }catch(err){}
+  }
   const vt = (profilPanneau || {}).vitrine || [];
   if(e.target.closest('[data-pr="vitrine"]')) ouvrirChoixVitrine(vt, 'panneau');
   if(e.target.closest('[data-vt-voir]')) ouvrirGrandeVitrine(vt, true, (profilPanneau || {}).pseudo, (v) => {
@@ -10975,6 +11018,43 @@ async function parrainageDuJour(){
 }
 
 function lienParrain(pseudo){ return location.origin + '/?ref=' + encodeURIComponent(pseudo || ''); }
+
+// ---------- patch158 : ma couleur sur la carte ----------
+function blocCouleur(){
+  if(couleursDispo === false) return `<div class="pf-bloc pf-couleur"><h3>Ma couleur sur la carte</h3>
+    <p class="mc-aide">Bientôt : tu pourras choisir la couleur de ton territoire.</p></div>`;
+  const moi = window.__monId || '';
+  const compte = new Map();
+  for(const [id, c] of COULEURS_CHOISIES) if(id !== moi) compte.set(c, (compte.get(c) || 0) + 1);
+  const actuelle = maCouleurChoisie || (moi ? couleurAuto(moi) : null);
+  const nom = (c) => NOMS_COULEURS[PALETTE_TERRITOIRE.indexOf(c)] || '';
+  const pastilles = PALETTE_TERRITOIRE.map((c, i) => {
+    const n = compte.get(c) || 0, ici = c === actuelle;
+    return `<button type="button" class="mc-pastille${ici ? ' choisie' : ''}" data-pf="couleur" data-couleur="${c}"
+      style="background:${c}" title="${NOMS_COULEURS[i]}" aria-label="${NOMS_COULEURS[i]}" aria-pressed="${ici}">${n ? `<span class="mc-nb">${n}</span>` : ''}</button>`;
+  }).join('');
+  return `<div class="pf-bloc pf-couleur">
+      <h3>Ma couleur sur la carte</h3>
+      <div class="mc-nuancier">${pastilles}</div>
+      <p class="mc-aide">${maCouleurChoisie
+        ? `Les autres joueurs te voient en <b>${echapperTexte(nom(maCouleurChoisie))}</b>.`
+        : `Pour l'instant, ta couleur est choisie automatiquement${actuelle ? ` (<b>${echapperTexte(nom(actuelle))}</b>)` : ''}. Touche une pastille pour choisir la tienne.`}
+        Le petit chiffre : joueurs qui l'ont déjà prise.</p>
+      <label class="mc-dore"><span><b>Me voir en doré</b><small>Sur ta carte, ton territoire reste doré.</small></span>
+        <input type="checkbox" data-pf="dore" ${meVoirDore() ? 'checked' : ''}></label>
+    </div>`;
+}
+async function choisirCouleur(c){
+  if(!c || c === maCouleurChoisie) return;
+  const { error } = await sb.rpc('choisir_couleur', { p_couleur: c });
+  if(error){ notifier({ type: 'erreur', titre: 'Couleur', texte: messageLisible(error.message) }); return; }
+  if(window.__monId) COULEURS_CHOISIES.set(window.__monId, c);
+  maCouleurChoisie = c;
+  appliquerCouleurMoi();
+  rendreProfilPanneau();
+  try{ renderMapOverlay(); }catch(err){}
+  notifier({ type: 'succes', titre: 'Couleur enregistrée', texte: 'Les autres joueurs te voient maintenant en ' + (NOMS_COULEURS[PALETTE_TERRITOIRE.indexOf(c)] || 'couleur') + '.' });
+}
 
 function blocParrainage(d){
   if(!d) return '';

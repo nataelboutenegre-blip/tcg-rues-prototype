@@ -2899,6 +2899,21 @@
   .ctl-grille .mini.neuve{ box-shadow:0 0 0 2px var(--c-legendaire), 0 8px 16px rgba(0,0,0,0.35); }
   .ctl-pied{ margin-top:14px; }
   @media (prefers-reduced-motion: reduce){ .ctl-grille .mini{ transition:none; opacity:1; transform:none; } }
+  /* ---------- patch158 : ma couleur sur la carte ---------- */
+  .mc-nuancier{ display:grid; grid-template-columns:repeat(8, minmax(0, 1fr)); gap:8px; margin-top:10px; }
+  @media (max-width:420px){ .mc-nuancier{ grid-template-columns:repeat(6, minmax(0, 1fr)); } }
+  .mc-pastille{ aspect-ratio:1; max-width:100%; border:none; border-radius:10px; cursor:pointer; position:relative; padding:0;
+    box-shadow: inset 0 0 0 2px rgba(0,0,0,.25); }
+  .mc-pastille:hover{ filter:brightness(1.08); }
+  .mc-pastille.choisie{ box-shadow: 0 0 0 3px var(--nuit-2), 0 0 0 5px #fff; }
+  .mc-pastille.choisie::after{ content:"✓"; position:absolute; inset:0; display:grid; place-items:center; color:#0B1628; font-weight:800; font-size:1.05rem; }
+  .mc-nb{ position:absolute; right:3px; bottom:1px; font-size:.6rem; font-weight:700; color:rgba(11,22,40,.75); }
+  .mc-aide{ color:#A9BCD4; font-size:.82rem; line-height:1.5; margin:12px 0 0; }
+  .mc-aide b{ color:#fff; }
+  .mc-dore{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:12px; padding:10px 12px;
+    border-radius:10px; background:rgba(7,16,31,.5); cursor:pointer; }
+  .mc-dore b{ display:block; font-size:.9rem; } .mc-dore small{ color:#A9BCD4; font-size:.78rem; }
+  .mc-dore input{ width:20px; height:20px; accent-color: var(--c-legendaire); flex:none; }
   /* ---------- patch156 : glisser pour acheter ---------- */
   .glisser{ position:relative; width:min(330px, 100%); height:48px; border-radius:14px; user-select:none; -webkit-user-select:none; overflow:hidden;
     background: rgba(7,16,31,.55); box-shadow: inset 0 0 0 2px rgba(169,188,212,.35), 0 5px 0 rgba(0,0,0,.25); align-self:center; }

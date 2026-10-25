@@ -5742,3 +5742,8 @@ body.mode-front .bq-terra-seul{ display: none !important; }
 
 /* patch181 : la bande du choix de vitrine part de la place 1 */
 .vt-etagere.vt-bande{ justify-content:flex-start; }
+
+/* patch182 : la carte de vitrine en grand */
+.vt-case[data-vt-carte], .vt-place[data-vtg-carte]{ cursor:pointer; }
+.fc-vitrine-de{ font-size:.78rem; color:var(--brume); margin:10px 0 0; text-align:center; }
+.fc-vitrine-de b{ color:var(--c-legendaire); font-weight:600; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'e275ac9072ea';
+const VERSION_JEU = 'a98cea7895cf';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6241,6 +6241,8 @@ document.getElementById('pfCorps').addEventListener('click', (e) => {
   const vt = (profilPanneau || {}).vitrine || [];
   const src = sourceVitrine(e.target);
   if(e.target.closest('[data-pr="vitrine"]')) ouvrirChoixVitrine(vt, 'panneau', src);
+  const uneCarte = e.target.closest('[data-vt-carte]');   // patch182
+  if(uneCarte){ const c = vitrineDe(vt, src)[Number(uneCarte.dataset.vtCarte)]; if(c) ouvrirCarteVitrine(c, (profilPanneau || {}).pseudo); return; }
   if(e.target.closest('[data-vt-voir]')) ouvrirGrandeVitrine(vitrineDe(vt, src), true, (profilPanneau || {}).pseudo, (v) => {
     if(v === 'modifier') setTimeout(() => ouvrirChoixVitrine(vt, 'panneau', src), 200);
   }, src);
@@ -14550,7 +14552,7 @@ function blocVitrine(toutes, moi){
   for(let i = 0; i < VITRINE_FICHE; i++){
     const c = cartes[i];
     const plus = i === VITRINE_FICHE - 1 && cartes.length > VITRINE_FICHE;
-    cases.push(c ? `<div class="vt-case${plus ? ' vt-a-plus' : ''}">${miniVitrine(c)}${plus ? `<span class="vt-plus">+${reste}</span>` : ''}</div>`
+    cases.push(c ? `<div class="vt-case${plus ? ' vt-a-plus' : ''}"${plus ? '' : ` data-vt-carte="${i}"`}>${miniVitrine(c)}${plus ? `<span class="vt-plus">+${reste}</span>` : ''}</div>`
       : `<div class="vt-case vide">${moi ? '<button type="button" class="vt-ajout" data-pr="vitrine" aria-label="Ajouter une carte à ma vitrine">+</button>' : ''}</div>`);
   }
   const lien = cartes.length
@@ -14583,14 +14585,24 @@ function ouvrirGrandeVitrine(cartes, moi, pseudo, apres, source){
       <h2 id="vtgTitre">${echapperTexte(pseudo || '')}</h2>
       <p class="vt-compte"><b>${cartes.length}</b> carte${cartes.length > 1 ? 's' : ''} exposée${cartes.length > 1 ? 's' : ''}${moi ? ` sur ${VITRINE_MAX}` : ''}</p>
       <div class="vt-mur">
-        ${cartes.map((c, i) => `<div class="vt-place"><span class="vt-rang">${i + 1}</span>${miniTerra({ ...c, exemplaires: 1 })}</div>`).join('')}
+        ${cartes.map((c, i) => `<div class="vt-place" data-vtg-carte="${i}"><span class="vt-rang">${i + 1}</span>${miniTerra({ ...c, exemplaires: 1 })}</div>`).join('')}
         ${Array.from({ length: vides }, () => '<button type="button" class="vt-case vide" data-vtg="modifier" aria-label="Ajouter une carte"><span>+</span></button>').join('')}
       </div>
       ${moi ? '<div class="prix-boutons"><button type="button" class="open-btn" data-vtg="modifier">Modifier ma vitrine</button></div>' : ''}
-    </div>`, (v) => { if(apres) apres(v); });
+    </div>`, (v) => {
+      if(typeof v === 'string' && v.startsWith('carte:')){   // patch182
+        const c = cartes[Number(v.slice(6))];
+        if(c) setTimeout(() => ouvrirCarteVitrine(c, pseudo,
+          () => setTimeout(() => ouvrirGrandeVitrine(cartes, moi, pseudo, apres, source), 200)), 200);
+        return;
+      }
+      if(apres) apres(v);
+    });
   document.querySelector('#fenetre .vt-grande').addEventListener('click', (e) => {
     const b = e.target.closest('[data-vtg]');
-    if(b) fermer(b.dataset.vtg);
+    if(b){ fermer(b.dataset.vtg); return; }
+    const c = e.target.closest('[data-vtg-carte]');
+    if(c) fermer('carte:' + c.dataset.vtgCarte);
   });
 }
 
@@ -14600,12 +14612,15 @@ document.getElementById('fenetre').addEventListener('click', (e) => {
   if(!profilEnCours) return;
   const voir = e.target.closest('[data-vt-voir]');
   const modif = e.target.closest('[data-pr="vitrine"]');
+  const uneCarte = e.target.closest('[data-vt-carte]');   // patch182
   if(!voir && !(modif && profilEnCours.est_moi)) return;
   const p = profilEnCours;
   const cartes = p.vitrine || [];
   const src = sourceVitrine(voir || modif);
   if(fermerProfil) fermerProfil(null);
   setTimeout(() => {
+    const c = uneCarte && vitrineDe(cartes, src)[Number(uneCarte.dataset.vtCarte)];
+    if(c){ ouvrirCarteVitrine(c, p.pseudo, () => setTimeout(() => { profilEnCours = p; rendreProfil(); }, 200)); return; }
     if(modif){ ouvrirChoixVitrine(cartes, 'fiche', src); return; }
     ouvrirGrandeVitrine(vitrineDe(cartes, src), !!p.est_moi, p.pseudo, (v) => {
       if(v === 'modifier') setTimeout(() => ouvrirChoixVitrine(cartes, 'fiche', src), 200);
@@ -15368,6 +15383,50 @@ function armerCarte3d(racine){
 }
 
 // Terra : la fiche d'une carte de la collection
+// patch182 : une carte de vitrine en grand. Pas de bouton d'action : elle
+// peut appartenir a un autre joueur.
+async function ouvrirCarteVitrine(e, pseudo, apres){
+  const code = e.code;
+  const nb = (x) => Number(x || 0).toLocaleString('fr-FR');
+  const front = e.source === 'front';
+  const rendre = (d) => {
+    const gentile = d && d.gentile ? String(d.gentile).trim() : '';
+    const faits = d ? faitsTries(d.faits) : null;
+    const savais = faits === null ? '<p class="fc-attente">Recherche des faits…</p>'
+      : !faits.length ? '' : '<h3>Le savais-tu ?</h3>' + faits.slice(0, 3).map((f, i) => `<div class="fc-fait${i ? '' : ' phare'}"><i>${i ? iconeFait(f.t) : '🏅'}</i><span>${i ? echapperTexte(f.t) : '<b>' + echapperTexte(f.t) + '</b>'}</span></div>`).join('');
+    return `
+    <div class="fenetre fiche fiche-terra ${e.tier.id}" data-tcode="${echapperTexte(code)}" role="dialog" aria-modal="true" aria-labelledby="ftNom">
+      <button class="fc-fermer" data-ft="fermer" aria-label="Fermer">✕</button>
+      <div class="fc-tete">${carte3dDebut(150, 225, 1.65)}${miniTerra({ ...e, exemplaires: 1 })}${carte3dFin()}</div>
+      <div class="fc-corps">
+        <h2 id="ftNom" class="fc-nom ${e.nom.length > 22 ? 'long' : ''}">${echapperTexte(e.nom)}</h2>
+        <p class="fc-dep">${DEPT_NAMES[e.dept] ? echapperTexte(DEPT_NAMES[e.dept]) + ' (' + echapperTexte(e.dept) + ')' : echapperTexte(e.dept)}</p>
+        ${gentile ? `<p class="fc-gent">les ${echapperTexte(gentile)}</p>` : ''}
+        <div class="fc-chiffres">
+          <div class="fc-ch"><b>${nb(e.pop)}</b><span>habitants</span></div>
+          <div class="fc-ch"><b class="fc-rar">${e.tier.label}</b><span>${e.rank ? 'n° ' + nb(e.rank) + ' / ' + nb(e.tierSize) : 'rareté'}</span></div>
+          <div class="fc-ch"><b>${front ? 'Front' : 'Terra'}</b><span>${e.aurore > 0 ? 'Aurore' : 'vitrine'}</span></div>
+        </div>
+        ${pseudo ? `<p class="fc-vitrine-de">Dans la vitrine de <b>${echapperTexte(pseudo)}</b></p>` : ''}
+        ${savais}
+      </div>
+    </div>`;
+  };
+  const fermer = ouvrirFenetre(rendre(null), () => { if(apres) apres(); });
+  const boite = document.querySelector('#fenetre .fiche-terra');
+  if(boite){
+    armerCarte3d(boite.querySelector('.c3d'));
+    boite.addEventListener('click', (ev) => { if(ev.target.closest('[data-ft="fermer"]')) fermer(null); });
+  }
+  let d = {};
+  try { d = await detailsCommune(code); } catch(err){ d = {}; }
+  const ouverte = document.querySelector('#fenetre .fiche-terra[data-tcode="' + code + '"]');
+  if(!ouverte) return;
+  const tmp = document.createElement('div'); tmp.innerHTML = rendre(d);
+  const neuf = tmp.querySelector('.fc-corps'), vieux = ouverte.querySelector('.fc-corps');
+  if(neuf && vieux) vieux.replaceWith(neuf);
+}
+
 async function ouvrirCarteTerra(code){
   const e = terraCollection.get(code);
   if(!e) return;

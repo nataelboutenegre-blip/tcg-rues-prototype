@@ -5216,7 +5216,8 @@ body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme svg, 
 .vt-bande > .vt-case{ flex:0 0 66px; width:66px; min-width:0; }
 .vt-bande > .vt-case .mini{ width:100%; }
 .vt-etagere{
-  display:grid; grid-template-columns:repeat(5, minmax(0, 1fr)); gap:7px;
+  /* patch169 : des cases de 132 px au plus, centrees */
+  display:grid; grid-template-columns:repeat(5, minmax(0, 132px)); justify-content:center; gap:7px;
   padding:14px 10px 16px; border-radius:14px;
   background:
     radial-gradient(90% 70% at 50% 0%, rgba(240,180,41,.13), transparent 70%),
@@ -5236,7 +5237,8 @@ body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme svg, 
 .vt-etagere .mini-infos, .vt-grille .mini-infos{ padding:3px 4px; }
 .vt-etagere .mini-nom, .vt-grille .mini-nom{ font-size:.7rem; overflow-wrap:normal; hyphens:auto; -webkit-hyphens:auto; }
 .vt-etagere .mini-nom.vt-l, .vt-grille .mini-nom.vt-l{ font-size:.6rem; overflow-wrap:anywhere; }
-.vt-etagere .mini-num{ display:none; }
+.vt-etagere.vt-bande .mini-num{ display:none; }   /* patch169 : le numero revient sur la fiche */
+.vt-etagere:not(.vt-bande) .mini-num{ font-size:.6rem; }
 .vt-etagere .mini-rarete, .vt-grille .mini-rarete{ font-size:.5rem; }
 .vt-grille .mini-num{ font-size:.5rem; }
 .vt-grille .mini-total{ display:none; }

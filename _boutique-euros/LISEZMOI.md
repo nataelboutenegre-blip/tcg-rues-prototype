@@ -64,8 +64,9 @@ signature Stripe rejette un message modifié ou non signé.
   Personnaliser). Le volet n'apparaît qu'aux joueurs qui peuvent acheter.
 - Pour ouvrir à tous, le jour J : clés live, articles actifs, puis
   `update euros_reglages set valeur = 'true' where cle = 'boutique_ouverte';`
-- **Manque encore la page `cgv.html`** : le lien « conditions générales de
-  vente » de la fiche d'achat y renvoie.
+- `cgv.html` : la page publique des CGV (version 2026-10-19-v3), liée depuis
+  la fiche d'achat. À changer en même temps que `cgv_version` à chaque
+  nouvelle version.
 
 ## Ce qui reste à faire avant les vraies ventes
 

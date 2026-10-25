@@ -5,9 +5,9 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CURRENT_SEASON = 'saison-1';
 // patch110 : les clans. Passer a true le jour de leur ouverture (avec
 // config_jeu 'clans_ouverts' cote serveur).
-const CLANS = false;
+const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'af06ec4570fa';
+const VERSION_JEU = 'dec6e82334a7';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -251,7 +251,7 @@ function messageLisible(msg){
     [/Seul le chef peut inviter/i, 'Seul le chef du clan peut inviter.'],
     [/Joueur introuvable/i, 'Aucun joueur avec ce pseudo.'],
     [/Ce joueur est deja dans un clan/i, 'Ce joueur est déjà dans un clan.'],
-    [/Le clan est complet/i, 'Le clan est complet (5 membres).'],
+    [/Le clan est complet/i, 'Le clan est complet (6 membres).'],
     [/Invitation introuvable ou expiree/i, 'Cette invitation a expiré.'],
     [/Tu ne peux pas attaquer un membre de ton clan/i, 'Tu ne peux pas attaquer un membre de ton clan.'],
   ];
@@ -14176,10 +14176,10 @@ function renderClan(){
     const total = (c.membres || []).reduce((s, m) => s + (m.communes || 0), 0);
     const n = (c.membres || []).length;
     gauche = `<div class="clan-carte">
-      <div class="clan-tete">${blasonHtml(c.tag, c.couleur)}<div><div class="clan-nom">${echapperTexte(c.nom)}</div><small>${n} membre${n > 1 ? 's' : ''} sur 5${n < 3 ? ' · classé à partir de 3' : ''}</small></div></div>
+      <div class="clan-tete">${blasonHtml(c.tag, c.couleur)}<div><div class="clan-nom">${echapperTexte(c.nom)}</div><small>${n} membre${n > 1 ? 's' : ''} sur 6${n < 3 ? ' · classé à partir de 3' : ''}</small></div></div>
       <div class="puces"><span class="puce">Communes en Front <b>${nbClan(total)}</b></span><span class="puce">Moyenne par membre <b>${nbClan(n ? Math.round(total / n) : 0)}</b></span>${rang >= 0 ? `<span class="puce">Rang <b>${rang + 1}</b> sur ${classement.length}</span>` : ''}</div>
       <h2>Membres</h2>${membres}
-      ${c.chef && n < 5 ? `<div class="clan-inviter"><input id="clanPseudo" placeholder="Pseudo du joueur à inviter"><button class="bq-btn" id="clanInviter">Inviter</button></div>` : ''}
+      ${c.chef && n < 6 ? `<div class="clan-inviter"><input id="clanPseudo" placeholder="Pseudo du joueur à inviter"><button class="bq-btn" id="clanInviter">Inviter</button></div>` : ''}
       ${(c.invites || []).length ? `<p class="clan-note">Invitations en attente : ${c.invites.map(echapperTexte).join(', ')}.</p>` : ''}
       <ul class="clan-regles"><li>Pas d'attaque entre membres : leurs communes n'apparaissent plus dans tes cibles.</li><li>Aucun bonus de combat : le territoire d'un coéquipier ne compte pas dans tes chances.</li><li>Après avoir quitté un clan, il faut attendre 48 h avant d'en rejoindre un autre.</li><li>Pour discuter, demande un salon privé pour ton clan sur le Discord.</li></ul>
       <button class="bq-btn secondaire" id="clanQuitter" data-prix="0">Quitter le clan</button>

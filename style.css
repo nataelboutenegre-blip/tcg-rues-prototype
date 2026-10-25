@@ -4933,6 +4933,13 @@ html:not(.clans-ouverts) .tab[data-tab="clan"]{ display:none !important; }
 .blason.petit{ width:28px; height:32px; font-size:.6rem; }
 .clan-membre, .clan-invit{ display:grid; grid-template-columns:34px minmax(0,1fr) auto auto; gap:12px; align-items:center; padding:9px 0; border-top:1px solid rgba(169,188,212,0.1); }
 .clan-invit{ grid-template-columns:64px minmax(0,1fr) auto auto; }
+@media (max-width:560px){   /* patch173 : les boutons passent sous le nom */
+  .clan-invit{ grid-template-columns:52px minmax(0,1fr) auto; }
+  .clan-invit .blason{ grid-row:span 2; }
+  .clan-invit > div{ grid-column:2 / -1; }
+  .clan-invit [data-clan-oui]{ grid-column:2; justify-self:start; }
+  .clan-invit [data-clan-non]{ grid-column:3; }
+}
 .clan-membre .av{ width:34px; height:34px; border-radius:50%; background: var(--nuit-3); display:flex; align-items:center; justify-content:center; font-family: var(--titre); font-weight:800; box-shadow:0 0 0 2px var(--clan); }
 .clan-nb{ color: var(--brume); font-size:.85rem; }
 .clan-inviter, .clan-form{ display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }

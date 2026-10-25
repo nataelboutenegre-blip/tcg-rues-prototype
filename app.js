@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '54a077636b2c';
+const VERSION_JEU = 'af06ec4570fa';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11971,8 +11971,8 @@ let rafaleNoms = null, rafaleNomsEnCours = null;
 const RAFALE_RANGS = [['Piéton', 0], ['Cycliste', 900], ['Motard', 1000], ['Routier', 1100], ['Pilote', 1200]];
 const RAFALE_LETTRES = 'ABCDEFGHJLMNOPRSTV';
 const RAFALE_SECONDES = 30;
-let qgFiltreHist = (() => { try{ const v = localStorage.getItem('tf-qg-hist'); return ['tous', 'radar', 'rafale'].includes(v) ? v : 'tous'; }catch(e){ return 'tous'; } })();
-let qgFiltreCl = (() => { try{ return localStorage.getItem('tf-qg-cl') === 'rafale' ? 'rafale' : 'radar'; }catch(e){ return 'radar'; } })();
+let qgFiltreHist = (() => { try{ const v = localStorage.getItem('tf-qg-hist'); return ['tous', 'radar', 'rafale', 'pom'].includes(v) ? v : 'tous'; }catch(e){ return 'tous'; } })();
+let qgFiltreCl = (() => { try{ const v = localStorage.getItem('tf-qg-cl'); return v === 'rafale' || v === 'pom' ? v : 'radar'; }catch(e){ return 'radar'; } })();
 
 // meme regle que rafale_norm() sur le serveur
 function rafaleNorm(s){
@@ -12034,12 +12034,13 @@ function ligneDuel(x, jeu, tous){
   const nomAdv = echapperTexte(x.adversaire || 'un joueur');
   const kmQG = (n) => Number(n).toLocaleString('fr-FR');
   const score = (n) => `${Number(n || 0)} commune${Number(n) > 1 ? 's' : ''}`;
-  const tag = tous ? `<span class="qg-jeu ${jeu}">${jeu === 'radar' ? 'Radar' : 'Rafale'}</span>` : '';
+  const tag = tous ? `<span class="qg-jeu ${jeu}">${jeu === 'radar' ? 'Radar' : jeu === 'pom' ? 'Plus ou moins' : 'Rafale'}</span>` : '';
+  const pom = (n) => `${Number(n || 0)} / 10`;   // patch172
   const lettre = jeu === 'rafale' && x.lettre ? ` · lettre ${echapperTexte(x.lettre)}` : '';
   const attr = `data-id="${Number(x.id)}" data-jeu="${jeu}" tabindex="0" role="button"`;
   if(x.attente){
     return `<li ${attr}><span class="qg-res attente">En attente</span>
-      <span class="qg-adv">${tag}pas encore d’adversaire<small>${jeu === 'radar' ? kmQG(x.total_km) + ' km' : score(x.score)}${lettre}</small></span>
+      <span class="qg-adv">${tag}pas encore d’adversaire<small>${jeu === 'radar' ? kmQG(x.total_km) + ' km' : jeu === 'pom' ? pom(x.justes) : score(x.score)}${lettre}</small></span>
       <span></span><span class="qg-chev" aria-hidden="true">›</span></li>`;
   }
   if(x.resultat === 'refuse' || x.resultat === 'expire'){
@@ -12051,6 +12052,7 @@ function ligneDuel(x, jeu, tous){
   const mot = x.resultat === 'victoire' ? 'Victoire' : x.resultat === 'defaite' ? 'Défaite' : 'Égalité';
   const detail = jeu === 'radar'
     ? `${kmQG(x.total_km)} km contre ${kmQG(x.adversaire_km)} km`
+    : jeu === 'pom' ? `${pom(x.justes)} contre ${pom(x.adversaire_justes)}`
     : `${score(x.score)} contre ${Number(x.adversaire_score || 0)}${lettre}`;
   return `<li class="${x.vu ? '' : 'nouveau'}" ${attr}><span class="qg-res ${x.resultat}">${mot}</span>
     <span class="qg-adv">${tag}${x.amical ? 'défi contre' : 'contre'} <b>${nomAdv}</b><small>${detail}</small></span>
@@ -12060,18 +12062,20 @@ function ligneDuel(x, jeu, tous){
 
 function renderQGListes(){
   const rd = radarEtat || {}, rf = rafaleEtat || {};
+  let pm = {};   // patch172 (pomDuelEtat est declare plus bas)
+  try{ pm = pomDuelEtat || {}; }catch(err){}
   // l'historique
   document.querySelectorAll('[data-hist]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.hist === qgFiltreHist)));
   const tous = qgFiltreHist === 'tous';
   const prendre = (jeu, e) => (qgFiltreHist === jeu || tous) ? [
     ...(e.attente_liste || []).map(x => ({ ...x, attente: true, jeu })),
     ...(e.derniers || []).map(x => ({ ...x, jeu }))] : [];
-  let lignes = [...prendre('radar', rd), ...prendre('rafale', rf)];
+  let lignes = [...prendre('radar', rd), ...prendre('rafale', rf), ...prendre('pom', pm)];
   lignes.sort((a, b) => ((b.attente ? 1 : 0) - (a.attente ? 1 : 0)) || (new Date(b.fin) - new Date(a.fin)));
   if(tous) lignes = lignes.slice(0, 10);
   document.getElementById('qgDerniers').innerHTML = lignes.length
     ? lignes.map(x => ligneDuel(x, x.jeu, tous)).join('')
-    : `<li class="qg-vide">Aucun duel ${qgFiltreHist === 'radar' ? 'Radar ' : qgFiltreHist === 'rafale' ? 'Rafale ' : ''}pour l’instant.</li>`;
+    : `<li class="qg-vide">Aucun duel ${qgFiltreHist === 'radar' ? 'Radar ' : qgFiltreHist === 'rafale' ? 'Rafale ' : qgFiltreHist === 'pom' ? 'Plus ou moins ' : ''}pour l’instant.</li>`;
 
   // les defis des deux jeux
   const kmQG = (n) => Number(n).toLocaleString('fr-FR');
@@ -12094,11 +12098,11 @@ function renderQGListes(){
 
   // le classement du jeu choisi
   document.querySelectorAll('[data-cl]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.cl === qgFiltreCl)));
-  const c = (qgFiltreCl === 'rafale' ? rf.classement : rd.classement) || [];
-  const prefixe = qgFiltreCl === 'rafale' ? 'rang-rf-' : 'rang-';
+  const c = (qgFiltreCl === 'rafale' ? rf.classement : qgFiltreCl === 'pom' ? pm.classement : rd.classement) || [];
+  const prefixe = qgFiltreCl === 'rafale' ? 'rang-rf-' : qgFiltreCl === 'pom' ? 'rang-pom-' : 'rang-';
   document.getElementById('qgClassement').innerHTML = c.length ? c.map((x, i) =>
     `<li class="${x.moi ? 'moi' : ''}"><span class="qg-pos">${i + 1}</span><span class="qg-nom">${echapperTexte(x.pseudo)}</span><span class="qg-rangpetit ${prefixe}${sansAccents(x.rang).toLowerCase().replace(/\s+/g, '-')}">${x.rang}</span><b>${Number(x.elo).toLocaleString('fr-FR')}</b></li>`).join('')
-    : `<li class="qg-vide">Aucun duel ${qgFiltreCl === 'rafale' ? 'Rafale' : 'Radar'} joué pour l’instant.</li>`;
+    : `<li class="qg-vide">Aucun duel ${qgFiltreCl === 'rafale' ? 'Rafale' : qgFiltreCl === 'pom' ? 'Plus ou moins' : 'Radar'} joué pour l’instant.</li>`;
 }
 document.getElementById('panel-qg').addEventListener('click', (e) => {
   const h = e.target.closest('[data-hist]');
@@ -12107,6 +12111,7 @@ document.getElementById('panel-qg').addEventListener('click', (e) => {
   if(c){ qgFiltreCl = c.dataset.cl; try{ localStorage.setItem('tf-qg-cl', qgFiltreCl); }catch(err){} renderQGListes(); }
 });
 function ouvrirResumeDuel(li){
+  if(li.dataset.jeu === 'pom') return;   // patch172 : pas encore de resume
   const id = Number(li.dataset.id);
   if(li.dataset.jeu === 'rafale') rafaleOuvrirResume(id); else radarOuvrirResume(id);
 }
@@ -12763,6 +12768,7 @@ function renderPomDuelCarte(){
     + (e.en_attente > 0 ? ` · ${e.en_attente} en attente` : '');
   const d = document.getElementById('qgPomDuel');
   d.textContent = e.en_cours ? 'Reprendre le duel' : 'Duel classé';
+  try{ renderQGListes(); }catch(err){}   // patch172
   d.classList.add('plein');
 }
 function pomCacher(c){ return Object.assign({}, c, { population: null }); }

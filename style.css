@@ -5395,6 +5395,9 @@ body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme svg, 
 .qg-jeu{ display:inline-block; margin-right:6px; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:1px 6px; border-radius:4px; vertical-align:1px; }
 .qg-jeu.radar{ color:#9DC3FF; background: rgba(77,141,255,.14); }
 .qg-jeu.rafale{ color:#FFD27A; background: rgba(240,180,41,.14); }
+.qg-jeu.pom{ color:#9CF7C9; background: rgba(61,214,140,.14); }   /* patch172 */
+.rang-pom-arpenteur{ color: var(--brume); } .rang-pom-cartographe{ color:#9DC3FF; } .rang-pom-geometre{ color: var(--c-peucommun); }
+.rang-pom-recenseur{ color: var(--c-epique, #B07CFF); } .rang-pom-prefet{ color: var(--c-legendaire); }
 .qg-duels .qg-vide, .qg-classement .qg-vide{ display:block; padding:4px 8px; }
 .rang-rf-pieton{ color: var(--brume); } .rang-rf-cycliste{ color:#9DC3FF; } .rang-rf-motard{ color: var(--c-peucommun); }
 .rang-rf-routier{ color: var(--c-epique, #B07CFF); } .rang-rf-pilote, .rang-rf-as-du-volant{ color: var(--c-legendaire); }

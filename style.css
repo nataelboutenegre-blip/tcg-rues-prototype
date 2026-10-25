@@ -5683,3 +5683,11 @@ body[data-dos="og-dos-constellation"] .face-back:not(.bq-dos-apercu .face-back) 
 .gr-voir .bq-btn, .gr-vitrine .bq-btn{ margin: 0; }
 .gr-vitrine{ display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .9rem; }
 .gr-vitrine b{ font-family: var(--titre); font-size: 1.2rem; }
+
+
+/* ---------- patch176 : clans en formation ---------- */
+.cl-formation-titre{ font-family: var(--titre); font-weight: 800; font-size: 1.15rem; margin: 20px 0 8px; padding-top: 14px; border-top: 1px solid rgba(169,188,212,0.16); }
+.cl-formation-titre small{ font-family: var(--texte); font-weight: 500; font-size: .78rem; color: var(--brume); margin-left: 6px; }
+.clan-carte .cl-ligne.formation{ grid-template-columns: 30px minmax(0,1fr) auto; cursor: default; }
+.cl-ligne.formation span small{ display: block; color: var(--brume); font-size: .74rem; }
+.cl-ligne.formation .cl-score{ color: var(--brume); font-size: 1.05rem; }

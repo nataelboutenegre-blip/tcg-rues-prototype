@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b33830e5224b';
+const VERSION_JEU = '2ceb0a282f30';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -14183,9 +14183,9 @@ function peindreClans(joueurs){
 async function loadClan(){
   const zone = document.getElementById('clanZone');
   if(!CLANS || !zone) return;
-  const [mc, cl] = await Promise.all([sb.rpc('mon_clan'), sb.rpc('clans_classement')]);
+  const [mc, cl, cf] = await Promise.all([sb.rpc('mon_clan'), sb.rpc('clans_classement'), sb.rpc('clans_en_formation')]);
   if(mc.error){ zone.innerHTML = `<p class="collection-empty">${echapperTexte(messageLisible(mc.error.message))}</p>`; return; }
-  clanCache = { moi: mc.data || {}, classement: cl.error ? [] : (cl.data || []) };
+  clanCache = { moi: mc.data || {}, classement: cl.error ? [] : (cl.data || []), formation: cf.error ? [] : (cf.data || []) };
   renderClan();
 }
 function blasonHtml(tag, couleur, petit){
@@ -14201,8 +14201,13 @@ function renderClan(){
   const lignesClassement = classement.length
     ? classement.map((x, i) => `<div class="cl-ligne${c && x.clan_id === c.id ? ' moi' : ''}"><b>${i + 1}</b>${blasonHtml(x.tag, x.couleur, true)}<span>${echapperTexte(x.nom)}</span><span class="cl-score">${nbClan(x.moyenne)}<small>par membre</small></span></div>`).join('')
     : '<p class="collection-empty">Aucun clan classé pour l\'instant (il faut 3 membres).</p>';
+  // patch176 : les clans de 1 ou 2 membres, pour pouvoir demander une invitation
+  const formation = (clanCache.formation || []).filter(x => !c || x.clan_id !== c.id);
+  const blocFormation = formation.length ? `<h3 class="cl-formation-titre">En formation <small>${formation.length} clan${formation.length > 1 ? 's' : ''} cherche${formation.length > 1 ? 'nt' : ''} des membres</small></h3>
+    ${formation.map(x => `<div class="cl-ligne formation">${blasonHtml(x.tag, x.couleur, true)}<span>${echapperTexte(x.nom)}<small>${x.chef ? 'chef : ' + echapperTexte(x.chef) : ''}</small></span><span class="cl-score">${x.membres} / 3<small>membres</small></span></div>`).join('')}
+    <p class="clan-note">Pour en rejoindre un, demande une invitation à son chef (sur le Discord, salon recrutement-clans). Il sera classé à partir de 3 membres.</p>` : '';
   const blocClassement = `<div class="clan-carte"><h2>Classement des clans</h2>${lignesClassement}
-    <p class="clan-note">À la moyenne de communes du Front par membre, jamais au total : un gros clan n'a pas d'avantage.</p></div>`;
+    <p class="clan-note">À la moyenne de communes du Front par membre, jamais au total : un gros clan n'a pas d'avantage.</p>${blocFormation}</div>`;
 
   let gauche;
   if(!c){

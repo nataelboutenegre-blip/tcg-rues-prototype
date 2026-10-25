@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '271ff197e575';
+const VERSION_JEU = 'afda994d9971';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9041,7 +9041,7 @@ const ONGLETS_MODE = {
   terra: { nom: 'Terra', barre: ['tirage', 'collection', 'qg', 'contrat'],
            propres: ['tirage', 'collection', 'qg', 'contrat', 'monuments', 'bourse', 'echange', 'boutique'] },
   front: { nom: 'Front', barre: ['tirage', 'territoire', 'qg', 'combat'],
-           propres: ['tirage', 'territoire', 'qg', 'combat', 'collection'] },
+           propres: ['tirage', 'territoire', 'qg', 'combat', 'collection', 'boutique'] },   // patch178 : boutique sans paquets
 };
 const ONGLETS_COMMUNS = CLANS ? ['profil', 'communaute', 'clan'] : ['profil', 'communaute'];
 let modeJeu = (() => {
@@ -13973,7 +13973,7 @@ function renderBoutique(){
   if(!st || !paq || !dos) return;
   const restants = Math.max(0, b.paquets_max - b.paquets_du_jour);
   st.innerHTML = `<span class="puce solde">Solde <b>${Number(b.solde).toLocaleString('fr-FR')}</b></span>`
-               + `<span class="puce">Paquets de boutique aujourd'hui <b>${b.paquets_du_jour} sur ${b.paquets_max}</b></span>`;
+               + `<span class="puce bq-terra-seul">Paquets de boutique aujourd'hui <b>${b.paquets_du_jour} sur ${b.paquets_max}</b></span>`;
 
   const deps = Object.keys(DEPT_NAMES).sort((x, y) => x.localeCompare(y, 'fr', { numeric: true }));
   paq.innerHTML = b.articles.filter(a => a.type === 'paquet').map(a => {

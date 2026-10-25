@@ -5691,3 +5691,7 @@ body[data-dos="og-dos-constellation"] .face-back:not(.bq-dos-apercu .face-back) 
 .clan-carte .cl-ligne.formation{ grid-template-columns: 30px minmax(0,1fr) auto; cursor: default; }
 .cl-ligne.formation span small{ display: block; color: var(--brume); font-size: .74rem; }
 .cl-ligne.formation .cl-score{ color: var(--brume); font-size: 1.05rem; }
+
+
+/* ---------- patch178 : en Front, la boutique sans les paquets ---------- */
+body.mode-front .bq-terra-seul{ display: none !important; }

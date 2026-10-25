@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'dec6e82334a7';
+const VERSION_JEU = '993b71f7ae86';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9120,6 +9120,12 @@ function initModes(){
     g.addEventListener('click', (e) => {
       const b = e.target.closest('[data-gn-recharger]');
       if(b) garnisonAction(b.dataset.gnRecharger, 5);
+      const p = e.target.closest('[data-gn-poser]');   // patch174
+      if(p){
+        p.disabled = true;
+        const dispo = energieEtat ? Math.floor(energieEtat.energie) : 5;
+        garnisonAction(p.dataset.gnPoser, Math.max(1, Math.min(5, dispo)));
+      }
     });
   }
   chargerGarnisons();
@@ -9150,8 +9156,29 @@ function renderGarnisons(){
         <span>${tier.label} · ${g.attaquants > 0 ? 'attaquée' : 'calme'} · ${g.energie} / 10</span>${barre(g.energie)}</div>
         <button class="gl-r" data-gn-recharger="${code}" ${g.energie >= 10 ? 'disabled' : ''}>Recharger</button></div>`;
     }).join('')}
-    ${liste.length < 3 ? `<p class="gl-vide">${3 - liste.length} place${liste.length < 2 ? 's' : ''} libre${liste.length < 2 ? 's' : ''} : ouvre une de tes communes sur la carte et choisis « Mettre en garnison ».</p>` : ''}
+    ${liste.length < 3 ? `<p class="gl-vide">${3 - liste.length} place${liste.length < 2 ? 's' : ''} libre${liste.length < 2 ? 's' : ''} : choisis une de tes communes ci-dessous (ou depuis la carte).</p>
+      <input type="search" class="bourse-search gn-cherche" id="gnCherche" placeholder="Chercher une de mes communes…" autocomplete="off" value="${echapperTexte(gnRecherche)}">
+      <div class="gn-choix" id="gnChoix">${gnChoixHtml()}</div>` : ''}
     ${recits}`;
+  const champ = document.getElementById('gnCherche');
+  if(champ) champ.addEventListener('input', (e) => {
+    gnRecherche = e.target.value;
+    const z = document.getElementById('gnChoix'); if(z) z.innerHTML = gnChoixHtml();
+  });
+}
+// patch174 : poser une garnison depuis Defendre
+let gnRecherche = '';
+function gnChoixHtml(){
+  const q = sansAccents(gnRecherche.trim().toLowerCase());
+  const rang = (t) => TIERS.findIndex(x => x.id === t.id);
+  const mes = [...collectionMap.values()].filter(c => !garnisonsMoi.has(c.code)
+    && (!q || sansAccents(c.nom.toLowerCase()).includes(q) || c.dept === q.toUpperCase()));
+  mes.sort((a, b) => rang(a.tier) - rang(b.tier) || a.nom.localeCompare(b.nom, 'fr'));
+  if(!mes.length) return `<p class="gl-vide">${collectionMap.size ? 'Aucune de tes communes ne correspond.' : 'Tu n\'as pas encore de commune dans le Front.'}</p>`;
+  return mes.slice(0, 6).map(c => `<div class="gl gn-ligne"><i class="gl-c ${c.tier.id}"></i><div class="gl-t"><b>${echapperTexte(c.nom)}</b>
+      <span>${c.tier.label} · ${echapperTexte(DEPT_NAMES[c.dept] || c.dept)} (${echapperTexte(c.dept)})</span></div>
+      <button class="gl-r gn-poser" data-gn-poser="${echapperTexte(c.code)}">En garnison</button></div>`).join('')
+    + (mes.length > 6 ? `<p class="gl-vide">+ ${mes.length - 6} autre${mes.length - 6 > 1 ? 's' : ''} : affine la recherche.</p>` : '');
 }
 
 async function garnisonAction(code, n){

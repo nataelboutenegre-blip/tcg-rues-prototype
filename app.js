@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '401f169c2657';
+const VERSION_JEU = '54a077636b2c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9244,7 +9244,7 @@ function miniTerra(e){
     <div class="mini-int">
       ${au ? fondAurore(e.code, e.tier.id, false) : ''}
       ${e.exemplaires > 1 ? `<span class="mini-ex">×${e.exemplaires}</span>` : ''}
-      <div class="mini-art">${miniArtSvg(e.code, e.tier.id)}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
+      <div class="mini-art">${e.photo ? artCommune(e, e.tier.id, 'mini') : miniArtSvg(e.code, e.tier.id)}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
       <div class="mini-infos">
         <p class="mini-nom ${e.nom.length > 14 ? 'long' : ''}">${nom}</p>
         ${e.rank ? `<span class="mini-num">n° ${Number(e.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(e.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
@@ -9288,6 +9288,11 @@ async function chargerCollectionTerra(){
   try{
     const { data: bl, error: eb } = await toutesLesLignes(() => sb.rpc('terra_bloques_moi'), 'code');
     if(!eb) for(const b of bl || []){ const e = terraCollection.get(b.code); if(e) e.bloques = Number(b.bloques) || 0; }
+  }catch(err){}
+  // patch171 : les photos (par pages : une collection depasse 1000 cartes)
+  try{
+    const { data: ph, error: ep } = await toutesLesLignes(() => sb.rpc('terra_photos_moi'), 'code');
+    if(!ep) for(const p of ph || []){ const e = terraCollection.get(p.code); if(e){ e.photo = p.photo; e.photoAuteur = p.auteur; e.photoLicence = p.licence; e.photoSource = p.source; } }
   }catch(err){}
   // patch170 : les Aurore venues du Front S1
   try{
@@ -14431,11 +14436,16 @@ async function chargerVitrine(id){
   if(!SAISON2 || !id) return [];
   const { data, error } = await sb.rpc('terra_vitrine', { p_joueur: id });
   if(error){ console.error(error); return []; }
+  const photos = new Map();   // patch171
+  try{
+    const codes = (data || []).map(r => r.code);
+    if(codes.length){ const r3 = await sb.rpc('terra_photos', { p_codes: codes }); if(!r3.error) for(const p of r3.data || []) photos.set(p.code, p.photo); }
+  }catch(err){}
   let s1 = new Set();   // patch170
   try{ const r2 = await sb.rpc('terra_aurores_s1', { p_joueur: id }); if(!r2.error) s1 = new Set(r2.data || []); }catch(err){}
   return (data || []).map(r => ({ code: r.code, nom: r.nom, dept: r.departement,
     tier: TIERS.find(t => t.id === r.tier) || TIERS[TIERS.length - 1], pop: r.population,
-    exemplaires: 1, rank: r.rang, tierSize: r.palier_total, aurore: r.aurore ? 1 : 0, auroreS1: s1.has(r.code) }));
+    exemplaires: 1, rank: r.rang, tierSize: r.palier_total, aurore: r.aurore ? 1 : 0, auroreS1: s1.has(r.code), photo: photos.get(r.code) || '' }));
 }
 
 // cinq cartes cote a cote : un nom de plus de 8 lettres passe en plus petit

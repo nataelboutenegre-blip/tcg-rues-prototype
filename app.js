@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '7fbcc45088eb';
+const VERSION_JEU = 'da697d10cbb1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -13596,7 +13596,13 @@ const BQ_DOS = [
 ];
 function dosCle(id){ return id ? id.replace(/^dos-/, '') : 'origine'; }
 function appliquerDos(id){
+  const avant = document.body.dataset.dos;
   document.body.dataset.dos = dosCle(id);
+  // patch161 : le paquet gratuit qui attend sur l'ecran suit le nouveau dos
+  if(avant !== document.body.dataset.dos && !paquetEnCours){
+    const zone = document.getElementById('packZone');
+    if(zone && zone.querySelector('.paquet[data-pret]')){ zone.innerHTML = ''; afficherPaquetPret('gratuit'); }
+  }
 }
 function dosApercuHtml(id){
   return `<div class="bq-dos-apercu" data-dos="${dosCle(id)}" aria-hidden="true"><div class="bq-dos-echelle">

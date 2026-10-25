@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1d2dd62db62c';
+const VERSION_JEU = '51eb72114ffb';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3407,6 +3407,8 @@ function brancherSurvolCanvas(){
   if(!cv || !bulle) return;
   cv.addEventListener('pointermove', (e) => {
     if(mapDragging){ bulle.hidden = true; return; }
+    // patch165 : au doigt, pas de bulle (elle restait et cachait la carte)
+    if(e.pointerType === 'touch'){ bulle.hidden = true; CV.survol = null; return; }
     const rect = cv.getBoundingClientRect();
     if(vueDepartements()){
       // de loin : le departement, pas une commune de quelques pixels
@@ -4049,15 +4051,20 @@ function creditPhoto(e){
     : `<p class="carte-credit">${texte}</p>`;
 }
 
+// patch166 : un id unique par affichage (gabarit en cache, id a la sortie)
+let miniArtNumero = 0;
 function miniArtSvg(code, tierId){
   const cle = code + '|' + tierId;
-  if(miniArtCache.has(cle)) return miniArtCache.get(cle);
+  const gabarit = miniArtCache.get(cle) || miniArtGabarit(code, tierId, cle);
+  return gabarit.split('__MGID__').join('mg' + (++miniArtNumero).toString(36));
+}
+function miniArtGabarit(code, tierId, cle){
   const [clair, fonce] = TEINTES_CARTE[tierId];
   // L'identifiant vient d'un hachage, jamais du texte recu : une
   // apostrophe ou une espace dans un nom de commune (« L'Abergement »,
   // « Aix en Othe ») rendait url(#...) non resoluble, et la carte
   // s'affichait sur fond noir.
-  const id = 'mg' + hashTexte(cle).toString(36);
+  const id = '__MGID__';
   const { d, cx, cy } = courbesDeNiveau(hashTexte(String(code)), 160, 100, 6, 36);
   const svg = `<svg viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
     <defs><radialGradient id="${id}" cx="${(cx / 160 * 100).toFixed(0)}%" cy="${cy.toFixed(0)}%" r="85%">

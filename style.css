@@ -5747,3 +5747,6 @@ body.mode-front .bq-terra-seul{ display: none !important; }
 .vt-case[data-vt-carte], .vt-place[data-vtg-carte]{ cursor:pointer; }
 .fc-vitrine-de{ font-size:.78rem; color:var(--brume); margin:10px 0 0; text-align:center; }
 .fc-vitrine-de b{ color:var(--c-legendaire); font-weight:600; }
+
+/* patch183 : le dos d'un autre joueur dans la scene 3D */
+.c3d-base > .bq-dos-apercu.c3d-dosde{ position: absolute; inset: 0; width: auto; height: auto; margin: 0; }

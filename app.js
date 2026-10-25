@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'a98cea7895cf';
+const VERSION_JEU = '972624f2bb3f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -14507,12 +14507,15 @@ async function chargerVitrine(id){
     const codes = (data || []).map(r => r.code);
     if(codes.length){ const r3 = await sb.rpc('terra_photos', { p_codes: codes }); if(!r3.error) for(const p of r3.data || []) photos.set(p.code, p.photo); }
   }catch(err){}
+  let dos;   // patch183 : undefined = inconnu (SQL pas passe), on garde le mien
+  try{ const r4 = await sb.rpc('dos_equipe', { p_joueur: id }); if(!r4.error) dos = dosCle(r4.data || null); }catch(err){}
   let s1 = new Set();   // patch170
   try{ const r2 = await sb.rpc('terra_aurores_s1', { p_joueur: id }); if(!r2.error) s1 = new Set(r2.data || []); }catch(err){}
   return (data || []).map(r => ({ code: r.code, nom: r.nom, dept: r.departement,
     tier: TIERS.find(t => t.id === r.tier) || TIERS[TIERS.length - 1], pop: r.population,
     exemplaires: 1, rank: r.rang, tierSize: r.palier_total, aurore: r.aurore ? 1 : 0,
     source: r.source === 'front' ? 'front' : 'terra',   // patch180
+    dos,
     auroreS1: r.source !== 'front' && s1.has(r.code), photo: photos.get(r.code) || '' }));
 }
 
@@ -15340,11 +15343,13 @@ function carte3dDebut(bw, bh, s){
     <div class="c3d-scene"><div class="c3d-carte" tabindex="0" role="button" aria-label="Retourner la carte"><div class="c3d-tourne">
       <div class="c3d-face c3d-devant"><div class="c3d-base">`;
 }
-function carte3dFin(){
+function carte3dFin(dos){
+  // patch183 : dos = la cle d'un dos (celui d'un autre joueur) ; sinon le mien
+  const autre = typeof dos === 'string' && /^[a-z0-9-]+$/.test(dos);
   return `</div><span class="c3d-reflet"></span></div>
-      <div class="c3d-face c3d-dos"><div class="c3d-base"><div class="face face-back c3d-dosint">${DOS_MOTIF_SVG}
+      <div class="c3d-face c3d-dos"><div class="c3d-base">${autre ? `<div class="bq-dos-apercu c3d-dosde" data-dos="${dos}">` : ''}<div class="face face-back c3d-dosint">${DOS_MOTIF_SVG}
         <span class="dos-coin hg"></span><span class="dos-coin hd"></span><span class="dos-coin bg"></span><span class="dos-coin bd"></span>
-        <div class="dos-embleme">${ICONE_EPINGLE}</div></div></div><span class="c3d-reflet"></span></div>
+        <div class="dos-embleme">${ICONE_EPINGLE}</div></div>${autre ? '</div>' : ''}</div><span class="c3d-reflet"></span></div>
     </div></div><div class="c3d-ombre"></div></div>
     <p class="c3d-aide">Fais glisser pour incliner · touche pour retourner</p></div>`;
 }
@@ -15397,7 +15402,7 @@ async function ouvrirCarteVitrine(e, pseudo, apres){
     return `
     <div class="fenetre fiche fiche-terra ${e.tier.id}" data-tcode="${echapperTexte(code)}" role="dialog" aria-modal="true" aria-labelledby="ftNom">
       <button class="fc-fermer" data-ft="fermer" aria-label="Fermer">✕</button>
-      <div class="fc-tete">${carte3dDebut(150, 225, 1.65)}${miniTerra({ ...e, exemplaires: 1 })}${carte3dFin()}</div>
+      <div class="fc-tete">${carte3dDebut(150, 225, 1.65)}${miniTerra({ ...e, exemplaires: 1 })}${carte3dFin(e.dos)}</div>
       <div class="fc-corps">
         <h2 id="ftNom" class="fc-nom ${e.nom.length > 22 ? 'long' : ''}">${echapperTexte(e.nom)}</h2>
         <p class="fc-dep">${DEPT_NAMES[e.dept] ? echapperTexte(DEPT_NAMES[e.dept]) + ' (' + echapperTexte(e.dept) + ')' : echapperTexte(e.dept)}</p>

@@ -5743,7 +5743,7 @@ body.mode-front .bq-terra-seul{ display: none !important; }
 .c3d-dos{ visibility: hidden; transition: visibility 0s linear .35s; }
 .c3d-carte.retournee .c3d-dos{ visibility: visible; }
 .c3d-base{ width: var(--bw); height: var(--bh); transform: scale(var(--s)); transform-origin: 0 0; position: relative; }
-.c3d-base > .mini{ width: 100%; height: 100%; }
+.c3d-base > .mini{ width: 100%; height: 100%; content-visibility: visible; contain: none; }   /* patch190 */
 .c3d-base > .mini:hover{ transform: none; }
 .c3d-base .c3d-dosint{ position: absolute; inset: 0; backface-visibility: visible; -webkit-backface-visibility: visible; }
 .fiche .c3d .fc-carte{ margin: 0; }

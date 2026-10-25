@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '294c18f294b3';
+const VERSION_JEU = '7fbcc45088eb';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -12484,6 +12484,7 @@ async function ouvrirQG(){
   majBoutonEntr();
   renderQG();
   if(!cdjEtat) chargerCdj();
+  chargerPom();   // patch160
   await Promise.all([chargerRadar(), chargerRafale()]);
   renderQG();
   // les resultats affiches sont vus : la pastille s'eteint
@@ -12553,6 +12554,168 @@ function renderQG(){
   renderRafaleCarte();
   renderQGListes();
 }
+
+// ---------- patch160 : Plus ou moins ----------
+// Tout se decide sur le serveur (pom_partie, pom_repondre) : la population
+// d'un duel n'arrive qu'avec la reponse.
+let pomEtat = null;   // null = pas charge, false = indisponible (SQL absent)
+let pomFermer = null, pomOccupe = false;
+async function chargerPom(){
+  const { data, error } = await sb.rpc('pom_partie');
+  if(error){ if(fonctionAbsente(error)) pomEtat = false; renderPomCarte(); return; }
+  pomEtat = data;
+  renderPomCarte();
+}
+function renderPomCarte(){
+  const carte = document.getElementById('qgPom');
+  if(!carte) return;
+  carte.hidden = !pomEtat;
+  if(!pomEtat) return;
+  const e = pomEtat, n = (e.reponses || []).length;
+  const etat = document.getElementById('qgPomEtat'), btn = document.getElementById('qgPomBtn');
+  etat.className = 'qg-etiquette' + (e.fini ? ' vert' : ' or');
+  etat.textContent = e.fini ? `${e.justes} / 10` : (n ? `${n} sur 10` : 'À jouer');
+  btn.textContent = e.fini ? 'Revoir' : (n ? 'Continuer' : 'Jouer');
+  btn.classList.toggle('plein', !e.fini);
+  document.getElementById('qgPomInfo').textContent = (e.gain > 0 ? `+${e.gain} pts gagnés · ` : '') + 'nouveaux duels à minuit';
+}
+const pomNb = (x) => Number(x || 0).toLocaleString('fr-FR');
+function pomTuile(c, k){
+  const u = urlPhoto(c.photo);
+  const photo = u ? `<img src="${echapperTexte(u)}" alt="" decoding="async" onerror="this.remove()">` : '';
+  return `<button type="button" class="pom-commune" data-pom-choix="${k}">
+      <span class="pom-photo">${photo}<b>${echapperTexte(c.nom)}</b></span>
+      <span class="pom-bas"><span class="pom-pop" id="pomPop${k}">${c.population != null ? pomNb(c.population) + '<em>hab.</em>' : ''}</span>
+        <small>${echapperTexte(DEPT_NAMES[c.departement] || '')} (${echapperTexte(c.departement)})</small></span>
+    </button>`;
+}
+function pomCredits(d){
+  const un = (c) => c.photo && c.auteur
+    ? (c.source ? `<a href="${echapperTexte(c.source)}" target="_blank" rel="noopener">${echapperTexte(c.nom)} : ${echapperTexte(c.auteur)}${c.licence ? ' · ' + echapperTexte(c.licence) : ''}</a>`
+                : `${echapperTexte(c.nom)} : ${echapperTexte(c.auteur)}${c.licence ? ' · ' + echapperTexte(c.licence) : ''}`) : '';
+  const l = [un(d.a), un(d.b)].filter(Boolean);
+  return l.length ? `<p class="pom-credits">Photos — ${l.join(' / ')}</p>` : '';
+}
+function pomPastilles(){
+  const e = pomEtat, rep = e.reponses || [];
+  return '<span class="pom-pastilles">' + e.duels.map((d, k) => {
+    if(k >= rep.length) return `<i class="${k === rep.length ? 'ici' : ''}"></i>`;
+    const pa = d.a.population, pb = d.b.population;
+    const juste = (rep[k] === 0 && pa > pb) || (rep[k] === 1 && pb > pa);
+    return `<i class="${juste ? 'ok' : 'ko'}"></i>`;
+  }).join('') + '</span>';
+}
+function pomLigne(){
+  const e = pomEtat;
+  return (e.reponses || []).map((r, k) => {
+    const d = e.duels[k];
+    return ((r === 0 && d.a.population > d.b.population) || (r === 1 && d.b.population > d.a.population)) ? '🟩' : '🟥';
+  }).join('');
+}
+function pomTextePartage(){
+  return `TerraFront · Plus ou moins #${pomEtat.numero}\n${pomEtat.justes}/10  ${pomLigne()}\nterrafront.fr`;
+}
+function renderPom(){
+  const corps = document.getElementById('pomCorps');
+  if(!corps || !pomEtat) return;
+  const e = pomEtat, i = (e.reponses || []).length;
+  if(e.fini){
+    corps.innerHTML = `<div class="pom-fin">
+        <span class="pom-sur">Plus ou moins #${e.numero}</span>
+        <div class="pom-score">${e.justes}<span> / 10</span></div>
+        <div class="pom-ligne">${pomLigne()}</div>
+        ${e.gain > 0 ? `<span class="pom-gain">+${e.gain} points Terra</span>` : ''}
+        <pre class="pom-partage" id="pomPartage">${echapperTexte(pomTextePartage())}</pre>
+        <button type="button" class="pom-btn" data-pom="copier">Copier mon résultat</button>
+        <p class="pom-note">Nouveaux duels demain, à minuit.</p>
+      </div>`;
+    return;
+  }
+  const d = e.duels[i];
+  corps.innerHTML = `<div class="pom-tete"><h2 id="pomTitre">Plus ou moins <span>#${e.numero} · duel ${i + 1} / 10</span></h2>${pomPastilles()}</div>
+    <p class="pom-question">Laquelle a le plus d'habitants ?</p>
+    <div class="pom-duel">${pomTuile(d.a, 0)}<span class="pom-ou">ou</span>${pomTuile(d.b, 1)}</div>
+    <p class="pom-verdict" id="pomVerdict" aria-live="polite"></p>
+    <button type="button" class="pom-btn" data-pom="suivant" id="pomSuivant" hidden>${i === 9 ? 'Voir mon score' : 'Duel suivant'}</button>
+    ${pomCredits(d)}`;
+}
+function pomCompter(el, cible){
+  if(!el) return;
+  if(REDUCED_MOTION){ el.innerHTML = pomNb(cible) + '<em>hab.</em>'; return; }
+  const t0 = performance.now(), duree = 700;
+  const pas = (t) => {
+    const k = Math.min(1, (t - t0) / duree);
+    el.innerHTML = pomNb(Math.round(cible * (1 - Math.pow(1 - k, 3)))) + '<em>hab.</em>';
+    if(k < 1) requestAnimationFrame(pas);
+  };
+  requestAnimationFrame(pas);
+}
+async function pomChoisir(k){
+  if(pomOccupe || !pomEtat || pomEtat.fini) return;
+  pomOccupe = true;
+  const i = (pomEtat.reponses || []).length;
+  const tuiles = document.querySelectorAll('#pomCorps .pom-commune');
+  tuiles.forEach(t => { t.disabled = true; });
+  const { data, error } = await sb.rpc('pom_repondre', { p_i: i, p_choix: k });
+  pomOccupe = false;
+  if(error){
+    notifier({ type: 'erreur', titre: 'Plus ou moins', texte: messageLisible(error.message) });
+    await chargerPom(); renderPom();
+    return;
+  }
+  const d = pomEtat.duels[i];
+  d.a.population = data.pop_a; d.b.population = data.pop_b;
+  pomEtat.reponses = (pomEtat.reponses || []).concat([k]);
+  pomEtat.justes = data.justes; pomEtat.gain = data.gain;
+  const fini = data.fini;
+  const grand = data.pop_a > data.pop_b ? 0 : 1;
+  tuiles.forEach((t, j) => {
+    t.classList.add(j === grand ? 'gagne' : 'perd');
+    if(j === k && !data.juste) t.classList.add('mauvais');
+    pomCompter(document.getElementById('pomPop' + j), j === 0 ? data.pop_a : data.pop_b);
+  });
+  const nomGrand = (grand === 0 ? d.a : d.b).nom;
+  const rapport = Math.max(data.pop_a, data.pop_b) / Math.max(1, Math.min(data.pop_a, data.pop_b));
+  const ecart = rapport >= 2 ? `${rapport.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} fois plus d'habitants`
+                             : `${Math.max(1, Math.round(100 * (rapport - 1)))} % d'habitants de plus`;
+  const v = document.getElementById('pomVerdict');
+  v.className = 'pom-verdict ' + (data.juste ? 'ok' : 'ko');
+  v.textContent = data.juste ? `Bien vu ! ${nomGrand} compte ${ecart}.` : `Raté : c'est ${nomGrand}, avec ${ecart}.`;
+  const p = document.querySelector('#pomCorps .pom-pastilles');
+  if(p) p.outerHTML = pomPastilles();
+  if(data.juste) loadPackStatus();   // le solde affiche suit
+  pomEtat.fini = fini;
+  const s = document.getElementById('pomSuivant');
+  if(s){ s.hidden = false; s.focus(); }
+  renderPomCarte();
+  if(fini) try{ loadQuetes(); }catch(err){}
+}
+async function ouvrirPom(){
+  if(!pomEtat) await chargerPom();
+  if(!pomEtat){ notifier({ type: 'erreur', titre: 'Plus ou moins', texte: "Le jeu n'est pas disponible pour le moment." }); return; }
+  pomFermer = ouvrirFenetre(`<div class="fenetre pom" role="dialog" aria-modal="true" aria-labelledby="pomTitre">
+      <button type="button" class="pom-fermer" data-pom="fermer" aria-label="Fermer">✕</button>
+      <div id="pomCorps"></div></div>`, () => { pomFermer = null; renderPomCarte(); });
+  renderPom();
+  const f = document.querySelector('.fenetre.pom');
+  if(f) f.addEventListener('click', async (ev) => {
+    const c = ev.target.closest('[data-pom-choix]');
+    if(c && !c.disabled) return pomChoisir(Number(c.dataset.pomChoix));
+    const a = ev.target.closest('[data-pom]');
+    if(!a) return;
+    if(a.dataset.pom === 'fermer' && pomFermer) pomFermer(null);
+    else if(a.dataset.pom === 'suivant') renderPom();
+    else if(a.dataset.pom === 'copier'){
+      try{ await navigator.clipboard.writeText(pomTextePartage()); a.textContent = 'Copié ✓'; }
+      catch(err){
+        const pre = document.getElementById('pomPartage');
+        if(pre){ const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+        a.textContent = 'Sélectionné : copie-le';
+      }
+    }
+  });
+}
+document.getElementById('qgPomBtn').addEventListener('click', () => ouvrirPom());
 
 document.getElementById('qgCdjBtn').addEventListener('click', () => {
   const t = document.querySelector('.tab[data-tab="cdj"]'); if(t) t.click();

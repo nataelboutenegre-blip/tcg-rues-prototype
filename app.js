@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '5a0af14a053c';
+const VERSION_JEU = 'c9c1bcb2d6bf';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -14204,6 +14204,44 @@ function joursDepuis(jour){
   const jj = (s) => { const [a, m, d] = String(s).slice(0, 10).split('-').map(Number); return Date.UTC(a, m - 1, d); };
   return Math.max(0, Math.round((jj(auj) - jj(jour)) / 86400000));
 }
+// patch186 : les membres des autres clans, depliables dans le classement
+const clansOuverts = new Set();
+const clanMembresVus = new Map();   // clan_id -> liste, 'erreur' ou 'charge'
+const CHEVRON_CLAN = '<svg class="cl-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 8l5 5 5-5"/></svg>';
+function membresClanHtml(x, chef){
+  const liste = clanMembresVus.get(x.clan_id);
+  let corps;
+  if(liste === 'charge' || liste === undefined) corps = '<div class="cl-pied">Chargement…</div>';
+  else if(liste === 'erreur') corps = '<div class="cl-pied">Membres indisponibles pour le moment.</div>';
+  else {
+    const actifs = liste.filter(m => membreActif(m)).length;
+    corps = liste.map(m => {
+      const j = joursDepuis(m.dernier_jour);
+      const actif = membreActif(m);
+      const etat = actif ? 'Actif' : (j === null ? 'Pas encore joué' : `Absent depuis ${j} jour${j > 1 ? 's' : ''}`);
+      return `<div class="cl-mb"><span class="av" aria-hidden="true">${echapperTexte((m.pseudo || '?')[0].toUpperCase())}</span>
+        <div class="qui"><button type="button" class="cl-mb-pseudo" data-clan-profil="${echapperTexte(m.joueur_id)}">${echapperTexte(m.pseudo)}</button>
+          <div class="cl-mb-info"><span class="cl-mb-point${actif ? '' : ' off'}" aria-hidden="true"></span>${etat}${m.chef ? ' · <span class="cl-mb-chef">Chef</span>' : ''}</div></div>
+        <span class="cl-mb-nb"><b>${nbClan(m.communes)}</b> commune${m.communes > 1 ? 's' : ''}</span></div>`;
+    }).join('') + (chef
+      ? `<div class="cl-pied">Pour le rejoindre, demande une invitation à ${echapperTexte(chef)} (Discord, salon recrutement-clans).</div>`
+      : `<div class="cl-pied">${liste.length} membre${liste.length > 1 ? 's' : ''} sur 6 · ${actifs} actif${actifs > 1 ? 's' : ''}</div>`);
+  }
+  return `<div class="cl-membres" style="--clan:${x.couleur}">${corps}</div>`;
+}
+async function basculerClanVu(id){
+  if(clansOuverts.has(id)){ clansOuverts.delete(id); renderClan(); return; }
+  clansOuverts.add(id);
+  const deja = clanMembresVus.get(id);
+  if(Array.isArray(deja)){ renderClan(); return; }
+  clanMembresVus.set(id, 'charge');
+  renderClan();
+  try{
+    const { data, error } = await sb.rpc('clan_membres_voir', { p_clan: id });
+    clanMembresVus.set(id, error ? 'erreur' : (data || []));
+  }catch(e){ clanMembresVus.set(id, 'erreur'); }
+  renderClan();
+}
 function membreActif(a){ const j = a ? joursDepuis(a.dernier_jour) : null; return j !== null && j < CLAN_ACTIF_JOURS; }
 function activiteClanHtml(a){
   if(!a) return '';
@@ -14221,12 +14259,12 @@ function renderClan(){
   const c = moi.clan;
   const rang = c ? classement.findIndex(x => x.clan_id === c.id) : -1;
   const lignesClassement = classement.length
-    ? classement.map((x, i) => `<div class="cl-ligne${c && x.clan_id === c.id ? ' moi' : ''}"><b>${i + 1}</b>${blasonHtml(x.tag, x.couleur, true)}<span>${echapperTexte(x.nom)}</span><span class="cl-score">${nbClan(x.moyenne)}<small>${x.actifs != null ? 'par membre actif' : 'par membre'}</small></span></div>`).join('')
+    ? classement.map((x, i) => `<div class="cl-bloc"><button type="button" class="cl-ligne cl-depli${c && x.clan_id === c.id ? ' moi' : ''}" data-clan-voir="${x.clan_id}" aria-expanded="${clansOuverts.has(x.clan_id)}"><b>${i + 1}</b>${blasonHtml(x.tag, x.couleur, true)}<span class="cl-nom">${echapperTexte(x.nom)}</span><span class="cl-score">${nbClan(x.moyenne)}<small>${x.actifs != null ? 'par membre actif' : 'par membre'}</small></span>${CHEVRON_CLAN}</button>${clansOuverts.has(x.clan_id) ? membresClanHtml(x) : ''}</div>`).join('') + '<p class="clan-note">Touche un clan pour voir ses membres.</p>'
     : '<p class="collection-empty">Aucun clan classé pour l\'instant (il faut 3 membres).</p>';
   // patch176 : les clans de 1 ou 2 membres, pour pouvoir demander une invitation
   const formation = (clanCache.formation || []).filter(x => !c || x.clan_id !== c.id);
   const blocFormation = formation.length ? `<h3 class="cl-formation-titre">En formation <small>${formation.length} clan${formation.length > 1 ? 's' : ''} cherche${formation.length > 1 ? 'nt' : ''} des membres</small></h3>
-    ${formation.map(x => `<div class="cl-ligne formation">${blasonHtml(x.tag, x.couleur, true)}<span>${echapperTexte(x.nom)}<small>${x.chef ? 'chef : ' + echapperTexte(x.chef) : ''}</small></span><span class="cl-score">${x.membres} / 3<small>membres</small></span></div>`).join('')}
+    ${formation.map(x => `<div class="cl-bloc"><button type="button" class="cl-ligne cl-depli formation" data-clan-voir="${x.clan_id}" aria-expanded="${clansOuverts.has(x.clan_id)}">${blasonHtml(x.tag, x.couleur, true)}<span class="cl-nom">${echapperTexte(x.nom)}<small>${x.chef ? 'chef : ' + echapperTexte(x.chef) : ''}</small></span><span class="cl-score">${x.membres} / 3<small>membres</small></span>${CHEVRON_CLAN}</button>${clansOuverts.has(x.clan_id) ? membresClanHtml(x, x.chef || 'son chef') : ''}</div>`).join('')}
     <p class="clan-note">Pour en rejoindre un, demande une invitation à son chef (sur le Discord, salon recrutement-clans). Il sera classé à partir de 3 membres.</p>` : '';
   const blocClassement = `<div class="clan-carte"><h2>Classement des clans</h2>${lignesClassement}
     <p class="clan-note">À la moyenne de communes du Front par membre actif (jeu ouvert dans les 7 derniers jours), jamais au total : un gros clan n'a pas d'avantage, et un membre absent ne fait pas baisser son clan.</p>${blocFormation}</div>`;
@@ -14290,6 +14328,8 @@ async function actionClan(nom, args, succes){
 document.getElementById('panel-clan').addEventListener('click', (e) => {
   const b = e.target.closest('button');
   if(!b) return;
+  if(b.dataset.clanVoir){ basculerClanVu(b.dataset.clanVoir); return; }   // patch186
+  if(b.dataset.clanProfil){ ouvrirProfil(b.dataset.clanProfil); return; }
   if(b.dataset.clanCouleur){ clanCouleurChoisie = b.dataset.clanCouleur; document.querySelectorAll('#clanCouleurs button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); return; }
   if(b.id === 'clanCreer'){
     const nom = (document.getElementById('clanNom') || {}).value || '';

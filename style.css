@@ -5127,14 +5127,15 @@ body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme svg, 
 }
 
 /* ---------- patch160 : Plus ou moins ---------- */
-.fenetre.pom{ width:min(640px, 100%); padding:22px 20px 18px; display:grid; gap:14px; max-height:calc(100dvh - 24px); overflow:auto; }
-.pom-fermer{ position:absolute; top:10px; right:10px; width:34px; height:34px; border-radius:50%; border:0; cursor:pointer; background:rgba(255,255,255,.08); color:#fff; font-size:1rem; z-index:2; }
-.pom-tete{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; padding-right:36px; }
+.fenetre.pom{ width:min(760px, 100%); padding:30px 30px 24px; display:grid; gap:22px; max-height:calc(100dvh - 24px); overflow:auto; }
+#pomCorps{ display:grid; gap:22px; }
+.pom-fermer{ position:absolute; top:16px; right:16px; width:34px; height:34px; border-radius:50%; border:0; cursor:pointer; background:rgba(255,255,255,.08); color:#fff; font-size:1rem; z-index:2; }
+.pom-tete{ display:flex; justify-content:space-between; align-items:center; gap:12px 20px; flex-wrap:wrap; padding-right:44px; }
 .pom-tete h2{ font-family: var(--titre); font-size:1.4rem; margin:0; } .pom-tete h2 span{ color: var(--brume); font-size:.95rem; margin-left:6px; font-weight:600; }
 .pom-pastilles{ display:flex; gap:4px; } .pom-pastilles i{ width:16px; height:6px; border-radius:3px; background:#2A3B57; }
 .pom-pastilles i.ok{ background:#3DD68C; } .pom-pastilles i.ko{ background:#E5484D; } .pom-pastilles i.ici{ background: var(--c-legendaire); }
-.pom-question{ text-align:center; font-family: var(--titre); font-size:1.25rem; margin:0; }
-.pom-duel{ display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:10px; align-items:stretch; }
+.pom-question{ text-align:center; font-family: var(--titre); font-size:1.5rem; margin:4px 0 0; text-wrap:balance; }
+.pom-duel{ display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); gap:20px; align-items:stretch; }
 .pom-ou{ align-self:center; font-family: var(--titre); color: var(--brume); }
 .pom-commune{ font:inherit; color:#fff; text-align:left; padding:0; border:0; border-radius:14px; overflow:hidden; cursor:pointer; min-width:0;
   display:flex; flex-direction:column; background: radial-gradient(circle at 30% 20%, #24446F 0%, #13284A 60%, #0B1830 100%);
@@ -5145,8 +5146,8 @@ body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme svg, 
   background: linear-gradient(160deg, #3B5378, #1C2E4D); }
 .pom-photo img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .pom-photo::after{ content:""; position:absolute; inset:0; background: linear-gradient(180deg, transparent 45%, rgba(11,24,48,.92)); }
-.pom-photo b{ position:absolute; left:10px; right:10px; bottom:7px; z-index:1; font-family: var(--titre); font-size:1.3rem; line-height:1.05; overflow-wrap:anywhere; text-shadow:0 2px 6px rgba(0,0,0,.6); }
-.pom-bas{ display:grid; gap:4px; padding:8px 10px 10px; }
+.pom-photo b{ position:absolute; left:14px; right:14px; bottom:10px; z-index:1; font-family: var(--titre); font-size:1.3rem; line-height:1.05; overflow-wrap:anywhere; text-shadow:0 2px 6px rgba(0,0,0,.6); }
+.pom-bas{ display:grid; gap:6px; padding:12px 14px 14px; }
 .pom-bas small{ color: var(--brume); font-size:.8rem; }
 .pom-pop{ font-family: var(--titre); font-size:1.45rem; color: var(--c-legendaire); min-height:1.75rem; font-variant-numeric: tabular-nums; }
 .pom-pop em{ font-style:normal; font-size:.8rem; color: var(--brume); margin-left:4px; font-family: var(--texte); }
@@ -5166,7 +5167,7 @@ body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme svg, 
 .pom-gain{ background: rgba(240,180,41,.12); border:1px solid rgba(240,180,41,.4); border-radius:999px; padding:6px 12px; font-weight:600; font-size:.9rem; }
 .pom-partage{ background: var(--nuit); border-radius:10px; padding:10px 12px; margin:0; text-align:left; font-size:.82rem; color: var(--brume); white-space:pre-wrap; }
 .pom-note{ margin:0; color: var(--brume); font-size:.85rem; }
-@media (max-width:420px){ .pom-duel{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); } .pom-ou{ display:none; } .pom-photo b{ font-size:1.1rem; } .pom-pop{ font-size:1.2rem; } }
+@media (max-width:420px){ .fenetre.pom{ padding:22px 16px 18px; gap:16px; } .pom-question{ font-size:1.2rem; } #pomCorps{ gap:16px; } .pom-duel{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; } .pom-ou{ display:none; } .pom-photo b{ font-size:1.1rem; } .pom-pop{ font-size:1.2rem; } }
 
 /* patch115 : l'astuce sous la recherche d'echange */
 .ech-astuce{ margin: -4px 0 10px; font-size: .74rem; color: var(--brume); }

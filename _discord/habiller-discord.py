@@ -196,7 +196,7 @@ for nom_cat, liste in PLAN:
 if VRAI and ordre:
     appel('PATCH', '/guilds/%s/channels' % G, ordre, fatal=False)
     dire(u'  ordre des salons envoyé (si un « ignoré » s\'affiche au-dessus, range-les à la main : rien de grave)')
-vieilles = [c['name'] for c in salons if c['type'] == 4 and c['name'] not in [p[0] for p in PLAN]]
+vieilles = [c['name'] for c in salons if c['type'] == 4 and c['name'] not in [p[0] for p in PLAN] and c['name'] != u'🏰 Clans']   # les clans : clans-discord.py
 if vieilles: dire(u'  (les anciennes catégories %s resteront vides : supprime-les à la main si tu veux)' % ', '.join(vieilles))
 
 # ------------------------------------------------------------------ 4. messages

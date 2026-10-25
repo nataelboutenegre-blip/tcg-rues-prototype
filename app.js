@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '582e1f446c73';
+const VERSION_JEU = 'd943201e849b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9216,7 +9216,8 @@ function afficherBilanTerra(){
 }
 
 async function chargerCollectionTerra(){
-  const { data, error } = await sb.rpc('terra_collection_moi');
+  // patch157 : par pages, sinon la collection s'arrete a 1000 cartes
+  const { data, error } = await toutesLesLignes(() => sb.rpc('terra_collection_moi'), 'code');
   if(error){ console.error(error); return false; }
   terraCollection = new Map();
   for(const r of data || []){
@@ -9229,7 +9230,7 @@ async function chargerCollectionTerra(){
   // s2-23, la fonction manque : tout reste echangeable cote affichage, le
   // serveur tranche de toute facon.
   try{
-    const { data: bl, error: eb } = await sb.rpc('terra_bloques_moi');
+    const { data: bl, error: eb } = await toutesLesLignes(() => sb.rpc('terra_bloques_moi'), 'code');
     if(!eb) for(const b of bl || []){ const e = terraCollection.get(b.code); if(e) e.bloques = Number(b.bloques) || 0; }
   }catch(err){}
   terraCharge = true;

@@ -5695,3 +5695,37 @@ body[data-dos="og-dos-constellation"] .face-back:not(.bq-dos-apercu .face-back) 
 
 /* ---------- patch178 : en Front, la boutique sans les paquets ---------- */
 body.mode-front .bq-terra-seul{ display: none !important; }
+
+
+/* ---------- patch179 : la carte en grand ---------- */
+.c3d{ display: grid; justify-items: center; gap: 6px; }
+.c3d-scene{ perspective: 1100px; display: grid; justify-items: center; touch-action: none; padding-top: 4px; }
+.c3d-carte{ --rx: 0deg; --ry: 0deg; --gx: 50%; --gy: 50%;
+  width: calc(var(--bw) * var(--s)); height: calc(var(--bh) * var(--s)); max-width: 100%;
+  position: relative; cursor: grab; outline: none;
+  transform: rotateX(var(--rx)) rotateY(var(--ry)); transform-style: preserve-3d; }
+.c3d-carte:active{ cursor: grabbing; }
+.c3d-carte:focus-visible{ outline: 2px solid var(--c-legendaire); outline-offset: 6px; border-radius: 16px; }
+.c3d-tourne{ position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.45,.05,.2,1); }
+.c3d-carte.retournee .c3d-tourne{ transform: rotateY(180deg); }
+.c3d-face{ position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: calc(14px * var(--s)); }
+.c3d-dos{ transform: rotateY(180deg); }
+/* Safari laisse parfois voir l'autre face à l'envers : on la cache à mi-retournement */
+.c3d-devant{ visibility: visible; transition: visibility 0s linear .35s; }
+.c3d-carte.retournee .c3d-devant{ visibility: hidden; }
+.c3d-dos{ visibility: hidden; transition: visibility 0s linear .35s; }
+.c3d-carte.retournee .c3d-dos{ visibility: visible; }
+.c3d-base{ width: var(--bw); height: var(--bh); transform: scale(var(--s)); transform-origin: 0 0; position: relative; }
+.c3d-base > .mini{ width: 100%; height: 100%; }
+.c3d-base > .mini:hover{ transform: none; }
+.c3d-base .c3d-dosint{ position: absolute; inset: 0; backface-visibility: visible; -webkit-backface-visibility: visible; }
+.fiche .c3d .fc-carte{ margin: 0; }
+.c3d-reflet{ position: absolute; inset: 0; z-index: 6; pointer-events: none; border-radius: inherit; mix-blend-mode: overlay;
+  background: radial-gradient(farthest-corner circle at var(--gx) var(--gy), rgba(255,255,255,.45), rgba(255,255,255,.07) 30%, transparent 60%); }
+.c3d-ombre{ width: 60%; height: 16px; border-radius: 50%; background: rgba(0,0,0,.5); filter: blur(12px); margin-top: 2px; }
+.c3d-aide{ margin: 0; font-size: .74rem; color: var(--brume); text-align: center; }
+[data-tcode].mini{ cursor: pointer; }
+[data-tcode].mini:focus-visible{ outline: 2px solid var(--c-legendaire); outline-offset: 2px; }
+.fiche-terra .fc-actions{ display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (prefers-reduced-motion: reduce){ .c3d-tourne{ transition: none; } }
+@media (max-width: 420px){ .c3d{ --s: 1.5 !important; } }

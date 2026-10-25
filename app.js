@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '972624f2bb3f';
+const VERSION_JEU = '7726ead812c3';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -14185,15 +14185,35 @@ function peindreClans(joueurs){
 async function loadClan(){
   const zone = document.getElementById('clanZone');
   if(!CLANS || !zone) return;
-  const [mc, cl, cf] = await Promise.all([sb.rpc('mon_clan'), sb.rpc('clans_classement'), sb.rpc('clans_en_formation')]);
+  const [mc, cl, cf, ac] = await Promise.all([sb.rpc('mon_clan'), sb.rpc('clans_classement'), sb.rpc('clans_en_formation'),
+    sb.rpc('clan_activite').then(r => r, () => ({ error: true }))]);   // patch184
   if(mc.error){ zone.innerHTML = `<p class="collection-empty">${echapperTexte(messageLisible(mc.error.message))}</p>`; return; }
-  clanCache = { moi: mc.data || {}, classement: cl.error ? [] : (cl.data || []), formation: cf.error ? [] : (cf.data || []) };
+  clanCache = { moi: mc.data || {}, classement: cl.error ? [] : (cl.data || []), formation: cf.error ? [] : (cf.data || []),
+                activite: ac.error ? null : new Map((ac.data || []).map(a => [a.joueur_id, a])) };
   renderClan();
 }
 function blasonHtml(tag, couleur, petit){
   return `<span class="blason${petit ? ' petit' : ''}" style="--clan:${couleur}">${echapperTexte(tag)}</span>`;
 }
 function nbClan(n){ return Number(n || 0).toLocaleString('fr-FR'); }
+// patch184 : l'activite du jour d'un membre, et depuis quand il n'a pas joue
+const CLAN_ACTIF_JOURS = 7;
+function joursDepuis(jour){
+  if(!jour) return null;
+  const auj = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Paris' });   // AAAA-MM-JJ
+  const jj = (s) => { const [a, m, d] = String(s).slice(0, 10).split('-').map(Number); return Date.UTC(a, m - 1, d); };
+  return Math.max(0, Math.round((jj(auj) - jj(jour)) / 86400000));
+}
+function membreActif(a){ const j = a ? joursDepuis(a.dernier_jour) : null; return j !== null && j < CLAN_ACTIF_JOURS; }
+function activiteClanHtml(a){
+  if(!a) return '';
+  const j = joursDepuis(a.dernier_jour);
+  if(j === null || j >= CLAN_ACTIF_JOURS)
+    return `<div class="clan-act absent">${j === null ? 'Pas encore joué' : `Absent depuis ${j} jours`} · ne compte pas dans la moyenne</div>`;
+  const vals = [[a.cartes, 'carte', 'cartes'], [a.conquetes, 'conquête', 'conquêtes'], [a.defenses, 'défense', 'défenses'], [a.energie, 'énergie', 'énergie']];
+  if(!vals.some(v => v[0] > 0)) return `<div class="clan-act calme">${j === 0 ? 'Passé aujourd\'hui, rien de joué encore' : j === 1 ? 'Vu hier' : `Vu il y a ${j} jours`}</div>`;
+  return `<div class="clan-act">${vals.map(([n, un, plus]) => `<span class="${n > 0 ? '' : 'zero'}"><b>${nbClan(n)}</b> ${n > 1 ? plus : un}</span>`).join('')}</div>`;
+}
 function renderClan(){
   const zone = document.getElementById('clanZone');
   if(!zone || !clanCache) return;
@@ -14201,7 +14221,7 @@ function renderClan(){
   const c = moi.clan;
   const rang = c ? classement.findIndex(x => x.clan_id === c.id) : -1;
   const lignesClassement = classement.length
-    ? classement.map((x, i) => `<div class="cl-ligne${c && x.clan_id === c.id ? ' moi' : ''}"><b>${i + 1}</b>${blasonHtml(x.tag, x.couleur, true)}<span>${echapperTexte(x.nom)}</span><span class="cl-score">${nbClan(x.moyenne)}<small>par membre</small></span></div>`).join('')
+    ? classement.map((x, i) => `<div class="cl-ligne${c && x.clan_id === c.id ? ' moi' : ''}"><b>${i + 1}</b>${blasonHtml(x.tag, x.couleur, true)}<span>${echapperTexte(x.nom)}</span><span class="cl-score">${nbClan(x.moyenne)}<small>${x.actifs != null ? 'par membre actif' : 'par membre'}</small></span></div>`).join('')
     : '<p class="collection-empty">Aucun clan classé pour l\'instant (il faut 3 membres).</p>';
   // patch176 : les clans de 1 ou 2 membres, pour pouvoir demander une invitation
   const formation = (clanCache.formation || []).filter(x => !c || x.clan_id !== c.id);
@@ -14209,7 +14229,7 @@ function renderClan(){
     ${formation.map(x => `<div class="cl-ligne formation">${blasonHtml(x.tag, x.couleur, true)}<span>${echapperTexte(x.nom)}<small>${x.chef ? 'chef : ' + echapperTexte(x.chef) : ''}</small></span><span class="cl-score">${x.membres} / 3<small>membres</small></span></div>`).join('')}
     <p class="clan-note">Pour en rejoindre un, demande une invitation à son chef (sur le Discord, salon recrutement-clans). Il sera classé à partir de 3 membres.</p>` : '';
   const blocClassement = `<div class="clan-carte"><h2>Classement des clans</h2>${lignesClassement}
-    <p class="clan-note">À la moyenne de communes du Front par membre, jamais au total : un gros clan n'a pas d'avantage.</p>${blocFormation}</div>`;
+    <p class="clan-note">À la moyenne de communes du Front par membre actif (jeu ouvert dans les 7 derniers jours), jamais au total : un gros clan n'a pas d'avantage, et un membre absent ne fait pas baisser son clan.</p>${blocFormation}</div>`;
 
   let gauche;
   if(!c){
@@ -14229,15 +14249,25 @@ function renderClan(){
       <p class="clan-note">Ou attends qu'un chef t'invite : son invitation apparaîtra ici.</p>
     </div>`;
   } else {
+    const act = clanCache.activite;   // patch184 : null si le SQL n'est pas passe
     const membres = (c.membres || []).map(m => `<div class="clan-membre"><span class="av" style="--clan:${c.couleur}">${echapperTexte((m.pseudo || '?')[0].toUpperCase())}</span>
         <div><b>${echapperTexte(m.pseudo)}</b><small>${m.chef ? 'Chef' : 'Membre'}${m.moi ? ' · toi' : ''}</small></div>
         <span class="clan-nb">${nbClan(m.communes)} communes</span>
-        ${c.chef && !m.moi ? `<button class="bq-btn secondaire" data-clan-exclure="${m.id}">Exclure</button>` : '<span></span>'}</div>`).join('');
+        ${c.chef && !m.moi ? `<button class="bq-btn secondaire" data-clan-exclure="${m.id}">Exclure</button>` : '<span></span>'}
+        ${act ? activiteClanHtml(act.get(m.id)) : ''}</div>`).join('');
     const total = (c.membres || []).reduce((s, m) => s + (m.communes || 0), 0);
     const n = (c.membres || []).length;
+    const actifs = act ? (c.membres || []).filter(m => membreActif(act.get(m.id))) : null;
+    const moyenne = actifs ? (actifs.length ? Math.round(actifs.reduce((s, m) => s + (m.communes || 0), 0) / actifs.length) : 0)
+                           : (n ? Math.round(total / n) : 0);
+    const somme = (k) => [...(act ? act.values() : [])].reduce((s, a) => s + (a[k] || 0), 0);
+    const blocJour = act ? `<div class="clan-jour"><span class="clan-jour-t">Le clan aujourd'hui</span>
+        <span><b>${nbClan(somme('cartes'))}</b> cartes</span><span><b>${nbClan(somme('conquetes'))}</b> conquêtes</span>
+        <span><b>${nbClan(somme('defenses'))}</b> défenses</span><span><b>${nbClan(somme('energie'))}</b> énergie</span></div>` : '';
     gauche = `<div class="clan-carte">
       <div class="clan-tete">${blasonHtml(c.tag, c.couleur)}<div><div class="clan-nom">${echapperTexte(c.nom)}</div><small>${n} membre${n > 1 ? 's' : ''} sur 6${n < 3 ? ' · classé à partir de 3' : ''}</small></div></div>
-      <div class="puces"><span class="puce">Communes en Front <b>${nbClan(total)}</b></span><span class="puce">Moyenne par membre <b>${nbClan(n ? Math.round(total / n) : 0)}</b></span>${rang >= 0 ? `<span class="puce">Rang <b>${rang + 1}</b> sur ${classement.length}</span>` : ''}</div>
+      <div class="puces"><span class="puce">Communes en Front <b>${nbClan(total)}</b></span><span class="puce">Moyenne par membre${actifs ? ' actif' : ''} <b>${nbClan(moyenne)}</b></span>${actifs ? `<span class="puce">Actifs <b>${actifs.length}</b> sur ${n}</span>` : ''}${rang >= 0 ? `<span class="puce">Rang <b>${rang + 1}</b> sur ${classement.length}</span>` : ''}</div>
+      ${blocJour}
       <h2>Membres</h2>${membres}
       ${c.chef && n < 6 ? `<div class="clan-inviter"><input id="clanPseudo" placeholder="Pseudo du joueur à inviter"><button class="bq-btn" id="clanInviter">Inviter</button></div>` : ''}
       ${(c.invites || []).length ? `<p class="clan-note">Invitations en attente : ${c.invites.map(echapperTexte).join(', ')}.</p>` : ''}

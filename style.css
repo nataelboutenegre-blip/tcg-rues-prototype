@@ -5750,3 +5750,14 @@ body.mode-front .bq-terra-seul{ display: none !important; }
 
 /* patch183 : le dos d'un autre joueur dans la scene 3D */
 .c3d-base > .bq-dos-apercu.c3d-dosde{ position: absolute; inset: 0; width: auto; height: auto; margin: 0; }
+
+/* patch184 : l'activite du jour dans l'onglet Clan */
+.clan-act{ grid-column: 2 / -1; margin-top:-4px; display:flex; flex-wrap:wrap; gap:4px 12px; font-size:.76rem; color: var(--brume); }
+.clan-act span b{ color:#fff; font-weight:700; }
+.clan-act span.zero{ opacity:.45; }
+.clan-act.absent{ color:#E8907A; }
+.clan-act.calme{ font-style:italic; }
+.clan-jour{ display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 16px; margin:14px 0 2px; padding:10px 12px; border-radius:10px;
+  background: rgba(240,180,41,.07); border:1px solid rgba(240,180,41,.18); font-size:.84rem; color: var(--brume); }
+.clan-jour b{ color: var(--c-legendaire); font-family: var(--titre); font-weight:800; font-size:1.05rem; }
+.clan-jour-t{ width:100%; font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color: var(--brume); }

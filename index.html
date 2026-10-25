@@ -26,7 +26,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=dc6a3568853e">
+<link rel="stylesheet" href="style.css?v=4eaf3d0c0932">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -547,10 +547,17 @@
         <div class="qg-carte" id="qgPom" hidden>
           <div class="qg-tete">
             <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20V5M3.5 8.5 7 5l3.5 3.5"/><path d="M17 4v15M13.5 15.5 17 19l3.5-3.5"/></svg></span>
-            <div class="qg-titre"><h2>Plus ou moins</h2><p>Solo · 10 duels de population par jour · jusqu'à 50 pts</p></div>
+            <div class="qg-titre"><h2>Plus ou moins</h2><p>10 duels de population · partie du jour jusqu'à 50 pts · duel classé 20 pts par victoire, 5 par jour</p></div>
             <span class="qg-etiquette" id="qgPomEtat"></span>
           </div>
-          <div class="qg-actions"><button type="button" class="qg-btn" id="qgPomBtn">Jouer</button><span class="qg-petit" id="qgPomInfo"></span></div>
+          <div class="qg-rang" id="qgPomRang" hidden>
+            <div><b id="qgPomRangNom">—</b><span class="qg-petit" id="qgPomGains"></span></div>
+            <span class="qg-elo"><b id="qgPomElo">—</b> Elo</span>
+          </div>
+          <div class="qg-actions"><button type="button" class="qg-btn" id="qgPomBtn">Jouer</button>
+            <button type="button" class="qg-btn" id="qgPomDuel" hidden>Duel classé</button>
+            <button type="button" class="qg-btn" id="qgPomEntr" hidden>S'entraîner</button>
+            <span class="qg-petit" id="qgPomInfo"></span></div>
         </div>
 
         <div class="qg-carte" id="qgRadar">
@@ -1507,6 +1514,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=dc6a3568853e"></script>
+<script defer src="app.js?v=4eaf3d0c0932"></script>
 </body>
 </html>

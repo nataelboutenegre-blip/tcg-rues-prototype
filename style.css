@@ -5171,6 +5171,16 @@ body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme svg, 
 .pom-note{ margin:0; color: var(--brume); font-size:.85rem; }
 @media (max-width:420px){ .fenetre.pom{ padding:22px 16px 18px; gap:16px; } .pom-question{ font-size:1.2rem; } #pomCorps{ gap:16px; } .pom-duel{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; } .pom-ou{ display:none; } .pom-photo b{ font-size:1.1rem; } .pom-pop{ font-size:1.2rem; } }
 
+/* ---------- patch168 : Plus ou moins, entrainement et duels ---------- */
+.pom-sous-tete{ margin:-12px 0 0; color: var(--brume); font-size:.82rem; }
+.pom-minuteur{ height:8px; border-radius:4px; background:#2A3B57; overflow:hidden; }
+.pom-minuteur i{ display:block; height:100%; width:100%; background: linear-gradient(90deg, #E5484D, var(--c-legendaire) 40%, #3DD68C); }
+.pom-q-num{ color: var(--brume); font-size:.95rem; margin-left:6px; }
+.pom-gains{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+.pom-gains:empty{ display:none; }
+.pom-score.pom-victoire{ color:#3DD68C; } .pom-score.pom-defaite{ color:#E5484D; }
+.pom-score.pom-victoire, .pom-score.pom-defaite, .pom-score.pom-egalite{ font-size:2.4rem; }
+
 /* patch115 : l'astuce sous la recherche d'echange */
 .ech-astuce{ margin: -4px 0 10px; font-size: .74rem; color: var(--brume); }
 .ech-astuce b{ color: var(--papier); font-weight: 600; }

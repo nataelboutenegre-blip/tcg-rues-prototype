@@ -1392,7 +1392,7 @@
     padding:2px 10px; border-radius:999px; letter-spacing:.03em;
   }
   .pr-corps{ padding:18px 20px 20px; }
-  .pr-chiffres{ display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px; }
+  .pr-chiffres{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; margin-bottom:20px; }
   .pr-ch{ background:var(--nuit); border-radius:10px; padding:11px 6px; text-align:center; }
   .pr-ch b{ display:block; font-family:var(--titre); font-weight:900; font-size:1.4rem; line-height:1.05; }
   .pr-ch span{ font-size:.66rem; color:var(--brume); }
@@ -1453,7 +1453,7 @@
   .pc-proprio:hover{ text-decoration-color:var(--c-legendaire); }
 
   @media (max-width:520px){
-    .pr-chiffres{ grid-template-columns:repeat(2,1fr); }
+    .pr-chiffres{ grid-template-columns:repeat(6,minmax(0,1fr)); } .pr-chiffres .pr-ch{ grid-column:span 2; } .pr-chiffres .pr-ch:nth-child(-n+2){ grid-column:span 3; }
     .pr-btn{ min-width:100%; }
   }
   .fenetre h2{ font-family: var(--titre); font-weight:900; font-size:2.2rem; line-height:.95; margin:0 0 8px; position:relative; }
@@ -2256,6 +2256,7 @@
   .pf-bloc h3{ font:700 .68rem/1 var(--texte); letter-spacing:.1em; text-transform:uppercase;
                color: var(--brume); margin:0 0 13px; }
   .pf-paire{ display:grid; grid-template-columns:1fr 1fr; gap:11px; }
+  .pf-paire.pf-trio{ grid-template-columns:repeat(3, minmax(0, 1fr)); margin-top:11px; }   /* patch167 */
   .pf-ch{ background: var(--nuit); border-radius:10px; padding:10px 12px; }
   .pf-ch b{ display:block; font:900 1.5rem/1 var(--titre); }
   .pf-ch span{ display:block; font-size:.72rem; color:#7F91AB; margin-top:3px; }

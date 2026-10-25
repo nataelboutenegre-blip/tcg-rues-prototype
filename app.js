@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '51eb72114ffb';
+const VERSION_JEU = 'dc6a3568853e';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6120,7 +6120,10 @@ function blocsProfil(p){
         <div class="pf-paire">
           <div class="pf-ch"><b style="color:var(--joueur)">${nb(p.communes)}</b><span>communes</span></div>
           <div class="pf-ch"><b>${nb(p.departements)}</b><span>départements</span></div>
+        </div>
+        <div class="pf-paire pf-trio">
           <div class="pf-ch"><b style="color:var(--c-legendaire)">${nb(p.legendaires)}</b><span>légendaires</span></div>
+          <div class="pf-ch"><b style="color:var(--c-epique)">${nb(p.epiques)}</b><span>épiques</span></div>
           <div class="pf-ch"><b style="color:var(--c-rare)">${nb(p.rares)}</b><span>rares</span></div>
         </div>
         <p class="pf-ratio"><b>${nb(p.habitants)}</b> habitants sous sa garde</p>
@@ -6368,6 +6371,7 @@ function rendreProfil(){
           <div class="pr-ch"><b style="color:${couleur}">${nb(p.communes)}</b><span>communes</span></div>
           <div class="pr-ch"><b>${nb(p.departements)}</b><span>départements</span></div>
           <div class="pr-ch"><b style="color:var(--c-legendaire)">${nb(p.legendaires)}</b><span>légendaires</span></div>
+          <div class="pr-ch"><b style="color:var(--c-epique)">${nb(p.epiques)}</b><span>épiques</span></div>
           <div class="pr-ch"><b style="color:var(--c-rare)">${nb(p.rares)}</b><span>rares</span></div>
         </div>
 

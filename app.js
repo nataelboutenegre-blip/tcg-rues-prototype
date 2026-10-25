@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = false;
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '9a2709870e1c';
+const VERSION_JEU = '294c18f294b3';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -149,11 +149,11 @@ const DOS_MOTIF_SVG = (() => {
 })();
 
 function paquetMotifSvg(type){
-  const achete = type === 'achete';
-  const clair = achete ? '#FCE38A' : '#3B6FB8';
-  const moyen = achete ? '#F0B429' : '#1D3F72';
-  const fonce = achete ? '#9A6412' : '#0B1D38';
-  const trait = achete ? 'rgba(90,55,5,0.28)' : 'rgba(169,210,255,0.22)';
+  const achete = type === 'achete', og = type === 'og';   // patch159 : nacre OG
+  const clair = og ? '#F4F1FF' : achete ? '#FCE38A' : '#3B6FB8';
+  const moyen = og ? '#D9D3F2' : achete ? '#F0B429' : '#1D3F72';
+  const fonce = og ? '#A79FCF' : achete ? '#9A6412' : '#0B1D38';
+  const trait = og ? 'rgba(91,74,158,0.22)' : achete ? 'rgba(90,55,5,0.28)' : 'rgba(169,210,255,0.22)';
   const { d } = courbesDeNiveau(hashTexte('paquet-' + type), 200, 280, 12);
   return `<svg class="paquet-motif" viewBox="0 0 200 280" aria-hidden="true">
     <defs><linearGradient id="pg-${type}" x1="0" y1="0" x2="1" y2="1">
@@ -6919,16 +6919,17 @@ function potRetirer(n){
 
 // Paquet bleu pour le gratuit, dore pour celui achete
 function makePackEl(type){
-  const motif = paquetMotifSvg(type);
+  const og = document.body.dataset.dos === 'og';   // patch159 : le paquet suit le dos OG
+  const motif = paquetMotifSvg(og ? 'og' : type);
   const pack = document.createElement('button');
-  pack.className = 'paquet ' + (type === 'achete' ? 'achete' : 'gratuit');
+  pack.className = 'paquet ' + (type === 'achete' ? 'achete' : 'gratuit') + (og ? ' og' : '');
   pack.setAttribute('aria-label', 'Ouvrir le paquet');
   pack.innerHTML = `
     <div class="paquet-languette">${motif}</div>
     <svg class="paquet-perfo" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><polyline class="perfo-base" points="${PERFO_POINTS}"/></svg>
     <div class="perfo-masque"><svg class="paquet-perfo perfo-lueur" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><polyline class="perfo-trace" points="${PERFO_POINTS}"/></svg></div>
     <div class="paquet-corps">${motif}
-      <div class="paquet-etiquette">${ICONE_EPINGLE}<span class="paquet-titre">Paquet</span></div>
+      <div class="paquet-etiquette">${og ? '<span class="paquet-hexa"><b>OG</b></span>' : ICONE_EPINGLE}<span class="paquet-titre">Paquet</span></div>
       <div class="paquet-bande">5 communes</div>
     </div>
     <div class="paquet-eclat"></div>
@@ -13455,6 +13456,15 @@ async function loadBoutique(silencieux){
   boutiqueCache = data;
   appliquerDos(data.dos);
   renderBoutique();
+  // patch159 : prevenir les OG une fois (par appareil)
+  try{
+    const og = (data.articles || []).some(a => a.id === 'dos-og' && a.possede);
+    if(og && data.dos !== 'dos-og' && localStorage.getItem('tf-dos-og-vu') !== '1'){
+      localStorage.setItem('tf-dos-og-vu', '1');
+      notifier({ type: 'succes', titre: 'Merci d\'avoir joué la saison 1 !',
+                 texte: 'Ton dos de carte OG t\'attend dans la Boutique : touche « Équiper ».' });
+    }
+  }catch(e){}
 }
 function bqPrix(n){ return Number(n).toLocaleString('fr-FR') + ' pts'; }
 function renderBoutique(){
@@ -13490,8 +13500,8 @@ function renderBoutique(){
   dos.innerHTML = liste.map(a => {
     const equipe = (b.dos || null) === a.id;
     let action;
-    if(equipe) action = `<span class="bq-equipe">Sur tes cartes</span>`;
-    else if(a.possede) action = `<button class="bq-btn secondaire" data-bq-mettre="${a.id || ''}">Mettre</button>`;
+    if(equipe) action = `<span class="bq-equipe">Équipé</span>`;
+    else if(a.possede) action = `<button class="bq-btn secondaire" data-bq-mettre="${a.id || ''}">Équiper</button>`;
     else action = `<button class="bq-btn" data-bq-dos="${a.id}" data-prix="${a.prix}"${b.solde < a.prix ? ' data-court="1"' : ''}>${bqPrix(a.prix)}</button>`;
     return `<div class="bq-article bq-dos${equipe ? ' equipe' : ''}">
         ${dosApercuHtml(a.id)}
@@ -13975,7 +13985,7 @@ async function reclamerCollection(id){
   colCache = null;
   boutiqueCache = null;
   notifier({ type: 'succes', titre: 'Collection terminée !',
-             texte: r ? `+${fmtNombre(r.points)} points et le dos « ${r.dos_nom} ». Mets-le sur tes cartes depuis la Boutique.` : '' });
+             texte: r ? `+${fmtNombre(r.points)} points et le dos « ${r.dos_nom} ». Équipe-le depuis la Boutique.` : '' });
   const el = document.getElementById('terraColl');
   if(el && terraVue === 'collections') renderCollectionsTerra(el);
 }

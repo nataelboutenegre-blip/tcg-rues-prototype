@@ -5082,6 +5082,50 @@ body[data-dos="village"], .bq-dos-apercu[data-dos="village"]{
   --dos-liseret: rgba(244,232,210,0.7); --dos-embleme: #4A3A63; --dos-or: #F4E8D2; --dos-anneau: rgba(94,74,122,0.9);
 }
 
+/* ---------- patch159 : le dos OG « Nacre » et son paquet ---------- */
+body[data-dos="og"], .bq-dos-apercu[data-dos="og"]{
+  --dos-fond: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='14'%3E%3Ctext x='60' y='11' text-anchor='middle' font-family='Arial Narrow,Arial,sans-serif' font-size='10' letter-spacing='3' fill='%235B4A9E'%3ESAISON 1%3C/text%3E%3C/svg%3E") center bottom 22px / 120px 14px no-repeat,
+              radial-gradient(circle at 50% 42%, #F4F1FF 0%, #D9D3F2 55%, #A79FCF 100%);
+  --dos-liseret: rgba(91,74,158,0.5); --dos-embleme: #F4F1FF; --dos-or: #5B4A9E; --dos-anneau: rgba(167,159,207,0.9);
+}
+body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back)::before, .bq-dos-apercu[data-dos="og"] .face-back::before{
+  border-color: transparent; background: linear-gradient(115deg, #8FF3FF 0%, #C7A6FF 28%, #FFB7E3 46%, #FFE7A3 64%, #9CF7C9 82%, #8FF3FF 100%) border-box; background-size: 220% 220%;
+  -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0); mask-composite: exclude;
+  animation: ogHolo 6s ease-in-out infinite;
+}
+body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-coin, .bq-dos-apercu[data-dos="og"] .face-back .dos-coin{ background: linear-gradient(115deg, #8FF3FF, #C7A6FF, #FFB7E3, #FFE7A3); opacity: 1; }
+body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif, .bq-dos-apercu[data-dos="og"] .face-back .dos-motif{
+  background: linear-gradient(105deg, transparent 38%, rgba(143,243,255,.6) 46%, rgba(255,183,227,.6) 52%, rgba(255,231,163,.5) 56%, transparent 64%);
+  background-size: 300% 100%; mix-blend-mode: soft-light; animation: ogReflet 5s ease-in-out infinite;
+}
+body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif path, .bq-dos-apercu[data-dos="og"] .face-back .dos-motif path{ stroke: rgba(91,74,158,0.2); }
+body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme, .bq-dos-apercu[data-dos="og"] .face-back .dos-embleme{
+  width: 74px; height: 84px; margin: -42px 0 0 -37px; border-radius: 0; box-shadow: none;
+  clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  background: linear-gradient(115deg, #8FF3FF 0%, #C7A6FF 28%, #FFB7E3 46%, #FFE7A3 64%, #9CF7C9 82%, #8FF3FF 100%); background-size: 220% 220%; animation: ogHolo 6s ease-in-out infinite;
+}
+body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme::before, .bq-dos-apercu[data-dos="og"] .face-back .dos-embleme::before{ content: ""; position: absolute; inset: 4px; clip-path: inherit; background: #F4F1FF; }
+body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme::after, .bq-dos-apercu[data-dos="og"] .face-back .dos-embleme::after{
+  content: "OG"; position: relative; font-family: var(--titre); font-weight: 900; font-size: 28px; letter-spacing: .02em;
+  background: linear-gradient(115deg, #3D6BFF, #8A4DFF 40%, #E0479E 70%, #D98A00); -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme svg, .bq-dos-apercu[data-dos="og"] .face-back .dos-embleme svg{ display: none; }
+@keyframes ogReflet{ 0%{ background-position: 100% 0; } 55%, 100%{ background-position: 0% 0; } }
+.paquet.og .paquet-etiquette{ color: #3D2E7A; }
+.paquet .paquet-hexa{ width: 40px; height: 46px; display: grid; place-items: center; position: relative;
+  clip-path: polygon(50% 0, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  background: linear-gradient(115deg, #8FF3FF 0%, #C7A6FF 28%, #FFB7E3 46%, #FFE7A3 64%, #9CF7C9 82%, #8FF3FF 100%); background-size: 220% 220%; animation: ogHolo 6s ease-in-out infinite; }
+.paquet .paquet-hexa::before{ content: ""; position: absolute; inset: 3px; clip-path: inherit; background: #F4F1FF; }
+.paquet .paquet-hexa b{ position: relative; font-family: var(--titre); font-weight: 900; font-size: 15px; color: #5B4A9E; }
+.paquet.og.gratuit .paquet-bande{ background: linear-gradient(90deg, #8FF3FF 0%, #C7A6FF 28%, #FFB7E3 46%, #FFE7A3 64%, #9CF7C9 82%, #8FF3FF 100%); background-size: 220% 100%; color: #2A1F5C;
+  animation: ogHolo 6s ease-in-out infinite; }
+.paquet.og.achete .paquet-bande{ background: linear-gradient(90deg, #B7791F, #FCE38A 30%, var(--c-legendaire) 55%, #B7791F); color: var(--encre); }
+@media (prefers-reduced-motion: reduce){
+  body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif, .bq-dos-apercu[data-dos="og"] .face-back .dos-motif, body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back)::before, .bq-dos-apercu[data-dos="og"] .face-back::before, body[data-dos="og"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme, .bq-dos-apercu[data-dos="og"] .face-back .dos-embleme,
+  .paquet .paquet-hexa, .paquet.og.gratuit .paquet-bande{ animation: none; }
+}
+
 /* patch115 : l'astuce sous la recherche d'echange */
 .ech-astuce{ margin: -4px 0 10px; font-size: .74rem; color: var(--brume); }
 .ech-astuce b{ color: var(--papier); font-weight: 600; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '09c64fa7a31c';
+const VERSION_JEU = 'f6962e57fff5';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -12190,7 +12190,78 @@ function ligneDuel(x, jeu, tous){
       : `<span class="qg-delta ${delta >= 0 ? 'plus' : 'moins'}">${delta >= 0 ? '+' : ''}${delta}</span>`}<span class="qg-chev" aria-hidden="true">›</span></li>`;
 }
 
+// ---------- patch192 : on choisit son mini-jeu dans le QG ----------
+const QG_JEUX = [
+  { id: 'cdj', carte: 'qgCdj', etat: 'qgCdjEtat', nom: 'Commune du jour',
+    explic: 'La même commune mystère pour tout le monde : six essais pour la trouver. Chaque essai te dit à quelle distance tu es et dans quelle direction chercher, chaque erreur dévoile un indice.' },
+  { id: 'pom', carte: 'qgPom', etat: 'qgPomEtat', nom: 'Plus ou moins',
+    explic: 'Deux communes s\'affichent : choisis celle qui a le plus d\'habitants. Dix duels d\'affilée, seul pour la partie du jour ou contre un joueur en duel classé.' },
+  { id: 'radar', carte: 'qgRadar', etat: 'qgRestants', nom: 'Radar',
+    explic: 'Une commune s\'affiche : place-la sur la carte de France. Le joueur qui a le moins de kilomètres d\'écart au total gagne le duel.' },
+  { id: 'rafale', carte: 'qgRafale', etat: 'rfEtiquette', nom: 'Rafale',
+    explic: 'Une lettre s\'affiche : tape le plus de communes qui commencent par cette lettre en 30 secondes. Celui qui en trouve le plus gagne.' },
+];
+let qgJeuChoisi = (() => { try{ const v = localStorage.getItem('tf-qg-jeu'); return ['cdj', 'pom', 'radar', 'rafale'].includes(v) ? v : 'radar'; }catch(e){ return 'radar'; } })();
+function choixQG(){
+  const panneau = document.getElementById('panel-qg');
+  const grille = panneau ? panneau.querySelector('.qg-grille') : null;
+  if(!grille) return;
+  panneau.classList.add('qg-choix-actif');
+  // une fois : la rangee des jeux, les phrases, les reperes des blocs
+  let rangee = document.getElementById('qgChoix');
+  if(!rangee){
+    rangee = document.createElement('div');
+    rangee.id = 'qgChoix';
+    rangee.className = 'qg-choix';
+    rangee.setAttribute('role', 'group');
+    rangee.setAttribute('aria-label', 'Choisir un mini-jeu');
+    grille.insertAdjacentElement('beforebegin', rangee);
+    rangee.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-qgjeu]');
+      if(!b || b.dataset.qgjeu === qgJeuChoisi) return;
+      qgJeuChoisi = b.dataset.qgjeu;
+      try{ localStorage.setItem('tf-qg-jeu', qgJeuChoisi); }catch(err){}
+      renderQGListes();
+    });
+    for(const j of QG_JEUX){
+      const c = document.getElementById(j.carte);
+      const tete = c ? c.querySelector('.qg-tete') : null;
+      if(tete && !c.querySelector('.qg-explic')) tete.insertAdjacentHTML('afterend', `<p class="qg-explic">${j.explic}</p>`);
+    }
+    const cl = document.getElementById('qgClassement');
+    if(cl && cl.closest('.qg-carte')) cl.closest('.qg-carte').id = 'qgClassementBloc';
+    const note = document.createElement('div');
+    note.className = 'qg-carte';
+    note.id = 'qgCdjNote';
+    note.innerHTML = '<h3 class="qg-h3">Commune du jour</h3><p class="qg-petit">Pas de classement : c\'est un défi solo, la même commune pour tout le monde. Ta série et tes points du jour sont sur la carte du jeu.</p>';
+    grille.appendChild(note);
+  }
+  // un jeu indisponible (Plus ou moins cache) ne se choisit pas
+  const dispo = QG_JEUX.filter(j => { const c = document.getElementById(j.carte); return c && !c.hidden; });
+  if(!dispo.some(j => j.id === qgJeuChoisi) && dispo.length) qgJeuChoisi = dispo.some(j => j.id === 'radar') ? 'radar' : dispo[0].id;
+  const defis = (jeu) => { try{ const e = jeu === 'radar' ? radarEtat : jeu === 'rafale' ? rafaleEtat : null; return e && e.defis_recus ? e.defis_recus.length : 0; }catch(err){ return 0; } };
+  rangee.innerHTML = dispo.map(j => {
+    const c = document.getElementById(j.carte);
+    const ico = c.querySelector('.qg-ico') ? c.querySelector('.qg-ico').innerHTML : '';
+    const et = document.getElementById(j.etat);
+    const etat = et ? et.textContent.trim() : '';
+    const n = defis(j.id);
+    return `<button type="button" class="qg-choix-jeu" data-qgjeu="${j.id}" aria-pressed="${j.id === qgJeuChoisi}">
+      <span class="qg-ico" aria-hidden="true">${ico}</span><span><b>${j.nom}</b>${etat ? `<small>${echapperTexte(etat)}</small>` : ''}</span>
+      ${n ? `<i class="qg-choix-pastille" aria-label="${n} défi${n > 1 ? 's' : ''}">${n}</i>` : ''}</button>`;
+  }).join('');
+  for(const j of QG_JEUX){ const c = document.getElementById(j.carte); if(c) c.classList.toggle('qg-pas-choisi', j.id !== qgJeuChoisi); }
+  const solo = qgJeuChoisi === 'cdj';
+  panneau.classList.toggle('qg-solo', solo);
+  if(!solo){ qgFiltreHist = qgJeuChoisi; qgFiltreCl = qgJeuChoisi; }
+  const nom = (QG_JEUX.find(j => j.id === qgJeuChoisi) || {}).nom || '';
+  const titreD = document.querySelector('#qgDerniersBloc .qg-h3');
+  if(titreD) titreD.innerHTML = `Tes dernières parties <small>${nom}</small>`;
+  const titreC = document.querySelector('#qgClassementBloc .qg-h3');
+  if(titreC) titreC.innerHTML = `Classement <small>${nom}</small>`;
+}
 function renderQGListes(){
+  choixQG();   // patch192
   const rd = radarEtat || {}, rf = rafaleEtat || {};
   let pm = {};   // patch172 (pomDuelEtat est declare plus bas)
   try{ pm = pomDuelEtat || {}; }catch(err){}

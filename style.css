@@ -6179,3 +6179,14 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .bqe-tete-a small{ color: var(--brume); font-size: .78rem; }
 .bqe-tete-a h2{ font-family: var(--titre); font-weight: 900; font-size: 1.9rem; line-height: .95; margin: 2px 0; }
 .fenetre.bqe-fiche{ max-height: 92vh; overflow-y: auto; }
+
+/* ---------- patch208 : le sélecteur de la Collection tient sur un téléphone ---------- */
+.mf-vue{ max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.mf-vue::-webkit-scrollbar{ display: none; }
+.mf-vue button{ flex: none; white-space: nowrap; }
+@media (max-width: 460px){
+  /* quatre colonnes égales : le texte passe sur deux lignes plutôt que de déborder */
+  .mf-vue{ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; padding: 3px; overflow: visible; }
+  .mf-vue button{ min-width: 0; white-space: normal; padding: 6px 4px; font-size: .76rem; line-height: 1.15; text-align: center; }
+}
+@media (max-width: 360px){ .mf-vue button{ padding: 6px 2px; font-size: .7rem; } }

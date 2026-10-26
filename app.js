@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '9cf0d97edecf';
+const VERSION_JEU = '42ba283d1144';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1794,7 +1794,7 @@ const CONTOURS = new Map();        // departement -> { communes } ou 'charge' / 
 let contoursEnCours = 0;
 
 // patch113 : monter ce numero quand un fichier de contours change
-const CONTOURS_V = '3';   // patch130 : communes nouvelles
+const CONTOURS_V = '4';   // patch208 : ~160 communes manquantes ajoutées (patch130 : communes nouvelles)
 async function chargerContours(dep){
   if(CONTOURS.has(dep)) return CONTOURS.get(dep);
   CONTOURS.set(dep, null); // evite de demander deux fois le meme

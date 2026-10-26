@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'e21053953f13';
+const VERSION_JEU = '55b4eb8f0efa';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9991,7 +9991,53 @@ async function majEnergie(){
   if(el) el.textContent = data[0].energie;
   energieEtat = { energie: Number(data[0].energie), prochaine_dans: data[0].prochaine_dans, lu: Date.now() };
   renderJaugeEnergie();
+  if(!recolteLu || Date.now() - recolteLu > 300000) chargerRecolte();   // patch211
 }
+
+// patch211 : les légendaires tenues depuis 24 h rapportent de l'énergie, à récolter une fois par jour
+let recolteEtat = null, recolteLu = 0, recolteEnCours = false;
+async function chargerRecolte(){
+  if(!SAISON2) return;
+  recolteLu = Date.now();
+  try{
+    const { data, error } = await sb.rpc('front_recolte_etat');
+    recolteEtat = error ? null : (Array.isArray(data) ? data[0] : data) || null;
+  }catch(e){ recolteEtat = null; }
+  renderJaugeEnergie();
+}
+function blocRecolteHtml(){
+  const r = recolteEtat;
+  if(!r) return '';
+  const n = Number(r.pretes) || 0, e = Number(r.energie) || 0;
+  const bientot = Array.isArray(r.bientot) ? r.bientot : [];
+  const prochaine = bientot.length ? `<span class="rc-bientot">${echapperTexte(bientot[0].nom)} comptera dans ${bientot[0].heures} h${bientot.length > 1 ? ` · +${bientot.length - 1} autre${bientot.length > 2 ? 's' : ''}` : ''}</span>` : '';
+  let corps;
+  if(r.recoltee){
+    corps = `<div class="rc-ligne"><span class="rc-texte"><b>Récolté aujourd'hui : +${Number(r.recoltee_energie) || 0}</b><small>Prochaine récolte demain.</small></span><span class="rc-fait">✓</span></div>`;
+  } else if(n > 0){
+    corps = `<div class="rc-ligne"><span class="rc-texte"><b>${n} légendaire${n > 1 ? 's' : ''} tenue${n > 1 ? 's' : ''} depuis 24 h</b><small>+2 énergie chacune, 10 au plus par jour</small></span>
+      <button type="button" class="rc-bouton" data-recolter${recolteEnCours ? ' disabled' : ''}>Récolter <b>+${e}</b> ${ICONE_ENERGIE}</button></div>`;
+  } else {
+    corps = `<div class="rc-ligne"><span class="rc-texte"><b>Garde une légendaire 24 h</b><small>Chacune te rapporte +2 énergie par jour, à récolter ici (10 au plus).</small></span></div>`;
+  }
+  return `<div class="rc-bloc${r.recoltee ? ' fait' : n > 0 ? ' pret' : ''}"><div class="rc-titre"><span class="rc-etoile">★</span> Tes légendaires</div>${corps}${prochaine}</div>`;
+}
+document.addEventListener('click', async (ev) => {
+  const b = ev.target.closest('[data-recolter]');
+  if(!b || recolteEnCours) return;
+  recolteEnCours = true; b.disabled = true;
+  try{
+    const { data, error } = await sb.rpc('front_recolter');
+    if(error) notifier({ type: 'erreur', titre: 'Récolte', texte: messageLisible(error.message) });
+    else {
+      const l = Array.isArray(data) ? data[0] : data;
+      notifier({ type: 'succes', titre: 'Énergie récoltée', texte: l && l.message ? l.message : '' });
+    }
+  }catch(e){ notifier({ type: 'erreur', titre: 'Récolte', texte: 'Réessaie dans un instant.' }); }
+  recolteEnCours = false;
+  await majEnergie();
+  await chargerRecolte();
+});
 
 function renderJaugeEnergie(){
   const el = document.getElementById('jaugeEnergie');
@@ -10004,7 +10050,7 @@ function renderJaugeEnergie(){
   el.innerHTML = `<div class="je-titre">${ICONE_ENERGIE} Énergie</div>
     <div class="je-haut"><b>${e} <small>/ ${max}</small></b><span>${e >= max ? 'Réserve pleine' : `+1 dans ${prochaineMin} min · pleine dans ${duree(pleinMin)}`}</span></div>
     <div class="je-barre">${Array.from({ length: max }, (_, i) => `<i class="${i < e ? 'p' : ''}"></i>`).join('')}</div>
-    <p class="je-note">L'énergie se recharge seule : +1 toutes les 10 minutes.</p>`;
+    <p class="je-note">L'énergie se recharge seule : +1 toutes les 10 minutes.</p>${blocRecolteHtml()}`;
 }
 
 function construireMenuPlus(){

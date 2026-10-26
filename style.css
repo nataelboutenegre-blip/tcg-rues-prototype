@@ -6215,3 +6215,21 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .cl-ligne.cl-clan .cl-score small{ white-space:nowrap; }
 .cl-note-clans{ margin:6px 2px 0; font-size:.74rem; line-height:1.4; color: var(--brume); }
 @media (max-width: 420px){ .cl-ligne.cl-clan .cl-detail{ display:none; } }
+
+/* ---------- patch211 : la récolte des légendaires ---------- */
+.rc-bloc{ margin-top:12px; padding:10px 12px; border-radius:12px; background:rgba(240,180,41,.06); border:1px solid rgba(240,180,41,.22); }
+.rc-bloc.pret{ background:linear-gradient(180deg, rgba(240,180,41,.16), rgba(240,180,41,.05)); border-color:rgba(240,180,41,.55); }
+.rc-bloc.fait{ background:rgba(169,188,212,.05); border-color:rgba(169,188,212,.16); }
+.rc-titre{ display:flex; align-items:center; gap:6px; color: var(--c-legendaire); font-weight:600; font-size:.74rem; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+.rc-bloc.fait .rc-titre{ color: var(--brume); }
+.rc-ligne{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.rc-texte{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+.rc-texte b{ color:#fff; font-size:.9rem; }
+.rc-texte small{ color: var(--brume); font-size:.74rem; line-height:1.35; }
+.rc-bouton{ flex:none; display:inline-flex; align-items:center; gap:5px; min-height:44px; padding:8px 14px; border-radius:10px; border:0; cursor:pointer;
+  background: var(--c-legendaire); color:#1a1205; font: inherit; font-weight:700; font-size:.88rem; }
+.rc-bouton b{ font-family: var(--titre); font-weight:900; font-size:1.05rem; }
+.rc-bouton svg{ width:14px; height:14px; }
+.rc-bouton:disabled{ opacity:.6; cursor:default; }
+.rc-fait{ flex:none; width:32px; height:32px; border-radius:50%; display:grid; place-items:center; background:rgba(76,195,138,.15); color:#4CC38A; font-weight:700; }
+.rc-bientot{ display:block; margin-top:6px; font-size:.74rem; color: var(--brume); }

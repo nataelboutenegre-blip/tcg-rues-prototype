@@ -6041,3 +6041,57 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .face-back.dos-gl-on .dos-embleme{
   box-shadow: 0 0 0 2px var(--dos-or), 0 0 0 7px var(--dos-anneau), 0 0 0 8.5px var(--dos-liseret), 0 0 22px var(--dos-halo, transparent);
 }
+
+/* ---------- patch200 : le dos carte par carte, la révélation de la grande vitrine ---------- */
+.dc-mini{ width: 47px; height: 65.75px; margin: 0; flex: none; }
+.dc-mini .bq-dos-echelle{ transform: scale(.25); }
+.dc-choix{ width: min(360px, 100%); margin: 14px auto 0; text-align: left; background: rgba(15,31,56,.6); border: 1px solid rgba(169,188,212,.18); border-radius: 14px; padding: 10px 12px; display: grid; gap: 8px; }
+.dc-tete{ display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.dc-tete span{ font-size: .68rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--brume); }
+.dc-tete small{ font-size: .76rem; color: var(--brume); }
+.dc-rangee{ display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.dc-attente{ font-size: .8rem; color: var(--brume); padding: 8px 0; }
+.dc-opt{ flex: none; display: flex; flex-direction: column; align-items: center; gap: 5px; min-width: 62px; padding: 6px; border-radius: 10px; cursor: pointer;
+  background: transparent; border: 1px solid rgba(169,188,212,.16); color: #fff; font: inherit; }
+.dc-opt span{ font-size: .7rem; font-weight: 600; white-space: nowrap; }
+.dc-opt.on{ border-color: var(--c-legendaire); background: rgba(240,180,41,.12); }
+.dc-opt:disabled{ opacity: .6; cursor: default; }
+.dc-opt:focus-visible{ outline: 2px solid #fff; outline-offset: 2px; }
+.dc-aide{ margin: 0; font-size: .74rem; line-height: 1.45; color: var(--brume); }
+/* la vitrine : le petit dos de chaque carte exposée */
+.vt-bande > .vt-case-w{ position: relative; flex: 0 0 66px; width: 66px; min-width: 0; }
+.vt-case-w > .vt-case .mini{ width: 100%; }
+.vt-dos-pastille{ position: absolute; right: -5px; top: -7px; z-index: 3; width: 26px; height: 35px; padding: 2px; border-radius: 5px; cursor: pointer;
+  background: var(--nuit, #0B1830); border: 2px solid rgba(244,247,251,.85); box-shadow: 0 4px 10px rgba(0,0,0,.5); }
+.vt-dos-pastille:focus-visible{ outline: 2px solid var(--c-legendaire); outline-offset: 2px; }
+.vt-pastille-dos{ width: 18px; height: 25.2px; margin: 0; border-radius: 3px; overflow: hidden; }
+.vt-pastille-dos .bq-dos-echelle{ transform: scale(.0958); }
+.vt-dos-panneau{ background: rgba(15,31,56,.85); border: 1px solid rgba(240,180,41,.35); border-radius: 14px; padding: 10px 12px; margin: 0 0 12px; text-align: left; }
+.vt-dos-panneau .dc-choix{ width: auto; margin: 0; padding: 0; background: none; border: 0; }
+.vt-dos-haut{ display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; }
+.vt-dos-haut b{ font-family: var(--titre); font-size: 1.15rem; }
+.vt-dos-haut button{ width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(169,188,212,.25); background: transparent; color: #fff; cursor: pointer; font: inherit; }
+/* Profil › Personnaliser */
+.gr-dc-liste{ display: grid; gap: 6px; margin-bottom: 10px; }
+.gr-dc-ligne{ display: grid; grid-template-columns: 47px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 10px; background: rgba(8,19,37,.5); border: 1px solid rgba(169,188,212,.12); }
+.gr-dc-nom{ min-width: 0; display: flex; flex-direction: column; }
+.gr-dc-nom b{ white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.gr-dc-nom span{ font-size: .78rem; color: var(--brume); }
+.gr-dc-ligne .bq-btn{ margin: 0; }
+.gr-dc-vide{ margin: 0 0 10px; font-size: .85rem; color: var(--brume); }
+.gr-dc-bas{ display: grid; gap: 6px; justify-items: start; }
+.gr-dc-bas small{ font-size: .76rem; color: var(--brume); }
+.dc-fenetre .dc-rangee{ margin: 4px 0 10px; }
+.dc-sources{ display: inline-flex; padding: 3px; border-radius: 999px; background: var(--nuit-2, #162C4B); border: 1px solid rgba(169,188,212,.16); }
+.dc-sources button{ min-height: 40px; padding: 8px 18px; border-radius: 999px; border: 0; background: none; color: var(--brume); font: inherit; font-weight: 600; cursor: pointer; }
+.dc-sources button[aria-pressed="true"]{ background: #F4F7FB; color: #0F1F38; }
+/* la grande vitrine : les cartes arrivent de dos et se retournent une par une */
+.vtg-rev{ perspective: 700px; }
+.vtg-tourne{ position: relative; transform-style: preserve-3d; animation: vtgRetourne .6s cubic-bezier(.45,.05,.2,1) var(--vtg-d, .5s) both; }
+.vtg-face{ transform: rotateY(180deg); backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.vtg-dos{ position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.vtg-dosde{ position: absolute; inset: 0; width: auto; height: auto; margin: 0; border-radius: 10px; overflow: hidden; box-shadow: 0 10px 18px rgba(0,0,0,.5); }
+.vtg-fini .vtg-tourne{ animation: none; transform: none; }
+.vtg-fini .vtg-face{ transform: none; }
+@keyframes vtgRetourne{ from{ transform: rotateY(0deg); } to{ transform: rotateY(180deg); } }
+@media (prefers-reduced-motion: reduce){ .vtg-tourne{ animation: none; } .vtg-face{ transform: none; } .vtg-dos{ display: none; } }

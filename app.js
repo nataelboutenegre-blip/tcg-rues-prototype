@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd6a4565b55f7';
+const VERSION_JEU = '82ebc5b8a0fa';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -5491,7 +5491,7 @@ function rendreFiche(entry, d){
     <div class="fenetre fiche ${tier.id}" data-code="${echapperTexte(entry.code)}"
          role="dialog" aria-modal="true" aria-labelledby="fcNom">
       <button class="fc-fermer" data-fc="fermer" aria-label="Fermer">✕</button>
-      <div class="fc-tete">${carte3dDebut(150, 225, 1.65)}${miniTerra({ ...entry, exemplaires: 1, aurore: auroreFront(entry.code) ? 1 : 0 })}${carte3dFin()}
+      <div class="fc-tete">${carte3dDebut(150, 225, 1.65)}${miniTerra({ ...entry, exemplaires: 1, aurore: auroreFront(entry.code) ? 1 : 0 })}${carte3dFin(entry.perdue ? undefined : dosDeMaCarte('front', entry.code))}${entry.perdue ? '' : choixDosHtml('front', entry.code)}
       </div>
       <div class="fc-corps">
         <h2 id="fcNom" class="fc-nom ${entry.nom.length > 22 ? 'long' : ''}">${echapperTexte(entry.nom)}</h2>
@@ -5530,6 +5530,7 @@ function rendreFiche(entry, d){
   const boite = document.querySelector('#fenetre .fiche');
   if(!boite) return;
   armerCarte3d(boite.querySelector('.c3d'));   // patch179
+  if(!entry.perdue) armerDosFiche(boite, 'front', entry.code);   // patch200
   boite.addEventListener('click', (e) => {
     const b = e.target.closest('[data-fc]');
     if(!b) return;
@@ -14140,6 +14141,7 @@ async function loadBoutique(silencieux){
   }
   boutiqueCache = data;
   appliquerDos(data.dos);
+  chargerMesDosCartes(true);   // patch200 : les dos carte par carte
   // patch175 : l'habillage de paquet se regle a part ; sans le SQL 6, le paquet Nacre suit le dos OG
   appliquerHabillage(data.habillage === undefined ? (data.dos === 'dos-og' ? 'nacre' : null) : data.habillage);
   bqeVerifierAcces();
@@ -14909,13 +14911,16 @@ async function chargerVitrine(id){
   }catch(err){}
   let dos;   // patch183 : undefined = inconnu (SQL pas passe), on garde le mien
   try{ const r4 = await sb.rpc('dos_equipe', { p_joueur: id }); if(!r4.error) dos = dosCle(r4.data || null); }catch(err){}
+  const dosCartes = new Map();   // patch200 : le dos choisi pour chaque carte exposée
+  try{ const r5 = await sb.rpc('dos_cartes', { p_joueur: id });
+    if(!r5.error) for(const x of r5.data || []) dosCartes.set(x.source + '|' + x.code, dosCle(x.dos === 'origine' ? null : x.dos)); }catch(err){}
   let s1 = new Set();   // patch170
   try{ const r2 = await sb.rpc('terra_aurores_s1', { p_joueur: id }); if(!r2.error) s1 = new Set(r2.data || []); }catch(err){}
   return (data || []).map(r => ({ code: r.code, nom: r.nom, dept: r.departement,
     tier: TIERS.find(t => t.id === r.tier) || TIERS[TIERS.length - 1], pop: r.population,
     exemplaires: 1, rank: r.rang, tierSize: r.palier_total, aurore: r.aurore ? 1 : 0,
     source: r.source === 'front' ? 'front' : 'terra',   // patch180
-    dos,
+    dos: dosCartes.get((r.source === 'front' ? 'front' : 'terra') + '|' + r.code) || dos,
     auroreS1: r.source !== 'front' && s1.has(r.code), photo: photos.get(r.code) || '' }));
 }
 
@@ -14988,7 +14993,7 @@ function ouvrirGrandeVitrine(cartes, moi, pseudo, apres, source){
       <h2 id="vtgTitre">${echapperTexte(pseudo || '')}</h2>
       <p class="vt-compte"><b>${cartes.length}</b> carte${cartes.length > 1 ? 's' : ''} exposée${cartes.length > 1 ? 's' : ''}${moi ? ` sur ${VITRINE_MAX}` : ''}</p>
       <div class="vt-mur">
-        ${cartes.map((c, i) => `<div class="vt-place" data-vtg-carte="${i}"><span class="vt-rang">${i + 1}</span>${miniTerra({ ...c, exemplaires: 1 })}</div>`).join('')}
+        ${cartes.map((c, i) => placeVitrineHtml(c, i, cartes.length)).join('')}
         ${Array.from({ length: vides }, () => '<button type="button" class="vt-case vide" data-vtg="modifier" aria-label="Ajouter une carte"><span>+</span></button>').join('')}
       </div>
       ${moi ? '<div class="prix-boutons"><button type="button" class="open-btn" data-vtg="modifier">Modifier ma vitrine</button></div>' : ''}
@@ -15001,6 +15006,7 @@ function ouvrirGrandeVitrine(cartes, moi, pseudo, apres, source){
       }
       if(apres) apres(v);
     });
+  armerRevelationVitrine(document.querySelector('#fenetre .vt-grande'), cartes);   // patch200
   document.querySelector('#fenetre .vt-grande').addEventListener('click', (e) => {
     const b = e.target.closest('[data-vtg]');
     if(b){ fermer(b.dataset.vtg); return; }
@@ -15034,6 +15040,7 @@ document.getElementById('fenetre').addEventListener('click', (e) => {
 
 async function ouvrirChoixVitrine(actuelle, retour, source){
   const front = source === 'front';   // patch180
+  if(SAISON2) await chargerMesDosCartes();   // patch200
   if(!front && !terraCharge) await chargerCollectionTerra();
   const reserve = front
     ? new Map([...collectionMap.values()].map(e => [e.code, { ...e, exemplaires: 1, aurore: AURORE && AURORE[e.code] ? 1 : 0 }]))
@@ -15049,6 +15056,7 @@ async function ouvrirChoixVitrine(actuelle, retour, source){
       <p class="vt-aide">Choisis jusqu'à ${VITRINE_MAX} cartes, dans l'ordre où tu veux les montrer : les ${VITRINE_FICHE} premières s'affichent sur ton profil. Touche une carte de la vitrine pour la retirer.${front ? ' Si on te prend une commune, elle quitte ta vitrine.' : ''}</p>
       <p class="vt-compte" id="vtCompte"></p>
       <div class="vt-etagere vt-bande" id="vtApercu"></div>
+      ${SAISON2 ? `<div class="vt-dos-panneau" id="vtDosPanneau" hidden><div class="vt-dos-haut"><b class="vt-dos-titre"></b><button type="button" data-vt-dos-fermer aria-label="Fermer">✕</button></div>${choixDosHtml(front ? 'front' : 'terra', '')}</div>` : ''}
       <input type="search" id="vtRecherche" class="bourse-search" placeholder="Rechercher une commune ou un département…" autocomplete="off">
       <div class="vt-grille" id="vtGrille"></div>
       <p class="prix-erreur" id="vtErreur" role="alert"></p>
@@ -15063,7 +15071,8 @@ async function ouvrirChoixVitrine(actuelle, retour, source){
     const cases = [];
     for(let i = 0; i < VITRINE_MAX; i++){
       const c = choix[i] && reserve.get(choix[i]);
-      cases.push(c ? `<button type="button" class="vt-case" data-vt-retirer="${echapperTexte(c.code)}" aria-label="Retirer ${echapperTexte(c.nom)}">${miniVitrine(c)}</button>`
+      const dosC = c && SAISON2 && mesDosCartes ? (dosDeMaCarte(front ? 'front' : 'terra', c.code) || document.body.dataset.dos || 'origine') : null;   // patch200
+      cases.push(c ? `<div class="vt-case-w"><button type="button" class="vt-case" data-vt-retirer="${echapperTexte(c.code)}" aria-label="Retirer ${echapperTexte(c.nom)}">${miniVitrine(c)}</button>${dosC ? `<button type="button" class="vt-dos-pastille" data-vt-dos="${echapperTexte(c.code)}" aria-label="Changer le dos de ${echapperTexte(c.nom)}">${miniDosHtml(dosC, 'vt-pastille-dos')}</button>` : ''}</div>`
                    : `<div class="vt-case vide"><span>${i + 1}</span></div>`);
     }
     const bande = document.getElementById('vtApercu');
@@ -15084,6 +15093,17 @@ async function ouvrirChoixVitrine(actuelle, retour, source){
   dessiner();
   document.getElementById('vtRecherche').addEventListener('input', (e) => { recherche = e.target.value; dessiner(); });
   boite.addEventListener('click', async (e) => {
+    if(e.target.closest('[data-vt-dos-fermer]')){ document.getElementById('vtDosPanneau').hidden = true; return; }   // patch200
+    if(e.target.closest('#vtDosPanneau')) return;
+    const pd = e.target.closest('[data-vt-dos]');
+    if(pd){
+      const pan = document.getElementById('vtDosPanneau'), c = reserve.get(pd.dataset.vtDos);
+      pan.hidden = false;
+      pan.querySelector('.vt-dos-titre').textContent = 'Dos de ' + (c ? c.nom : '');
+      const ch = pan.querySelector('.dc-choix'); ch.dataset.dcCode = pd.dataset.vtDos;
+      remplirChoixDos(ch, () => dessiner());
+      return;
+    }
     const r = e.target.closest('[data-vt-retirer]');
     if(r){ choix = choix.filter(x => x !== r.dataset.vtRetirer); erreur.textContent = ''; dessiner(); return; }
     const c = e.target.closest('[data-vt-code]');
@@ -16073,6 +16093,7 @@ async function loadGardeRobe(){
   const { data, error } = await sb.rpc('garde_robe');
   if(error || !data){ corps.innerHTML = '<p class="collection-empty">La garde-robe arrive bientôt.</p>'; return; }
   gardeRobe = data;
+  if(SAISON2) await chargerMesDosCartes(true);   // patch200
   renderGardeRobe();
   try{
     const r = await sb.rpc('terra_vitrine', { p_joueur: window.__monId });
@@ -16096,6 +16117,7 @@ function renderGardeRobe(){
       <h2>Mes cartes</h2>
       <div class="gr-titre">Dos de carte <span>${dos.length} possédé${dos.length > 1 ? 's' : ''}</span></div>
       <div class="gr-objets">${dos.map(o => tuile('dos', o, dosApercuHtml(o.id))).join('')}</div>
+      ${SAISON2 ? blocDosCartesHtml() : ''}
       <div class="gr-titre">Habillage de paquet <span>${habs.length} possédé${habs.length > 1 ? 's' : ''}</span></div>
       <div class="gr-objets">${habs.map(o => tuile('habillage', o, habVignette(habCle(o.id), 66))).join('')}</div>
       <div class="gr-voir"><p>D'autres dos et habillages t'attendent : à gagner en jouant ou dans la boutique.</p>
@@ -16131,6 +16153,223 @@ document.getElementById('grCorps').addEventListener('click', async (e) => {
   renderGardeRobe();
 });
 
+
+// ---------- patch200 : le dos carte par carte ----------
+// Une carte (Terra ou Front) peut avoir son propre dos. Il se voit quand on la
+// retourne : sa fiche, sa vitrine. Le Tirage garde le dos principal (sinon le
+// dos dévoilerait la carte avant qu'on la retourne).
+let mesDosCartes = null;   // Map 'terra|83137' -> { dos, nom } ; null = pas encore chargé
+async function chargerMesDosCartes(force){
+  if(mesDosCartes && !force) return mesDosCartes;
+  const m = new Map();
+  try{
+    const { data, error } = await sb.rpc('dos_cartes', { p_joueur: window.__monId });
+    if(!error) for(const r of data || []) m.set(r.source + '|' + r.code, { dos: r.dos, nom: r.nom });
+  }catch(e){}
+  mesDosCartes = m;
+  return m;
+}
+// la clé du dos d'une de mes cartes, ou undefined = mon dos principal
+function dosDeMaCarte(source, code){
+  const r = mesDosCartes && mesDosCartes.get(source + '|' + code);
+  return r ? dosCle(r.dos === 'origine' ? null : r.dos) : undefined;
+}
+async function dosPossedes(){
+  if(!gardeRobe){ try{ const { data } = await sb.rpc('garde_robe'); if(data) gardeRobe = data; }catch(e){} }
+  return (gardeRobe && gardeRobe.dos_liste) || [];
+}
+const nomDosCourt = (n) => String(n || '').replace(/^Dos /, '');
+// un petit dos, à partir de sa clé (« neon », « origine »…)
+function miniDosHtml(cle, classe){
+  return dosApercuHtml('dos-' + (cle || 'origine')).replace('class="bq-dos-apercu"', `class="bq-dos-apercu ${classe || 'dc-mini'}"`);
+}
+function choixDosHtml(source, code){
+  if(!SAISON2) return '';
+  return `<div class="dc-choix" data-dc-src="${source}" data-dc-code="${echapperTexte(code)}">
+      <div class="dc-tete"><span>Dos de cette carte</span><small class="dc-etat"></small></div>
+      <div class="dc-rangee" role="group" aria-label="Dos de cette carte"><span class="dc-attente">Chargement…</span></div>
+      <p class="dc-aide">Se voit quand on retourne la carte : ici, et chez ceux qui regardent ta vitrine.</p>
+    </div>`;
+}
+// remplit un .dc-choix ; apres(cle) reçoit la clé du nouveau dos (undefined = mon dos)
+async function remplirChoixDos(el, apres){
+  if(!el) return;
+  el._apres = apres;   // la même rangée peut servir pour plusieurs cartes (vitrine)
+  const [liste] = await Promise.all([dosPossedes(), chargerMesDosCartes()]);
+  if(!el.isConnected) return;
+  const dessiner = () => {
+    const source = el.dataset.dcSrc, code = el.dataset.dcCode;
+    const r = mesDosCartes.get(source + '|' + code);
+    const actuel = r ? r.dos : '';
+    const opts = [{ val: '', nom: 'Mon dos', cle: document.body.dataset.dos || 'origine' }]
+      .concat(liste.map(o => ({ val: o.id || 'origine', nom: nomDosCourt(o.nom), cle: dosCle(o.id) })));
+    el.querySelector('.dc-rangee').innerHTML = opts.map(o => `<button type="button" class="dc-opt${o.val === actuel ? ' on' : ''}" data-dc-val="${echapperTexte(o.val)}" aria-pressed="${o.val === actuel}">
+        ${miniDosHtml(o.cle)}<span>${echapperTexte(o.nom)}</span></button>`).join('');
+    const choisi = opts.find(o => o.val === actuel);
+    const etat = el.querySelector('.dc-etat');
+    if(etat) etat.textContent = actuel ? (choisi ? choisi.nom : '') : 'suit ton dos principal';
+  };
+  el._dessiner = dessiner;
+  dessiner();
+  if(el.dataset.arme) return;
+  el.dataset.arme = '1';
+  el.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-dc-val]');
+    if(!b || b.disabled) return;
+    const source = el.dataset.dcSrc, code = el.dataset.dcCode;
+    const val = b.dataset.dcVal;
+    el.querySelectorAll('.dc-opt').forEach(x => { x.disabled = true; });
+    const { error } = await sb.rpc('dos_cartes_definir', { p_source: source, p_codes: [code], p_dos: val || null });
+    el.querySelectorAll('.dc-opt').forEach(x => { x.disabled = false; });
+    if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); return; }
+    if(val) mesDosCartes.set(source + '|' + code, { dos: val, nom: (mesDosCartes.get(source + '|' + code) || {}).nom || '' });
+    else mesDosCartes.delete(source + '|' + code);
+    el._dessiner();
+    if(el._apres) el._apres(dosDeMaCarte(source, code));
+  });
+}
+// change le dos d'une carte en grand (et la retourne pour le montrer)
+function majDosC3d(c3d, cle, retourner){
+  const base = c3d && c3d.querySelector('.c3d-dos .c3d-base');
+  const fb = base && base.querySelector('.c3d-dosint');
+  if(!fb) return;
+  const ancien = base.querySelector('.c3d-dosde');
+  if(cle){
+    let w = ancien;
+    if(!w){ w = document.createElement('div'); w.className = 'bq-dos-apercu c3d-dosde'; base.insertBefore(w, fb); w.appendChild(fb); }
+    w.dataset.dos = cle;
+  } else if(ancien) ancien.replaceWith(fb);
+  if(retourner){ const carte = c3d.querySelector('.c3d-carte'); if(carte) carte.classList.add('retournee'); }
+}
+// une fiche à moi : la carte prend son dos, la rangée de choix se remplit
+function armerDosFiche(boite, source, code){
+  if(!SAISON2 || !boite) return;
+  const c3d = boite.querySelector('.c3d');
+  chargerMesDosCartes().then(() => { if(c3d && c3d.isConnected) majDosC3d(c3d, dosDeMaCarte(source, code), false); });
+  remplirChoixDos(boite.querySelector('.dc-choix'), (cle) => majDosC3d(c3d, cle, true));
+}
+
+// la grande vitrine : les cartes arrivent de dos et se retournent une par une
+function placeVitrineHtml(c, i, n){
+  const pas = Math.min(.2, 2.4 / Math.max(1, n));
+  return `<div class="vt-place vtg-rev" data-vtg-carte="${i}" style="--vtg-d:${(.55 + i * pas).toFixed(2)}s"><span class="vt-rang">${i + 1}</span>
+      <div class="vtg-tourne">
+        <div class="vtg-face">${miniTerra({ ...c, exemplaires: 1 })}</div>
+        <div class="vtg-dos">${miniDosHtml(c.dos || document.body.dataset.dos || 'origine', 'vtg-dosde')}</div>
+      </div></div>`;
+}
+const vtgDejaVues = new WeakSet();
+function armerRevelationVitrine(boite, cartes){
+  if(!boite) return;
+  const deja = cartes && vtgDejaVues.has(cartes);
+  if(cartes) vtgDejaVues.add(cartes);
+  const fin = (p) => { p.classList.add('vtg-fini'); const d = p.querySelector('.vtg-dos'); if(d) d.remove(); };
+  const places = [...boite.querySelectorAll('.vtg-rev')];
+  if(deja || matchMedia('(prefers-reduced-motion: reduce)').matches){ places.forEach(fin); return; }
+  for(const p of places){
+    // le dos (188 x 263 dans le jeu) est mis à l'échelle de la carte de la vitrine
+    const d = p.querySelector('.vtg-dosde'), e = d && d.querySelector('.bq-dos-echelle');
+    if(e && p.offsetWidth){ const k = p.offsetWidth / 188; e.style.transform = `scale(${k})`; e.style.height = (p.offsetHeight / k) + 'px'; }
+    const t = p.querySelector('.vtg-tourne');
+    if(t) t.addEventListener('animationend', () => fin(p), { once: true });
+    setTimeout(() => fin(p), 6000);   // filet : l'animation coupée ne laisse pas de dos
+  }
+}
+
+// Profil › Personnaliser : les cartes qui ont leur propre dos
+function blocDosCartesHtml(){
+  if(!mesDosCartes) return '';
+  const liste = gardeRobe ? gardeRobe.dos_liste || [] : [];
+  const nomDe = (id) => { const o = liste.find(x => (x.id || 'origine') === id); return o ? nomDosCourt(o.nom) : ''; };
+  const lignes = [...mesDosCartes.entries()].sort((a, b) => a[1].nom.localeCompare(b[1].nom, 'fr'));
+  return `<div class="gr-titre">Carte par carte <span>${lignes.length} carte${lignes.length > 1 ? 's' : ''}</span></div>
+    ${lignes.length ? `<div class="gr-dc-liste">${lignes.map(([cle, r]) => {
+      const [source] = cle.split('|');
+      return `<div class="gr-dc-ligne">${miniDosHtml(dosCle(r.dos === 'origine' ? null : r.dos), 'dc-mini')}
+        <div class="gr-dc-nom"><b>${echapperTexte(r.nom)}</b><span>${source === 'front' ? 'Front' : 'Terra'} · ${echapperTexte(nomDe(r.dos))}</span></div>
+        <button type="button" class="bq-btn secondaire" data-gr-dc-retirer="${echapperTexte(cle)}">Mon dos</button></div>`;
+    }).join('')}</div>` : '<p class="gr-dc-vide">Aucune carte n\'a son propre dos : elles suivent toutes ton dos principal.</p>'}
+    <div class="gr-dc-bas"><button type="button" class="bq-btn secondaire" data-gr-dc-choisir>Choisir les cartes</button>
+      <small>Terra et Front. Une carte vendue, échangée ou prise prend le dos de son nouveau propriétaire.</small></div>`;
+}
+document.getElementById('grCorps').addEventListener('click', async (e) => {
+  const r = e.target.closest('[data-gr-dc-retirer]');
+  if(r){
+    r.disabled = true;
+    const [source, code] = r.dataset.grDcRetirer.split('|');
+    const { error } = await sb.rpc('dos_cartes_definir', { p_source: source, p_codes: [code], p_dos: null });
+    if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); r.disabled = false; return; }
+    mesDosCartes.delete(r.dataset.grDcRetirer);
+    renderGardeRobe();
+    return;
+  }
+  if(e.target.closest('[data-gr-dc-choisir]')) ouvrirChoixDosCartes();
+});
+
+// choisir un dos, puis les cartes qui le portent
+async function ouvrirChoixDosCartes(){
+  const liste = await dosPossedes();
+  if(!terraCharge) await chargerCollectionTerra();
+  let dos = (liste.find(o => o.id) || liste[0] || {}).id || 'origine';
+  let source = modeJeu === 'front' ? 'front' : 'terra';
+  let choix = new Set(), recherche = '';
+  const rangTier = (t) => TIERS.findIndex(x => x.id === t.id);
+  const cartesDe = (s) => [...(s === 'front' ? collectionMap.values() : terraCollection.values())]
+    .sort((a, b) => rangTier(a.tier) - rangTier(b.tier) || a.nom.localeCompare(b.nom, 'fr'));
+  const fermer = ouvrirFenetre(`
+    <div class="fenetre vt-choix dc-fenetre" role="dialog" aria-modal="true" aria-labelledby="dcTitre">
+      <h2 id="dcTitre">Donner un dos à des cartes</h2>
+      <p class="vt-aide">Choisis un dos, puis touche les cartes qui le porteront.</p>
+      <div class="dc-rangee" id="dcDos" role="group" aria-label="Le dos"></div>
+      <div class="dc-sources" role="group" aria-label="Mode">
+        <button type="button" data-dc-source="terra">Terra</button><button type="button" data-dc-source="front">Front</button>
+      </div>
+      <p class="vt-compte" id="dcCompte"></p>
+      <input type="search" id="dcRecherche" class="bourse-search" placeholder="Rechercher une commune ou un département…" autocomplete="off">
+      <div class="vt-grille" id="dcGrille"></div>
+      <p class="prix-erreur" id="dcErreur" role="alert"></p>
+      <div class="prix-boutons">
+        <button type="button" class="open-btn secondary" data-dc="annuler">Annuler</button>
+        <button type="button" class="open-btn" data-dc="ok">Enregistrer</button>
+      </div>
+    </div>`);
+  const boite = document.querySelector('#fenetre .dc-fenetre');
+  if(!boite) return;
+  const dessiner = () => {
+    boite.querySelector('#dcDos').innerHTML = liste.map(o => { const v = o.id || 'origine';
+      return `<button type="button" class="dc-opt${v === dos ? ' on' : ''}" data-dc-dos="${echapperTexte(v)}" aria-pressed="${v === dos}">${miniDosHtml(dosCle(o.id))}<span>${echapperTexte(nomDosCourt(o.nom))}</span></button>`; }).join('');
+    boite.querySelectorAll('[data-dc-source]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.dcSource === source)));
+    boite.querySelector('#dcCompte').innerHTML = `<b>${choix.size}</b> carte${choix.size > 1 ? 's' : ''} choisie${choix.size > 1 ? 's' : ''}`;
+    const q = recherche.trim().toLowerCase();
+    const dep = q ? codeDepartement(q) : null;
+    const qs = sansAccents(recherche.trim());
+    const cartes = cartesDe(source).filter(c => !q || correspondRecherche(c.nom, c.dept, qs) || c.dept === dep).slice(0, 150);
+    boite.querySelector('#dcGrille').innerHTML = cartes.map(c => `<button type="button" class="vt-carte${choix.has(c.code) ? ' pris' : ''}" data-dc-code="${echapperTexte(c.code)}" aria-pressed="${choix.has(c.code)}">
+        ${miniVitrine({ ...c, aurore: source === 'front' ? (AURORE && AURORE[c.code] ? 1 : 0) : c.aurore })}${choix.has(c.code) ? '<span class="vt-num">✓</span>' : ''}</button>`).join('')
+      || '<p class="collection-empty">Aucune carte ne correspond.</p>';
+  };
+  dessiner();
+  boite.querySelector('#dcRecherche').addEventListener('input', (e) => { recherche = e.target.value; dessiner(); });
+  boite.addEventListener('click', async (e) => {
+    const d = e.target.closest('[data-dc-dos]');
+    if(d){ dos = d.dataset.dcDos; dessiner(); return; }
+    const s = e.target.closest('[data-dc-source]');
+    if(s){ if(s.dataset.dcSource !== source){ source = s.dataset.dcSource; choix = new Set(); } dessiner(); return; }
+    const c = e.target.closest('[data-dc-code]');
+    if(c){ const k = c.dataset.dcCode; if(choix.has(k)) choix.delete(k); else choix.add(k); dessiner(); return; }
+    const b = e.target.closest('[data-dc]');
+    if(!b) return;
+    if(b.dataset.dc === 'annuler'){ fermer(null); return; }
+    if(!choix.size){ boite.querySelector('#dcErreur').textContent = 'Touche au moins une carte.'; return; }
+    b.disabled = true; b.textContent = 'Enregistrement…';
+    const { error } = await sb.rpc('dos_cartes_definir', { p_source: source, p_codes: [...choix], p_dos: dos });
+    if(error){ boite.querySelector('#dcErreur').textContent = messageLisible(error.message); b.disabled = false; b.textContent = 'Enregistrer'; return; }
+    fermer(null);
+    await chargerMesDosCartes(true);
+    renderGardeRobe();
+    notifier({ type: 'succes', titre: 'Dos posé', texte: `${choix.size} carte${choix.size > 1 ? 's' : ''} ${choix.size > 1 ? 'ont' : 'a'} maintenant ce dos.` });
+  });
+}
 
 // ---------- patch179 : la carte en grand, inclinable et retournable ----------
 // La carte garde sa taille de base (bw x bh) et elle est agrandie d'un coup
@@ -16242,7 +16481,7 @@ async function ouvrirCarteTerra(code){
     return `
     <div class="fenetre fiche fiche-terra ${e.tier.id}" data-tcode="${echapperTexte(code)}" role="dialog" aria-modal="true" aria-labelledby="ftNom">
       <button class="fc-fermer" data-ft="fermer" aria-label="Fermer">✕</button>
-      <div class="fc-tete">${carte3dDebut(150, 225, 1.65)}${miniTerra(e)}${carte3dFin()}</div>
+      <div class="fc-tete">${carte3dDebut(150, 225, 1.65)}${miniTerra(e)}${carte3dFin(dosDeMaCarte('terra', code))}${choixDosHtml('terra', code)}</div>
       <div class="fc-corps">
         <h2 id="ftNom" class="fc-nom ${e.nom.length > 22 ? 'long' : ''}">${echapperTexte(e.nom)}</h2>
         <p class="fc-dep">${DEPT_NAMES[e.dept] ? echapperTexte(DEPT_NAMES[e.dept]) + ' (' + echapperTexte(e.dept) + ')' : echapperTexte(e.dept)}</p>
@@ -16265,6 +16504,7 @@ async function ouvrirCarteTerra(code){
     const boite = document.querySelector('#fenetre .fiche-terra');
     if(!boite) return;
     armerCarte3d(boite.querySelector('.c3d'));
+    armerDosFiche(boite, 'terra', code);   // patch200
     boite.addEventListener('click', async (ev) => {
       const b = ev.target.closest('[data-ft]');
       if(!b) return;

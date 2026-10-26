@@ -75,7 +75,10 @@ async function envoyerConfirmation(session: Stripe.Checkout.Session): Promise<vo
   const cle = Deno.env.get("RESEND_API_KEY");
   const destinataire = session.customer_details?.email ?? session.customer_email;
   if (!cle || !destinataire) {
-    console.warn("Email de confirmation non envoyé (clé Resend ou adresse manquante)", session.id);
+    // 26 octobre : on dit précisément ce qui manque
+    console.warn("Email de confirmation non envoyé :",
+      !cle ? "secret RESEND_API_KEY introuvable ou vide" : "clé Resend OK",
+      "·", !destinataire ? "adresse du client absente" : "adresse OK", session.id);
     return;
   }
   const { data: c, error } = await base.rpc("euros_commande_pour_email", { p_session: session.id });

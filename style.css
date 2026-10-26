@@ -5928,3 +5928,51 @@ body.mode-terra .coll-entete, body.mode-front .coll-entete{
   .qg-choix-actif #qgDerniersBloc, .qg-choix-actif #qgCdjNote{ order:3; grid-row:auto; }
   .qg-choix-actif #qgDefisBloc{ order:0; }
 }
+
+
+/* ---------- patch194 : les echanges du clan ---------- */
+.ce-bloc{ margin-top:18px; padding-top:14px; border-top:1px solid rgba(169,188,212,0.14); display:grid; gap:12px; }
+.ce-tete{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+.ce-tete h2{ margin:0 !important; }
+.ce-h3{ margin:4px 0 0; font-size:.7rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#8297B5; }
+.ce-com{ display:inline-flex; align-items:center; gap:8px; min-width:0; }
+.ce-com i{ width:10px; height:10px; border-radius:3px; flex:none; }
+.ce-com b{ font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ce-com small{ color: var(--brume); font-size:.76rem; white-space:nowrap; }
+.ce-prop{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:center; padding:12px; border-radius:12px; background:rgba(8,19,37,.5); border:1px solid rgba(169,188,212,0.14); }
+@media (max-width: 560px){ .ce-prop{ grid-template-columns:minmax(0,1fr); } }
+.ce-qui{ font-size:.82rem; color: var(--brume); margin-bottom:6px; }
+.ce-qui b{ color:#fff; }
+.ce-troc{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.ce-fl{ color: var(--brume); }
+.ce-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+.ce-attente{ font-size:.78rem; color: var(--brume); margin:0 0 6px; }
+.ce-membres{ display:flex; gap:8px; flex-wrap:wrap; }
+.ce-membre{ display:inline-flex; align-items:center; gap:8px; padding:6px 12px 6px 6px; border-radius:999px; border:1px solid rgba(169,188,212,0.14); background:rgba(8,19,37,.5); color:#fff; font:inherit; cursor:pointer; min-height:40px; }
+.ce-membre .av{ width:28px; height:28px; border-radius:50%; background: var(--nuit-3); display:grid; place-items:center; font-family: var(--titre); font-weight:800; box-shadow:0 0 0 2px var(--clan); }
+.ce-membre[aria-pressed="true"]{ border-color: var(--c-legendaire); background: rgba(240,180,41,.12); }
+.ce-deux{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
+@media (max-width: 620px){ .ce-deux{ grid-template-columns:minmax(0,1fr); } }
+.ce-recherche{ width:100%; padding:9px 12px; border-radius:9px; border:1px solid rgba(169,188,212,0.3); background: var(--nuit); color:#fff; font:inherit; }
+.ce-liste{ display:grid; gap:4px; max-height:220px; overflow:auto; padding:6px; margin-top:8px; border-radius:12px; background:rgba(8,19,37,.5); border:1px solid rgba(169,188,212,0.14); }
+.ce-choix{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; text-align:left; padding:8px 10px; border-radius:9px; border:1px solid transparent; background:none; color:#fff; font:inherit; cursor:pointer; min-height:40px; }
+.ce-choix:hover:not(:disabled){ background: rgba(169,188,212,.06); }
+.ce-choix[aria-pressed="true"]{ border-color: var(--c-legendaire); background: rgba(240,180,41,.1); }
+.ce-choix:disabled{ cursor:not-allowed; opacity:.55; }
+.ce-raison{ font-size:.72rem; color: var(--brume); white-space:nowrap; }
+.ce-recap{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; padding:12px; border-radius:12px; background: rgba(240,180,41,.08); border:1px solid rgba(240,180,41,.35); }
+.ce-membre:focus-visible, .ce-choix:focus-visible{ outline:2px solid var(--c-legendaire); outline-offset:2px; }
+
+
+/* ---------- patch195 : le Tirage, un onglet comme les autres sur PC ---------- */
+@media (min-width: 721px) and (hover: hover){
+  .tab[data-tab="tirage"], .sidebar:hover .tab[data-tab="tirage"], .sidebar:focus-within .tab[data-tab="tirage"]{
+    width:68px; height:auto; margin:0; padding:7px 2px 6px; border:0; border-radius:10px; background:none; box-shadow:none; overflow:visible;
+    flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    font-size:.62rem; font-weight:600; line-height:1.1; white-space:normal; text-align:center; color: var(--brume); }
+  .tab[data-tab="tirage"]::after, .sidebar:hover .tab[data-tab="tirage"]::after, .sidebar:focus-within .tab[data-tab="tirage"]::after{ content:none; }
+  .tab[data-tab="tirage"] .icon, .tab[data-tab="tirage"] .icon svg{ width:22px; height:22px; color: inherit; }
+  .tab[data-tab="tirage"]:hover{ background: rgba(169,188,212,0.08); color:#fff; }
+  .tab[data-tab="tirage"].active{ box-shadow:none; color: var(--c-legendaire); }
+  .tab[data-tab="tirage"].active::before{ left:2px; }
+}

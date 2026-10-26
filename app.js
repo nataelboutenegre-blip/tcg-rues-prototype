@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '59e1c5b352f1';
+const VERSION_JEU = '66b921050711';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -14333,6 +14333,118 @@ let clansCarte = new Map();           // joueur_id -> { tag, couleur }
 let clansCarteVersion = 0;
 let monUidClan = null;
 let clanCache = null;
+// patch194 : les echanges entre membres du clan (Front)
+const clanEch = { etat: null, qui: null, donne: null, recoit: null, mes: null, leurs: null, r1: '', r2: '' };
+const enFrontClan = () => SAISON2 && modeJeu === 'front';
+async function chargerClanEch(){
+  if(!SAISON2) return null;
+  try{
+    const { data, error } = await sb.rpc('clan_ech_etat');
+    clanEch.etat = error ? null : data;
+  }catch(e){ clanEch.etat = null; }
+  majBadgeClanEch();
+  return clanEch.etat;
+}
+function majBadgeClanEch(){
+  const tab = document.querySelector('.tab[data-tab="clan"]');
+  if(!tab) return;
+  let b = tab.querySelector('.tab-badge');
+  const n = clanEch.etat && clanEch.etat.recus ? clanEch.etat.recus.length : 0;
+  if(!n){ if(b) b.hidden = true; return; }
+  if(!b){ b = document.createElement('span'); b.className = 'tab-badge'; tab.appendChild(b); }
+  b.hidden = false;
+  b.textContent = n;
+}
+function ceTier(id){ return TIERS.find(t => t.id === id) || TIERS[TIERS.length - 1]; }
+function ceCommune(c, tier){
+  const t = ceTier(tier || c.tier);
+  return `<span class="ce-com"><i style="background:var(--c-${t.id})"></i><b>${echapperTexte(c.nom)}</b><small>${t.label} · ${echapperTexte(c.dept || c.departement || '')}</small></span>`;
+}
+function ceDans(iso){
+  const h = Math.max(0, Math.round((new Date(iso).getTime() - Date.now()) / 3600000));
+  return h < 1 ? 'expire dans moins d\'une heure' : `expire dans ${h} h`;
+}
+function ceListeHtml(liste, cle, choisi, filtre){
+  if(!liste) return '<p class="ce-attente">Chargement…</p>';
+  const f = sansAccents((filtre || '').toLowerCase());
+  const l = liste.filter(c => !f || sansAccents(c.nom.toLowerCase()).includes(f) || String(c.departement).toLowerCase() === f);
+  if(!l.length) return '<p class="ce-attente">Aucune commune.</p>';
+  return l.slice(0, 80).map(c => `<button type="button" class="ce-choix" data-${cle}="${echapperTexte(c.code)}" aria-pressed="${c.code === choisi}"${c.raison ? ' disabled' : ''}>${ceCommune(c)}${c.raison ? `<span class="ce-raison">${echapperTexte(c.raison)}</span>` : ''}</button>`).join('');
+}
+function ceLeursFiltrees(){
+  if(!clanEch.leurs) return null;
+  const mienne = clanEch.mes && clanEch.donne ? clanEch.mes.find(c => c.code === clanEch.donne) : null;
+  return mienne ? clanEch.leurs.filter(c => c.tier === mienne.tier) : clanEch.leurs;
+}
+function ceRecapHtml(){
+  const m = clanEch.mes && clanEch.donne ? clanEch.mes.find(c => c.code === clanEch.donne) : null;
+  const s = clanEch.leurs && clanEch.recoit ? clanEch.leurs.find(c => c.code === clanEch.recoit) : null;
+  const qui = (clanEch.etat && clanEch.etat.membres || []).find(x => x.id === clanEch.qui);
+  return m && s && qui
+    ? `<span>Tu donnes <b>${echapperTexte(m.nom)}</b> à ${echapperTexte(qui.pseudo)} contre <b>${echapperTexte(s.nom)}</b>.</span><button type="button" class="bq-btn" data-ce-proposer>Proposer l'échange</button>`
+    : `<span class="ce-attente">Choisis une commune de chaque côté.</span><button type="button" class="bq-btn" disabled>Proposer l'échange</button>`;
+}
+function majListesCe(){
+  const d = document.getElementById('ceDonne'), r = document.getElementById('ceRecoit'), rc = document.getElementById('ceRecap'), t3 = document.getElementById('ceT3');
+  if(d) d.innerHTML = ceListeHtml(clanEch.mes, 'ce-donne', clanEch.donne, clanEch.r1);
+  const leurs = ceLeursFiltrees();
+  if(leurs && clanEch.recoit && !leurs.some(c => c.code === clanEch.recoit)) clanEch.recoit = null;
+  if(r) r.innerHTML = clanEch.qui ? ceListeHtml(leurs, 'ce-recoit', clanEch.recoit, clanEch.r2) : '<p class="ce-attente">Choisis d\'abord un coéquipier.</p>';
+  const mienne = clanEch.mes && clanEch.donne ? clanEch.mes.find(c => c.code === clanEch.donne) : null;
+  if(t3) t3.textContent = '3. Tu reçois · ' + (mienne ? ceTier(mienne.tier).label.toLowerCase() : 'même rareté');
+  if(rc) rc.innerHTML = ceRecapHtml();
+}
+function blocEchangesClan(){
+  const e = clanEch.etat;
+  if(!enFrontClan() || !e || !e.clan) return '';
+  const restant = Math.max(0, (e.max || 2) - (e.faits || 0));
+  const prop = (x, recu) => `<div class="ce-prop"><div>
+      <div class="ce-qui">${recu ? `<b>${echapperTexte(x.pseudo)}</b> te propose` : `à <b>${echapperTexte(x.pseudo)}</b> · en attente`} · ${ceDans(x.expire_le)}</div>
+      <div class="ce-troc">${ceCommune(recu ? x.recoit : x.donne, x.tier)}<span class="ce-fl" aria-hidden="true">⇄</span>${ceCommune(recu ? x.donne : x.recoit, x.tier)}</div>
+      ${recu ? `<div class="ce-attente">Tu donnes ${echapperTexte(x.donne.nom)}, tu reçois ${echapperTexte(x.recoit.nom)}.</div>` : ''}</div>
+    <div class="ce-actions">${recu ? `<button type="button" class="bq-btn" data-ce-accepter="${Number(x.id)}">Accepter</button><button type="button" class="bq-btn secondaire" data-ce-refuser="${Number(x.id)}">Refuser</button>`
+                                  : `<button type="button" class="bq-btn secondaire" data-ce-annuler="${Number(x.id)}">Annuler</button>`}</div></div>`;
+  const pret = e.pret_le ? new Date(e.pret_le) : null;
+  const membres = e.membres || [];
+  const proposer = pret
+    ? `<p class="clan-note">Tu pourras échanger avec ton clan à partir du ${pret.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à ${pret.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} (48 h après ton arrivée).</p>`
+    : !membres.length ? '<p class="clan-note">Il faut au moins un coéquipier pour échanger.</p>'
+    : restant === 0 ? '<p class="clan-note">Tu as fait tes 2 échanges du jour. Reviens demain.</p>'
+    : `<div class="ce-etape"><div class="ce-attente">1. Avec qui</div>
+        <div class="ce-membres">${membres.map(m => `<button type="button" class="ce-membre" data-ce-qui="${echapperTexte(m.id)}" aria-pressed="${m.id === clanEch.qui}"><span class="av" style="--clan:${(clanCache && clanCache.moi && clanCache.moi.clan || {}).couleur || '#E07A2E'}">${echapperTexte((m.pseudo || '?')[0].toUpperCase())}</span>${echapperTexte(m.pseudo)}</button>`).join('')}</div></div>
+      <div class="ce-deux">
+        <div><div class="ce-attente">2. Tu donnes</div><input type="search" class="ce-recherche" id="ceR1" placeholder="Une de tes communes…" aria-label="Chercher une de tes communes" value="${echapperTexte(clanEch.r1)}"><div class="ce-liste" id="ceDonne"></div></div>
+        <div><div class="ce-attente" id="ceT3">3. Tu reçois · même rareté</div><input type="search" class="ce-recherche" id="ceR2" placeholder="Une commune de ton coéquipier…" aria-label="Chercher une commune du coéquipier" value="${echapperTexte(clanEch.r2)}"><div class="ce-liste" id="ceRecoit"></div></div>
+      </div>
+      <div class="ce-recap" id="ceRecap"></div>`;
+  return `<div class="ce-bloc"><div class="ce-tete"><h2>Échanges du clan</h2><span class="puce">${restant ? `<b>${restant}</b> échange${restant > 1 ? 's' : ''} possible${restant > 1 ? 's' : ''} aujourd'hui` : 'plus d\'échange aujourd\'hui'}</span></div>
+    ${(e.recus || []).length ? `<h3 class="ce-h3">Reçus</h3>${e.recus.map(x => prop(x, true)).join('')}` : ''}
+    <h3 class="ce-h3">Proposer un échange</h3>${proposer}
+    ${(e.envoyes || []).length ? `<h3 class="ce-h3">Envoyés</h3>${e.envoyes.map(x => prop(x, false)).join('')}` : ''}
+    <ul class="clan-regles"><li>Seulement entre membres du clan, une commune contre une commune de même rareté.</li><li>2 échanges par jour et par joueur. Une proposition expire au bout de 24 h.</li><li>Impossible pour une commune prise il y a moins de 24 h, en garnison, ou échangée il y a moins de 48 h.</li><li>Il faut être dans le clan depuis 48 h. Un échange ne rapporte aucun point de combat.</li></ul></div>`;
+}
+async function ceChargerCommunes(){
+  if(!monUidClan){ const { data: u } = await sb.auth.getUser(); monUidClan = u && u.user ? u.user.id : null; }
+  if(!clanEch.mes && monUidClan){
+    const { data, error } = await sb.rpc('clan_ech_communes', { p_joueur: monUidClan });
+    clanEch.mes = error ? [] : (data || []);
+  }
+  if(clanEch.qui && !clanEch.leurs){
+    const { data, error } = await sb.rpc('clan_ech_communes', { p_joueur: clanEch.qui });
+    clanEch.leurs = error ? [] : (data || []);
+  }
+  majListesCe();
+}
+async function ceAction(nom, args, apres){
+  const { data, error } = await sb.rpc(nom, args);
+  if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); return; }
+  notifier({ type: 'succes', titre: String(data || 'C\'est fait') });
+  if(apres) apres();
+  clanEch.mes = null; clanEch.leurs = null;
+  await chargerClanEch();
+  if(nom === 'clan_ech_repondre') await loadClansCarte();
+  renderClan();
+}
 let clanCouleurChoisie = CLAN_COULEURS[0];
 
 async function loadClansCarte(){
@@ -14364,6 +14476,7 @@ async function loadClan(){
   const [mc, cl, cf, ac] = await Promise.all([sb.rpc('mon_clan'), sb.rpc('clans_classement'), sb.rpc('clans_en_formation'),
     sb.rpc('clan_activite').then(r => r, () => ({ error: true }))]);   // patch184
   if(mc.error){ zone.innerHTML = `<p class="collection-empty">${echapperTexte(messageLisible(mc.error.message))}</p>`; return; }
+  if(SAISON2) await chargerClanEch();   // patch194
   clanCache = { moi: mc.data || {}, classement: cl.error ? [] : (cl.data || []), formation: cf.error ? [] : (cf.data || []),
                 activite: ac.error ? null : new Map((ac.data || []).map(a => [a.joueur_id, a])) };
   renderClan();
@@ -14485,11 +14598,13 @@ function renderClan(){
       <h2>Membres</h2>${membres}
       ${c.chef && n < 6 ? `<div class="clan-inviter"><input id="clanPseudo" placeholder="Pseudo du joueur à inviter"><button class="bq-btn" id="clanInviter">Inviter</button></div>` : ''}
       ${(c.invites || []).length ? `<p class="clan-note">Invitations en attente : ${c.invites.map(echapperTexte).join(', ')}.</p>` : ''}
+      ${blocEchangesClan()}
       <ul class="clan-regles"><li>Pas d'attaque entre membres : leurs communes n'apparaissent plus dans tes cibles.</li><li>Aucun bonus de combat : le territoire d'un coéquipier ne compte pas dans tes chances.</li><li>Après avoir quitté un clan, il faut attendre 48 h avant d'en rejoindre un autre.</li><li>Pour discuter, demande un salon privé pour ton clan sur le Discord.</li></ul>
       <button class="bq-btn secondaire" id="clanQuitter" data-prix="0">Quitter le clan</button>
     </div>`;
   }
   zone.innerHTML = `<div class="clan-grille">${gauche}${blocClassement}</div>`;
+  if(document.getElementById('ceDonne')) ceChargerCommunes();   // patch194
 }
 async function actionClan(nom, args, succes){
   const { data, error } = await sb.rpc(nom, args || {});
@@ -14505,6 +14620,18 @@ document.getElementById('panel-clan').addEventListener('click', (e) => {
   const b = e.target.closest('button');
   if(!b) return;
   if(b.dataset.clanVoir){ basculerClanVu(b.dataset.clanVoir); return; }   // patch186
+  // patch194 : les echanges du clan
+  if(b.dataset.ceQui){ if(clanEch.qui !== b.dataset.ceQui){ clanEch.qui = b.dataset.ceQui; clanEch.leurs = null; clanEch.recoit = null; clanEch.r2 = ''; }
+    document.querySelectorAll('.ce-membre').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    const r2 = document.getElementById('ceR2'); if(r2) r2.value = '';
+    majListesCe(); ceChargerCommunes(); return; }
+  if(b.dataset.ceDonne){ clanEch.donne = b.dataset.ceDonne; majListesCe(); return; }
+  if(b.dataset.ceRecoit){ clanEch.recoit = b.dataset.ceRecoit; majListesCe(); return; }
+  if(b.hasAttribute('data-ce-proposer')){ b.disabled = true;
+    return ceAction('clan_ech_proposer', { p_cible: clanEch.qui, p_ma: clanEch.donne, p_sa: clanEch.recoit }, () => { clanEch.donne = null; clanEch.recoit = null; }); }
+  if(b.dataset.ceAccepter){ b.disabled = true; return ceAction('clan_ech_repondre', { p_id: Number(b.dataset.ceAccepter), p_accepter: true }); }
+  if(b.dataset.ceRefuser){ return ceAction('clan_ech_repondre', { p_id: Number(b.dataset.ceRefuser), p_accepter: false }); }
+  if(b.dataset.ceAnnuler){ return ceAction('clan_ech_annuler', { p_id: Number(b.dataset.ceAnnuler) }); }
   if(b.dataset.clanProfil){ ouvrirProfil(b.dataset.clanProfil); return; }
   if(b.dataset.clanCouleur){ clanCouleurChoisie = b.dataset.clanCouleur; document.querySelectorAll('#clanCouleurs button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); return; }
   if(b.id === 'clanCreer'){
@@ -14529,6 +14656,11 @@ document.getElementById('panel-clan').addEventListener('click', (e) => {
   }
 });
 if(CLANS) setTimeout(loadClansCarte, 1500);
+if(CLANS) setTimeout(chargerClanEch, 2500);   // patch194 : la pastille des propositions recues
+document.getElementById('panel-clan').addEventListener('input', (e) => {
+  if(e.target.id === 'ceR1'){ clanEch.r1 = e.target.value; majListesCe(); }
+  if(e.target.id === 'ceR2'){ clanEch.r2 = e.target.value; majListesCe(); }
+});
 
 
 // ---------- patch111 : les cartes Aurore ----------

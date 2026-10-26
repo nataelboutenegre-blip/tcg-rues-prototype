@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '106291fe5ea7';
+const VERSION_JEU = '48e78193096f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10747,6 +10747,8 @@ async function loadEchanges(){
   textesMarche('echange');
   if(marcheTerra() && !terraCharge) await chargerCollectionTerra();
   await chargerEchangesEnCours();
+  majVueEchange();   // patch214
+  if(ongletsEchange()) chargerAlertes();
   renderEchangePropositions();
   renderEchangeMien();
   await chargerCiblesEchange();
@@ -10793,14 +10795,20 @@ async function loadBadgeEchanges(){
   const panneau = document.getElementById('panel-echange');
   if(panneau && panneau.classList.contains('active')) renderEchangePropositions();
   signalerNouveauxEchanges();
+  if(ongletsEchange() && Date.now() - alertesLu > 180000) chargerAlertes();   // patch214
 }
 
 function majBadgeEchange(){
   const recues = echangesEnCours.filter(e => e.sens === 'recu').length;
+  const nouv = alertesNouvelles().size;   // patch214
+  const pc = document.getElementById('echCoursBadge');
+  if(pc){ pc.hidden = recues === 0; pc.textContent = recues; }
+  const pa = document.getElementById('echAlertesBadge');
+  if(pa){ pa.hidden = nouv === 0; pa.textContent = nouv; }
   const badge = document.getElementById('echangeBadge');
   if(!badge) return;
-  badge.hidden = recues === 0;
-  badge.textContent = recues;
+  badge.hidden = recues + nouv === 0;
+  badge.textContent = recues + nouv;
 }
 
 function ligneEchange(e){
@@ -10841,8 +10849,9 @@ function renderEchangePropositions(){
   const bloc = document.getElementById('echPropositions');
   const liste = document.getElementById('echListe');
   if(!bloc || !liste) return;
-  bloc.hidden = echangesEnCours.length === 0;
-  liste.innerHTML = echangesEnCours.map(ligneEchange).join('');
+  bloc.hidden = ongletsEchange() ? echVue !== 'cours' : echangesEnCours.length === 0;   // patch214
+  liste.innerHTML = echangesEnCours.map(ligneEchange).join('')
+    || (ongletsEchange() ? '<p class="collection-empty">Aucune proposition en cours. Propose un échange ou regarde tes alertes.</p>' : '');
   // le raccourci du haut : combien, et combien attendent une reponse
   const raccourci = document.getElementById('echRaccourci');
   if(raccourci){
@@ -11001,6 +11010,202 @@ function majResumeEchange(){
   bouton.textContent = 'Envoyer la proposition';
 }
 
+// ---------- patch214 : Échange en onglets et alertes d'échange ----------
+let echVue = 'proposer';
+let alertesEtat = null, alertesLu = 0, alertesCles = null, alertesMontrees = new Set();
+const CLE_ALERTES_VUES = 'tf-alertes-vues';
+const ALERTES_MAX = 10;
+const ongletsEchange = () => marcheTerra();
+function alertesVues(){
+  try{ return new Set(JSON.parse(localStorage.getItem(CLE_ALERTES_VUES) || '[]')); }catch(e){ return new Set(); }
+}
+function clesAlertes(a){
+  const k = new Set();
+  if(!a) return k;
+  for(const c of a.je_cherche || []) for(const d of c.dispo || []) k.add('c|' + c.code + '|' + d.id);
+  for(const c of a.mes_doublons || []) for(const d of c.chercheurs || []) k.add('d|' + c.code + '|' + d.id);
+  return k;
+}
+function alertesNouvelles(){
+  if(!alertesEtat) return new Set();
+  const vues = alertesVues();
+  return new Set([...clesAlertes(alertesEtat)].filter(k => !vues.has(k)));
+}
+function marquerAlertesVues(){
+  const k = [...clesAlertes(alertesEtat)];
+  try{ localStorage.setItem(CLE_ALERTES_VUES, JSON.stringify(k.slice(-300))); }catch(e){}
+}
+async function chargerAlertes(){
+  if(!ongletsEchange()) return;
+  alertesLu = Date.now();
+  const { data, error } = await sb.rpc('terra_mes_alertes');
+  if(error){ console.warn('TERRAFRONT alertes indisponibles', error); return; }
+  alertesEtat = data || { je_cherche: [], mes_doublons: [], plus_recherchees: [] };
+  // prévenir une seule fois par commune et par joueur, pendant la séance
+  const cles = clesAlertes(alertesEtat), vues = alertesVues();
+  const neuves = [...cles].filter(k => !vues.has(k) && !(alertesCles && alertesCles.has(k)) && !alertesMontrees.has(k));
+  neuves.forEach(k => alertesMontrees.add(k));
+  const surAlertes = echVue === 'alertes' && document.getElementById('panel-echange')?.classList.contains('active');
+  if(neuves.length && !surAlertes){
+    const dispo = neuves.filter(k => k[0] === 'c'), cherche = neuves.filter(k => k[0] === 'd');
+    const nomDe = (k) => { const code = k.split('|')[1]; const c = [...alertesEtat.je_cherche, ...alertesEtat.mes_doublons].find(x => x.code === code); return c ? c.nom : code; };
+    if(dispo.length) notifier({ type: 'info', titre: dispo.length === 1 ? `${nomDe(dispo[0])} est disponible` : 'Des communes que tu cherches sont disponibles',
+                                texte: 'Un joueur l\u2019a en double : regarde Échange › Mes alertes.' });
+    else if(cherche.length) notifier({ type: 'info', titre: `On cherche ${nomDe(cherche[0])}`,
+                                texte: 'Un joueur cherche une commune que tu as en double : Échange › Mes alertes.' });
+  }
+  alertesCles = cles;
+  majBadgeEchange();
+  if(surAlertes){ renderAlertes(); marquerAlertesVues(); majBadgeEchange(); }
+}
+function majVueEchange(vue){
+  if(vue) echVue = vue;
+  const actif = ongletsEchange();
+  const ong = document.getElementById('echOnglets');
+  if(ong){
+    ong.hidden = !actif;
+    ong.querySelectorAll('[data-ech-vue]').forEach(b => {
+      const on = b.dataset.echVue === echVue;
+      b.classList.toggle('actif', on); b.setAttribute('aria-selected', String(on));
+    });
+  }
+  const zp = document.querySelector('#panel-echange [data-ech-zone="proposer"]');
+  if(zp) zp.hidden = actif && echVue !== 'proposer';
+  const za = document.getElementById('echAlertes');
+  if(za) za.hidden = !actif || echVue !== 'alertes';
+  renderEchangePropositions();
+  if(actif && echVue === 'alertes'){
+    renderAlertes();
+    if(alertesEtat){ marquerAlertesVues(); majBadgeEchange(); }
+    if(Date.now() - alertesLu > 30000) chargerAlertes();
+  }
+}
+const tierInfo = (id) => TIERS.find(t => t.id === id) || TIERS[TIERS.length - 1];
+function alerteMini(tier){ return `<span class="al-mini" style="--t:${tierInfo(tier).color}"></span>`; }
+function alertePseudos(liste, max, attr, c){
+  const n = liste.length;
+  const vus = liste.slice(0, max).map(d => `<button type="button" class="al-qui" ${attr}="${echapperTexte(c.code)}" data-al-id="${echapperTexte(d.id)}" data-al-pseudo="${echapperTexte(d.pseudo || '')}">${echapperTexte(d.pseudo || 'un joueur')}</button>`);
+  const reste = n - vus.length;
+  return vus.length === 1 ? vus[0] : vus.slice(0, -1).join(', ') + (reste > 0 ? ', ' + vus[vus.length - 1] + ` et ${reste} autre${reste > 1 ? 's' : ''}` : ' et ' + vus[vus.length - 1]);
+}
+function renderAlertes(){
+  const zone = document.getElementById('echAlertes');
+  if(!zone) return;
+  if(!alertesEtat){ zone.innerHTML = '<p class="collection-empty">Chargement…</p>'; return; }
+  const nouv = alertesNouvelles();
+  const a = alertesEtat, cherche = a.je_cherche || [];
+  const neuf = (prefixe, code, liste) => liste.some(d => nouv.has(prefixe + '|' + code + '|' + d.id));
+  const champ = document.getElementById('alAjout');
+  const garde = champ ? champ.value : '';
+  let h = `<h2>Je cherche</h2>
+    <p class="ech-astuce">Ajoute les communes que tu veux (${ALERTES_MAX} au plus). Dès qu'un joueur en a une en double, elle passe en vert ici et l'onglet Échange s'allume.</p>
+    <div class="al-ajout"><input type="search" id="alAjout" class="bourse-search" placeholder="Ajouter une commune…" autocomplete="off"${cherche.length >= ALERTES_MAX ? ' disabled' : ''}><b>${cherche.length} / ${ALERTES_MAX}</b></div>
+    <div class="al-sugg" id="alSugg"></div>`;
+  h += cherche.length ? cherche.map(c => {
+    const dispo = c.dispo || [], t = tierInfo(c.tier), n = neuf('c', c.code, dispo);
+    return `<div class="al-ligne${dispo.length ? ' dispo' : ''}${n ? ' nouveau' : ''}">${alerteMini(c.tier)}
+      <div class="al-info"><div class="al-nom">${echapperTexte(c.nom)}${n ? '<span class="al-neuf">NOUVEAU</span>' : ''}</div>
+      <div class="al-tier" style="color:${t.color}">${t.label} · ${echapperTexte(c.dept)}</div>
+      <div class="al-etat${dispo.length ? ' ok' : ''}">${dispo.length ? 'En double chez ' + alertePseudos(dispo, 3, 'data-al-proposer', c) : 'Personne ne l\u2019a en double pour l\u2019instant'}</div></div>
+      ${dispo.length ? `<button type="button" class="al-btn" data-al-proposer="${echapperTexte(c.code)}" data-al-id="${echapperTexte(dispo[0].id)}" data-al-pseudo="${echapperTexte(dispo[0].pseudo || '')}">Proposer</button>` : ''}
+      <button type="button" class="al-x" data-al-retirer="${echapperTexte(c.code)}" aria-label="Retirer ${echapperTexte(c.nom)} de ma liste">✕</button></div>`;
+  }).join('') : '<p class="collection-empty">Ta liste est vide : ajoute la commune qui te manque.</p>';
+  const md = a.mes_doublons || [];
+  if(md.length){
+    h += `<h2>On cherche tes doublons</h2><p class="ech-astuce">Des joueurs cherchent des communes que tu as en double : un échange tout trouvé.</p>`;
+    h += md.map(c => {
+      const ch = c.chercheurs || [], t = tierInfo(c.tier), n = neuf('d', c.code, ch);
+      return `<div class="al-ligne${n ? ' nouveau' : ''}">${alerteMini(c.tier)}
+        <div class="al-info"><div class="al-nom">${echapperTexte(c.nom)}${n ? '<span class="al-neuf">NOUVEAU</span>' : ''}</div>
+        <div class="al-tier" style="color:${t.color}">${t.label} · ${c.libres} en double</div>
+        <div class="al-etat">Cherchée par ${alertePseudos(ch, 3, 'data-al-voir', c)}${Number(c.nb) > ch.length ? ` (${c.nb} joueurs)` : ''}</div></div>
+        ${ch.length ? `<button type="button" class="al-btn" data-al-voir="${echapperTexte(c.code)}" data-al-id="${echapperTexte(ch[0].id)}" data-al-pseudo="${echapperTexte(ch[0].pseudo || '')}">Voir ses doublons</button>` : ''}</div>`;
+    }).join('');
+  }
+  const top = a.plus_recherchees || [];
+  if(top.length){
+    h += `<h2>Les plus recherchées</h2><p class="ech-astuce">Les communes en alerte chez le plus de joueurs.</p>`;
+    h += top.map(c => `<div class="al-ligne">${alerteMini(c.tier)}<div class="al-info"><div class="al-nom">${echapperTexte(c.nom)}</div>
+      <div class="al-etat">${c.nb} joueurs la cherchent</div></div></div>`).join('');
+  }
+  zone.innerHTML = h;
+  const nc = document.getElementById('alAjout');
+  if(nc && garde){ nc.value = garde; }
+}
+const alerteDe = (code) => alertesEtat && [...(alertesEtat.je_cherche || []), ...(alertesEtat.mes_doublons || [])].find(c => c.code === code);
+async function choisirRareteEchange(tier){
+  document.querySelectorAll('#echTiers .filter-pill').forEach(p => p.classList.toggle('active', p.dataset.tier === tier));
+  echangeTier = tier;
+}
+async function allerProposerAlerte(code, id, pseudo){
+  const c = alerteDe(code);
+  if(!c) return;
+  majVueEchange('proposer');
+  await choisirRareteEchange(c.tier);
+  echangeMien = null; echangeCible = null;
+  echangeRecherche = c.nom + (pseudo ? ', ' + pseudo : '');
+  const champ = document.getElementById('echSearch'); if(champ) champ.value = echangeRecherche;
+  renderEchangeMien();
+  await chargerCiblesEchange();
+  echangeCible = echangeCibles.find(x => x.commune_code === code && x.proprietaire === id) || echangeCibles.find(x => x.commune_code === code) || null;
+  renderEchangeCibles();
+  document.getElementById('echMien')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  notifier({ type: 'info', titre: `${c.nom} chez ${pseudo || 'ce joueur'}`, texte: 'Choisis ce que tu donnes en échange (même rareté).' });
+}
+async function allerVoirAlerte(code, id, pseudo){
+  const c = alerteDe(code);
+  if(!c) return;
+  majVueEchange('proposer');
+  await choisirRareteEchange(c.tier);
+  const cm = document.getElementById('echSearchMien'); if(cm) cm.value = '';
+  echangeMien = code; echangeCible = null;
+  echangeRecherche = pseudo || '';
+  const champ = document.getElementById('echSearch'); if(champ) champ.value = echangeRecherche;
+  renderEchangeMien();
+  await chargerCiblesEchange();
+  document.getElementById('echCibles')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  notifier({ type: 'info', titre: `${pseudo || 'Ce joueur'} cherche ${c.nom}`, texte: echangeCibles.length ? 'Choisis ce que tu veux recevoir parmi ses doublons.' : 'Il n\u2019a aucun doublon de cette rareté pour l\u2019instant.' });
+}
+let alertesMinuteur = null;
+document.getElementById('echOnglets').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-ech-vue]');
+  if(b) majVueEchange(b.dataset.echVue);
+});
+document.getElementById('echAlertes').addEventListener('input', (e) => {
+  if(e.target.id !== 'alAjout') return;
+  clearTimeout(alertesMinuteur);
+  const texte = e.target.value.trim();
+  alertesMinuteur = setTimeout(async () => {
+    const zone = document.getElementById('alSugg');
+    if(!zone) return;
+    if(texte.length < 2){ zone.innerHTML = ''; return; }
+    const { data, error } = await sb.rpc('terra_recherche_suggerer', { p_texte: texte });
+    if(error){ zone.innerHTML = `<p class="prix-erreur">${echapperTexte(messageLisible(error.message))}</p>`; return; }
+    const deja = new Set((alertesEtat && alertesEtat.je_cherche || []).map(c => c.code));
+    const l = (data || []).filter(c => !deja.has(c.code));
+    zone.innerHTML = l.length ? l.map(c => `<button type="button" class="al-sugg-b" data-al-ajouter="${echapperTexte(c.code)}">
+        ${alerteMini(c.tier)}<b>${echapperTexte(c.nom)}</b><small>${echapperTexte(c.departement)} · ${tierInfo(c.tier).label}</small></button>`).join('')
+      : '<p class="ech-astuce">Aucune commune à ajouter (ou tu l\u2019as déjà).</p>';
+  }, 250);
+});
+document.getElementById('echAlertes').addEventListener('click', async (e) => {
+  const aj = e.target.closest('[data-al-ajouter]');
+  const re = e.target.closest('[data-al-retirer]');
+  const pr = e.target.closest('[data-al-proposer]');
+  const vo = e.target.closest('[data-al-voir]');
+  if(pr) return allerProposerAlerte(pr.dataset.alProposer, pr.dataset.alId, pr.dataset.alPseudo);
+  if(vo) return allerVoirAlerte(vo.dataset.alVoir, vo.dataset.alId, vo.dataset.alPseudo);
+  const b = aj || re;
+  if(!b) return;
+  b.disabled = true;
+  const { error } = await sb.rpc(aj ? 'terra_recherche_ajouter' : 'terra_recherche_retirer', { p_code: aj ? aj.dataset.alAjouter : re.dataset.alRetirer });
+  if(error){ b.disabled = false; notifier({ type: 'erreur', titre: 'Liste de recherche', texte: messageLisible(error.message) }); return; }
+  if(aj){ const ch = document.getElementById('alAjout'); if(ch) ch.value = ''; }
+  await chargerAlertes();
+  renderAlertes();
+  marquerAlertesVues(); majBadgeEchange();
+});
+
 document.getElementById('echTiers').addEventListener('click', async (e) => {
   const b = e.target.closest('[data-tier]');
   if(!b) return;
@@ -11058,6 +11263,7 @@ document.getElementById('echEnvoyer').addEventListener('click', async (e) => {
 });
 
 document.getElementById('echRaccourci').addEventListener('click', () => {
+  if(ongletsEchange()){ majVueEchange('cours'); return; }   // patch214
   const bloc = document.getElementById('echPropositions');
   if(bloc) bloc.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });

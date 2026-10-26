@@ -26,7 +26,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=106291fe5ea7">
+<link rel="stylesheet" href="style.css?v=48e78193096f">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 </head>
@@ -994,8 +994,13 @@
       <div class="sub">Propose un troc à un autre joueur : une commune contre une autre de la même rareté. Les deux cartes changent de main en même temps, personne ne peut te doubler.</div>
       <div class="puces"><span class="puce solde">Solde <b id="soldeValueEchange">—</b></span>
         <button type="button" class="ech-raccourci" id="echRaccourci" hidden></button></div>
+      <div class="ech-onglets" id="echOnglets" role="tablist" hidden>
+        <button type="button" data-ech-vue="proposer" class="actif" aria-selected="true">Proposer</button>
+        <button type="button" data-ech-vue="alertes" aria-selected="false">Mes alertes<i class="ech-pastille" id="echAlertesBadge" hidden></i></button>
+        <button type="button" data-ech-vue="cours" aria-selected="false">En cours<i class="ech-pastille" id="echCoursBadge" hidden></i></button>
+      </div>
 
-      <div class="bourse-section">
+      <div class="bourse-section" data-ech-zone="proposer">
         <h2>Proposer un échange</h2>
         <div class="bourse-filters" id="echTiers">
           <button class="filter-pill active" data-tier="commun"><span class="pill-point" style="background:#7E8BA0"></span>Commun</button>
@@ -1019,7 +1024,9 @@
         <button class="open-btn" id="echEnvoyer" disabled>Choisis deux communes</button>
       </div>
 
-      <div class="bourse-section" id="echPropositions" hidden>
+      <div class="bourse-section ech-alertes" id="echAlertes" data-ech-zone="alertes" hidden></div>
+
+      <div class="bourse-section" id="echPropositions" data-ech-zone="cours" hidden>
         <h2>Propositions en cours</h2>
         <div class="ech-liste" id="echListe"></div>
       </div>
@@ -1542,6 +1549,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=106291fe5ea7"></script>
+<script defer src="app.js?v=48e78193096f"></script>
 </body>
 </html>

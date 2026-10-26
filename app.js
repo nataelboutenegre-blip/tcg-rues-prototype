@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd739c9173faf';
+const VERSION_JEU = '9cf0d97edecf';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -16010,11 +16010,47 @@ function bqeAge(iso){
   return a;
 }
 
+// patch207 : l'objet en grand, sur une vraie carte du jeu
+function bqeGrandApercu(a){
+  const ex = { ...carteExemple(), exemplaires: 1, aurore: 0 };
+  const c = a.contenu || [];
+  if(a.type === 'dos') return carte3dDebut(150, 225, 1.45) + miniTerra(ex) + carte3dFin(dosCle(a.id));
+  if(a.type === 'skin') return carte3dDebut(150, 225, 1.45) + miniTerra({ ...ex, skin: skinCle(a.id) }) + carte3dFin();
+  if(a.type === 'collection'){
+    const d = c.find(x => x.startsWith('dos-')), s = c.find(x => x.startsWith('skin-'));
+    return carte3dDebut(150, 225, 1.45) + miniTerra({ ...ex, skin: skinCle(s) }) + carte3dFin(dosCle(d));
+  }
+  return `<div class="hab-grand bqe-hab-grand">${habVignette(habCle(a.id), 150).replace('data-fixe="1" ', '')}</div>`;
+}
+function bqeArmerApercu(f, a){
+  const c3d = f.querySelector('.bqe-apercu .c3d');
+  if(!c3d) return;
+  armerCarte3d(c3d);
+  // un dos se montre côté dos ; skin et collection côté face (on retourne pour voir le dos)
+  if(a.type === 'dos'){ const carte = c3d.querySelector('.c3d-carte'); if(carte) carte.classList.add('retournee'); }
+  const aide = c3d.querySelector('.c3d-aide');
+  if(aide && a.type === 'collection') aide.textContent = 'Fais glisser pour incliner · touche pour voir le dos';
+}
+function bqeApercuSeul(a){
+  const fermer = ouvrirFenetre(`
+    <div class="fenetre bqe-fiche bqe-fiche-apercu" role="dialog" aria-modal="true" aria-labelledby="bqeNomA">
+      <button type="button" class="bqe-fermer" aria-label="Fermer">×</button>
+      <div class="bqe-apercu">${bqeGrandApercu(a)}</div>
+      <div class="bqe-tete-a"><small>Dans ta garde-robe</small><h2 id="bqeNomA">${echapperTexte(bqeNomCourt(a))}</h2></div>
+      <p class="bqe-recoit">${echapperTexte(a.description || '')}. Tu l'as déjà : équipe-le ou pose-le sur tes cartes dans Profil › Personnaliser.</p>
+    </div>`);
+  const f = document.querySelector('#fenetre .bqe-fiche-apercu');
+  if(!f) return;
+  f.querySelector('.bqe-fermer').addEventListener('click', () => fermer(null));
+  bqeArmerApercu(f, a);
+  habGl.demarrer();
+}
+
 function bqeOuvrirFiche(id){
   const cat = bqeCat;
   const a = cat && (cat.articles || []).find(x => x.id === id);
   if(!a) return;
-  if(a.possede){ notifier({ type: 'info', titre: 'Tu l\'as déjà', texte: 'Il est dans Profil › Personnaliser.' }); return; }
+  if(a.possede){ bqeApercuSeul(a); return; }   // patch207
   if(a.livraison_le){ notifier({ type: 'info', titre: 'Déjà payé', texte: 'Il arrive le ' + dateLongue(a.livraison_le) + '.' }); return; }
   const nom = bqeNomCourt(a), prix = euros(bqePrixMoi(a));
   const date14 = dateLongue(Date.now() + 14 * 86400000);
@@ -16023,12 +16059,13 @@ function bqeOuvrirFiche(id){
     : a.type === 'collection' ? `<b>le dos et le skin ${echapperTexte(nom)}</b>${bqePrixMoi(a) < Number(a.prix_centimes) ? ' (tu en as déjà une partie : tu ne paies que ce qui te manque)' : ''}`
     : `<b>le dos ${echapperTexte(nom)}</b> sur toutes tes cartes`;
   const plafondBloque = cat.mineur && cat.plafond_restant != null && Number(cat.plafond_restant) < bqePrixMoi(a);
-  const grand = a.type === 'dos' ? dosApercuHtml(a.id) : a.type === 'skin' || a.type === 'collection' ? bqeVignette(a) : `<div class="hab-grand">${habVignette(habCle(a.id), 92).replace('data-fixe="1" ', '')}</div>`;
+  const grand = bqeGrandApercu(a);   // patch207
   const aujourdhui = new Date().toISOString().slice(0, 10);
   const fermer = ouvrirFenetre(`
     <div class="fenetre bqe-fiche" role="dialog" aria-modal="true" aria-labelledby="bqeNom">
       <button type="button" class="bqe-fermer" aria-label="Fermer">×</button>
-      <div class="bqe-tete"><div class="bqe-grand">${grand}</div>
+      <div class="bqe-apercu">${grand}</div>
+      <div class="bqe-tete">
         <div><small>${{ dos: 'Dos de carte', skin: 'Skin de carte', collection: 'Collection · dos + skin' }[a.type] || 'Habillage de paquet'}${a.reserve_og ? ' · réservé aux OG' : ''}</small>
           <h2 id="bqeNom">${echapperTexte(nom)}</h2><b class="bqe-gros-prix">${prix}</b></div></div>
       <p class="bqe-recoit">Tu reçois ${quoi}, gardé à vie et associé à ton compte. Ça ne change ni le contenu des paquets ni tes chances. Il ne s'échange pas et ne se revend pas.</p>
@@ -16054,6 +16091,7 @@ function bqeOuvrirFiche(id){
   const f = document.querySelector('.bqe-fiche');
   if(!f) return;
   f.querySelector('.bqe-fermer').addEventListener('click', () => fermer(null));
+  bqeArmerApercu(f, a);   // patch207
   habGl.demarrer();
   const liv = () => f.querySelector('input[name="bqeLiv"]:checked').value;
   const verifier = () => {

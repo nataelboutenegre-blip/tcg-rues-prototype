@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd70bdafcc2a9';
+const VERSION_JEU = '126459ae354e';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -15860,7 +15860,7 @@ const dosGl = (() => {
 let bqeAcces = null, bqeCat = null, bqeBandeau = null, bqeCommandes = [];
 const euros = (c) => (Number(c) / 100).toFixed(2).replace('.', ',') + ' €';
 const dateLongue = (d) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
-function bqeNomCourt(a){ return String(a.nom || '').replace(/^(Paquet|Dos) (OG )?/, ''); }
+function bqeNomCourt(a){ return String(a.nom || '').replace(/^(Paquet|Dos|Skin|Collection) (OG )?/, ''); }
 
 async function bqeVerifierAcces(){
   if(bqeAcces === null){
@@ -15905,13 +15905,18 @@ function habVignette(k, w){
   const gl = HAB_PAQ[k] != null;
   return `<div class="hab-vignette" data-hab="${k}"${w ? ` style="width:${w}px"` : ''} aria-hidden="true">${gl ? habCanvas(k, true, 200, 280) : ''}<span class="hv-bande"></span></div>`;
 }
-function bqeVignette(a){ return a.type === 'dos' ? dosApercuHtml(a.id) : habVignette(habCle(a.id)); }
+function bqeVignette(a){
+  if(a.type === 'skin') return skinVignetteHtml(skinCle(a.id));   // patch202
+  if(a.type === 'collection'){ const c = a.contenu || [];
+    return `<div class="bqe-col-vig">${dosApercuHtml(c.find(x => x.startsWith('dos-')))}${skinVignetteHtml(skinCle(c.find(x => x.startsWith('skin-'))))}</div>`; }
+  return a.type === 'dos' ? dosApercuHtml(a.id) : habVignette(habCle(a.id));
+}
 
 function bqeCarte(a){
   const attente = !a.possede && a.livraison_le;
   const bas = a.possede ? '<span class="bqe-etat ok">Dans ta garde-robe</span>'
     : attente ? `<span class="bqe-etat">Arrive le ${dateLongue(a.livraison_le)}</span>`
-    : `<span class="bq-btn bqe-prix">${euros(a.prix_centimes)}</span>`;
+    : `<span class="bq-btn bqe-prix">${bqePrixHtml(a)}</span>`;
   return `<button type="button" class="bq-article bqe-article" data-bqe="${echapperTexte(a.id)}">
       ${bqeVignette(a)}
       <b>${echapperTexte(bqeNomCourt(a))}</b>
@@ -15938,18 +15943,21 @@ function renderBoutiqueEuros(){
   const corps = document.getElementById('bqeCorps');
   const cat = bqeCat;
   if(!corps || !cat) return;
-  const arts = (cat.articles || []).filter(a => a.type === 'dos' || a.type === 'habillage');
+  const arts = (cat.articles || []).filter(a => ['dos', 'habillage', 'skin', 'collection'].includes(a.type));
   const og = arts.filter(a => a.reserve_og);
   const hab = arts.filter(a => !a.reserve_og && a.type === 'habillage');
   const dos = arts.filter(a => !a.reserve_og && a.type === 'dos');
+  const skins = arts.filter(a => a.type === 'skin'), cols = arts.filter(a => a.type === 'collection');   // patch202
   const section = (titre, mot, liste, badge) => liste.length ? `<div class="bourse-section bq-section">
       <h2>${titre}${badge ? ' <span class="bqe-og">OG</span>' : ''}${mot ? ` <small class="bqe-mot">${mot}</small>` : ''}</h2>
       <div class="bq-grille bq-grille-dos">${liste.map(bqeCarte).join('')}</div></div>` : '';
   corps.innerHTML = bqeBandeauHtml()
     + (cat.ouverte ? '' : '<p class="bqe-test">Mode test : la boutique n\'est visible que des comptes testeurs. Paie avec une carte de test Stripe.</p>')
     + (cat.og ? section('Réservé aux OG', 'pour les joueurs de la saison 1', og, true) : '')
+    + section('Collections', 'le dos et le skin ensemble, moins cher', cols)
     + section('Habillages de paquet', 'l\'emballage de tes paquets', hab)
     + section('Dos de cartes', '', dos)
+    + section('Skins de carte', 'à poser sur les cartes de ton choix', skins)
     + (!arts.length ? '<p class="collection-empty">Rien en vente pour le moment.</p>' : '')
     + (bqeCommandes.length ? `<div class="bourse-section bq-section"><h2>Mes achats</h2><div class="bqe-achats">${bqeCommandes.map(bqeCommandeHtml).join('')}</div></div>` : '')
     + `<p class="bqe-pied">Paiement par Stripe · TerraFront, entrepreneur individuel · <a href="cgv.html" target="_blank" rel="noopener">Conditions de vente</a> · <a href="mentions-legales.html" target="_blank" rel="noopener">Mentions légales</a></p>`;
@@ -15969,17 +15977,20 @@ function bqeOuvrirFiche(id){
   if(!a) return;
   if(a.possede){ notifier({ type: 'info', titre: 'Tu l\'as déjà', texte: 'Il est dans Profil › Personnaliser.' }); return; }
   if(a.livraison_le){ notifier({ type: 'info', titre: 'Déjà payé', texte: 'Il arrive le ' + dateLongue(a.livraison_le) + '.' }); return; }
-  const nom = bqeNomCourt(a), prix = euros(a.prix_centimes);
+  const nom = bqeNomCourt(a), prix = euros(bqePrixMoi(a));
   const date14 = dateLongue(Date.now() + 14 * 86400000);
-  const quoi = a.type === 'habillage' ? `<b>l'habillage ${echapperTexte(nom)}</b> sur tous tes paquets` : `<b>le dos ${echapperTexte(nom)}</b> sur toutes tes cartes`;
-  const plafondBloque = cat.mineur && cat.plafond_restant != null && Number(cat.plafond_restant) < Number(a.prix_centimes);
-  const grand = a.type === 'dos' ? dosApercuHtml(a.id) : `<div class="hab-grand">${habVignette(habCle(a.id), 92).replace('data-fixe="1" ', '')}</div>`;
+  const quoi = a.type === 'habillage' ? `<b>l'habillage ${echapperTexte(nom)}</b> sur tous tes paquets`
+    : a.type === 'skin' ? `<b>le skin ${echapperTexte(nom)}</b>, à poser sur autant de tes cartes que tu veux (Terra et Front)`
+    : a.type === 'collection' ? `<b>le dos et le skin ${echapperTexte(nom)}</b>${bqePrixMoi(a) < Number(a.prix_centimes) ? ' (tu en as déjà une partie : tu ne paies que ce qui te manque)' : ''}`
+    : `<b>le dos ${echapperTexte(nom)}</b> sur toutes tes cartes`;
+  const plafondBloque = cat.mineur && cat.plafond_restant != null && Number(cat.plafond_restant) < bqePrixMoi(a);
+  const grand = a.type === 'dos' ? dosApercuHtml(a.id) : a.type === 'skin' || a.type === 'collection' ? bqeVignette(a) : `<div class="hab-grand">${habVignette(habCle(a.id), 92).replace('data-fixe="1" ', '')}</div>`;
   const aujourdhui = new Date().toISOString().slice(0, 10);
   const fermer = ouvrirFenetre(`
     <div class="fenetre bqe-fiche" role="dialog" aria-modal="true" aria-labelledby="bqeNom">
       <button type="button" class="bqe-fermer" aria-label="Fermer">×</button>
       <div class="bqe-tete"><div class="bqe-grand">${grand}</div>
-        <div><small>${a.type === 'dos' ? 'Dos de carte' : 'Habillage de paquet'}${a.reserve_og ? ' · réservé aux OG' : ''}</small>
+        <div><small>${{ dos: 'Dos de carte', skin: 'Skin de carte', collection: 'Collection · dos + skin' }[a.type] || 'Habillage de paquet'}${a.reserve_og ? ' · réservé aux OG' : ''}</small>
           <h2 id="bqeNom">${echapperTexte(nom)}</h2><b class="bqe-gros-prix">${prix}</b></div></div>
       <p class="bqe-recoit">Tu reçois ${quoi}, gardé à vie et associé à ton compte. Ça ne change ni le contenu des paquets ni tes chances. Il ne s'échange pas et ne se revend pas.</p>
       <fieldset class="bqe-liv"><legend>Quand veux-tu le recevoir ?</legend>
@@ -16098,7 +16109,7 @@ async function loadGardeRobe(){
   const { data, error } = await sb.rpc('garde_robe');
   if(error || !data){ corps.innerHTML = '<p class="collection-empty">La garde-robe arrive bientôt.</p>'; return; }
   gardeRobe = data;
-  if(SAISON2) await chargerMesDosCartes(true);   // patch200
+  if(SAISON2) await Promise.all([chargerMesDosCartes(true), chargerMesSkins(true), chargerMesSkinsCartes(true)]);   // patch200-202
   renderGardeRobe();
   try{
     const r = await sb.rpc('terra_vitrine', { p_joueur: window.__monId });
@@ -16122,7 +16133,7 @@ function renderGardeRobe(){
       <h2>Mes cartes</h2>
       <div class="gr-titre">Dos de carte <span>${dos.length} possédé${dos.length > 1 ? 's' : ''}</span></div>
       <div class="gr-objets">${dos.map(o => tuile('dos', o, dosApercuHtml(o.id))).join('')}</div>
-      ${SAISON2 ? blocDosCartesHtml() : ''}
+      ${SAISON2 ? blocDosCartesHtml() + blocSkinsHtml() : ''}
       <div class="gr-titre">Habillage de paquet <span>${habs.length} possédé${habs.length > 1 ? 's' : ''}</span></div>
       <div class="gr-objets">${habs.map(o => tuile('habillage', o, habVignette(habCle(o.id), 66))).join('')}</div>
       <div class="gr-voir"><p>D'autres dos et habillages t'attendent : à gagner en jouant ou dans la boutique.</p>
@@ -16918,6 +16929,125 @@ async function armerSkinFiche(boite){
     skinGl.rafraichir();
   });
 }
+// ---------- patch202 : skins et collections dans la boutique, skins dans Personnaliser ----------
+// une carte pour montrer un skin : ma plus belle carte Terra avec photo, sinon Paris
+function carteExemple(){
+  let best = null;
+  try{
+    if(typeof terraCollection !== 'undefined' && terraCollection)
+      for(const e of terraCollection.values()){
+        if(!e.photo) continue;
+        if(!best || RANG_TIER[e.tier.id] > RANG_TIER[best.tier.id]) best = e;
+      }
+  }catch(err){}
+  return best || { code: '75056', nom: 'Paris', dept: '75', tier: TIERS[0], rank: 1, tierSize: 302, photo: '' };
+}
+function skinVignetteHtml(k){
+  if(!k) return '';
+  return `<div class="sk-vig" aria-hidden="true"><div class="sk-vig-echelle">${miniTerra({ ...carteExemple(), skin: k, exemplaires: 1, aurore: 0 })}</div></div>`;
+}
+const bqePrixMoi = (a) => a.prix_moi != null ? Number(a.prix_moi) : Number(a.prix_centimes);
+function bqePrixHtml(a){
+  const moi = bqePrixMoi(a), plein = Number(a.prix_centimes);
+  return (moi < plein ? `<s>${euros(plein)}</s> ` : '') + euros(moi);
+}
+
+// Profil › Personnaliser : mes skins et les cartes qui les portent
+function blocSkinsHtml(){
+  const liste = mesSkins || [];
+  if(!liste.length) return `<div class="gr-titre">Skins de carte <span>0 possédé</span></div>
+    <p class="gr-dc-vide">Un skin habille les cartes de ton choix (photo, fond, textes). Ils sont dans la boutique.</p>`;
+  const lignes = mesSkinsCartes ? [...mesSkinsCartes.entries()].sort((a, b) => a[1].nom.localeCompare(b[1].nom, 'fr')) : [];
+  return `<div class="gr-titre">Skins de carte <span>${liste.length} possédé${liste.length > 1 ? 's' : ''} · ${lignes.length} carte${lignes.length > 1 ? 's' : ''} habillée${lignes.length > 1 ? 's' : ''}</span></div>
+    ${lignes.length ? `<div class="gr-dc-liste">${lignes.map(([cle, r]) => {
+      const [source] = cle.split('|'); const k = skinCle(r.skin);
+      return `<div class="gr-dc-ligne gr-sk-ligne"><i class="sk-pastille sk-p-${k}" aria-hidden="true"></i>
+        <div class="gr-dc-nom"><b>${echapperTexte(r.nom)}</b><span>${source === 'front' ? 'Front' : 'Terra'} · ${echapperTexte(SKIN_NOMS[k] || '')}</span></div>
+        <button type="button" class="bq-btn secondaire" data-gr-sk-retirer="${echapperTexte(cle)}">Retirer</button></div>`;
+    }).join('')}</div>` : '<p class="gr-dc-vide">Aucune carte n\'a de skin pour l\'instant.</p>'}
+    <div class="gr-dc-bas"><button type="button" class="bq-btn secondaire" data-gr-sk-choisir>Choisir les cartes</button>
+      <small>Terra et Front. Une carte vendue, échangée ou prise perd ton skin ; le skin reste à toi.</small></div>`;
+}
+document.getElementById('grCorps').addEventListener('click', async (e) => {
+  const r = e.target.closest('[data-gr-sk-retirer]');
+  if(r){
+    r.disabled = true;
+    const [source, code] = r.dataset.grSkRetirer.split('|');
+    const { error } = await sb.rpc('skin_cartes_definir', { p_source: source, p_codes: [code], p_skin: null });
+    if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); r.disabled = false; return; }
+    mesSkinsCartes.delete(r.dataset.grSkRetirer);
+    skinGl.rafraichir();
+    renderGardeRobe();
+    return;
+  }
+  if(e.target.closest('[data-gr-sk-choisir]')) ouvrirChoixSkinCartes();
+});
+async function ouvrirChoixSkinCartes(){
+  const liste = await chargerMesSkins();
+  if(!liste.length) return;
+  if(!terraCharge) await chargerCollectionTerra();
+  let skin = liste[0].id;
+  let source = modeJeu === 'front' ? 'front' : 'terra';
+  let choix = new Set(), recherche = '';
+  const rangTier = (t) => TIERS.findIndex(x => x.id === t.id);
+  const cartesDe = (s) => [...(s === 'front' ? collectionMap.values() : terraCollection.values())]
+    .filter(c => !c.perdue)
+    .sort((a, b) => rangTier(a.tier) - rangTier(b.tier) || a.nom.localeCompare(b.nom, 'fr'));
+  const fermer = ouvrirFenetre(`
+    <div class="fenetre vt-choix dc-fenetre sk-fenetre" role="dialog" aria-modal="true" aria-labelledby="skTitre">
+      <h2 id="skTitre">Poser un skin sur des cartes</h2>
+      <p class="vt-aide">Choisis un skin, puis touche les cartes qui le porteront.</p>
+      <div class="sk-rangee" id="skSkins" role="group" aria-label="Le skin"></div>
+      <div class="dc-sources" role="group" aria-label="Mode">
+        <button type="button" data-sk-source="terra">Terra</button><button type="button" data-sk-source="front">Front</button>
+      </div>
+      <p class="vt-compte" id="skCompte"></p>
+      <input type="search" id="skRecherche" class="bourse-search" placeholder="Rechercher une commune ou un département…" autocomplete="off">
+      <div class="vt-grille" id="skGrille"></div>
+      <p class="prix-erreur" id="skErreur" role="alert"></p>
+      <div class="prix-boutons">
+        <button type="button" class="open-btn secondary" data-sk="annuler">Annuler</button>
+        <button type="button" class="open-btn" data-sk="ok">Enregistrer</button>
+      </div>
+    </div>`);
+  const boite = document.querySelector('#fenetre .sk-fenetre');
+  if(!boite) return;
+  const dessiner = () => {
+    boite.querySelector('#skSkins').innerHTML = liste.map(o => { const k = skinCle(o.id);
+      return `<button type="button" class="sk-opt${o.id === skin ? ' on' : ''}" data-sk-skin="${echapperTexte(o.id)}" aria-pressed="${o.id === skin}"><i class="sk-pastille sk-p-${k}" aria-hidden="true"></i>${echapperTexte(SKIN_NOMS[k] || o.nom)}</button>`; }).join('');
+    boite.querySelectorAll('[data-sk-source]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.skSource === source)));
+    boite.querySelector('#skCompte').innerHTML = `<b>${choix.size}</b> carte${choix.size > 1 ? 's' : ''} choisie${choix.size > 1 ? 's' : ''}`;
+    const q = recherche.trim().toLowerCase();
+    const dep = q ? codeDepartement(q) : null;
+    const qs = sansAccents(recherche.trim());
+    const cartes = cartesDe(source).filter(c => !q || correspondRecherche(c.nom, c.dept, qs) || c.dept === dep).slice(0, 150);
+    boite.querySelector('#skGrille').innerHTML = cartes.map(c => `<button type="button" class="vt-carte${choix.has(c.code) ? ' pris' : ''}" data-sk-code="${echapperTexte(c.code)}" aria-pressed="${choix.has(c.code)}">
+        ${miniVitrine({ ...c, aurore: source === 'front' ? (AURORE && AURORE[c.code] ? 1 : 0) : c.aurore })}${choix.has(c.code) ? '<span class="vt-num">✓</span>' : ''}</button>`).join('')
+      || '<p class="collection-empty">Aucune carte ne correspond.</p>';
+  };
+  dessiner();
+  boite.querySelector('#skRecherche').addEventListener('input', (e) => { recherche = e.target.value; dessiner(); });
+  boite.addEventListener('click', async (e) => {
+    const d = e.target.closest('[data-sk-skin]');
+    if(d){ skin = d.dataset.skSkin; dessiner(); return; }
+    const s = e.target.closest('[data-sk-source]');
+    if(s){ if(s.dataset.skSource !== source){ source = s.dataset.skSource; choix = new Set(); } dessiner(); return; }
+    const c = e.target.closest('[data-sk-code]');
+    if(c){ const k = c.dataset.skCode; if(choix.has(k)) choix.delete(k); else choix.add(k); dessiner(); return; }
+    const b = e.target.closest('[data-sk]');
+    if(!b) return;
+    if(b.dataset.sk === 'annuler'){ fermer(null); return; }
+    if(!choix.size){ boite.querySelector('#skErreur').textContent = 'Touche au moins une carte.'; return; }
+    b.disabled = true; b.textContent = 'Enregistrement…';
+    const { error } = await sb.rpc('skin_cartes_definir', { p_source: source, p_codes: [...choix], p_skin: skin });
+    if(error){ boite.querySelector('#skErreur').textContent = messageLisible(error.message); b.disabled = false; b.textContent = 'Enregistrer'; return; }
+    fermer(null);
+    await chargerMesSkinsCartes(true);
+    renderGardeRobe();
+    notifier({ type: 'succes', titre: 'Skin posé', texte: `${choix.size} carte${choix.size > 1 ? 's' : ''} ${choix.size > 1 ? 'portent' : 'porte'} maintenant le skin ${SKIN_NOMS[skinCle(skin)] || ''}.` });
+  });
+}
+
 // ---------- patch179 : la carte en grand, inclinable et retournable ----------
 // La carte garde sa taille de base (bw x bh) et elle est agrandie d'un coup
 // (--s) : textes et dessins restent ceux de la carte du jeu.

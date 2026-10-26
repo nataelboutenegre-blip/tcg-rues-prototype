@@ -6149,3 +6149,18 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .sk-p-neon{ background: linear-gradient(135deg, #FF2BD6, #20E3FF); }
 .sk-p-gravure{ background: linear-gradient(135deg, #F2E8D2, #8F846F); }
 .sk-p-orage{ background: linear-gradient(135deg, #121828, #9FB3D1); }
+
+/* ---------- patch202 : skins et collections dans la boutique ---------- */
+.sk-vig{ width: 94px; height: 141px; margin: 0 auto 4px; position: relative; }
+.sk-vig-echelle{ width: 150px; position: absolute; left: 0; top: 0; transform: scale(.6267); transform-origin: 0 0; }
+.sk-vig .mini{ width: 150px; content-visibility: visible; }
+.bqe-col-vig{ display: flex; justify-content: center; align-items: flex-end; gap: 6px; margin: 0 auto 4px; }
+.bqe-col-vig .bq-dos-apercu, .bqe-col-vig .sk-vig{ margin: 0; }
+.bqe-col-vig .bq-dos-apercu{ width: 64px; height: 89.5px; }
+.bqe-col-vig .bq-dos-echelle{ transform: scale(.34); }
+.bqe-col-vig .sk-vig{ width: 60px; height: 90px; }
+.bqe-col-vig .sk-vig-echelle{ transform: scale(.4); }
+.bqe-prix s, .bqe-gros-prix s{ opacity: .6; font-weight: 600; margin-right: 4px; }
+.bqe-grand .sk-vig, .bqe-grand .bqe-col-vig{ margin: 0; }
+.gr-sk-ligne{ grid-template-columns: 22px minmax(0, 1fr) auto; }
+.gr-sk-ligne .sk-pastille{ width: 18px; height: 18px; }

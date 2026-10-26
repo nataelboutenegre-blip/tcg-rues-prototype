@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '9ee5f49a6520';
+const VERSION_JEU = 'e21053953f13';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1619,8 +1619,8 @@ let palmaresSaisons = [], palmaresChoisie = null, palmaresCharge = false;
 async function initModesClassement(){
   const general = document.querySelector('#classement [data-mode="general"]');
   if(general) general.textContent = SAISON2 ? 'Front' : 'Saison en cours';
-  const terra = document.querySelector('#classement [data-mode="terra"]');
-  if(terra) terra.hidden = !SAISON2;
+  const clans = document.querySelector('#classement [data-mode="clans"]');   // patch210
+  if(clans) clans.hidden = !CLANS;
   if(palmaresCharge) return;
   palmaresCharge = true;
   const { data, error } = await sb.rpc('palmares_saisons');
@@ -1645,6 +1645,7 @@ function renderSaisonsPalmares(){
 async function loadClassement(){
   const bloc = document.getElementById('classement');
   await initModesClassement();
+  if(classementMode === 'clans'){ await chargerClassementClans(); return; }   // patch210
   const limite = classementComplet ? 50 : 10;
   let appel;
   if(classementMode === 'terra') appel = sb.rpc('terra_classement', { p_limite: limite });
@@ -1669,6 +1670,57 @@ async function loadClassement(){
   chargerScoreDetail();
 }
 
+// patch210 : le classement des clans (même calcul que l'écran Clan)
+let clanAOuvrir = null;
+async function chargerClassementClans(){
+  const [cl, mc] = await Promise.all([sb.rpc('clans_classement'), sb.rpc('mon_clan')]);
+  if(cl.error) console.error('Classement des clans :', cl.error.message);
+  const monClan = !mc.error && mc.data && mc.data.clan ? mc.data.clan.id : null;
+  const tous = cl.error ? [] : (cl.data || []).map((x, i) => ({ ...x, rang: i + 1, est_moi: x.clan_id === monClan }));
+  classementDonnees = classementComplet ? tous : tous.filter(x => x.rang <= 10 || x.est_moi);
+  classementDonnees.total = tous.length;
+  scoreDetail = new Map();
+  renderClassement();
+}
+function renderClassementClans(podium, liste, plus){
+  const leg = document.getElementById('clLegende');
+  if(leg) leg.hidden = true;
+  const nb = (n) => Number(n || 0).toLocaleString('fr-FR');
+  const d = classementDonnees;
+  const qui = (x) => x.actifs != null ? `${nb(x.actifs)} actif${x.actifs > 1 ? 's' : ''} sur ${nb(x.membres)}` : `${nb(x.membres)} membres`;
+  const ligne = (x) => `<button class="cl-ligne cl-clan${x.est_moi ? ' moi' : ''}" data-clan-voir="${echapperTexte(x.clan_id)}" title="Voir les membres de ce clan">
+      <span class="cl-rang">${x.rang}</span>${blasonHtml(x.tag, x.couleur, true)}
+      <span class="cl-pseudo">${x.est_moi ? '<b>' + echapperTexte(x.nom) + '</b>' : echapperTexte(x.nom)}</span>
+      <span class="cl-detail">${qui(x)}</span>
+      <span class="cl-score">${nb(x.moyenne)}<small>/ membre</small></span>
+    </button>`;
+  if(!classementOuvert){
+    const moi = d.find(x => x.est_moi);
+    podium.innerHTML = '';
+    liste.innerHTML = moi ? ligne(moi) : '';
+    if(plus) plus.hidden = true;
+    return;
+  }
+  if(!d.length){
+    podium.innerHTML = '';
+    liste.innerHTML = `<p class="collection-empty">Le classement des clans apparaîtra dès qu'un clan aura 3 membres.</p>`;
+    if(plus) plus.hidden = true;
+    return;
+  }
+  const ordre = [2, 1, 3].map(r => d.find(x => x.rang === r)).filter(Boolean);
+  podium.innerHTML = ordre.map(x => `
+    <button class="cl-marche cl-clan r${x.rang}${x.est_moi ? ' moi' : ''}" data-clan-voir="${echapperTexte(x.clan_id)}" title="Voir les membres de ce clan">
+      <span class="cl-rang">${x.rang}</span>
+      ${blasonHtml(x.tag, x.couleur)}
+      <span class="cl-pseudo">${echapperTexte(x.nom)}</span>
+      <span class="cl-score">${nb(x.moyenne)}<small>/ membre</small></span>
+      <span class="cl-detail">${qui(x)}</span>
+    </button>`).join('');
+  liste.innerHTML = d.filter(x => x.rang > 3).map(ligne).join('')
+    + `<p class="cl-note-clans">Moyenne de communes du Front par membre actif (jeu ouvert dans les 7 derniers jours) : un gros clan n'a pas d'avantage.</p>`;
+  if(plus) plus.hidden = classementComplet || (d.total || 0) <= 10;
+}
+
 function renderClassement(){
   renderSaisonsPalmares();
   const podium = document.getElementById('clPodium');
@@ -1683,6 +1735,7 @@ function renderClassement(){
     bouton.setAttribute('aria-expanded', String(classementOuvert));
     bouton.setAttribute('aria-label', classementOuvert ? 'Replier le classement' : 'Afficher le classement');
   }
+  if(classementMode === 'clans'){ renderClassementClans(podium, liste, plus); return; }   // patch210
   if(!classementOuvert){
     // replie : on ne garde que ma position, en une ligne
     const moi = classementDonnees.find(l => l.est_moi);
@@ -1701,7 +1754,6 @@ function renderClassement(){
   if(classementDonnees.length === 0){
     podium.innerHTML = '';
     liste.innerHTML = `<p class="collection-empty">${classementMode === 'mois' ? 'Aucune commune prise ce mois-ci pour le moment.'
-      : classementMode === 'terra' ? 'Le classement Terra apparaîtra dès les premiers paquets ouverts.'
       : classementMode === 'palmares' ? 'Pas de palmarès pour cette saison.'
       : 'Le classement apparaîtra dès que des communes seront possédées.'}</p>`;
     if(plus) plus.hidden = true;
@@ -1782,6 +1834,13 @@ document.getElementById('classement').addEventListener('click', (e) => {
   // obligeait de toute facon a changer d'onglet, et la fiche porte un bouton
   // qui le fait. La legende de la carte, elle, garde le clic direct : on y est
   // deja devant la carte et on veut aller vite.
+  const clan = e.target.closest('[data-clan-voir]');   // patch210
+  if(clan){
+    clanAOuvrir = clan.dataset.clanVoir;
+    const t = document.querySelector('.tab[data-tab="clan"]');
+    if(t) t.click();
+    return;
+  }
   const ligne = e.target.closest('[data-joueur-id]');
   if(ligne) ouvrirProfil(ligne.dataset.joueurId);
 });
@@ -14509,6 +14568,14 @@ async function loadClan(){
   clanCache = { moi: mc.data || {}, classement: cl.error ? [] : (cl.data || []), formation: cf.error ? [] : (cf.data || []),
                 activite: ac.error ? null : new Map((ac.data || []).map(a => [a.joueur_id, a])) };
   renderClan();
+  // patch210 : venu du classement, le clan touché est déplié et montré
+  if(clanAOuvrir){
+    const id = clanAOuvrir; clanAOuvrir = null;
+    const estLeMien = clanCache.moi.clan && clanCache.moi.clan.id === id;
+    if(!estLeMien && !clansOuverts.has(id)) await basculerClanVu(id);
+    const el = document.querySelector('#clanZone [data-clan-voir="' + CSS.escape(id) + '"]');
+    if(el && !estLeMien) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
 }
 function blasonHtml(tag, couleur, petit){
   return `<span class="blason${petit ? ' petit' : ''}" style="--clan:${couleur}">${echapperTexte(tag)}</span>`;

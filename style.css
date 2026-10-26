@@ -6208,3 +6208,10 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .mini.skin-gravure .mini-art::after{ display: none; }
 .mini .skin-marque::before{ content: ''; flex: none; width: 5px; height: 5px; transform: rotate(45deg); background: currentColor; border-radius: 1px; }
 .mini .skin-marque.court{ font-size: 0; gap: 0; right: 6px; bottom: 8px; }
+
+/* ---------- patch210 : le classement des clans ---------- */
+.cl-marche.cl-clan .blason{ width:40px; height:46px; font-size:.82rem; margin:2px 0; }
+.cl-ligne.cl-clan .cl-detail{ width:auto; white-space:nowrap; }
+.cl-ligne.cl-clan .cl-score small{ white-space:nowrap; }
+.cl-note-clans{ margin:6px 2px 0; font-size:.74rem; line-height:1.4; color: var(--brume); }
+@media (max-width: 420px){ .cl-ligne.cl-clan .cl-detail{ display:none; } }

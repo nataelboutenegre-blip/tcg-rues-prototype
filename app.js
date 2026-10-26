@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'f140d2778d3d';
+const VERSION_JEU = 'd739c9173faf';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -16135,6 +16135,8 @@ document.getElementById('bqeCorps').addEventListener('click', async (e) => {
   r.disabled = true;
   const { data, error } = await sb.rpc('euros_demander_retractation', { p_commande: r.dataset.retract });
   if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); r.disabled = false; return; }
+  // patch206 : prévenir Nataël par e-mail (la demande est déjà enregistrée, un échec ne bloque rien)
+  try{ sb.functions.invoke('prevenir-retractation', { body: {} }).catch(() => {}); }catch(err){}
   bqeCommandes = data || [];
   renderBoutiqueEuros();
   notifier({ type: 'succes', titre: 'Achat annulé', texte: 'L\'objet ne sera pas livré. Tu seras remboursé sous quelques jours.' });

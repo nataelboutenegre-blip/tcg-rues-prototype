@@ -6104,8 +6104,8 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .mini.skin .mini-art > svg, .mini.skin .mini-art > img, .mini.skin .mini-art .art-voile, .mini.skin .au-fond{ visibility: hidden; }
 .mini.skin .mini-art, .mini.skin .mini-infos, .mini.skin .mini-lisere{ position: relative; z-index: 1; }
 .mini.skin .mini-lisere{ margin: 0 4px 3px; border-radius: 2px; overflow: hidden; }
-.mini .skin-marque{ position: absolute; right: 6px; top: 6px; z-index: 2; font: 700 8px/1 var(--texte, sans-serif); letter-spacing: .08em; text-transform: uppercase;
-  padding: 3px 5px; border-radius: 999px; background: rgba(8,19,37,.75); color: #fff; pointer-events: none; }
+.mini .skin-marque{ position: absolute; right: 7px; bottom: 9px; z-index: 2; font: 700 7px/1 var(--texte, sans-serif); letter-spacing: .12em; text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 3px; color: var(--sk-acc, #fff); opacity: .9; pointer-events: none; }   /* patch209 */
 .mini.skin-neon .mini-nom{ color: #fff; text-shadow: 0 0 2px #fff, 0 0 7px #FF2BD6, 0 0 14px #FF2BD6; }
 .mini.skin-neon .mini-num{ color: #9FE9FF; }
 .mini.skin-neon .mini-rarete{ color: #20E3FF !important; text-shadow: 0 0 6px rgba(32,227,255,.8); }
@@ -6190,3 +6190,21 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
   .mf-vue button{ min-width: 0; white-space: normal; padding: 6px 4px; font-size: .76rem; line-height: 1.15; text-align: center; }
 }
 @media (max-width: 360px){ .mf-vue button{ padding: 6px 2px; font-size: .7rem; } }
+
+/* ---------- patch209 : le skin mieux fondu dans la carte ---------- */
+.mini.skin-comete{ --sk-acc: #9FC0FF; }
+.mini.skin-juillet{ --sk-acc: #FF6B77; }
+.mini.skin-maree{ --sk-acc: #7FE8FF; }
+.mini.skin-feu{ --sk-acc: #FF9A4A; }
+.mini.skin-prisme{ --sk-acc: #D7B8FF; }
+.mini.skin-orfondu{ --sk-acc: #F3CD6A; }
+.mini.skin-neon{ --sk-acc: #FF5BE3; }
+.mini.skin-gravure{ --sk-acc: #5A4426; }
+.mini.skin-orage{ --sk-acc: #B9CCEA; }
+/* un liseré de la couleur du skin autour de la photo, qui s'efface vers le bas comme la photo */
+.mini.skin .mini-art::after{ content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 2; padding: 1px; opacity: .7;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--sk-acc) 75%, #fff) 0%, color-mix(in srgb, var(--sk-acc) 40%, transparent) 45%, transparent 80%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+.mini.skin-gravure .mini-art::after{ display: none; }
+.mini .skin-marque::before{ content: ''; flex: none; width: 5px; height: 5px; transform: rotate(45deg); background: currentColor; border-radius: 1px; }
+.mini .skin-marque.court{ font-size: 0; gap: 0; right: 6px; bottom: 8px; }

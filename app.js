@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '42ba283d1144';
+const VERSION_JEU = '9ee5f49a6520';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -16474,7 +16474,12 @@ async function ouvrirChoixDosCartes(){
 // vitrines) : une seule image par carte, gardée en mémoire. Rendu WebGL 2,
 // mêmes outils que les dos premium (DOS_GLSL_COMMUN), au format de .mini-int.
 const SKIN_GLSL_COMMUN = DOS_GLSL_COMMUN.replace('H=263.', 'H=285.')
-  .replace('vec4 photoRect(float b){ return vec4(b,b,W-b,b+(H-2.*b)*.6); }', 'vec4 photoRect(float b){ return vec4(5.2,5.2,W-5.2,116.); }');
+  .replace('vec4 photoRect(float b){ return vec4(b,b,W-b,b+(H-2.*b)*.6); }', 'vec4 photoRect(float b){ return vec4(5.2,5.2,W-5.2,116.); }')
+  // patch209 : la photo a les coins arrondis d'une carte normale et se fond dans le bas de la carte ;
+  // inRnet garde un bord net (la plaque de la Gravure, les flammes du Brasier)
+  .replace('float inR(vec2 q,vec4 R){ float p=upx(); return smoothstep(R.x-p,R.x+p,q.x)*(1.-smoothstep(R.z-p,R.z+p,q.x))*smoothstep(R.y-p,R.y+p,q.y)*(1.-smoothstep(R.w-p,R.w+p,q.y)); }',
+    'float inR(vec2 q,vec4 R){ vec2 c=(R.xy+R.zw)*.5,h=(R.zw-R.xy)*.5; float p=upx(); return (1.-smoothstep(-p,p,sdBox(q-c,h,7.8)))*(1.-smoothstep(R.w-24.,R.w-1.,q.y)); }\n'
+    + 'float inRnet(vec2 q,vec4 R){ vec2 c=(R.xy+R.zw)*.5,h=(R.zw-R.xy)*.5; float p=upx(); return 1.-smoothstep(-p,p,sdBox(q-c,h,2.5)); }');
 const SKIN_GLSL = {
   comete: `
 vec3 comet(vec2 q,float t,float P,vec2 A,vec2 B,float sc,out float light){
@@ -16487,7 +16492,7 @@ vec3 comet(vec2 q,float t,float P,vec2 A,vec2 B,float sc,out float light){
   light=act*exp(-length(q-head)/(50.*sc));
   return act*(tail*vec3(.75,.88,1.)*1.1+ion*vec3(.4,.6,1.)+hd*vec3(1.,.98,.95)); }
 vec3 face(vec2 q,vec2 uv,float t){
-  float b=5.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
   float an=atan(q.y-H*.5,q.x-W*.5);
   vec3 frame=mix(vec3(.38,.46,.66),vec3(.93,.97,1.),pow(.5+.5*sin(an*2.+t*.6+u_tilt.x*2.5),3.))*(.85+.3*glint(uv,u_tilt,8.));
   vec3 inner=mix(vec3(.02,.035,.1),vec3(.05,.08,.2),1.-smoothstep(.3,1.,uv.y))+stars(q,u_tilt*.5,t,.16)*.6;
@@ -16527,7 +16532,7 @@ vec3 fireworks(vec2 q,float t,vec4 A,float sc,out vec3 lc){
     else{ acc+=burst(q,c,lt-.55,fc,sc,sd,lc); } }
   return acc; }
 vec3 face(vec2 q,vec2 uv,float t){
-  float b=5.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
   vec3 frame=q.x<W/3.?vec3(.16,.27,.62):(q.x<2.*W/3.?vec3(.95,.95,.97):vec3(.86,.24,.27));
   frame*=.82+.3*glint(uv,u_tilt,10.);
   vec3 lc; vec3 fw=fireworks(q,t,vec4(25.,20.,163.,92.),.85,lc);
@@ -16551,7 +16556,7 @@ vec3 bubbles(vec2 q,float t){ vec2 p=q; p.y+=t*14.; vec2 id=floor(p/16.); vec2 r
   float d=length(p-cc); float rr=.6+r.x*1.2; float bub=step(.6,r.y)*((1.-smoothstep(rr,rr+.25,d))-(1.-smoothstep(rr-.5,rr-.15,d))*.75);
   return bub*.35*vec3(.8,1.,1.); }
 vec3 face(vec2 q,vec2 uv,float t){
-  float b=5.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
   float g=glint(uv,u_tilt,9.); float ca=caustic(q*.05+u_tilt*.3+vec2(10.,0.),t*.45);
   vec3 frame=mix(vec3(.1,.45,.56),vec3(.7,.96,1.),.3+.7*g)+ca*.15;
   vec3 inner=mix(vec3(.02,.15,.22),vec3(.03,.28,.38),1.-smoothstep(.3,1.,uv.y))+vec3(.5,.9,1.)*ca*.18;
@@ -16565,7 +16570,7 @@ vec3 face(vec2 q,vec2 uv,float t){
   return col; }`,
   feu: `
 vec3 face(vec2 q,vec2 uv,float t){
-  float b=5.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
   float k=.5+.5*sin(t*2.4);
   vec3 frame=mix(vec3(.18,.02,0.),vec3(1.,.45,.03),pow(uv.y,1.4))*(.65+.55*k)+vec3(.4,.1,0.)*vnoise(q*.2+t*2.)*.4;
   vec3 inner=mix(vec3(.08,.015,.008),vec3(.18,.04,.01),smoothstep(.5,1.,uv.y));
@@ -16574,7 +16579,7 @@ vec3 face(vec2 q,vec2 uv,float t){
   vec3 p=photo(s); p=pow(p,vec3(1.1))*vec3(1.12,.86,.64); p*=mix(.55,1.,smoothstep(0.,.45,s.y));
   vec3 col=mix(inner,p,ip);
   float v=(R.w-q.y)/34.; float fl=fbm(vec2(q.x*.075,q.y*.06+t*1.7))*1.5-v*1.25-.15+.15*sin(t*3.+q.x*.1);
-  col+=fire(max(fl,0.)*1.7)*ip*(1.-smoothstep(0.,1.2,v));
+  col+=fire(max(fl,0.)*1.7)*inRnet(q,vec4(R.xyz,R.w+14.))*(1.-smoothstep(R.w-4.,R.w+14.,q.y))*(1.-smoothstep(0.,1.2,v));
   col+=vec3(.5,.1,0.)*exp(-(H-b-q.y)/12.)*(.5+.5*k)*ii;
   col+=ember(q,t,12.,26.,.6,.45,1.,vec3(1.,.55,.15))+ember(q,t*1.3,19.,40.,.9,.4,7.,vec3(1.,.75,.3));
   col=mix(frame,col,ii);
@@ -16583,7 +16588,7 @@ vec3 face(vec2 q,vec2 uv,float t){
   return col; }`,
   prisme: `
 vec3 face(vec2 q,vec2 uv,float t){
-  float b=5.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R); vec2 tl=u_tilt;
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R); vec2 tl=u_tilt;
   float f=ringsF(q,0.,0.);
   vec3 holo=spectral(f*.12+dot(uv-.5,vec2(1.2,.8))+tl.x*.9+tl.y*.6+t*.025);
   float gl=glint(uv,tl,16.);
@@ -16604,7 +16609,7 @@ vec3 face(vec2 q,vec2 uv,float t){
   return col; }`,
   orfondu: `
 vec3 face(vec2 q,vec2 uv,float t){
-  float b=7.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  float b=4.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
   float eo=min(min(q.x,W-q.x),min(q.y,H-q.y)); float pr=sin(clamp(eo/b,0.,1.)*PI);
   float hg=pr*3.+fbm(q*.25)*.25; float gx=dFdx(hg)/upx(), gy=dFdy(hg)/upx(); vec3 N=normalize(vec3(-gx,gy,1.));
   vec3 L=normalize(vec3(u_tilt.x*1.2+.3*cos(t*.5),-u_tilt.y*1.2+.3*sin(t*.5)+.2,.9));
@@ -16652,7 +16657,7 @@ vec3 face(vec2 q,vec2 uv,float t){
   gravure: `
 vec3 paper(vec2 q,vec2 uv){ vec3 p=vec3(.955,.925,.845)*(.92+.08*fbm(q*.35)); return p*(1.-.18*smoothstep(.5,1.05,length((uv-.5)*vec2(1.,.85))*1.45)); }
 vec3 face(vec2 q,vec2 uv,float t){
-  float b=6.; vec4 R=photoRect(b); float ip=inR(q,R); vec3 ink=vec3(.19,.13,.07);
+  float b=6.; vec4 R=photoRect(b); float ip=inRnet(q,R); vec3 ink=vec3(.19,.13,.07);
   vec3 pp=paper(q,uv); vec3 col=pp;
   float eo=min(min(q.x,W-q.x),min(q.y,H-q.y));
   col=mix(col,ink,max(lineU(abs(eo-2.8),.45),lineU(abs(eo-4.9),.25))*.9);
@@ -16663,7 +16668,7 @@ vec3 face(vec2 q,vec2 uv,float t){
   float s2=dot(q,vec2(cos(-a),sin(-a))); float h2=abs(fract(s2/2.2)-.5)*2.2; float w2=max(dk-.5,0.)*1.7;
   float l2=1.-smoothstep(w2-upx(),w2+upx(),h2);
   col=mix(col,mix(pp,ink,max(l1,l2)*.92),ip);
-  float dr=abs(sdBox(q-(R.xy+R.zw)*.5,(R.zw-R.xy)*.5,0.)); col=mix(col,ink,lineU(dr,.45)*.95);
+  float dr=abs(sdBox(q-(R.xy+R.zw)*.5,(R.zw-R.xy)*.5,2.5)); col=mix(col,ink,lineU(dr,.45)*.95);
   float band=(uv.x+uv.y*.6)-mod(t*.12,2.6)+.6; col+=vec3(1.,.97,.9)*exp(-band*band*40.)*.08;
   if(u_rev<1.4){ float x=u_rev/1.4; float ring=1.-x; col=mix(col,ink,(1.-smoothstep(0.,max(30.*ring,.01),eo))*ring*.85); }
   return col; }`,
@@ -16677,7 +16682,7 @@ vec3 rain(vec2 q,float t,float fl){ vec2 r=mat2(cos(.18),-sin(.18),sin(.18),cos(
     float xw=exp(-pow((fract(r.x/cw)-.5)*cw,2.)*4.); c+=vec3(.6,.7,.85)*drop*xw*(.16+.1*s)*(1.+fl*2.); }
   return c; }
 vec3 face(vec2 q,vec2 uv,float t){
-  float b=5.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
   float k,ph; float fl=flash(t,k,ph);
   if(u_rev<.6){ fl=max(fl,smoothstep(0.,.03,u_rev)*(1.-smoothstep(.06,.12,u_rev))+.8*smoothstep(.2,.22,u_rev)*(1.-smoothstep(.28,.36,u_rev))); }
   vec3 frame=mix(vec3(.27,.33,.44),vec3(.08,.11,.18),uv.y)+glint(uv,u_tilt,10.)*.18+fl*.35;
@@ -16850,7 +16855,7 @@ const skinGl = (() => {
     mini.classList.toggle('skin-anime', !!anime);
     let m = int.querySelector(':scope > .skin-marque');
     if(!anime && !m){ m = document.createElement('span'); m.className = 'skin-marque'; int.appendChild(m); }
-    if(m){ if(anime) m.remove(); else m.textContent = SKIN_NOMS[k]; }
+    if(m){ if(anime) m.remove(); else { m.textContent = SKIN_NOMS[k]; m.classList.toggle('court', (mini.offsetWidth || 150) < 130); } }   // patch209
     return c;
   }
   function taille(mini, r){

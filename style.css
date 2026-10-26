@@ -6275,3 +6275,8 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .al-btn{ flex:none; font:inherit; font-size:.8rem; font-weight:800; border:0; border-radius:9px; padding:8px 10px; background:var(--c-legendaire, #F0B429); color:#1a1200; cursor:pointer; }
 .al-x{ flex:none; font:inherit; color:var(--brume); background:none; border:0; padding:4px 6px; cursor:pointer; font-size:.95rem; }
 @media (max-width:420px){ .al-btn{ padding:7px 8px; font-size:.75rem; } }
+
+/* patch215 : e-mail masqué dans le profil */
+.pf-mail{ margin:0 0 8px; font-size:.8rem; color:var(--brume); }
+.pf-mail span{ color:#fff; }
+.pf-mail-b{ font:inherit; font-size:.78rem; color:var(--brume); background:none; border:0; padding:0 0 0 6px; text-decoration:underline; cursor:pointer; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '48e78193096f';
+const VERSION_JEU = '71fc2fd6e211';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -739,7 +739,10 @@ async function showGame(session_){
   marquerDejaJoue();
   document.getElementById('authScreen').style.display = 'none';
   document.getElementById('gameScreen').style.display = 'flex';
-  document.getElementById('whoami').textContent = session_.user.email;
+  // patch215 : jamais l'e-mail à l'écran (lives, captures) : le pseudo à la place
+  window.__monEmail = session_.user.email || '';
+  document.getElementById('whoami').textContent = '';
+  majWhoami(session_.user.id);
   dmEtape(25, 'La carte de France…');
   await loadOutline();
   dmMesure('carte');
@@ -6293,6 +6296,7 @@ function rendreProfilPanneau(){
       <button class="pr-btn" data-pf="editer">Changer d'avatar ou de pseudo</button>
     </div>
     <div class="pf-compte">
+      ${window.__monEmail ? `<p class="pf-mail">Compte : <span id="pfMail">${echapperTexte(emailMasque(window.__monEmail))}</span> <button type="button" class="pf-mail-b" data-pf-mail="voir">Afficher</button></p>` : ''}
       <p class="pf-legal"><a href="mentions-legales.html">Mentions légales</a> · <a href="confidentialite.html">Confidentialité</a> · <a href="cgu.html">Conditions d\'utilisation</a></p>
       <button type="button" class="pf-suppr" data-pf="supprimer">Supprimer mon compte</button>
     </div>`;
@@ -6399,7 +6403,34 @@ function ouvrirSuppressionCompte(){
 
 // Apres un changement d'avatar ou de pseudo, le panneau doit se resservir
 // des nouvelles valeurs plutot que de garder sa copie.
+// patch215 : le pseudo en bas du menu, et l'e-mail masqué dans le profil
+async function majWhoami(id){
+  const el = document.getElementById('whoami');
+  if(!el || !id) return;
+  try{
+    const { data, error } = await sb.rpc('profil_joueur', { p_joueur: id });
+    const p = !error && (Array.isArray(data) ? data[0] : data);
+    el.textContent = p && p.pseudo ? p.pseudo : '';
+  }catch(e){}
+}
+function emailMasque(m){
+  const [u, d] = String(m || '').split('@');
+  if(!d) return '';
+  return (u ? u.charAt(0) : '') + '\u2022\u2022\u2022\u2022@' + d;
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pf-mail]');
+  if(!b) return;
+  const s = document.getElementById('pfMail');
+  if(!s) return;
+  const visible = b.dataset.pfMail === 'cacher';
+  s.textContent = visible ? emailMasque(window.__monEmail) : window.__monEmail;
+  b.dataset.pfMail = visible ? 'voir' : 'cacher';
+  b.textContent = visible ? 'Afficher' : 'Masquer';
+});
+
 function rafraichirPanneauProfil(){
+  if(window.__monId) majWhoami(window.__monId);   // patch215 : le pseudo a pu changer
   profilPanneau = null;
   const panneau = document.getElementById('panel-profil');
   if(panneau && panneau.classList.contains('active')) loadProfilPanneau();

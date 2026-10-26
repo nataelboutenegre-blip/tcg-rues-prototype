@@ -5984,3 +5984,12 @@ body.mode-terra .coll-entete, body.mode-front .coll-entete{
   .qg-choix-actif .qg-jeux, .qg-choix-actif #qgDefisBloc, .qg-choix-actif #qgDerniersBloc,
   .qg-choix-actif #qgClassementBloc, .qg-choix-actif #qgCdjNote{ grid-column:1; grid-row:auto; }
 }
+
+
+/* ---------- patch198 : les objets achetes avant la suppression du compte ---------- */
+.suppr-achats{ margin:0 0 16px; padding:12px 14px; border-radius:10px; background: rgba(229,72,77,.08); border:1px solid rgba(229,72,77,.35); }
+.suppr-achats-titre{ margin:0 0 6px; color:#fff; font-size:.92rem; }
+.suppr-achats .suppr-liste{ margin:0 0 10px; }
+.suppr-achats i{ color: var(--brume); font-style:normal; font-size:.82rem; }
+.suppr-perte{ display:flex; gap:8px; align-items:flex-start; font-size:.86rem; color:#fff; cursor:pointer; }
+.suppr-perte input{ margin-top:3px; width:18px; height:18px; flex:none; }

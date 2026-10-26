@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '6f2d50b7c026';
+const VERSION_JEU = '978814c53ebb';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -6263,6 +6263,7 @@ function ouvrirSuppressionCompte(){
         <li>Ton e-mail, ton pseudo, tes amis, tes échanges et leurs messages sont effacés.</li>
         <li>Le journal et les classements passés gardent les parties jouées, sous « un joueur ».</li>
       </ul>
+      <div class="suppr-achats" id="supprAchats" hidden></div>
       <label class="suppr-champ"><span>Pour confirmer, écris ton pseudo : <b>${echapperTexte(pseudo)}</b></span>
         <input type="text" id="supprPseudo" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
       <p class="prix-erreur" id="supprErreur" role="alert"></p>
@@ -6275,8 +6276,28 @@ function ouvrirSuppressionCompte(){
   const champ = document.getElementById('supprPseudo');
   const ok = form.querySelector('.suppr-ok');
   const erreur = document.getElementById('supprErreur');
-  const pareil = () => champ.value.trim().toLowerCase() === pseudo.trim().toLowerCase() && pseudo !== '';
+  // patch198 : les objets achetes en euros (CGV art. 4)
+  let achatsAConfirmer = false;
+  const casePerte = () => document.getElementById('supprPerte');
+  const pareil = () => champ.value.trim().toLowerCase() === pseudo.trim().toLowerCase() && pseudo !== ''
+    && (!achatsAConfirmer || (casePerte() && casePerte().checked));
   champ.addEventListener('input', () => { ok.disabled = !pareil(); erreur.textContent = ''; });
+  (async () => {
+    try{
+      const { data, error } = await sb.rpc('euros_mes_commandes');
+      const liste = error ? [] : (data || []).filter(c => c.statut === 'livree' || c.statut === 'payee');
+      const zone = document.getElementById('supprAchats');
+      if(!liste.length || !zone) return;
+      const prix = (c) => (Number(c.prix_centimes || 0) / 100).toFixed(2).replace('.', ',') + ' €';
+      zone.innerHTML = `<p class="suppr-achats-titre">Tu perds aussi ${liste.length > 1 ? `tes <b>${liste.length} objets achetés</b>` : 'ton <b>objet acheté</b>'}, sans remboursement :</p>
+        <ul class="suppr-liste">${liste.map(c => `<li><b>${echapperTexte(c.article)}</b> · ${prix(c)}${c.statut === 'payee' ? ' · <i>pas encore livré : tu peux encore te rétracter depuis « Mes achats »</i>' : ''}</li>`).join('')}</ul>
+        <label class="suppr-perte"><input type="checkbox" id="supprPerte"> <span>Je comprends que ces objets sont liés à mon compte et qu'ils disparaissent avec lui.</span></label>`;
+      zone.hidden = false;
+      achatsAConfirmer = true;
+      ok.disabled = !pareil();
+      casePerte().addEventListener('change', () => { ok.disabled = !pareil(); });
+    }catch(err){ /* sans la boutique en euros : rien a afficher */ }
+  })();
   form.querySelector('[data-annuler]').addEventListener('click', () => fermer(null));
   champ.focus();
   form.addEventListener('submit', async (e) => {

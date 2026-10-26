@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '55b4eb8f0efa';
+const VERSION_JEU = '4bd61cb93432';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2280,16 +2280,9 @@ function territoiresVisiblesCache(){
   if(CV.donnees && CV.donneesSignature === signature) return CV.donnees;
   CV.donneesSignature = signature;
   CV.donnees = territoiresVisibles();
-  if(CLANS && CALQUES.clans){
-    peindreClans(CV.donnees.joueurs);   // patch110
-    // patch177 : le filtre Clans ne montre que les joueurs qui sont dans un clan
-    const { liste, joueurs } = CV.donnees;
-    for(const [id, j] of [...joueurs]){
-      if(j.clan) continue;
-      if(id === ID_MOI) j.nb = 0; else joueurs.delete(id);
-    }
-    CV.donnees.liste = liste.filter(e => { const j = joueurs.get(e.joueur); return j && j.clan; });
-  }
+  // patch212 : le filtre Clans ne cache plus personne ; chaque joueur garde
+  // sa couleur et le territoire du clan est cerclé de la couleur du clan
+  if(CLANS && CALQUES.clans) peindreClans(CV.donnees.joueurs);   // patch110
   majReperage(CV.donnees.liste, CV.donnees.joueurs);
   return CV.donnees;
 }
@@ -2375,8 +2368,14 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
         if(!j) continue;
         ctx.globalAlpha = opaciteJoueur(info.joueur, info.force);
         ctx.fillStyle = j.couleur;
-        ctx.fill(cheminDeptCanvas(dep, CONTOURS_DEPTS[dep]));
+        const cd = cheminDeptCanvas(dep, CONTOURS_DEPTS[dep]);
+        ctx.fill(cd);
         ctx.globalAlpha = 1;
+        if(CLANS && CALQUES.clans && j.clan){   // patch212
+          ctx.save(); ctx.clip(cd);
+          ctx.strokeStyle = j.clanCouleur; ctx.lineWidth = trait(7); ctx.stroke(cd);
+          ctx.restore();
+        }
       }
       return 'depts';
     }
@@ -2405,6 +2404,7 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
       const passage = CALQUES.passage && perduesMap.size > 0;
       const perduLibre = new Path2D();
       const perduPris = new Path2D();
+      const parClan = CLANS && CALQUES.clans ? new Map() : null;   // patch212
       for(const dep of deps){
         const contours = CONTOURS.get(dep);
         if(!contours || contours === 'erreur') continue;
@@ -2421,6 +2421,11 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
           if(etaitAMoi) perduPris.addPath(p);
           if(!parJoueur.has(c.joueur)) parJoueur.set(c.joueur, new Path2D());
           parJoueur.get(c.joueur).addPath(p);
+          const jc = parClan && joueurs.get(c.joueur);   // patch212
+          if(jc && jc.clan){
+            if(!parClan.has(jc.clan)) parClan.set(jc.clan, { couleur: jc.clanCouleur, chemin: new Path2D() });
+            parClan.get(jc.clan).chemin.addPath(p);
+          }
         }
       }
       ctx.fillStyle = 'rgba(22,48,79,0.75)';
@@ -2452,6 +2457,18 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
         ctx.globalAlpha = opaciteJoueur(id, 0.55);
         ctx.strokeStyle = j.fonce; ctx.lineWidth = trait(0.7); ctx.stroke(p);
         ctx.globalAlpha = 1;
+      }
+      // patch212 : le tour du territoire de chaque clan, trace seulement a
+      // l'exterieur (decoupe pair-impair) : pas de traits entre deux membres
+      if(parClan) for(const { couleur, chemin } of parClan.values()){
+        const dehors = new Path2D();
+        dehors.rect(-MAP_W, -MAP_H, MAP_W * 3, MAP_H * 3);
+        dehors.addPath(chemin);
+        ctx.save();
+        ctx.clip(dehors, 'evenodd');
+        ctx.strokeStyle = '#07111F'; ctx.lineWidth = trait(9); ctx.stroke(chemin);
+        ctx.strokeStyle = couleur; ctx.lineWidth = trait(6); ctx.stroke(chemin);
+        ctx.restore();
       }
       // le lisere des communes reprises : trace apres les fonds, sinon la
       // couleur du nouveau proprietaire le recouvrirait
@@ -14598,8 +14615,7 @@ function peindreClans(joueurs){
   for(const j of joueurs.values()){
     const k = clansCarte.get(j.id === ID_MOI ? monUidClan : j.id);
     if(!k) continue;
-    j.couleur = k.couleur;
-    j.fonce = couleurFoncee(k.couleur);
+    j.clanCouleur = k.couleur;   // patch212 : plus de repeinte, un contour
     j.clan = k.tag;
   }
 }

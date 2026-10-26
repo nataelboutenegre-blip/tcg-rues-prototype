@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '126459ae354e';
+const VERSION_JEU = '7299fac78582';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -15077,7 +15077,7 @@ async function ouvrirChoixVitrine(actuelle, retour, source){
     for(let i = 0; i < VITRINE_MAX; i++){
       const c = choix[i] && reserve.get(choix[i]);
       const dosC = c && SAISON2 && mesDosCartes ? (dosDeMaCarte(front ? 'front' : 'terra', c.code) || document.body.dataset.dos || 'origine') : null;   // patch200
-      cases.push(c ? `<div class="vt-case-w"><button type="button" class="vt-case" data-vt-retirer="${echapperTexte(c.code)}" aria-label="Retirer ${echapperTexte(c.nom)}">${miniVitrine(c)}</button>${dosC ? `<button type="button" class="vt-dos-pastille" data-vt-dos="${echapperTexte(c.code)}" aria-label="Changer le dos de ${echapperTexte(c.nom)}">${miniDosHtml(dosC, 'vt-pastille-dos')}</button>` : ''}</div>`
+      cases.push(c ? `<div class="vt-case-w"><button type="button" class="vt-case" data-vt-retirer="${echapperTexte(c.code)}" aria-label="Retirer ${echapperTexte(c.nom)}">${miniVitrine({ ...c, skin: skinDeMaCarte(front ? 'front' : 'terra', c.code) })}</button>${dosC ? `<button type="button" class="vt-dos-pastille" data-vt-dos="${echapperTexte(c.code)}" aria-label="Changer le dos de ${echapperTexte(c.nom)}">${miniDosHtml(dosC, 'vt-pastille-dos')}</button>` : ''}</div>`
                    : `<div class="vt-case vide"><span>${i + 1}</span></div>`);
     }
     const bande = document.getElementById('vtApercu');
@@ -15092,7 +15092,7 @@ async function ouvrirChoixVitrine(actuelle, retour, source){
     document.getElementById('vtGrille').innerHTML = liste.map(c => {
       const n = choix.indexOf(c.code);
       return `<button type="button" class="vt-carte${n >= 0 ? ' pris' : ''}" data-vt-code="${echapperTexte(c.code)}">
-        ${miniVitrine(c)}${n >= 0 ? `<span class="vt-num">${n + 1}</span>` : ''}</button>`;
+        ${miniVitrine({ ...c, skin: skinDeMaCarte(front ? 'front' : 'terra', c.code) })}${n >= 0 ? `<span class="vt-num">${n + 1}</span>` : ''}</button>`;
     }).join('') || '<p class="collection-empty">Aucune carte ne correspond.</p>';
   };
   dessiner();
@@ -16240,6 +16240,7 @@ async function remplirChoixDos(el, apres){
     if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); return; }
     if(val) mesDosCartes.set(source + '|' + code, { dos: val, nom: (mesDosCartes.get(source + '|' + code) || {}).nom || '' });
     else mesDosCartes.delete(source + '|' + code);
+    rafraichirPanneauProfil();   // patch203
     el._dessiner();
     if(el._apres) el._apres(dosDeMaCarte(source, code));
   });
@@ -16747,6 +16748,7 @@ const skinGl = (() => {
   }
   // le skin d'une carte : posé dans le HTML (fiche, vitrine), sinon le mien dans mes grilles
   function skinDe(mini){
+    if(mini.classList.contains('aurore')) return null;   // patch203 : l'Aurore garde son apparence
     if(mini.dataset.skin) return mini.dataset.skin;
     if(!mesSkinsCartes || !mesSkinsCartes.size) return null;
     if(mini.dataset.tcode && mini.parentElement && mini.parentElement.id === 'tcGrille') return skinDeMaCarte('terra', mini.dataset.tcode) || null;
@@ -16903,6 +16905,11 @@ async function armerSkinFiche(boite){
   if(!el.isConnected || !liste.length) return;   // aucun skin : rien à choisir
   el.hidden = false;
   const mini = boite.querySelector('.c3d .mini');
+  if(mini && mini.classList.contains('aurore')){   // patch203
+    el.querySelector('.sk-rangee').innerHTML = '<p class="dc-aide">Une carte Aurore garde son apparence Aurore : elle ne prend pas de skin.</p>';
+    el.querySelector('.sk-etat').textContent = '';
+    return;
+  }
   const dessiner = () => {
     const r = mesSkinsCartes.get(source + '|' + code);
     const actuel = r ? r.skin : '';
@@ -16922,6 +16929,7 @@ async function armerSkinFiche(boite){
     el.querySelectorAll('.sk-opt').forEach(x => { x.disabled = false; });
     if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); return; }
     if(val) mesSkinsCartes.set(source + '|' + code, { skin: val, nom: '' }); else mesSkinsCartes.delete(source + '|' + code);
+    rafraichirPanneauProfil();   // patch203 : ma vitrine suit
     // la carte se remet côté face pour montrer le skin
     const carte = boite.querySelector('.c3d-carte');
     if(carte) carte.classList.remove('retournee');
@@ -16976,6 +16984,7 @@ document.getElementById('grCorps').addEventListener('click', async (e) => {
     const { error } = await sb.rpc('skin_cartes_definir', { p_source: source, p_codes: [code], p_skin: null });
     if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); r.disabled = false; return; }
     mesSkinsCartes.delete(r.dataset.grSkRetirer);
+    rafraichirPanneauProfil();   // patch203
     skinGl.rafraichir();
     renderGardeRobe();
     return;
@@ -16991,7 +17000,7 @@ async function ouvrirChoixSkinCartes(){
   let choix = new Set(), recherche = '';
   const rangTier = (t) => TIERS.findIndex(x => x.id === t.id);
   const cartesDe = (s) => [...(s === 'front' ? collectionMap.values() : terraCollection.values())]
-    .filter(c => !c.perdue)
+    .filter(c => !c.perdue && !(s === 'front' ? (AURORE && AURORE[c.code]) : c.aurore > 0))   // patch203 : pas d'Aurore
     .sort((a, b) => rangTier(a.tier) - rangTier(b.tier) || a.nom.localeCompare(b.nom, 'fr'));
   const fermer = ouvrirFenetre(`
     <div class="fenetre vt-choix dc-fenetre sk-fenetre" role="dialog" aria-modal="true" aria-labelledby="skTitre">
@@ -17043,6 +17052,7 @@ async function ouvrirChoixSkinCartes(){
     if(error){ boite.querySelector('#skErreur').textContent = messageLisible(error.message); b.disabled = false; b.textContent = 'Enregistrer'; return; }
     fermer(null);
     await chargerMesSkinsCartes(true);
+    rafraichirPanneauProfil();   // patch203
     renderGardeRobe();
     notifier({ type: 'succes', titre: 'Skin posé', texte: `${choix.size} carte${choix.size > 1 ? 's' : ''} ${choix.size > 1 ? 'portent' : 'porte'} maintenant le skin ${SKIN_NOMS[skinCle(skin)] || ''}.` });
   });

@@ -5976,3 +5976,11 @@ body.mode-terra .coll-entete, body.mode-front .coll-entete{
   .tab[data-tab="tirage"].active{ box-shadow:none; color: var(--c-legendaire); }
   .tab[data-tab="tirage"].active::before{ left:2px; }
 }
+
+
+/* ---------- patch196 : le QG sur telephone, une seule colonne ---------- */
+@media (max-width: 900px){
+  .qg-choix-actif .qg-grille{ grid-template-columns:minmax(0,1fr); }
+  .qg-choix-actif .qg-jeux, .qg-choix-actif #qgDefisBloc, .qg-choix-actif #qgDerniersBloc,
+  .qg-choix-actif #qgClassementBloc, .qg-choix-actif #qgCdjNote{ grid-column:1; grid-row:auto; }
+}

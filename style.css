@@ -5993,3 +5993,51 @@ body.mode-terra .coll-entete, body.mode-front .coll-entete{
 .suppr-achats i{ color: var(--brume); font-style:normal; font-size:.82rem; }
 .suppr-perte{ display:flex; gap:8px; align-items:flex-start; font-size:.86rem; color:#fff; cursor:pointer; }
 .suppr-perte input{ margin-top:3px; width:18px; height:18px; flex:none; }
+
+/* ---------- patch199 : les dos premium (rendu WebGL sous le liseré, les coins et l'épingle) ---------- */
+body[data-dos="comete"], .bq-dos-apercu[data-dos="comete"]{
+  --dos-fond: radial-gradient(circle at 50% 42%, #2A4386 0%, #1F2A61 55%, #0B1230 100%);
+  --dos-liseret: rgba(220,232,255,.55); --dos-or: #E8F0FF; --dos-embleme: #081428; --dos-anneau: rgba(8,20,40,.92); --dos-halo: rgba(140,180,255,.35);
+}
+body[data-dos="juillet"], .bq-dos-apercu[data-dos="juillet"]{
+  --dos-fond: radial-gradient(circle at 50% 42%, #2B346E 0%, #222651 55%, #0C0F2C 100%);
+  --dos-liseret: rgba(255,255,255,.6); --dos-or: #FFFFFF; --dos-embleme: #0C1638; --dos-anneau: rgba(224,82,82,.95); --dos-halo: rgba(255,255,255,.2);
+}
+body[data-dos="maree"], .bq-dos-apercu[data-dos="maree"]{
+  --dos-fond: radial-gradient(circle at 50% 42%, #3AA0BD 0%, #28738C 55%, #0E3A4C 100%);
+  --dos-liseret: rgba(214,244,250,.6); --dos-or: #D6F4FA; --dos-embleme: #0A3D52; --dos-anneau: rgba(10,61,82,.92); --dos-halo: rgba(120,230,255,.3);
+}
+body[data-dos="feu"], .bq-dos-apercu[data-dos="feu"]{
+  --dos-fond: radial-gradient(circle at 50% 50%, #9A3A12 0%, #712D11 50%, #2A0904 100%);
+  --dos-liseret: rgba(255,170,90,.55); --dos-or: #FFB463; --dos-embleme: #1E0805; --dos-anneau: rgba(30,8,5,.92); --dos-halo: rgba(255,110,20,.45);
+}
+body[data-dos="prisme"], .bq-dos-apercu[data-dos="prisme"]{
+  --dos-fond: linear-gradient(135deg, #2E3653 0%, #38597C 35%, #5B3F7A 65%, #2E3653 100%);
+  --dos-liseret: rgba(230,236,245,.75); --dos-or: #EEF3FA; --dos-embleme: #0E1A33; --dos-anneau: rgba(14,26,51,.92); --dos-halo: rgba(200,160,255,.3);
+}
+body[data-dos="orfondu"], .bq-dos-apercu[data-dos="orfondu"]{
+  --dos-fond: radial-gradient(circle at 50% 42%, #C99A45 0%, #A07836 55%, #5A3E12 100%);
+  --dos-liseret: rgba(255,241,184,.7); --dos-or: #F6D77A; --dos-embleme: #120B02; --dos-anneau: rgba(18,11,2,.92); --dos-halo: rgba(246,215,122,.35);
+}
+body[data-dos="neon"], .bq-dos-apercu[data-dos="neon"]{
+  --dos-fond: radial-gradient(circle at 50% 42%, #2A2258 0%, #1F1A3B 55%, #0A0618 100%);
+  --dos-liseret: rgba(32,227,255,.7); --dos-or: #FF8CF0; --dos-embleme: #0A0418; --dos-anneau: rgba(10,4,24,.92); --dos-halo: rgba(255,43,214,.5);
+}
+body[data-dos="gravure"], .bq-dos-apercu[data-dos="gravure"]{
+  --dos-fond: radial-gradient(circle at 50% 42%, #D9CFBC 0%, #BBB19F 60%, #8F846F 100%);
+  --dos-liseret: rgba(59,42,23,.85); --dos-or: #3B2A17; --dos-embleme: #F2E8D2; --dos-anneau: rgba(233,221,194,.95); --dos-halo: transparent;
+}
+body[data-dos="orage"], .bq-dos-apercu[data-dos="orage"]{
+  --dos-fond: radial-gradient(circle at 50% 42%, #44506C 0%, #323D56 55%, #121828 100%);
+  --dos-liseret: rgba(201,214,234,.6); --dos-or: #C9D6EA; --dos-embleme: #0A1020; --dos-anneau: rgba(10,16,32,.92); --dos-halo: rgba(170,200,255,.25);
+}
+body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif path, .bq-dos-apercu[data-dos="gravure"] .face-back .dos-motif path{ stroke: rgba(59,42,23,.3); }
+.face-back.dos-gl-on{ isolation: isolate; }
+.face-back > canvas.dos-gl{ position: absolute; inset: 0; width: 100%; height: 100%; display: block; border-radius: inherit; pointer-events: none; }
+.face-back.dos-gl-on .dos-motif{ display: none; }
+.face-back.dos-gl-on::before, .face-back.dos-gl-on .dos-coin, .face-back.dos-gl-on .dos-embleme{ z-index: 1; }
+.face-back.dos-gl-on::after{ z-index: 2; }
+.face-back.dos-gl-on .dos-coin{ opacity: .9; }
+.face-back.dos-gl-on .dos-embleme{
+  box-shadow: 0 0 0 2px var(--dos-or), 0 0 0 7px var(--dos-anneau), 0 0 0 8.5px var(--dos-liseret), 0 0 22px var(--dos-halo, transparent);
+}

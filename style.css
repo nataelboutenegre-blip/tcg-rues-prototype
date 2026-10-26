@@ -6095,3 +6095,57 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .vtg-fini .vtg-face{ transform: none; }
 @keyframes vtgRetourne{ from{ transform: rotateY(0deg); } to{ transform: rotateY(180deg); } }
 @media (prefers-reduced-motion: reduce){ .vtg-tourne{ animation: none; } .vtg-face{ transform: none; } .vtg-dos{ display: none; } }
+
+/* ---------- patch201 : les skins de carte ---------- */
+/* le cadre de rareté reste ; l'intérieur prend le skin (rendu WebGL dessous, textes par-dessus) */
+.mini.skin .mini-int{ position: relative; background: #000; isolation: isolate; }
+.mini.skin .skin-gl{ position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; pointer-events: none; }
+.mini.skin .mini-art{ background: transparent; }
+.mini.skin .mini-art > svg, .mini.skin .mini-art > img, .mini.skin .mini-art .art-voile, .mini.skin .au-fond{ visibility: hidden; }
+.mini.skin .mini-art, .mini.skin .mini-infos, .mini.skin .mini-lisere{ position: relative; z-index: 1; }
+.mini.skin .mini-lisere{ margin: 0 4px 3px; border-radius: 2px; overflow: hidden; }
+.mini .skin-marque{ position: absolute; right: 6px; top: 6px; z-index: 2; font: 700 8px/1 var(--texte, sans-serif); letter-spacing: .08em; text-transform: uppercase;
+  padding: 3px 5px; border-radius: 999px; background: rgba(8,19,37,.75); color: #fff; pointer-events: none; }
+.mini.skin-neon .mini-nom{ color: #fff; text-shadow: 0 0 2px #fff, 0 0 7px #FF2BD6, 0 0 14px #FF2BD6; }
+.mini.skin-neon .mini-num{ color: #9FE9FF; }
+.mini.skin-neon .mini-rarete{ color: #20E3FF !important; text-shadow: 0 0 6px rgba(32,227,255,.8); }
+.mini.skin-neon .mini-dept{ color: transparent; -webkit-text-stroke: 1px rgba(255,43,214,.7); }
+.mini.skin-neon .mini-lisere span{ box-shadow: 0 0 5px currentColor; }
+.mini.skin-gravure .mini-nom{ color: #2A1D10; font-family: 'IM Fell English', Georgia, serif; font-weight: 400; }
+.mini.skin-gravure .mini-num{ color: #5A4426; font-family: 'IM Fell English', Georgia, serif; font-style: italic; }
+.mini.skin-gravure .mini-rarete{ color: #2A1D10 !important; font-family: 'IM Fell English', Georgia, serif; font-style: italic; font-weight: 400; }
+.mini.skin-gravure .mini-dept{ color: rgba(42,29,16,.25); font-family: 'IM Fell English', Georgia, serif; font-weight: 400; }
+.mini.skin-gravure .mini-lisere{ opacity: .85; }
+.mini.skin-comete .mini-nom{ background: linear-gradient(100deg,#FFFFFF,#BFD3FF 45%,#FFFFFF 70%,#9DB8F5); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 3px rgba(140,180,255,.6)); }
+.mini.skin-comete .mini-num{ color: #AFC3EA; } .mini.skin-comete .mini-rarete{ color: #DCE6FF !important; } .mini.skin-comete .mini-dept{ color: rgba(200,215,255,.28); }
+.mini.skin-juillet .mini-nom{ color: #fff; text-shadow: -1px 0 0 rgba(76,123,255,.9), 1px 0 0 rgba(255,77,90,.9), 0 0 8px rgba(255,255,255,.35); }
+.mini.skin-juillet .mini-num{ color: #C7D3FF; } .mini.skin-juillet .mini-rarete{ color: #fff !important; } .mini.skin-juillet .mini-dept{ color: rgba(255,255,255,.22); }
+.mini.skin-maree .mini-nom{ color: #F2FDFF; text-shadow: 0 0 7px rgba(110,230,255,.65); }
+.mini.skin-maree .mini-num{ color: #A8E7F2; } .mini.skin-maree .mini-rarete{ color: #D6F4FA !important; } .mini.skin-maree .mini-dept{ color: rgba(214,244,250,.25); }
+.mini.skin-feu .mini-nom{ color: #FFF3E0; text-shadow: 0 0 6px rgba(255,120,20,.95), 0 1px 0 #7A1800; }
+.mini.skin-feu .mini-num{ color: #FFB37A; } .mini.skin-feu .mini-rarete{ color: #FFD36B !important; } .mini.skin-feu .mini-dept{ color: rgba(255,140,50,.3); }
+.mini.skin-prisme .mini-nom{ background: linear-gradient(90deg,#fff,#CFE6FF 30%,#FFE3F2 55%,#E5FFE9 75%,#fff); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 1px 2px rgba(0,0,0,.5)); }
+.mini.skin-prisme .mini-num{ color: rgba(255,255,255,.8); } .mini.skin-prisme .mini-rarete{ color: #fff !important; } .mini.skin-prisme .mini-dept{ color: rgba(255,255,255,.25); }
+.mini.skin-orfondu .mini-nom{ background: linear-gradient(100deg,#B7791F 0%,#FFF1B8 40%,#F6D77A 55%,#9A6412 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.mini.skin-orfondu .mini-num{ color: rgba(246,231,193,.75); } .mini.skin-orfondu .mini-rarete{ color: #F6D77A !important; } .mini.skin-orfondu .mini-dept{ color: rgba(246,215,122,.25); }
+.mini.skin-orage .mini-nom{ color: #fff; text-shadow: 0 0 6px rgba(191,216,255,.5); }
+.mini.skin-orage .mini-num{ color: #9FB3D1; } .mini.skin-orage .mini-rarete{ color: #C9D6EA !important; } .mini.skin-orage .mini-dept{ color: rgba(201,214,234,.2); }
+/* le choix du skin, sous la carte en grand */
+.sk-choix{ width: min(360px, 100%); margin: 10px auto 0; text-align: left; background: rgba(15,31,56,.6); border: 1px solid rgba(169,188,212,.18); border-radius: 14px; padding: 10px 12px; display: grid; gap: 8px; }
+.sk-choix[hidden]{ display: none; }
+.sk-rangee{ display: flex; gap: 6px; flex-wrap: wrap; }
+.sk-opt{ display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 10px; border-radius: 999px; cursor: pointer;
+  background: transparent; border: 1px solid rgba(169,188,212,.2); color: #fff; font: inherit; font-size: .78rem; font-weight: 600; }
+.sk-opt.on{ border-color: var(--c-legendaire); background: rgba(240,180,41,.12); }
+.sk-opt:disabled{ opacity: .6; cursor: default; }
+.sk-opt:focus-visible{ outline: 2px solid #fff; outline-offset: 2px; }
+.sk-pastille{ width: 14px; height: 14px; border-radius: 50%; flex: none; background: rgba(169,188,212,.25); box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); }
+.sk-p-comete{ background: linear-gradient(135deg, #1B2A6B, #8FB4FF); }
+.sk-p-juillet{ background: linear-gradient(90deg, #2B4A9A 33%, #fff 33% 66%, #E05252 66%); }
+.sk-p-maree{ background: linear-gradient(135deg, #0E4F66, #3FC6D8); }
+.sk-p-feu{ background: linear-gradient(135deg, #3E0E04, #FF6A1A); }
+.sk-p-prisme{ background: linear-gradient(115deg, #8FF3FF, #C7A6FF, #FFB7E3, #FFE7A3); }
+.sk-p-orfondu{ background: linear-gradient(135deg, #8A6114, #F6D77A); }
+.sk-p-neon{ background: linear-gradient(135deg, #FF2BD6, #20E3FF); }
+.sk-p-gravure{ background: linear-gradient(135deg, #F2E8D2, #8F846F); }
+.sk-p-orage{ background: linear-gradient(135deg, #121828, #9FB3D1); }

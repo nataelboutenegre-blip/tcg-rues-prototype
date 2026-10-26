@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '4bd61cb93432';
+const VERSION_JEU = '106291fe5ea7';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -15185,14 +15185,16 @@ async function ouvrirChoixVitrine(actuelle, retour, source){
     : terraCollection;
   let choix = vitrineDe(actuelle, front ? 'front' : 'terra').map(c => c.code).filter(code => reserve.has(code));
   let recherche = '';
+  let vtSel = null, vtSaute = -1;   // patch213 : place sélectionnée dans la bande
   const rangTier = (t) => TIERS.findIndex(x => x.id === t.id);
   const toutes = [...reserve.values()].sort((a, b) =>
     (b.aurore > 0) - (a.aurore > 0) || rangTier(a.tier) - rangTier(b.tier) || a.nom.localeCompare(b.nom, 'fr'));
   const fermer = ouvrirFenetre(`
     <div class="fenetre vt-choix" role="dialog" aria-modal="true" aria-labelledby="vtTitre">
       <h2 id="vtTitre">Ma vitrine ${front ? 'Front' : 'Terra'}</h2>
-      <p class="vt-aide">Choisis jusqu'à ${VITRINE_MAX} cartes, dans l'ordre où tu veux les montrer : les ${VITRINE_FICHE} premières s'affichent sur ton profil. Touche une carte de la vitrine pour la retirer.${front ? ' Si on te prend une commune, elle quitte ta vitrine.' : ''}</p>
+      <p class="vt-aide">Choisis jusqu'à ${VITRINE_MAX} cartes, dans l'ordre où tu veux les montrer : les ${VITRINE_FICHE} premières s'affichent sur ton profil. Touche une carte de la vitrine pour la déplacer ou la retirer.${front ? ' Si on te prend une commune, elle quitte ta vitrine.' : ''}</p>
       <p class="vt-compte" id="vtCompte"></p>
+      <p class="vt-deplacer" id="vtDeplacer" hidden></p>
       <div class="vt-etagere vt-bande" id="vtApercu"></div>
       ${SAISON2 ? `<div class="vt-dos-panneau" id="vtDosPanneau" hidden><div class="vt-dos-haut"><b class="vt-dos-titre"></b><button type="button" data-vt-dos-fermer aria-label="Fermer">✕</button></div>${choixDosHtml(front ? 'front' : 'terra', '')}</div>` : ''}
       <input type="search" id="vtRecherche" class="bourse-search" placeholder="Rechercher une commune ou un département…" autocomplete="off">
@@ -15210,10 +15212,17 @@ async function ouvrirChoixVitrine(actuelle, retour, source){
     for(let i = 0; i < VITRINE_MAX; i++){
       const c = choix[i] && reserve.get(choix[i]);
       const dosC = c && SAISON2 && mesDosCartes ? (dosDeMaCarte(front ? 'front' : 'terra', c.code) || document.body.dataset.dos || 'origine') : null;   // patch200
-      cases.push(c ? `<div class="vt-case-w"><button type="button" class="vt-case" data-vt-retirer="${echapperTexte(c.code)}" aria-label="Retirer ${echapperTexte(c.nom)}">${miniVitrine({ ...c, skin: skinDeMaCarte(front ? 'front' : 'terra', c.code) })}</button>${dosC ? `<button type="button" class="vt-dos-pastille" data-vt-dos="${echapperTexte(c.code)}" aria-label="Changer le dos de ${echapperTexte(c.nom)}">${miniDosHtml(dosC, 'vt-pastille-dos')}</button>` : ''}</div>`
-                   : `<div class="vt-case vide"><span>${i + 1}</span></div>`);
+      cases.push(c ? `<div class="vt-case-w"><button type="button" class="vt-case${vtSel === i ? ' choisie' : ''}${vtSaute === i ? ' saute' : ''}" data-vt-place="${i}" aria-pressed="${vtSel === i}" aria-label="Déplacer ${echapperTexte(c.nom)}">${miniVitrine({ ...c, skin: skinDeMaCarte(front ? 'front' : 'terra', c.code) })}</button>${vtSel === i ? `<button type="button" class="vt-retirer" data-vt-retirer="${echapperTexte(c.code)}" aria-label="Retirer ${echapperTexte(c.nom)}">✕</button>` : ''}${dosC ? `<button type="button" class="vt-dos-pastille" data-vt-dos="${echapperTexte(c.code)}" aria-label="Changer le dos de ${echapperTexte(c.nom)}">${miniDosHtml(dosC, 'vt-pastille-dos')}</button>` : ''}</div>`
+                   : (vtSel !== null && i === choix.length
+                      ? `<button type="button" class="vt-case vide cible" data-vt-bout aria-label="Mettre au bout"><span>${i + 1}</span></button>`
+                      : `<div class="vt-case vide"><span>${i + 1}</span></div>`));
     }
+    vtSaute = -1;
+    const vdep = document.getElementById('vtDeplacer'), cs = vtSel !== null && reserve.get(choix[vtSel]);
+    vdep.hidden = !cs;
+    if(cs) vdep.textContent = `${cs.nom} : touche une autre carte pour échanger leurs places, ou la place vide pour la mettre au bout.`;
     const bande = document.getElementById('vtApercu');
+    bande.classList.toggle('vt-sel', vtSel !== null);
     const defil = bande.scrollLeft;
     bande.innerHTML = cases.join('');
     bande.scrollLeft = defil;
@@ -15243,9 +15252,23 @@ async function ouvrirChoixVitrine(actuelle, retour, source){
       return;
     }
     const r = e.target.closest('[data-vt-retirer]');
-    if(r){ choix = choix.filter(x => x !== r.dataset.vtRetirer); erreur.textContent = ''; dessiner(); return; }
+    if(r){ choix = choix.filter(x => x !== r.dataset.vtRetirer); vtSel = null; erreur.textContent = ''; dessiner(); return; }
+    // patch213 : sélectionner, échanger, envoyer au bout
+    const pl = e.target.closest('[data-vt-place]');
+    if(pl){
+      const i = Number(pl.dataset.vtPlace);
+      if(vtSel === null) vtSel = i;
+      else if(vtSel === i) vtSel = null;
+      else { [choix[vtSel], choix[i]] = [choix[i], choix[vtSel]]; vtSaute = i; vtSel = null; }
+      erreur.textContent = ''; dessiner(); return;
+    }
+    if(e.target.closest('[data-vt-bout]') && vtSel !== null){
+      const [x] = choix.splice(vtSel, 1); choix.push(x); vtSaute = choix.length - 1; vtSel = null;
+      dessiner(); return;
+    }
     const c = e.target.closest('[data-vt-code]');
     if(c){
+      vtSel = null;
       const code = c.dataset.vtCode;
       if(choix.includes(code)) choix = choix.filter(x => x !== code);
       else if(choix.length >= VITRINE_MAX){ erreur.textContent = 'La vitrine est pleine : retire une carte d\'abord.'; return; }

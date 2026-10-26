@@ -16,14 +16,14 @@
 begin;
 
 -- 1. les commandes de test : on détache d'abord les objets qu'elles ont livrés
-create temporary table cmd_test on commit drop as
-  select id from public.euros_commandes
-   where stripe_session like 'cs_test\_%'
-      or (stripe_session is null and statut in ('creee', 'annulee'));
-
+--    (pas de table temporaire : l'éditeur SQL de Supabase ne la garde pas)
 update public.euros_inventaire set commande_id = null
- where commande_id in (select id from cmd_test);
-delete from public.euros_commandes where id in (select id from cmd_test);
+ where commande_id in (select c.id from public.euros_commandes c
+                        where c.stripe_session like 'cs_test\_%'
+                           or (c.stripe_session is null and c.statut in ('creee', 'annulee')));
+delete from public.euros_commandes c
+ where c.stripe_session like 'cs_test\_%'
+    or (c.stripe_session is null and c.statut in ('creee', 'annulee'));
 
 -- 2. les testeurs : tout ce qui est en vente, en cadeau (sauf le pass)
 insert into public.euros_inventaire(joueur_id, article_id, commande_id)

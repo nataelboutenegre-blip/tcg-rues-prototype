@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1644c28a851e';
+const VERSION_JEU = 'f140d2778d3d';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10011,8 +10011,12 @@ function majBadgePlus(){
     cible.hidden = false;
     cible.textContent = source.textContent;
   } else {
-    cible.hidden = !cdjAJouer;
+    // patch205 : une nouveauté en boutique, quand la Boutique est dans le menu
+    const bq = document.querySelector('.tab[data-tab="boutique"] .bq-nouveau');
+    const bqMenu = surTelephone() && ONGLETS_MENU.includes('boutique') && bq && !bq.hidden;
+    cible.hidden = !(cdjAJouer || bqMenu);
     cible.textContent = cdjAJouer ? '1' : '';
+    cible.classList.toggle('point', !cdjAJouer && !!bqMenu);
   }
 }
 
@@ -15872,6 +15876,40 @@ async function bqeVerifierAcces(){
   }
   const v = document.getElementById('bqVolets');
   if(v) v.hidden = !bqeAcces;
+  majPastilleBoutique();   // patch205
+}
+
+// ---------- patch205 : pastille « nouveauté » sur la Boutique ----------
+function bqeEnVente(){
+  const cat = bqeCat;
+  return ((cat && cat.articles) || [])
+    .filter(a => a.type !== 'pass' && !a.possede && (!a.reserve_og || cat.og))
+    .map(a => a.id);
+}
+function bqeVus(){
+  try{ const v = JSON.parse(localStorage.getItem('tf-bqe-vus') || '[]'); return Array.isArray(v) ? v : []; }catch(e){ return []; }
+}
+function majPastilleBoutique(){
+  const vus = bqeVus();
+  const nouveau = !!bqeAcces && bqeEnVente().some(id => !vus.includes(id));
+  const tab = document.querySelector('.tab[data-tab="boutique"]');
+  if(tab){
+    let b = tab.querySelector('.tab-badge.bq-nouveau');
+    if(!b && nouveau){ b = document.createElement('span'); b.className = 'tab-badge point bq-nouveau'; b.setAttribute('aria-label', 'Nouveautés dans la boutique'); tab.appendChild(b); }
+    if(b) b.hidden = !nouveau;
+  }
+  const v = document.querySelector('.volet[data-volet="boutiqueeuros"]');
+  if(v){
+    let p = v.querySelector('.volet-point');
+    if(!p && nouveau){ p = document.createElement('span'); p.className = 'volet-point'; p.setAttribute('aria-label', 'nouveau'); v.appendChild(p); }
+    if(p) p.hidden = !nouveau;
+  }
+  try{ majBadgePlus(); }catch(e){}
+}
+// j'ai ouvert Objets TerraFront : tout ce qui est en vente est vu
+function bqeMarquerVus(){
+  try{ localStorage.setItem('tf-bqe-vus', JSON.stringify([...new Set([...bqeVus(), ...bqeEnVente()])])); }catch(e){}
+  majPastilleBoutique();
 }
 
 async function loadBoutiqueEuros(){
@@ -15881,6 +15919,7 @@ async function loadBoutiqueEuros(){
   if(c.error || !c.data){ corps.innerHTML = '<p class="collection-empty">La boutique est indisponible pour le moment.</p>'; return; }
   bqeCat = c.data; bqeBandeau = b.error ? null : b.data; bqeCommandes = m.error ? [] : (m.data || []);
   renderBoutiqueEuros();
+  bqeMarquerVus();   // patch205
 }
 
 function bqeBandeauHtml(){

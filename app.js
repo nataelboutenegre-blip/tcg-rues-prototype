@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'f1d26ac59bb3';
+const VERSION_JEU = '6f2d50b7c026';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9883,6 +9883,7 @@ function ouvrirVenteTerra(){
 
 // patch188 : le balayage au changement de mode
 function balayerMode(){
+  if(!ouvAnim) return;   // patch197 : le bouton « Animation » coupe aussi le balayage
   let el = document.getElementById('modeBalayage');
   if(!el){
     el = document.createElement('div');

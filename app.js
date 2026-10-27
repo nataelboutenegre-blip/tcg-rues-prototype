@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'a578ac8702b3';
+const VERSION_JEU = 'cc43f68e07ff';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3846,7 +3846,7 @@ function brancherSurvolCanvas(){
     bulle.classList.remove('dept');
     bulle.dataset.dep = '';
     bulle.textContent = t.commune.nom + ' (' + t.commune.dept + '), '
-      + LIBELLE_TIER[t.commune.tier] + ', '
+      + LIBELLE_TIER[t.commune.tier] + (auroreFront(t.commune.code) ? ' Aurore' : '') + ', '   // patch241
       + (t.joueur.moi ? 'à toi' : 'à ' + t.joueur.pseudo);
     }
     const bb = bulle.getBoundingClientRect();
@@ -3992,7 +3992,7 @@ function dessinerTerritoires(){
     } else if(c.tier === 'rare' || c.tier === 'epique'){
       g.marqueurs += `<circle cx="${cx}" cy="${cy}" r="2.2" fill="${j.moi ? '#fff' : 'rgba(255,255,255,0.7)'}" stroke="#0B1830" stroke-width="1" stroke-opacity="${j.moi ? 1 : 0.45}" vector-effect="non-scaling-stroke"/>`;
     }
-    zonesSurvol += `<circle cx="${cx}" cy="${cy}" r="${Math.max(RAYON_ZONE[c.tier], 6)}" fill="transparent"><title>${echapperHtml(c.nom)} (${c.dept}), ${LIBELLE_TIER[c.tier]}, ${j.moi ? 'à toi' : 'à ' + echapperHtml(j.pseudo)}</title></circle>`;
+    zonesSurvol += `<circle cx="${cx}" cy="${cy}" r="${Math.max(RAYON_ZONE[c.tier], 6)}" fill="transparent"><title>${echapperHtml(c.nom)} (${c.dept}), ${LIBELLE_TIER[c.tier]}${auroreFront(c.code) ? ' Aurore' : ''}, ${j.moi ? 'à toi' : 'à ' + echapperHtml(j.pseudo)}</title></circle>`;
   });
 
   // les autres joueurs d'abord, toi par-dessus
@@ -4049,7 +4049,7 @@ function dessinerContours(liste, joueurs, deps){
       } else if(c.tier === 'rare' || c.tier === 'epique'){
         g.marqueurs += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(2.2 * e).toFixed(2)}" fill="${j.moi ? '#fff' : 'rgba(255,255,255,0.7)'}" stroke="#0B1830" stroke-width="${(1 * e).toFixed(2)}"/>`;
       }
-      zonesSurvol += `<path d="${d}" fill="transparent"><title>${echapperHtml(c.nom)} (${c.dept}), ${LIBELLE_TIER[c.tier]}, ${j.moi ? 'à toi' : 'à ' + echapperHtml(j.pseudo)}</title></path>`;
+      zonesSurvol += `<path d="${d}" fill="transparent"><title>${echapperHtml(c.nom)} (${c.dept}), ${LIBELLE_TIER[c.tier]}${auroreFront(c.code) ? ' Aurore' : ''}, ${j.moi ? 'à toi' : 'à ' + echapperHtml(j.pseudo)}</title></path>`;
     }
   }
 

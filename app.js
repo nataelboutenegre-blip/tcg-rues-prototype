@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '80a698a342c6';
+const VERSION_JEU = 'e538c3bd010e';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -398,6 +398,16 @@ async function skinCibleFront(code){
     return k;
   }catch(e){ return null; }
 }
+// patch232 : la vraie carte dans l'assaut, Aurore ou habillée ; lien = étiquette vers la Boutique
+function carteAssautReelle(e, qui, k, au, lien){
+  const t = e.tier && e.tier.id ? e.tier : (TIERS.find(x => x.id === e.tier) || TIERS[0]);
+  const sk = !au && k && skinConnu(k) ? k : undefined;
+  const etiquette = au ? '<span class="as-skin-nom as-aurore-nom">✦ Aurore</span>'
+    : sk && lien ? `<button type="button" class="as-skin-nom" data-skin-boutique="${echapperTexte(sk)}">✦ Skin ${echapperTexte(SKIN_NOMS[sk] || sk)}</button>` : '';
+  return `<div class="as-carte as-carte-skin ${t.id}">${miniTerra({ code: e.code, nom: e.nom, dept: e.dept, tier: t, exemplaires: 1, photo: e.photo,
+      rank: e.tierSize ? e.rank : undefined, tierSize: e.tierSize, aurore: au ? 1 : 0, skin: sk })}
+    <p class="as-skin-qui">${qui}</p>${etiquette}</div>`;
+}
 function carteAssautSkin(e, k, qui){
   const t = e.tier && e.tier.id ? e.tier : (TIERS.find(x => x.id === e.tier) || TIERS[0]);
   return `<div class="as-carte as-carte-skin ${t.id}">${miniTerra({ code: e.code, nom: e.nom, dept: e.dept, tier: t, exemplaires: 1, photo: e.photo, skin: k })}
@@ -452,11 +462,11 @@ function mettreEnSceneAssaut(cible, r){
     <div class="fenetre assaut ${grand ? 'grand' : ''}" role="dialog" aria-modal="true" aria-labelledby="asVerdict">
       <p class="as-surtitre">Assaut · intensité ${intens}</p>
       <div class="as-duel">
-        <div class="as-cote as-att">${proche ? carteAssaut(proche.entry, 'à toi') : '<div class="as-carte vide"></div>'}<p class="as-proche">${ligneProche}</p></div>
+        <div class="as-cote as-att">${proche ? ((SAISON2 && (auroreFront(proche.entry.code) || skinDeMaCarte('front', proche.entry.code))) ? carteAssautReelle(proche.entry, 'à toi', skinDeMaCarte('front', proche.entry.code), auroreFront(proche.entry.code), false) : carteAssaut(proche.entry, 'à toi')) : '<div class="as-carte vide"></div>'}<p class="as-proche">${ligneProche}</p></div>
         <div class="as-vs">VS</div>
         <div class="as-cote as-cib">
           <div class="as-drapeau" aria-hidden="true"><svg viewBox="0 0 40 56"><path d="M6 4v50" stroke="#e8edf5" stroke-width="3" stroke-linecap="round"/><path d="M7 5 C18 1, 24 11, 37 6 L37 24 C24 29, 18 19, 7 23 Z" fill="#F0B429" stroke="#9a6a10" stroke-width="1"/></svg></div>
-          ${cible.skin && skinConnu(cible.skin) && !auroreFront(cible.code) ? carteAssautSkin(cible, cible.skin, 'à <b>' + echapperTexte(cible.pseudo || 'un joueur') + '</b>') : carteAssaut(cible, 'à ' + echapperTexte(cible.pseudo || 'un joueur'))}
+          ${SAISON2 && (auroreFront(cible.code) || (cible.skin && skinConnu(cible.skin))) ? carteAssautReelle(cible, 'à <b>' + echapperTexte(cible.pseudo || 'un joueur') + '</b>', cible.skin, auroreFront(cible.code), true) : carteAssaut(cible, 'à ' + echapperTexte(cible.pseudo || 'un joueur'))}
           <div class="as-pastilles" aria-hidden="true">${pastilles}</div>
           <div class="as-onde" aria-hidden="true"></div>
         </div>
@@ -564,7 +574,7 @@ function cibleAssaut(code, repli){
     dept: c.dept || (repli && repli.departement) || '',
     tier: c.tier || (repli && repli.tier) || 'commun',
     pseudo: c.pseudo || (repli && repli.pseudo) || '',
-    lat: c.lat, lon: c.lon, pop: c.pop, photo: c.photo || '', rank: c.rank,
+    lat: c.lat, lon: c.lon, pop: c.pop, photo: c.photo || (repli && repli.photo) || '', rank: c.rank || (repli && repli.rang), tierSize: c.tierSize || (repli && repli.palier_total),   // patch232
   };
 }
 

@@ -6319,3 +6319,19 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .card.outremer .carte-lisere span:nth-child(3), .mini.outremer .mini-lisere span:nth-child(3){ background:#FF7A59; }
 .card.outremer .carte-dept, .mini.outremer .mini-dept{ color:rgba(255,255,255,.34); }
 .om-compteur{ color:#2CC6C9; font-weight:600; }
+
+/* patch220 — l'outre-mer sur la carte du Front */
+#panel-territoire .map-outils{ flex-wrap:wrap; gap:8px; }
+#panel-territoire .map-outils .mf-zone{ margin:0; }
+.map-wrap.outremer{ height:auto !important; background:#0C1A31; padding:10px; overflow:visible; }
+.map-wrap.outremer #mapTransform, .map-wrap.outremer #mapCanvas, .map-wrap.outremer #mapInfobulle,
+.map-wrap.outremer .map-reduire, .map-wrap.outremer #mapLegende{ display:none !important; }
+.omf[hidden]{ display:none; }
+.omf .om-grille{ max-width:none; }
+.omf-leg .omf-autres{ background:linear-gradient(90deg,#E5484D 0 33%,#8E7CF6 33% 66%,#2EC4B6 66%); }
+.omf-leg .omf-bouclier{ background:none; box-shadow:inset 0 0 0 1.5px #fff; border:1px dashed #0C1A31; }
+.omf-note{ margin:8px 0 0; font-size:.72rem; color:var(--brume); }
+.om-nb b{ color:#F0B429; }
+/* en outre-mer, seuls les clans ont un sens parmi les calques de la carte de France */
+#panel-territoire.outremer #toggleOthersBtn, #panel-territoire.outremer .map-calques button:not([data-calque="clans"]),
+#panel-territoire.outremer .map-note{ display:none !important; }

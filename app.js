@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '870b8ed29282';
+const VERSION_JEU = '71ffb0b7cebb';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3394,7 +3394,7 @@ function clicOutremerFront(e){
     fermerPanneau();
     const b = tu.div.querySelector('.om-bulle');
     b.hidden = false;
-    b.innerHTML = `<i class="mf-pastille vide"></i><div><b>Commune libre</b><span>Personne ne la tient : elle peut sortir d'un paquet Front.</span></div>`;
+    b.innerHTML = `<i class="mf-pastille vide"></i><div><b>Commune libre</b><span>Personne ne la tient : elle peut sortir d'un paquet Front.</span></div><button type="button" class="om-bulle-x" aria-label="Fermer">✕</button>`;
   }
 }
 
@@ -10377,6 +10377,7 @@ function omToucher(dep, px, py){
     b.innerHTML = e
       ? `<i class="mf-pastille ${e.tier.id}"></i><div><b>${echapperTexte(e.nom)}</b><span>${e.tier.label} · ×${e.exemplaires} · n° ${e.rank} / ${e.tierSize}</span></div>`
       : `<i class="mf-pastille vide"></i><div><b>Pas encore dans ta collection</b><span>${echapperTexte(terr.nom)} · tire-la dans un paquet</span></div>`;
+    b.insertAdjacentHTML('beforeend', '<button type="button" class="om-bulle-x" aria-label="Fermer">✕</button>');   // patch229
     if(e) b.dataset.tcode = e.code; else delete b.dataset.tcode;
   }
 }
@@ -12743,7 +12744,8 @@ function renderCdjFin(){
     <p>C’était <b>${echapperTexte(r.nom)}</b>, ${echapperTexte(DEPT_NAMES[r.dept] || r.dept)}, ${Number(r.pop).toLocaleString('fr-FR')} habitants.</p>
     <p>${qui}${serie} Nouvelle commune à minuit.</p>
     <pre class="cdj-partage" id="cdjPartage">${echapperTexte(cdjTextePartage())}</pre>
-    <button type="button" class="cdj-copier" id="cdjCopier">Copier le résultat pour Discord</button>`;
+    <div class="cdj-fin-actions"><button type="button" class="qg-btn plein" id="cdjRetourQG">Retour au QG</button><button type="button" class="cdj-copier" id="cdjCopier">Copier le résultat pour Discord</button></div>`;
+  document.getElementById('cdjRetourQG').onclick = () => { const t = document.querySelector('.tab[data-tab="qg"]'); if(t) t.click(); };   // patch229
   document.getElementById('cdjCopier').onclick = async (ev) => {
     const b = ev.currentTarget;
     try{
@@ -18603,3 +18605,15 @@ document.addEventListener('click', (e) => {
   const code = b.dataset.voirCarte;
   voirCommuneSurCarte(collectionMap.get(code) || { code });
 });
+
+// ---------- patch229 : la bulle d'outre-mer se ferme (croix, ou clic hors des territoires) ----------
+document.addEventListener('click', (e) => {
+  const x = e.target.closest('.om-bulle-x');
+  if(!x && e.target.closest('.om-tuile')) return;
+  const ouvertes = document.querySelectorAll('.om-bulle:not([hidden])');
+  if(!ouvertes.length) return;
+  if(x){ e.stopPropagation(); e.preventDefault(); }
+  ouvertes.forEach(b => { b.hidden = true; });
+  if(typeof OMF !== 'undefined' && OMF.bulle){ const d = OMF.bulle.dep; OMF.bulle = null; omfDessiner(d); }
+  if(typeof OM !== 'undefined' && OM.bulle){ const d = OM.bulle.dep; OM.bulle = null; omDessiner(d); }
+}, true);

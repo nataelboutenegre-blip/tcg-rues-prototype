@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=fa5c87b5308f">
+<link rel="stylesheet" href="style.css?v=a578ac8702b3">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -113,7 +113,7 @@
         <div class="lp-etape">
           <span class="lp-num">2</span>
           <b>Conquiers</b>
-          <p>En Front, chaque commune n'a qu'un propriétaire. Attaque avec ton énergie : trois victoires d'affilée et elle est à toi.</p>
+          <p>En Front, chaque commune n'a qu'un propriétaire. Attaque avec ton énergie : trois victoires et elle est à toi.</p>
         </div>
         <div class="lp-etape">
           <span class="lp-num">3</span>
@@ -141,7 +141,7 @@
         <div class="lp-etape">
           <span class="lp-num">3</span>
           <b>Conquiers</b>
-          <p>Les communes des autres se prennent par la force : trois victoires d'affilée. Celles qui touchent ton territoire tombent plus vite. Les tiennes partent pareil.</p>
+          <p>Les communes des autres se prennent par la force : trois victoires. Celles qui touchent ton territoire tombent plus vite. Les tiennes partent pareil.</p>
         </div>
       </div>
     </div>
@@ -954,7 +954,7 @@
         <button type="button" class="volet actif" data-volet="combat" role="tab" aria-selected="true">Attaquer</button>
         <button type="button" class="volet" data-volet="defense" role="tab" aria-selected="false">Défendre<span class="volet-badge" data-badge-defense hidden></span></button>
       </div>
-      <div class="sub">3 victoires d'affilée pour conquérir une commune, une défaite remet ta série à zéro. Avant d'attaquer, choisis ton engagement : plus tu paies, plus tu as de chances. Un round toutes les 2 min sur une commune, 5 min sur une peu commune, 10 min sur une rare, 3 h sur une légendaire. Les communes et peu communes s'affichent avec leur filtre ou « Près de mon territoire ».</div>
+      <div class="sub">3 victoires pour conquérir une commune, pas forcément d'affilée : une défaite ne te fait rien perdre. Avant d'attaquer, choisis ton engagement : plus tu paies, plus tu as de chances. Un round toutes les 2 min sur une commune, 5 min sur une peu commune, 10 min sur une rare, 3 h sur une légendaire. Les communes et peu communes s'affichent avec leur filtre ou « Près de mon territoire ».</div>
       <div class="bourse-filters combat-proximite">
         <span class="puce solde">Solde <b id="soldeValueCombat">—</b></span>
         <button class="filter-pill prox-toggle" id="combatEnCoursToggle" aria-pressed="false"><span class="prox-switch"></span>Combats en cours <span class="en-cours-nb" id="combatEnCoursNb">0</span></button>
@@ -1240,9 +1240,9 @@
             <h2>Front<small>Énergie et combat</small></h2>
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
           </summary>
-          <div class="regle-corps"><div class="chiffres"><div class="chiffre-bloc"><b>40</b><span>énergie au maximum</span></div><div class="chiffre-bloc"><b>10 min</b><span>pour recharger 1 énergie</span></div><div class="chiffre-bloc"><b>3</b><span>victoires d'affilée pour conquérir</span></div></div>
+          <div class="regle-corps"><div class="chiffres"><div class="chiffre-bloc"><b>40</b><span>énergie au maximum</span></div><div class="chiffre-bloc"><b>10 min</b><span>pour recharger 1 énergie</span></div><div class="chiffre-bloc"><b>3</b><span>victoires pour conquérir</span></div></div>
             <p>Avant chaque assaut, choisis ton engagement : <b>prudent</b> (1 énergie, 35 %), <b>normal</b> (2 énergie, 50 %) ou <b>offensif</b> (3 énergie, 65 %). Avoir des communes autour de la cible augmente tes chances.</p>
-            <p>Gagne <b>3 rounds d'affilée</b> pour prendre la commune ; une défaite remet ta série à zéro. Entre deux assauts sur la même commune : 2 min (commune), 5 min (peu commune), 10 min (rare), 1 h (épique), 3 h (légendaire). Une commune prise est protégée 3 h.</p>
+            <p>Gagne <b>3 rounds</b> pour prendre la commune, pas forcément d'affilée : <b>une défaite ne te fait rien perdre</b>, ta série reste où elle était. Entre deux assauts sur la même commune : 2 min (commune), 5 min (peu commune), 10 min (rare), 1 h (épique), 3 h (légendaire). Une commune prise est protégée 3 h.</p>
             <p>En Front, les paquets sont <b>gratuits uniquement</b> (1 toutes les 20 min, 3 en réserve) et rien ne s'achète. Toutes les raretés peuvent en sortir, <b>épiques</b> comprises, et parfois une commune d'<b>outre-mer</b> encore libre.</p>
             <div class="tableau-defile">
               <table class="tableau">
@@ -1287,7 +1287,7 @@
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
           </summary>
           <div class="regle-corps">
-            <p><b>Défendre</b> : quand un joueur gagne un round contre toi, tu peux tenter une défense pour <b>1 énergie</b>, une fois par attaque. Réussie, l'attaquant perd une victoire.</p>
+            <p><b>Défendre</b> : quand un joueur gagne un round contre toi, tu peux tenter une défense pour <b>1 énergie</b>, deux fois par attaque. Réussie, l'attaquant perd une victoire.</p>
             <p><b>Garnison</b> : jusqu'à <b>3 communes</b>, où tu déposes de l'énergie (10 au maximum par commune). Quand un attaquant gagne un round, la garnison tente seule une défense : <b>1 chance sur 2</b>, 1 énergie par tentative. Réussie, la victoire ne compte pas.</p>
             <p>Retirer une garnison rend la moitié de son énergie. Une défense que tu réussis toi-même sur une commune en garnison y remet <b>3 énergie</b>. L'attaquant voit qu'une commune est en garnison, pas combien elle contient.</p>
             <p>Dans Défendre, <b>Mes départements</b> fait passer en tête les communes attaquées des départements que tu choisis.</p>
@@ -1348,7 +1348,7 @@
         <section class="essentiel" aria-label="L'essentiel">
           <div class="etape"><div class="etape-num">1</div><h3>Ouvre des paquets</h3><p>Chaque paquet contient 5 vraies communes. Plus une ville est peuplée, plus elle est rare.</p></div>
           <div class="etape"><div class="etape-num">2</div><h3>Gère ton solde</h3><p>Revends tes cartes au jeu ou aux autres joueurs pour gagner des points.</p></div>
-          <div class="etape"><div class="etape-num">3</div><h3>Conquiers</h3><p>Aligne 3 victoires d'affilée contre une commune rare ou légendaire pour la prendre.</p></div>
+          <div class="etape"><div class="etape-num">3</div><h3>Conquiers</h3><p>Gagne 3 victoires contre une commune pour la prendre.</p></div>
           <div class="etape"><div class="etape-num">4</div><h3>Défends-toi</h3><p>Dans l'onglet Défense, tente une défense ou pose un bouclier. Et complète des objectifs pour des récompenses.</p></div>
         </section>
 
@@ -1444,7 +1444,7 @@
               <li><b>D'où tu attaques compte.</b> Le jeu compte tes communes à moins de 20 km de ta cible : chacune ajoute à tes chances, jusqu'à <b>+15 points</b>. Si tu n'en as aucune, c'est une attaque à distance : <b>−12 points</b>. Tes chances vont donc de <b>23 %</b> (prudente, à distance) à <b>80 %</b> (offensive, entourée de tes communes).</li>
               <li>C'est pour ça que <b>deux joueurs n'ont pas les mêmes chances</b> sur la même commune, et que le pourcentage affiché sur une carte n'est jamais exactement celui de ton engagement.</li>
               <li>Avant d'attaquer, tu choisis ton <b>engagement</b> : plus tu paies, plus tu as de chances. Le coût est prélevé à chaque round, même si tu perds.</li>
-              <li><b>3 victoires d'affilée</b> et la commune est à toi. <b>Une défaite remet ta série à zéro.</b></li>
+              <li><b>3 victoires</b> et la commune est à toi, pas forcément d'affilée. <b>Une défaite ne te fait rien perdre.</b></li>
             </ul>
             <div class="tableau-defile">
               <table class="tableau">
@@ -1488,7 +1488,7 @@
             <p>Quand un joueur gagne un round contre une de tes communes, une <b>pastille rouge</b> apparaît sur l'onglet Défense, et la commune s'affiche dans <b>Tes communes attaquées</b>.</p>
             <ul>
               <li><b>Défendre</b> retire une victoire à l'attaquant si ça réussit. Comme pour l'attaque, tu choisis ton engagement — et <b>tu défends chez toi</b> : toutes tes communes voisines comptent pour toi.</li>
-              <li>Tu as droit à <b>une seule défense par attaque</b>. Si la série de l'attaquant retombe à zéro, tu récupères ta défense pour sa prochaine attaque.</li>
+              <li>Tu as droit à <b>deux défenses par attaque</b>. Si la série de l'attaquant retombe à zéro, tu les récupères pour sa prochaine attaque.</li>
               <li>Tu ne peux pas défendre une commune déjà protégée par un bouclier.</li>
             </ul>
             <div class="encart rouge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/><circle cx="12" cy="12" r="9.5"/></svg><span>À 2 victoires, l'attaquant n'a plus qu'un round à gagner. C'est le bon moment pour défendre ou poser un bouclier.</span></div>
@@ -1634,6 +1634,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=fa5c87b5308f"></script>
+<script defer src="app.js?v=a578ac8702b3"></script>
 </body>
 </html>

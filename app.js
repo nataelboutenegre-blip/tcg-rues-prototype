@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'fa5c87b5308f';
+const VERSION_JEU = 'a578ac8702b3';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -441,10 +441,10 @@ function mettreEnSceneAssaut(cible, r){
   const anim = ouvAnim && !REDUCED_MOTION;
   const proche = maCommuneLaPlusProche(cible.lat, cible.lon, cible.code);
   const chances = Math.max(1, Math.min(99, Number(r.chances) || 50));
-  const serieAvant = r.conquise ? 2 : (r.gagne ? Math.max(0, Number(r.victoires_consecutives) - 1) : null);
+  const serieAvant = r.conquise ? 2 : (r.gagne ? Math.max(0, Number(r.victoires_consecutives) - 1) : Number(r.victoires_consecutives) || 0);   // patch240
   const res = r.conquise ? 'conq' : (r.gagne ? 'ok' : 'ko');
   // patch91 : une victoire annulee par la garnison revient perdue mais avec une serie intacte
-  const parGarnison = SAISON2 && !r.gagne && !r.conquise && Number(r.victoires_consecutives) > 0;
+  const parGarnison = SAISON2 && !r.gagne && !r.conquise && (r.par_garnison !== undefined ? !!r.par_garnison : Number(r.victoires_consecutives) > 0);   // patch240 : s2-46 le dit
   const soldeAvant = packStatusCache ? Number(packStatusCache.solde) : null;
   if(SAISON2) setTimeout(majEnergie, 300);
   // ou l'aiguille s'arrete : dans le vert si gagne, dans le rouge sinon
@@ -523,11 +523,15 @@ function mettreEnSceneAssaut(cible, r){
       if(!passe) sonsOuverture.assautGagne();
     } else if(res === 'ko'){
       v.className = 'as-verdict ko'; v.textContent = parGarnison ? 'Annulé par la garnison' : 'Repoussé';
-      bl.forEach((b, i) => b.className = parGarnison ? (i < Number(r.victoires_consecutives) ? 'gagne' : '') : 'perdu');
+      bl.forEach((b, i) => b.className = i < Number(r.victoires_consecutives) ? 'gagne' : '');   // patch240 : la série reste
       jouer(att1, [{ transform: 'translateX(-6px) rotate(-1deg)' }, { transform: 'translateX(5px) rotate(1deg)' }, { transform: 'none' }], { duration: 380 });
       d.innerHTML = parGarnison
         ? `La garnison ${deCommune(nomCible)} a annulé ta victoire : ta série reste à ${Number(r.victoires_consecutives)} sur 3.`
-        : `${nomCible} tient bon : ta série repart à zéro.`;
+        : Number(r.victoires_consecutives) > 0
+          ? `${nomCible} tient bon, mais tu gardes ta série <span class="as-serie">${[0, 1, 2].map(i => `<i class="${i < r.victoires_consecutives ? 'plein' : ''}"></i>`).join('')}</span><br>`
+            + (3 - Number(r.victoires_consecutives) <= 1 ? 'Encore une victoire pour la prendre.' : `Encore ${3 - Number(r.victoires_consecutives)} victoires pour la prendre.`)
+            + ` <span class="as-petit">Prochain assaut dans ${Math.round((DELAI_ATTAQUE_MS[tierId] || 0) / 60000) >= 60 ? Math.round(DELAI_ATTAQUE_MS[tierId] / 3600000) + ' h' : Math.round((DELAI_ATTAQUE_MS[tierId] || 0) / 60000) + ' min'}.</span>`
+          : `${nomCible} tient bon. Retente ta chance : une défaite ne te fait rien perdre.`;
       if(!passe) sonsOuverture.assautPerdu();
     } else {
       v.className = 'as-verdict conq'; v.textContent = `${cible.nom} est à toi !`;
@@ -975,7 +979,7 @@ const DM_ASTUCES = [
   'chaque légendaire gardée 24 h te rapporte +2 énergie par jour (10 au plus) : pense à récolter.',
   'réclame tes quêtes avant minuit : après, elles sont perdues.',
   'les communes d’outre-mer tombent aussi dans les paquets : bascule Ma France sur « Outre-mer ».',
-  'en Front, une commune tombe après 3 rounds gagnés d’affilée : défends-la ou pose un bouclier.',
+  'en Front, une commune tombe après 3 rounds gagnés : défends-la ou mets-la en garnison.',
   'ta vitrine expose jusqu’à 20 cartes sur ton profil, en Terra comme en Front.'
 ];
 function dmMesure(etiquette){ try{ console.info(`[démarrage] ${etiquette} : ${Math.round(performance.now() - DM_T0)} ms`); }catch(e){} }
@@ -3581,9 +3585,11 @@ function ligneConquete(chances, serie){
   const reste = Math.max(1, 3 - (Number(serie) || 0));
   const p = Math.max(0, Math.min(100, Number(chances) || 0)) / 100;
   const proba = Math.round(100 * Math.pow(p, reste));
-  const txt = reste === 3 ? `Il faut 3 victoires d’affilée pour la prendre : <b>${proba}\u00A0%</b> de chances d’y arriver sans perdre un round.`
-            : reste === 2 ? `Encore 2 victoires d’affilée pour la prendre : <b>${proba}\u00A0%</b> de chances.`
-            :               `Une dernière victoire pour la prendre : <b>${proba}\u00A0%</b> de chances.`;
+  // patch240 : la série est gardée, chaque round gagné rapproche de la conquête
+  void proba;
+  const txt = reste === 3 ? 'Il faut 3 victoires pour la prendre, pas forcément d’affilée. Une défaite ne te fait rien perdre.'
+            : reste === 2 ? 'Encore 2 victoires pour la prendre.'
+            :               'Une dernière victoire pour la prendre.';
   return `<p class="pc-conquete">${txt}</p>`;
 }
 
@@ -8715,10 +8721,10 @@ function renderDefenseLisible(liste){
     }
     let action = '';
     if(v > 0 && !g.bouclier){
-      action = m.defense_utilisee ? '<span class="df-note">défense déjà utilisée</span>'
+      action = m.defense_utilisee ? '<span class="df-note">deux défenses utilisées</span>'
         : (m.attaquant_id ? `<button class="menace-defendre" data-commune="${m.commune_code}" data-attaquant="${m.attaquant_id}" data-nom="${echapperTexte(g.nom)}">${ICONE_BOUCLIER}${coutTexte(SAISON2 ? 1 : coutIntensite(g.tier))}</button>` : '');
     }
-    return `<div class="df-att"><span class="menace-serie" title="${v} victoire${v > 1 ? 's' : ''} d'affilée sur 3">${serie}</span>
+    return `<div class="df-att"><span class="menace-serie" title="${v} victoire${v > 1 ? 's' : ''} sur 3">${serie}</span>
       <span class="df-qui"><b>${echapperTexte(m.attaquant_pseudo || 'Un joueur')}</b><small>${quand}</small></span>${action}</div>`;
   };
   const ligne = (g) => {
@@ -9386,7 +9392,7 @@ function renderCombatGrid(){
       disabled = false;
     }
     if(victoires > 0 && siege && siege.defense_utilisee){
-      note = 'Le défenseur a déjà utilisé sa défense';
+      note = 'Le défenseur a utilisé ses deux défenses';
       noteAlerte = true;
     }
     const ronds = [0, 1, 2].map(i => `<i class="${i < victoires ? 'plein' : ''}"></i>`).join('');
@@ -12299,7 +12305,7 @@ const ETAPES_GUIDE = [
   {
     cible: '.tab[data-tab="combat"]',
     titre: 'Attaque, et défends-toi',
-    texte: 'Les communes rares et légendaires des autres joueurs se prennent par la force : trois victoires d\'affilée. Et les tiennes peuvent partir pareil, alors garde un œil sur l\'onglet Défense.'
+    texte: 'Les communes rares et légendaires des autres joueurs se prennent par la force : trois victoires, pas forcément d\'affilée. Et les tiennes peuvent partir pareil, alors garde un œil sur l\'onglet Défense.'
   },
 ];
 
@@ -12313,7 +12319,7 @@ const ETAPES_GUIDE_S2 = [
   { mode: 'front', cible: '#modeBascule [data-mode="front"]', titre: 'Le Front',
     texte: 'Ici, l\'énergie remplace les points : 40 au maximum, +1 toutes les 10 minutes. Elle sert à attaquer et à défendre.' },
   { mode: 'front', cible: '.tab[data-tab="combat"]', titre: 'Attaque et défends',
-    texte: 'Trois victoires d\'affilée prennent une commune. Mets tes communes clés en garnison : elles se défendent seules pendant ton absence.' },
+    texte: 'Trois victoires prennent une commune, et une défaite ne te fait rien perdre. Mets tes communes clés en garnison : elles se défendent seules pendant ton absence.' },
   { cible: '.tab[data-tab="qg"]', titre: 'Chaque jour',
     texte: 'Les quêtes, la Commune du jour et le Radar rapportent des points Terra et de l\'énergie. Une saison du Front dure 4 semaines.' },
 ];

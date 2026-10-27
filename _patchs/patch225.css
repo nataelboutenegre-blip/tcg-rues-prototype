@@ -1,0 +1,65 @@
+/* ---------- patch122 : ecran de chargement ---------- */
+/* patch225 : la France coupée entre Terra et Front. Le dessin est dans index.html (il s'anime avant
+   que app.js soit téléchargé) ; app.js fait avancer le contour doré (--pct) et lance la sortie. */
+.demarrage{ position:fixed; inset:0; z-index:9999; overflow:hidden; color:#fff; font-family:var(--texte); transition:opacity .42s ease;
+  --pct:0; --g:clamp(16px, 5.5vw, 44px);
+  background:
+    radial-gradient(48% 40% at 24% 46%, rgba(30,110,84,.32), rgba(30,110,84,0) 72%),
+    radial-gradient(48% 40% at 76% 46%, rgba(140,34,52,.32), rgba(140,34,52,0) 72%),
+    radial-gradient(120% 80% at 50% 40%, #18305A 0%, var(--nuit) 62%); }
+.demarrage.fini{ opacity:0; pointer-events:none; }
+@keyframes dmFondu{ from{ opacity:0; } }
+.dm-carte{ position:absolute; left:50%; top:46%; width:min(90vw, 66vh); height:auto; aspect-ratio:104 / 102.4; overflow:visible;
+  transform:translate(-50%, -50%); animation:dmCarteIn .8s cubic-bezier(.2,.8,.2,1) both; }
+@supports (height:1dvh){ .dm-carte{ width:min(90vw, 66dvh); } }
+@keyframes dmCarteIn{ from{ opacity:0; transform:translate(-50%, -50%) scale(.94); } }
+.dm-moitie{ animation:dmFondu .7s ease .35s both; }
+.dm-anneau{ fill:none; stroke:#5FD39D; stroke-width:1; stroke-linejoin:round; vector-effect:non-scaling-stroke;
+  stroke-dasharray:1; stroke-dashoffset:1; animation:dmTrace 2.6s ease-out forwards; }
+@keyframes dmTrace{ to{ stroke-dashoffset:0; } }
+.dm-couture{ stroke:#FFE29A; stroke-width:.45; filter:drop-shadow(0 0 1.5px rgba(240,180,41,.9)); }
+.dm-contour-piste{ fill:none; stroke:rgba(240,180,41,.2); stroke-width:.32; }
+.dm-contour{ fill:none; stroke:var(--c-legendaire); stroke-width:.5; stroke-linejoin:round; stroke-dasharray:1 1;
+  stroke-dashoffset:calc(1 - var(--pct)); transition:stroke-dashoffset .6s ease, stroke-width .5s ease;
+  filter:drop-shadow(0 0 1.2px rgba(240,180,41,.9)); }
+.demarrage.sortie .dm-contour{ stroke-dashoffset:0; stroke-width:.75; }
+/* la Corse s'allume à la fin (le tracé progressif suit le continent) */
+.dm-corse{ fill:none; stroke:var(--c-legendaire); stroke-width:.5; stroke-linejoin:round; opacity:0; transition:opacity .5s ease, stroke-width .5s ease;
+  filter:drop-shadow(0 0 1.2px rgba(240,180,41,.9)); }
+.demarrage.dm-corse-on .dm-corse, .demarrage.sortie .dm-corse{ opacity:1; }
+.demarrage.sortie .dm-corse{ stroke-width:.75; }
+/* Terra | Front, de part et d'autre de la ligne */
+.dm-mot{ position:absolute; top:46%; z-index:2; transform:translateY(-50%); transition:transform .62s cubic-bezier(.6,0,.3,1), opacity .4s ease; }
+.dm-mot.terra{ right:calc(50% + var(--g) / 2); }
+.dm-mot.front{ left:calc(50% + var(--g) / 2); }
+.dm-mot-in{ display:flex; flex-direction:column; gap:.55em; }
+.dm-mot.terra .dm-mot-in{ align-items:flex-end; text-align:right; animation:dmEntreG .7s cubic-bezier(.2,.8,.2,1) .42s both; }
+.dm-mot.front .dm-mot-in{ align-items:flex-start; animation:dmEntreD .7s cubic-bezier(.2,.8,.2,1) .42s both; }
+@keyframes dmEntreG{ from{ opacity:0; transform:translateX(-34px); } }
+@keyframes dmEntreD{ from{ opacity:0; transform:translateX(34px); } }
+.dm-mot b{ font-family:var(--titre); font-weight:900; font-size:clamp(38px, 12vw, 104px); line-height:.84; letter-spacing:.045em;
+  text-transform:uppercase; transition:text-shadow .5s ease; }
+.dm-mot.terra b{ color:#5FD39D; text-shadow:0 0 26px rgba(95,211,157,.3); }
+.dm-mot.front b{ color:#FF8A8E; text-shadow:0 0 26px rgba(255,138,142,.3); }
+.dm-mot small{ font-size:clamp(9.5px, 2.75vw, 13px); font-weight:600; letter-spacing:.24em; text-transform:uppercase;
+  color:rgba(255,255,255,.8); animation:dmFondu .6s ease .85s both; }
+/* la sortie : le dernier mode joué recouvre la France et passe au centre */
+.demarrage.sortie.m-front .dm-mot.front{ transform:translate(calc(-50% - var(--g) / 2), -50%) scale(1.12); }
+.demarrage.sortie.m-terra .dm-mot.terra{ transform:translate(calc(50% + var(--g) / 2), -50%) scale(1.12); }
+.demarrage.sortie.m-front .dm-mot.front b{ text-shadow:0 0 34px #FF8A8E; }
+.demarrage.sortie.m-terra .dm-mot.terra b{ text-shadow:0 0 34px #5FD39D; }
+.demarrage.sortie.m-front .dm-mot.terra{ transform:translate(-45vw, -50%); opacity:0; }
+.demarrage.sortie.m-terra .dm-mot.front{ transform:translate(45vw, -50%); opacity:0; }
+/* en bas : où on en est, une astuce */
+.dm-bas{ position:absolute; left:0; right:0; bottom:0; z-index:3; display:flex; flex-direction:column; align-items:center; gap:12px;
+  padding:56px max(16px, 5vw) calc(max(22px, 3.2vh) + env(safe-area-inset-bottom, 0px));
+  background:linear-gradient(to top, rgba(10,22,40,.94) 45%, rgba(10,22,40,0)); animation:dmFondu .6s ease .9s both; }
+.dm-texte{ font-size:clamp(12px, 3.3vw, 14px); color:var(--brume); min-height:1.3em; text-align:center; }
+.dm-astuce{ margin:0; max-width:46ch; text-align:center; font-size:clamp(11.5px, 3.1vw, 13.5px); color:var(--brume); line-height:1.5; opacity:.85; }
+.dm-astuce b{ color:#fff; font-weight:600; }
+.demarrage.sortie .dm-bas{ animation:none; opacity:0; transition:opacity .3s ease; }
+@media (prefers-reduced-motion:reduce){
+  .demarrage *, .demarrage *::before{ animation:none !important; }
+  .dm-anneau{ stroke-dashoffset:0; }
+  .dm-contour, .dm-corse{ transition:none; }
+}

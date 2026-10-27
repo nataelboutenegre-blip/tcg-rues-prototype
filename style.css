@@ -6280,3 +6280,42 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .pf-mail{ margin:0 0 8px; font-size:.8rem; color:var(--brume); }
 .pf-mail span{ color:#fff; }
 .pf-mail-b{ font:inherit; font-size:.78rem; color:var(--brume); background:none; border:0; padding:0 0 0 6px; text-decoration:underline; cursor:pointer; }
+
+/* =====================================================================
+   patch219 — l'outre-mer dans Ma France (DA « lagon »)
+   ===================================================================== */
+.mf-zone{ display:flex; gap:4px; padding:4px; border-radius:999px; width:max-content; max-width:100%; margin:0 0 10px;
+  background:rgba(0,0,0,.28); border:1px solid rgba(169,188,212,.16); }
+.mf-zone button{ border:none; background:none; color:var(--brume); font:inherit; font-size:.84rem; font-weight:700; padding:7px 16px;
+  border-radius:999px; cursor:pointer; }
+.mf-zone.france button.on{ background:#1E5A44; color:#E8F6EE; box-shadow:inset 0 0 0 1px rgba(53,185,126,.55); }
+.mf-zone.outremer button.on{ background:#2CC6C9; color:#04252A; }
+.mf-stats.om div{ background:rgba(44,198,201,.07); border-color:rgba(44,198,201,.22); }
+.om-grille{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; width:100%; max-width:760px; }
+.om-grille.focus{ grid-template-columns:1fr; }
+.om-tuile{ position:relative; border-radius:14px; overflow:hidden; border:1px solid rgba(44,198,201,.3);
+  background:radial-gradient(130% 100% at 50% 0%, #0A3942, #06252E 70%); }
+.om-tuile canvas{ display:block; width:100%; touch-action:manipulation; cursor:pointer; }
+.om-nom{ position:absolute; left:11px; top:9px; font-weight:800; font-size:.92rem; color:#fff; text-shadow:0 1px 6px rgba(0,0,0,.6);
+  pointer-events:none; }
+.om-nb{ position:absolute; left:11px; top:29px; font-size:.7rem; font-weight:700; color:#2CC6C9; pointer-events:none; }
+.om-code{ display:none; }
+.om-tuile.grande .om-code{ display:block; position:absolute; right:12px; top:6px; font-size:2rem; font-weight:900; color:rgba(255,255,255,.1); pointer-events:none; }
+.om-agrandir{ position:absolute; right:7px; top:7px; width:30px; height:30px; border-radius:9px; border:1px solid rgba(44,198,201,.35);
+  background:rgba(6,37,46,.85); color:#fff; font-size:1rem; cursor:pointer; }
+.om-retour{ display:block; margin:0 0 10px; border:1px solid rgba(44,198,201,.35); background:rgba(44,198,201,.1); color:#BFF4F5;
+  font:inherit; font-size:.8rem; font-weight:700; padding:6px 12px; border-radius:999px; cursor:pointer; }
+.om-bulle{ background:#0B3540; border-color:rgba(44,198,201,.4); bottom:8px; left:8px; right:8px; transform:none; max-width:none; }
+.om-bulle[data-tcode]{ cursor:pointer; }
+.mf-pastille.vide{ background:#14454E; box-shadow:inset 0 0 0 1px rgba(44,198,201,.5); }
+.mf-leg .om-vide{ background:#14454E; box-shadow:inset 0 0 0 1px rgba(44,198,201,.5); }
+
+/* patch219 — la carte d'une commune d'outre-mer */
+.om-badge{ position:absolute; left:6px; top:6px; z-index:1; font-size:.58rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+  color:#04252A; background:#F3E2B7; padding:2px 7px; border-radius:999px; box-shadow:0 2px 6px rgba(0,0,0,.25); }
+.mini .om-badge{ left:4px; top:4px; font-size:.6rem; padding:1px 5px; letter-spacing:0; }
+.card.outremer .carte-lisere span:nth-child(1), .mini.outremer .mini-lisere span:nth-child(1){ background:#fff; }
+.card.outremer .carte-lisere span:nth-child(2), .mini.outremer .mini-lisere span:nth-child(2){ background:#2CC6C9; }
+.card.outremer .carte-lisere span:nth-child(3), .mini.outremer .mini-lisere span:nth-child(3){ background:#FF7A59; }
+.card.outremer .carte-dept, .mini.outremer .mini-dept{ color:rgba(255,255,255,.34); }
+.om-compteur{ color:#2CC6C9; font-weight:600; }

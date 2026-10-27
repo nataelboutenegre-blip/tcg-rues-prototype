@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'abe002e4d9f7';
+const VERSION_JEU = 'd9107f5f8439';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -23,6 +23,21 @@ const TIERS = [
 const EPIQUE_VISIBLE = true;
 const DEPT_NAMES = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","2A":"Corse-du-Sud","2B":"Haute-Corse","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise","971":"Guadeloupe","972":"Martinique","973":"Guyane","974":"La Réunion","975":"Saint-Pierre-et-Miquelon","976":"Mayotte"};
 const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
+// patch219 : l'outre-mer — un set à part (rareté propre, numéros « / 129 »), qui ne se
+// mélange ni aux compteurs ni à la carte de la métropole. 97x = DOM ; 98x = Pacifique (plus tard).
+// Le code INSEE suffit à reconnaître une carte : 97xxx / 98xxx, jamais en métropole.
+const estOutremer = (dep) => /^9[78]/.test(String(dep || ''));
+const estOutremerCode = (code) => /^9[78]\d/.test(String(code || ''));
+const OM_TERR = [
+  { dep: '971', nom: 'Guadeloupe', n: 32 }, { dep: '972', nom: 'Martinique', n: 34 },
+  { dep: '973', nom: 'Guyane', n: 22 }, { dep: '974', nom: 'La Réunion', n: 24 },
+  { dep: '976', nom: 'Mayotte', n: 17 },
+];
+const OM_TOTAL = OM_TERR.reduce((s, t) => s + t.n, 0);   // 129
+let mfZone = 'france';            // Ma France : 'france' | 'outremer'
+const OM = { focus: null, tuiles: new Map(), bulle: null };
+const OM_BADGE = '<span class="om-badge" title="Commune d’outre-mer">★ Outre-mer</span>';
+const OM_BADGE_MINI = '<span class="om-badge" title="Commune d’outre-mer">★</span>';
 
 // Couleurs des autres joueurs sur la carte (toi = dore). Au-dela de 12 joueurs, des couleurs se repetent.
 const OPPONENT_COLORS = ['#E5484D','#8E7CF6','#2EC4B6','#F76B15','#E93D82','#3DD68C','#5EB1EF','#FF977D','#9EB1FF','#12A594','#D6409F','#C2A383'];
@@ -120,6 +135,7 @@ const TEINTES_CARTE = {
 };
 
 function carteArtSvg(code, tierId){
+  if(estOutremerCode(code)) return artLagonSvg(code, tierId, 200, 120, 'cg' + code);   // patch219
   const [clair, fonce] = TEINTES_CARTE[tierId];
   const id = 'cg' + code;
   const { d, cx, cy } = courbesDeNiveau(hashTexte(String(code)), 200, 120, 9);
@@ -4067,9 +4083,11 @@ function codeDepartement(texte){
   const t = nu(texte || '');
   if(t.length < 3) return null;
   const codes = Object.keys(DEPT_NAMES);
-  const exact = codes.find(c => nu(DEPT_NAMES[c]) === t);
+  // patch219 : « Réunion » sans l'article trouve La Réunion
+  const noms = (c) => { const n = DEPT_NAMES[c], s = n.replace(/^(la|le|les|l['’])\s*/i, ''); return s !== n ? [nu(n), nu(s)] : [nu(n)]; };
+  const exact = codes.find(c => noms(c).includes(t));
   if(exact) return exact;
-  const debuts = codes.filter(c => nu(DEPT_NAMES[c]).startsWith(t));
+  const debuts = codes.filter(c => noms(c).some(x => x.startsWith(t)));
   return debuts.length === 1 ? debuts[0] : null;
 }
 
@@ -4077,7 +4095,8 @@ function codeDepartement(texte){
 function correspondRecherche(nom, dept, recherche){
   if(!recherche) return true;
   return sansAccents(nom).includes(recherche)
-      || String(dept).toLowerCase().includes(recherche)
+      // patch219 : « 74 » ne doit pas trouver La Réunion (974) — un code d'outre-mer se tape par le début
+      || (String(dept).length > 2 ? String(dept).toLowerCase().startsWith(recherche) : String(dept).toLowerCase().includes(recherche))
       || sansAccents(DEPT_NAMES[dept] || '').includes(recherche);
 }
 
@@ -4169,6 +4188,7 @@ function miniArtSvg(code, tierId){
   return gabarit.split('__MGID__').join('mg' + (++miniArtNumero).toString(36));
 }
 function miniArtGabarit(code, tierId, cle){
+  if(estOutremerCode(code)){ const s = artLagonSvg(code, tierId, 160, 100, '__MGID__'); miniArtCache.set(cle, s); return s; }   // patch219
   const [clair, fonce] = TEINTES_CARTE[tierId];
   // L'identifiant vient d'un hachage, jamais du texte recu : une
   // apostrophe ou une espace dans un nom de commune (« L'Abergement »,
@@ -6645,7 +6665,7 @@ document.getElementById('fenetre').addEventListener('click', async (e) => {
 function makeCardEl(draw, onFlip){
   const wrap = document.createElement('div');
   const mon = monumentDe(draw.code);
-  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '') + (draw.aurore ? ' aurore' : '');
+  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '') + (draw.aurore ? ' aurore' : '') + (estOutremerCode(draw.code) ? ' outremer' : '');   // patch219
   wrap.innerHTML = `
     <div class="card-inner">
       <div class="face face-back">
@@ -6661,13 +6681,13 @@ function makeCardEl(draw, onFlip){
               <span class="carte-rarete">${draw.tier.label}</span>
               <span class="carte-num">${draw.rank.toLocaleString('fr-FR')} / ${draw.tierSize.toLocaleString('fr-FR')}</span>
             </div>
-            <div class="carte-art">${carteArtSvg(draw.code, draw.tier.id)}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
+            <div class="carte-art">${estOutremerCode(draw.code) ? OM_BADGE : ''}${carteArtSvg(draw.code, draw.tier.id)}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
             <div class="carte-infos">
               <p class="carte-nom ${draw.nom.length > 26 ? 'tres-long' : draw.nom.length > 16 ? 'long' : ''}" title="${echapperTexte(draw.nom)}">${draw.nom}</p>
               <p class="carte-departement">${DEPT_NAMES[draw.dept] ? `<span class="dep-nom">${DEPT_NAMES[draw.dept]}</span> <span class="dep-num">(${draw.dept})</span>` : `<span class="dep-num">${draw.dept}</span>`}</p>
               <div class="carte-stats">
                 <div><span>Habitants</span><b>${draw.pop.toLocaleString('fr-FR')}</b></div>
-                <div><span>Rang</span><b>${draw.rank.toLocaleString('fr-FR')}</b></div>
+                <div><span>${estOutremerCode(draw.code) ? 'Rang outre-mer' : 'Rang'}</span><b>${draw.rank.toLocaleString('fr-FR')}</b></div>
               </div>
               ${draw.aurore ? creditAurore(draw.code) : ''}
             </div>
@@ -9475,11 +9495,11 @@ function terraCarteRetournee(draw){
 function miniTerra(e){
   const nom = echapperTexte(e.nom);
   const au = e.aurore > 0;
-  return `<div class="mini ${e.tier.id}${au ? ' aurore' : ''}"${e.skin ? ` data-skin="${echapperTexte(e.skin)}"` : ''} title="${nom} (${e.dept}) — ${e.tier.label}${au ? ' — Aurore' + (e.aurore > 1 ? ' ×' + e.aurore : '') : ''}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}${au ? titreCreditAurore(e.code) : ''}">
+  return `<div class="mini ${e.tier.id}${au ? ' aurore' : ''}${estOutremerCode(e.code) ? ' outremer' : ''}"${e.skin ? ` data-skin="${echapperTexte(e.skin)}"` : ''} title="${nom} (${e.dept}) — ${e.tier.label}${au ? ' — Aurore' + (e.aurore > 1 ? ' ×' + e.aurore : '') : ''}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}${au ? titreCreditAurore(e.code) : ''}">
     <div class="mini-int">
       ${au ? fondAurore(e.code, e.tier.id, false) : ''}
       ${e.exemplaires > 1 ? `<span class="mini-ex">×${e.exemplaires}</span>` : ''}
-      <div class="mini-art">${e.photo ? artCommune(e, e.tier.id, 'mini') : miniArtSvg(e.code, e.tier.id)}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
+      <div class="mini-art">${estOutremerCode(e.code) ? OM_BADGE_MINI : ''}${e.photo ? artCommune(e, e.tier.id, 'mini') : miniArtSvg(e.code, e.tier.id)}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
       <div class="mini-infos">
         <p class="mini-nom ${e.nom.length > 14 ? 'long' : ''}">${nom}</p>
         ${e.rank ? `<span class="mini-num">n° ${Number(e.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(e.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
@@ -9573,6 +9593,9 @@ function renderCollectionTerra(){
   if(!el) return;
   const parTier = {};
   for(const e of terraCollection.values()) parTier[e.tier.id] = (parTier[e.tier.id] || 0) + 1;
+  // patch219 : la progression par rareté se compte en métropole (les totaux du serveur aussi)
+  const parTierM = {};
+  for(const e of terraCollection.values()) if(!estOutremer(e.dept)) parTierM[e.tier.id] = (parTierM[e.tier.id] || 0) + 1;
   const tot = totauxPaliers || {};
   const totalFrance = Object.values(tot).reduce((s, l) => s + Number(l.total || 0), 0) || 34739;
   const dbl = doublonsTerra();
@@ -9582,10 +9605,10 @@ function renderCollectionTerra(){
   if(terraVue === 'france') return renderMaFranceTerra(el, totalFrance);
   if(terraVue === 'collections') return renderCollectionsTerra(el);   // patch112
   el.innerHTML = `
-    <div class="coll-ligne-titre"><h1>Collection</h1><span class="coll-compteur"><b>${fmtNombre(terraCollection.size)}</b> / ${fmtNombre(totalFrance)} communes</span></div>
+    <div class="coll-ligne-titre"><h1>Collection</h1>${compteurCollectionHtml(totalFrance)}</div>
     ${selecteurVueTerra()}
     <div class="tc-prog" style="grid-template-columns:repeat(${Math.max(1, ordre.length)},1fr)">${ordre.map(t => {
-      const n = parTier[t.id] || 0, total = tot[t.id] ? Number(tot[t.id].total) : 0;
+      const n = parTierM[t.id] || 0, total = tot[t.id] ? Number(tot[t.id].total) : 0;
       return `<div style="--c:${COULEURS_FILTRE[t.id]};--p:${total ? (100 * n / total).toFixed(1) : 0}%"><b>${fmtNombre(n)}</b><span>${t.label}${total ? ' · ' + fmtNombre(total) : ''}</span><i></i></div>`;
     }).join('')}</div>
     ${nbDbl ? `<div class="tc-vente"><span aria-hidden="true">🔁</span><span><b>${fmtNombre(nbDbl)} doublon${nbDbl > 1 ? 's' : ''}</b> · jusqu'à ${fmtNombre(gainMax)} pts</span><button data-tc="vendre">Vendre…</button>${CONTRATS.some(c => (dbl[c.de] || 0) >= c.n) ? '<button class="tc-ct" data-tc="contrat">Contrat</button>' : ''}</div>` : ''}
@@ -9632,20 +9655,22 @@ const MF_COMMUNES = 2.5;    // a partir de ce zoom, les communes ; en dessous, l
 const MF_NOMS = 6;          // a partir de ce zoom, les noms
 
 function renderMaFranceTerra(el, totalFrance){
+  if(mfZone === 'outremer') return renderOutremerTerra(el);   // patch219
   MF.parDep = {};
   for(const e of terraCollection.values()) MF.parDep[e.dept] = (MF.parDep[e.dept] || 0) + 1;
   const touches = Object.keys(MF.parDep).filter(d => COMMUNES_PAR_DEPT[d]).length;
   const complets = Object.keys(MF.parDep).filter(d => COMMUNES_PAR_DEPT[d] && MF.parDep[d] >= COMMUNES_PAR_DEPT[d]).length;
   const nbDepts = Object.keys(COMMUNES_PAR_DEPT).length;
-  const pct = totalFrance ? 100 * terraCollection.size / totalFrance : 0;
+  const pct = totalFrance ? 100 * collectionMetro() / totalFrance : 0;   // patch219
   el.innerHTML = `
-    <div class="coll-ligne-titre"><h1>Collection</h1><span class="coll-compteur"><b>${fmtNombre(terraCollection.size)}</b> / ${fmtNombre(totalFrance)} communes</span></div>
+    <div class="coll-ligne-titre"><h1>Collection</h1>${compteurCollectionHtml(totalFrance)}</div>
     ${selecteurVueTerra()}
     <div class="mf-stats">
       <div><b>${pct < 10 ? pct.toFixed(1).replace('.', ',') : Math.round(pct)} %</b><span>de la France</span></div>
       <div><b>${touches} / ${nbDepts}</b><span>départements touchés</span></div>
       <div><b>${complets}</b><span>départements complets</span></div>
     </div>
+    ${selecteurZoneMF()}
     <div class="mf-cadre" id="mfCadre">
       <canvas id="mfCanvas" aria-label="Carte de ta collection : touche un département pour zoomer, une commune pour la voir"></canvas>
       <span class="mf-niveau" id="mfNiveau"></span>
@@ -9934,8 +9959,223 @@ function mfArmer(cv){
   cv.addEventListener('pointercancel', fin);
 }
 
+// en-tête de la collection : la métropole sur 34 739, l'outre-mer à part sur 129
+function collectionMetro(){
+  let n = 0;
+  for(const e of terraCollection.values()) if(!estOutremer(e.dept)) n++;
+  return n;
+}
+function compteurCollectionHtml(totalFrance){
+  const om = collectionOutremer().n;
+  return `<span class="coll-compteur"><b>${fmtNombre(collectionMetro())}</b> / ${fmtNombre(totalFrance)} communes${om ? ` <span class="om-compteur">· <b>${fmtNombre(om)}</b> / ${OM_TOTAL} outre-mer</span>` : ''}</span>`;
+}
+
+// ---------- patch219 : l'outre-mer dans Ma France ----------
+// Ma France gagne un sélecteur France | Outre-mer ; l'outre-mer montre les 5
+// territoires côte à côte, chacun à son échelle, dans la DA « lagon ».
+function selecteurZoneMF(){
+  const b = (id, nom) => `<button data-mfz="${id}" class="${mfZone === id ? 'on' : ''}" aria-pressed="${mfZone === id}">${nom}</button>`;
+  return `<div class="mf-zone ${mfZone}" role="group" aria-label="Quelle carte">${b('france', 'France')}${b('outremer', 'Outre-mer')}</div>`;
+}
+
+function collectionOutremer(){
+  const parDep = {};
+  let n = 0;
+  for(const e of terraCollection.values()){
+    if(!estOutremer(e.dept)) continue;
+    parDep[e.dept] = (parDep[e.dept] || 0) + 1;
+    n++;
+  }
+  return { parDep, n };
+}
+
+function renderOutremerTerra(el){
+  const { parDep, n } = collectionOutremer();
+  const touches = OM_TERR.filter(t => parDep[t.dep]).length;
+  const complets = OM_TERR.filter(t => (parDep[t.dep] || 0) >= t.n).length;
+  const focus = OM_TERR.find(t => t.dep === OM.focus);
+  const tuile = (t) => `
+    <div class="om-tuile${focus ? ' grande' : ''}" data-omdep="${t.dep}">
+      <span class="om-nom">${t.nom}</span>
+      <span class="om-nb">${fmtNombre(parDep[t.dep] || 0)} / ${t.n} communes${(parDep[t.dep] || 0) >= t.n ? ' ✓' : ''}</span>
+      <span class="om-code" aria-hidden="true">${t.dep}</span>
+      ${focus ? '' : `<button class="om-agrandir" data-omfocus="${t.dep}" aria-label="Agrandir ${t.nom}">⤢</button>`}
+      <canvas aria-label="${t.nom} : touche une commune pour la voir"></canvas>
+      <div class="mf-bulle om-bulle" hidden></div>
+    </div>`;
+  el.innerHTML = `
+    <div class="coll-ligne-titre"><h1>Collection</h1><span class="coll-compteur"><b>${fmtNombre(n)}</b> / ${OM_TOTAL} communes d'outre-mer</span></div>
+    ${selecteurVueTerra()}
+    <div class="mf-stats om">
+      <div><b>${fmtNombre(n)} / ${OM_TOTAL}</b><span>communes d'outre-mer</span></div>
+      <div><b>${touches} / ${OM_TERR.length}</b><span>territoires touchés</span></div>
+      <div><b>${complets}</b><span>territoire${complets > 1 ? 's' : ''} complet${complets > 1 ? 's' : ''}</span></div>
+    </div>
+    ${selecteurZoneMF()}
+    ${focus ? `<button class="om-retour" data-omfocus="">← Les 5 territoires</button>` : ''}
+    <div class="om-grille${focus ? ' focus' : ''}">${(focus ? [focus] : OM_TERR).map(tuile).join('')}</div>
+    <div class="mf-leg">${TIERS.slice().reverse().map(t => `<span><i style="background:${COULEURS_FILTRE[t.id]}"></i>${t.label}</span>`).join('')}<span><i class="om-vide"></i>Pas encore</span></div>`;
+  OM.tuiles.clear();
+  OM.bulle = null;
+  for(const div of el.querySelectorAll('.om-tuile')){
+    const dep = div.dataset.omdep;
+    const tu = { div, cv: div.querySelector('canvas'), chemins: [] };
+    OM.tuiles.set(dep, tu);
+    chargerContours(dep).then(() => omDessiner(dep));
+  }
+}
+
+// projection propre à chaque territoire : équirectangulaire corrigée de la
+// latitude, ajustée dans la tuile
+function omProjection(contours, larg, haut, marge, entete){
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, sl = 0, nl = 0;
+  for(const code in contours) for(const anneau of contours[code]) for(const [lon, lat] of anneau){
+    if(lon < x0) x0 = lon; if(lon > x1) x1 = lon; if(lat < y0) y0 = lat; if(lat > y1) y1 = lat;
+    sl += lat; nl++;
+  }
+  const kx = Math.cos((sl / nl) * Math.PI / 180);
+  const w = (x1 - x0) * kx, h = y1 - y0;
+  // le haut de la tuile porte le nom et le compteur : on dessine en dessous
+  const s = Math.min((larg - 2 * marge) / w, (haut - entete - 2 * marge) / h);
+  const ox = (larg - w * s) / 2, oy = entete + (haut - entete - h * s) / 2;
+  return (lon, lat) => [ox + (lon - x0) * kx * s, oy + (y1 - lat) * s];
+}
+
+function omDessiner(dep){
+  const tu = OM.tuiles.get(dep);
+  const contours = CONTOURS.get(dep);
+  if(!tu || !document.body.contains(tu.cv)) return;
+  const cv = tu.cv, larg = cv.clientWidth;
+  if(larg < 40) return;
+  const grand = tu.div.classList.contains('grande');
+  const haut = Math.round(grand ? Math.min(larg * 0.9, window.innerHeight * 0.66) : larg * 1.05);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = Math.round(larg * dpr); cv.height = Math.round(haut * dpr); cv.style.height = haut + 'px';
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, larg, haut);
+  // les fonds marins : des courbes de niveau autour de l'île
+  for(let i = 8; i >= 1; i--){
+    ctx.strokeStyle = `rgba(44,198,201,${(0.04 + i * 0.012).toFixed(3)})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(larg / 2, haut / 2 + 20, larg * 0.075 * i, haut * 0.07 * i, 0, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  if(!contours || contours === 'erreur'){ tu.chemins = []; return; }
+  const P = omProjection(contours, larg, haut, grand ? 18 : 10, grand ? 40 : 46);
+  tu.P = P;
+  tu.chemins = [];
+  for(const code in contours){
+    const p = new Path2D();
+    for(const anneau of contours[code]){
+      anneau.forEach(([lon, lat], i) => { const [x, y] = P(lon, lat); i ? p.lineTo(x, y) : p.moveTo(x, y); });
+      p.closePath();
+    }
+    tu.chemins.push([code, p]);
+    const e = terraCollection.get(code);
+    ctx.fillStyle = e ? COULEURS_FILTRE[e.tier.id] : '#14454E';
+    ctx.globalAlpha = e ? 0.95 : 1;
+    ctx.fill(p);
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = e ? 'rgba(4,30,36,.85)' : 'rgba(44,198,201,.38)';
+    ctx.lineWidth = grand ? 1.1 : 0.8;
+    ctx.stroke(p);
+  }
+  if(OM.bulle && OM.bulle.dep === dep){
+    const c = tu.chemins.find(([code]) => code === OM.bulle.code);
+    if(c){ ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.2; ctx.stroke(c[1]); }
+  }
+  if(grand) omNoms(ctx, tu, contours, larg, haut);
+}
+
+// en grand : le nom des communes de la collection, sans chevauchement
+function omNoms(ctx, tu, contours, larg, haut){
+  const liste = [];
+  for(const code in contours){ const e = terraCollection.get(code); if(e) liste.push([e, contours[code]]); }
+  liste.sort((a, b) => (b[0].pop || 0) - (a[0].pop || 0));
+  ctx.font = '600 11px ' + getComputedStyle(document.body).getPropertyValue('--texte');
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const pris = [];
+  for(const [e, poly] of liste){
+    let anneau = poly[0]; for(const a of poly) if(a.length > anneau.length) anneau = a;
+    let sx = 0, sy = 0; for(const [lon, lat] of anneau){ const [x, y] = tu.P(lon, lat); sx += x; sy += y; }
+    const x = sx / anneau.length, y = sy / anneau.length;
+    const w = ctx.measureText(e.nom).width + 6;
+    const r = [x - w / 2, y - 7, x + w / 2, y + 7];
+    if(r[0] < 2 || r[2] > larg - 2 || r[1] < 2 || r[3] > haut - 2) continue;
+    if(pris.some(q => r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1])) continue;
+    pris.push(r);
+    ctx.fillStyle = 'rgba(2,14,18,.8)'; ctx.fillText(e.nom, x + 1, y + 1);
+    ctx.fillStyle = '#fff'; ctx.fillText(e.nom, x, y);
+  }
+}
+
+function omToucher(dep, px, py){
+  const tu = OM.tuiles.get(dep);
+  if(!tu) return;
+  const ctx = tu.cv.getContext('2d');
+  const dpr = tu.cv.width / tu.cv.clientWidth;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const avant = OM.bulle && OM.bulle.dep;
+  const trouve = tu.chemins.find(([, p]) => ctx.isPointInPath(p, px * dpr, py * dpr));
+  OM.bulle = trouve ? { dep, code: trouve[0] } : null;
+  if(avant && avant !== dep) omDessiner(avant);
+  omDessiner(dep);
+  for(const [d, t] of OM.tuiles){
+    const b = t.div.querySelector('.om-bulle');
+    if(!OM.bulle || d !== OM.bulle.dep){ b.hidden = true; continue; }
+    const e = terraCollection.get(OM.bulle.code);
+    const terr = OM_TERR.find(x => x.dep === d);
+    b.hidden = false;
+    b.innerHTML = e
+      ? `<i class="mf-pastille ${e.tier.id}"></i><div><b>${echapperTexte(e.nom)}</b><span>${e.tier.label} · ×${e.exemplaires} · n° ${e.rank} / ${e.tierSize}</span></div>`
+      : `<i class="mf-pastille vide"></i><div><b>Pas encore dans ta collection</b><span>${echapperTexte(terr.nom)} · tire-la dans un paquet</span></div>`;
+    if(e) b.dataset.tcode = e.code; else delete b.dataset.tcode;
+  }
+}
+
+function clicOutremer(e){
+  const z = e.target.closest('[data-mfz]');
+  if(z){ if(mfZone !== z.dataset.mfz){ mfZone = z.dataset.mfz; OM.focus = null; renderCollectionTerra(); } return true; }
+  const f = e.target.closest('[data-omfocus]');
+  if(f){ OM.focus = f.dataset.omfocus || null; renderCollectionTerra(); return true; }
+  const cv = e.target.closest('.om-tuile canvas');
+  if(cv){
+    const r = cv.getBoundingClientRect();
+    omToucher(cv.parentElement.dataset.omdep, e.clientX - r.left, e.clientY - r.top);
+    return true;
+  }
+  return false;
+}
+
+// l'illustration : un lagon, des fonds marins en courbes, une île à l'épingle
+// de la couleur de la rareté. Stable pour une commune donnée.
+function artLagonSvg(code, tierId, w, h, id){
+  const [clair, fonce] = TEINTES_CARTE[tierId];
+  const rnd = aleatoireStable(hashTexte('om' + code));
+  const cx = w * (0.3 + 0.4 * rnd()), cy = h * (0.38 + 0.24 * rnd());
+  const ang = Math.round(rnd() * 50 - 25);
+  let anneaux = '';
+  for(let i = 1; i <= 8; i++){
+    anneaux += `<ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(w * 0.075 * i).toFixed(1)}" ry="${(h * 0.1 * i).toFixed(1)}"`
+      + ` transform="rotate(${ang} ${cx.toFixed(1)} ${cy.toFixed(1)})" fill="none" stroke="rgba(191,244,245,${(0.34 - i * 0.03).toFixed(2)})" stroke-width="1"/>`;
+  }
+  const ri = Math.min(w, h) * 0.11;
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs><radialGradient id="${id}" cx="${(cx / w * 100).toFixed(0)}%" cy="${(cy / h * 100).toFixed(0)}%" r="90%">
+      <stop offset="0%" stop-color="#7FE7E4"/><stop offset="38%" stop-color="#1A8C96"/><stop offset="100%" stop-color="#06252E"/></radialGradient></defs>
+    <rect width="${w}" height="${h}" fill="url(#${id})"/>
+    ${anneaux}
+    <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(ri * 1.5).toFixed(1)}" ry="${ri.toFixed(1)}" transform="rotate(${ang} ${cx.toFixed(1)} ${cy.toFixed(1)})" fill="#F3E2B7" opacity=".92"/>
+    <ellipse cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" rx="${(ri * 1.05).toFixed(1)}" ry="${(ri * 0.68).toFixed(1)}" transform="rotate(${ang} ${cx.toFixed(1)} ${cy.toFixed(1)})" fill="${clair}"/>
+    <circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(ri * 0.42).toFixed(1)}" fill="#fff" stroke="${fonce}" stroke-width="2"/>
+  </svg>`;
+}
+
 window.addEventListener('resize', () => {
   if(terraVue === 'france' && MF.cv && document.body.contains(MF.cv)){ mfDimensionner(); mfLimiter(); mfPlanifier(); }
+  if(terraVue === 'france' && mfZone === 'outremer') for(const dep of OM.tuiles.keys()) omDessiner(dep);   // patch219
 });
 
 function renderGrilleTerra(){
@@ -9955,6 +10195,7 @@ function renderGrilleTerra(){
 
 function clicCollectionTerra(e){
   if(clicCollections(e)) return;   // patch112
+  if(clicOutremer(e)) return;   // patch219
   const carteT = e.target.closest('[data-tcode]');   // patch179
   if(carteT){ ouvrirCarteTerra(carteT.dataset.tcode); return; }
   const v = e.target.closest('[data-tcv]');

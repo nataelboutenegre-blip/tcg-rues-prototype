@@ -6465,3 +6465,13 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 /* ---------- patch226 : une carte de vitrine ne s'étire jamais ---------- */
 .mini-int > canvas.skin-gl{ position:absolute; inset:0; width:100%; height:100%; display:block; pointer-events:none; }
 .vt-bande .mini, .vt-grille .mini, .vt-etagere .mini{ min-height:0; overflow:hidden; }
+
+/* ---------- patch227 : le nom d'une commune attaquée mène à la carte ---------- */
+.df-voir{ display:inline-flex; align-items:center; gap:4px; padding:0; border:0; background:none; font:inherit; color:inherit; cursor:pointer; text-align:left; }
+.df-voir b{ text-decoration:underline dotted rgba(169,188,212,.55); text-underline-offset:3px; }
+.df-voir svg, .nc-lien svg{ width:13px; height:13px; stroke:var(--c-legendaire); flex:none; }
+.df-voir:hover b{ color:var(--c-legendaire); text-decoration-color:currentColor; }
+.df-voir:focus-visible, .nc-lien:focus-visible{ outline:2px solid var(--c-legendaire); outline-offset:2px; border-radius:4px; }
+.nc-lien{ display:inline-flex; align-items:center; gap:3px; padding:0; border:0; background:none; font:inherit; font-weight:700; color:#fff; cursor:pointer;
+  text-decoration:underline dotted rgba(169,188,212,.6); text-underline-offset:3px; vertical-align:baseline; }
+.nc-lien svg{ width:12px; height:12px; }

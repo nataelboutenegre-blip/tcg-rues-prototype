@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'cafb2a89478b';
+const VERSION_JEU = 'c5bbb5ad6c98';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8654,7 +8654,7 @@ function renderDefenseLisible(liste){
     return `<div class="df-ligne${g.vmax >= 2 && !g.bouclier ? ' urgente' : ''}${g.prio ? ' prio' : ''}">
       <div class="df-tete"><span class="menace-point" style="background:${COULEURS_FILTRE[g.tier] || '#7E8BA0'}"></span>
         ${g.prio ? '<span class="df-epingle" title="Département prioritaire">📍</span>' : ''}${g.favori ? '<span class="menace-etoile" title="Une de tes cinq communes gardées">★</span>' : ''}
-        <b>${echapperTexte(g.nom)}</b>${badgeDept(g.dept)}<span class="df-rarete">${tier ? tier.label.toLowerCase() : ''}</span>
+        <button type="button" class="df-voir" data-voir-carte="${echapperTexte(g.code)}" title="Voir sur la carte" aria-label="Voir ${echapperTexte(g.nom)} sur la carte"><b>${echapperTexte(g.nom)}</b><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></button>${badgeDept(g.dept)}<span class="df-rarete">${tier ? tier.label.toLowerCase() : ''}</span>
         ${g.bouclier ? `<span class="df-bouclier">${ICONE_BOUCLIER}${formatDuree(g.bouclier - now)}</span>` : ''}</div>
       ${g.attaques.map(m => ligneAttaque(g, m)).join('')}
     </div>`;
@@ -18263,7 +18263,7 @@ function ncConstruire(){
       if(nb(m.victoires_consecutives) < 1 || p.sourdine.includes(String(m.commune_code)) || p.sourdine_dep.includes(depM)) continue;
       if(!p.alerte_dep.includes(depM) && sousSeuil(m.commune_code)) continue;
       items.push({ cle: `att|${m.commune_code}|${m.attaquant_id}|${m.victoires_consecutives}`, sec: 'afaire', c: 'danger', i: '⚔️', mode: 'front',
-        t: `<b>${echapperTexte(m.attaquant_pseudo || 'Un joueur')}</b> t'attaque à <b>${echapperTexte(nomDe(m.commune_code))}</b>`,
+        t: `<b>${echapperTexte(m.attaquant_pseudo || 'Un joueur')}</b> t'attaque à <button type="button" class="nc-lien" data-nc-voir="${echapperTexte(String(m.commune_code))}" title="Voir sur la carte">${echapperTexte(nomDe(m.commune_code))}<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></button>`,
         s: `Série ${nb(m.victoires_consecutives)} / 3${m.dernier_round ? ' · ' + ilYA(m.dernier_round) : ''}`,
         a: 'Défendre', rouge: true, sourdine: String(m.commune_code), aller: () => ncAller('front', 'defense') });
     }
@@ -18511,6 +18511,10 @@ async function ncRegler(fn, args){
 async function ncClic(e){
   const b = e.target.closest('button');
   if(!b) return;
+  if(b.dataset.ncVoir){   // patch227 : la commune attaquée, sur la carte du Front
+    const code = b.dataset.ncVoir, entree = collectionMap.get(code) || { code };
+    return ncAller('front', 'territoire', () => voirCommuneSurCarte(entree));
+  }
   if(b.dataset.nc === 'fermer') return ncFermer();
   if(b.dataset.nc === 'lu'){ ncMarquerVus(NC.items.map(x => x.cle)); ncConstruire(); return ncRendre(); }
   if(b.dataset.nc){ NC.vue = b.dataset.nc; return ncRendre(); }
@@ -18554,3 +18558,11 @@ async function ncClic(e){
   }
   if(b.dataset.ncSeuil){ await ncRegler('regler_notif_seuil', { p_tier: b.dataset.ncSeuil }); return ncRendre(); }
 }
+
+// ---------- patch227 : le nom d'une commune attaquée mène à la carte (idée d'Arkhannou) ----------
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-voir-carte]');
+  if(!b) return;
+  const code = b.dataset.voirCarte;
+  voirCommuneSurCarte(collectionMap.get(code) || { code });
+});

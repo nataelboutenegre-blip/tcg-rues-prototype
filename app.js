@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '71ffb0b7cebb';
+const VERSION_JEU = '0068571e655a';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -383,6 +383,44 @@ function carteAssaut(e, qui){
   </div>`;
 }
 
+// patch230 : le skin de la carte du Front visée (celui de son propriétaire), demandé juste avant l'attaque
+const skinsCibles = new Map();   // code -> { k, t }
+async function skinCibleFront(code){
+  if(!SAISON2) return null;
+  const c = skinsCibles.get(code);
+  if(c && Date.now() - c.t < 120000) return c.k;
+  try{
+    const r = await Promise.race([sb.rpc('skin_front_commune', { p_code: code }), new Promise(ok => setTimeout(() => ok(null), 700))]);
+    if(!r) return null;
+    const k = r.error ? null : skinCle(r.data);
+    skinsCibles.set(code, { k, t: Date.now() });
+    return k;
+  }catch(e){ return null; }
+}
+function carteAssautSkin(e, k, qui){
+  const t = e.tier && e.tier.id ? e.tier : (TIERS.find(x => x.id === e.tier) || TIERS[0]);
+  return `<div class="as-carte as-carte-skin ${t.id}">${miniTerra({ code: e.code, nom: e.nom, dept: e.dept, tier: t, exemplaires: 1, photo: e.photo, skin: k })}
+    <p class="as-skin-qui">${qui}</p>
+    <button type="button" class="as-skin-nom" data-skin-boutique="${echapperTexte(k)}">✦ Skin ${echapperTexte(SKIN_NOMS[k] || k)}</button></div>`;
+}
+// le nom du skin mène à sa fiche dans la Boutique
+async function ouvrirSkinBoutique(k){
+  const fond = document.getElementById('fenetre');
+  if(fond && !fond.hidden){ fond.classList.remove('visible'); fond.hidden = true; fond.innerHTML = ''; }
+  const tab = document.querySelector('.tab[data-tab="boutique"]');
+  if(tab) tab.click();
+  const v = document.querySelector('.volet[data-volet="boutiqueeuros"]');
+  if(v) v.click();
+  for(let i = 0; i < 30; i++){
+    if(typeof bqeCat !== 'undefined' && bqeCat && (bqeCat.articles || []).some(a => a.id === 'skin-' + k)){ bqeOuvrirFiche('skin-' + k); return; }
+    await new Promise(ok => setTimeout(ok, 150));
+  }
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-skin-boutique]');
+  if(b){ e.preventDefault(); ouvrirSkinBoutique(b.dataset.skinBoutique); }
+});
+
 // cible : { code, nom, dept, tier (id), pseudo, lat, lon } — capturee AVANT
 // le rechargement des possessions. r : la reponse de attaquer().
 function mettreEnSceneAssaut(cible, r){
@@ -417,7 +455,7 @@ function mettreEnSceneAssaut(cible, r){
         <div class="as-vs">VS</div>
         <div class="as-cote as-cib">
           <div class="as-drapeau" aria-hidden="true"><svg viewBox="0 0 40 56"><path d="M6 4v50" stroke="#e8edf5" stroke-width="3" stroke-linecap="round"/><path d="M7 5 C18 1, 24 11, 37 6 L37 24 C24 29, 18 19, 7 23 Z" fill="#F0B429" stroke="#9a6a10" stroke-width="1"/></svg></div>
-          ${carteAssaut(cible, 'à ' + echapperTexte(cible.pseudo || 'un joueur'))}
+          ${cible.skin && skinConnu(cible.skin) && !auroreFront(cible.code) ? carteAssautSkin(cible, cible.skin, 'à <b>' + echapperTexte(cible.pseudo || 'un joueur') + '</b>') : carteAssaut(cible, 'à ' + echapperTexte(cible.pseudo || 'un joueur'))}
           <div class="as-pastilles" aria-hidden="true">${pastilles}</div>
           <div class="as-onde" aria-hidden="true"></div>
         </div>
@@ -3564,6 +3602,7 @@ async function lancerAssaut(code){
   if(bouton){ bouton.disabled = true; bouton.textContent = 'Assaut en cours…'; }
   try{
     const cibleVue = cibleAssaut(code);
+    cibleVue.skin = await skinCibleFront(code);   // patch230
     const { data, error } = await sb.rpc('attaquer', { p_commune_code: code, p_intensite: intensiteChoisie });
     if(error) throw error;
     const r = data[0];
@@ -8385,6 +8424,7 @@ document.addEventListener('click', async (e) => {
         const ciblePrevue = combatCibles.find(x => x.commune_code === code);
         const cibleVueCombat = cibleAssaut(code, ciblePrevue ? Object.assign({}, ciblePrevue.communes,
           { pseudo: ciblePrevue.pseudo || ciblePrevue.proprietaire_pseudo || (ciblePrevue.joueurs && ciblePrevue.joueurs.pseudo) }) : null);
+        cibleVueCombat.skin = await skinCibleFront(code);   // patch230
         let { data, error } = await sb.rpc('attaquer', { p_commune_code: code, p_intensite: intensiteChoisie });
         // si intensite.sql n'a pas encore ete execute, on attaque comme avant
         if(error && /p_intensite|does not exist|could not find/i.test(error.message || '')){
@@ -17798,7 +17838,7 @@ const skinGl = (() => {
     let anime = false, attente = false, faits = 0;
     const t = now / 1000;
     // 1. les cartes en grand (fiche) et la grande vitrine (patch204) : animées
-    for(const mini of document.querySelectorAll('.c3d .mini, .vt-grande .mini')){
+    for(const mini of document.querySelectorAll('.c3d .mini, .vt-grande .mini, .as-carte-skin .mini')){
       const k = skinDe(mini);
       if(!skinConnu(k) || progs.get(k) === false){ if(mini.classList.contains('skin')) retirer(mini); continue; }
       const carte = mini.closest('.c3d-carte');
@@ -17832,7 +17872,7 @@ const skinGl = (() => {
       dernierScan = now; sale = false;
       const sel = '.mini[data-skin]' + (mesSkinsCartes && mesSkinsCartes.size ? ', #tcGrille > .mini[data-tcode], #collectionGrid .mini[data-code]' : '');
       for(const mini of document.querySelectorAll(sel)){
-        if(mini.closest('.c3d, .vt-grande')) continue;   // animées plus haut
+        if(mini.closest('.c3d, .vt-grande, .as-carte-skin')) continue;   // animées plus haut
         const k = skinDe(mini);
         if(!skinConnu(k) || progs.get(k) === false){ if(mini.classList.contains('skin')) retirer(mini); continue; }
         const r = mini.getBoundingClientRect();

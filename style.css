@@ -6496,3 +6496,15 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .om-grille:not(.focus) .om-bulle .mf-pastille{ display:none; }
 .om-grille:not(.focus) .om-bulle b{ font-size:.76rem; }
 .om-grille:not(.focus) .om-bulle span{ font-size:.64rem; line-height:1.3; }
+
+/* ---------- patch230 : le skin de la cible pendant l'assaut ---------- */
+.as-carte.as-carte-skin{ aspect-ratio:auto; height:auto; background:none; border:0; padding:0; overflow:visible; box-shadow:none; display:flex; flex-direction:column; align-items:center; gap:7px; }
+.as-carte-skin .mini{ width:100%; content-visibility:visible; box-shadow:0 16px 36px rgba(0,0,0,.45); }
+.as-carte-skin .mini:hover{ transform:none; }
+.as-skin-qui{ margin:0; font-size:.7rem; color:var(--brume); }
+.as-skin-qui b{ color:#fff; }
+.as-skin-nom{ border:0; cursor:pointer; font:inherit; font-size:.68rem; font-weight:800; letter-spacing:.03em; padding:4px 10px; border-radius:999px; color:#fff;
+  background:rgba(8,16,30,.72); box-shadow:0 0 0 1px rgba(255,255,255,.25); }
+.as-skin-nom:hover{ background:rgba(8,16,30,.95); box-shadow:0 0 0 1px var(--c-legendaire); }
+.as-skin-nom:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+.as-cib:has(.as-carte-skin) .as-pastilles{ margin-top:12px; }

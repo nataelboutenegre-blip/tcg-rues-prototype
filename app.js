@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '0068571e655a';
+const VERSION_JEU = '80a698a342c6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -387,6 +387,7 @@ function carteAssaut(e, qui){
 const skinsCibles = new Map();   // code -> { k, t }
 async function skinCibleFront(code){
   if(!SAISON2) return null;
+  if(FRONT_SKINS) return FRONT_SKINS.get(String(code)) || null;   // patch231
   const c = skinsCibles.get(code);
   if(c && Date.now() - c.t < 120000) return c.k;
   try{
@@ -9042,6 +9043,17 @@ function deCommune(nom){
   return /^[AEIOUYÀÂÄÉÈÊËÎÏÔÖÙÛÜaeiouyàâäéèêëîïôöùûü]/.test(nom) ? "d'" + nom : 'de ' + nom;
 }
 
+// patch231 : les skins des cartes du Front (code -> skin), null = pas encore chargés ou s2-42 absent
+let FRONT_SKINS = null;
+async function chargerSkinsFront(){
+  if(!SAISON2) return;
+  try{
+    const { data, error } = await sb.rpc('front_skins');
+    if(error) return;
+    FRONT_SKINS = new Map((data || []).map(r => [String(r.commune_code), skinCle(r.skin)]));
+  }catch(e){}
+}
+
 async function loadCombat(){
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
@@ -9052,7 +9064,8 @@ async function loadCombat(){
   const soldeDef = document.getElementById('soldeValueDefense');
   if(soldeDef) soldeDef.textContent = solde;
 
-  const champsCible = 'communes!inner(nom,departement,tier,latitude,longitude), joueurs(pseudo)';
+  const champsCible = 'communes!inner(nom,departement,tier,latitude,longitude,photo,rang,palier_total), joueurs(pseudo)';   // patch231
+  const skinsCharges = chargerSkinsFront();   // patch231
   // Sans pagination, l'API s'arrete a 1 000 lignes et des cibles disparaissent
   // sans message. Meme precaution que pour les possessions des autres joueurs.
   let { data: cibles, error } = await toutesLesLignes(() => sb
@@ -9090,6 +9103,7 @@ async function loadCombat(){
   loadMenaces();
   combatSieges = new Map((mesSieges || []).map(s => [s.commune_code, s]));
   combatChargeLe = Date.now();   // patch135
+  await skinsCharges;
   renderCombatGrid();
   demanderChances();
 }
@@ -9371,25 +9385,27 @@ function renderCombatGrid(){
     const distance = c._distKm !== null
       ? `<p class="cible-distance">À ${c._distKm < 10 ? c._distKm.toFixed(1).replace('.', ',') : Math.round(c._distKm)} km ${deCommune(c._procheDe)}</p>` : '';
 
-    const au = auroreFront(c.commune_code);   // patch228
-    return `
-      <article class="cible ${commune.tier}${au ? ' cible-aurore' : ''}">
-        <div class="cible-int">
-          <div class="cible-haut">
-            <span class="cible-rarete">${tier.label}${au ? '<span class="cible-au">✦ Aurore</span>' : ''}</span>
-            <span class="cible-etat ${etatClasse}">${etatTexte}</span>
-          </div>
-          <div class="cible-art">${miniArtSvg(c.commune_code, commune.tier)}${au && auroreImage(c.commune_code) ? `<img class="art-photo" src="${auroreImage(c.commune_code)}" alt="" loading="lazy" decoding="async" data-onfail="next"><span class="cible-au-voile"></span>` : ''}<span class="cible-dept">${commune.departement}</span></div>
-          <div class="cible-infos">
-            <h3 class="cible-nom ${commune.nom.length > 16 ? 'long' : ''}">${commune.nom}</h3>
-            <p class="cible-proprio"><i style="background:${colorForPlayer(c.joueur_id)}"></i>à <b>${echapperTexte(pseudo)}</b></p>
-            ${distance}
-          </div>
-          <div class="cible-serie"><span>Ta série</span><span class="cible-ronds">${ronds}</span></div>
-          <p class="cible-note ${noteAlerte ? 'alerte' : ''}">${note}</p>
-          <button class="cible-attaquer" data-action="attaquer" data-code="${c.commune_code}" ${disabled ? 'disabled' : ''}>Attaquer <b>${coutTexte(cout)}</b><i>${vrai ? vrai.chances + ' %' : '…'}</i></button>
-        </div>
-      </article>`;
+    // patch231 : la vraie carte (photo, Aurore, skin), l'action en dessous
+    const au = auroreFront(c.commune_code);
+    const sk = !au && FRONT_SKINS ? FRONT_SKINS.get(String(c.commune_code)) : null;
+    const carte = miniTerra({ code: c.commune_code, nom: commune.nom, dept: commune.departement, tier,
+      exemplaires: 1, photo: commune.photo || '', rank: commune.rang, tierSize: commune.palier_total,
+      aurore: au ? 1 : 0, skin: sk && skinConnu(sk) ? sk : undefined });
+    let bouton;
+    if(etatClasse === 'pret'){
+      bouton = `<button class="cible-attaquer ca-att" data-action="attaquer" data-code="${c.commune_code}">Attaquer <span class="ca-pastille"><b>${coutTexte(cout)}</b> · <i>${vrai ? vrai.chances + ' %' : '…'}</i></span></button>`;
+    } else {
+      const texte = etatClasse === 'bouclier' ? `${ICONE_BOUCLIER}Bouclier · ${formatDuree(bouclierFin - now)}`
+        : etatClasse === 'protegee' ? `Protégée encore ${formatDuree(immuniteFin - now)}`
+        : `Prochain round dans ${formatDuree(prochainRound - now)}`;
+      bouton = `<button class="cible-attaquer ca-att off" data-action="attaquer" data-code="${c.commune_code}" disabled>${texte}</button>`;
+    }
+    const km = c._distKm !== null ? (c._distKm < 10 ? c._distKm.toFixed(1).replace('.', ',') : Math.round(c._distKm)) + ' km' : '';
+    const titreKm = km ? ` title="À ${km} ${echapperTexte(deCommune(c._procheDe))}"` : '';
+    const serie = [0, 1, 2].map(i => `<i class="${i < victoires ? 'plein' : ''}"></i>`).join('');
+    return `<article class="ca-cible">${carte}
+      <p class="ca-qui"${titreKm}><i style="background:${colorForPlayer(c.joueur_id)}"></i><b>${echapperTexte(pseudo)}</b>${km ? `<span>· ${km}</span>` : ''}<span class="ca-serie" title="Ta série : ${victoires} / 3">${serie}</span></p>
+      ${bouton}${noteAlerte ? `<p class="ca-note">${note}</p>` : ''}</article>`;
   };
 
   // la signature dit si c'est un nouveau filtrage ou un simple rafraichissement
@@ -18657,3 +18673,11 @@ document.addEventListener('click', (e) => {
   if(typeof OMF !== 'undefined' && OMF.bulle){ const d = OMF.bulle.dep; OMF.bulle = null; omfDessiner(d); }
   if(typeof OM !== 'undefined' && OM.bulle){ const d = OM.bulle.dep; OM.bulle = null; omDessiner(d); }
 }, true);
+
+// ---------- patch231 : dans le Combat, la marque du skin (◆ BRASIER) mène à la Boutique ----------
+document.addEventListener('click', (e) => {
+  const m = e.target.closest('#combatGrid .mini.skin .skin-marque');
+  if(!m) return;
+  const k = m.closest('.mini').dataset.skin;
+  if(k){ e.preventDefault(); ouvrirSkinBoutique(k); }
+});

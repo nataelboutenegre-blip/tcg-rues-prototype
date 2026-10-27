@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'db965b0c8bef';
+const VERSION_JEU = 'abe002e4d9f7';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8961,10 +8961,22 @@ function renderCombatGrid(){
     cibles = cibles.filter(c => c.communes.tier === combatFilterTier);
   }
   if(searchText){
-    // patch126 : le pseudo du proprietaire compte aussi ; patch149 : plusieurs termes, separes par des virgules
-    const termes = searchText.split(/[,;]/).map(t => t.trim()).filter(Boolean);
-    cibles = cibles.filter(c => termes.some(t => correspondRecherche(c.communes.nom, c.communes.departement, t)
-      || (c.joueurs && c.joueurs.pseudo && sansAccents(c.joueurs.pseudo).includes(t))));
+    // patch218 : comme l'Echange — pseudo ET departement ET nom (ET entre categories,
+    // OU a l'interieur). « Arkhannou, 63 » = les communes d'Arkhannou DANS le 63.
+    const owners = new Set(combatCibles.map(c => c.joueurs && c.joueurs.pseudo).filter(Boolean).map(x => sansAccents(x)));
+    const deps = [], pseudos = [], noms = [];
+    for(const t of searchText.split(/[,;]/).map(s => s.trim()).filter(Boolean)){
+      const d = codeDepartement(t) || t;
+      if(/^(\d{2,3}|2a|2b)$/i.test(d)){ deps.push(d.toUpperCase()); continue; }
+      if([...owners].some(x => x.includes(t))) pseudos.push(t); else noms.push(t);
+    }
+    cibles = cibles.filter(c => {
+      const dept = String(c.communes.departement).toUpperCase();
+      const ps = c.joueurs && c.joueurs.pseudo ? sansAccents(c.joueurs.pseudo) : '';
+      return (!deps.length || deps.includes(dept))
+          && (!pseudos.length || pseudos.some(t => ps.includes(t)))
+          && (!noms.length || noms.some(t => correspondRecherche(c.communes.nom, c.communes.departement, t)));
+    });
   }
   if(exclusCombat.length){
     cibles = cibles.filter(c => !estExclu(c.communes.nom, c.communes.departement, c.joueurs && c.joueurs.pseudo, exclusCombat));

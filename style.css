@@ -6335,3 +6335,66 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 /* en outre-mer, seuls les clans ont un sens parmi les calques de la carte de France */
 #panel-territoire.outremer #toggleOthersBtn, #panel-territoire.outremer .map-calques button:not([data-calque="clans"]),
 #panel-territoire.outremer .map-note{ display:none !important; }
+
+/* =====================================================================
+   patch222 — le centre de notifications
+   ===================================================================== */
+.nc-cloche{ position:relative; width:38px; height:38px; border-radius:11px; border:1px solid rgba(169,188,212,.22); background:rgba(15,31,56,.7);
+  color:#E8EEF7; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; flex:none; }
+.nc-cloche svg{ width:20px; height:20px; }
+.nc-cloche .nc-pastille{ position:absolute; top:-5px; right:-5px; min-width:19px; height:19px; padding:0 5px; border-radius:999px; background:#E5484D; color:#fff;
+  font-size:.68rem; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px #0B1A30; }
+.nc-voile{ position:fixed; inset:0; background:rgba(3,8,18,.55); z-index:900; }
+.nc-panneau{ position:fixed; z-index:901; background:#0F213C; border:1px solid rgba(169,188,212,.2); box-shadow:0 24px 60px rgba(0,0,0,.6);
+  display:flex; flex-direction:column; color:#E8EEF7; }
+@media (max-width:760px){ .nc-panneau{ left:0; right:0; bottom:0; max-height:84vh; border-radius:20px 20px 0 0; } }
+@media (min-width:761px){ .nc-panneau{ top:64px; right:24px; width:400px; max-height:calc(100vh - 90px); border-radius:16px; } }
+.nc-tete{ display:flex; align-items:center; gap:10px; padding:14px 16px 10px; border-bottom:1px solid rgba(169,188,212,.12); }
+.nc-tete h2{ margin:0; font-family:var(--titre); font-size:1.35rem; flex:1; }
+.nc-tete button{ border:none; background:none; color:var(--brume); font:inherit; font-size:.78rem; cursor:pointer; }
+.nc-tete .nc-x{ font-size:1.2rem; color:#fff; }
+.nc-corps{ overflow:auto; padding:6px 0 14px; }
+.nc-titre{ margin:12px 16px 6px; font-size:.7rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--brume); }
+.nc-item{ display:flex; gap:11px; align-items:flex-start; padding:10px 16px; position:relative; }
+.nc-item.neuf{ background:rgba(240,180,41,.06); }
+.nc-item.neuf::before{ content:''; position:absolute; left:6px; top:18px; width:6px; height:6px; border-radius:50%; background:#F0B429; }
+.nc-ico{ width:34px; height:34px; border-radius:10px; flex:none; display:flex; align-items:center; justify-content:center; font-size:1rem; }
+.nc-ico.danger{ background:rgba(229,72,77,.18); } .nc-ico.echange{ background:rgba(47,124,246,.18); } .nc-ico.alerte{ background:rgba(44,198,201,.16); }
+.nc-ico.quete{ background:rgba(240,180,41,.16); } .nc-ico.energie{ background:rgba(61,214,140,.16); } .nc-ico.clan{ background:rgba(155,92,246,.18); }
+.nc-ico.histo{ background:rgba(169,188,212,.1); }
+.nc-txt{ flex:1; min-width:0; font-size:.86rem; line-height:1.3; }
+.nc-txt b{ color:#fff; } .nc-txt small{ display:block; color:var(--brume); font-size:.72rem; margin-top:2px; }
+.nc-txt .nc-mode{ display:inline-block; font-size:.6rem; font-weight:800; letter-spacing:.05em; padding:1px 6px; border-radius:999px; margin-right:5px; vertical-align:1px; }
+.nc-mode.terra{ background:rgba(53,185,126,.2); color:#7FE3B4; } .nc-mode.front{ background:rgba(229,72,77,.2); color:#FF9DA0; }
+.nc-action{ flex:none; align-self:center; border:1px solid rgba(240,180,41,.45); background:rgba(240,180,41,.12); color:#F7D27A; font:inherit; font-size:.76rem;
+  font-weight:700; padding:6px 11px; border-radius:999px; cursor:pointer; }
+.nc-action.rouge{ border-color:rgba(229,72,77,.5); background:rgba(229,72,77,.14); color:#FF9DA0; }
+.nc-pied{ text-align:center; color:var(--brume); font-size:.72rem; padding:8px 16px 0; }
+.nc-reglage{ border:none; background:none; color:var(--brume); cursor:pointer; padding:4px; display:flex; }
+.nc-reglage svg{ width:19px; height:19px; }
+.nc-r-intro{ margin:10px 16px 4px; font-size:.78rem; color:var(--brume); }
+.nc-r-entete, .nc-r-ligne{ display:grid; grid-template-columns:1fr 64px 64px; align-items:center; gap:6px; padding:9px 16px; }
+.nc-r-entete{ font-size:.64rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--brume); padding-bottom:4px; }
+.nc-r-entete span{ text-align:center; }
+.nc-r-ligne{ border-top:1px solid rgba(169,188,212,.08); }
+.nc-r-ligne b{ display:block; font-size:.86rem; } .nc-r-ligne small{ color:var(--brume); font-size:.7rem; }
+.nc-r-ligne .nc-r-c{ display:flex; justify-content:center; }
+.nc-inter{ width:40px; height:24px; border-radius:999px; background:rgba(169,188,212,.22); position:relative; border:none; cursor:pointer; }
+.nc-inter::after{ content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:.15s; }
+.nc-inter.on{ background:#35B97E; } .nc-inter.on::after{ left:19px; }
+.nc-r-sans{ color:rgba(169,188,212,.35); font-size:.9rem; }
+.nc-retour{ border:none; background:none; color:#fff; font-size:1.2rem; cursor:pointer; padding:0 4px; }
+.nc-r-fin{ padding:2px 16px 12px; display:flex; flex-direction:column; gap:8px; }
+.nc-r-fin p{ margin:0; font-size:.72rem; color:var(--brume); }
+.nc-puces{ display:flex; flex-wrap:wrap; gap:6px; }
+.nc-puce{ border:1px solid rgba(169,188,212,.25); background:none; color:var(--brume); font:inherit; font-size:.74rem; padding:5px 10px; border-radius:999px; cursor:pointer; }
+.nc-puce.on{ background:#2F7CF6; border-color:#2F7CF6; color:#fff; }
+.nc-sourdine{ display:flex; align-items:center; justify-content:space-between; background:rgba(169,188,212,.07); border-radius:10px; padding:8px 10px; font-size:.8rem; }
+.nc-sourdine button{ border:none; background:none; color:#F7D27A; font:inherit; font-size:.76rem; font-weight:700; cursor:pointer; }
+.nc-muet{ flex:none; align-self:center; border:none; background:none; color:var(--brume); font-size:1rem; cursor:pointer; padding:4px; margin-left:-4px; }
+.nc-vide{ margin:4px 16px 8px; font-size:.8rem; color:var(--brume); }
+.nc-s-ligne{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 16px; border-top:1px solid rgba(169,188,212,.08); font-size:.86rem; }
+.nc-s-ligne small{ display:block; color:var(--brume); font-size:.7rem; }
+.nc-s-ligne button{ border:1px solid rgba(53,185,126,.5); background:rgba(53,185,126,.12); color:#7FE3B4; font:inherit; font-size:.76rem; font-weight:700; padding:5px 10px; border-radius:999px; cursor:pointer; }
+.nc-inter:disabled, .nc-puce:disabled{ opacity:.4; cursor:default; }
+#ncClocheMobile{ margin-right:8px; width:34px; height:34px; }

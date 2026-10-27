@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '4683d9edbf62';
+const VERSION_JEU = 'db965b0c8bef';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -303,8 +303,15 @@ function notifier({ type = 'info', titre, texte = '', serie = null, duree }){
   requestAnimationFrame(() => el.classList.add('visible'));
   setTimeout(fermer, duree || (type === 'erreur' ? 6000 : 3500));
 }
+// patch217 : repli d'image cassee sans gestionnaire inline (compatible CSP)
+window.addEventListener('error', function(ev){
+  var t = ev.target;
+  if(!(t instanceof HTMLImageElement) || !t.dataset || !t.dataset.onfail) return;
+  if(t.dataset.onfail === 'next' && t.nextElementSibling) t.nextElementSibling.remove();
+  t.remove();
+}, true);
 function echapperTexte(s){
-  return String(s == null ? '' : s).replace(/[&<>"]/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[ch]));
+  return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[ch]));
 }
 
 // ---------- Fenetres (conquete, prix de vente) ----------
@@ -556,7 +563,7 @@ function celebrerConquete({ nom, tier, dept, bonus, code }){
       <p class="conquete-infos"><span class="conquete-rarete">${t ? t.label : ''}</span>${dept ? ` ${echapperTexte(DEPT_NAMES[dept] || '')} (${dept})` : ''}</p>
       <p class="conquete-bonus">+${Number(bonus).toLocaleString('fr-FR')} pts de bonus</p>
       ${mon ? `<div class="conquete-monument">
-        <span class="cm-art">${photoMon ? `<img src="${echapperTexte(photoMon)}" alt="" onerror="this.remove()">` : ''}${ICONE_MONUMENT}</span>
+        <span class="cm-art">${photoMon ? `<img src="${echapperTexte(photoMon)}" alt="" data-onfail="1">` : ''}${ICONE_MONUMENT}</span>
         <span class="cm-tx"><i>Monument conquis avec la commune</i><b>${echapperTexte(mon.nom)}</b></span>
       </div>` : ''}
       <p class="conquete-note">Elle t'appartient maintenant et elle est protégée pendant 3 h. Revente au jeu possible dans 12 h.</p>
@@ -2011,7 +2018,7 @@ function etoileSvg(x, y, r){
   }
   return pts.join(' ');
 }
-const echapperHtml = (s) => String(s).replace(/[&<>"]/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;'}[ch]));
+const echapperHtml = (s) => String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[ch]));
 
 let carteRenduPlanifie = false;
 
@@ -4140,7 +4147,7 @@ function artCommune(e, tierId, taille){
   if(!u) return dessin;
   return dessin
     + `<img class="art-photo" src="${echapperTexte(u)}" alt="" loading="lazy"`
-    + ` decoding="async" onerror="this.nextElementSibling&&this.nextElementSibling.remove();this.remove()">`
+    + ` decoding="async" data-onfail="next">`
     + `<span class="art-voile"></span>`;
 }
 
@@ -10547,7 +10554,7 @@ function carteMonument(m){
              title="${echapperTexte(m.embleme)} — ${echapperTexte(m.nom)}, connu en ${Number(m.langues) || 0} langues">
       <div class="mon-int">
         <div class="mon-art">
-          ${u ? '<img src="' + echapperTexte(u) + '" alt="" loading="lazy" decoding="async" onerror="this.remove()">'
+          ${u ? '<img src="' + echapperTexte(u) + '" alt="" loading="lazy" decoding="async" data-onfail="1">'
               : '<span class="mon-sans">' + ICONE_MONUMENT + '</span>'}
           <span class="mon-dept">${echapperTexte(dept)}</span>
         </div>
@@ -13224,7 +13231,7 @@ function renderPomCarte(){
 const pomNb = (x) => Number(x || 0).toLocaleString('fr-FR');
 function pomTuile(c, k){
   const u = urlPhoto(c.photo);
-  const photo = u ? `<img src="${echapperTexte(u)}" alt="" decoding="async" onerror="this.remove()">` : '';
+  const photo = u ? `<img src="${echapperTexte(u)}" alt="" decoding="async" data-onfail="1">` : '';
   return `<button type="button" class="pom-commune" data-pom-choix="${k}">
       <span class="pom-photo">${photo}<b>${echapperTexte(c.nom)}</b></span>
       <span class="pom-bas"><span class="pom-pop" id="pomPop${k}">${c.population != null ? pomNb(c.population) + '<em>hab.</em>' : ''}</span>
@@ -15092,7 +15099,7 @@ function fondAurore(code, tierId, grande){
     etoiles += `<i style="left:${(4 + rnd() * 92).toFixed(1)}%;top:${(3 + rnd() * 45).toFixed(1)}%;animation-delay:${(rnd() * 3).toFixed(2)}s"></i>`;
   }
   return `<div class="au-fond" aria-hidden="true">`
-    + (u ? `<img class="au-photo" src="${u}" alt=""${grande ? '' : ' loading="lazy"'} decoding="async" onerror="this.remove()">` : '')
+    + (u ? `<img class="au-photo" src="${u}" alt=""${grande ? '' : ' loading="lazy"'} decoding="async" data-onfail="1">` : '')
     + `<span class="au-teinte"></span><span class="au-voile"><i></i><i></i><i></i></span>`
     + `<span class="au-etoiles">${etoiles}</span><span class="au-reflet"></span>`
     + `<span class="au-sceau"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2H22l-6.2 4.5 2.4 7.3L12 16.5 5.8 21l2.4-7.3L2 9.2h7.6z"/></svg>${grande ? 'Aurore' : ''}</span>`

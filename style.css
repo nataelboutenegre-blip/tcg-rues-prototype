@@ -6398,3 +6398,23 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .nc-s-ligne button{ border:1px solid rgba(53,185,126,.5); background:rgba(53,185,126,.12); color:#7FE3B4; font:inherit; font-size:.76rem; font-weight:700; padding:5px 10px; border-radius:999px; cursor:pointer; }
 .nc-inter:disabled, .nc-puce:disabled{ opacity:.4; cursor:default; }
 #ncClocheMobile{ margin-right:8px; width:34px; height:34px; }
+/* patch224 : notifications par département */
+.nc-sourdine span{ line-height:1.6; }
+.nc-s-sec{ display:flex; align-items:center; justify-content:space-between; margin:14px 16px 4px; }
+.nc-s-sec p{ margin:0; font-size:.7rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--brume); }
+.nc-s-sec button{ border:none; background:none; color:#F7D27A; font:inherit; font-size:.76rem; font-weight:700; cursor:pointer; }
+.nc-s-cherche{ margin:6px 16px 4px; }
+.nc-s-cherche input{ width:100%; box-sizing:border-box; background:rgba(3,8,18,.5); border:1px solid rgba(169,188,212,.3); border-radius:10px; color:#fff; font:inherit; font-size:16px; padding:9px 11px; }
+.nc-s-props{ margin:4px 16px 6px; border:1px solid rgba(169,188,212,.15); border-radius:10px; overflow:hidden; }
+.nc-s-prop{ display:flex; justify-content:space-between; align-items:center; padding:9px 11px; font-size:.84rem; border-top:1px solid rgba(169,188,212,.08); }
+.nc-s-prop:first-child{ border-top:none; }
+.nc-s-prop small{ color:var(--brume); margin-left:6px; }
+.nc-s-prop button{ border:1px solid rgba(169,188,212,.3); background:none; color:#E8EEF7; font:inherit; font-size:.74rem; font-weight:700; padding:4px 10px; border-radius:999px; cursor:pointer; }
+.nc-s-prop.deja button{ opacity:.45; cursor:default; }
+.nc-s-num{ display:inline-flex; min-width:28px; justify-content:center; font-weight:800; color:#F7D27A; margin-right:6px; }
+.nc-s-ligne button.retirer{ border-color:rgba(169,188,212,.35); background:none; color:var(--brume); }
+.nc-muet-choix{ margin:-4px 16px 8px 61px; display:flex; flex-direction:column; gap:6px; background:rgba(3,8,18,.45); border:1px solid rgba(169,188,212,.18); border-radius:12px; padding:8px; }
+.nc-muet-choix p{ margin:0 2px 2px; font-size:.72rem; color:var(--brume); }
+.nc-muet-choix button{ text-align:left; border:1px solid rgba(169,188,212,.2); background:rgba(169,188,212,.06); color:#E8EEF7; font:inherit; font-size:.8rem; padding:8px 10px; border-radius:9px; cursor:pointer; }
+.nc-muet-choix button b{ color:#fff; }
+.nc-muet-choix button small{ display:block; color:var(--brume); font-size:.68rem; margin-top:1px; }

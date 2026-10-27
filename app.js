@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '81bdb15642ae';
+const VERSION_JEU = 'c43bb6ef5956';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -18161,7 +18161,7 @@ async function ouvrirCarteTerra(code){
 // l'appareil. Les réglages (s2-38) valent pour le compte, et pour le
 // téléphone aussi (seuil de rareté, communes en sourdine).
 const NC_DEFAUT = { jeu: { attaque: true, perdue: true, defense: true, echange: true, alerte: true, quete: true, recolte: true, clan: true, paquet: false },
-                    tel: { attaque: true, paquet: true }, seuil: 'commun', sourdine: [] };
+                    tel: { attaque: true, paquet: true }, seuil: 'commun', sourdine: [], sourdine_dep: [], alerte_dep: [] };
 const NC = { prefs: null, prefsDispo: true, d: {}, items: [], ouvert: false, vue: 'liste', demarre: false };
 const NC_ORDRE = ['commun', 'peucommun', 'rare', 'epique', 'legendaire'];
 const NC_CLOCHE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>';
@@ -18177,7 +18177,9 @@ function ncMarquerVus(cles){
 function ncPrefsDepuis(p){
   if(!p || typeof p !== 'object') return null;
   return { ...NC_DEFAUT, ...p, jeu: { ...NC_DEFAUT.jeu, ...(p.jeu || {}) }, tel: { ...NC_DEFAUT.tel, ...(p.tel || {}) },
-           sourdine: Array.isArray(p.sourdine) ? p.sourdine.map(String) : [] };
+           sourdine: Array.isArray(p.sourdine) ? p.sourdine.map(String) : [],
+           sourdine_dep: Array.isArray(p.sourdine_dep) ? p.sourdine_dep.map(String) : [],   // patch224
+           alerte_dep: Array.isArray(p.alerte_dep) ? p.alerte_dep.map(String) : [] };
 }
 
 function ncDemarrer(){
@@ -18232,7 +18234,9 @@ function ncConstruire(){
   // --- À faire ---
   if(p.jeu.attaque && Array.isArray(d.sieges)){
     for(const m of d.sieges){
-      if(nb(m.victoires_consecutives) < 1 || p.sourdine.includes(String(m.commune_code)) || sousSeuil(m.commune_code)) continue;
+      const depM = ncDepDe(m.commune_code);   // patch224
+      if(nb(m.victoires_consecutives) < 1 || p.sourdine.includes(String(m.commune_code)) || p.sourdine_dep.includes(depM)) continue;
+      if(!p.alerte_dep.includes(depM) && sousSeuil(m.commune_code)) continue;
       items.push({ cle: `att|${m.commune_code}|${m.attaquant_id}|${m.victoires_consecutives}`, sec: 'afaire', c: 'danger', i: '⚔️', mode: 'front',
         t: `<b>${echapperTexte(m.attaquant_pseudo || 'Un joueur')}</b> t'attaque à <b>${echapperTexte(nomDe(m.commune_code))}</b>`,
         s: `Série ${nb(m.victoires_consecutives)} / 3${m.dernier_round ? ' · ' + ilYA(m.dernier_round) : ''}`,
@@ -18344,6 +18348,7 @@ function ncOuvrir(vue){
     document.body.insertAdjacentHTML('beforeend', '<div class="nc-voile" id="ncVoile"></div><div class="nc-panneau" id="ncPanneau" role="dialog" aria-modal="true"></div>');
     document.getElementById('ncVoile').addEventListener('click', ncFermer);
     document.getElementById('ncPanneau').addEventListener('click', ncClic);
+    document.getElementById('ncPanneau').addEventListener('input', ncSaisie);   // patch224
   }
   ncRendre();
   if(NC.vue === 'liste') ncCharger();
@@ -18370,7 +18375,8 @@ function ncRendre(){
   const ligne = (it, k) => `<div class="nc-item${it.neuf ? ' neuf' : ''}"><span class="nc-ico ${it.c}" aria-hidden="true">${it.i}</span>
     <div class="nc-txt">${it.mode && SAISON2 ? `<span class="nc-mode ${it.mode}">${it.mode === 'terra' ? 'TERRA' : 'FRONT'}</span>` : ''}${it.t}<small>${it.s || ''}</small></div>
     ${it.a ? `<button type="button" class="nc-action${it.rouge ? ' rouge' : ''}" data-nc-aller="${k}">${it.a}</button>` : ''}
-    ${it.sourdine ? `<button type="button" class="nc-muet" data-nc-muet="${echapperTexte(it.sourdine)}" title="Ne plus me prévenir pour cette commune" aria-label="Ne plus me prévenir pour cette commune">🔕</button>` : ''}</div>`;
+    ${it.sourdine ? `<button type="button" class="nc-muet" data-nc-muet="${echapperTexte(it.sourdine)}" aria-expanded="${NC.muet === it.sourdine}" title="Ne plus être prévenu" aria-label="Ne plus être prévenu des attaques ici">🔕</button>` : ''}</div>`
+    + (it.sourdine && NC.muet === it.sourdine ? ncMuetChoix(it.sourdine) : '');
   const af = NC.items.map((x, k) => [x, k]).filter(([x]) => x.sec === 'afaire');
   const hi = NC.items.map((x, k) => [x, k]).filter(([x]) => x.sec === 'histo');
   el.innerHTML = `<div class="nc-tete"><h2>Notifications</h2>
@@ -18407,18 +18413,66 @@ function ncRendreReglages(el){
         <div class="nc-r-c">${inter('jeu', id, p.jeu[id])}</div><div class="nc-r-c">${tel ? inter('tel', id, p.tel[id]) : '<span class="nc-r-sans">—</span>'}</div></div>` +
         (id === 'attaque' ? `<div class="nc-r-fin"><p>Seulement pour les communes…</p>
           <div class="nc-puces">${seuils.map(([t, n]) => `<button type="button" class="nc-puce${(p.seuil || 'commun') === t ? ' on' : ''}" data-nc-seuil="${t}"${off ? ' disabled' : ''}>${n}</button>`).join('')}</div>
-          <div class="nc-sourdine"><span>🔕 <b>${p.sourdine.length} commune${p.sourdine.length > 1 ? 's' : ''}</b> en sourdine</span>${p.sourdine.length ? '<button type="button" data-nc="sourdine">Gérer</button>' : ''}</div></div>` : '')).join('')}
+          <div class="nc-sourdine"><span>${ncResumeDep(p)}</span>${off ? '' : '<button type="button" data-nc="sourdine">Gérer</button>'}</div></div>` : '')).join('')}
       <p class="nc-pied">« Téléphone » : seulement si tu as activé les notifications de TerraFront sur cet appareil.</p></div>`;
 }
-function ncRendreSourdine(el){
+// patch224 : notifications par département
+function ncDepDe(code){ const e = collectionMap.get(code) || othersMap.get(code); return e && e.dept ? String(e.dept) : ''; }
+const ncDepNom = (d) => `${DEPT_NAMES[d] || d} (${d})`;
+function ncResumeDep(p){
+  const pl = (n, m) => `<b>${n} ${m}${n > 1 ? 's' : ''}</b>`;
+  const a = p.alerte_dep.length, sd = p.sourdine_dep.length, sc = p.sourdine.length;
+  if(!a && !sd && !sc) return '🔕 Sourdine et alertes par département';
+  return (a ? `⚡ ${pl(a, 'département')} dès la 1re attaque` : '') + (a && (sd || sc) ? '<br>' : '')
+    + (sd || sc ? `🔕 ${[sd ? pl(sd, 'département') : '', sc ? pl(sc, 'commune') : ''].filter(Boolean).join(' · ')} en sourdine` : '');
+}
+function ncMuetChoix(code){
+  const e = collectionMap.get(code) || othersMap.get(code), d = ncDepDe(code);
+  return `<div class="nc-muet-choix"><p>Ne plus être prévenu des attaques…</p>
+    <button type="button" data-nc-muet-ok="${echapperTexte(code)}"><b>à ${echapperTexte(e ? e.nom : code)}</b><small>Seulement cette commune</small></button>
+    ${d ? `<button type="button" data-nc-muet-dep="${echapperTexte(d)}"><b>dans tout le département</b><small>${echapperTexte(ncDepNom(d))} : toutes mes communes</small></button>` : ''}</div>`;
+}
+function ncDepProps(){
   const p = ncPrefs();
-  el.innerHTML = `<div class="nc-tete"><button type="button" class="nc-retour" data-nc="reglages" aria-label="Retour">←</button><h2>En sourdine</h2>
+  const norm = (x) => String(x).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[-']/g, ' ');
+  const q = norm((NC.depQ || '').trim());
+  if(!q) return '';
+  const cle = NC.depListe === 'alerte' ? 'alerte_dep' : 'sourdine_dep';
+  const l = Object.keys(DEPT_NAMES).filter(d => d !== '975' && (d.toLowerCase().startsWith(q) || norm(DEPT_NAMES[d]).includes(q))).slice(0, 6);
+  if(!l.length) return '<div class="nc-s-props"><div class="nc-s-prop"><span>Aucun département trouvé</span></div></div>';
+  return `<div class="nc-s-props">${l.map(d => {
+    const deja = p[cle].includes(d);
+    return `<div class="nc-s-prop${deja ? ' deja' : ''}"><span><span class="nc-s-num">${d}</span>${echapperTexte(DEPT_NAMES[d])}${deja ? '<small>déjà dans la liste</small>' : ''}</span>`
+      + `<button type="button"${deja ? ' disabled' : ` data-nc-dep="${NC.depListe}|${d}|1"`}>${deja ? '✓' : 'Ajouter'}</button></div>`;
+  }).join('')}</div>`;
+}
+function ncSaisie(e){
+  if(e.target.id !== 'ncDepQ') return;
+  NC.depQ = e.target.value;
+  const z = document.getElementById('ncDepProps');
+  if(z) z.innerHTML = ncDepProps();
+}
+function ncRendreSourdine(el){
+  const p = ncPrefs(), off = !NC.prefsDispo;
+  el.setAttribute('aria-label', 'Par département');
+  const ligneDep = (d, liste) => `<div class="nc-s-ligne"><span><b>${echapperTexte(ncDepNom(d))}</b><small>${liste === 'alerte' ? 'Prévenu dès le 1er round, quelle que soit la rareté' : 'Toutes tes communes du département'}</small></span>`
+    + `<button type="button"${liste === 'alerte' ? ' class="retirer"' : ''} data-nc-dep="${liste}|${echapperTexte(d)}|0">${liste === 'alerte' ? 'Retirer' : 'Réactiver'}</button></div>`;
+  const sec = (liste, titre) => `<div class="nc-s-sec"><p>${titre}</p>${off ? '' : `<button type="button" data-nc-dep-ajout="${liste}">${NC.depListe === liste ? 'Fermer' : '+ Ajouter'}</button>`}</div>`;
+  const cherche = (liste) => NC.depListe === liste && !off
+    ? `<div class="nc-s-cherche"><input type="search" id="ncDepQ" placeholder="Nom ou numéro du département" autocomplete="off" value="${echapperTexte(NC.depQ || '')}" aria-label="Chercher un département"></div><div id="ncDepProps">${ncDepProps()}</div>` : '';
+  const liste = (cle, l) => p[cle].length ? p[cle].map(d => ligneDep(d, l)).join('') : (NC.depListe === l ? '' : '<p class="nc-vide">Aucun département.</p>');
+  el.innerHTML = `<div class="nc-tete"><button type="button" class="nc-retour" data-nc="reglages" aria-label="Retour">←</button><h2>Par département</h2>
       <button type="button" class="nc-x" data-nc="fermer" aria-label="Fermer">✕</button></div>
-    <div class="nc-corps"><p class="nc-r-intro">Tu n'es plus prévenu quand ces communes sont attaquées, ni dans le jeu ni sur ton téléphone.</p>
+    <div class="nc-corps"><p class="nc-r-intro">${off ? 'Les réglages arrivent très bientôt.' : 'Choisis, département par département, quand être prévenu des attaques contre tes communes, dans le jeu et sur ton téléphone.'}</p>
+      ${sec('alerte', '⚡ Prévenir dès la 1re attaque')}${cherche('alerte')}${liste('alerte_dep', 'alerte')}
+      ${sec('sourdine', '🔕 En sourdine')}${cherche('sourdine')}${liste('sourdine_dep', 'sourdine')}
+      <div class="nc-s-sec"><p>🔕 Communes en sourdine</p></div>
       ${p.sourdine.length ? p.sourdine.map(code => {
         const e = collectionMap.get(code) || othersMap.get(code);
         return `<div class="nc-s-ligne"><span><b>${echapperTexte(e ? e.nom : code)}</b><small>${echapperTexte(e ? (DEPT_NAMES[e.dept] || e.dept) : '')}</small></span><button type="button" data-nc-demuet="${echapperTexte(code)}">Réactiver</button></div>`;
-      }).join('') : '<p class="nc-vide">Aucune commune en sourdine.</p>'}</div>`;
+      }).join('') : '<p class="nc-vide">Aucune commune. Touche 🔕 sur une attaque dans la cloche pour en ajouter une.</p>'}</div>`;
+  const i = el.querySelector('#ncDepQ');
+  if(i && NC.depFocus){ NC.depFocus = false; i.focus(); }
 }
 
 async function ncRegler(fn, args){
@@ -18440,8 +18494,27 @@ async function ncClic(e){
     if(it){ ncMarquerVus([it.cle]); it.aller(); }
     return;
   }
-  if(b.dataset.ncMuet){
-    const code = b.dataset.ncMuet, nom = (collectionMap.get(code) || {}).nom || code;
+  if(b.dataset.ncMuet){ NC.muet = NC.muet === b.dataset.ncMuet ? null : b.dataset.ncMuet; return ncRendre(); }   // patch224
+  if(b.dataset.ncMuetDep){
+    const d = b.dataset.ncMuetDep;
+    NC.muet = null;
+    if(await ncRegler('notif_departement', { p_liste: 'sourdine', p_dep: d, p_on: true }))
+      notifier({ type: 'info', titre: `${DEPT_NAMES[d] || d} en sourdine`, texte: 'Tu ne seras plus prévenu des attaques dans ce département. Ça se réactive dans les réglages de la cloche.' });
+    return ncRendre();
+  }
+  if(b.dataset.ncDepAjout){
+    NC.depListe = NC.depListe === b.dataset.ncDepAjout ? null : b.dataset.ncDepAjout;
+    NC.depQ = ''; NC.depFocus = true;
+    return ncRendre();
+  }
+  if(b.dataset.ncDep){
+    const [liste, d, on] = b.dataset.ncDep.split('|');
+    if(await ncRegler('notif_departement', { p_liste: liste, p_dep: d, p_on: on === '1' }) && on === '1'){ NC.depQ = ''; NC.depFocus = true; }
+    return ncRendre();
+  }
+  if(b.dataset.ncMuetOk){
+    NC.muet = null;
+    const code = b.dataset.ncMuetOk, nom = (collectionMap.get(code) || {}).nom || code;
     if(await ncRegler('notif_sourdine', { p_code: code, p_on: true }))
       notifier({ type: 'info', titre: `${nom} en sourdine`, texte: 'Tu ne seras plus prévenu de ses attaques. Ça se réactive dans les réglages de la cloche.' });
     return ncRendre();

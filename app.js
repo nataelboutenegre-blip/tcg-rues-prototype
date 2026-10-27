@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'f1cf6b77b481';
+const VERSION_JEU = 'b9fcea117979';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2690,10 +2690,7 @@ function dessinerCellulesCanvas(ctx, trait, liste, joueurs, ordre){
 // Etoiles et pastilles : taille constante a l'ecran, comme dans le SVG
 // patch228 : une commune Aurore sur la carte du Front : étoile à 4 branches aux couleurs d'aurore
 function dessinerEtoileAurore(ctx, x, y, r){
-  const h = ctx.createRadialGradient(x, y, 0, x, y, r * 2.3);
-  h.addColorStop(0, 'rgba(61,242,192,0.7)'); h.addColorStop(0.5, 'rgba(91,140,255,0.3)'); h.addColorStop(1, 'rgba(176,108,255,0)');
-  ctx.fillStyle = h; ctx.beginPath(); ctx.arc(x, y, r * 2.3, 0, Math.PI * 2); ctx.fill();
-  ctx.beginPath();
+  ctx.beginPath();   // patch235 : plus de halo
   for(let i = 0; i < 8; i++){
     const a = -Math.PI / 2 + i * Math.PI / 4, rr = i % 2 ? r * 0.3 : r;
     ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
@@ -2715,7 +2712,7 @@ function dessinerMarqueursCanvas(ctx, liste, joueurs, k, legendairesSeules){
     const j = joueurs.get(c.joueur);
     if(!j) continue;
     ctx.globalAlpha = opaciteJoueur(c.joueur, 1);
-    if(au){ dessinerEtoileAurore(ctx, x, y, (j.moi ? 11 : 10) * e); ctx.globalAlpha = 1; continue; }
+    if(au){ dessinerEtoileAurore(ctx, x, y, (j.moi ? 6.5 : 6) * e); ctx.globalAlpha = 1; continue; }
     if(c.tier === 'legendaire'){
       const r = (j.moi ? 7 : 6) * e;
       ctx.beginPath();

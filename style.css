@@ -4625,7 +4625,7 @@ body.mode-front #panel-defense .bourse-section{ display:none !important; }
 .je-haut b{ font-family:var(--titre); font-weight:900; font-size:2rem; line-height:1; }
 .je-haut b small{ font-size:1rem; color:var(--brume); font-weight:700; }
 .je-haut span{ color:var(--brume); font-size:.8rem; text-align:right; }
-.je-barre{ display:grid; grid-template-columns:repeat(45,1fr); gap:2px; margin-top:10px; }
+.je-barre{ display:grid; grid-template-columns:repeat(40,1fr); gap:2px; margin-top:10px; }
 .je-barre i{ height:10px; border-radius:2px; background:rgba(169,188,212,.16); }
 .je-barre i.p{ background:linear-gradient(180deg,#FF9A7A,#E5484D); }
 .je-note{ margin:8px 0 0; font-size:.74rem; color:var(--brume); }

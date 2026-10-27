@@ -1,0 +1,22 @@
+# patch239 : annule patch237 — l'énergie reste à 40 et +1 toutes les 10 min (décision du 27/10, 23 h 04)
+import pathlib
+def ouvrir(n): return pathlib.Path(n), pathlib.Path(n).read_text(encoding='utf-8')
+def rep(s, a, b, n=1):
+    assert s.count(a) == n, (a[:70], s.count(a)); return s.replace(a, b)
+f, s = ouvrir('app.js')
+s = rep(s, "maximum: Number(data[0].maximum) || 45,", "maximum: Number(data[0].maximum) || 40,")
+s = rep(s, "<b id=\"mbEnergie\">—</b>/ 45 énergie", "<b id=\"mbEnergie\">—</b>/ 40 énergie")
+s = rep(s, "max = energieEtat.maximum || 45;   // patch237", "max = energieEtat.maximum || 40;   // patch237 (le serveur donne le maximum)")
+s = rep(s, "prochaineMin + (manque - 1) * 8 : 0;", "prochaineMin + (manque - 1) * 10 : 0;")
+s = rep(s, "L'énergie se recharge seule : +1 toutes les 8 minutes.", "L'énergie se recharge seule : +1 toutes les 10 minutes.")
+s = rep(s, "45 au maximum, +1 toutes les 8 minutes.", "40 au maximum, +1 toutes les 10 minutes.")
+f.write_text(s, encoding='utf-8')
+f, s = ouvrir('style.css')
+s = rep(s, "grid-template-columns:repeat(45,1fr);", "grid-template-columns:repeat(40,1fr);")
+f.write_text(s, encoding='utf-8')
+f, s = ouvrir('index.html')
+s = rep(s, "<b>45</b><span>énergie au maximum</span></div><div class=\"chiffre-bloc\"><b>8 min</b>",
+           "<b>40</b><span>énergie au maximum</span></div><div class=\"chiffre-bloc\"><b>10 min</b>")
+s = rep(s, "L'énergie récoltée peut dépasser 45, jusqu'à 60.", "L'énergie récoltée peut dépasser 40, jusqu'à 60.")
+s = rep(s, "elle peut faire dépasser les 45, jusqu'à 60.", "elle peut faire dépasser les 40, jusqu'à 60.")
+f.write_text(s, encoding='utf-8'); print('patch239 ok')

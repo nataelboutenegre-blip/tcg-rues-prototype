@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '6a239abedfc2';
+const VERSION_JEU = 'fa5c87b5308f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9616,7 +9616,7 @@ function initModes(){
   el.setAttribute('aria-label', 'Mode de jeu');
   el.innerHTML = `
     <button class="terra" data-mode="terra" role="tab"><span class="mb-nom">Terra</span><span class="mb-res"><b id="mbPoints">—</b>points</span></button>
-    <button class="front" data-mode="front" role="tab"><span class="mb-nom">Front</span><span class="mb-res">${ICONE_ENERGIE}<b id="mbEnergie">—</b>/ 45 énergie</span></button>`;
+    <button class="front" data-mode="front" role="tab"><span class="mb-nom">Front</span><span class="mb-res">${ICONE_ENERGIE}<b id="mbEnergie">—</b>/ 40 énergie</span></button>`;
   const entete = document.querySelector('.content .entete-mobile');
   entete.insertAdjacentElement('afterend', el);
   el.addEventListener('click', (e) => {
@@ -10611,7 +10611,7 @@ async function majEnergie(){
   if(error || !data || !data[0]) return;
   const el = document.getElementById('mbEnergie');
   if(el) el.textContent = data[0].energie;
-  energieEtat = { energie: Number(data[0].energie), maximum: Number(data[0].maximum) || 45, prochaine_dans: data[0].prochaine_dans, lu: Date.now() };
+  energieEtat = { energie: Number(data[0].energie), maximum: Number(data[0].maximum) || 40, prochaine_dans: data[0].prochaine_dans, lu: Date.now() };
   renderJaugeEnergie();
   if(!recolteLu || Date.now() - recolteLu > 300000) chargerRecolte();   // patch211
 }
@@ -10664,15 +10664,15 @@ document.addEventListener('click', async (ev) => {
 function renderJaugeEnergie(){
   const el = document.getElementById('jaugeEnergie');
   if(!el || !energieEtat) return;
-  const e = energieEtat.energie, max = energieEtat.maximum || 45;   // patch237
+  const e = energieEtat.energie, max = energieEtat.maximum || 40;   // patch237 (le serveur donne le maximum)
   const manque = Math.max(0, max - e);
   const prochaineMin = energieEtat.prochaine_dans != null ? Math.max(1, Math.ceil(energieEtat.prochaine_dans / 60)) : null;
-  const pleinMin = manque > 0 && prochaineMin != null ? prochaineMin + (manque - 1) * 8 : 0;
+  const pleinMin = manque > 0 && prochaineMin != null ? prochaineMin + (manque - 1) * 10 : 0;
   const duree = (m) => m >= 60 ? Math.floor(m / 60) + ' h ' + String(m % 60).padStart(2, '0') : m + ' min';
   el.innerHTML = `<div class="je-titre">${ICONE_ENERGIE} Énergie</div>
     <div class="je-haut"><b>${e} <small>/ ${max}</small></b><span>${e >= max ? 'Réserve pleine' : `+1 dans ${prochaineMin} min · pleine dans ${duree(pleinMin)}`}</span></div>
     <div class="je-barre">${Array.from({ length: max }, (_, i) => `<i class="${i < e ? 'p' : ''}"></i>`).join('')}</div>
-    <p class="je-note">L'énergie se recharge seule : +1 toutes les 8 minutes.</p>${blocRecolteHtml()}`;
+    <p class="je-note">L'énergie se recharge seule : +1 toutes les 10 minutes.</p>${blocRecolteHtml()}`;
 }
 
 function construireMenuPlus(){
@@ -12311,7 +12311,7 @@ const ETAPES_GUIDE_S2 = [
   { mode: 'terra', cible: '.tab[data-tab="collection"]', titre: 'Ta collection',
     texte: 'Ta France se remplit ici, en cartes ou sur la carte. Tes doublons se revendent, s\'échangent avec les autres joueurs ou partent en contrat.' },
   { mode: 'front', cible: '#modeBascule [data-mode="front"]', titre: 'Le Front',
-    texte: 'Ici, l\'énergie remplace les points : 45 au maximum, +1 toutes les 8 minutes. Elle sert à attaquer et à défendre.' },
+    texte: 'Ici, l\'énergie remplace les points : 40 au maximum, +1 toutes les 10 minutes. Elle sert à attaquer et à défendre.' },
   { mode: 'front', cible: '.tab[data-tab="combat"]', titre: 'Attaque et défends',
     texte: 'Trois victoires d\'affilée prennent une commune. Mets tes communes clés en garnison : elles se défendent seules pendant ton absence.' },
   { cible: '.tab[data-tab="qg"]', titre: 'Chaque jour',

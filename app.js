@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '482f2a98479d';
+const VERSION_JEU = '6a239abedfc2';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -269,7 +269,7 @@ function messageLisible(msg){
     [/Seul le chef peut inviter/i, 'Seul le chef du clan peut inviter.'],
     [/Joueur introuvable/i, 'Aucun joueur avec ce pseudo.'],
     [/Ce joueur est deja dans un clan/i, 'Ce joueur est déjà dans un clan.'],
-    [/Le clan est complet/i, 'Le clan est complet (6 membres).'],
+    [/Le clan est complet/i, 'Le clan est complet (8 membres).'],
     [/Invitation introuvable ou expiree/i, 'Cette invitation a expiré.'],
     [/Tu ne peux pas attaquer un membre de ton clan/i, 'Tu ne peux pas attaquer un membre de ton clan.'],
     // patch175 : boutique en euros

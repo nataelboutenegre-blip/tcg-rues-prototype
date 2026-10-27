@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'c5bbb5ad6c98';
+const VERSION_JEU = '870b8ed29282';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -779,6 +779,7 @@ async function showGame(session_){
   dmEtape(65, 'Les territoires des autres joueurs…');
   await loadOthersPossessions();
   dmMesure('les autres joueurs');
+  chargerAuroresFront();   // patch228
   dmEtape(88, 'Tes paquets…');
   await loadPackStatus();
   dmMesure('paquets');
@@ -2637,16 +2638,34 @@ function dessinerCellulesCanvas(ctx, trait, liste, joueurs, ordre){
 }
 
 // Etoiles et pastilles : taille constante a l'ecran, comme dans le SVG
+// patch228 : une commune Aurore sur la carte du Front : étoile à 4 branches aux couleurs d'aurore
+function dessinerEtoileAurore(ctx, x, y, r){
+  const h = ctx.createRadialGradient(x, y, 0, x, y, r * 2.3);
+  h.addColorStop(0, 'rgba(61,242,192,0.7)'); h.addColorStop(0.5, 'rgba(91,140,255,0.3)'); h.addColorStop(1, 'rgba(176,108,255,0)');
+  ctx.fillStyle = h; ctx.beginPath(); ctx.arc(x, y, r * 2.3, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath();
+  for(let i = 0; i < 8; i++){
+    const a = -Math.PI / 2 + i * Math.PI / 4, rr = i % 2 ? r * 0.3 : r;
+    ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr);
+  }
+  ctx.closePath();
+  const g = ctx.createLinearGradient(x - r, y - r, x + r, y + r);
+  g.addColorStop(0, '#FFFFFF'); g.addColorStop(0.35, '#9FFFE2'); g.addColorStop(0.7, '#7FA8FF'); g.addColorStop(1, '#C08CFF');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = '#0B1830'; ctx.lineWidth = r * 0.17; ctx.stroke();
+}
 function dessinerMarqueursCanvas(ctx, liste, joueurs, k, legendairesSeules){
   const e = 1 / Math.max(1, mapZoom);
   const vue = vueCarteUnites(12);   // patch145
   for(const c of liste){
-    if(c.tier !== 'legendaire' && (legendairesSeules || (c.tier !== 'rare' && c.tier !== 'epique'))) continue;
+    const au = auroreFront(c.code);   // patch228
+    if(!au && c.tier !== 'legendaire' && (legendairesSeules || (c.tier !== 'rare' && c.tier !== 'epique'))) continue;
     const x = c.x, y = c.y;
     if(x < vue[0] || x > vue[2] || y < vue[1] || y > vue[3]) continue;
     const j = joueurs.get(c.joueur);
     if(!j) continue;
     ctx.globalAlpha = opaciteJoueur(c.joueur, 1);
+    if(au){ dessinerEtoileAurore(ctx, x, y, (j.moi ? 11 : 10) * e); ctx.globalAlpha = 1; continue; }
     if(c.tier === 'legendaire'){
       const r = (j.moi ? 7 : 6) * e;
       ctx.beginPath();
@@ -3151,6 +3170,7 @@ function ouvrirPanneau(code, xCss, yCss){
   }
 
   const lignes = [];
+  if(SAISON2 && auroreFront(code)) lignes.push(['Carte', '<b class="pc-aurore">✦ Aurore</b>']);   // patch228
   if(c.pop != null) lignes.push(['Population', nbFr(c.pop)]);
   if(mienne && c.rank) lignes.push([estOutremerCode(code) ? 'Rang outre-mer' : 'Rang national', nbFr(c.rank) + '<sup>e</sup>']);   // patch220
   lignes.push(['Propriétaire', mienne
@@ -4110,6 +4130,7 @@ function renderLegendeCarte(joueurs, idSvg){
         <div><svg width="14" height="14"><circle cx="7" cy="7" r="4" fill="#A9BCD4"/></svg>Peu c.</div>
         <div><svg width="20" height="20"><circle cx="10" cy="10" r="6.5" fill="#A9BCD4"/><circle cx="10" cy="10" r="2" fill="#fff" stroke="#0B1830"/></svg>Rare</div>
         <div><svg width="26" height="26"><circle cx="13" cy="13" r="10" fill="#A9BCD4"/><polygon points="${etoileSvg(13, 13, 6)}" fill="#FFF6D6" stroke="#0B1830"/></svg>Légend.</div>
+        <div><svg width="26" height="26"><defs><linearGradient id="legAu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#9FFFE2"/><stop offset="1" stop-color="#C08CFF"/></linearGradient></defs><circle cx="13" cy="13" r="11" fill="rgba(61,242,192,.25)"/><path d="M13 3 L15.4 10.6 L23 13 L15.4 15.4 L13 23 L10.6 15.4 L3 13 L10.6 10.6 Z" fill="url(#legAu)" stroke="#0B1830"/></svg>Aurore</div>
       </div>
     </div>`;
 }
@@ -7761,6 +7782,8 @@ async function tirerCartesDuPaquetSeul(nbCartes){
       aurore: auroreFront(row.code)
     });
   }
+  // patch228 : une Aurore vient peut-être de sortir (1 fois sur 3) : on relit la liste
+  if(draws.length){ await chargerAuroresFront(); for(const d of draws) d.aurore = auroreFront(d.code); }
   return draws;
 }
 
@@ -9308,14 +9331,15 @@ function renderCombatGrid(){
     const distance = c._distKm !== null
       ? `<p class="cible-distance">À ${c._distKm < 10 ? c._distKm.toFixed(1).replace('.', ',') : Math.round(c._distKm)} km ${deCommune(c._procheDe)}</p>` : '';
 
+    const au = auroreFront(c.commune_code);   // patch228
     return `
-      <article class="cible ${commune.tier}">
+      <article class="cible ${commune.tier}${au ? ' cible-aurore' : ''}">
         <div class="cible-int">
           <div class="cible-haut">
-            <span class="cible-rarete">${tier.label}</span>
+            <span class="cible-rarete">${tier.label}${au ? '<span class="cible-au">✦ Aurore</span>' : ''}</span>
             <span class="cible-etat ${etatClasse}">${etatTexte}</span>
           </div>
-          <div class="cible-art">${miniArtSvg(c.commune_code, commune.tier)}<span class="cible-dept">${commune.departement}</span></div>
+          <div class="cible-art">${miniArtSvg(c.commune_code, commune.tier)}${au && auroreImage(c.commune_code) ? `<img class="art-photo" src="${auroreImage(c.commune_code)}" alt="" loading="lazy" decoding="async" data-onfail="next"><span class="cible-au-voile"></span>` : ''}<span class="cible-dept">${commune.departement}</span></div>
           <div class="cible-infos">
             <h3 class="cible-nom ${commune.nom.length > 16 ? 'long' : ''}">${commune.nom}</h3>
             <p class="cible-proprio"><i style="background:${colorForPlayer(c.joueur_id)}"></i>à <b>${echapperTexte(pseudo)}</b></p>
@@ -15556,7 +15580,20 @@ async function chargerAurore(){
   if(ouvert && ouvert.dataset.tab === 'collection' && !enTerra() && Object.keys(AURORE).length) renderCollection();
 }
 if(SAISON2) chargerAurore();
-const auroreFront = (code) => SAISON2 && !enTerra() && !!(AURORE && AURORE[code]);
+// patch228 : en Front, l'Aurore suit la marque du serveur (s2-40) ; sans elle, la liste
+let FRONT_AURORES = null;   // Set des codes Aurore du Front, null = s2-40 absent
+let auroresFrontLu = 0;
+async function chargerAuroresFront(){
+  if(!SAISON2) return;
+  try{
+    const { data, error } = await sb.rpc('front_aurores');
+    if(error) return;
+    FRONT_AURORES = new Set((data || []).map(r => String(r.commune_code)));
+    auroresFrontLu = Date.now();
+    if(typeof demanderDessin === 'function' && canvasActif()){ CV.donneesSignature = null; demanderDessin(); }
+  }catch(e){}
+}
+const auroreFront = (code) => SAISON2 && !enTerra() && (FRONT_AURORES ? FRONT_AURORES.has(String(code)) : !!(AURORE && AURORE[code]));
 const auroreImage = (code) => AURORE && AURORE[code] ? 'aurore/' + code + '.jpg?v=' + AURORE_V : null;
 // les exemplaires qu'on peut vendre ou echanger : jamais le dernier, jamais une Aurore
 const libresTerra = (e) => e.exemplaires - Math.max(1, e.aurore || 0);

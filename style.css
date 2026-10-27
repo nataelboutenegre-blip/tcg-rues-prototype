@@ -6475,3 +6475,13 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .nc-lien{ display:inline-flex; align-items:center; gap:3px; padding:0; border:0; background:none; font:inherit; font-weight:700; color:#fff; cursor:pointer;
   text-decoration:underline dotted rgba(169,188,212,.6); text-underline-offset:3px; vertical-align:baseline; }
 .nc-lien svg{ width:12px; height:12px; }
+
+/* ---------- patch228 : l'Aurore se voit dans le Front ---------- */
+.cible-au{ display:inline-flex; align-items:center; margin-left:6px; padding:1px 7px; border-radius:999px; font-size:.62rem; font-weight:800; letter-spacing:.04em;
+  color:#06231A; background:linear-gradient(90deg, #7FF2D0, #5B8CFF 60%, #B06CFF); vertical-align:1px; }
+.cible.cible-aurore{ box-shadow:0 0 0 1.5px rgba(61,242,192,.75), 0 0 18px rgba(91,140,255,.35), 0 10px 22px rgba(0,0,0,.4); }
+.cible-aurore .cible-art{ position:relative; overflow:hidden; }
+.cible-au-voile{ position:absolute; inset:0; z-index:2; pointer-events:none; mix-blend-mode:screen;
+  background:linear-gradient(160deg, rgba(61,242,192,.35), rgba(91,140,255,.12) 45%, rgba(176,108,255,.35)); }
+.cible-aurore .cible-dept{ z-index:3; }
+.pc-aurore{ background:linear-gradient(90deg, #7FF2D0, #8FB4FF 55%, #C9A6FF); -webkit-background-clip:text; background-clip:text; color:transparent; }

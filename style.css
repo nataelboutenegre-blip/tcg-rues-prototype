@@ -6536,3 +6536,6 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 /* ---------- patch232 : l'Aurore dans l'assaut ---------- */
 .as-skin-nom.as-aurore-nom{ cursor:default; color:#06231A; background:linear-gradient(90deg, #7FF2D0, #8FB4FF 55%, #C9A6FF); box-shadow:0 0 14px rgba(61,242,192,.35); }
 .as-att .as-carte-skin + .as-proche{ margin-top:10px; }
+
+/* ---------- patch233 : le skin ne se gagne pas ---------- */
+.as-skin-note{ display:block; max-width:150px; text-align:center; font-size:.6rem; line-height:1.35; color:var(--brume); }

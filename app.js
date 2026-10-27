@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'e538c3bd010e';
+const VERSION_JEU = 'afcb8f7f98f2';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -403,7 +403,8 @@ function carteAssautReelle(e, qui, k, au, lien){
   const t = e.tier && e.tier.id ? e.tier : (TIERS.find(x => x.id === e.tier) || TIERS[0]);
   const sk = !au && k && skinConnu(k) ? k : undefined;
   const etiquette = au ? '<span class="as-skin-nom as-aurore-nom">✦ Aurore</span>'
-    : sk && lien ? `<button type="button" class="as-skin-nom" data-skin-boutique="${echapperTexte(sk)}">✦ Skin ${echapperTexte(SKIN_NOMS[sk] || sk)}</button>` : '';
+    : sk && lien ? `<button type="button" class="as-skin-nom" data-skin-boutique="${echapperTexte(sk)}">✦ Skin ${echapperTexte(SKIN_NOMS[sk] || sk)}</button>`
+      + '<span class="as-skin-note">Le skin reste à son propriétaire, même si tu prends la commune.</span>' : '';   // patch233
   return `<div class="as-carte as-carte-skin ${t.id}">${miniTerra({ code: e.code, nom: e.nom, dept: e.dept, tier: t, exemplaires: 1, photo: e.photo,
       rank: e.tierSize ? e.rank : undefined, tierSize: e.tierSize, aurore: au ? 1 : 0, skin: sk })}
     <p class="as-skin-qui">${qui}</p>${etiquette}</div>`;

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '411c73e520ee';
+const VERSION_JEU = '81bdb15642ae';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -15767,7 +15767,8 @@ const VITRINE_FICHE = 5;   // cartes montrees sur la fiche
 // Sur la fiche : les 5 premieres. Au-dela, la 5e case montre « +N » et
 // invite a ouvrir la grande vitrine.
 // patch180 : deux vitrines, Terra et Front. L'onglet choisi est retenu.
-let vitrineVue = 'terra';
+// patch223 : la vitrine suit le mode ; un onglet choisi à la main vaut tant qu'on reste dans ce mode.
+let vitrineVue = null;
 const vitrineBlocs = new Map();
 let vitrineBlocN = 0;
 const vitrineDe = (cartes, source) => (cartes || []).filter(c => (c.source || 'terra') === source);
@@ -15777,7 +15778,7 @@ function blocVitrine(toutes, moi){
   vitrineBlocs.set(id, { toutes, moi });
   if(vitrineBlocs.size > 30) vitrineBlocs.delete(vitrineBlocs.keys().next().value);
   const nT = vitrineDe(toutes, 'terra').length, nF = vitrineDe(toutes, 'front').length;
-  let vue = vitrineVue;
+  let vue = (vitrineVue && vitrineVue.mode === modeJeu) ? vitrineVue.vue : (modeJeu === 'front' ? 'front' : 'terra');
   // chez un autre joueur, on ne montre pas une vitrine vide si l'autre est remplie
   if(!moi && vue === 'terra' && !nT && nF) vue = 'front';
   if(!moi && vue === 'front' && !nF && nT) vue = 'terra';
@@ -15808,7 +15809,7 @@ const sourceVitrine = (el) => { const b = el && el.closest('.vt-bloc'); return b
 document.addEventListener('click', (e) => {
   const o = e.target.closest('[data-vt-onglet]');
   if(!o) return;
-  vitrineVue = o.dataset.vtOnglet === 'front' ? 'front' : 'terra';
+  vitrineVue = { mode: modeJeu, vue: o.dataset.vtOnglet === 'front' ? 'front' : 'terra' };
   const d = vitrineBlocs.get(Number(o.dataset.vtBloc));
   const bloc = o.closest('.vt-bloc');
   if(d && bloc) bloc.outerHTML = blocVitrine(d.toutes, d.moi);

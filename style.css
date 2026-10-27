@@ -402,6 +402,9 @@
     padding: 6px 12px; cursor: pointer;
   }
   .coll-filtre .point{ width:8px; height:8px; border-radius:50%; }
+  .coll-filtre .au-pt{ width:11px; height:11px; flex:none; background:linear-gradient(135deg,#fff,#9FFFE2 35%,#7FA8FF 70%,#C08CFF);
+    clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%); }
+  .coll-filtre.actif .au-pt{ background:linear-gradient(135deg,#1FB98F,#4A78F0 55%,#8A4CF0); }
   .coll-filtre .nb{ color:#fff; font-variant-numeric: tabular-nums; }
   .coll-filtre:hover{ border-color: rgba(169,188,212,0.4); }
   .coll-filtre.actif{ background: var(--papier); color: var(--encre); border-color: var(--papier); }

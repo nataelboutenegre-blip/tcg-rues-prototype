@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b9fcea117979';
+const VERSION_JEU = 'c91adde7c155';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9910,6 +9910,8 @@ function renderCollectionTerra(){
   const totalFrance = Object.values(tot).reduce((s, l) => s + Number(l.total || 0), 0) || 34739;
   const dbl = doublonsTerra();
   const nbDbl = Object.values(dbl).reduce((s, n) => s + n, 0);
+  let nbAur = 0; for(const e of terraCollection.values()) if(e.aurore > 0) nbAur++;   // patch236
+  if(terraFiltre === 'aurore' && !nbAur) terraFiltre = 'tous';
   const gainMax = Object.entries(dbl).reduce((s, [t, n]) => s + n * (TERRA_REVENTE[t] || 0), 0);
   const ordre = TIERS.filter(t => tot[t.id] || parTier[t.id]);
   if(terraVue === 'france') return renderMaFranceTerra(el, totalFrance);
@@ -9925,6 +9927,7 @@ function renderCollectionTerra(){
     <div class="coll-filtres">
       <button class="coll-filtre ${terraFiltre === 'tous' ? 'actif' : ''}" data-tcf="tous">Toutes <span class="nb">${fmtNombre(terraCollection.size)}</span></button>
       <button class="coll-filtre ${terraFiltre === 'doublons' ? 'actif' : ''}" data-tcf="doublons">Doublons <span class="nb">${fmtNombre(nbDbl)}</span></button>
+      ${nbAur ? `<button class="coll-filtre ${terraFiltre === 'aurore' ? 'actif' : ''}" data-tcf="aurore"><i class="au-pt" aria-hidden="true"></i>Aurore <span class="nb">${fmtNombre(nbAur)}</span></button>` : ''}
       ${ordre.filter(t => parTier[t.id]).map(t => `<button class="coll-filtre ${terraFiltre === t.id ? 'actif' : ''}" data-tcf="${t.id}"><span class="point" style="background:${COULEURS_FILTRE[t.id]}"></span>${t.label} <span class="nb">${fmtNombre(parTier[t.id])}</span></button>`).join('')}
     </div>
     <input type="text" id="tcRecherche" class="bourse-search coll-recherche" placeholder="Rechercher une commune ou un département…" value="${echapperTexte(terraRecherche)}">
@@ -10493,7 +10496,7 @@ function renderGrilleTerra(){
   const grille = document.getElementById('tcGrille');
   if(!grille) return;
   const liste = [...terraCollection.values()]
-    .filter(e => terraFiltre === 'tous' || (terraFiltre === 'doublons' ? libresTerra(e) > 0 : e.tier.id === terraFiltre))
+    .filter(e => terraFiltre === 'tous' || (terraFiltre === 'doublons' ? libresTerra(e) > 0 : terraFiltre === 'aurore' ? e.aurore > 0 : e.tier.id === terraFiltre))
     .filter(e => correspondRecherche(e.nom, e.dept, sansAccents(terraRecherche.trim())))
     .sort((a, b) => RANG_TIER[b.tier.id] - RANG_TIER[a.tier.id] || (b.pop || 0) - (a.pop || 0));
   grille.innerHTML = liste.length

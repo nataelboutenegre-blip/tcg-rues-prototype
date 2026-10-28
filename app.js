@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '5f13f592776f';
+const VERSION_JEU = '5a0c2656a8d6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -5021,7 +5021,7 @@ function majRappelContrat(){
     if(id) parTier[id] = (parTier[id] || 0) + 1;
   }
   const c = CONTRATS.find(x => (parTier[x.de] || 0) >= x.n);
-  if(!c || ctTerra()){ bloc.hidden = true; return; }
+  if(!c || ctTerra() || SAISON2){ bloc.hidden = true; return; }   // patch245 : pas de contrat en Front
   const n = parTier[c.de];
   // la situation, c'est le nombre de contrats signables : le rappel revient
   // quand le joueur peut en signer un de plus qu'au moment ou il l'a ferme

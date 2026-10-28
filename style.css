@@ -6744,3 +6744,29 @@ body[data-dos="braises"], .bq-dos-apercu[data-dos="braises"]{
 .mini.skin-vendanges{ --sk-acc: #F2CB72; }
 .mini.skin-vendanges .mini-nom{ color: #FBE3B0; text-shadow: 0 0 6px rgba(120,10,30,.6); }
 .mini.skin-vendanges .mini-num{ color: #E6B3A0; } .mini.skin-vendanges .mini-rarete{ color: #F2CB72 !important; } .mini.skin-vendanges .mini-dept{ color: rgba(251,227,176,.18); }
+
+/* ---------- patch258 : le tchat du clan ---------- */
+.tc-bloc{ margin:14px 0 6px; }
+.tc-liste{ height:300px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; padding:10px; border-radius:12px;
+  background:var(--nuit); border:1px solid rgba(169,188,212,.14); scroll-behavior:smooth; }
+.tc-vide{ margin:auto; text-align:center; color:var(--brume); font-size:.84rem; max-width:260px; line-height:1.5; }
+.tc-msg{ max-width:82%; align-self:flex-start; margin-top:8px; position:relative; }
+.tc-msg.suite{ margin-top:0; }
+.tc-msg.moi{ align-self:flex-end; text-align:right; }
+.tc-tete{ display:flex; gap:8px; align-items:baseline; font-size:.75rem; color:var(--brume); margin:0 4px 3px; }
+.tc-msg.moi .tc-tete{ justify-content:flex-end; }
+.tc-tete b{ color:#fff; font-weight:700; font-size:.8rem; }
+.tc-tete b.chef::after{ content:' · Chef'; color:var(--clan); font-weight:600; }
+.tc-tete b.bd::after{ content:' · Bras droit'; color:#F0B429; font-weight:600; }
+.tc-bulle{ display:inline-block; text-align:left; padding:7px 11px; border-radius:14px; font-size:.88rem; line-height:1.4; word-break:break-word;
+  background:var(--nuit-3); color:#fff; border-top-left-radius:5px; }
+.tc-msg.moi .tc-bulle{ background:color-mix(in srgb, var(--clan) 34%, var(--nuit-2)); border-top-left-radius:14px; border-top-right-radius:5px; }
+.tc-msg.suite .tc-bulle{ border-top-left-radius:14px; border-top-right-radius:14px; }
+.tc-bulle i{ color:var(--brume); }
+.tc-actions{ display:none; gap:8px; margin:3px 6px 0; font-size:.7rem; }
+.tc-msg:hover .tc-actions, .tc-msg:focus-within .tc-actions{ display:flex; }
+.tc-msg.moi .tc-actions{ justify-content:flex-end; }
+.tc-actions button{ background:none; border:0; color:var(--brume); font:inherit; cursor:pointer; padding:0; text-decoration:underline; }
+.tc-saisie{ display:flex; gap:8px; margin-top:8px; }
+.tc-saisie input{ flex:1; min-width:0; background:var(--nuit); border:1px solid rgba(169,188,212,0.3); border-radius:9px; padding:9px 12px; color:#fff; font:inherit; }
+.tc-note{ color:var(--brume); font-size:.74rem; margin:6px 2px 0; }

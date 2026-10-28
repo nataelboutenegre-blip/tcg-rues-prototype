@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '16a5abde24f3';
+const VERSION_JEU = 'b54df761e40c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9773,20 +9773,28 @@ async function chargerBatiments(){
   }catch(e){ console.error('Bâtiments :', e); }
 }
 // la réserve « maintenant », sans rappeler le serveur
+// patch259 : la production de toutes les Fonderies prêtes, et la liste des Fonderies
+const mesFonderies = () => (BATIMENTS && (BATIMENTS.fonderies || (BATIMENTS.fonderie ? [BATIMENTS.fonderie] : []))) || [];
+function btProdTotale(){
+  const B = BATIMENTS;
+  if(!B) return 0;
+  if(B.production_totale != null) return Number(B.production_totale) || 0;
+  return B.fonderie && B.fonderie.pret ? Number(B.production) || 10 : 0;
+}
 function lingotsActuels(){
   const B = BATIMENTS;
   if(!B) return 0;
-  const n = Number(B.lingots) || 0, max = Number(B.max) || 30, prod = Number(B.production) || 10;
-  if(!B.fonderie || !B.fonderie.pret || n >= max || B.prochain_dans == null) return n;
+  const n = Number(B.lingots) || 0, max = Number(B.max) || 30, prod = btProdTotale();
+  if(!prod || n >= max || B.prochain_dans == null) return n;
   const ecoule = (Date.now() - batimentsLu) / 1000;
   if(ecoule < B.prochain_dans) return n;
   return Math.min(max, n + 1 + Math.floor((ecoule - B.prochain_dans) / (86400 / prod)));
 }
 function prochainLingotMs(){
   const B = BATIMENTS;
-  if(!B || !B.fonderie || !B.fonderie.pret || B.prochain_dans == null) return null;
+  if(!B || !btProdTotale() || B.prochain_dans == null) return null;
   if(lingotsActuels() >= (Number(B.max) || 30)) return null;
-  const pas = 86400 / (Number(B.production) || 10);
+  const pas = 86400 / btProdTotale();
   const ecoule = (Date.now() - batimentsLu) / 1000;
   const reste = ecoule < B.prochain_dans ? B.prochain_dans - ecoule : pas - ((ecoule - B.prochain_dans) % pas);
   return Math.max(60, reste) * 1000;
@@ -9800,7 +9808,7 @@ function blocBatimentsEtat(code, c){
   const B = BATIMENTS;
   if(!B) return '';
   let html = '';
-  const ici = B.fonderie && B.fonderie.code === code ? B.fonderie : null;
+  const ici = mesFonderies().find(x => x.code === code) || null;   // patch259
   if(ici){
     const n = lingotsActuels(), max = Number(B.max) || 30;
     const prete = btPretDans(ici) <= 0;
@@ -9808,8 +9816,8 @@ function blocBatimentsEtat(code, c){
     html += `<div class="bt">
       <div class="bt-haut">${ICONE_FONDERIE}Fonderie <b>${n} / ${max} ${ICONE_LINGOT}</b></div>
       <div class="bt-barre" style="grid-template-columns:repeat(${max},1fr)">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'p' : ''}"></i>`).join('')}</div>
-      <p class="bt-txt">${prete ? `<b>+${B.production} lingots par jour</b>, jusqu’à ${max} en réserve${pr ? ` · prochain dans ${formatDuree(pr)}` : ''}.` : `<b>En construction</b> : prête dans ${formatDuree(btPretDans(ici))}.`}
-        Visible de tous : si on te prend ${echapperHtml(c.nom)}, la Fonderie est détruite et l’attaquant pille ${btReglage('pillage', 50)} % de ta réserve.</p>
+      <p class="bt-txt">${prete ? `<b>+${B.production} lingots par jour</b>${mesFonderies().length > 1 ? ' (réserve partagée avec ton autre Fonderie)' : ''}, jusqu’à ${max} en réserve${pr ? ` · prochain dans ${formatDuree(pr)}` : ''}.` : `<b>En construction</b> : prête dans ${formatDuree(btPretDans(ici))}.`}
+        Visible de tous : si on te prend ${echapperHtml(c.nom)}, la Fonderie est détruite et l’attaquant pille ${Math.round(btReglage('pillage', 50) / Math.max(1, mesFonderies().length))} % de ta réserve.</p>
     </div>`;
   }
   const fort = mesForteresses().find(x => x.code === code);
@@ -9829,8 +9837,13 @@ function blocBatimentsActions(code, c){
   const h = btReglage('construction_h', 24);
   const arme = (t) => btArme === code + '|' + t;
   const boutons = [];
-  if(!B.fonderie){
-    boutons.push(`<button class="pc-action bt-action${arme('fonderie') ? ' arme' : ''}" data-pc="bt-construire" data-bt="fonderie">${ICONE_FONDERIE}<span>${arme('fonderie') ? `Confirmer : la Fonderie à ${echapperHtml(c.nom)}` : 'Construire la Fonderie ici'}<small>Une seule · prête dans ${h} h · ${B.production} lingots par jour</small></span><span class="prix">gratuit</span></button>`);
+  const nF = mesFonderies().length, maxNF = btReglage('fonderies_max', 1);
+  if(!nF){
+    boutons.push(`<button class="pc-action bt-action${arme('fonderie') ? ' arme' : ''}" data-pc="bt-construire" data-bt="fonderie">${ICONE_FONDERIE}<span>${arme('fonderie') ? `Confirmer : la Fonderie à ${echapperHtml(c.nom)}` : 'Construire la Fonderie ici'}<small>Prête dans ${h} h · ${B.production} lingots par jour</small></span><span class="prix">gratuit</span></button>`);
+  } else if(nF < maxNF && !mesFonderies().some(x => x.code === code)){   // patch259 : la 2e Fonderie
+    const p2 = btReglage('fonderie2_prix', 30), n = lingotsActuels();
+    const bloque = n < p2 ? `Il te faut ${p2} lingots (tu en as ${n})` : '';
+    boutons.push(`<button class="pc-action bt-action${arme('fonderie') ? ' arme' : ''}" data-pc="bt-construire" data-bt="fonderie" ${bloque ? 'disabled' : ''}>${ICONE_FONDERIE}<span>${arme('fonderie') ? `Confirmer : ${p2} lingots` : 'Construire une 2e Fonderie ici'}<small>${bloque || `Prête dans ${h} h · +${B.production} lingots par jour · réserve jusqu’à ${btReglage('fonderie_max2', 45)}`}</small></span><span class="prix">${p2} ${ICONE_LINGOT}</span></button>`);
   }
   if(!mesForteresses().some(x => x.code === code)){
     const nb = mesForteresses().length, maxF = btReglage('forteresse_max', 3), prix = btReglage('forteresse_prix', 20);
@@ -9867,9 +9880,10 @@ function renderBatimentsBloc(){
       <span class="btl-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(b.code)}">${echapperTexte(b.nom)} (${echapperTexte(b.dept)})</button><small>${sous}</small></span>${etat(b)}</div>`;
   el.innerHTML = `<h2>Bâtiments</h2>
     <div class="bt-reserve"><span class="btr-nb">${n}</span>${ICONE_LINGOT}<span class="btr-max">/ ${max} lingots</span>
-      <span class="btr-prod">${F ? (btPretDans(F) <= 0 ? `+${B.production} par jour<br>${pr ? 'prochain dans ' + formatDuree(pr) : 'réserve pleine'}` : 'Fonderie<br>en construction') : 'Pas encore<br>de Fonderie'}</span></div>
-    <div class="btl-titre">Fonderie</div>
-    ${F ? ligne(ICONE_FONDERIE, F, btPretDans(F) <= 0 ? `Produit ${B.production} lingots par jour` : 'En construction')
+      <span class="btr-prod">${F ? (btProdTotale() > 0 ? `+${btProdTotale()} par jour<br>${pr ? 'prochain dans ' + formatDuree(pr) : 'réserve pleine'}` : 'Fonderie<br>en construction') : 'Pas encore<br>de Fonderie'}</span></div>
+    <div class="btl-titre">Fonderies <em>${mesFonderies().length} / ${btReglage('fonderies_max', 1)}</em></div>
+    ${F ? mesFonderies().map(x => ligne(ICONE_FONDERIE, x, btPretDans(x) <= 0 ? `Produit ${B.production} lingots par jour` : 'En construction')).join('')
+        + (mesFonderies().length < btReglage('fonderies_max', 1) ? `<p class="gl-vide">2e Fonderie : ${btReglage('fonderie2_prix', 30)} lingots. Ouvre une de tes communes sur la carte et choisis « Construire une 2e Fonderie ici ». La réserve monte alors à ${btReglage('fonderie_max2', 45)}.</p>` : '')
         : '<p class="gl-vide">Ouvre une de tes communes sur la carte et choisis « Construire la Fonderie ici ». Elle est gratuite, mais visible de tous : choisis bien l’endroit.</p>'}
     <div class="btl-titre">Forteresses <em>${forts.length} / ${maxF}</em></div>
     ${forts.map(x => ligne(ICONE_FORTERESSE, x, btPretDans(x) <= 0 ? `−${btReglage('forteresse_defense', 15)} % aux attaquants · +${btReglage('forteresse_appui', 5)} % autour` : 'En construction')).join('')}

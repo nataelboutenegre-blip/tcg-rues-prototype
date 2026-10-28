@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '3585af1edbe9';
+const VERSION_JEU = '132f7ace9e19';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -15750,7 +15750,7 @@ function membresClanHtml(x, chef){
         <span class="cl-mb-nb"><b>${nbClan(m.communes)}</b> commune${m.communes > 1 ? 's' : ''}</span></div>`;
     }).join('') + (chef
       ? `<div class="cl-pied">Pour le rejoindre, demande une invitation à ${echapperTexte(chef)} (Discord, salon recrutement-clans).</div>`
-      : `<div class="cl-pied">${liste.length} membre${liste.length > 1 ? 's' : ''} sur 6 · ${actifs} actif${actifs > 1 ? 's' : ''}</div>`);
+      : `<div class="cl-pied">${liste.length} membre${liste.length > 1 ? 's' : ''} sur 8 · ${actifs} actif${actifs > 1 ? 's' : ''}</div>`);
   }
   return `<div class="cl-membres" style="--clan:${x.couleur}">${corps}</div>`;
 }
@@ -15828,11 +15828,11 @@ function renderClan(){
         <span><b>${nbClan(somme('cartes'))}</b> cartes</span><span><b>${nbClan(somme('conquetes'))}</b> conquêtes</span>
         <span><b>${nbClan(somme('defenses'))}</b> défenses</span><span><b>${nbClan(somme('energie'))}</b> énergie</span></div>` : '';
     gauche = `<div class="clan-carte">
-      <div class="clan-tete">${blasonHtml(c.tag, c.couleur)}<div><div class="clan-nom">${echapperTexte(c.nom)}</div><small>${n} membre${n > 1 ? 's' : ''} sur 6${n < 3 ? ' · classé à partir de 3' : ''}</small></div></div>
+      <div class="clan-tete">${blasonHtml(c.tag, c.couleur)}<div><div class="clan-nom">${echapperTexte(c.nom)}</div><small>${n} membre${n > 1 ? 's' : ''} sur 8${n < 3 ? ' · classé à partir de 3' : ''}</small></div></div>
       <div class="puces"><span class="puce">Communes en Front <b>${nbClan(total)}</b></span><span class="puce">Moyenne par membre${actifs ? ' actif' : ''} <b>${nbClan(moyenne)}</b></span>${actifs ? `<span class="puce">Actifs <b>${actifs.length}</b> sur ${n}</span>` : ''}${rang >= 0 ? `<span class="puce">Rang <b>${rang + 1}</b> sur ${classement.length}</span>` : ''}</div>
       ${blocJour}
       <h2>Membres</h2>${membres}
-      ${c.chef && n < 6 ? `<div class="clan-inviter"><input id="clanPseudo" placeholder="Pseudo du joueur à inviter"><button class="bq-btn" id="clanInviter">Inviter</button></div>` : ''}
+      ${c.chef && n < 8 ? `<div class="clan-inviter"><input id="clanPseudo" placeholder="Pseudo du joueur à inviter"><button class="bq-btn" id="clanInviter">Inviter</button></div>` : ''}
       ${(c.invites || []).length ? `<p class="clan-note">Invitations en attente : ${c.invites.map(echapperTexte).join(', ')}.</p>` : ''}
       ${blocEchangesClan()}
       <ul class="clan-regles"><li>Pas d'attaque entre membres : leurs communes n'apparaissent plus dans tes cibles.</li><li>Aucun bonus de combat : le territoire d'un coéquipier ne compte pas dans tes chances.</li><li>Après avoir quitté un clan, il faut attendre 48 h avant d'en rejoindre un autre.</li><li>Pour discuter, demande un salon privé pour ton clan sur le Discord.</li></ul>

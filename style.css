@@ -6542,3 +6542,58 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 
 /* ---------- patch233 : le skin ne se gagne pas ---------- */
 .as-skin-note{ display:block; max-width:150px; text-align:center; font-size:.6rem; line-height:1.35; color:var(--brume); }
+
+/* ---------- patch243 : les bâtiments du Front ---------- */
+.lingot{ display:inline-block; width:14px; height:9px; vertical-align:-1px; flex:none;
+  background:linear-gradient(180deg,#FFE08A,#F0B429 55%,#B98316); clip-path:polygon(18% 0,82% 0,100% 100%,0 100%); }
+.bt{ margin-top:11px; padding:10px 11px; border-radius:11px; background:linear-gradient(160deg,rgba(232,131,58,.16),rgba(232,131,58,.05)); border:1px solid rgba(232,131,58,.4); }
+.bt-haut{ display:flex; align-items:center; gap:7px; color:#FFB27A; font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; }
+.bt-haut svg{ width:16px; height:16px; flex:none; }
+.bt-haut b{ margin-left:auto; color:#fff; font-size:.9rem; letter-spacing:0; text-transform:none; display:flex; align-items:center; gap:5px; }
+.bt-barre{ display:grid; gap:2px; margin:8px 0 6px; }
+.bt-barre i{ height:8px; border-radius:2px; background:rgba(169,188,212,.16); }
+.bt-barre i.p{ background:linear-gradient(180deg,#FFE08A,#F0B429); }
+.bt-txt{ font-size:.72rem; color:#D6C2B2; line-height:1.4; margin:0; }
+.bt-txt b{ color:#fff; }
+.bt.bt-fort .bt-txt{ margin-top:6px; }
+.pc-titre-bt{ margin:12px 0 0; font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:#B9A08C; font-weight:600; }
+.pc-actions.pc-actions-bt{ margin-top:6px; }
+.pc-action.bt-action{ border-color:rgba(232,131,58,.45); background:rgba(232,131,58,.12); white-space:normal; overflow:visible; }
+.pc-action.bt-action:hover{ background:rgba(232,131,58,.22); }
+.pc-action.bt-action:disabled{ opacity:.55; cursor:default; }
+.pc-action.bt-action:disabled:hover{ background:rgba(232,131,58,.12); }
+.pc-action.bt-action.arme{ border-color:#E8833A; background:rgba(232,131,58,.3); }
+.pc-action.bt-action svg{ color:#FFB27A; }
+.pc-action.bt-action > span:first-of-type{ flex:1; min-width:0; }
+.pc-action.bt-action small{ display:block; font-size:.68rem; color:#C9AE97; font-weight:400; margin-top:1px; }
+.pc-action .prix{ margin-left:auto; flex:none; display:flex; align-items:center; gap:5px; font-size:.78rem; color:#FFD9B8; font-weight:600; }
+.gn-badge.bt-badge{ background:rgba(232,131,58,.12); border-color:rgba(232,131,58,.38); }
+.gn-badge.bt-badge svg{ color:#FFB27A; }
+.bt-appui{ display:flex; align-items:center; gap:7px; margin:8px 0 0; font-size:.76rem; color:#FFD9B8; }
+.bt-appui svg{ width:15px; height:15px; flex:none; color:#FFB27A; }
+.bt-appui b{ color:#fff; }
+.as-mon.as-bt{ color:#FFD9B8; }
+.as-mon.as-bt svg{ color:#FFB27A; }
+.batiments-bloc[hidden]{ display:none; }
+.bt-reserve{ display:flex; align-items:center; gap:8px; padding:12px; border-radius:13px; background:linear-gradient(160deg,rgba(232,131,58,.18),rgba(232,131,58,.05)); border:1px solid rgba(232,131,58,.4); }
+.bt-reserve .lingot{ width:20px; height:13px; }
+.btr-nb{ font-family:var(--titre); font-weight:900; font-size:2.1rem; line-height:1; }
+.btr-max{ color:#B9A08C; font-size:.85rem; }
+.btr-prod{ margin-left:auto; font-size:.76rem; color:#FFD9B8; text-align:right; line-height:1.3; }
+.btl-titre{ margin:16px 2px 2px; font-size:.7rem; letter-spacing:.08em; text-transform:uppercase; color:#8FA4BF; font-weight:600; display:flex; }
+.btl-titre em{ margin-left:auto; font-style:normal; color:#fff; }
+.btl{ display:flex; align-items:center; gap:10px; padding:10px 11px; margin-top:8px; border-radius:11px; background:var(--nuit-2); border:1px solid rgba(169,188,212,.14); }
+.btl-ic{ width:32px; height:32px; border-radius:9px; display:grid; place-items:center; background:rgba(232,131,58,.16); color:#FFB27A; flex:none; }
+.btl-ic svg{ width:19px; height:19px; }
+.btl-t{ flex:1; min-width:0; }
+.btl-nom{ display:block; background:none; border:0; padding:0; font:inherit; font-weight:600; font-size:.86rem; color:#fff; cursor:pointer; text-align:left; }
+.btl-nom:hover{ text-decoration:underline; }
+.btl-t small{ display:block; font-size:.72rem; color:#8FA4BF; margin-top:2px; }
+.btl-etat{ font-size:.7rem; font-weight:600; padding:3px 8px; border-radius:999px; white-space:nowrap; }
+.btl-etat.ok{ background:rgba(43,212,139,.16); color:#5BE3A6; }
+.btl-etat.cours{ background:rgba(232,131,58,.18); color:#FFB27A; }
+.btl-regle{ margin:12px 2px 0; font-size:.72rem; color:#7B8FAB; line-height:1.45; }
+.gl-r.bt-fortifier{ border-color:rgba(232,131,58,.55); background:rgba(232,131,58,.14); }
+.gl-r.bt-fortifier.arme{ background:rgba(232,131,58,.32); border-color:#E8833A; }
+.leg-bt{ display:inline-grid; place-items:center; width:20px; height:20px; border-radius:50%; background:#2A1A0E; border:1.5px solid #E8833A; color:#FFB27A; margin:0 3px; }
+.leg-bt svg{ width:13px; height:13px; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '663322d318d1';
+const VERSION_JEU = '33e0794ae386';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -543,7 +543,9 @@ function mettreEnSceneAssaut(cible, r){
       if(!passe) jouer($q('.as-onde'), [{ opacity: .9, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(14)' }], { duration: 1100, easing: 'ease-out' });
       d.innerHTML = (SAISON2 ? `<span class="as-gain">TerraPoints : calcul…</span> · protégée 3 h`
                              : `+${bonus.toLocaleString('fr-FR')} pts de bonus · protégée 3 h · revente au jeu dans 12 h`)
-        + (mon ? `<span class="as-mon">${ICONE_MONUMENT}Monument conquis : <b>${echapperTexte(mon.nom)}</b></span>` : '');
+        + (mon ? `<span class="as-mon">${ICONE_MONUMENT}Monument conquis : <b>${echapperTexte(mon.nom)}</b></span>` : '')
+        + (SAISON2 && (BATIMENTS_CARTE.get(String(cible.code)) || {}).fonderie ? `<span class="as-mon as-bt">${ICONE_FONDERIE}Fonderie détruite : tu pilles la moitié de ses lingots</span>` : '');   // patch243
+      if(SAISON2 && BATIMENTS) setTimeout(chargerBatiments, 800);
       if(SAISON2 && soldeAvant != null){
         // le gain reel (plafond du jour, reprise, degressif) se lit sur le solde
         sb.rpc('statut_paquets').then(({ data }) => {
@@ -834,6 +836,7 @@ async function showGame(session_){
   await loadOthersPossessions();
   dmMesure('les autres joueurs');
   chargerAuroresFront();   // patch228
+  chargerBatiments();   // patch243
   dmEtape(88, 'Tes paquets…');
   await loadPackStatus();
   dmMesure('paquets');
@@ -2099,6 +2102,21 @@ const RAYON_ZONE = {commun: 4.5, peucommun: 6.5, rare: 10, epique: 12, legendair
 const ZOOM_MINI = {commun: 2.6, peucommun: 1.8, rare: 1, epique: 1, legendaire: 1};
 const MASQUEES_PAR_ZOOM = {commun: 0, peucommun: 0};
 const LIBELLE_TIER = {commun: 'commun', peucommun: 'peu commun', rare: 'rare', epique: 'épique', legendaire: 'légendaire'};
+// ---------- patch243 : les bâtiments du Front (s2-48) ----------
+const ICONE_FONDERIE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" d="M3 20.5h18M4 20.5V11l5 3V11l5 3V5.5h3.2V20.5M17.2 9.5H20v11"/><path fill="currentColor" d="M15.6 2.2c.9.9 1 1.8.4 2.6-.5-.5-1.3-.6-1.6.1-.5-1 .1-2 1.2-2.7z"/></svg>';
+const ICONE_FORTERESSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M5 21V8h2.4V5h2.4v3h2.4V5h2.4v3h2.4V5H19v16zM10 21v-4.2a2 2 0 0 1 4 0V21"/></svg>';
+const ICONE_LINGOT = '<i class="lingot" aria-hidden="true"></i>';
+const BT_TRACES = typeof Path2D === 'function' ? {
+  fonderie: [new Path2D('M3 20.5h18M4 20.5V11l5 3V11l5 3V5.5h3.2V20.5M17.2 9.5H20v11'), new Path2D('M15.6 2.2c.9.9 1 1.8.4 2.6-.5-.5-1.3-.6-1.6.1-.5-1 .1-2 1.2-2.7z')],
+  forteresse: [new Path2D('M5 21V8h2.4V5h2.4v3h2.4V5h2.4v3h2.4V5H19v16zM10 21v-4.2a2 2 0 0 1 4 0V21')],
+} : null;
+let BATIMENTS = null;              // mes_batiments() ; null = bâtiments fermés ou s2-48 absent
+let BATIMENTS_CARTE = new Map();   // code -> { fonderie: { moi, pret }, forteresse: { moi, pret } }
+let batimentsLu = 0;
+let batimentsTimer = null;
+let btArme = null;                 // « code|type » : la construction attend sa confirmation
+let btRecherche = '';
+let attaqueEffetBt = null;         // batiments_effet() de la cible ouverte
 const ID_MOI = '__moi__';
 let joueurSurligne = null;
 let listeJoueursComplete = false;
@@ -2443,6 +2461,7 @@ function dessinerTerritoiresCanvas(ctx, trait, k){
   if(mode === 'contours') dessinerArrondissementsParis(ctx, trait, k, liste);   // patch108
   dessinerFrontieres(ctx, trait, mode === 'contours');
   if(CALQUES.raretes) dessinerMarqueursCanvas(ctx, liste, joueurs, k, mode === 'depts');
+  if(SAISON2 && BATIMENTS_CARTE.size) dessinerBatimentsCanvas(ctx, liste);   // patch243
   majLegendeSiBesoin(joueurs);
 }
 
@@ -3222,6 +3241,15 @@ function ouvrirPanneau(code, xCss, yCss){
 
   const lignes = [];
   if(SAISON2 && auroreFront(code)) lignes.push(['Carte', '<b class="pc-aurore">✦ Aurore</b>']);   // patch228
+  if(SAISON2 && !mienne && BATIMENTS){   // patch243 : les bâtiments des autres se voient
+    const bt = BATIMENTS_CARTE.get(String(code));
+    if(bt){
+      const t = [];
+      if(bt.fonderie) t.push(bt.fonderie.pret ? 'Fonderie' : 'Fonderie en construction');
+      if(bt.forteresse) t.push(bt.forteresse.pret ? 'Forteresse' : 'Forteresse en construction');
+      lignes.push(['Bâtiment', t.join(' + ')]);
+    }
+  }
   if(c.pop != null) lignes.push(['Population', nbFr(c.pop)]);
   if(mienne && c.rank) lignes.push([estOutremerCode(code) ? 'Rang outre-mer' : 'Rang national', nbFr(c.rank) + '<sup>e</sup>']);   // patch220
   lignes.push(['Propriétaire', mienne
@@ -3254,7 +3282,7 @@ function ouvrirPanneau(code, xCss, yCss){
       gardee ? 'Retirer l’étoile de ' + c.nom : 'Garder ' + c.nom + ' à la fin de la saison']);
   if(mienne && !favorisCharges) chargerFavoris().then(() => { if(panneauCommune === code && favorisCharges){ const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); } });
   // patch91 : en saison 2, le Front n'a ni bouclier, ni echange, ni vente ; il a la garnison
-  let gnBloc = '';
+  let gnBloc = '', btEtat = '', btActions = '';
   if(SAISON2){
     for(let i = actions.length - 1; i >= 0; i--)
       if(['bouclier', 'echange', 'voir-echange', 'vente'].includes(actions[i][1])) actions.splice(i, 1);
@@ -3262,6 +3290,8 @@ function ouvrirPanneau(code, xCss, yCss){
       if(lignes[i][0] === 'Bouclier' || lignes[i][0] === 'En vente') lignes.splice(i, 1);
     if(mienne){
       gnBloc = blocGarnisonFiche(code);
+      btEtat = blocBatimentsEtat(code, c);   // patch243
+      btActions = blocBatimentsActions(code, c);
       if(!gnBloc) actions.push(['', 'gn-poser', `Mettre en garnison <span class="pc-gn-nb">${garnisonsMoi.size} / 3</span>`, 'Défense automatique sur ' + c.nom]);
     }
   }
@@ -3280,12 +3310,12 @@ function ouvrirPanneau(code, xCss, yCss){
       <button class="pc-fermer" data-pc="fermer" aria-label="Fermer">&times;</button>
     </div>
     ${alerte}
-    ${gnBloc}
+    ${gnBloc}${btEtat}
     ${propose ? `<p class="pc-propose">${ICONES_PC.echange}<span>${echapperHtml(propose)}</span></p>` : ''}
     <div class="pc-lignes">${lignes.map(([a, b]) => `<div class="pc-ligne"><span>${a}</span><b>${b}</b></div>`).join('')}</div>
     ${note ? `<p class="pc-note">${note}</p>` : ''}
     ${actions.length ? `<div class="pc-actions">${actions.map(([cl, ic, txt, titre]) =>
-      `<button class="pc-action ${cl}" data-pc="${ic}" title="${echapperHtml(titre)}">${ICONES_PC[ic]}${txt}</button>`).join('')}</div>` : ''}`;
+      `<button class="pc-action ${cl}" data-pc="${ic}" title="${echapperHtml(titre)}">${ICONES_PC[ic]}${txt}</button>`).join('')}</div>` : ''}${btActions}`;
 
   el.hidden = false;
   const wrap = document.getElementById('mapWrap');
@@ -3507,13 +3537,15 @@ async function ouvrirAttaque(code){
 
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
-  const [apercu, siege, gnv] = await Promise.all([
+  const [apercu, siege, gnv, bte] = await Promise.all([
     sb.rpc('apercu_attaque', { p_commune_code: code, p_intensite: intensiteChoisie }),
     sb.from('sieges').select('victoires_consecutives, dernier_round')
       .eq('attacker_id', uid).eq('commune_code', code).maybeSingle(),
     SAISON2 ? sb.rpc('garnisons_visibles', { p_codes: [code] }) : Promise.resolve({ data: [] }),
+    SAISON2 && BATIMENTS ? sb.rpc('batiments_effet', { p_code: code }) : Promise.resolve({ data: [] }),   // patch243
   ]);
   attaqueEnGarnison = !!(gnv && Array.isArray(gnv.data) && gnv.data.length);
+  attaqueEffetBt = bte && !bte.error && Array.isArray(bte.data) && bte.data[0] ? bte.data[0] : null;
   if(panneauCommune !== code) return;          // le joueur est passe a autre chose
 
   if(apercu.error){
@@ -3549,6 +3581,8 @@ function rendreAttaque(code, a, siege){
     </div>
 
     ${attaqueEnGarnison ? `<div class="gn-badge">${ICONES_PC.bouclier}<span><b>Commune en garnison.</b> Chaque victoire peut être annulée par une défense automatique (1 chance sur 2).</span></div>` : ''}
+    ${attaqueEffetBt && attaqueEffetBt.defense > 0 ? `<div class="gn-badge bt-badge">${ICONE_FORTERESSE}<span><b>Forteresse.</b> −${attaqueEffetBt.defense} % à tes chances sur cette commune.</span></div>` : ''}
+    ${attaqueEffetBt && attaqueEffetBt.appui > 0 ? `<p class="bt-appui">${ICONE_FORTERESSE}<span>+${attaqueEffetBt.appui} % grâce à ta forteresse${attaqueEffetBt.appui_de ? ' de <b>' + echapperHtml(attaqueEffetBt.appui_de) + '</b>' : ''}</span></p>` : ''}
     <div class="pc-prox ${a.a_distance ? 'loin' : ''}">
       ${a.a_distance
         ? 'Aucune de tes communes à moins de 20 km : <b>attaque à distance</b>, tes chances baissent.'
@@ -3767,6 +3801,14 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
     return;
   }
   if(quoi === 'assaut'){ lancerAssaut(code); return; }
+  if(quoi === 'bt-construire'){   // patch243 : deux temps, comme le retrait de garnison
+    const t = b.dataset.bt;
+    if(btArme !== code + '|' + t){ btArme = code + '|' + t; const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); return; }
+    btArme = null;
+    b.disabled = true;
+    batimentConstruire(code, t);
+    return;
+  }
   if(quoi === 'gn-plus'){ gnRetraitArme = null; garnisonAction(code, Number(b.dataset.n) || 1); return; }
   if(quoi === 'gn-poser'){
     const dispo = energieEtat ? Math.floor(energieEtat.energie) : 5;
@@ -4184,7 +4226,7 @@ function renderLegendeCarte(joueurs, idSvg){
         <div><svg width="14" height="14"><circle cx="7" cy="7" r="4" fill="#A9BCD4"/></svg>Peu c.</div>
         <div><svg width="20" height="20"><circle cx="10" cy="10" r="6.5" fill="#A9BCD4"/><circle cx="10" cy="10" r="2" fill="#fff" stroke="#0B1830"/></svg>Rare</div>
         <div><svg width="26" height="26"><circle cx="13" cy="13" r="10" fill="#A9BCD4"/><polygon points="${etoileSvg(13, 13, 6)}" fill="#FFF6D6" stroke="#0B1830"/></svg>Légend.</div>
-        <div><svg width="26" height="26"><defs><linearGradient id="legAu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#9FFFE2"/><stop offset="1" stop-color="#C08CFF"/></linearGradient></defs><circle cx="13" cy="13" r="11" fill="rgba(61,242,192,.25)"/><path d="M13 3 L15.4 10.6 L23 13 L15.4 15.4 L13 23 L10.6 15.4 L3 13 L10.6 10.6 Z" fill="url(#legAu)" stroke="#0B1830"/></svg>Aurore</div>
+        <div><svg width="26" height="26"><defs><linearGradient id="legAu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#9FFFE2"/><stop offset="1" stop-color="#C08CFF"/></linearGradient></defs><circle cx="13" cy="13" r="11" fill="rgba(61,242,192,.25)"/><path d="M13 3 L15.4 10.6 L23 13 L15.4 15.4 L13 23 L10.6 15.4 L3 13 L10.6 10.6 Z" fill="url(#legAu)" stroke="#0B1830"/></svg>Aurore</div>${SAISON2 && BATIMENTS ? `<div><span class="leg-bt">${ICONE_FONDERIE}</span>Fonderie</div><div><span class="leg-bt">${ICONE_FORTERESSE}</span>Forteresse</div>` : ''}
       </div>
     </div>`;
 }
@@ -9654,6 +9696,21 @@ function initModes(){
     g.className = 'garnisons-bloc';
     const sect = defense.querySelector('.bourse-section');
     if(sect) sect.insertAdjacentElement('beforebegin', g); else defense.appendChild(g);
+    // patch243 : les bâtiments, au-dessus des garnisons
+    const bt = document.createElement('div');
+    bt.id = 'batimentsBloc';
+    bt.className = 'garnisons-bloc batiments-bloc';
+    bt.hidden = true;
+    g.insertAdjacentElement('beforebegin', bt);
+    bt.addEventListener('click', (e) => {
+      const fo = e.target.closest('[data-bt-fortifier]');
+      if(!fo) return;
+      const code = fo.dataset.btFortifier;
+      if(btArme !== code + '|forteresse'){ btArme = code + '|forteresse'; renderBatimentsBloc(); return; }
+      btArme = null;
+      fo.disabled = true;
+      batimentConstruire(code, 'forteresse');
+    });
     g.addEventListener('click', (e) => {
       const b = e.target.closest('[data-gn-recharger]');
       if(b) garnisonAction(b.dataset.gnRecharger, 5);
@@ -9666,6 +9723,186 @@ function initModes(){
     });
   }
   chargerGarnisons();
+  chargerBatiments();   // patch243
+  if(!batimentsTimer) batimentsTimer = setInterval(siVisible(chargerBatiments), 120000);
+}
+
+// ---------- patch243 : les bâtiments ----------
+async function chargerBatiments(){
+  if(!SAISON2) return;
+  try{
+    const [m, v] = await Promise.all([sb.rpc('mes_batiments'), sb.rpc('batiments_visibles')]);
+    if(m.error || !m.data || !m.data.ouverts){ BATIMENTS = null; BATIMENTS_CARTE = new Map(); renderBatimentsBloc(); return; }
+    BATIMENTS = m.data;
+    batimentsLu = Date.now();
+    const carte = new Map();
+    for(const b of (v.data || [])){
+      const k = String(b.commune_code);
+      const e = carte.get(k) || {};
+      e[b.type] = { moi: b.joueur_id === window.__monId, pret: !!b.pret };
+      carte.set(k, e);
+    }
+    BATIMENTS_CARTE = carte;
+    renderBatimentsBloc();
+    if(typeof demanderDessin === 'function' && canvasActif()){ CV.donneesSignature = null; demanderDessin(); }
+  }catch(e){ console.error('Bâtiments :', e); }
+}
+// la réserve « maintenant », sans rappeler le serveur
+function lingotsActuels(){
+  const B = BATIMENTS;
+  if(!B) return 0;
+  const n = Number(B.lingots) || 0, max = Number(B.max) || 30, prod = Number(B.production) || 10;
+  if(!B.fonderie || !B.fonderie.pret || n >= max || B.prochain_dans == null) return n;
+  const ecoule = (Date.now() - batimentsLu) / 1000;
+  if(ecoule < B.prochain_dans) return n;
+  return Math.min(max, n + 1 + Math.floor((ecoule - B.prochain_dans) / (86400 / prod)));
+}
+function prochainLingotMs(){
+  const B = BATIMENTS;
+  if(!B || !B.fonderie || !B.fonderie.pret || B.prochain_dans == null) return null;
+  if(lingotsActuels() >= (Number(B.max) || 30)) return null;
+  const pas = 86400 / (Number(B.production) || 10);
+  const ecoule = (Date.now() - batimentsLu) / 1000;
+  const reste = ecoule < B.prochain_dans ? B.prochain_dans - ecoule : pas - ((ecoule - B.prochain_dans) % pas);
+  return Math.max(60, reste) * 1000;
+}
+const btPretDans = (b) => Math.max(0, new Date(b.pret_le).getTime() - Date.now());
+const mesForteresses = () => (BATIMENTS && BATIMENTS.forteresses) || [];
+const btReglage = (cle, defaut) => (BATIMENTS && BATIMENTS.reglages && BATIMENTS.reglages[cle] != null) ? BATIMENTS.reglages[cle] : defaut;
+
+// sur la fiche : ce qui est construit ici
+function blocBatimentsEtat(code, c){
+  const B = BATIMENTS;
+  if(!B) return '';
+  let html = '';
+  const ici = B.fonderie && B.fonderie.code === code ? B.fonderie : null;
+  if(ici){
+    const n = lingotsActuels(), max = Number(B.max) || 30;
+    const prete = btPretDans(ici) <= 0;
+    const pr = prochainLingotMs();
+    html += `<div class="bt">
+      <div class="bt-haut">${ICONE_FONDERIE}Fonderie <b>${n} / ${max} ${ICONE_LINGOT}</b></div>
+      <div class="bt-barre" style="grid-template-columns:repeat(${max},1fr)">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'p' : ''}"></i>`).join('')}</div>
+      <p class="bt-txt">${prete ? `<b>+${B.production} lingots par jour</b>, jusqu’à ${max} en réserve${pr ? ` · prochain dans ${formatDuree(pr)}` : ''}.` : `<b>En construction</b> : prête dans ${formatDuree(btPretDans(ici))}.`}
+        Visible de tous : si on te prend ${echapperHtml(c.nom)}, la Fonderie est détruite et l’attaquant pille ${btReglage('pillage', 50)} % de ta réserve.</p>
+    </div>`;
+  }
+  const fort = mesForteresses().find(x => x.code === code);
+  if(fort){
+    const prete = btPretDans(fort) <= 0;
+    html += `<div class="bt bt-fort">
+      <div class="bt-haut">${ICONE_FORTERESSE}Forteresse <b>${prete ? 'active' : 'prête dans ' + formatDuree(btPretDans(fort))}</b></div>
+      <p class="bt-txt"><b>−${btReglage('forteresse_defense', 15)} %</b> aux chances des attaquants ici, et <b>+${btReglage('forteresse_appui', 5)} %</b> à tes attaques à moins de ${btReglage('rayon_km', 20)} km.</p>
+    </div>`;
+  }
+  return html;
+}
+// sur la fiche : ce qu'on peut y construire
+function blocBatimentsActions(code, c){
+  const B = BATIMENTS;
+  if(!B) return '';
+  const h = btReglage('construction_h', 24);
+  const arme = (t) => btArme === code + '|' + t;
+  const boutons = [];
+  if(!B.fonderie){
+    boutons.push(`<button class="pc-action bt-action${arme('fonderie') ? ' arme' : ''}" data-pc="bt-construire" data-bt="fonderie">${ICONE_FONDERIE}<span>${arme('fonderie') ? `Confirmer : la Fonderie à ${echapperHtml(c.nom)}` : 'Construire la Fonderie ici'}<small>Une seule · prête dans ${h} h · ${B.production} lingots par jour</small></span><span class="prix">gratuit</span></button>`);
+  }
+  if(!mesForteresses().some(x => x.code === code)){
+    const nb = mesForteresses().length, maxF = btReglage('forteresse_max', 3), prix = btReglage('forteresse_prix', 20);
+    const n = lingotsActuels();
+    const bloque = !B.fonderie ? 'Il te faut d’abord une Fonderie'
+      : nb >= maxF ? `Déjà ${maxF} forteresses`
+      : n < prix ? `Il te faut ${prix} lingots (tu en as ${n})` : '';
+    boutons.push(`<button class="pc-action bt-action${arme('forteresse') ? ' arme' : ''}" data-pc="bt-construire" data-bt="forteresse" ${bloque ? 'disabled' : ''}>${ICONE_FORTERESSE}<span>${arme('forteresse') ? `Confirmer : ${prix} lingots` : `Faire de ${echapperHtml(c.nom)} une Forteresse`}<small>${bloque || `Prête dans ${h} h · ${nb} / ${maxF} · −${btReglage('forteresse_defense', 15)} % en défense, +${btReglage('forteresse_appui', 5)} % autour`}</small></span><span class="prix">${prix} ${ICONE_LINGOT}</span></button>`);
+  }
+  return boutons.length ? `<p class="pc-titre-bt">Bâtiments</p><div class="pc-actions pc-actions-bt">${boutons.join('')}</div>` : '';
+}
+async function batimentConstruire(code, type){
+  const nom = type === 'fonderie' ? 'Fonderie' : 'Forteresse';
+  const { error } = await sb.rpc('batiment_construire', { p_code: code, p_type: type });
+  if(error) notifier({ type: 'erreur', titre: nom, texte: messageLisible(error.message) });
+  else notifier({ type: 'succes', titre: nom + ' en construction', texte: `Prête dans ${btReglage('construction_h', 24)} h.` });
+  await chargerBatiments();
+  if(panneauCommune === code && collectionMap.get(code)){ const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); }
+}
+// Défendre : réserve, Fonderie, forteresses
+function renderBatimentsBloc(){
+  const el = document.getElementById('batimentsBloc');
+  if(!el) return;
+  const B = BATIMENTS;
+  el.hidden = !B;
+  if(!B) return;
+  const n = lingotsActuels(), max = Number(B.max) || 30;
+  const pr = prochainLingotMs();
+  const F = B.fonderie;
+  const forts = mesForteresses();
+  const maxF = btReglage('forteresse_max', 3), prix = btReglage('forteresse_prix', 20);
+  const etat = (b) => btPretDans(b) <= 0 ? '<span class="btl-etat ok">Active</span>' : `<span class="btl-etat cours">prête dans ${formatDuree(btPretDans(b))}</span>`;
+  const ligne = (ic, b, sous) => `<div class="btl"><span class="btl-ic">${ic}</span>
+      <span class="btl-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(b.code)}">${echapperTexte(b.nom)} (${echapperTexte(b.dept)})</button><small>${sous}</small></span>${etat(b)}</div>`;
+  el.innerHTML = `<h2>Bâtiments</h2>
+    <div class="bt-reserve"><span class="btr-nb">${n}</span>${ICONE_LINGOT}<span class="btr-max">/ ${max} lingots</span>
+      <span class="btr-prod">${F ? (btPretDans(F) <= 0 ? `+${B.production} par jour<br>${pr ? 'prochain dans ' + formatDuree(pr) : 'réserve pleine'}` : 'Fonderie<br>en construction') : 'Pas encore<br>de Fonderie'}</span></div>
+    <div class="btl-titre">Fonderie</div>
+    ${F ? ligne(ICONE_FONDERIE, F, btPretDans(F) <= 0 ? `Produit ${B.production} lingots par jour` : 'En construction')
+        : '<p class="gl-vide">Ouvre une de tes communes sur la carte et choisis « Construire la Fonderie ici ». Elle est gratuite, mais visible de tous : choisis bien l’endroit.</p>'}
+    <div class="btl-titre">Forteresses <em>${forts.length} / ${maxF}</em></div>
+    ${forts.map(x => ligne(ICONE_FORTERESSE, x, btPretDans(x) <= 0 ? `−${btReglage('forteresse_defense', 15)} % aux attaquants · +${btReglage('forteresse_appui', 5)} % autour` : 'En construction')).join('')}
+    ${F && forts.length < maxF ? (n >= prix
+        ? `<input type="search" class="bourse-search gn-cherche" id="btCherche" placeholder="Fortifier une de mes communes (${prix} lingots)…" autocomplete="off" value="${echapperTexte(btRecherche)}"><div class="gn-choix" id="btChoix">${btChoixHtml()}</div>`
+        : `<p class="gl-vide">Prochaine forteresse : ${prix} lingots (tu en as ${n}).</p>`) : ''}
+    <p class="btl-regle">Les lingots ne servent qu’aux bâtiments : ils ne s’échangent pas, ne s’achètent pas et repartent à zéro à chaque saison. Un bâtiment est perdu si on prend sa commune.</p>`;
+  const champ = document.getElementById('btCherche');
+  if(champ) champ.addEventListener('input', (e) => {
+    btRecherche = e.target.value;
+    const z = document.getElementById('btChoix'); if(z) z.innerHTML = btChoixHtml();
+  });
+}
+function btChoixHtml(){
+  const q = sansAccents(btRecherche.trim().toLowerCase());
+  const deja = new Set(mesForteresses().map(x => x.code));
+  const rang = (t) => TIERS.findIndex(x => x.id === t.id);
+  const mes = [...collectionMap.values()].filter(c => !deja.has(c.code)
+    && (!q || sansAccents(c.nom.toLowerCase()).includes(q) || c.dept === q.toUpperCase()));
+  mes.sort((a, b) => rang(a.tier) - rang(b.tier) || a.nom.localeCompare(b.nom, 'fr'));
+  if(!mes.length) return `<p class="gl-vide">${collectionMap.size ? 'Aucune de tes communes ne correspond.' : 'Tu n\'as pas encore de commune dans le Front.'}</p>`;
+  const prix = btReglage('forteresse_prix', 20);
+  return mes.slice(0, 6).map(c => {
+    const a = btArme === c.code + '|forteresse';
+    return `<div class="gl gn-ligne"><i class="gl-c ${c.tier.id}"></i><div class="gl-t"><b>${echapperTexte(c.nom)}</b>
+      <span>${c.tier.label} · ${echapperTexte(DEPT_NAMES[c.dept] || c.dept)} (${echapperTexte(c.dept)})</span></div>
+      <button class="gl-r bt-fortifier${a ? ' arme' : ''}" data-bt-fortifier="${echapperTexte(c.code)}">${a ? `Confirmer · ${prix} lingots` : 'Fortifier'}</button></div>`;
+  }).join('') + (mes.length > 6 ? `<p class="gl-vide">+ ${mes.length - 6} autre${mes.length - 6 > 1 ? 's' : ''} : affine la recherche.</p>` : '');
+}
+// la carte : une pastille par bâtiment (doré : les miens), pointillés tant qu'il est en construction
+function dessinerBatimentsCanvas(ctx, liste){
+  if(!BT_TRACES) return;
+  const e = 1 / Math.max(1, mapZoom);
+  const vue = vueCarteUnites(12);
+  for(const c of liste){
+    const bt = BATIMENTS_CARTE.get(String(c.code));
+    if(!bt) continue;
+    const x = c.x, y = c.y;
+    if(x < vue[0] || x > vue[2] || y < vue[1] || y > vue[3]) continue;
+    const types = ['fonderie', 'forteresse'].filter(t => bt[t]);
+    types.forEach((t, i) => {
+      const r = 7.5 * e;
+      const cx = x + (types.length > 1 ? (i ? 1 : -1) * r * 0.95 : 0), cy = y - r * 1.1;
+      ctx.globalAlpha = bt[t].pret ? 1 : 0.65;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.fillStyle = '#2A1A0E'; ctx.fill();
+      ctx.lineWidth = 1.6 * e; ctx.strokeStyle = bt[t].moi ? '#F0B429' : '#E8833A';
+      if(!bt[t].pret) ctx.setLineDash([2.2 * e, 1.6 * e]);
+      ctx.stroke(); ctx.setLineDash([]);
+      ctx.save();
+      const k = r / 14;
+      ctx.translate(cx - 12 * k, cy - 12 * k); ctx.scale(k, k);
+      ctx.strokeStyle = '#FFB27A'; ctx.fillStyle = '#FFB27A'; ctx.lineWidth = 1.9; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.stroke(BT_TRACES[t][0]); if(BT_TRACES[t][1]) ctx.fill(BT_TRACES[t][1]);
+      ctx.restore();
+    });
+  }
+  ctx.globalAlpha = 1;
 }
 
 // ---------- patch91 : garnisons ----------

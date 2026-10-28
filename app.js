@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '50d6d29423a7';
+const VERSION_JEU = '0e362fae75a3';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1759,7 +1759,7 @@ async function loadClassement(){
   const bloc = document.getElementById('classement');
   await initModesClassement();
   if(classementMode === 'clans'){ await chargerClassementClans(); return; }   // patch210
-  const limite = classementComplet ? 50 : 10;
+  const limite = classementComplet ? 100 : 10;   // patch247 : 50 -> 100
   let appel;
   if(classementMode === 'terra') appel = sb.rpc('terra_classement', { p_limite: limite });
   else if(classementMode === 'palmares') appel = sb.rpc('palmares', { p_saison: palmaresChoisie, p_limite: limite });

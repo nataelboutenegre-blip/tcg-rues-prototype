@@ -6723,3 +6723,11 @@ body[data-dos="feuilles-or"], .bq-dos-apercu[data-dos="feuilles-or"]{
 :is(.paquet.hab-vendanges, .hab-vignette[data-hab="vendanges"]){
   --hab-fond: radial-gradient(circle at 70% 60%, #6A1F5A 0 6%, transparent 7%), linear-gradient(180deg, #2B0410, #6E1226);
   --hab-texte: #FBE3B0; --hab-bande: linear-gradient(90deg, #8A5A16, #F2CB72 45%, #9A6A1E); --hab-bande-texte: #2B0410; --hab-lueur: 0 2px 8px rgba(30,0,10,.6); }
+
+/* ---------- patch256 : Skin Brume et Paquet Sous-bois (pass « Brumes d'automne ») ---------- */
+.mini.skin-brume{ --sk-acc: #C8D3DC; }
+.mini.skin-brume .mini-nom{ color: #F2F5F8; text-shadow: 0 0 6px rgba(200,211,220,.45); }
+.mini.skin-brume .mini-num{ color: #A9B6C2; } .mini.skin-brume .mini-rarete{ color: #D5DDE4 !important; } .mini.skin-brume .mini-dept{ color: rgba(213,221,228,.2); }
+:is(.paquet.hab-sous-bois, .hab-vignette[data-hab="sous-bois"]){
+  --hab-fond: radial-gradient(40% 25% at 30% 65%, rgba(150,95,40,.55), transparent 70%), linear-gradient(180deg, #08130A, #1F2E12);
+  --hab-texte: #EAF2C8; --hab-bande: linear-gradient(90deg, #4A3416, #C8A04A 45%, #5A4018); --hab-bande-texte: #0E1608; --hab-lueur: 0 0 10px rgba(190,255,90,.35); }

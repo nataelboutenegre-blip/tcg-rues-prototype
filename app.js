@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '33e0794ae386';
+const VERSION_JEU = '5f13f592776f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2461,7 +2461,7 @@ function dessinerTerritoiresCanvas(ctx, trait, k){
   if(mode === 'contours') dessinerArrondissementsParis(ctx, trait, k, liste);   // patch108
   dessinerFrontieres(ctx, trait, mode === 'contours');
   if(CALQUES.raretes) dessinerMarqueursCanvas(ctx, liste, joueurs, k, mode === 'depts');
-  if(SAISON2 && BATIMENTS_CARTE.size) dessinerBatimentsCanvas(ctx, liste);   // patch243
+  if(SAISON2 && CALQUES.batiments && BATIMENTS_CARTE.size) dessinerBatimentsCanvas(ctx, liste);   // patch243-244
   majLegendeSiBesoin(joueurs);
 }
 
@@ -2652,7 +2652,8 @@ function majLegendeSiBesoin(joueurs){
     + '|' + (legendeOuverte ? 1 : 0)
     + '|' + (listeJoueursComplete ? 1 : 0)
     + '|' + (showOthers ? 1 : 0)
-    + '|' + TOTAL_COMMUNES;
+    + '|' + TOTAL_COMMUNES
+    + '|' + (BATIMENTS ? 1 : 0);   // patch244
   if(sig === legendeSignature) return;
   legendeSignature = sig;
   renderLegendeCarte(joueurs, (x) => 'j' + x);
@@ -2804,7 +2805,7 @@ const CALQUES = (() => {
   // « passage » est eteint au depart : il demande un chargement de plus et
   // n'a de sens que pour un joueur qui a deja perdu des communes
   const defaut = { regions: true, depts: true, communes: true, noms: true,
-                   raretes: true, passage: false, clans: false };
+                   raretes: true, passage: false, clans: false, batiments: true };
   try {
     const v = JSON.parse(localStorage.getItem(CLE_CALQUES) || '{}');
     return Object.assign(defaut, v);
@@ -2936,7 +2937,14 @@ function rendreCalques(){
     NOMS.clans = 'Clans';
     ICONES.clans = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M12 3 19.5 5.5v6c0 4.6-3.2 8.2-7.5 9.5-4.3-1.3-7.5-4.9-7.5-9.5v-6z"/></svg>';
   }
-  zone.innerHTML = Object.keys(NOMS).map(id =>
+  // patch244 : le calque des bâtiments, juste après Raretés
+  const ordre = Object.keys(NOMS);
+  if(SAISON2 && BATIMENTS){
+    NOMS.batiments = 'Bâtiments';
+    ICONES.batiments = ICONE_FORTERESSE;
+    ordre.splice(ordre.indexOf('raretes') + 1, 0, 'batiments');
+  }
+  zone.innerHTML = ordre.map(id =>
     `<button data-calque="${id}" class="${CALQUES[id] ? 'actif' : ''}" aria-pressed="${!!CALQUES[id]}">${ICONES[id]}${NOMS[id]}</button>`
   ).join('');
 }
@@ -4226,8 +4234,9 @@ function renderLegendeCarte(joueurs, idSvg){
         <div><svg width="14" height="14"><circle cx="7" cy="7" r="4" fill="#A9BCD4"/></svg>Peu c.</div>
         <div><svg width="20" height="20"><circle cx="10" cy="10" r="6.5" fill="#A9BCD4"/><circle cx="10" cy="10" r="2" fill="#fff" stroke="#0B1830"/></svg>Rare</div>
         <div><svg width="26" height="26"><circle cx="13" cy="13" r="10" fill="#A9BCD4"/><polygon points="${etoileSvg(13, 13, 6)}" fill="#FFF6D6" stroke="#0B1830"/></svg>Légend.</div>
-        <div><svg width="26" height="26"><defs><linearGradient id="legAu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#9FFFE2"/><stop offset="1" stop-color="#C08CFF"/></linearGradient></defs><circle cx="13" cy="13" r="11" fill="rgba(61,242,192,.25)"/><path d="M13 3 L15.4 10.6 L23 13 L15.4 15.4 L13 23 L10.6 15.4 L3 13 L10.6 10.6 Z" fill="url(#legAu)" stroke="#0B1830"/></svg>Aurore</div>${SAISON2 && BATIMENTS ? `<div><span class="leg-bt">${ICONE_FONDERIE}</span>Fonderie</div><div><span class="leg-bt">${ICONE_FORTERESSE}</span>Forteresse</div>` : ''}
-      </div>
+        <div><svg width="26" height="26"><defs><linearGradient id="legAu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#9FFFE2"/><stop offset="1" stop-color="#C08CFF"/></linearGradient></defs><circle cx="13" cy="13" r="11" fill="rgba(61,242,192,.25)"/><path d="M13 3 L15.4 10.6 L23 13 L15.4 15.4 L13 23 L10.6 15.4 L3 13 L10.6 10.6 Z" fill="url(#legAu)" stroke="#0B1830"/></svg>Aurore</div>
+      </div>${SAISON2 && BATIMENTS ? `
+      <div class="leg-tailles leg-batiments"><div><span class="leg-bt">${ICONE_FONDERIE}</span>Fonderie</div><div><span class="leg-bt">${ICONE_FORTERESSE}</span>Forteresse</div></div>` : ''}
     </div>`;
 }
 
@@ -9744,6 +9753,8 @@ async function chargerBatiments(){
     }
     BATIMENTS_CARTE = carte;
     renderBatimentsBloc();
+    if(!document.querySelector('#mapCalques [data-calque="batiments"]') && typeof rendreCalques === 'function') rendreCalques();   // patch244
+    legendeSignature = '';
     if(typeof demanderDessin === 'function' && canvasActif()){ CV.donneesSignature = null; demanderDessin(); }
   }catch(e){ console.error('Bâtiments :', e); }
 }
@@ -9886,8 +9897,9 @@ function dessinerBatimentsCanvas(ctx, liste){
     if(x < vue[0] || x > vue[2] || y < vue[1] || y > vue[3]) continue;
     const types = ['fonderie', 'forteresse'].filter(t => bt[t]);
     types.forEach((t, i) => {
-      const r = 7.5 * e;
-      const cx = x + (types.length > 1 ? (i ? 1 : -1) * r * 0.95 : 0), cy = y - r * 1.1;
+      const r = 7 * e;
+      // patch244 : à droite du point et de son étoile (rayon 7 au plus), côte à côte s'il y en a deux
+      const cx = x + 9 * e + r + i * (2 * r + 2 * e), cy = y;
       ctx.globalAlpha = bt[t].pret ? 1 : 0.65;
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
       ctx.fillStyle = '#2A1A0E'; ctx.fill();

@@ -6597,3 +6597,8 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .gl-r.bt-fortifier.arme{ background:rgba(232,131,58,.32); border-color:#E8833A; }
 .leg-bt{ display:inline-grid; place-items:center; width:20px; height:20px; border-radius:50%; background:#2A1A0E; border:1.5px solid #E8833A; color:#FFB27A; margin:0 3px; }
 .leg-bt svg{ width:13px; height:13px; }
+
+/* ---------- patch244 : la ligne des bâtiments dans la légende ---------- */
+.leg-tailles.leg-batiments{ justify-content:flex-start; align-items:center; gap:14px; margin-top:8px; padding-top:8px; }
+.leg-tailles.leg-batiments div{ flex-direction:row; gap:6px; }
+.leg-tailles.leg-batiments .leg-bt{ margin:0; }

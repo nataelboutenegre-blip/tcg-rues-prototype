@@ -6607,3 +6607,6 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .jr-texte .jr-voir{ display:inline-flex; vertical-align:baseline; }
 .jr-texte .jr-voir b{ text-decoration:underline dotted rgba(169,188,212,.55); text-underline-offset:3px; }
 .jr-texte .dep{ margin-left:2px; }
+
+/* ---------- patch249 : la bulle du département se cache vraiment ---------- */
+.map-infobulle.dept[hidden]{ display:none; }

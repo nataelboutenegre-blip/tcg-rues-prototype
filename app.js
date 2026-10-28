@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '0e362fae75a3';
+const VERSION_JEU = '1d839ae4bbc8';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1555,7 +1555,13 @@ function ligneJournal(e){
   const acteur = e.je_suis_acteur ? '<b>Tu</b>' : moi(e.acteur_pseudo);
   const a = e.je_suis_acteur ? 'as' : 'a';
   const cible = e.je_suis_cible ? '<b>toi</b>' : moi(e.cible_pseudo);
-  const commune = `<b class="jr-commune ${e.tier || ''}">${echapperTexte(e.commune_nom || 'une commune')}</b>`;
+  // patch248 : comme dans les listes du Front — le nom (et l'icône carte) mène à la commune,
+  // et la pastille du département, tirée du code INSEE (3 chiffres en outre-mer)
+  const cc = String(e.commune_code || '');
+  const nomC = `<b class="jr-commune ${e.tier || ''}">${echapperTexte(e.commune_nom || 'une commune')}</b>`;
+  const commune = cc
+    ? `<button type="button" class="df-voir jr-voir" data-voir-carte="${echapperTexte(cc)}" title="Voir sur la carte">${nomC}<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></button> ${badgeDept(cc.startsWith('97') ? cc.slice(0, 3) : cc.slice(0, 2))}`
+    : nomC;
   let texte;
   if(e.type === 'conquete') texte = `${acteur} ${a} conquis ${commune}${e.cible_pseudo ? ` sur ${cible}` : ''}`;
   else if(e.type === 'defense') texte = `${acteur} ${a} repoussé une attaque de ${cible} sur ${commune}`;
@@ -18930,7 +18936,11 @@ document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-voir-carte]');
   if(!b) return;
   const code = b.dataset.voirCarte;
-  voirCommuneSurCarte(collectionMap.get(code) || { code });
+  const connue = collectionMap.get(code) || othersMap.get(code);   // patch248
+  if(connue && connue.lat != null) return voirCommuneSurCarte(connue);
+  if(estOutremerCode(code)) return voirCommuneSurCarte({ code });
+  sb.from('communes').select('latitude, longitude').eq('code', code).maybeSingle()
+    .then(({ data }) => voirCommuneSurCarte({ code, lat: data && data.latitude, lon: data && data.longitude }));
 });
 
 // ---------- patch229 : la bulle d'outre-mer se ferme (croix, ou clic hors des territoires) ----------

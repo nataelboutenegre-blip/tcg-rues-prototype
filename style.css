@@ -6602,3 +6602,8 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .leg-tailles.leg-batiments{ justify-content:flex-start; align-items:center; gap:14px; margin-top:8px; padding-top:8px; }
 .leg-tailles.leg-batiments div{ flex-direction:row; gap:6px; }
 .leg-tailles.leg-batiments .leg-bt{ margin:0; }
+
+/* ---------- patch248 : journal — commune cliquable + pastille du département ---------- */
+.jr-texte .jr-voir{ display:inline-flex; vertical-align:baseline; }
+.jr-texte .jr-voir b{ text-decoration:underline dotted rgba(169,188,212,.55); text-underline-offset:3px; }
+.jr-texte .dep{ margin-left:2px; }

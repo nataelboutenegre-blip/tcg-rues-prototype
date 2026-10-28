@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=cc43f68e07ff">
+<link rel="stylesheet" href="style.css?v=663322d318d1">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -123,7 +123,7 @@
         <div class="lp-etape">
           <span class="lp-num">4</span>
           <b>Joue chaque jour</b>
-          <p>Quêtes, Commune du jour et duels Radar rapportent des points et de l'énergie.</p>
+          <p>Quêtes, Commune du jour et duels Radar rapportent des TerraPoints et de l'énergie.</p>
         </div>
       </div>
       <p class="lp-sous s1-seul">Trois gestes, et c'est tout le jeu.</p>
@@ -479,10 +479,10 @@
 
   <main class="content">
 
-    <span class="solde-global solde-fixe" hidden title="Ton solde de points"><b>—</b> pts</span>
+    <span class="solde-global solde-fixe" hidden title="Ton solde de TerraPoints"><b>—</b> TP</span>
     <div class="entete-mobile">
       <span class="brand">Terra<span>Front</span></span>
-      <span class="solde-global" hidden title="Ton solde de points"><b>—</b> pts</span>
+      <span class="solde-global" hidden title="Ton solde de TerraPoints"><b>—</b> TP</span>
       <button class="regles-btn" id="reglesBtnMobile" title="Règles du jeu" aria-label="Règles du jeu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/>
@@ -520,8 +520,8 @@
         <button class="open-btn" id="openFreeBtn">Ouvrir un paquet gratuit</button>
         <div class="glisser" id="glisserAchat">
           <span class="glisser-rempli" id="glisserRempli"></span>
-          <span class="glisser-texte" id="glisserTexte">Glisse pour acheter<small>200 pts</small></span>
-          <button type="button" class="glisser-bouton" id="openBuyBtn" aria-label="Glisse jusqu'au bout pour acheter un paquet à 200 points"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h12M13 6l6 6-6 6"/></svg></button>
+          <span class="glisser-texte" id="glisserTexte">Glisse pour acheter<small>200 TP</small></span>
+          <button type="button" class="glisser-bouton" id="openBuyBtn" aria-label="Glisse jusqu'au bout pour acheter un paquet à 200 TerraPoints"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h12M13 6l6 6-6 6"/></svg></button>
         </div>
         <div class="ouv-reglages" aria-label="Réglages de l'ouverture">
           <button type="button" class="ouv-bascule" id="ouvSon" aria-pressed="true">Son</button>
@@ -558,7 +558,7 @@
         <div class="qg-carte" id="qgCdj">
           <div class="qg-tete">
             <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
-            <div class="qg-titre"><h2>Commune du jour</h2><p>Solo · une commune mystère par jour · jusqu'à 50 pts</p></div>
+            <div class="qg-titre"><h2>Commune du jour</h2><p>Solo · une commune mystère par jour · jusqu'à 50 TP</p></div>
             <span class="qg-etiquette" id="qgCdjEtat"></span>
           </div>
           <div class="qg-actions"><button type="button" class="qg-btn" id="qgCdjBtn">Jouer</button><span class="qg-petit" id="qgCdjInfo"></span></div>
@@ -567,7 +567,7 @@
         <div class="qg-carte" id="qgPom" hidden>
           <div class="qg-tete">
             <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20V5M3.5 8.5 7 5l3.5 3.5"/><path d="M17 4v15M13.5 15.5 17 19l3.5-3.5"/></svg></span>
-            <div class="qg-titre"><h2>Plus ou moins</h2><p>10 duels de population · partie du jour jusqu'à 50 pts · duel classé 20 pts par victoire, 5 par jour</p></div>
+            <div class="qg-titre"><h2>Plus ou moins</h2><p>10 duels de population · partie du jour jusqu'à 50 TP · duel classé 20 TP par victoire, 5 par jour</p></div>
             <span class="qg-etiquette" id="qgPomEtat"></span>
           </div>
           <div class="qg-rang" id="qgPomRang" hidden>
@@ -583,7 +583,7 @@
         <div class="qg-carte" id="qgRadar">
           <div class="qg-tete">
             <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 12 L17.6 6.4"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/></svg></span>
-            <div class="qg-titre"><h2>Radar</h2><p>Duel classé · 20 pts par victoire, 5 par jour</p></div>
+            <div class="qg-titre"><h2>Radar</h2><p>Duel classé · 20 TP par victoire, 5 par jour</p></div>
             <span class="qg-etiquette or" id="qgRestants"></span>
           </div>
           <div class="qg-rang">
@@ -600,7 +600,7 @@
         <div class="qg-carte" id="qgRafale">
           <div class="qg-tete">
             <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13.5 2.5 5 13.5h6l-1.5 8 8.5-11h-6z"/></svg></span>
-            <div class="qg-titre"><h2>Rafale</h2><p>Duel classé · une lettre, 30 s · 20 pts par victoire, 5 par jour</p></div>
+            <div class="qg-titre"><h2>Rafale</h2><p>Duel classé · une lettre, 30 s · 20 TP par victoire, 5 par jour</p></div>
             <span class="qg-etiquette or" id="rfEtiquette"></span>
           </div>
           <div class="qg-rang">
@@ -699,7 +699,7 @@
 
     <section class="tab-panel" id="panel-cdj">
       <h1>Commune du jour <span class="cdj-numero" id="cdjNumero"></span></h1>
-      <div class="sub">La même commune pour tout le monde, six essais pour la trouver. Chaque erreur dévoile un indice, et chaque essai dit à quelle distance tu es et dans quelle direction chercher. Nouvelle commune chaque jour à minuit. La trouver rapporte des points : 50 en un essai, puis 40, 30, 20, 15 et 10.</div>
+      <div class="sub">La même commune pour tout le monde, six essais pour la trouver. Chaque erreur dévoile un indice, et chaque essai dit à quelle distance tu es et dans quelle direction chercher. Nouvelle commune chaque jour à minuit. La trouver rapporte des TP : 50 en un essai, puis 40, 30, 20, 15 et 10.</div>
       <p class="cdj-invite-bandeau" id="cdjInviteBandeau" hidden></p>
       <p class="cdj-indispo" id="cdjIndispo" hidden>La commune du jour n'est pas disponible pour le moment.</p>
       <div class="cdj-grille" id="cdjJeu" hidden>
@@ -897,10 +897,10 @@
     <section class="tab-panel" id="panel-boutique">
       <h1>Boutique</h1>
       <div class="volets" id="bqVolets" role="tablist" aria-label="Boutique" hidden>
-        <button type="button" class="volet actif" data-volet="boutique" role="tab" aria-selected="true">Avec mes points</button>
+        <button type="button" class="volet actif" data-volet="boutique" role="tab" aria-selected="true">Avec mes TP</button>
         <button type="button" class="volet" data-volet="boutiqueeuros" role="tab" aria-selected="false">Objets TerraFront</button>
       </div>
-      <div class="sub">Dépense tes points Terra : paquets spéciaux et dos de cartes.</div>
+      <div class="sub">Dépense tes TerraPoints : paquets spéciaux et dos de cartes.</div>
       <div class="puces" id="bqStatut"><span class="puce">Chargement…</span></div>
       <div class="bourse-section bq-section bq-terra-seul">
         <h2>Paquets</h2>
@@ -916,7 +916,7 @@
     <section class="tab-panel" id="panel-boutiqueeuros">
       <h1>Boutique</h1>
       <div class="volets" role="tablist" aria-label="Boutique">
-        <button type="button" class="volet" data-volet="boutique" role="tab" aria-selected="false">Avec mes points</button>
+        <button type="button" class="volet" data-volet="boutique" role="tab" aria-selected="false">Avec mes TP</button>
         <button type="button" class="volet actif" data-volet="boutiqueeuros" role="tab" aria-selected="true">Objets TerraFront</button>
       </div>
       <div class="sub">Des objets d'apparence, payés en euros. Ils ne changent jamais le contenu des paquets ni tes chances, et restent associés à ton compte.</div>
@@ -1142,7 +1142,7 @@
           <div class="etape"><div class="etape-num">1</div><h3>Deux modes</h3><p>En haut de l'écran : <b>Terra</b>, ta collection à toi, et <b>Front</b>, la conquête de la carte avec tous les joueurs.</p></div>
           <div class="etape"><div class="etape-num">2</div><h3>Collectionne</h3><p>En Terra, chaque paquet complète ta propre France. Les doublons se revendent, s'échangent ou partent en contrat.</p></div>
           <div class="etape"><div class="etape-num">3</div><h3>Conquiers</h3><p>En Front, chaque commune n'a qu'un propriétaire. Attaque avec ton énergie, défends avec tes garnisons.</p></div>
-          <div class="etape"><div class="etape-num">4</div><h3>Accomplis</h3><p>Les quêtes du jour et les mini-jeux du QG rapportent des points Terra et de l'énergie.</p></div>
+          <div class="etape"><div class="etape-num">4</div><h3>Accomplis</h3><p>Les quêtes du jour et les mini-jeux du QG rapportent des TerraPoints (TP) et de l'énergie.</p></div>
         </section>
 
         <nav class="sommaire" aria-label="Sommaire">
@@ -1168,7 +1168,7 @@
           <div class="regle-corps">
             <p><b>Terra</b> est ta collection personnelle : tu as ta propre copie de la France, et une commune peut être dans la collection de tous les joueurs à la fois. Elle ne se remet jamais à zéro.</p>
             <p><b>Front</b> est la carte partagée : chaque commune n'appartient qu'à <b>un seul joueur</b>, et se prend au combat. Le Front repart à chaque saison.</p>
-            <p>Les deux sont liés : ce que tu gagnes en Front (conquêtes, défenses) rapporte des <b>points Terra</b>. L'inverse n'existe pas : Terra ne donne aucune force en Front.</p>
+            <p>Les deux sont liés : ce que tu gagnes en Front (conquêtes, défenses) rapporte des <b>TerraPoints (TP)</b>. L'inverse n'existe pas : Terra ne donne aucune force en Front.</p>
           </div>
         </details>
         <details class="regle" id="s2-cartes">
@@ -1182,11 +1182,11 @@
               <table class="tableau">
                 <thead><tr><th>Rareté</th><th>Population</th><th>Communes</th><th>Revente d'un doublon</th></tr></thead>
                 <tbody>
-                  <tr><td><span class="rarete legendaire">Légendaire</span></td><td>30 000 et plus</td><td class="chiffre">302</td><td class="chiffre or">600 pts</td></tr>
-                  <tr><td><span class="rarete epique">Épique</span></td><td>8 000 à 29 999</td><td class="chiffre">1 015</td><td class="chiffre or">300 pts</td></tr>
-                  <tr><td><span class="rarete rare">Rare</span></td><td>2 300 à 7 999</td><td class="chiffre">3 406</td><td class="chiffre or">100 pts</td></tr>
-                  <tr><td><span class="rarete peucommun">Peu commun</span></td><td>450 à 2 299</td><td class="chiffre">12 841</td><td class="chiffre or">20 pts</td></tr>
-                  <tr><td><span class="rarete commun">Commun</span></td><td>Moins de 450</td><td class="chiffre">17 183</td><td class="chiffre or">5 pts</td></tr>
+                  <tr><td><span class="rarete legendaire">Légendaire</span></td><td>30 000 et plus</td><td class="chiffre">302</td><td class="chiffre or">600 TP</td></tr>
+                  <tr><td><span class="rarete epique">Épique</span></td><td>8 000 à 29 999</td><td class="chiffre">1 015</td><td class="chiffre or">300 TP</td></tr>
+                  <tr><td><span class="rarete rare">Rare</span></td><td>2 300 à 7 999</td><td class="chiffre">3 406</td><td class="chiffre or">100 TP</td></tr>
+                  <tr><td><span class="rarete peucommun">Peu commun</span></td><td>450 à 2 299</td><td class="chiffre">12 841</td><td class="chiffre or">20 TP</td></tr>
+                  <tr><td><span class="rarete commun">Commun</span></td><td>Moins de 450</td><td class="chiffre">17 183</td><td class="chiffre or">5 TP</td></tr>
                 </tbody>
               </table>
             </div>
@@ -1199,11 +1199,11 @@
             <h2>Terra<small>Paquets, collection, doublons</small></h2>
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
           </summary>
-          <div class="regle-corps"><div class="chiffres"><div class="chiffre-bloc"><b>5</b><span>cartes par paquet</span></div><div class="chiffre-bloc"><b>30 min</b><span>pour recharger un paquet gratuit (3 en réserve)</span></div><div class="chiffre-bloc"><b>200 pts</b><span>le paquet acheté, 5 par jour</span></div></div>
+          <div class="regle-corps"><div class="chiffres"><div class="chiffre-bloc"><b>5</b><span>cartes par paquet</span></div><div class="chiffre-bloc"><b>30 min</b><span>pour recharger un paquet gratuit (3 en réserve)</span></div><div class="chiffre-bloc"><b>200 TP</b><span>le paquet acheté, 5 par jour</span></div></div>
             <p>Toutes les communes ont <b>la même chance</b> de sortir : environ une carte sur deux est commune, une sur cent est légendaire. Les 129 communes d'<b>outre-mer</b> sont dans le même pot : environ une carte sur 270. Une carte que tu as déjà devient un <b>doublon</b>.</p>
             <p>Ta collection se regarde en cartes ou sur <b>Ma France</b>, une carte zoomable où tes communes apparaissent avec leur rareté. Le bouton <b>France | Outre-mer</b> passe aux 5 territoires d'outre-mer.</p>
             <p>Tu gardes toujours <b>au moins un exemplaire</b> de chaque commune : seuls les doublons se vendent, s'échangent ou partent en contrat.</p>
-            <p><b>Boutique</b> (en points Terra) : le paquet <b>garanti</b> (4 communes au hasard + 1 rare, épique ou légendaire), le paquet d'un <b>département</b> (5 communes différentes du département choisi) et les paquets de <b>collection</b>. 3 paquets de Boutique par jour au plus ; ils ne comptent pas pour les quêtes.</p>
+            <p><b>Boutique</b> (en TerraPoints) : le paquet <b>garanti</b> (4 communes au hasard + 1 rare, épique ou légendaire), le paquet d'un <b>département</b> (5 communes différentes du département choisi) et les paquets de <b>collection</b>. 3 paquets de Boutique par jour au plus ; ils ne comptent pas pour les quêtes.</p>
             <p><b>Aurore</b> : 233 communes existent aussi en version Aurore. Quand l'une d'elles sort d'un paquet, elle a <b>1 chance sur 3</b> d'être une Aurore. Un exemplaire Aurore reste toujours dans ta collection : il ne se vend pas et ne s'échange pas.</p>
           </div>
         </details>
@@ -1214,7 +1214,7 @@
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
           </summary>
           <div class="regle-corps">
-            <p><b>Collections</b> : des albums thématiques (fromages, eaux minérales, vins, préfectures, plus beaux villages…). Complète-en un pour <b>réclamer sa récompense</b>, une seule fois : des points Terra et un dos de carte exclusif. Toutes tes cartes comptent, d'où qu'elles viennent. Chaque collection a son paquet en Boutique : 5 communes de la collection que tu n'as <b>pas encore</b>.</p>
+            <p><b>Collections</b> : des albums thématiques (fromages, eaux minérales, vins, préfectures, plus beaux villages…). Complète-en un pour <b>réclamer sa récompense</b>, une seule fois : des TerraPoints et un dos de carte exclusif. Toutes tes cartes comptent, d'où qu'elles viennent. Chaque collection a son paquet en Boutique : 5 communes de la collection que tu n'as <b>pas encore</b>.</p>
             <p><b>Monuments</b> : l'album des monuments de France. Un monument est trouvé dès que sa commune est dans ta collection Terra.</p>
             <p><b>Vitrine</b> : jusqu'à <b>20 cartes</b> à montrer sur ton profil, une vitrine Terra et une vitrine Front. Touche une carte puis une autre pour échanger leurs places ; une place vide envoie la carte au bout.</p>
           </div>
@@ -1231,7 +1231,7 @@
             <p><b>Échange</b> : un de tes doublons contre un doublon d'un autre joueur, de la même rareté. Chacun paie une petite commission ; l'autre joueur a 48 h pour répondre.</p>
             <p><b>Contrat</b> : <b>10 doublons</b> communs donnent une commune peu commune, 10 doublons peu communs donnent une rare. La commune reçue est une commune de métropole que tu n'as <b>pas encore</b>.</p>
             <p><b>Mes alertes</b> (dans Échange) : note jusqu'à <b>10 communes</b> que tu cherches. Tu vois qui les a en doublon, quels joueurs cherchent tes propres doublons, et les communes les plus recherchées. Une commune obtenue sort toute seule de ta liste.</p>
-            <p>Les cartes payées en points (paquet acheté, Boutique) <b>ne s'échangent pas</b> et ne vont pas à la Bourse : elles se revendent au jeu ou partent en contrat, en premier.</p>
+            <p>Les cartes payées en TP (paquet acheté, Boutique) <b>ne s'échangent pas</b> et ne vont pas à la Bourse : elles se revendent au jeu ou partent en contrat, en premier.</p>
           </div>
         </details>
         <details class="regle" id="s2-front">
@@ -1246,7 +1246,7 @@
             <p>En Front, les paquets sont <b>gratuits uniquement</b> (1 toutes les 20 min, 3 en réserve) et rien ne s'achète. Toutes les raretés peuvent en sortir, <b>épiques</b> comprises, et parfois une commune d'<b>outre-mer</b> encore libre.</p>
             <div class="tableau-defile">
               <table class="tableau">
-                <thead><tr><th>Conquête d'une…</th><th>Points Terra</th></tr></thead>
+                <thead><tr><th>Conquête d'une…</th><th>TerraPoints</th></tr></thead>
                 <tbody>
                   <tr><td><span class="rarete commun">Commune</span></td><td class="chiffre or">+5</td></tr>
                   <tr><td><span class="rarete peucommun">Peu commune</span></td><td class="chiffre or">+10</td></tr>
@@ -1256,7 +1256,7 @@
                 </tbody>
               </table>
             </div>
-            <p>Une défense réussie rapporte <b>+10</b>. Au plus <b>250 points Terra par jour</b> venant du Front. Reprendre une commune perdue depuis moins de 24 h ne rapporte rien, et reprendre plusieurs fois la même commune au même joueur rapporte de moins en moins.</p>
+            <p>Une défense réussie rapporte <b>+10</b>. Au plus <b>250 TP par jour</b> venant du Front. Reprendre une commune perdue depuis moins de 24 h ne rapporte rien, et reprendre plusieurs fois la même commune au même joueur rapporte de moins en moins.</p>
             <p><b>Légendaires</b> : chaque légendaire que tu tiens depuis au moins 24 h rapporte <b>+2 énergie</b> par jour (10 au plus), à récolter à la main dans Combat. Ce qui n'est pas récolté dans la journée est perdu. L'énergie récoltée peut dépasser 40, jusqu'à 60.</p>
             <p><b>Le classement du Front</b> additionne tes cartes, tes victoires et tes territoires :</p>
             <div class="tableau-defile">
@@ -1325,10 +1325,10 @@
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
           </summary>
           <div class="regle-corps">
-            <p><b>Quêtes Terra</b> (points) : chaque jour, <b>5 quêtes</b> tirées dans une réserve de 11, les mêmes pour tout le monde : <b>20 pts</b> chacune, et <b>+50</b> quand les 5 sont faites. Et des défis permanents : 100, 500 et 2 000 communes (200, 400 et 600 pts), un département complet (300), une première épique (200).</p>
-            <p><b>Quêtes Front</b> (énergie, +5 chacune) : réussir une défense, mettre une garnison, ouvrir un paquet Terra, trouver la Commune du jour, jouer à Plus ou moins, gagner un duel Radar, gagner un duel Rafale, conquérir 3 communes, conquérir dans 2 départements, garder une commune prise la veille. Conquérir une commune : 50 pts et +3. Au plus <b>35 énergie de quêtes par jour</b> ; elle peut faire dépasser les 40, jusqu'à 60.</p>
+            <p><b>Quêtes Terra</b> (TP) : chaque jour, <b>5 quêtes</b> tirées dans une réserve de 11, les mêmes pour tout le monde : <b>20 TP</b> chacune, et <b>+50</b> quand les 5 sont faites. Et des défis permanents : 100, 500 et 2 000 communes (200, 400 et 600 TP), un département complet (300), une première épique (200).</p>
+            <p><b>Quêtes Front</b> (énergie, +5 chacune) : réussir une défense, mettre une garnison, ouvrir un paquet Terra, trouver la Commune du jour, jouer à Plus ou moins, gagner un duel Radar, gagner un duel Rafale, conquérir 3 communes, conquérir dans 2 départements, garder une commune prise la veille. Conquérir une commune : 50 TP et +3. Au plus <b>35 énergie de quêtes par jour</b> ; elle peut faire dépasser les 40, jusqu'à 60.</p>
             <p><b>Réclame tes récompenses</b> à la main, avant <b>minuit</b> (heure de Paris) : une quête du jour non réclamée est perdue.</p>
-            <p>Mini-jeux du <b>QG</b>. <b>Commune du jour</b> : 50 pts trouvée en un essai, puis 40, 30, 20, 15 et 10. <b>Radar</b> et <b>Rafale</b> (une lettre, 30 secondes, le plus de communes possible) : 20 pts par victoire en duel classé, 5 victoires payées par jour pour chacun. <b>Plus ou moins</b> (laquelle a le plus d'habitants ?) : le jeu du jour, 10 duels à 5 pts la bonne réponse, et des duels classés à 20 pts la victoire, 5 par jour.</p>
+            <p>Mini-jeux du <b>QG</b>. <b>Commune du jour</b> : 50 TP trouvée en un essai, puis 40, 30, 20, 15 et 10. <b>Radar</b> et <b>Rafale</b> (une lettre, 30 secondes, le plus de communes possible) : 20 TP par victoire en duel classé, 5 victoires payées par jour pour chacun. <b>Plus ou moins</b> (laquelle a le plus d'habitants ?) : le jeu du jour, 10 duels à 5 TP la bonne réponse, et des duels classés à 20 TP la victoire, 5 par jour.</p>
           </div>
         </details>
         <details class="regle" id="s2-saison">
@@ -1604,7 +1604,7 @@
     <p class="acc-invite-note" id="accueilInviteNote" hidden></p>
     <div class="acc-cadeau">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h18v10H3zM3 6h18v4H3zM12 6v14"/><path d="M12 6S9.5 2.5 7.5 4s1 2 4.5 2 6.5 0 4.5-2S12 6 12 6z"/></svg>
-      <span>Tu commences avec <b>100 points</b> et <b>3 paquets gratuits</b>. Un nouveau paquet arrive toutes les 20 minutes.</span>
+      <span>Tu commences avec <b>100 TerraPoints</b> et <b>3 paquets gratuits</b>. Un nouveau paquet arrive toutes les 20 minutes.</span>
     </div>
     <button class="acc-go" id="accueilGo">Ouvrir mon premier paquet</button>
     <div class="acc-liens">
@@ -1634,6 +1634,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=cc43f68e07ff"></script>
+<script defer src="app.js?v=663322d318d1"></script>
 </body>
 </html>

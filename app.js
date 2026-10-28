@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'cc43f68e07ff';
+const VERSION_JEU = '663322d318d1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -541,7 +541,7 @@ function mettreEnSceneAssaut(cible, r){
       await att(320);
       jouer($q('.as-drapeau'), [{ opacity: 0, transform: 'translateY(-40px)' }, { opacity: 1, transform: 'translateY(4px)' }, { opacity: 1, transform: 'none' }], { duration: 420, easing: 'ease-in' });
       if(!passe) jouer($q('.as-onde'), [{ opacity: .9, transform: 'scale(1)' }, { opacity: 0, transform: 'scale(14)' }], { duration: 1100, easing: 'ease-out' });
-      d.innerHTML = (SAISON2 ? `<span class="as-gain">Points Terra : calcul…</span> · protégée 3 h`
+      d.innerHTML = (SAISON2 ? `<span class="as-gain">TerraPoints : calcul…</span> · protégée 3 h`
                              : `+${bonus.toLocaleString('fr-FR')} pts de bonus · protégée 3 h · revente au jeu dans 12 h`)
         + (mon ? `<span class="as-mon">${ICONE_MONUMENT}Monument conquis : <b>${echapperTexte(mon.nom)}</b></span>` : '');
       if(SAISON2 && soldeAvant != null){
@@ -550,7 +550,7 @@ function mettreEnSceneAssaut(cible, r){
           const g = fen.querySelector('.as-gain');
           if(!g || !data || !data[0]) return;
           const gain = Number(data[0].solde) - soldeAvant;
-          g.textContent = gain > 0 ? `+${gain.toLocaleString('fr-FR')} points Terra` : 'Aucun point Terra (plafond du jour ou reprise)';
+          g.textContent = gain > 0 ? `+${gain.toLocaleString('fr-FR')} TP` : 'Aucun TP (plafond du jour ou reprise)';
         });
       }
     }
@@ -659,9 +659,9 @@ function demanderPrix({ nom, rachat }){
         <p class="prix-commune">${echapperTexte(nom)}</p>
         <label class="prix-champ">
           <span>Ton prix</span>
-          <span class="prix-saisie"><input type="number" inputmode="numeric" min="${plancher}" step="1" id="prixValeur" value="${plancher}" required><em>pts</em></span>
+          <span class="prix-saisie"><input type="number" inputmode="numeric" min="${plancher}" step="1" id="prixValeur" value="${plancher}" required><em>TP</em></span>
         </label>
-        <p class="prix-aide">Minimum ${plancherTxt} pts — c’est aussi ce que le jeu te la rachète si tu préfères vendre tout de suite.</p>
+        <p class="prix-aide">Minimum ${plancherTxt} TP — c’est aussi ce que le jeu te la rachète si tu préfères vendre tout de suite.</p>
         <p class="prix-erreur" id="prixErreur" role="alert"></p>
         <div class="prix-boutons">
           <button type="button" class="open-btn secondary" data-annuler>Annuler</button>
@@ -676,7 +676,7 @@ function demanderPrix({ nom, rachat }){
       const prix = parseInt(champ.value, 10);
       if(!prix || prix < plancher){
         document.getElementById('prixErreur').textContent =
-          'Le prix minimum pour cette rareté est de ' + plancherTxt + ' pts.';
+          'Le prix minimum pour cette rareté est de ' + plancherTxt + ' TP.';
         champ.focus();
         return;
       }
@@ -3229,7 +3229,7 @@ function ouvrirPanneau(code, xCss, yCss){
     : `<button class="pc-proprio" data-profil="${echapperHtml(c.joueurId)}">${echapperHtml(c.pseudo)}</button>`]);
   if(protegee) lignes.push(['Bouclier', 'jusqu’à ' + new Date(c.bouclierJusqua).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })]);
   else if(mienne) lignes.push(['Bouclier', 'Aucun']);
-  if(enVente != null) lignes.push(['En vente', nbFr(enVente) + ' pts']);
+  if(enVente != null) lignes.push(['En vente', nbFr(enVente) + ' TP']);
   if(c.acquiredAt) lignes.push([mienne ? 'Possédée depuis' : 'Prise le', new Date(c.acquiredAt).toLocaleDateString('fr-FR')]);
 
   // une proposition en attente sur cette commune, s'il y en a une
@@ -5868,7 +5868,7 @@ function rendreFiche(entry, d){
   // Le rachat n'a de sens que sur une commune qu'on possede encore.
   const troisieme = entry.perdue
     ? '<div class="fc-ch"><b class="fc-perdue">Perdue</b><span>statut</span></div>'
-    : '<div class="fc-ch"><b>' + nb(PRIX_RACHAT[tier.id]) + ' pts</b><span>rachat</span></div>';
+    : '<div class="fc-ch"><b>' + nb(PRIX_RACHAT[tier.id]) + ' TP</b><span>rachat</span></div>';
 
   let savais;
   if(faits === null){
@@ -7981,7 +7981,7 @@ var GLISSER = (() => {
     rempli.style.width = x > 0 ? (x + bouton.offsetWidth / 2 + 4) + 'px' : '0';
   };
   const revenir = () => { zone.classList.add('retour'); poser(0); setTimeout(() => zone.classList.remove('retour'), 360); };
-  const texteRepos = () => { texte.innerHTML = raison ? echapperTexte(raison) : 'Glisse pour acheter<small>200 pts</small>'; };
+  const texteRepos = () => { texte.innerHTML = raison ? echapperTexte(raison) : 'Glisse pour acheter<small>200 TP</small>'; };
   const valider = () => {
     fini = true; depart = null;
     poser(course());
@@ -8191,7 +8191,7 @@ function choisirBouclier(entry){
         <label class="offre ${tropCher ? 'indisponible' : ''}">
           <input type="radio" name="offre" value="${o.id}" ${tropCher ? 'disabled' : ''} ${i === 1 && !tropCher ? 'checked' : ''}>
           <span class="offre-duree">${o.label}</span>
-          <span class="offre-prix">${prix.toLocaleString('fr-FR')} pts</span>
+          <span class="offre-prix">${prix.toLocaleString('fr-FR')} TP</span>
           ${tropCher ? '<span class="offre-note">Solde insuffisant</span>' : ''}
         </label>`;
     }).join('');
@@ -8201,7 +8201,7 @@ function choisirBouclier(entry){
         <p class="prix-commune">${echapperTexte(entry.nom)}${entry.dept ? ` — ${echapperTexte(DEPT_NAMES[entry.dept] || '')} (${echapperTexte(entry.dept)})` : ''}, ${entry.tier.label.toLowerCase()}</p>
         <div class="offres">${options}</div>
         ${etat.code === 'immunite' ? `<p class="prix-aide">Cette commune est encore protégée ${formatDuree(entry.acquiredAt + IMMUNITE_MS - Date.now())} grâce à son acquisition récente : le bouclier démarrera juste après.</p>` : ''}
-        <p class="prix-aide">${solde !== null ? `Ton solde : ${Number(solde).toLocaleString('fr-FR')} pts. ` : ''}Après ce bouclier, 12 h sans protection possible.</p>
+        <p class="prix-aide">${solde !== null ? `Ton solde : ${Number(solde).toLocaleString('fr-FR')} TP. ` : ''}Après ce bouclier, 12 h sans protection possible.</p>
         <p class="prix-erreur" id="bouclierErreur" role="alert"></p>
         <div class="prix-boutons">
           <button type="button" class="open-btn secondary" data-annuler>Annuler</button>
@@ -8261,7 +8261,7 @@ function renderSellableGrid(){
     const listedPrice = myListings.get(entry.code);
     const rachat = PRIX_RACHAT[entry.tier.id];
     const actions = listedPrice
-      ? `<span class="chip-vente">En vente à ${Number(listedPrice).toLocaleString('fr-FR')} pts</span>
+      ? `<span class="chip-vente">En vente à ${Number(listedPrice).toLocaleString('fr-FR')} TP</span>
          <div class="ligne-actions"><button class="btn-p contour" data-action="retirer" data-code="${entry.code}">Retirer</button></div>`
       : `<div class="ligne-actions">${finSiegeMienne(entry.code)
             ? `<button class="btn-p contour" disabled title="Un joueur l'attaque : la vente au jeu reprend 24 h après sa dernière attaque. Tu peux toujours la mettre en vente ou l'échanger, l'attaque suit la commune.">Assiégée · vente au jeu dans ${formatDuree(finSiegeMienne(entry.code) - Date.now())}</button>`
@@ -8303,7 +8303,7 @@ function renderVenteTerra(grid, searchText, exclus = []){
     const ach = achetesTerra(e);
     const prixAnnonce = myListings.get(e.code);
     const actions = prixAnnonce
-      ? `<span class="chip-vente">En vente à ${Number(prixAnnonce).toLocaleString('fr-FR')} pts</span>
+      ? `<span class="chip-vente">En vente à ${Number(prixAnnonce).toLocaleString('fr-FR')} TP</span>
          <div class="ligne-actions"><button class="btn-p contour" data-action="retirer" data-code="${e.code}">Retirer</button></div>`
       : `<div class="ligne-actions"><button class="btn-p contour" data-action="vendre-jeu" data-code="${e.code}">Vendre au jeu <b>${TERRA_REVENTE[e.tier.id]}</b></button>
          ${echangeablesTerra(e) > 0 ? `<button class="btn-p or" data-action="mettre-vente" data-code="${e.code}">Mettre en vente</button>` : ''}</div>`;
@@ -8325,13 +8325,13 @@ async function actionBourseTerra(action, code, btn){
     const { data, error } = await sb.rpc('terra_vendre', { p_code: code, p_n: 1 });
     if(error) throw error;
     const r = data && data[0];
-    notifier({ type: 'succes', titre: `Doublon de ${e ? e.nom : 'la commune'} vendu au jeu`, texte: r ? `+${r.gain} pts` : '' });
+    notifier({ type: 'succes', titre: `Doublon de ${e ? e.nom : 'la commune'} vendu au jeu`, texte: r ? `+${r.gain} TP` : '' });
   } else if(action === 'mettre-vente'){
     const prix = await demanderPrix({ nom: e ? e.nom : 'Cette commune', rachat: e ? TERRA_REVENTE[e.tier.id] : 1 });
     if(!prix){ btn.disabled = false; return; }
     const { error } = await sb.rpc('terra_mettre_en_vente', { p_code: code, p_prix: prix });
     if(error) throw error;
-    notifier({ type: 'succes', titre: 'Annonce publiée', texte: `Un doublon de ${e ? e.nom : 'la commune'} est en vente à ${prix.toLocaleString('fr-FR')} pts` });
+    notifier({ type: 'succes', titre: 'Annonce publiée', texte: `Un doublon de ${e ? e.nom : 'la commune'} est en vente à ${prix.toLocaleString('fr-FR')} TP` });
   } else if(action === 'retirer'){
     const { error } = await sb.rpc('terra_retirer_de_la_vente', { p_code: code });
     if(error) throw error;
@@ -8374,7 +8374,7 @@ function renderMarketGrid(market, myUid){
           <span class="ligne-nom">${echapperTexte(c.nom)}${a.je_l_ai === false && !isMine ? TAG_NEUF : ''}${tagSiege(isMine ? serieMienne(a.commune_code) : siegesConnus.get(a.commune_code))}</span>
           <span class="ligne-detail">${DEPT_NAMES[c.departement] ? DEPT_NAMES[c.departement] + ' ' : ''}(${c.departement}), ${tier.label.toLowerCase()}, ${vendeur}</span>
         </div>
-        <span class="ligne-prix">${Number(a.prix).toLocaleString('fr-FR')}<small>pts</small></span>
+        <span class="ligne-prix">${Number(a.prix).toLocaleString('fr-FR')}<small>TP</small></span>
         <div class="ligne-actions">${action}</div>
       </div>`;
   };
@@ -8398,14 +8398,14 @@ document.addEventListener('click', async (e) => {
       if(error) throw error;
       collectionMap.delete(code);
       renderCollection(); renderStats(); renderMapOverlay();
-      if(vendue) notifier({ type: 'succes', titre: `${vendue.nom} vendue au jeu`, texte: `+${PRIX_RACHAT[vendue.tier.id]} pts` });
+      if(vendue) notifier({ type: 'succes', titre: `${vendue.nom} vendue au jeu`, texte: `+${PRIX_RACHAT[vendue.tier.id]} TP` });
     } else if(action === 'mettre-vente'){
       const entree = collectionMap.get(code);
       const prix = await demanderPrix({ nom: entree ? entree.nom : 'Cette commune', rachat: entree ? PRIX_RACHAT[entree.tier.id] : 0 });
       if(!prix){ btn.disabled = false; return; }
       const { error } = await sb.rpc('mettre_en_vente', { p_commune_code: code, p_prix: prix });
       if(error) throw error;
-      notifier({ type: 'succes', titre: 'Annonce publiée', texte: `${entree ? entree.nom + ' est' : 'La commune est'} en vente à ${prix.toLocaleString('fr-FR')} pts` });
+      notifier({ type: 'succes', titre: 'Annonce publiée', texte: `${entree ? entree.nom + ' est' : 'La commune est'} en vente à ${prix.toLocaleString('fr-FR')} TP` });
     } else if(action === 'retirer'){
       const { error } = await sb.rpc('retirer_de_la_vente', { p_commune_code: code });
       if(error) throw error;
@@ -8429,7 +8429,7 @@ document.addEventListener('click', async (e) => {
       notifier({
         type: 'succes',
         titre: `Bouclier activé sur ${entree.nom}`,
-        texte: fin ? `Protégée jusqu'à ${fin.toLocaleString('fr-FR', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} (−${res.prix} pts)` : ''
+        texte: fin ? `Protégée jusqu'à ${fin.toLocaleString('fr-FR', { weekday: 'long', hour: '2-digit', minute: '2-digit' })} (−${res.prix} TP)` : ''
       });
       await loadMyCollection();
     } else if(action === 'attaquer'){
@@ -9621,7 +9621,7 @@ function initModes(){
   el.setAttribute('role', 'tablist');
   el.setAttribute('aria-label', 'Mode de jeu');
   el.innerHTML = `
-    <button class="terra" data-mode="terra" role="tab"><span class="mb-nom">Terra</span><span class="mb-res"><b id="mbPoints">—</b>points</span></button>
+    <button class="terra" data-mode="terra" role="tab"><span class="mb-nom">Terra</span><span class="mb-res"><b id="mbPoints">—</b>TP</span></button>
     <button class="front" data-mode="front" role="tab"><span class="mb-nom">Front</span><span class="mb-res">${ICONE_ENERGIE}<b id="mbEnergie">—</b>/ 40 énergie</span></button>`;
   const entete = document.querySelector('.content .entete-mobile');
   entete.insertAdjacentElement('afterend', el);
@@ -9929,7 +9929,7 @@ function renderCollectionTerra(){
       const n = parTierM[t.id] || 0, total = tot[t.id] ? Number(tot[t.id].total) : 0;
       return `<div style="--c:${COULEURS_FILTRE[t.id]};--p:${total ? (100 * n / total).toFixed(1) : 0}%"><b>${fmtNombre(n)}</b><span>${t.label}${total ? ' · ' + fmtNombre(total) : ''}</span><i></i></div>`;
     }).join('')}</div>
-    ${nbDbl ? `<div class="tc-vente"><span aria-hidden="true">🔁</span><span><b>${fmtNombre(nbDbl)} doublon${nbDbl > 1 ? 's' : ''}</b> · jusqu'à ${fmtNombre(gainMax)} pts</span><button data-tc="vendre">Vendre…</button>${CONTRATS.some(c => (dbl[c.de] || 0) >= c.n) ? '<button class="tc-ct" data-tc="contrat">Contrat</button>' : ''}</div>` : ''}
+    ${nbDbl ? `<div class="tc-vente"><span aria-hidden="true">🔁</span><span><b>${fmtNombre(nbDbl)} doublon${nbDbl > 1 ? 's' : ''}</b> · jusqu'à ${fmtNombre(gainMax)} TP</span><button data-tc="vendre">Vendre…</button>${CONTRATS.some(c => (dbl[c.de] || 0) >= c.n) ? '<button class="tc-ct" data-tc="contrat">Contrat</button>' : ''}</div>` : ''}
     <div class="coll-filtres">
       <button class="coll-filtre ${terraFiltre === 'tous' ? 'actif' : ''}" data-tcf="tous">Toutes <span class="nb">${fmtNombre(terraCollection.size)}</span></button>
       <button class="coll-filtre ${terraFiltre === 'doublons' ? 'actif' : ''}" data-tcf="doublons">Doublons <span class="nb">${fmtNombre(nbDbl)}</span></button>
@@ -10553,7 +10553,7 @@ function ouvrirVenteTerra(){
   f.setAttribute('aria-labelledby', 'tcVenteTitre');
   f.innerHTML = `<h3 id="tcVenteTitre">Vendre mes doublons</h3><p>On garde toujours un exemplaire de chaque commune, et toutes tes cartes Aurore.</p>
     ${lignes.map(t => `<label class="tc-ligne"><input type="checkbox" value="${t.id}" ${t.id === 'commun' || t.id === 'peucommun' ? 'checked' : ''}>
-      <i class="pt" style="background:${COULEURS_FILTRE[t.id]}"></i>${t.label} <em>× ${fmtNombre(dbl[t.id])} · ${TERRA_REVENTE[t.id]} pts</em><b>+${fmtNombre(dbl[t.id] * TERRA_REVENTE[t.id])}</b></label>`).join('')}
+      <i class="pt" style="background:${COULEURS_FILTRE[t.id]}"></i>${t.label} <em>× ${fmtNombre(dbl[t.id])} · ${TERRA_REVENTE[t.id]} TP</em><b>+${fmtNombre(dbl[t.id] * TERRA_REVENTE[t.id])}</b></label>`).join('')}
     <button class="tc-ok" id="tcVenteOk"></button>
     <button class="tc-annuler" id="tcVenteNon">Annuler</button>`;
   document.body.append(voile, f);
@@ -10564,7 +10564,7 @@ function ouvrirVenteTerra(){
     const g = choix.reduce((s, t) => s + dbl[t] * TERRA_REVENTE[t], 0);
     const ok = f.querySelector('#tcVenteOk');
     ok.disabled = n === 0;
-    ok.textContent = n ? `Vendre ${fmtNombre(n)} doublon${n > 1 ? 's' : ''} · +${fmtNombre(g)} points` : 'Coche au moins une rareté';
+    ok.textContent = n ? `Vendre ${fmtNombre(n)} doublon${n > 1 ? 's' : ''} · +${fmtNombre(g)} TP` : 'Coche au moins une rareté';
     return choix;
   };
   majBouton();
@@ -10585,7 +10585,7 @@ function ouvrirVenteTerra(){
       e.bloques = Math.min(Math.max(0, (e.bloques || 0) - vendus), e.exemplaires);
     }
     if(r && packStatusCache){ packStatusCache.solde = r.solde; majBascule(); }
-    notifier({ type: 'succes', titre: 'Doublons vendus', texte: r ? `${fmtNombre(r.vendus)} doublon${r.vendus > 1 ? 's' : ''} · +${fmtNombre(r.gain)} points` : '' });
+    notifier({ type: 'succes', titre: 'Doublons vendus', texte: r ? `${fmtNombre(r.vendus)} doublon${r.vendus > 1 ? 's' : ''} · +${fmtNombre(r.gain)} TP` : '' });
     renderCollectionTerra();
   });
 }
@@ -10956,9 +10956,9 @@ async function loadObjectifs(){
 function carteObjectif(o){
   const pct = Math.min(100, Math.round(100 * o.avancement / o.cible));
   const recompense = o.points !== undefined
-    ? [o.points ? `${Number(o.points).toLocaleString('fr-FR')} pts` : '', o.energie ? `+${o.energie} ⚡` : ''].filter(Boolean).join(' · ')
+    ? [o.points ? `${Number(o.points).toLocaleString('fr-FR')} TP` : '', o.energie ? `+${o.energie} ⚡` : ''].filter(Boolean).join(' · ')
     : o.recompense === 'points'
-    ? `${Number(o.valeur).toLocaleString('fr-FR')} pts`
+    ? `${Number(o.valeur).toLocaleString('fr-FR')} TP`
     : (o.valeur > 1 ? `${o.valeur} paquets` : '1 paquet');
   const etat = o.reclame
     ? '<span class="obj-fait">Récupéré</span>'
@@ -11249,7 +11249,7 @@ function ligneSucces(d){
       </div>
       <div class="obj-droite">
         <span class="obj-chiffres">${possedees.toLocaleString('fr-FR')} / ${total.toLocaleString('fr-FR')}</span>
-        <span class="obj-gain gain-points">${Number(d.recompense).toLocaleString('fr-FR')} pts</span>
+        <span class="obj-gain gain-points">${Number(d.recompense).toLocaleString('fr-FR')} TP</span>
         ${etat}
       </div>
     </div>`;
@@ -11450,7 +11450,7 @@ function ligneEchange(e){
         </div>
       </div>
       <div class="ech-prop-pied">
-        <span class="ech-commission">Commission ${e.commission} pts</span>
+        <span class="ech-commission">Commission ${e.commission} TP</span>
         <div class="ech-actions">${boutons}</div>
       </div>
     </div>`;
@@ -11553,7 +11553,7 @@ function renderEchangeMienTerra(zone, rechercheM){
       <small>${echapperTexte(c.dept)} · ${c.libres} doublon${c.libres > 1 ? 's' : ''} échangeable${c.libres > 1 ? 's' : ''}</small>
     </button>`).join('');
   if([...terraCollection.values()].some(c => c.tier.id === echangeTier && achetesTerra(c) > 0))
-    zone.insertAdjacentHTML('afterbegin', '<p class="ech-note">🔒 Les cartes des paquets achetés en points ne s\u2019échangent pas : elles restent dans ta collection ou se revendent au jeu.</p>');
+    zone.insertAdjacentHTML('afterbegin', '<p class="ech-note">🔒 Les cartes des paquets achetés en TP ne s\u2019échangent pas : elles restent dans ta collection ou se revendent au jeu.</p>');
   majResumeEchange();
 }
 const cleCible = (c) => c.commune_code + '|' + (c.proprietaire || '');
@@ -11617,7 +11617,7 @@ function majResumeEchange(){
   const commission = COMMISSION_ECHANGE[echangeTier] || 1;
   resume.innerHTML = `
     <span><b>${echapperTexte(mienne ? mienne.nom : echangeMien)}</b> contre <b>${echapperTexte(echangeCible.nom)}</b></span>
-    <span class="ech-commission">${commission} pts de commission pour chacun</span>`;
+    <span class="ech-commission">${commission} TP de commission pour chacun</span>`;
   bouton.textContent = 'Envoyer la proposition';
 }
 
@@ -12317,11 +12317,11 @@ const ETAPES_GUIDE_S2 = [
   { mode: 'terra', cible: '.tab[data-tab="collection"]', titre: 'Ta collection',
     texte: 'Ta France se remplit ici, en cartes ou sur la carte. Tes doublons se revendent, s\'échangent avec les autres joueurs ou partent en contrat.' },
   { mode: 'front', cible: '#modeBascule [data-mode="front"]', titre: 'Le Front',
-    texte: 'Ici, l\'énergie remplace les points : 40 au maximum, +1 toutes les 10 minutes. Elle sert à attaquer et à défendre.' },
+    texte: 'Ici, l\'énergie remplace les TerraPoints : 40 au maximum, +1 toutes les 10 minutes. Elle sert à attaquer et à défendre.' },
   { mode: 'front', cible: '.tab[data-tab="combat"]', titre: 'Attaque et défends',
     texte: 'Trois victoires prennent une commune, et une défaite ne te fait rien perdre. Mets tes communes clés en garnison : elles se défendent seules pendant ton absence.' },
   { cible: '.tab[data-tab="qg"]', titre: 'Chaque jour',
-    texte: 'Les quêtes, la Commune du jour et le Radar rapportent des points Terra et de l\'énergie. Une saison du Front dure 4 semaines.' },
+    texte: 'Les quêtes, la Commune du jour et le Radar rapportent des TerraPoints (TP) et de l\'énergie. Une saison du Front dure 4 semaines.' },
 ];
 if(SAISON2) ETAPES_GUIDE.splice(0, ETAPES_GUIDE.length, ...ETAPES_GUIDE_S2);
 
@@ -12813,7 +12813,7 @@ function renderCdjFin(){
     : '';
   const serie = e.serie > 0 ? ` Série en cours : <b>${e.serie} jour${e.serie > 1 ? 's' : ''}</b>.` : '';
   z.innerHTML = `<h2 class="${e.trouve ? 'gagne' : ''}">${e.trouve ? `Trouvée en ${nb}` : 'Pas trouvée'}</h2>
-    ${e.trouve && e.gain ? `<p class="mj-gain">+${Number(e.gain).toLocaleString('fr-FR')} pts sur ton solde</p>` : ''}
+    ${e.trouve && e.gain ? `<p class="mj-gain">+${Number(e.gain).toLocaleString('fr-FR')} TP sur ton solde</p>` : ''}
     <p>C’était <b>${echapperTexte(r.nom)}</b>, ${echapperTexte(DEPT_NAMES[r.dept] || r.dept)}, ${Number(r.pop).toLocaleString('fr-FR')} habitants.</p>
     <p>${qui}${serie} Nouvelle commune à minuit.</p>
     <pre class="cdj-partage" id="cdjPartage">${echapperTexte(cdjTextePartage())}</pre>
@@ -13036,7 +13036,7 @@ function renderCdjFinInvite(z, e){
     ? `${e.trouves} joueur${e.trouves > 1 ? 's' : ''} sur ${e.joueurs} l’${e.trouves > 1 ? 'ont' : 'a'} trouvée.`
     : '';
   z.innerHTML = `<h2 class="${e.trouve ? 'gagne' : ''}">${e.trouve ? `Trouvée en ${nb}` : 'Pas trouvée'}</h2>
-    ${e.trouve && e.gain ? `<p class="mj-gain">+${Number(e.gain).toLocaleString('fr-FR')} pts sur ton solde</p>` : ''}
+    ${e.trouve && e.gain ? `<p class="mj-gain">+${Number(e.gain).toLocaleString('fr-FR')} TP sur ton solde</p>` : ''}
     <p>C’était <b>${echapperTexte(r.nom)}</b>, ${echapperTexte(DEPT_NAMES[r.dept] || r.dept)}, ${Number(r.pop).toLocaleString('fr-FR')} habitants. ${qui}</p>
     <div class="cdj-invite-appel">
       <b>La commune d’aujourd’hui t’attend.</b>
@@ -13123,7 +13123,7 @@ function renderRafaleCarte(){
   lancer.textContent = r.en_cours ? 'Reprendre la partie' : 'Lancer un duel';
   document.getElementById('rfAttente').textContent = r.en_attente > 0
     ? `${r.en_attente} partie${r.en_attente > 1 ? 's' : ''} en attente d’un adversaire`
-    : (gainsJour && Number(gainsJour.rafale) >= Number(gainsJour.max_rafale || 5) ? 'Les duels restent ouverts, sans points jusqu’à demain' : '');
+    : (gainsJour && Number(gainsJour.rafale) >= Number(gainsJour.max_rafale || 5) ? 'Les duels restent ouverts, sans TP jusqu’à demain' : '');
 }
 
 // une ligne de l'historique, quel que soit le jeu
@@ -13226,7 +13226,7 @@ function choixQG(){
     const note = document.createElement('div');
     note.className = 'qg-carte';
     note.id = 'qgCdjNote';
-    note.innerHTML = '<h3 class="qg-h3">Commune du jour</h3><p class="qg-petit">Pas de classement : c\'est un défi solo, la même commune pour tout le monde. Ta série et tes points du jour sont sur la carte du jeu.</p>';
+    note.innerHTML = '<h3 class="qg-h3">Commune du jour</h3><p class="qg-petit">Pas de classement : c\'est un défi solo, la même commune pour tout le monde. Ta série et tes TP du jour sont sur la carte du jeu.</p>';
     grille.appendChild(note);
   }
   // un jeu indisponible (Plus ou moins cache) ne se choisit pas
@@ -13496,7 +13496,7 @@ document.getElementById('rfEntr').addEventListener('click', async () => {
   try{ await rafaleChargerNoms(); }
   catch(e){ notifier({ type: 'erreur', titre: 'Rafale', texte: 'La liste des communes ne se charge pas. Recharge la page.' }); return; }
   const lettre = RAFALE_LETTRES[Math.floor(Math.random() * RAFALE_LETTRES.length)];
-  rafaleAvant({ entr: true, lettre, mots: [], vus: new Set() }, 'Entraînement : sans adversaire, sans Elo, sans points. Ton record est gardé sur cet appareil.', '—', '', 'Entraînement');
+  rafaleAvant({ entr: true, lettre, mots: [], vus: new Set() }, 'Entraînement : sans adversaire, sans Elo, sans TP. Ton record est gardé sur cet appareil.', '—', '', 'Entraînement');
 });
 function rafaleFinEntr(){
   const p = rafalePartie;
@@ -13544,7 +13544,7 @@ function rafaleAfficherFin(p, fin){
       <div class="rd-score"><div><b>${fmt(p.score)}</b><span>Toi</span></div><em>contre</em><div><b>${fmt(adv.score)}</b><span>${nomAdv}</span></div></div>
       ${p.amical ? '<p class="qg-petit">Un défi ne compte pas dans l’Elo.</p>'
         : delta != null ? `<div class="rd-elo"><span>Elo</span><b class="${delta >= 0 ? 'plus' : 'moins'}">${delta >= 0 ? '+' : ''}${delta}</b><span class="qg-petit">${fmt(p.elo_apres)} · ${rafaleRangDe(p.elo_apres)}</span></div>` : ''}
-      ${p.gain ? `<p class="mj-gain">+${fmt(p.gain)} pts sur ton solde</p>` : ''}`;
+      ${p.gain ? `<p class="mj-gain">+${fmt(p.gain)} TP sur ton solde</p>` : ''}`;
     if(p.gain && !rafaleGainVu.has(p.id)){ rafaleGainVu.add(p.id); loadPackStatus(); }
   } else if(p.cible){
     const cible = echapperTexte(p.cible);
@@ -13642,7 +13642,7 @@ document.getElementById('rfDefier').addEventListener('click', async () => {
   const fermer = ouvrirFenetre(`
     <div class="fenetre defi-choix" role="dialog" aria-modal="true" aria-labelledby="dcTitre">
       <h2 id="dcTitre">Défier à Rafale</h2>
-      <p class="dc-aide">Défi amical, sans Elo ni points. Tu joues une lettre maintenant ; ton adversaire a 7 jours pour faire mieux avec la même.</p>
+      <p class="dc-aide">Défi amical, sans Elo ni TP. Tu joues une lettre maintenant ; ton adversaire a 7 jours pour faire mieux avec la même.</p>
       ${amis ? `<h3>Tes amis</h3><div class="dc-liste">${amis}</div>` : ''}
       ${classes ? `<h3>Joueurs du QG</h3><div class="dc-liste">${classes}</div>` : ''}
       ${!amis && !classes ? '<p class="dc-aide">Personne à proposer pour l’instant.</p>' : ''}
@@ -13738,7 +13738,7 @@ function renderQG(){
     btn.classList.toggle('plein', !e.fini);
     const gainCdj = gainsJour && gainsJour.cdj ? Number(gainsJour.cdj) : 0;
     info.textContent = (e.serie > 0 ? `Série de ${e.serie} jour${e.serie > 1 ? 's' : ''} · ` : '')
-      + (gainCdj > 0 ? `+${gainCdj} pts gagnés · ` : '') + 'nouvelle commune à minuit';
+      + (gainCdj > 0 ? `+${gainCdj} TP gagnés · ` : '') + 'nouvelle commune à minuit';
   }
 
   // Radar
@@ -13771,7 +13771,7 @@ function renderQG(){
   lancer.disabled = !r.en_cours && !sansLimite && r.restants <= 0;
   document.getElementById('qgAttente').textContent = r.en_attente > 0
     ? `${r.en_attente} partie${r.en_attente > 1 ? 's' : ''} en attente d’un adversaire`
-    : (gainsJour && Number(gainsJour.radar) >= Number(gainsJour.max_radar || 5) ? 'Les duels restent ouverts, sans points jusqu’à demain' : '');
+    : (gainsJour && Number(gainsJour.radar) >= Number(gainsJour.max_radar || 5) ? 'Les duels restent ouverts, sans TP jusqu’à demain' : '');
 
   // patch128 : la carte Rafale, puis les listes des deux jeux, filtrees
   renderRafaleCarte();
@@ -13800,7 +13800,7 @@ function renderPomCarte(){
   etat.textContent = e.fini ? `${e.justes} / 10` : (n ? `${n} sur 10` : 'À jouer');
   btn.textContent = e.fini ? 'Revoir' : (n ? 'Continuer' : 'Jouer');
   btn.classList.toggle('plein', !e.fini);
-  document.getElementById('qgPomInfo').textContent = (e.gain > 0 ? `+${e.gain} pts gagnés · ` : '') + 'nouveaux duels à minuit';
+  document.getElementById('qgPomInfo').textContent = (e.gain > 0 ? `+${e.gain} TP gagnés · ` : '') + 'nouveaux duels à minuit';
 }
 const pomNb = (x) => Number(x || 0).toLocaleString('fr-FR');
 function pomTuile(c, k){
@@ -13847,7 +13847,7 @@ function renderPom(){
         <span class="pom-sur">Plus ou moins #${e.numero}</span>
         <div class="pom-score">${e.justes}<span> / 10</span></div>
         <div class="pom-ligne">${pomLigne()}</div>
-        ${e.gain > 0 ? `<span class="pom-gain">+${e.gain} points Terra</span>` : ''}
+        ${e.gain > 0 ? `<span class="pom-gain">+${e.gain} TP</span>` : ''}
         <pre class="pom-partage" id="pomPartage">${echapperTexte(pomTextePartage())}</pre>
         <button type="button" class="pom-btn" data-pom="copier">Copier mon résultat</button>
         <p class="pom-note">Nouveaux duels demain, à minuit.</p>
@@ -14030,7 +14030,7 @@ function renderPomEntr(){
     const n = pomEntr.res.filter(Boolean).length, avant = pomLireRecord();
     if(n > avant) pomEcrireRecord(n);
     corps.innerHTML = `<div class="pom-fin">
-        <span class="pom-sur">Entraînement · sans points</span>
+        <span class="pom-sur">Entraînement · sans TP</span>
         <div class="pom-score">${n}<span> / ${total}</span></div>
         <div class="pom-ligne">${pomEntr.res.map(x => x ? '🟩' : '🟥').join('')}</div>
         <span class="pom-gain">${n > avant ? 'Nouveau record !' : `Record d'entraînement : ${avant} / ${total}`}</span>
@@ -14039,7 +14039,7 @@ function renderPomEntr(){
     return;
   }
   const d = pomEntr.duels[i];
-  corps.innerHTML = `<div class="pom-tete"><h2 id="pomTitre">Entraînement <span>duel ${i + 1} / ${total} · sans points</span></h2>${pomPastillesListe(pomEntr.res, total)}</div>
+  corps.innerHTML = `<div class="pom-tete"><h2 id="pomTitre">Entraînement <span>duel ${i + 1} / ${total} · sans TP</span></h2>${pomPastillesListe(pomEntr.res, total)}</div>
     <p class="pom-question">Laquelle a le plus d'habitants ?</p>
     <div class="pom-duel">${pomTuile(pomCacher(d.a), 0)}<span class="pom-ou">ou</span>${pomTuile(pomCacher(d.b), 1)}</div>
     <p class="pom-verdict" id="pomVerdict" aria-live="polite"></p>
@@ -14159,7 +14159,7 @@ function renderPomDuelFin(){
     if(adv && adv.justes === d.justes) detail = `À égalité de réponses : ${sec(d.temps_total)} contre ${sec(adv.temps_total)}.`;
     const delta = (d.elo_apres || 0) - (d.elo_avant || 0);
     gains = `<span class="pom-gain">${delta >= 0 ? '+' : ''}${delta} Elo → ${Number(d.elo_apres).toLocaleString('fr-FR')}</span>`
-          + (d.gain ? `<span class="pom-gain">+${d.gain} points Terra</span>` : '');
+          + (d.gain ? `<span class="pom-gain">+${d.gain} TP</span>` : '');
   } else {
     titre = `${d.justes} / ${d.total}`;
     detail = "En attente d'un adversaire : le duel se règle quand un autre joueur aura joué les mêmes 10 duels. Tu verras le résultat dans le QG.";
@@ -14711,7 +14711,7 @@ function radarAfficherResume(p, fin){
     tete = `<div class="rd-titre"><h2 class="${p.resultat}">${mot}</h2><span>contre <b>${nomAdv}</b>${quand ? ` · ${quand}` : ''}</span></div>
       <div class="rd-score"><div><b>${fmt(p.total_km)} km</b><span>Toi</span></div><em>contre</em><div><b>${fmt(adv.total_km)} km</b><span>${nomAdv}</span></div></div>
       <div class="rd-elo"><span>Elo</span><b class="${delta >= 0 ? 'plus' : 'moins'}">${delta >= 0 ? '+' : ''}${delta}</b><span class="qg-petit">${fmt(p.elo_apres)} · ${apres}${apres !== avant ? (delta > 0 ? ' (promu !)' : ' (rétrogradé)') : ''}</span></div>
-      ${p.gain ? `<p class="mj-gain">+${fmt(p.gain)} pts sur ton solde</p>` : ''}`;
+      ${p.gain ? `<p class="mj-gain">+${fmt(p.gain)} TP sur ton solde</p>` : ''}`;
     if(p.gain && !radarGainVu.has(p.id)){ radarGainVu.add(p.id); loadPackStatus(); }
   } else if(p.cible){
     const cible = echapperTexte(p.cible);
@@ -15101,7 +15101,7 @@ async function loadBoutique(silencieux){
     }
   }catch(e){}
 }
-function bqPrix(n){ return Number(n).toLocaleString('fr-FR') + ' pts'; }
+function bqPrix(n){ return Number(n).toLocaleString('fr-FR') + ' TP'; }
 function renderBoutique(){
   const b = boutiqueCache;
   if(!b) return;
@@ -15736,7 +15736,7 @@ async function renderCollectionsTerra(el){
   el.innerHTML = `
     <div class="coll-ligne-titre"><h1>Collection</h1><span class="coll-compteur"><b>${finies}</b> / ${colCache.length} terminées</span></div>
     ${selecteurVueTerra()}
-    <p class="col-intro">Complète une collection pour gagner des points et un dos de carte. Le paquet d'une collection ne donne que des communes qui te manquent.</p>
+    <p class="col-intro">Complète une collection pour gagner des TP et un dos de carte. Le paquet d'une collection ne donne que des communes qui te manquent.</p>
     <div class="col-liste">${colCache.map(carteCollection).join('')}</div>`;
   if(colOuverte && colDetails.has(colOuverte)) afficherDetailCollection(colOuverte);
 }
@@ -15749,7 +15749,7 @@ function carteCollection(c){
   const court = packStatusCache && Number(packStatusCache.solde) < prix;
   let action;
   if(c.reclamee) action = `<span class="col-finie">✓ Terminée</span>`;
-  else if(!manque) action = `<button class="col-btn or" data-col-reclamer="${c.id}">Réclamer ${fmtNombre(c.recompense)} pts</button>`;
+  else if(!manque) action = `<button class="col-btn or" data-col-reclamer="${c.id}">Réclamer ${fmtNombre(c.recompense)} TP</button>`;
   else action = `<button class="bq-btn col-paquet" data-col-paquet="${c.id}" data-prix="${prix}"${court ? ' data-court="1"' : ''}>${bqPrix(prix)}</button>`;
   return `<div class="col-carte${c.reclamee ? ' finie' : ''}${!manque && !c.reclamee ? ' prete' : ''}" data-col="${c.id}">
       <div class="col-tete">
@@ -15759,7 +15759,7 @@ function carteCollection(c){
       </div>
       <div class="col-prog" role="progressbar" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${n}"><i style="width:${pct}%"></i></div>
       <div class="col-chiffres"><span><b>${fmtNombre(n)}</b> / ${fmtNombre(total)} communes</span>
-        <span class="col-rec">${c.reclamee ? 'Récompense reçue' : `Récompense : <b>${fmtNombre(c.recompense)} pts</b> + dos « ${echapperTexte(c.dos_nom || '')} »`}</span></div>
+        <span class="col-rec">${c.reclamee ? 'Récompense reçue' : `Récompense : <b>${fmtNombre(c.recompense)} TP</b> + dos « ${echapperTexte(c.dos_nom || '')} »`}</span></div>
       <div class="col-actions">
         <button class="col-btn" data-col-voir="${c.id}" aria-expanded="${colOuverte === c.id}">${colOuverte === c.id ? 'Masquer' : 'Voir les communes'}</button>
         ${action}
@@ -15847,7 +15847,7 @@ async function reclamerCollection(id){
   colCache = null;
   boutiqueCache = null;
   notifier({ type: 'succes', titre: 'Collection terminée !',
-             texte: r ? `+${fmtNombre(r.points)} points et le dos « ${r.dos_nom} ». Équipe-le depuis la Boutique.` : '' });
+             texte: r ? `+${fmtNombre(r.points)} TP et le dos « ${r.dos_nom} ». Équipe-le depuis la Boutique.` : '' });
   const el = document.getElementById('terraColl');
   if(el && terraVue === 'collections') renderCollectionsTerra(el);
 }

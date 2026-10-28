@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=b16168262fd9">
+<link rel="stylesheet" href="style.css?v=1f44f4f0c2fe">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -338,6 +338,7 @@
         <span class="tab-badge" id="qgBadge" hidden></span>
       </div>
 
+      <div class="tab onglet-fusionne" data-tab="pass" aria-hidden="true"><div class="icon"></div>Pass de saison</div>
       <div class="tab onglet-fusionne" data-tab="cdj" aria-hidden="true">
         <div class="icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg>
@@ -555,6 +556,7 @@
 
       <div class="qg-grille">
         <div class="qg-jeux">
+        <div class="qg-carte ps-qg" id="qgPass" hidden></div>
         <div class="qg-carte" id="qgCdj">
           <div class="qg-tete">
             <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.6"/></svg></span>
@@ -911,6 +913,14 @@
         <div class="bq-grille bq-grille-dos" id="bqDos"></div>
       </div>
       <div class="note"><span class="bq-terra-seul">3 paquets de boutique par jour au maximum. Ils ne comptent pas pour les quêtes. </span>Un dos de carte change l'arrière de toutes tes cartes, et tu peux revenir au dos d'origine quand tu veux.</div>
+    </section>
+
+    <section class="tab-panel" id="panel-pass">
+      <div class="volets" role="tablist" aria-label="QG">
+        <button type="button" class="volet" data-volet="qg" role="tab" aria-selected="false">QG</button>
+        <button type="button" class="volet actif" data-volet="pass" role="tab" aria-selected="true">Pass de saison</button>
+      </div>
+      <div id="passCorps"><p class="collection-empty">Chargement…</p></div>
     </section>
 
     <section class="tab-panel" id="panel-boutiqueeuros">
@@ -1635,6 +1645,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=b16168262fd9"></script>
+<script defer src="app.js?v=1f44f4f0c2fe"></script>
 </body>
 </html>

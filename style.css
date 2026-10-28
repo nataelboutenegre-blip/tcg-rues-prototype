@@ -6653,3 +6653,64 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .bl-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:18px; }
 .bl-actions [data-bl-enregistrer]{ margin-left:auto; }
 .bl-choix button:focus-visible, .bl-emaux button:focus-visible, .bl-seg button:focus-visible{ outline:2px solid var(--c-legendaire, #F0B429); outline-offset:2px; }
+
+/* ---------- patch254 : le pass de saison ---------- */
+.ps-feuilles{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; opacity:.5; }
+.ps-tete{ position:relative; overflow:hidden; border-radius:18px; padding:22px 24px; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:18px; align-items:end;
+  background: radial-gradient(120% 140% at 0% 0%, rgba(217,123,58,.38), transparent 55%), radial-gradient(90% 120% at 100% 100%, rgba(142,44,72,.45), transparent 60%), var(--nuit);
+  border:1px solid rgba(217,123,58,.35); margin-top:12px; }
+.ps-tete > *:not(.ps-feuilles){ position:relative; }
+.ps-surtitre{ color:#F2C9A0; font-size:.85rem; }
+.ps-h1{ font-family:var(--titre); font-weight:900; font-size:2.6rem; line-height:.95; margin:4px 0 10px; }
+.ps-niveau{ display:flex; align-items:center; gap:12px; }
+.ps-pastille{ width:54px; height:54px; border-radius:50%; display:grid; place-items:center; font-family:var(--titre); font-weight:900; font-size:1.6rem; background:var(--nuit); border:3px solid var(--c-legendaire, #F0B429); flex:none; }
+.ps-barre{ flex:1; min-width:180px; }
+.ps-barre .l{ display:flex; justify-content:space-between; gap:10px; font-size:.82rem; color:var(--brume); margin-bottom:5px; }
+.ps-barre .l b{ color:#fff; }
+.ps-jauge{ height:10px; border-radius:6px; background:rgba(255,255,255,.1); overflow:hidden; }
+.ps-jauge i{ display:block; height:100%; border-radius:6px; background:linear-gradient(90deg, #D97B3A, #F0B429); }
+.ps-jour{ font-size:.78rem; color:var(--brume); margin-top:7px; }
+.ps-achat{ background:rgba(11,24,48,.72); border:1px solid rgba(240,180,41,.45); border-radius:14px; padding:14px 16px; width:270px; }
+.ps-achat.ok{ border-color:rgba(123,224,166,.45); }
+.ps-achat b.t{ font-family:var(--titre); font-size:1.25rem; display:block; }
+.ps-achat p{ margin:4px 0 10px; font-size:.8rem; color:var(--brume); line-height:1.4; }
+.ps-achat.ok p{ margin-bottom:0; }
+.ps-btn{ font-family:var(--titre); font-weight:800; font-size:1.1rem; border-radius:10px; padding:9px 16px; cursor:pointer; border:0; background:var(--c-legendaire, #F0B429); color:#1a0d02; width:100%; }
+@media (max-width:760px){ .ps-tete{ grid-template-columns:1fr; padding:18px; } .ps-achat{ width:auto; } .ps-h1{ font-size:2.1rem; } }
+.ps-piste-titre{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:22px 2px 10px; }
+.ps-piste-titre h2{ font-family:var(--titre); font-weight:800; font-size:1.3rem; margin:0; }
+.ps-piste-titre span{ color:var(--brume); font-size:.8rem; }
+.ps-piste{ display:flex; gap:10px; overflow-x:auto; padding:12px 2px 14px; scroll-snap-type:x proximity; }
+.ps-niv{ flex:none; width:118px; scroll-snap-align:start; display:flex; flex-direction:column; gap:6px; }
+.ps-num{ text-align:center; font-family:var(--titre); font-weight:800; font-size:1rem; color:var(--brume); }
+.ps-niv.atteint .ps-num{ color:var(--c-legendaire, #F0B429); }
+.ps-niv.courant .ps-num{ color:#fff; }
+.ps-case{ border-radius:12px; padding:10px 8px 9px; min-height:128px; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center;
+  background:var(--nuit-2); border:1.5px solid rgba(169,188,212,.14); position:relative; }
+.ps-case.pass{ background:linear-gradient(180deg, rgba(142,44,72,.35), rgba(22,44,75,.9)); border-color:rgba(217,123,58,.4); }
+.ps-ico{ width:56px; height:56px; display:grid; place-items:center; }
+.ps-ico svg{ width:56px; height:56px; }
+.ps-nom{ font-size:.76rem; line-height:1.2; font-weight:600; }
+.ps-type{ font-size:.66rem; color:var(--brume); }
+.ps-etat{ margin-top:auto; font-size:.7rem; }
+.ps-etat.ok{ color:#7BE0A6; }
+.ps-etat.recl{ background:var(--c-legendaire, #F0B429); color:#1a0d02; border:0; border-radius:7px; padding:3px 9px; font-weight:700; font-family:var(--titre); font-size:.85rem; cursor:pointer; }
+.ps-case.ferme .ps-ico, .ps-case.ferme .ps-nom{ opacity:.55; }
+.ps-cadenas{ position:absolute; top:6px; right:6px; width:18px; height:18px; color:#F2C9A0; }
+.ps-etiq{ position:absolute; top:-8px; left:50%; transform:translateX(-50%); font-size:.6rem; font-weight:700; background:#D97B3A; color:#1a0d02; padding:1px 7px; border-radius:6px; white-space:nowrap; }
+.ps-lignes{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; }
+@media (max-width:760px){ .ps-lignes{ grid-template-columns:1fr; } }
+.ps-bloc{ background:var(--nuit); border:1px solid rgba(169,188,212,.14); border-radius:14px; padding:14px 16px; }
+.ps-bloc h3{ font-family:var(--titre); font-weight:800; font-size:1.1rem; margin:0 0 8px; }
+.ps-bloc ul{ margin:0; padding-left:0; list-style:none; font-size:.82rem; line-height:1.55; color:var(--brume); }
+.ps-bloc li{ display:flex; justify-content:space-between; gap:10px; }
+.ps-bloc li b{ color:#fff; white-space:nowrap; }
+.ps-bloc p{ margin:0; font-size:.82rem; line-height:1.5; color:var(--brume); }
+.qg-carte.ps-qg{ position:relative; overflow:hidden; border-color:rgba(217,123,58,.4);
+  background: radial-gradient(120% 160% at 0% 0%, rgba(217,123,58,.22), transparent 60%), var(--nuit-2, #162C4B); }
+.ps-qg-n{ width:38px; height:38px; border-radius:50%; display:grid; place-items:center; font-family:var(--titre); font-weight:900; font-size:1.2rem; border:2.5px solid var(--c-legendaire, #F0B429); flex:none; }
+.qg-carte.ps-qg .ps-jauge{ height:8px; }
+.ps-fiche-apercu{ position:relative; overflow:hidden; width:100%; min-height:150px; border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  background: radial-gradient(120% 140% at 0% 0%, rgba(217,123,58,.45), transparent 55%), radial-gradient(90% 120% at 100% 100%, rgba(142,44,72,.55), transparent 60%), #0F1F38; }
+.ps-fiche-apercu b{ position:relative; font-family:var(--titre); font-weight:900; font-size:1.7rem; }
+.ps-fiche-apercu span{ position:relative; color:#F2C9A0; font-size:.8rem; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '5a0c2656a8d6';
+const VERSION_JEU = '50d6d29423a7';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3592,7 +3592,11 @@ function rendreAttaque(code, a, siege){
     ${attaqueEffetBt && attaqueEffetBt.defense > 0 ? `<div class="gn-badge bt-badge">${ICONE_FORTERESSE}<span><b>Forteresse.</b> −${attaqueEffetBt.defense} % à tes chances sur cette commune.</span></div>` : ''}
     ${attaqueEffetBt && attaqueEffetBt.appui > 0 ? `<p class="bt-appui">${ICONE_FORTERESSE}<span>+${attaqueEffetBt.appui} % grâce à ta forteresse${attaqueEffetBt.appui_de ? ' de <b>' + echapperHtml(attaqueEffetBt.appui_de) + '</b>' : ''}</span></p>` : ''}
     <div class="pc-prox ${a.a_distance ? 'loin' : ''}">
-      ${a.a_distance
+      ${estOutremerCode(code)   // patch246 : en outre-mer, tout le territoire compte (s2-49)
+        ? (a.a_distance
+          ? 'Aucune de tes communes dans ce territoire : <b>attaque à distance</b>, tes chances baissent.'
+          : `<b>${a.proches}</b> de tes communes dans ce territoire`)
+        : a.a_distance
         ? 'Aucune de tes communes à moins de 20 km : <b>attaque à distance</b>, tes chances baissent.'
         : `<b>${a.proches}</b> de tes communes à moins de 20 km`}
     </div>
@@ -6108,6 +6112,7 @@ function voirCommuneSurCarte(entry){
   if(fermerFiche) fermerFiche(null);
   const onglet = document.querySelector('.tab[data-tab="territoire"]');
   if(onglet) onglet.click();
+  if(frontZone === 'outremer') basculerZoneFront('france');   // patch246 : retour à la France
   const carte = document.getElementById('mapWrap');
   if(carte && carte.scrollIntoView) carte.scrollIntoView({ behavior: 'smooth', block: 'center' });
   // le panneau vient d'etre affiche : il n'a ses dimensions qu'a l'image suivante

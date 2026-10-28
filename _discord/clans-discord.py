@@ -36,7 +36,7 @@ JETON_FICHIER = os.path.expanduser('~/.terrafront-bot')
 
 CATEGORIE = u'🏰 Clans'
 PUBLIC = u'🏰│recrutement-clans'
-PUBLIC_SUJET = u"Tu cherches un clan ou des membres ? Présente-toi : sigle, nom du clan, ce que vous visez sur le Front. 6 membres au plus par clan."
+PUBLIC_SUJET = u"Tu cherches un clan ou des membres ? Présente-toi : sigle, nom du clan, ce que vous visez sur le Front. 8 membres au plus par clan."
 PREFIXE_ROLE = u'🏰 ['
 VOIR, ECRIRE, GERER_MSG, LIENS, FICHIERS, HISTORIQUE, REACTIONS = 0x400, 0x800, 0x2000, 0x4000, 0x8000, 0x10000, 0x40
 DROITS_MEMBRE = VOIR | ECRIRE | LIENS | FICHIERS | HISTORIQUE | REACTIONS

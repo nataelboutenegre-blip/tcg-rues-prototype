@@ -6610,3 +6610,13 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 
 /* ---------- patch249 : la bulle du département se cache vraiment ---------- */
 .map-infobulle.dept[hidden]{ display:none; }
+
+/* ---------- patch252 : bras droits du clan ---------- */
+.clan-bd, .cl-mb-chef.bd{ color: var(--clan, #F0B429); font-weight:700; }
+.clan-membre .clan-bd{ color:#F0B429; }
+.clan-gere{ grid-column: 2 / -1; display:flex; flex-direction:column; gap:8px; padding:10px 12px; margin-top:2px;
+  background: rgba(169,188,212,.06); border:1px solid rgba(169,188,212,.16); border-radius:10px; }
+.clan-gere-l{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.clan-gere-l > span:first-child{ font-size:.8rem; color: var(--brume); margin-right:2px; }
+.clan-gere .clan-note{ margin:0; }
+.clan-gere .danger{ color:#F2A0A0; border-color:rgba(242,120,120,.4); }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '132f7ace9e19';
+const VERSION_JEU = '32261cfbd18a';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -15562,6 +15562,7 @@ let clansCarte = new Map();           // joueur_id -> { tag, couleur }
 let clansCarteVersion = 0;
 let monUidClan = null;
 let clanCache = null;
+let clanGere = null;   // patch252 : le membre dont le chef ouvre la gestion
 // patch194 : les echanges entre membres du clan (Front)
 const clanEch = { etat: null, qui: null, donne: null, recoit: null, mes: null, leurs: null, r1: '', r2: '' };
 const enFrontClan = () => SAISON2 && modeJeu === 'front';
@@ -15746,7 +15747,7 @@ function membresClanHtml(x, chef){
       const etat = actif ? 'Actif' : (j === null ? 'Pas encore joué' : `Absent depuis ${j} jour${j > 1 ? 's' : ''}`);
       return `<div class="cl-mb"><span class="av" aria-hidden="true">${echapperTexte((m.pseudo || '?')[0].toUpperCase())}</span>
         <div class="qui"><button type="button" class="cl-mb-pseudo" data-clan-profil="${echapperTexte(m.joueur_id)}">${echapperTexte(m.pseudo)}</button>
-          <div class="cl-mb-info"><span class="cl-mb-point${actif ? '' : ' off'}" aria-hidden="true"></span>${etat}${m.chef ? ' · <span class="cl-mb-chef">Chef</span>' : ''}</div></div>
+          <div class="cl-mb-info"><span class="cl-mb-point${actif ? '' : ' off'}" aria-hidden="true"></span>${etat}${m.chef ? ' · <span class="cl-mb-chef">Chef</span>' : m.bras_droit ? ' · <span class="cl-mb-chef bd">Bras droit</span>' : ''}</div></div>
         <span class="cl-mb-nb"><b>${nbClan(m.communes)}</b> commune${m.communes > 1 ? 's' : ''}</span></div>`;
     }).join('') + (chef
       ? `<div class="cl-pied">Pour le rejoindre, demande une invitation à ${echapperTexte(chef)} (Discord, salon recrutement-clans).</div>`
@@ -15813,11 +15814,31 @@ function renderClan(){
     </div>`;
   } else {
     const act = clanCache.activite;   // patch184 : null si le SQL n'est pas passe
+    // patch252 : les bras droits
+    const droits = c.droits || {};
+    const nbBras = (c.membres || []).filter(m => m.bras_droit).length;
+    const role = (m) => m.chef ? 'Chef' : m.bras_droit ? '<span class="clan-bd">Bras droit</span>' : 'Membre';
+    const bouton = (m) => m.moi ? '<span></span>'
+      : c.chef ? `<button class="bq-btn secondaire" data-clan-gerer="${m.id}" aria-expanded="${clanGere === m.id}">Gérer</button>`
+      : (droits.exclure && !m.chef && !m.bras_droit) ? `<button class="bq-btn secondaire" data-clan-exclure="${m.id}">Exclure</button>` : '<span></span>';
+    const gerer = (m) => {
+      if(!c.chef || m.moi || clanGere !== m.id) return '';
+      const d = m.droits || {};
+      const exclure = `<button class="bq-btn secondaire danger" data-clan-exclure="${m.id}">Exclure du clan</button>`;
+      const bascule = (cle, txt) => `<button type="button" class="filter-pill${d[cle] ? ' active' : ''}" aria-pressed="${!!d[cle]}" data-clan-droit="${cle}" data-clan-qui="${m.id}">${d[cle] ? '✓ ' : ''}${txt}</button>`;
+      return `<div class="clan-gere">
+        ${m.bras_droit
+          ? `<div class="clan-gere-l"><span>Ses droits</span>${bascule('inviter', 'Inviter')}${bascule('exclure', 'Exclure des membres')}</div>
+             <div class="clan-gere-l"><button type="button" class="bq-btn secondaire" data-clan-bras="${m.id}" data-actif="0">Retirer le rôle</button>${exclure}</div>`
+          : nbBras >= 2 ? `<p class="clan-note">Tu as déjà 2 bras droits : retire le rôle à l'un d'eux pour nommer ce membre.</p><div class="clan-gere-l">${exclure}</div>`
+          : `<div class="clan-gere-l"><button type="button" class="bq-btn" data-clan-bras="${m.id}" data-actif="1">Nommer bras droit</button>${exclure}</div><p class="clan-note">Un bras droit peut inviter ; tu choisis ensuite s'il peut aussi exclure.</p>`}
+      </div>`;
+    };
     const membres = (c.membres || []).map(m => `<div class="clan-membre"><span class="av" style="--clan:${c.couleur}">${echapperTexte((m.pseudo || '?')[0].toUpperCase())}</span>
-        <div><b>${echapperTexte(m.pseudo)}</b><small>${m.chef ? 'Chef' : 'Membre'}${m.moi ? ' · toi' : ''}</small></div>
+        <div><b>${echapperTexte(m.pseudo)}</b><small>${role(m)}${m.moi ? ' · toi' : ''}</small></div>
         <span class="clan-nb">${nbClan(m.communes)} communes</span>
-        ${c.chef && !m.moi ? `<button class="bq-btn secondaire" data-clan-exclure="${m.id}">Exclure</button>` : '<span></span>'}
-        ${act ? activiteClanHtml(act.get(m.id)) : ''}</div>`).join('');
+        ${bouton(m)}
+        ${act ? activiteClanHtml(act.get(m.id)) : ''}${gerer(m)}</div>`).join('');
     const total = (c.membres || []).reduce((s, m) => s + (m.communes || 0), 0);
     const n = (c.membres || []).length;
     const actifs = act ? (c.membres || []).filter(m => membreActif(act.get(m.id))) : null;
@@ -15832,10 +15853,10 @@ function renderClan(){
       <div class="puces"><span class="puce">Communes en Front <b>${nbClan(total)}</b></span><span class="puce">Moyenne par membre${actifs ? ' actif' : ''} <b>${nbClan(moyenne)}</b></span>${actifs ? `<span class="puce">Actifs <b>${actifs.length}</b> sur ${n}</span>` : ''}${rang >= 0 ? `<span class="puce">Rang <b>${rang + 1}</b> sur ${classement.length}</span>` : ''}</div>
       ${blocJour}
       <h2>Membres</h2>${membres}
-      ${c.chef && n < 8 ? `<div class="clan-inviter"><input id="clanPseudo" placeholder="Pseudo du joueur à inviter"><button class="bq-btn" id="clanInviter">Inviter</button></div>` : ''}
+      ${(c.chef || droits.inviter) && n < 8 ? `<div class="clan-inviter"><input id="clanPseudo" placeholder="Pseudo du joueur à inviter"><button class="bq-btn" id="clanInviter">Inviter</button></div>` : ''}
       ${(c.invites || []).length ? `<p class="clan-note">Invitations en attente : ${c.invites.map(echapperTexte).join(', ')}.</p>` : ''}
       ${blocEchangesClan()}
-      <ul class="clan-regles"><li>Pas d'attaque entre membres : leurs communes n'apparaissent plus dans tes cibles.</li><li>Aucun bonus de combat : le territoire d'un coéquipier ne compte pas dans tes chances.</li><li>Après avoir quitté un clan, il faut attendre 48 h avant d'en rejoindre un autre.</li><li>Pour discuter, demande un salon privé pour ton clan sur le Discord.</li></ul>
+      <ul class="clan-regles"><li>Pas d'attaque entre membres : leurs communes n'apparaissent plus dans tes cibles.</li><li>Aucun bonus de combat : le territoire d'un coéquipier ne compte pas dans tes chances.</li><li>Le chef peut nommer 2 bras droits et choisir leurs droits (inviter, exclure). Si le chef quitte le clan, un bras droit prend sa place.</li><li>Après avoir quitté un clan, il faut attendre 48 h avant d'en rejoindre un autre.</li><li>Pour discuter, demande un salon privé pour ton clan sur le Discord.</li></ul>
       <button class="bq-btn secondaire" id="clanQuitter" data-prix="0">Quitter le clan</button>
     </div>`;
   }
@@ -15882,6 +15903,15 @@ document.getElementById('panel-clan').addEventListener('click', (e) => {
   }
   if(b.dataset.clanOui) return actionClan('clan_repondre', { p_clan: b.dataset.clanOui, p_accepter: true }, 'Bienvenue dans le clan');
   if(b.dataset.clanNon) return actionClan('clan_repondre', { p_clan: b.dataset.clanNon, p_accepter: false });
+  if(b.dataset.clanGerer){ clanGere = clanGere === b.dataset.clanGerer ? null : b.dataset.clanGerer; renderClan(); return; }   // patch252
+  if(b.dataset.clanBras) return actionClan('clan_role', { p_joueur: b.dataset.clanBras, p_bras_droit: b.dataset.actif === '1', p_inviter: true, p_exclure: false },
+                                           b.dataset.actif === '1' ? 'Bras droit nommé' : 'Rôle retiré');
+  if(b.dataset.clanDroit){
+    const m = ((clanCache.moi.clan || {}).membres || []).find(x => x.id === b.dataset.clanQui);
+    const d = Object.assign({ inviter: true, exclure: false }, (m && m.droits) || {});
+    d[b.dataset.clanDroit] = !d[b.dataset.clanDroit];
+    return actionClan('clan_role', { p_joueur: b.dataset.clanQui, p_bras_droit: true, p_inviter: d.inviter, p_exclure: d.exclure }, 'Droits mis à jour');
+  }
   if(b.dataset.clanExclure){
     if(!b.classList.contains('confirmer')){ b.classList.add('confirmer'); b.textContent = 'Confirmer'; return; }
     return actionClan('clan_exclure', { p_joueur: b.dataset.clanExclure }, 'Joueur exclu');

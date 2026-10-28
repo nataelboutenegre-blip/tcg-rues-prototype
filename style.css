@@ -6620,3 +6620,36 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .clan-gere-l > span:first-child{ font-size:.8rem; color: var(--brume); margin-right:2px; }
 .clan-gere .clan-note{ margin:0; }
 .clan-gere .danger{ color:#F2A0A0; border-color:rgba(242,120,120,.4); }
+
+/* ---------- patch253 : blasons et édition du clan ---------- */
+.blason.blason-svg{ background:none; clip-path:none; width:62px; height:74px; }
+.blason.blason-svg.petit{ width:27px; height:32px; }
+.blason.blason-svg svg{ width:100%; height:100%; display:block; filter:drop-shadow(0 2px 4px rgba(0,0,0,.35)); }
+.cl-marche.cl-clan .blason.blason-svg{ width:38px; height:46px; }
+.clan-tete{ flex-wrap:wrap; }
+.clan-tete .bl-modifier{ margin-left:auto; align-self:flex-start; white-space:nowrap; font-size:.9rem; padding:6px 10px; }
+.bl-tete{ display:flex; gap:18px; align-items:center; margin-bottom:6px; }
+.bl-grand{ width:120px; height:144px; flex:none; filter:drop-shadow(0 8px 18px rgba(0,0,0,.45)); }
+.bl-tag{ display:inline-block; margin-top:6px; font-family:var(--titre); font-weight:800; font-size:.9rem; padding:2px 8px; border-radius:6px; background:var(--clan); color:#1a0d02; }
+.bl-mini{ display:flex; align-items:center; gap:8px; margin-top:10px; color:var(--brume); font-size:.78rem; }
+.bl-mini svg{ width:27px; height:32px; }
+.bl-sigle{ max-width:120px; }
+.bl-choix{ display:flex; flex-wrap:wrap; gap:7px; }
+.bl-choix button{ background:var(--nuit-2); border:1.5px solid rgba(169,188,212,.18); border-radius:10px; padding:5px; cursor:pointer; color:#fff;
+  display:flex; flex-direction:column; align-items:center; gap:3px; font:inherit; font-size:.66rem; }
+.bl-choix button[aria-pressed="true"]{ border-color:var(--c-legendaire, #F0B429); background:var(--nuit-3); }
+.bl-choix svg{ width:36px; height:43px; display:block; }
+.bl-choix.bl-meubles svg{ width:32px; height:32px; }
+.bl-choix span{ color:var(--brume); max-width:56px; text-align:center; line-height:1.15; }
+.bl-emaux{ display:flex; flex-wrap:wrap; gap:7px; }
+.bl-emaux button{ width:30px; height:30px; border-radius:50%; border:2px solid rgba(255,255,255,.18); cursor:pointer; padding:0; }
+.bl-emaux button[aria-pressed="true"]{ border-color:#fff; box-shadow:0 0 0 2px var(--nuit), 0 0 0 4px #fff; }
+.bl-emaux button.aucune{ background:repeating-linear-gradient(45deg, #2a3a55 0 4px, #1a2a45 4px 8px); }
+.bl-deux{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; }
+@media (max-width:560px){ .bl-deux{ grid-template-columns:1fr; } .bl-grand{ width:96px; height:115px; } }
+.bl-seg{ display:inline-flex; background:var(--nuit); padding:3px; border-radius:10px; gap:2px; }
+.bl-seg button{ background:none; border:0; color:var(--brume); font:inherit; font-size:.85rem; padding:6px 12px; border-radius:8px; cursor:pointer; }
+.bl-seg button[aria-pressed="true"]{ background:var(--nuit-3); color:#fff; }
+.bl-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:18px; }
+.bl-actions [data-bl-enregistrer]{ margin-left:auto; }
+.bl-choix button:focus-visible, .bl-emaux button:focus-visible, .bl-seg button:focus-visible{ outline:2px solid var(--c-legendaire, #F0B429); outline-offset:2px; }

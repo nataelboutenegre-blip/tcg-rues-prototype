@@ -7560,3 +7560,268 @@ body.hw-question-ouverte, body.hw-cri-ouvert{ overflow:hidden; overscroll-behavi
   .card.bri .carte-cadre, .card.ecl .carte-cadre, .mini.bri, .mini.ecl, .bx-b-halo, .bx-b-cadre, .bx-e-aura, .bx-e-rayons::before,
   .bx-e-noyau, .bx-e-orbite, .bx-e-orbite2, .bx-e-etoile i, .bx-holo-txt, .paquet.lum-bri, .coupe-rayons.lum-bri, .ouv-dos.lueur-bri .face-back::after{ animation:none; }
 }
+
+/* =====================================================================
+   patch270 — l'atelier des cartes, V1 : finitions et halos (s2-64)
+   Aperçus validés : canevas « Atelier des cartes TerraFront » (21/10),
+   Chrome et Cristal (29/10). Jamais d'arc-en-ciel : il est à la brillante.
+   Dans une grille, rien ne bouge (des centaines de cartes) ; en grand
+   (fiche, atelier, révélation, vitrine), la lumière suit la carte.
+   ===================================================================== */
+@property --atl-px { syntax: '<number>'; inherits: true; initial-value: 30; }
+@property --atl-py { syntax: '<number>'; inherits: true; initial-value: 26; }
+@keyframes atlBalade{ 0%, 100%{ --atl-px:22; --atl-py:30; } 50%{ --atl-px:78; --atl-py:70; } }
+
+.atl{ --atl-x:30%; --atl-y:26%; --halo:#FFE08A; }
+.atl.hc-ciel{ --halo:#7FD4FF; } .atl.hc-corail{ --halo:#FF8A80; } .atl.hc-vert{ --halo:#B8F27A; } .atl.hc-mauve{ --halo:#E3B8FF; }
+.mini.atl{ position:relative; }
+/* la lumière suit l'inclinaison de la carte en grand (fiche, atelier) */
+.c3d-carte .mini.atl{ --atl-x:calc(var(--gx) * 1.6 - 30%); --atl-y:calc(var(--gy) * 1.6 - 30%); }
+/* à la révélation : la souris si elle passe, sinon un lent va-et-vient */
+.card.atl:not(.fn-aucune) .carte-cadre{ animation:atlBalade 9s ease-in-out infinite;
+  --atl-x:var(--hx, calc(var(--atl-px) * 1%)); --atl-y:var(--hy, calc(var(--atl-py) * 1%)); }
+.atl-fond, .atl-a1, .atl-a2, .atl-reflet, .atl-glow, .atl-parts, .atl-scint{ position:absolute; pointer-events:none; display:block; font-style:normal; }
+.atl-fond{ inset:0; z-index:-1; }
+.atl-a1, .atl-a2{ inset:0; }
+.atl-reflet{ inset:0; z-index:4; border-radius:inherit; }
+.mini > .atl-reflet{ border-radius:10px; }
+.atl:not(.fn-aucune):not(.skin):not(.aurore) :is(.mini-int, .carte-int){ position:relative; isolation:isolate; }
+/* une carte qui porte un skin garde son skin ; une Aurore garde ses couleurs (seuls les reflets passent) */
+.atl.skin :is(.atl-fond, .atl-a1, .atl-a2, .atl-reflet, .atl-scint){ display:none; }
+.atl.aurore :is(.atl-fond, .atl-a1, .atl-a2){ display:none; }
+
+/* ---------- Encre (se gagne) : papier blanc, dessin à l'encre ---------- */
+.atl.fn-encre:not(.skin):not(.aurore) :is(.mini-int, .carte-int){ background:#fff; }
+.atl.fn-encre:not(.skin):not(.aurore) :is(.mini-art, .carte-art) > :is(svg, .art-photo){ filter:grayscale(1) contrast(1.5) brightness(.92); }
+.atl.fn-encre :is(.atl-fond, .atl-a1, .atl-a2, .atl-reflet){ display:none; }
+
+/* ---------- Chrome : l'argent poli, deux reflets francs qui glissent ---------- */
+.atl.fn-chrome:not(.skin):not(.aurore) :is(.mini-int, .carte-int){ background:linear-gradient(172deg, #FBFCFE 0%, #DCE3EB 38%, #F4F7FA 55%, #CDD6E1 100%); }
+.atl.fn-chrome .atl-fond{ background:repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 1px, rgba(96,116,140,.08) 1px 2px),
+  repeating-linear-gradient(90deg, rgba(255,255,255,0) 0 6px, rgba(255,255,255,.45) 6px 7px); }
+.atl.fn-chrome:not(.skin):not(.aurore) :is(.mini-art, .carte-art) > :is(svg, .art-photo){ filter:grayscale(1) contrast(1.5) brightness(.96); }
+.atl.fn-chrome .atl-a1{ mix-blend-mode:multiply; background:linear-gradient(158deg, #7F93AE 0%, #F3F7FB 40%, #55677F 68%, #D9E3EE 100%); }
+.atl.fn-chrome .atl-a2{ mix-blend-mode:screen;
+  background:linear-gradient(112deg, transparent 30%, rgba(255,255,255,.95) 44%, rgba(214,228,242,.45) 50%, transparent 60%),
+    linear-gradient(112deg, transparent 62%, rgba(255,255,255,.55) 67%, transparent 72%);
+  background-size:300% 100%; background-position:var(--atl-x) 0; }
+.atl.fn-chrome:not(.skin):not(.aurore) :is(.mini-nom, .carte-nom){ background:linear-gradient(180deg, #7D8DA3 0%, #1B2738 52%, #8797AD 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent; }
+.atl.fn-chrome:not(.skin):not(.aurore) .carte-stats b{ color:#2A3646; }
+.atl.fn-chrome:not(.skin):not(.aurore) :is(.mini-dept, .carte-dept){ color:rgba(255,255,255,.45); }
+.atl.fn-chrome .atl-reflet{ mix-blend-mode:overlay;
+  background:linear-gradient(104deg, transparent 30%, rgba(30,44,64,.35) 39%, transparent 44%, rgba(255,255,255,.95) 48%, rgba(255,255,255,0) 54%),
+    linear-gradient(104deg, transparent 56%, rgba(255,255,255,.5) 60%, transparent 64%);
+  background-size:320% 100%; background-position:var(--atl-x) 0; }
+
+/* ---------- Cristal : facettes taillées, teinte de la rareté, éclats blancs ---------- */
+.atl.fn-cristal{ --teinte:#2F7CF6; }
+.atl.fn-cristal.commun{ --teinte:#7E8BA0; } .atl.fn-cristal.peucommun{ --teinte:#22A06B; }
+.atl.fn-cristal.epique{ --teinte:#9B5CF6; } .atl.fn-cristal.legendaire{ --teinte:#E0A21C; }
+.atl.fn-cristal:not(.skin):not(.aurore) :is(.mini-int, .carte-int){ background:#F3F6FA;
+  background:linear-gradient(160deg, #FFFFFF 0%, color-mix(in srgb, var(--teinte) 12%, #F3F6FA) 60%, color-mix(in srgb, var(--teinte) 26%, #E6ECF4) 100%); }
+.atl.fn-cristal .atl-fond{ opacity:.165; background:var(--teinte);
+  -webkit-mask:url('atelier-facettes.svg') center / 100% 100% no-repeat; mask:url('atelier-facettes.svg') center / 100% 100% no-repeat; }
+.atl.fn-cristal .atl-a1{ display:none; }
+.atl.fn-cristal .atl-a2{ mix-blend-mode:overlay; opacity:.95; background:url('atelier-facettes.svg') center / 260% 230% no-repeat; }
+.atl.fn-cristal:not(.skin):not(.aurore) :is(.mini-nom, .carte-nom){ color:#0E1A2C; color:color-mix(in srgb, var(--teinte) 55%, #0E1A2C); }
+.atl.fn-cristal .atl-reflet{ mix-blend-mode:soft-light;
+  background:url('atelier-facettes.svg') center / 100% 100% no-repeat,
+    radial-gradient(circle at var(--atl-x) var(--atl-y), rgba(255,255,255,.9), rgba(255,255,255,0) 45%);
+  -webkit-mask:radial-gradient(circle at var(--atl-x) var(--atl-y), #000 0 22%, rgba(0,0,0,.35) 45%, rgba(0,0,0,.08) 75%);
+  mask:radial-gradient(circle at var(--atl-x) var(--atl-y), #000 0 22%, rgba(0,0,0,.35) 45%, rgba(0,0,0,.08) 75%); }
+.atl-scint{ inset:0; z-index:5; }
+.atl-scint i{ position:absolute; width:12px; height:12px; margin:-6px 0 0 -6px; opacity:0; filter:drop-shadow(0 0 3px rgba(255,255,255,.9));
+  background:radial-gradient(circle, #fff 0 1.5px, rgba(255,255,255,.55) 2.5px, transparent 5px); animation:atlScint 2.6s ease-in-out infinite; }
+.atl-scint i::before, .atl-scint i::after{ content:''; position:absolute; left:50%; top:50%; background:#fff; border-radius:1px; transform:translate(-50%, -50%); }
+.atl-scint i::before{ width:20px; height:1.5px; } .atl-scint i::after{ width:1.5px; height:20px; }
+.mini .atl-scint i{ width:10px; height:10px; margin:-5px 0 0 -5px; }
+.mini .atl-scint i::before{ width:16px; height:1.2px; } .mini .atl-scint i::after{ width:1.2px; height:16px; }
+.atl-scint .s1{ left:18%; top:22%; } .atl-scint .s2{ left:72%; top:14%; animation-delay:.6s; } .atl-scint .s3{ left:86%; top:48%; animation-delay:1.2s; }
+.atl-scint .s4{ left:30%; top:40%; animation-delay:1.9s; } .atl-scint .s5{ left:58%; top:84%; animation-delay:.9s; }
+.atl-scint .s6{ left:14%; top:88%; animation-delay:2.2s; } .atl-scint .s7{ left:90%; top:92%; animation-delay:1.5s; }
+@keyframes atlScint{ 0%, 70%, 100%{ opacity:0; transform:scale(.4); } 80%{ opacity:1; transform:scale(1); } 90%{ opacity:.2; transform:scale(.6); } }
+
+/* ---------- Or (plus tard, par un pass) : la feuille d'or ---------- */
+.atl.fn-or:not(.skin):not(.aurore) :is(.mini-art, .carte-art){ background:linear-gradient(140deg, #8A5A10, #F0B429 40%, #FFF1B8 55%, #C9952A 70%, #8A5A10); }
+.atl.fn-or:not(.skin):not(.aurore) :is(.mini-art, .carte-art) > svg rect{ opacity:0; }
+.atl.fn-or:not(.skin):not(.aurore) :is(.mini-art, .carte-art) > svg path{ stroke:rgba(255,248,220,.6); }
+.atl.fn-or :is(.atl-fond, .atl-a1, .atl-a2){ display:none; }
+.atl.fn-or:not(.skin):not(.aurore) :is(.mini-art, .carte-art):has(> .art-photo) > .atl-a1{ display:block; mix-blend-mode:multiply; opacity:.75;
+  background:linear-gradient(140deg, #C9952A, #FFE7A0 50%, #B7791F); }
+.atl.fn-or .atl-reflet{ mix-blend-mode:overlay; background:linear-gradient(115deg, transparent 35%, rgba(255,250,220,.75) 50%, transparent 65%);
+  background-size:300% 100%; background-position:var(--atl-x) 0; }
+
+/* ---------- Halos : dans une grille, une lueur fixe sur la carte elle-même ---------- */
+.mini.atl:not(.h-aucun):not(.atl-n1):not(.atl-n2){ box-shadow:0 8px 16px rgba(0,0,0,.35), 0 0 8px 1px var(--halo);
+  box-shadow:0 8px 16px rgba(0,0,0,.35), 0 0 8px 1.5px color-mix(in srgb, var(--halo) 65%, transparent); }
+/* en grand : la lueur qui respire, les étoiles qui jaillissent, les braises qui montent */
+.atl-glow{ inset:0; z-index:-1; border-radius:14px; }
+.mini > .atl-glow{ border-radius:10px; }
+.atl.h-lueur .atl-glow{ animation:atlLueur 2.4s ease-in-out infinite; }
+.mini.atl-n1.h-lueur .atl-glow{ animation-name:atlLueurPetit; }
+.mini.atl-n2.h-lueur .atl-glow{ animation-name:atlLueurMini; }
+@keyframes atlLueur{ 0%, 100%{ box-shadow:0 0 14px 2px color-mix(in srgb, var(--halo) 55%, transparent); } 50%{ box-shadow:0 0 36px 12px color-mix(in srgb, var(--halo) 85%, transparent); } }
+@keyframes atlLueurMini{ 0%, 100%{ box-shadow:0 0 11px 2px color-mix(in srgb, var(--halo) 55%, transparent); } 50%{ box-shadow:0 0 29px 10px color-mix(in srgb, var(--halo) 85%, transparent); } }
+@keyframes atlLueurPetit{ 0%, 100%{ box-shadow:0 0 6px 1px color-mix(in srgb, var(--halo) 55%, transparent); } 50%{ box-shadow:0 0 16px 5px color-mix(in srgb, var(--halo) 85%, transparent); } }
+@supports not (color: color-mix(in srgb, red 50%, blue)){
+  @keyframes atlLueur{ 0%, 100%{ box-shadow:0 0 14px 2px var(--halo); opacity:.55; } 50%{ box-shadow:0 0 36px 12px var(--halo); opacity:.85; } }
+  @keyframes atlLueurMini{ 0%, 100%{ box-shadow:0 0 11px 2px var(--halo); opacity:.55; } 50%{ box-shadow:0 0 29px 10px var(--halo); opacity:.85; } }
+  @keyframes atlLueurPetit{ 0%, 100%{ box-shadow:0 0 6px 1px var(--halo); opacity:.55; } 50%{ box-shadow:0 0 16px 5px var(--halo); opacity:.85; } }
+}
+.atl-parts{ inset:-34px; z-index:6; }
+.mini > .atl-parts{ inset:-26px; }
+.mini.atl-n1 > .atl-parts{ inset:-14px; }
+.atl-p{ position:absolute; display:block; opacity:0; font-style:normal; }
+.atl-p.etoile{ width:7px; height:7px; animation:atlEtoile 2.6s ease-out infinite; }
+.atl-p.etoile::before, .atl-p.etoile::after{ content:''; position:absolute; left:50%; top:50%; background:var(--halo); transform:translate(-50%, -50%); border-radius:2px; }
+.atl-p.etoile::before{ width:12px; height:2px; } .atl-p.etoile::after{ width:2px; height:12px; }
+.mini .atl-p.etoile::before{ width:10px; height:1.6px; } .mini .atl-p.etoile::after{ width:1.6px; height:10px; }
+.mini.atl-n1 .atl-p.etoile::before{ width:7px; height:1.2px; } .mini.atl-n1 .atl-p.etoile::after{ width:1.2px; height:7px; }
+@keyframes atlEtoile{ 0%{ opacity:0; transform:translate(0, 0) scale(.3); } 25%{ opacity:1; } 100%{ opacity:0; transform:translate(var(--dx), var(--dy)) scale(1) rotate(90deg); } }
+.atl-p.braise{ width:4px; height:4px; border-radius:50%; background:var(--halo); box-shadow:0 0 6px 2px var(--halo); animation:atlBraise 3s ease-in infinite; }
+.mini .atl-p.braise{ width:3.4px; height:3.4px; box-shadow:0 0 5px 1.6px var(--halo); }
+.mini.atl-n1 .atl-p.braise{ width:2.6px; height:2.6px; box-shadow:0 0 4px 1px var(--halo); }
+@keyframes atlBraise{ 0%{ opacity:0; transform:translate(0, 0); } 15%{ opacity:1; } 100%{ opacity:0; transform:translate(var(--dx), var(--dy)); } }
+
+@media (prefers-reduced-motion: reduce){
+  .card.atl .carte-cadre, .atl-glow, .atl-p, .atl-scint i, .atl-ec-rayons, .atl-ec-flash{ animation:none !important; }
+  .atl.h-lueur .atl-glow{ box-shadow:0 0 18px 4px var(--halo); }
+  .atl-parts, .atl-scint{ display:none; }
+}
+
+/* ---------- l'écran de l'atelier ---------- */
+html.atl-ouvert, html.atl-ouvert body{ overflow:hidden; }
+.atl-ecran{ position:fixed; inset:0; z-index:48; display:flex; flex-direction:column; background:var(--nuit); color:#EAF1F8;
+  font-family:var(--texte); opacity:0; transition:opacity .18s ease; }
+.atl-ecran[hidden]{ display:none; }
+.atl-ecran.visible{ opacity:1; }
+.atl-ecran p{ margin:0; }
+.atl-page{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch;
+  box-sizing:border-box; padding:36px 24px 64px; }
+.atl-page > *{ max-width:1180px; margin-left:auto; margin-right:auto; }
+.atl-tete{ display:flex; gap:14px; align-items:flex-start; }
+.atl-tete-t{ display:flex; flex-direction:column; gap:10px; min-width:0; }
+.atl-retour{ flex:none; width:44px; height:44px; margin:-6px 0 0 -8px; border-radius:50%; border:0; background:transparent; color:#EAF1F8;
+  display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+.atl-retour:hover{ background:rgba(169,188,212,.12); }
+.atl-retour svg{ width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.atl-fil{ font-size:13px; color:var(--brume); letter-spacing:.04em; }
+.atl-tete h1{ margin:0; font-family:var(--titre); font-weight:900; font-size:60px; line-height:.95; }
+.atl-intro{ max-width:64ch; color:var(--brume); font-size:15px; line-height:1.55; }
+.atl-test-c{ display:none; }
+.atl-test{ align-self:flex-start; padding:5px 12px; border-radius:999px; background:#2A2A2E; border:1px solid rgba(240,180,41,.5); color:#FFE08A; font-size:13px; font-weight:600; }
+.atl-corps{ display:flex; flex-wrap:wrap; gap:28px; align-items:flex-start; margin-top:28px; }
+.atl-gauche{ flex:1 1 380px; min-width:0; display:flex; flex-direction:column; gap:14px; }
+.atl-droite{ flex:999 1 520px; min-width:0; display:flex; flex-direction:column; gap:22px; }
+.atl-scene{ position:relative; min-height:520px; border-radius:20px; background:var(--nuit-2); border:1px solid rgba(169,188,212,.14);
+  display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.atl-c3d{ position:relative; z-index:2; }
+.atl-scene .c3d{ --s:1.85 !important; }
+.atl-scene .c3d-aide{ display:none; }
+.atl-lbl{ font-size:12px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:var(--brume); }
+.atl-lbl-essayer{ margin-top:4px !important; }
+.atl-chips{ display:flex; flex-wrap:wrap; gap:8px; }
+.atl-chip, .atl-seg{ min-height:44px; padding:0 14px; border-radius:999px; border:1px solid rgba(169,188,212,.3); background:transparent; color:#EAF1F8;
+  font-family:inherit; font-size:14px; font-weight:500; cursor:pointer; display:inline-flex; align-items:center; box-sizing:border-box; }
+.atl-chip.on, .atl-seg.on{ background:#EAF1F8; color:var(--nuit); border-color:#EAF1F8; }
+.atl-seg{ cursor:default; }
+.atl-essai{ display:flex; flex-direction:column; gap:6px; padding:14px 16px; border-radius:12px; background:#2A2A2E; border:1px solid rgba(240,180,41,.5); }
+.atl-essai-t{ font-weight:600; color:#FFE08A; }
+.atl-essai p:not(.atl-essai-t){ font-size:14px; line-height:1.45; color:#EAF1F8; }
+.atl-essai-pill{ display:none; }
+.atl-fam{ display:flex; flex-direction:column; gap:10px; }
+.atl-fam-tete{ display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+.atl-choisi{ font-size:14px; color:#FFE08A; }
+.atl-opts{ display:flex; flex-wrap:wrap; gap:8px; }
+.atl-opt{ display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:3px; min-height:56px; padding:8px 13px; border-radius:11px;
+  border:1px solid rgba(169,188,212,.25); background:#13284A; color:#EAF1F8; font-family:inherit; font-size:15px; font-weight:600; cursor:pointer; text-align:left; }
+.atl-opt:hover{ border-color:rgba(169,188,212,.55); }
+.atl-opt.on{ border-color:var(--c-legendaire); background:#2A3346; box-shadow:inset 0 0 0 1px var(--c-legendaire); }
+.atl-opt.verrou .atl-opt-nom{ color:#C9D6E6; }
+.atl-badge{ display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:500; white-space:nowrap; }
+.atl-badge svg{ width:11px; height:11px; stroke:currentColor; fill:none; stroke-width:2.2; }
+.b-inclus{ color:var(--brume); } .b-atoi, .b-gagner{ color:#7EE2B0; } .b-boutique{ color:#FFD56B; } .b-pass{ color:#D3B8FF; }
+.atl-couleurs{ display:flex; flex-direction:column; gap:6px; margin-top:12px; }
+.atl-sws{ display:flex; gap:4px; }
+.atl-sw{ width:44px; height:44px; border-radius:50%; border:2px solid transparent; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+.atl-sw span{ width:26px; height:26px; border-radius:50%; display:block; }
+.atl-sw.on{ border-color:#EAF1F8; }
+.atl-onglets{ display:none; }
+.atl-appliquer{ display:flex; flex-direction:column; gap:12px; border-top:1px solid rgba(169,188,212,.16); padding-top:18px; }
+.atl-actions{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:4px; }
+.atl-btn{ min-height:48px; padding:0 22px; border:0; border-radius:12px; background:var(--c-legendaire); color:var(--encre);
+  font-family:var(--titre); font-weight:800; font-size:20px; letter-spacing:.01em; cursor:pointer; }
+.atl-btn:disabled{ background:#2A3E5C; color:var(--brume); cursor:not-allowed; }
+.atl-btn.sec{ background:transparent; color:#FFD56B; box-shadow:inset 0 0 0 2px rgba(240,180,41,.55); }
+.atl-btn.sec:disabled{ color:var(--brume); box-shadow:inset 0 0 0 2px rgba(169,188,212,.25); }
+.atl-note{ max-width:62ch; font-size:13px; line-height:1.5; color:var(--brume); }
+.atl-eclat{ display:flex; flex-wrap:wrap; gap:20px; align-items:center; justify-content:space-between; margin-top:28px; padding:20px 22px; border-radius:18px;
+  background:var(--nuit-2); border:1px solid rgba(169,188,212,.14); }
+.atl-eclat-t{ flex:1 1 420px; min-width:0; display:flex; flex-direction:column; gap:6px; }
+.atl-eclat-h{ font-family:var(--titre); font-weight:800; font-size:26px; }
+.atl-eclat-t p:not(.atl-eclat-h):not(.atl-eclat-v){ max-width:70ch; font-size:14px; line-height:1.55; color:#C9D6E6; }
+.atl-eclat-v{ font-size:13px; color:#7EE2B0; }
+.atl-bas{ display:none; }
+.atl-retour:focus-visible, .atl-chip:focus-visible, .atl-opt:focus-visible, .atl-sw:focus-visible, .atl-btn:focus-visible, .atl-onglet:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+/* l'éclat, pour voir */
+.atl-ec-rayons{ position:absolute; left:50%; top:50%; width:540px; height:540px; margin:-270px 0 0 -270px; border-radius:50%; pointer-events:none; z-index:1;
+  background:repeating-conic-gradient(from var(--bx-ang), rgba(255,224,138,0) 0 10deg, rgba(255,224,138,.55) 10deg 14deg);
+  -webkit-mask:radial-gradient(circle, #000 18%, transparent 66%); mask:radial-gradient(circle, #000 18%, transparent 66%);
+  animation:atlRayons 1.6s ease-out forwards, bxTourne 6s linear infinite; }
+@keyframes atlRayons{ 0%{ opacity:0; transform:scale(.4); } 25%{ opacity:1; transform:scale(1.05); } 100%{ opacity:0; transform:scale(1.3); } }
+.atl-ec-flash{ position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:6; animation:atlFlash .7s ease-out; }
+@keyframes atlFlash{ 0%{ opacity:.7; } 100%{ opacity:0; } }
+
+/* téléphone : la carte, les familles en onglets, un bouton en bas */
+@media (max-width: 760px){
+  .atl-page{ padding:0 0 8px; }
+  .atl-page > *{ max-width:none; }
+  .atl-tete{ align-items:center; gap:4px; padding:12px 10px 4px; }
+  .atl-retour{ margin:0; }
+  .atl-tete h1{ font-size:28px; line-height:1; }
+  .atl-fil, .atl-intro{ display:none; }
+  .atl-test{ font-size:12px; padding:3px 10px; }
+  .atl-test-l{ display:none; } .atl-test-c{ display:inline; }
+  .atl-tete-t{ flex-direction:row; align-items:center; gap:10px; flex-wrap:wrap; }
+  .atl-corps{ display:block; margin:0; }
+  .atl-gauche{ display:block; }
+  .atl-scene{ height:316px; min-height:0; border:0; border-radius:0; background:none; }
+  .atl-scene .c3d{ --s:1.2 !important; }
+  .atl-lbl-essayer, .atl-chips-cartes{ display:none; }
+  .atl-essai{ display:none; }
+  .atl-essai-pill{ display:block; position:absolute; left:50%; bottom:6px; transform:translateX(-50%); z-index:7; max-width:calc(100% - 24px);
+    padding:5px 12px; border-radius:999px; background:#2A2A2E; border:1px solid rgba(240,180,41,.5); color:#FFE08A; font-size:12.5px; font-weight:600;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-sizing:border-box; }
+  .atl-droite{ display:block; }
+  .atl-onglets{ display:flex; gap:4px; margin:8px 16px 0; padding:4px; border-radius:13px; background:var(--nuit-2); }
+  .atl-onglet{ flex:1; min-height:44px; border:0; border-radius:10px; background:transparent; color:var(--brume); font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+  .atl-onglet.on{ background:#EAF1F8; color:var(--nuit); }
+  .atl-fam{ display:none; padding:12px 16px 0; gap:8px; }
+  .atl-fam.actif{ display:flex; }
+  .atl-fam-tete{ display:none; }
+  .atl-opts{ flex-direction:column; gap:8px; }
+  .atl-opt{ flex-direction:row; align-items:center; justify-content:space-between; gap:10px; min-height:48px; padding:0 14px; border-radius:12px;
+    border-color:rgba(169,188,212,.18); width:100%; box-sizing:border-box; }
+  .atl-badge{ font-size:12.5px; }
+  .atl-couleurs{ flex-direction:row; align-items:center; gap:2px; margin-top:2px; }
+  .atl-couleurs .atl-lbl{ font-size:13px; letter-spacing:0; text-transform:none; font-weight:400; margin-right:6px; }
+  .atl-sws{ gap:2px; }
+  .atl-sw span{ width:24px; height:24px; }
+  .atl-appliquer, .atl-eclat{ display:none; }
+  .atl-bas{ display:flex; flex:none; flex-direction:column; gap:8px; padding:12px 16px max(22px, env(safe-area-inset-bottom)); border-top:1px solid rgba(169,188,212,.14); background:var(--nuit); }
+  .atl-bas p{ font-size:13px; color:var(--brume); text-align:center; }
+  .atl-bas .atl-btn{ width:100%; min-height:50px; border-radius:13px; }
+}
+
+/* ---------- l'atelier dans Personnaliser et dans la boutique ---------- */
+.gr-atelier{ display:flex; gap:14px; align-items:center; padding:12px 14px; border-radius:14px;
+  background:linear-gradient(120deg, rgba(240,180,41,.12), rgba(15,31,56,.55) 62%); border:1.5px solid rgba(240,180,41,.35); }
+.gr-atelier .gr-at-vig{ margin:0; flex:none; }
+.gr-at-txt{ display:grid; gap:4px; justify-items:start; min-width:0; }
+.gr-at-txt b{ font-family:var(--titre); font-weight:800; font-size:1.45rem; line-height:1; }
+.gr-at-txt span{ color:var(--brume); font-size:.84rem; line-height:1.35; }
+.gr-at-txt .bq-btn{ margin:6px 0 0; }
+.atl-vig .mini, .gr-at-vig .mini{ content-visibility:visible; }
+/* dans la boutique, un halo à étoiles ou à braises se voit aussi à sa lueur */
+.atl-vig .mini.atl:is(.h-etoiles, .h-braises) > .atl-glow{ box-shadow:0 0 12px 3px var(--halo); opacity:.7; }

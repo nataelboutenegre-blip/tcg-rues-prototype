@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '3c7f7a7f1a64';
+const VERSION_JEU = '3e5a83abdcd7';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -250,6 +250,9 @@ function messageLisible(msg){
     [/deja son eclat/i, 'Cette carte a déjà son éclat.'],
     [/il faut (\d+) doublons libres/i, (x) => `Il faut ${x[1]} doublons de cette carte, en plus de ta carte, pour un éclat.`],
     [/eclats ne sont pas encore ouverts/i, 'Les éclats ne sont pas encore ouverts.'],
+    [/pas encore cette finition/i, 'Cette finition n’est pas encore à toi.'],   // patch270
+    [/pas encore ce halo/i, 'Ce halo n’est pas encore à toi.'],
+    [/atelier n'est pas encore ouvert/i, 'L’atelier n’est pas encore ouvert.'],
     [/invalid login credentials/i, 'Email ou mot de passe incorrect.'],
     [/user already registered/i, 'Un compte existe déjà avec cet email.'],
     [/password should be at least (\d+)/i, (x) => `Le mot de passe doit faire au moins ${x[1]} caractères.`],
@@ -834,6 +837,7 @@ async function showGame(session_){
   recapDemarrer();   // patch262 : le récap d'arrivée
   hwCharger();   // patch265 : Halloween (s2-62)
   briCharger();   // patch269 : brillantes et éclats (s2-63)
+  atlCharger();   // patch270 : l'atelier des cartes (s2-64)
   dmEtape(25, 'La carte de France…');
   await loadOutline();
   dmMesure('carte');
@@ -7055,7 +7059,8 @@ function makeCardEl(draw, onFlip){
   const wrap = document.createElement('div');
   const mon = monumentDe(draw.code);
   const bxg = briParts(draw, true);   // patch269
-  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '') + (draw.aurore ? ' aurore' : '') + (estOutremerCode(draw.code) ? ' outremer' : '') + bxg.cls;   // patch219, patch269
+  const atg = atlParts(draw.terraExemplaires != null ? { ...draw, atelier: atlMienne(2), skin: skinDeMaCarte('terra', draw.code) } : draw, true);   // patch270
+  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '') + (draw.aurore ? ' aurore' : '') + (estOutremerCode(draw.code) ? ' outremer' : '') + bxg.cls + atg.cls;   // patch219, patch269, patch270
   wrap.innerHTML = `
     <div class="card-inner">
       <div class="face face-back">
@@ -7063,15 +7068,15 @@ function makeCardEl(draw, onFlip){
         <span class="dos-coin hg"></span><span class="dos-coin hd"></span><span class="dos-coin bg"></span><span class="dos-coin bd"></span>
         <div class="dos-embleme">${ICONE_EPINGLE}</div>
       </div>
-      <div class="face face-front">${bxg.dehors}
+      <div class="face face-front">${bxg.dehors}${atg.dehors}
         <div class="carte-cadre">
-          <div class="carte-int">
+          <div class="carte-int">${atg.fond}
             ${draw.aurore ? fondAurore(draw.code, draw.tier.id, true) : ''}
             <div class="carte-haut">
               <span class="carte-rarete">${draw.tier.label}</span>
               <span class="carte-num">${draw.rank.toLocaleString('fr-FR')} / ${draw.tierSize.toLocaleString('fr-FR')}</span>
             </div>
-            <div class="carte-art">${estOutremerCode(draw.code) ? OM_BADGE : ''}${carteArtSvg(draw.code, draw.tier.id)}${bxg.art}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
+            <div class="carte-art">${estOutremerCode(draw.code) ? OM_BADGE : ''}${carteArtSvg(draw.code, draw.tier.id)}${bxg.art}${atg.art}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
             <div class="carte-infos">
               <p class="carte-nom ${draw.nom.length > 26 ? 'tres-long' : draw.nom.length > 16 ? 'long' : ''}" title="${echapperTexte(draw.nom)}">${draw.nom}</p>
               <p class="carte-departement">${DEPT_NAMES[draw.dept] ? `<span class="dep-nom">${DEPT_NAMES[draw.dept]}</span> <span class="dep-num">(${draw.dept})</span>` : `<span class="dep-num">${draw.dept}</span>`}</p>
@@ -7082,7 +7087,7 @@ function makeCardEl(draw, onFlip){
               ${draw.aurore ? creditAurore(draw.code) : ''}
             </div>
             ${bxg.surface}<div class="carte-lisere"><span></span><span></span><span></span></div>
-          </div>${bxg.anneau}
+          </div>${bxg.anneau}${atg.anneau}
         </div>
       </div>
     </div>
@@ -10748,18 +10753,19 @@ function miniTerra(e){
   const nom = echapperTexte(e.nom);
   const au = e.aurore > 0;
   const bx = briParts(e, false);   // patch269
-  return `<div class="mini ${e.tier.id}${au ? ' aurore' : ''}${estOutremerCode(e.code) ? ' outremer' : ''}${bx.cls}"${e.skin ? ` data-skin="${echapperTexte(e.skin)}"` : ''} title="${nom} (${e.dept}) — ${e.tier.label}${au ? ' — Aurore' + (e.aurore > 1 ? ' ×' + e.aurore : '') : ''}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}${au ? titreCreditAurore(e.code) : ''}">
-    ${bx.dehors}<div class="mini-int">
+  const at = atlParts(e, false);   // patch270
+  return `<div class="mini ${e.tier.id}${au ? ' aurore' : ''}${estOutremerCode(e.code) ? ' outremer' : ''}${bx.cls}${at.cls}"${e.skin ? ` data-skin="${echapperTexte(e.skin)}"` : ''} title="${nom} (${e.dept}) — ${e.tier.label}${au ? ' — Aurore' + (e.aurore > 1 ? ' ×' + e.aurore : '') : ''}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}${au ? titreCreditAurore(e.code) : ''}">
+    ${bx.dehors}${at.dehors}<div class="mini-int">${at.fond}
       ${au ? fondAurore(e.code, e.tier.id, false) : ''}
       ${e.exemplaires > 1 ? `<span class="mini-ex">×${e.exemplaires}</span>` : ''}
-      <div class="mini-art">${estOutremerCode(e.code) ? OM_BADGE_MINI : ''}${e.photo ? artCommune(e, e.tier.id, 'mini') : miniArtSvg(e.code, e.tier.id)}${bx.art}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
+      <div class="mini-art">${estOutremerCode(e.code) ? OM_BADGE_MINI : ''}${e.photo ? artCommune(e, e.tier.id, 'mini') : miniArtSvg(e.code, e.tier.id)}${bx.art}${at.art}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
       <div class="mini-infos">
         <p class="mini-nom ${e.nom.length > 14 ? 'long' : ''}">${nom}</p>
         ${e.rank ? `<span class="mini-num">n° ${Number(e.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(e.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
         <span class="mini-rarete">${e.tier.label}${e.auroreS1 ? '<span class="mini-origine" title="Aurore gagnée dans le Front, saison 1">Front S1</span>' : ''}</span>
       </div>
       ${bx.surface}<div class="mini-lisere"><span></span><span></span><span></span></div>
-    </div>${bx.anneau}
+    </div>${bx.anneau}${at.anneau}
   </div>`;
 }
 
@@ -10775,7 +10781,7 @@ function afficherBilanTerra(){
   el.id = 'terraBilan';
   el.className = 'tt-bilan-bloc';
   el.innerHTML = `<p class="tt-bilan">Dernier paquet : <b>${nouv} nouvelle${nouv > 1 ? 's' : ''}</b>, ${dbl} doublon${dbl > 1 ? 's' : ''}</p>
-    <div class="tt-res">${trierPourRevelation(draws).map(d => `<div class="tt-c"><span class="tt-tag ${d.terraNouvelle ? 'neuf' : 'dbl'}">${d.terraNouvelle ? 'NOUVELLE' : 'DOUBLON'}</span>${miniTerra({ code: d.code, nom: d.nom, dept: d.dept, tier: d.tier, brillante: d.brillante || 0, exemplaires: d.terraExemplaires, rank: d.rank, tierSize: d.tierSize, aurore: d.aurore ? 1 : 0, skin: d.terraNouvelle ? undefined : skinDeMaCarte('terra', d.code) })}</div>`).join('')}</div>`;
+    <div class="tt-res">${trierPourRevelation(draws).map(d => `<div class="tt-c"><span class="tt-tag ${d.terraNouvelle ? 'neuf' : 'dbl'}">${d.terraNouvelle ? 'NOUVELLE' : 'DOUBLON'}</span>${miniTerra({ code: d.code, nom: d.nom, dept: d.dept, tier: d.tier, brillante: d.brillante || 0, exemplaires: d.terraExemplaires, rank: d.rank, tierSize: d.tierSize, aurore: d.aurore ? 1 : 0, skin: d.terraNouvelle ? undefined : skinDeMaCarte('terra', d.code), atelier: atlMienne(0) })}</div>`).join('')}</div>`;
   zone.insertAdjacentElement('afterend', el);
 }
 
@@ -11447,7 +11453,7 @@ function renderGrilleTerra(){
     .filter(e => correspondRecherche(e.nom, e.dept, sansAccents(terraRecherche.trim())))
     .sort((a, b) => RANG_TIER[b.tier.id] - RANG_TIER[a.tier.id] || (b.pop || 0) - (a.pop || 0));
   grille.innerHTML = liste.length
-    ? liste.slice(0, terraLimite).map(e => miniTerra(e).replace('<div class="mini ', '<div data-tcode="' + echapperTexte(e.code) + '" tabindex="0" role="button" class="mini ')).join('')
+    ? liste.slice(0, terraLimite).map(e => miniTerra(atlMoi(e)).replace('<div class="mini ', '<div data-tcode="' + echapperTexte(e.code) + '" tabindex="0" role="button" class="mini ')).join('')
     : `<p class="collection-empty">${terraCollection.size ? 'Aucune commune ne correspond.' : 'Ta collection Terra est vide : ouvre un paquet dans l’onglet Tirage.'}</p>`;
   const plus = document.getElementById('tcPlus');
   if(plus) plus.innerHTML = liste.length > terraLimite
@@ -17429,13 +17435,13 @@ async function chargerVitrine(id){
     if(!r6.error) for(const x of r6.data || []) skinsCartes.set(x.source + '|' + x.code, skinCle(x.skin)); }catch(err){}
   let s1 = new Set();   // patch170
   try{ const r2 = await sb.rpc('terra_aurores_s1', { p_joueur: id }); if(!r2.error) s1 = new Set(r2.data || []); }catch(err){}
-  return briVitrine(id, (data || []).map(r => ({ code: r.code, nom: r.nom, dept: r.departement,   // patch269
+  return atlVitrine(id, await briVitrine(id, (data || []).map(r => ({ code: r.code, nom: r.nom, dept: r.departement,   // patch269, patch270
     tier: TIERS.find(t => t.id === r.tier) || TIERS[TIERS.length - 1], pop: r.population,
     exemplaires: 1, rank: r.rang, tierSize: r.palier_total, aurore: r.aurore ? 1 : 0,
     source: r.source === 'front' ? 'front' : 'terra',   // patch180
     dos: dosCartes.get((r.source === 'front' ? 'front' : 'terra') + '|' + r.code) || dos,
     skin: skinsCartes.get((r.source === 'front' ? 'front' : 'terra') + '|' + r.code),
-    auroreS1: r.source !== 'front' && s1.has(r.code), photo: photos.get(r.code) || '' })));
+    auroreS1: r.source !== 'front' && s1.has(r.code), photo: photos.get(r.code) || '' }))));
 }
 
 // cinq cartes cote a cote : un nom de plus de 8 lettres passe en plus petit
@@ -18552,7 +18558,7 @@ const dosGl = (() => {
 let bqeAcces = null, bqeCat = null, bqeBandeau = null, bqeCommandes = [];
 const euros = (c) => (Number(c) / 100).toFixed(2).replace('.', ',') + ' €';
 const dateLongue = (d) => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
-function bqeNomCourt(a){ return String(a.nom || '').replace(/^(Paquet|Dos|Skin|Collection) (OG )?/, ''); }
+function bqeNomCourt(a){ return String(a.nom || '').replace(/^(Paquet|Dos|Skin|Collection|Finition|Halo) (OG )?/, ''); }
 
 async function bqeVerifierAcces(){
   if(bqeAcces === null){
@@ -18634,6 +18640,7 @@ function habVignette(k, w){
 }
 function bqeVignette(a){
   if(a.type === 'skin') return skinVignetteHtml(skinCle(a.id));   // patch202
+  if(a.type === 'effet') return atlVignetteHtml(a.id);   // patch270
   if(a.type === 'collection'){ const c = a.contenu || [];
     return `<div class="bqe-col-vig">${dosApercuHtml(c.find(x => x.startsWith('dos-')))}${skinVignetteHtml(skinCle(c.find(x => x.startsWith('skin-'))))}</div>`; }
   return a.type === 'dos' ? dosApercuHtml(a.id) : habVignette(habCle(a.id));
@@ -18670,11 +18677,12 @@ function renderBoutiqueEuros(){
   const corps = document.getElementById('bqeCorps');
   const cat = bqeCat;
   if(!corps || !cat) return;
-  const arts = (cat.articles || []).filter(a => ['dos', 'habillage', 'skin', 'collection'].includes(a.type));
+  const arts = (cat.articles || []).filter(a => ['dos', 'habillage', 'skin', 'collection', 'effet'].includes(a.type));
   const og = arts.filter(a => a.reserve_og);
   const hab = arts.filter(a => !a.reserve_og && a.type === 'habillage');
   const dos = arts.filter(a => !a.reserve_og && a.type === 'dos');
   const skins = arts.filter(a => a.type === 'skin'), cols = arts.filter(a => a.type === 'collection');   // patch202
+  const effets = arts.filter(a => a.type === 'effet');   // patch270
   const section = (titre, mot, liste, badge) => liste.length ? `<div class="bourse-section bq-section">
       <h2>${titre}${badge ? ' <span class="bqe-og">OG</span>' : ''}${mot ? ` <small class="bqe-mot">${mot}</small>` : ''}</h2>
       <div class="bq-grille bq-grille-dos">${liste.map(bqeCarte).join('')}</div></div>` : '';
@@ -18685,6 +18693,7 @@ function renderBoutiqueEuros(){
     + section('Habillages de paquet', 'l\'emballage de tes paquets', hab)
     + section('Dos de cartes', '', dos)
     + section('Skins de carte', 'à poser sur les cartes de ton choix', skins)
+    + section('L\'atelier des cartes', 'finitions et halos, pour toutes tes cartes Terra', effets)
     + (!arts.length ? '<p class="collection-empty">Rien en vente pour le moment.</p>' : '')
     + (bqeCommandes.length ? `<div class="bourse-section bq-section"><h2>Mes achats</h2><div class="bqe-achats">${bqeCommandes.map(bqeCommandeHtml).join('')}</div></div>` : '')
     + `<p class="bqe-pied">Paiement par Stripe · TerraFront, entrepreneur individuel · <a href="cgv.html" target="_blank" rel="noopener">Conditions de vente</a> · <a href="mentions-legales.html" target="_blank" rel="noopener">Mentions légales</a></p>`;
@@ -18705,6 +18714,7 @@ function bqeGrandApercu(a){
   const c = a.contenu || [];
   if(a.type === 'dos') return carte3dDebut(150, 225, 1.45) + miniTerra(ex) + carte3dFin(dosCle(a.id));
   if(a.type === 'skin') return carte3dDebut(150, 225, 1.45) + miniTerra({ ...ex, skin: skinCle(a.id) }) + carte3dFin();
+  if(a.type === 'effet') return atlGrandApercu(a);   // patch270
   if(a.type === 'collection'){
     const d = c.find(x => x.startsWith('dos-')), s = c.find(x => x.startsWith('skin-'));
     return carte3dDebut(150, 225, 1.45) + miniTerra({ ...ex, skin: skinCle(s) }) + carte3dFin(dosCle(d));
@@ -18726,7 +18736,7 @@ function bqeApercuSeul(a){
       <button type="button" class="bqe-fermer" aria-label="Fermer">×</button>
       <div class="bqe-apercu">${bqeGrandApercu(a)}</div>
       <div class="bqe-tete-a"><small>Dans ta garde-robe</small><h2 id="bqeNomA">${echapperTexte(bqeNomCourt(a))}</h2></div>
-      <p class="bqe-recoit">${echapperTexte(a.description || '')}. Tu l'as déjà : équipe-le ou pose-le sur tes cartes dans Profil › Personnaliser.</p>
+      <p class="bqe-recoit">${echapperTexte(a.description || '')}. ${a.type === 'effet' ? 'C\'est déjà à toi, dans l\'atelier (Profil › Personnaliser).' : 'Tu l\'as déjà : équipe-le ou pose-le sur tes cartes dans Profil › Personnaliser.'}</p>
     </div>`);
   const f = document.querySelector('#fenetre .bqe-fiche-apercu');
   if(!f) return;
@@ -18735,7 +18745,7 @@ function bqeApercuSeul(a){
   habGl.demarrer();
 }
 
-function bqeOuvrirFiche(id){
+function bqeOuvrirFiche(id, retour){   // patch270 : retour = 'atelier'
   const cat = bqeCat;
   const a = cat && (cat.articles || []).find(x => x.id === id);
   if(!a) return;
@@ -18747,7 +18757,9 @@ function bqeOuvrirFiche(id){
     : a.type === 'habillage' ? `<b>l'habillage ${echapperTexte(nom)}</b> sur tous tes paquets`
     : a.type === 'skin' ? `<b>le skin ${echapperTexte(nom)}</b>, à poser sur autant de tes cartes que tu veux (Terra et Front)`
     : a.type === 'collection' ? `<b>le dos et le skin ${echapperTexte(nom)}</b>${bqePrixMoi(a) < Number(a.prix_centimes) ? ' (tu en as déjà une partie : tu ne paies que ce qui te manque)' : ''}`
+    : a.type === 'effet' ? atlQuoiAchat(a, nom)   // patch270
     : `<b>le dos ${echapperTexte(nom)}</b> sur toutes tes cartes`;
+  const fem = a.type === 'effet' && atlFamilleArticle(a.id) === 'finition';   // patch270 : la finition
   const plafondBloque = cat.mineur && cat.plafond_restant != null && Number(cat.plafond_restant) < bqePrixMoi(a);
   const grand = bqeGrandApercu(a);   // patch207
   const aujourdhui = new Date().toISOString().slice(0, 10);
@@ -18756,9 +18768,9 @@ function bqeOuvrirFiche(id){
       <button type="button" class="bqe-fermer" aria-label="Fermer">×</button>
       <div class="bqe-apercu">${grand}</div>
       <div class="bqe-tete">
-        <div><small>${{ dos: 'Dos de carte', skin: 'Skin de carte', collection: 'Collection · dos + skin', pass: 'Pass de saison' }[a.type] || 'Habillage de paquet'}${a.reserve_og ? ' · réservé aux OG' : ''}</small>
+        <div><small>${{ dos: 'Dos de carte', skin: 'Skin de carte', collection: 'Collection · dos + skin', pass: 'Pass de saison', effet: atlFamilleArticle(a.id) === 'halo' ? 'Halo de l\'atelier' : 'Finition de l\'atelier' }[a.type] || 'Habillage de paquet'}${a.reserve_og ? ' · réservé aux OG' : ''}</small>
           <h2 id="bqeNom">${echapperTexte(nom)}</h2><b class="bqe-gros-prix">${prix}</b></div></div>
-      <p class="bqe-recoit">Tu reçois ${quoi}, gardé à vie et associé à ton compte. Ça ne change ni le contenu des paquets ni tes chances. Il ne s'échange pas et ne se revend pas.</p>
+      <p class="bqe-recoit">Tu reçois ${quoi}, ${fem ? 'gardée' : 'gardé'} à vie et ${fem ? 'associée' : 'associé'} à ton compte. Ça ne change ni le contenu des paquets ni tes chances. ${fem ? 'Elle' : 'Il'} ne s'échange pas et ne se revend pas.</p>
       <fieldset class="bqe-liv"><legend>Quand veux-tu le recevoir ?</legend>
         <label><input type="radio" name="bqeLiv" value="immediate" checked><b>Tout de suite</b><span>Tu renonces au délai de rétractation.</span></label>
         <label><input type="radio" name="bqeLiv" value="differee"><b>Le ${date14}</b><span>Tu peux changer d'avis pendant 14 jours.</span></label>
@@ -18776,7 +18788,7 @@ function bqeOuvrirFiche(id){
       <label class="bqe-case"><input type="checkbox" id="bqeCgv"><span>J'ai lu et j'accepte les <a href="cgv.html" target="_blank" rel="noopener">conditions générales de vente</a>.</span></label>
       <button type="button" class="bqe-payer" id="bqePayer" disabled>Payer et recevoir l'objet · ${prix}</button>
       <p class="bqe-erreur" id="bqeErreur" role="alert" hidden></p>
-      <p class="bqe-securite">Tu passes un instant sur la page de paiement sécurisée de Stripe. TerraFront ne voit jamais ta carte bancaire. TVA non applicable, art. 293 B du CGI.</p>
+      <p class="bqe-securite">Tu passes un instant sur la page de paiement sécurisée de Stripe${retour === 'atelier' ? ', puis tu reviens à l\'atelier' : ''}. TerraFront ne voit jamais ta carte bancaire. TVA non applicable, art. 293 B du CGI.</p>
     </div>`);
   const f = document.querySelector('.bqe-fiche');
   if(!f) return;
@@ -18823,7 +18835,7 @@ function bqeOuvrirFiche(id){
       if(error){ try{ msg = (await error.context.json()).erreur; }catch(e){ msg = error.message; } }
       else url = data && data.url;
     }catch(e){ msg = e.message; }
-    if(url){ location.href = url; return; }
+    if(url){ if(retour) try{ sessionStorage.setItem('tf-retour-paiement', retour); }catch(e){} location.href = url; return; }   // patch270
     err.textContent = messageLisible(msg || 'Le paiement est indisponible pour le moment.');
     err.hidden = false;
     btn.textContent = 'Payer et recevoir l\'objet · ' + prix;
@@ -18835,7 +18847,9 @@ async function bqeRetourPaiement(){
   const q = new URLSearchParams(location.search).get('paiement');
   if(!q) return;
   history.replaceState(null, '', location.pathname);
-  if(q === 'annule'){ notifier({ type: 'info', titre: 'Paiement annulé', texte: 'Rien n\'a été débité.' }); return; }
+  let retour = null;   // patch270 : revenir à l'atelier après le paiement
+  try{ retour = sessionStorage.getItem('tf-retour-paiement'); sessionStorage.removeItem('tf-retour-paiement'); }catch(e){}
+  if(q === 'annule'){ notifier({ type: 'info', titre: 'Paiement annulé', texte: 'Rien n\'a été débité.' }); if(retour === 'atelier') atlOuvrirQuandPret(); return; }
   if(q !== 'ok') return;
   notifier({ type: 'succes', titre: 'Paiement reçu, merci !', texte: 'Ton objet arrive dans quelques secondes.', duree: 6000 });
   const tab = document.querySelector('.tab[data-tab="boutiqueeuros"]');
@@ -18848,6 +18862,7 @@ async function bqeRetourPaiement(){
     if(derniere && derniere.statut !== 'creee') break;
   }
   loadBoutique(true);
+  if(retour === 'atelier') atlOuvrirQuandPret();   // patch270
 }
 
 document.getElementById('bqeCorps').addEventListener('click', async (e) => {
@@ -18899,7 +18914,7 @@ function renderGardeRobe(){
   const dos = g.dos_liste || [], habs = g.habillages || [];
   corps.innerHTML = `
     <div class="bourse-section gr-bloc">
-      <h2>Mes cartes</h2>
+      <h2>Mes cartes</h2>${atlBlocGardeRobe()}
       <div class="gr-titre">Dos de carte <span>${dos.length} possédé${dos.length > 1 ? 's' : ''}</span></div>
       <div class="gr-objets">${dos.map(o => tuile('dos', o, dosApercuHtml(o.id))).join('')}</div>
       ${SAISON2 ? blocDosCartesHtml() + blocSkinsHtml() : ''}
@@ -18916,6 +18931,7 @@ function renderGardeRobe(){
   habGl.demarrer();
 }
 document.getElementById('grCorps').addEventListener('click', async (e) => {
+  if(e.target.closest('[data-gr-atelier]')){ atlOuvrir(); return; }   // patch270
   if(e.target.closest('[data-gr-boutique]')){
     const t = document.querySelector(`.tab[data-tab="${bqeAcces ? 'boutiqueeuros' : 'boutique'}"]`);
     if(t) t.click();
@@ -19958,7 +19974,7 @@ async function ouvrirCarteVitrine(e, pseudo, apres){
     return `
     <div class="fenetre fiche fiche-terra ${e.tier.id}" data-tcode="${echapperTexte(code)}" role="dialog" aria-modal="true" aria-labelledby="ftNom">
       <button class="fc-fermer" data-ft="fermer" aria-label="Fermer">✕</button>
-      <div class="fc-tete">${carte3dDebut(150, 225, 1.65)}${miniTerra({ ...e, exemplaires: 1 })}${carte3dFin(e.dos)}</div>
+      <div class="fc-tete">${carte3dDebut(150, 225, 1.65)}${miniTerra({ ...e, exemplaires: 1, atelier: atlNiveau(e.atelier, 2) })}${carte3dFin(e.dos)}</div>
       <div class="fc-corps">
         <h2 id="ftNom" class="fc-nom ${e.nom.length > 22 ? 'long' : ''}">${echapperTexte(e.nom)}</h2>
         <p class="fc-dep">${DEPT_NAMES[e.dept] ? echapperTexte(DEPT_NAMES[e.dept]) + ' (' + echapperTexte(e.dept) + ')' : echapperTexte(e.dept)}</p>
@@ -20001,7 +20017,7 @@ async function ouvrirCarteTerra(code){
     return `
     <div class="fenetre fiche fiche-terra ${e.tier.id}" data-tcode="${echapperTexte(code)}" role="dialog" aria-modal="true" aria-labelledby="ftNom">
       <button class="fc-fermer" data-ft="fermer" aria-label="Fermer">✕</button>
-      <div class="fc-tete">${carte3dDebut(150, 225, 1.65)}${miniTerra({ ...e, skin: skinDeMaCarte('terra', code) })}${carte3dFin(dosDeMaCarte('terra', code))}${choixSkinHtml('terra', code)}${choixDosHtml('terra', code)}</div>
+      <div class="fc-tete">${carte3dDebut(150, 225, 1.65)}${miniTerra({ ...e, skin: skinDeMaCarte('terra', code), atelier: atlMienne(2) })}${carte3dFin(dosDeMaCarte('terra', code))}${choixSkinHtml('terra', code)}${choixDosHtml('terra', code)}</div>
       <div class="fc-corps">
         <h2 id="ftNom" class="fc-nom ${e.nom.length > 22 ? 'long' : ''}">${echapperTexte(e.nom)}</h2>
         <p class="fc-dep">${DEPT_NAMES[e.dept] ? echapperTexte(DEPT_NAMES[e.dept]) + ' (' + echapperTexte(e.dept) + ')' : echapperTexte(e.dept)}</p>
@@ -21502,4 +21518,451 @@ async function briVitrine(id, cartes){
     if(b){ c.numeros = b.numeros; c.brillantes = b.numeros.length; c.eclat = b.eclat; }
   }
   return cartes;
+}
+
+// ---------- patch270 : l'atelier des cartes, V1 (s2-64) ----------
+// Une composition posée sur toutes mes cartes Terra : une finition (Encre,
+// Chrome, Cristal ; Or plus tard) et un halo (Lueur, Étoiles, Braises) avec
+// sa couleur. Encre et Lueur se gagnent en jouant ; Chrome, Cristal, Étoiles
+// et Braises s'achètent à l'unité (boutique en euros, articles « effet »).
+// Une brillante ou un éclat garde sa propre lumière ; une carte qui porte un
+// skin garde son skin (seul le halo s'ajoute) ; jamais le Front.
+// Dans une grille : la finition reste immobile et le halo est une lueur fixe
+// (des centaines de cartes) ; en grand (fiche, atelier, révélation, vitrine),
+// tout s'anime. Caché tant que atelier_etat() n'existe pas (s2-64).
+// Essai privé avant l'annonce : ?atelier=test (cet onglet seulement).
+const ATL_FINITIONS = [
+  { id: 'aucune', nom: 'Aucune', src: 'inclus' },
+  { id: 'encre', nom: 'Encre', src: 'gagner', comment: '50 quêtes du jour' },
+  { id: 'chrome', nom: 'Chrome', src: 'boutique', article: 'atelier-chrome', prix: 299 },
+  { id: 'cristal', nom: 'Cristal', src: 'boutique', article: 'atelier-cristal', prix: 299 },
+  { id: 'or', nom: 'Or', src: 'pass', comment: 'Pass de saison · bientôt' }
+];
+const ATL_HALOS = [
+  { id: 'aucun', nom: 'Aucun', src: 'inclus' },
+  { id: 'lueur', nom: 'Lueur', src: 'gagner', comment: 'Série de 7 jours' },
+  { id: 'etoiles', nom: 'Étoiles', src: 'boutique', article: 'atelier-etoiles', prix: 199 },
+  { id: 'braises', nom: 'Braises', src: 'boutique', article: 'atelier-braises', prix: 199 }
+];
+const ATL_FAMILLES = [{ id: 'finition', lib: 'Finition', options: ATL_FINITIONS }, { id: 'halo', lib: 'Halo', options: ATL_HALOS }];
+const ATL_COULEURS = [
+  { id: 'or', c: '#FFE08A', lib: 'Or pâle' }, { id: 'ciel', c: '#7FD4FF', lib: 'Ciel' },
+  { id: 'corail', c: '#FF8A80', lib: 'Corail' }, { id: 'vert', c: '#B8F27A', lib: 'Tilleul' },
+  { id: 'mauve', c: '#E3B8FF', lib: 'Mauve' }
+];
+const ATL_CADENAS = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>';
+const ATL = { lu: false, ouvert: false, test: false, moi: null, possede: {}, quetes: null, serie: null, encreQuetes: 50, lueurJours: 7, pret: null };
+
+function atlTest(){
+  try{
+    if(/[?&]atelier=test\b/.test(location.search)) sessionStorage.setItem('tf-atl-test', '1');
+    return sessionStorage.getItem('tf-atl-test') === '1';
+  }catch(e){ return false; }
+}
+function atlLireEtat(d){
+  const c = (d && d.composition) || {};
+  ATL.lu = true;
+  ATL.ouvert = d.ouvert === true || Number(d.ouvert) === 1;
+  ATL.moi = { finition: c.finition || 'aucune', halo: c.halo || 'aucun', couleur: c.couleur || 'or' };
+  ATL.possede = d.possede || {};
+  ATL.quetes = d.quetes != null ? Number(d.quetes) : null;
+  ATL.serie = d.serie != null ? Number(d.serie) : null;
+  ATL.encreQuetes = Number(d.encre_quetes) || 50;
+  ATL.lueurJours = Number(d.lueur_jours) || 7;
+}
+function atlCharger(){
+  ATL.pret = (async () => {
+    if(!SAISON2) return;
+    if(atlTest()){
+      let moi = null;
+      try{ moi = JSON.parse(sessionStorage.getItem('tf-atl-test-moi') || 'null'); }catch(e){}
+      Object.assign(ATL, { lu: true, ouvert: true, test: true, moi: moi || { finition: 'aucune', halo: 'aucun', couleur: 'or' },
+        possede: { encre: true }, quetes: null, serie: null });
+      if(!ATL.annonce){
+        ATL.annonce = true;
+        setTimeout(() => notifier({ type: 'info', titre: 'Essai de l’atelier',
+          texte: 'Dans cet onglet seulement : les achats sont simulés (rien n’est payé) et ta composition n’est gardée qu’ici. Ferme l’onglet pour en sortir.' }), 1800);
+      }
+    } else {
+      try{
+        const { data, error } = await sb.rpc('atelier_etat');
+        if(error || !data) return;   // s2-64 pas encore lancé : rien ne s'affiche
+        atlLireEtat(data);
+      }catch(e){ return; }
+    }
+    try{ if(gardeRobe && document.getElementById('grCorps')) renderGardeRobe(); }catch(e){}
+  })();
+  return ATL.pret;
+}
+
+// ma composition, telle qu'elle se pose sur mes cartes (null = rien à poser)
+function atlMienne(niveau){
+  const c = ATL.ouvert ? ATL.moi : null;
+  if(!c || (c.finition === 'aucune' && c.halo === 'aucun')) return null;
+  return { finition: c.finition, halo: c.halo, couleur: c.couleur, niveau: niveau || 0 };
+}
+// une de mes cartes Terra de la collection (une carte avec un skin garde son skin)
+function atlMoi(e, niveau){
+  const a = atlMienne(niveau);
+  if(!a) return e;
+  if(a.finition !== 'aucune' && skinDeMaCarte('terra', e.code)) a.finition = 'aucune';
+  return a.finition === 'aucune' && a.halo === 'aucun' ? e : { ...e, atelier: a };
+}
+const atlNiveau = (a, n) => a ? { ...a, niveau: n } : a;
+
+// les étoiles ou les braises autour d'une carte en grand
+function atlParticules(halo, code, niv, grande){
+  if((halo !== 'etoiles' && halo !== 'braises') || REDUCED_MOTION) return '';
+  const rnd = aleatoireStable(hashTexte(String(code) + halo));
+  const k = grande ? 1 : niv > 1 ? 0.8 : 0.45;
+  const n = niv > 1 ? (halo === 'etoiles' ? 16 : 18) : 6;
+  let h = '';
+  for(let i = 0; i < n; i++){
+    if(halo === 'etoiles'){
+      const dir = niv > 1 ? i % 8 : (i * 3) % 8, a = dir * Math.PI / 4 + (rnd() - 0.5) * 0.4, d = 40 * k;
+      h += `<i class="atl-p etoile" style="left:${(50 + Math.cos(a) * 40).toFixed(1)}%;top:${(50 + Math.sin(a) * 45).toFixed(1)}%;`
+        + `--dx:${(Math.cos(dir * Math.PI / 4) * d).toFixed(1)}px;--dy:${(Math.sin(dir * Math.PI / 4) * d).toFixed(1)}px;animation-delay:${(rnd() * 2.6).toFixed(2)}s"></i>`;
+    } else {
+      h += `<i class="atl-p braise" style="left:${(14 + rnd() * 72).toFixed(1)}%;top:${(70 + rnd() * 22).toFixed(1)}%;`
+        + `--dx:${(((i % 3) - 1) * 22 * k).toFixed(1)}px;--dy:${(-(150 + (i % 3 === 1 ? 10 : 0)) * k).toFixed(1)}px;animation-delay:${(rnd() * 3).toFixed(2)}s"></i>`;
+    }
+  }
+  return `<i class="atl-parts" aria-hidden="true">${h}</i>`;
+}
+function atlScint(niv){
+  const n = niv > 1 ? 7 : 3;
+  let h = '';
+  for(let i = 1; i <= n; i++) h += `<i class="s${i}"></i>`;
+  return `<i class="atl-scint" aria-hidden="true">${h}</i>`;
+}
+// les calques d'une carte : derrière (halo), au fond de la carte, dans l'image, par-dessus
+function atlParts(e, grande){
+  const vide = { cls: '', dehors: '', fond: '', art: '', anneau: '' };
+  const a = e && e.atelier;
+  if(!a || (e.brillantes || 0) > 0 || e.brillante || e.eclat) return vide;
+  const fn = !e.skin && ATL_FINITIONS.some(o => o.id === a.finition) ? a.finition : 'aucune';
+  const ha = ATL_HALOS.some(o => o.id === a.halo) ? a.halo : 'aucun';
+  if(fn === 'aucune' && ha === 'aucun') return vide;
+  const col = ATL_COULEURS.some(o => o.id === a.couleur) ? a.couleur : 'or';
+  const niv = grande ? 2 : (Number(a.niveau) || 0);
+  return {
+    cls: ` atl fn-${fn} h-${ha} hc-${col}${niv ? ' atl-n' + niv : ''}`,
+    dehors: (ha !== 'aucun' && niv > 0 ? '<i class="atl-glow" aria-hidden="true"></i>' : '') + (niv > 0 ? atlParticules(ha, e.code, niv, grande) : ''),
+    fond: fn !== 'aucune' ? '<i class="atl-fond" aria-hidden="true"></i>' : '',
+    art: fn !== 'aucune' ? '<i class="atl-a1" aria-hidden="true"></i><i class="atl-a2" aria-hidden="true"></i>' : '',
+    anneau: (fn !== 'aucune' ? '<i class="atl-reflet" aria-hidden="true"></i>' : '') + (fn === 'cristal' && niv > 0 && !REDUCED_MOTION ? atlScint(niv) : '')
+  };
+}
+
+// la vitrine d'un joueur : sa composition sur ses cartes Terra
+async function atlVitrine(id, cartes){
+  if(!ATL.lu || !ATL.ouvert || !cartes || !cartes.length) return cartes;
+  let comp = null;
+  if(id === window.__monId) comp = atlMienne(1);
+  else if(!ATL.test){
+    try{
+      const { data, error } = await sb.rpc('atelier_composition', { p_joueur: id });
+      if(!error && data) comp = { finition: data.finition || 'aucune', halo: data.halo || 'aucun', couleur: data.couleur || 'or', niveau: 1 };
+    }catch(e){}
+  }
+  if(comp && (comp.finition !== 'aucune' || comp.halo !== 'aucun'))
+    for(const c of cartes) if(c.source !== 'front') c.atelier = { ...comp };
+  return cartes;
+}
+
+// ---------- l'écran de l'atelier ----------
+const AS = { finition: 'aucune', halo: 'aucun', couleur: 'or', carte: 0, cartes: [], onglet: 'finition', achats: {}, eclat: false, enCours: false, minuteur: 0 };
+let atlRetourFocus = null;
+
+function atlPossede(id){
+  if(id === 'aucune' || id === 'aucun') return true;
+  if(ATL.test && AS.achats[id]) return true;
+  return !!(ATL.possede && ATL.possede[id]);
+}
+function atlArticle(o){
+  const cat = bqeCat;
+  return (o && o.article && cat && (cat.articles || []).find(a => a.id === o.article)) || null;
+}
+function atlPrix(o){ const a = atlArticle(o); return euros(a ? bqePrixMoi(a) : o.prix); }
+function atlSource(o){
+  if(o.src === 'boutique') return 'à acheter ici ou dans la Boutique, ' + atlPrix(o) + ', à l’unité';
+  if(o.src === 'pass') return 'arrivera dans un prochain pass de saison';
+  if(o.id === 'encre') return `se gagne en jouant (${ATL.encreQuetes} quêtes du jour réclamées)`
+    + (ATL.quetes != null ? ` · tu en es à ${fmtNombre(Math.min(ATL.quetes, ATL.encreQuetes))}` : '');
+  if(o.id === 'lueur') return `se gagne en jouant (une quête du jour réclamée ${ATL.lueurJours} jours d’affilée)`
+    + (ATL.serie != null ? ` · ta meilleure série : ${ATL.serie} jour${ATL.serie > 1 ? 's' : ''}` : '');
+  return '';
+}
+const atlCommentaire = (o) => o.comment ? o.comment.charAt(0).toLowerCase() + o.comment.slice(1) : '';
+// les éléments choisis qui ne sont pas encore à moi
+function atlManquants(){
+  const out = [];
+  for(const f of ATL_FAMILLES){
+    const o = f.options.find(x => x.id === AS[f.id]);
+    if(!o || atlPossede(o.id)) continue;
+    const art = atlArticle(o);
+    out.push({ f, o, attente: art && art.livraison_le ? art.livraison_le : null });
+  }
+  return out;
+}
+// une carte de chaque rareté pour essayer : mes plus connues (ni brillante, ni éclat, ni skin)
+function atlCartesEssai(){
+  const out = [];
+  try{
+    if(terraCollection && terraCollection.size) for(const t of TIERS){
+      let best = null;
+      for(const e of terraCollection.values()){
+        if(e.tier.id !== t.id || (e.brillantes || 0) > 0 || e.eclat || skinDeMaCarte('terra', e.code)) continue;
+        if(!best || (e.pop || 0) > (best.pop || 0)) best = e;
+      }
+      if(best) out.push(best);
+    }
+  }catch(e){}
+  if(!out.length) out.push(carteExemple());
+  return out;
+}
+const atlNomCourt = (n) => String(n || '').length > 16 ? String(n).slice(0, 14).trimEnd() + '…' : String(n || '');
+
+function atlOuvrir(){
+  if(!ATL.lu || !ATL.ouvert) return;
+  const m = ATL.moi || {};
+  Object.assign(AS, { finition: m.finition || 'aucune', halo: m.halo || 'aucun', couleur: m.couleur || 'or', carte: 0, onglet: 'finition', eclat: false, enCours: false });
+  AS.cartes = atlCartesEssai();
+  let ec = document.getElementById('atlEcran');
+  if(!ec){
+    ec = document.createElement('div');
+    ec.id = 'atlEcran';
+    ec.className = 'atl-ecran';
+    ec.setAttribute('role', 'dialog');
+    ec.setAttribute('aria-modal', 'true');
+    ec.setAttribute('aria-labelledby', 'atlTitre');
+    ec.hidden = true;
+    document.body.appendChild(ec);
+    ec.addEventListener('click', atlClic);
+  }
+  if(ec.hidden) atlRetourFocus = document.activeElement;
+  document.documentElement.classList.add('atl-ouvert');
+  ec.hidden = false;
+  atlRendre();
+  document.removeEventListener('keydown', atlTouche);
+  document.addEventListener('keydown', atlTouche);
+  requestAnimationFrame(() => {
+    ec.classList.add('visible');
+    const r = ec.querySelector('.atl-retour');
+    if(r) try{ r.focus({ preventScroll: true }); }catch(e){}
+  });
+  // les prix du catalogue, et mes cartes pour l'essai
+  if(!ATL.test && bqeAcces === null) bqeVerifierAcces().then(() => { if(!ec.hidden) atlRendre(); }).catch(() => {});
+  if(!terraCharge) chargerCollectionTerra().then(ok => { if(ok && !ec.hidden){ AS.cartes = atlCartesEssai(); atlRendre(); } }).catch(() => {});
+}
+function atlFermer(){
+  const ec = document.getElementById('atlEcran');
+  if(!ec || ec.hidden) return;
+  clearTimeout(AS.minuteur);
+  ec.classList.remove('visible');
+  ec.hidden = true;
+  ec.innerHTML = '';
+  document.documentElement.classList.remove('atl-ouvert');
+  document.removeEventListener('keydown', atlTouche);
+  if(atlRetourFocus && atlRetourFocus.isConnected && atlRetourFocus.focus) try{ atlRetourFocus.focus({ preventScroll: true }); }catch(e){}
+  try{ if(gardeRobe && document.getElementById('grCorps')) renderGardeRobe(); }catch(e){}
+}
+function atlTouche(e){
+  if(e.key !== 'Escape') return;
+  const f = document.getElementById('fenetre');
+  if(f && !f.hidden) return;   // la fiche d'achat se ferme d'abord
+  atlFermer();
+}
+async function atlOuvrirQuandPret(){
+  try{ await atlCharger(); }catch(e){}
+  atlOuvrir();
+}
+
+function atlCouleursHtml(){
+  return `<div class="atl-couleurs"><p class="atl-lbl">Couleur du halo</p><div class="atl-sws">${ATL_COULEURS.map(h =>
+    `<button type="button" class="atl-sw${AS.couleur === h.id ? ' on' : ''}" aria-pressed="${AS.couleur === h.id}" aria-label="Halo ${h.lib}" data-atl-c="${h.id}" data-atl-k="c-${h.id}"><span style="background:${h.c}"></span></button>`).join('')}</div></div>`;
+}
+function atlRendre(){
+  const ec = document.getElementById('atlEcran');
+  if(!ec || ec.hidden) return;
+  const actif = document.activeElement && ec.contains(document.activeElement) ? document.activeElement.dataset.atlK : null;
+  const page = ec.querySelector('.atl-page'), defil = page ? page.scrollTop : 0;
+  const s = AS, manq = atlManquants(), n = manq.length;
+  const achat = manq.find(m => m.o.src === 'boutique' && !m.attente) || null;
+  const moi = ATL.moi || { finition: 'aucune', halo: 'aucun', couleur: 'or' };
+  const egal = s.finition === moi.finition && s.halo === moi.halo && (s.halo === 'aucun' || s.couleur === moi.couleur);
+  const fait = egal && !(moi.finition === 'aucune' && moi.halo === 'aucun') ? 'Composition enregistrée' : 'Enregistrer';
+  const familles = ATL_FAMILLES.map(f => {
+    const opts = f.options.map(o => {
+      const sel = s[f.id] === o.id, aMoi = atlPossede(o.id), art = atlArticle(o);
+      const attente = !aMoi && art && art.livraison_le;
+      const badge = aMoi ? (o.src === 'inclus' ? 'Inclus' : 'À toi') : attente ? 'Arrive le ' + dateLongue(art.livraison_le) : o.src === 'boutique' ? atlPrix(o) : o.comment;
+      const bcls = 'atl-badge b-' + (aMoi ? (o.src === 'inclus' ? 'inclus' : 'atoi') : o.src);
+      return `<button type="button" class="atl-opt${sel ? ' on' : ''}${aMoi ? '' : ' verrou'}" aria-pressed="${sel}" data-atl-f="${f.id}" data-atl-o="${o.id}" data-atl-k="o-${f.id}-${o.id}">`
+        + `<span class="atl-opt-nom">${o.nom}</span><span class="${bcls}">${aMoi ? '' : ATL_CADENAS}${echapperTexte(badge)}</span></button>`;
+    }).join('');
+    const choisi = (f.options.find(o => o.id === s[f.id]) || f.options[0]).nom;
+    return `<div class="atl-fam${s.onglet === f.id ? ' actif' : ''}" data-famille="${f.id}">
+        <div class="atl-fam-tete"><p class="atl-lbl">${f.lib}</p><p class="atl-choisi">${choisi}</p></div>
+        <div class="atl-opts">${opts}</div>${f.id === 'halo' && s.halo !== 'aucun' ? atlCouleursHtml() : ''}
+      </div>`;
+  }).join('');
+  const c = s.cartes[s.carte] || s.cartes[0] || carteExemple();
+  const carte = { ...c, exemplaires: 1, skin: undefined, brillante: 0, brillantes: 0, numeros: [], eclat: !!s.eclat,
+    atelier: { finition: s.finition, halo: s.halo, couleur: s.couleur, niveau: 2 } };
+  const nomsManq = manq.map(m => m.o.nom).join(', ');
+  const scene = `<div class="atl-scene">${s.eclat ? '<i class="atl-ec-rayons" aria-hidden="true"></i><i class="atl-ec-flash" aria-hidden="true"></i>' : ''}
+      <div class="atl-c3d">${carte3dDebut(150, 225, 1.85)}${miniTerra(carte)}${carte3dFin()}</div>
+      ${n ? `<p class="atl-essai-pill">Essai : ${echapperTexte(nomsManq)} ${n > 1 ? 'ne sont pas à toi' : 'n’est pas à toi'}</p>` : ''}</div>`;
+  const chips = s.cartes.length > 1 ? `<p class="atl-lbl atl-lbl-essayer">Essayer sur une autre rareté</p><div class="atl-chips atl-chips-cartes">${s.cartes.map((x, i) =>
+    `<button type="button" class="atl-chip${i === s.carte ? ' on' : ''}" aria-pressed="${i === s.carte}" data-atl-carte="${i}" data-atl-k="k-${i}">${echapperTexte(atlNomCourt(x.nom))} · ${x.tier.label}</button>`).join('')}</div>` : '';
+  const essai = n ? `<div class="atl-essai"><p class="atl-essai-t">Aperçu d’essai</p>${manq.map(m =>
+    `<p><b>${m.f.lib} ${m.o.nom}</b> : ${m.attente ? 'déjà payé, arrive le ' + dateLongue(m.attente) : echapperTexte(atlSource(m.o))}</p>`).join('')}</div>` : '';
+  const onglets = `<div class="atl-onglets" role="tablist" aria-label="Familles d’effets">${ATL_FAMILLES.map(f =>
+    `<button type="button" role="tab" class="atl-onglet${s.onglet === f.id ? ' on' : ''}" aria-selected="${s.onglet === f.id}" data-atl-onglet="${f.id}" data-atl-k="t-${f.id}">${f.lib}</button>`).join('')}</div>`;
+  const aObtenir = n + (n > 1 ? ' éléments à obtenir' : ' élément à obtenir');
+  const enrTexte = s.enCours ? 'Enregistrement…' : n ? 'Enregistrer · ' + aObtenir : fait;
+  const enrOff = s.enCours || n > 0 || egal ? ' disabled' : '';
+  const acheter = achat ? `Acheter ${achat.o.nom} · ${atlPrix(achat.o)}` : '';
+  const aGagner = manq.filter(m => m.o.src !== 'boutique');
+  const basTexte = achat ? `${achat.o.nom} est en vente, ici ou dans la Boutique`
+    : aGagner.length ? `${aGagner[0].o.nom} : ${atlCommentaire(aGagner[0].o)}`
+    : manq.length ? `${manq[0].o.nom} : déjà payé, arrive le ${dateLongue(manq[0].attente)}` : 'S’applique à toutes tes cartes Terra';
+  const eclat = BRI.lu && BRI.ouvert ? `<div class="atl-eclat">
+      <div class="atl-eclat-t"><p class="atl-eclat-h">L’éclat d’une carte</p>
+        <p>Fonds ${BRI.eclatDoublons} doublons et ${fmtNombre(BRI.eclatTp)} TP pour donner un éclat à la carte de ton choix : des rayons dorés, une lumière qui fait le tour du cadre et le sceau « ✦ Éclat ». Ça se fait depuis la fiche de la carte ; l’exemplaire qui le porte ne s’échange plus.</p>
+        <p class="atl-eclat-v">Se gagne avec tes doublons. Ne s’achète jamais en euros.</p></div>
+      <button type="button" class="atl-btn sec" data-atl="eclat" data-atl-k="eclat">Voir l’éclat</button></div>` : '';
+  ec.innerHTML = `<div class="atl-page">
+    <div class="atl-tete">
+      <button type="button" class="atl-retour" data-atl="fermer" data-atl-k="fermer" aria-label="Retour à Personnaliser"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+      <div class="atl-tete-t"><p class="atl-fil">Profil › Personnaliser › Mes cartes</p><h1 id="atlTitre">L’atelier</h1>
+        <p class="atl-intro">Compose l’apparence de tes cartes Terra. Essaie tout librement : tu n’enregistres que ce qui est à toi. Rien n’est tiré au hasard, rien ne s’échange, tout est gardé à vie.</p>
+        ${ATL.test ? '<p class="atl-test"><span class="atl-test-l">Essai : les achats sont simulés et rien n’est enregistré sur le serveur.</span><span class="atl-test-c">Essai · achats simulés</span></p>' : ''}</div>
+    </div>
+    <div class="atl-corps">
+      <div class="atl-gauche">${scene}${chips}</div>
+      <div class="atl-droite">${essai}${onglets}${familles}
+        <div class="atl-appliquer">
+          <p class="atl-lbl">Appliquer à</p>
+          <div class="atl-chips"><span class="atl-seg on">Toutes mes cartes Terra</span></div>
+          <div class="atl-actions">${achat ? `<button type="button" class="atl-btn" data-atl="acheter" data-atl-k="acheter">${acheter}</button>` : ''}
+            <button type="button" class="atl-btn${achat ? ' sec' : ''}" data-atl="enregistrer" data-atl-k="enregistrer"${enrOff}>${enrTexte}</button></div>
+          <p class="atl-note">Chaque élément s’obtient une seule fois et sert ensuite sur toutes tes cartes Terra. Ceux qui sont en vente s’achètent ici, ou dans la Boutique (Objets TerraFront) à côté des dos et des skins, avec le même paiement. Les cartes du Front changent de propriétaire : l’atelier ne s’y applique pas.</p>
+          <p class="atl-note">${BRI.lu ? 'Tes brillantes et tes éclats gardent leur propre lumière. ' : ''}Sur une carte qui porte un skin, seul le halo s’ajoute.</p>
+        </div>
+      </div>
+    </div>${eclat}
+  </div>
+  <div class="atl-bas"><p>${echapperTexte(basTexte)}</p>${achat
+    ? `<button type="button" class="atl-btn" data-atl="acheter" data-atl-k="acheter-b">${acheter}</button>`
+    : `<button type="button" class="atl-btn" data-atl="enregistrer" data-atl-k="enregistrer-b"${enrOff}>${s.enCours ? 'Enregistrement…' : n ? aObtenir : fait}</button>`}</div>`;
+  const p2 = ec.querySelector('.atl-page');
+  if(p2 && defil) p2.scrollTop = defil;
+  armerCarte3d(ec.querySelector('.atl-scene .c3d'));
+  if(actif){
+    const b = ec.querySelector(`[data-atl-k="${actif}"]`);
+    if(b && !b.disabled) try{ b.focus({ preventScroll: true }); }catch(e){}
+  }
+}
+function atlClic(e){
+  const t = e.target.closest('[data-atl], [data-atl-f], [data-atl-c], [data-atl-carte], [data-atl-onglet]');
+  if(!t || t.disabled) return;
+  if(t.dataset.atlF){ AS[t.dataset.atlF] = t.dataset.atlO; AS.eclat = false; atlRendre(); return; }
+  if(t.dataset.atlC){ AS.couleur = t.dataset.atlC; atlRendre(); return; }
+  if(t.dataset.atlCarte != null){ AS.carte = Number(t.dataset.atlCarte) || 0; atlRendre(); return; }
+  if(t.dataset.atlOnglet){ AS.onglet = t.dataset.atlOnglet; atlRendre(); return; }
+  const a = t.dataset.atl;
+  if(a === 'fermer') atlFermer();
+  else if(a === 'enregistrer') atlEnregistrer();
+  else if(a === 'acheter') atlAcheter();
+  else if(a === 'eclat') atlVoirEclat();
+}
+async function atlEnregistrer(){
+  if(AS.enCours || atlManquants().length) return;
+  const comp = { finition: AS.finition, halo: AS.halo, couleur: AS.couleur };
+  if(ATL.test){
+    ATL.moi = comp;
+    try{ sessionStorage.setItem('tf-atl-test-moi', JSON.stringify(comp)); }catch(e){}
+  } else {
+    AS.enCours = true; atlRendre();
+    let r;
+    try{ r = await sb.rpc('atelier_enregistrer', { p_finition: comp.finition, p_halo: comp.halo, p_couleur: comp.couleur }); }
+    catch(e){ r = { error: e }; }
+    AS.enCours = false;
+    if(r.error){
+      atlRendre();
+      notifier({ type: 'erreur', titre: 'Impossible d’enregistrer', texte: messageLisible(r.error.message) });
+      try{ await atlCharger(); }catch(e){}
+      atlRendre();
+      return;
+    }
+    if(r.data) atlLireEtat(r.data); else ATL.moi = comp;
+  }
+  atlRendre();
+  notifier({ type: 'succes', titre: 'Composition enregistrée',
+    texte: ATL.test ? 'Essai : elle n’est gardée que dans cet onglet.' : 'Elle est posée sur toutes tes cartes Terra.' });
+  try{ if(terraCharge && document.getElementById('tcGrille')) renderGrilleTerra(); }catch(e){}
+}
+async function atlAcheter(){
+  const m = atlManquants().find(x => x.o.src === 'boutique' && !x.attente);
+  if(!m) return;
+  if(ATL.test){
+    AS.achats[m.o.id] = true;
+    atlRendre();
+    notifier({ type: 'info', titre: 'Essai : achat simulé', texte: `${m.f.lib} ${m.o.nom} : rien n’est payé, c’est pour voir. Tu peux enregistrer.` });
+    return;
+  }
+  try{ await bqeVerifierAcces(); }catch(e){}
+  const art = atlArticle(m.o);
+  if(!bqeAcces || !art){ notifier({ type: 'erreur', titre: 'Indisponible', texte: 'Cet élément n’est pas en vente pour le moment.' }); return; }
+  if(art.possede){ try{ await atlCharger(); }catch(e){} atlRendre(); return; }
+  bqeOuvrirFiche(art.id, 'atelier');
+}
+function atlVoirEclat(){
+  clearTimeout(AS.minuteur);
+  AS.eclat = true;
+  atlRendre();
+  try{ sonsOuverture.cloche(); }catch(e){}
+  AS.minuteur = setTimeout(() => { AS.eclat = false; atlRendre(); }, 4200);
+}
+
+// ---------- l'atelier dans la boutique et dans Personnaliser ----------
+function atlFamilleArticle(id){
+  const k = String(id || '').replace(/^atelier-/, '');
+  return ATL_HALOS.some(o => o.id === k) ? 'halo' : 'finition';
+}
+// pour montrer un objet seul (boutique, fiche d'achat) : Étoiles en ciel, Braises en corail
+function atlCompoArticle(id){
+  const k = String(id || '').replace(/^atelier-/, '');
+  return atlFamilleArticle(id) === 'halo' ? { finition: 'aucune', halo: k, couleur: k === 'braises' ? 'corail' : k === 'etoiles' ? 'ciel' : 'or' }
+    : { finition: k, halo: 'aucun', couleur: 'or' };
+}
+function atlVignetteHtml(id){
+  const ex = { ...carteExemple(), exemplaires: 1, aurore: 0, skin: undefined, brillantes: 0, numeros: [], eclat: false };
+  return `<div class="sk-vig atl-vig" aria-hidden="true"><div class="sk-vig-echelle">${miniTerra({ ...ex, atelier: { ...atlCompoArticle(id), niveau: 2 } })}</div></div>`;
+}
+function atlGrandApercu(a){
+  const ex = { ...carteExemple(), exemplaires: 1, aurore: 0, skin: undefined, brillantes: 0, numeros: [], eclat: false };
+  return carte3dDebut(150, 225, 1.45) + miniTerra({ ...ex, atelier: { ...atlCompoArticle(a.id), niveau: 2 } }) + carte3dFin();
+}
+function atlQuoiAchat(a, nom){
+  return atlFamilleArticle(a.id) === 'halo'
+    ? `<b>le halo ${echapperTexte(nom)}</b> (5 couleurs au choix), à poser sur toutes tes cartes Terra`
+    : `<b>la finition ${echapperTexte(nom)}</b>, à poser sur toutes tes cartes Terra`;
+}
+function atlBlocGardeRobe(){
+  if(!ATL.lu || !ATL.ouvert) return '';
+  const m = ATL.moi || {};
+  const fn = ATL_FINITIONS.find(o => o.id === m.finition), ha = ATL_HALOS.find(o => o.id === m.halo);
+  const coul = ATL_COULEURS.find(x => x.id === m.couleur) || ATL_COULEURS[0];
+  const res = [];
+  if(fn && fn.id !== 'aucune') res.push('Finition ' + fn.nom);
+  if(ha && ha.id !== 'aucun') res.push('Halo ' + ha.nom + ' ' + coul.lib.toLowerCase());
+  const c = atlCartesEssai()[0];
+  return `<div class="gr-atelier">
+      <div class="sk-vig gr-at-vig" aria-hidden="true"><div class="sk-vig-echelle">${miniTerra({ ...c, exemplaires: 1, skin: undefined, atelier: atlMienne(1) })}</div></div>
+      <div class="gr-at-txt"><b>L’atelier</b><span>${echapperTexte(res.length ? res.join(' · ') : 'Finitions et halos pour toutes tes cartes Terra')}</span>
+        <button type="button" class="bq-btn" data-gr-atelier>Ouvrir l’atelier</button></div>
+    </div>`;
 }

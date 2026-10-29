@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b54df761e40c';
+const VERSION_JEU = '64998cf3c04a';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -544,7 +544,8 @@ function mettreEnSceneAssaut(cible, r){
       d.innerHTML = (SAISON2 ? `<span class="as-gain">TerraPoints : calcul…</span> · protégée 3 h`
                              : `+${bonus.toLocaleString('fr-FR')} pts de bonus · protégée 3 h · revente au jeu dans 12 h`)
         + (mon ? `<span class="as-mon">${ICONE_MONUMENT}Monument conquis : <b>${echapperTexte(mon.nom)}</b></span>` : '')
-        + (SAISON2 && (BATIMENTS_CARTE.get(String(cible.code)) || {}).fonderie ? `<span class="as-mon as-bt">${ICONE_FONDERIE}Fonderie détruite : tu pilles la moitié de ses lingots</span>` : '');   // patch243
+        + (SAISON2 && (BATIMENTS_CARTE.get(String(cible.code)) || {}).fonderie ? `<span class="as-mon as-bt">${ICONE_FONDERIE}Fonderie détruite : tu pilles la moitié de ses lingots</span>` : '')   // patch243
+        + (SAISON2 && (BATIMENTS_CARTE.get(String(cible.code)) || {}).centre ? `<span class="as-mon as-bt">${ICONE_CENTRE}Centre de recherche détruit : sa bombe est perdue</span>` : '');   // patch260
       if(SAISON2 && BATIMENTS) setTimeout(chargerBatiments, 800);
       if(SAISON2 && soldeAvant != null){
         // le gain reel (plafond du jour, reprise, degressif) se lit sur le solde
@@ -2123,6 +2124,12 @@ let batimentsTimer = null;
 let btArme = null;                 // « code|type » : la construction attend sa confirmation
 let btRecherche = '';
 let attaqueEffetBt = null;         // batiments_effet() de la cible ouverte
+// patch260 : le Centre de recherche et la bombe
+const ICONE_CENTRE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" d="M9.5 3h5M10.5 3v6.5L5 19.2c-.5 1 .2 1.8 1.2 1.8h11.6c1 0 1.7-.8 1.2-1.8l-5.5-9.7V3M7.6 15h8.8"/></svg>';
+const ICONE_MALLETTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M3 8h18v11H3zM9 8V5.5h6V8M3 12.5h18"/><rect x="10.5" y="11" width="3" height="3" rx=".6" fill="currentColor"/></svg>';
+if(BT_TRACES) BT_TRACES.centre = [new Path2D('M9.5 3h5M10.5 3v6.5L5 19.2c-.5 1 .2 1.8 1.2 1.8h11.6c1 0 1.7-.8 1.2-1.8l-5.5-9.7V3M7.6 15h8.8')];
+let BOMBES_ZONES = [];             // bombes_actives() : les zones bombardées en cours
+let BOMBES_ALERTES = [];           // bombes_alertes(2) : préparations et impacts récents
 const ID_MOI = '__moi__';
 let joueurSurligne = null;
 let listeJoueursComplete = false;
@@ -2467,6 +2474,7 @@ function dessinerTerritoiresCanvas(ctx, trait, k){
   if(mode === 'contours') dessinerArrondissementsParis(ctx, trait, k, liste);   // patch108
   dessinerFrontieres(ctx, trait, mode === 'contours');
   if(CALQUES.raretes) dessinerMarqueursCanvas(ctx, liste, joueurs, k, mode === 'depts');
+  if(SAISON2 && BOMBES_ZONES.length) dessinerZonesBombes(ctx, trait);   // patch260 : sous les bâtiments
   if(SAISON2 && CALQUES.batiments && BATIMENTS_CARTE.size) dessinerBatimentsCanvas(ctx, liste);   // patch243-244
   majLegendeSiBesoin(joueurs);
 }
@@ -3597,6 +3605,7 @@ function rendreAttaque(code, a, siege){
     ${attaqueEnGarnison ? `<div class="gn-badge">${ICONES_PC.bouclier}<span><b>Commune en garnison.</b> Chaque victoire peut être annulée par une défense automatique (1 chance sur 2).</span></div>` : ''}
     ${attaqueEffetBt && attaqueEffetBt.defense > 0 ? `<div class="gn-badge bt-badge">${ICONE_FORTERESSE}<span><b>Forteresse.</b> −${attaqueEffetBt.defense} % à tes chances sur cette commune.</span></div>` : ''}
     ${attaqueEffetBt && attaqueEffetBt.appui > 0 ? `<p class="bt-appui">${ICONE_FORTERESSE}<span>+${attaqueEffetBt.appui} % grâce à ta forteresse${attaqueEffetBt.appui_de ? ' de <b>' + echapperHtml(attaqueEffetBt.appui_de) + '</b>' : ''}</span></p>` : ''}
+    ${attaqueEffetBt && attaqueEffetBt.bombe > 0 ? `<p class="bt-appui bt-bombe"><span class="bt-bombe-ic">💥</span><span>+${attaqueEffetBt.bombe} % : zone bombardée${attaqueEffetBt.bombe_sur ? ' (<b>' + echapperHtml(attaqueEffetBt.bombe_sur) + '</b>)' : ''}</span></p>` : ''}
     <div class="pc-prox ${a.a_distance ? 'loin' : ''}">
       ${estOutremerCode(code)   // patch246 : en outre-mer, tout le territoire compte (s2-49)
         ? (a.a_distance
@@ -4246,7 +4255,7 @@ function renderLegendeCarte(joueurs, idSvg){
         <div><svg width="26" height="26"><circle cx="13" cy="13" r="10" fill="#A9BCD4"/><polygon points="${etoileSvg(13, 13, 6)}" fill="#FFF6D6" stroke="#0B1830"/></svg>Légend.</div>
         <div><svg width="26" height="26"><defs><linearGradient id="legAu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#9FFFE2"/><stop offset="1" stop-color="#C08CFF"/></linearGradient></defs><circle cx="13" cy="13" r="11" fill="rgba(61,242,192,.25)"/><path d="M13 3 L15.4 10.6 L23 13 L15.4 15.4 L13 23 L10.6 15.4 L3 13 L10.6 10.6 Z" fill="url(#legAu)" stroke="#0B1830"/></svg>Aurore</div>
       </div>${SAISON2 && BATIMENTS ? `
-      <div class="leg-tailles leg-batiments"><div><span class="leg-bt">${ICONE_FONDERIE}</span>Fonderie</div><div><span class="leg-bt">${ICONE_FORTERESSE}</span>Forteresse</div></div>` : ''}
+      <div class="leg-tailles leg-batiments"><div><span class="leg-bt">${ICONE_FONDERIE}</span>Fonderie</div><div><span class="leg-bt">${ICONE_FORTERESSE}</span>Forteresse</div><div><span class="leg-bt leg-centre">${ICONE_CENTRE}</span>Centre dévoilé</div></div>` : ''}
     </div>`;
 }
 
@@ -9726,6 +9735,12 @@ function initModes(){
     bt.hidden = true;
     g.insertAdjacentElement('beforebegin', bt);
     bt.addEventListener('click', (e) => {
+      const pr = e.target.closest('[data-bt-prep]');   // patch260 : préparer une bombe, en deux temps
+      if(pr){
+        if(btArme !== 'centre|prep'){ btArme = 'centre|prep'; renderBatimentsBloc(); return; }
+        btArme = null; pr.disabled = true; bombePreparer(); return;
+      }
+      if(e.target.closest('[data-bt-mallette]')){ ouvrirMallette(); return; }
       const fo = e.target.closest('[data-bt-fortifier]');
       if(!fo) return;
       const code = fo.dataset.btFortifier;
@@ -9754,10 +9769,14 @@ function initModes(){
 async function chargerBatiments(){
   if(!SAISON2) return;
   try{
-    const [m, v] = await Promise.all([sb.rpc('mes_batiments'), sb.rpc('batiments_visibles')]);
+    const [m, v, z, al] = await Promise.all([sb.rpc('mes_batiments'), sb.rpc('batiments_visibles'),
+      sb.rpc('bombes_actives'), sb.rpc('bombes_alertes', { p_jours: 2 })]);   // patch260
     if(m.error || !m.data || !m.data.ouverts){ BATIMENTS = null; BATIMENTS_CARTE = new Map(); renderBatimentsBloc(); return; }
     BATIMENTS = m.data;
     batimentsLu = Date.now();
+    BOMBES_ZONES = z && !z.error && Array.isArray(z.data) ? z.data : [];
+    BOMBES_ALERTES = al && !al.error && Array.isArray(al.data) ? al.data : [];
+    bombesAnnoncer();
     const carte = new Map();
     for(const b of (v.data || [])){
       const k = String(b.commune_code);
@@ -9828,6 +9847,14 @@ function blocBatimentsEtat(code, c){
       <p class="bt-txt"><b>−${btReglage('forteresse_defense', 15)} %</b> aux chances des attaquants ici, et <b>+${btReglage('forteresse_appui', 5)} %</b> à tes attaques à moins de ${btReglage('rayon_km', 20)} km.</p>
     </div>`;
   }
+  const ce = B.centre && B.centre.code === code ? B.centre : null;   // patch260
+  if(ce){
+    const P = B.preparation, pret = btPretDans(ce) <= 0, niv = bombeEtat().niv;
+    html += `<div class="bt bt-centre">
+      <div class="bt-haut">${ICONE_CENTRE}Centre de recherche <b>${!pret ? 'prêt dans ' + formatDuree(btPretDans(ce)) : P ? (niv ? 'bombe niveau ' + niv : 'bombe en préparation') : 'prêt'}</b></div>
+      <p class="bt-txt">${ce.devoile ? '<b>Dévoilé</b> : tout le monde le voit sur la carte.' : 'Secret : les autres ne le voient pas sur la carte.'} Si on te prend ${echapperHtml(c.nom)}, il est détruit${P ? ' et ta bombe est perdue' : ''}. Tout se gère dans Défendre.</p>
+    </div>`;
+  }
   return html;
 }
 // sur la fiche : ce qu'on peut y construire
@@ -9853,10 +9880,15 @@ function blocBatimentsActions(code, c){
       : n < prix ? `Il te faut ${prix} lingots (tu en as ${n})` : '';
     boutons.push(`<button class="pc-action bt-action${arme('forteresse') ? ' arme' : ''}" data-pc="bt-construire" data-bt="forteresse" ${bloque ? 'disabled' : ''}>${ICONE_FORTERESSE}<span>${arme('forteresse') ? `Confirmer : ${prix} lingots` : `Faire de ${echapperHtml(c.nom)} une Forteresse`}<small>${bloque || `Prête dans ${h} h · ${nb} / ${maxF} · −${btReglage('forteresse_defense', 15)} % en défense, +${btReglage('forteresse_appui', 5)} % autour`}</small></span><span class="prix">${prix} ${ICONE_LINGOT}</span></button>`);
   }
+  if(B.bombes_ouvertes && !B.centre){   // patch260 : le Centre de recherche
+    const pc = btReglage('centre_prix', 40), nfMin = btReglage('centre_fonderies', 2), nl = lingotsActuels();
+    const bloque = nF < nfMin ? `Il te faut ${nfMin} Fonderies (tu en as ${nF})` : nl < pc ? `Il te faut ${pc} lingots (tu en as ${nl})` : '';
+    boutons.push(`<button class="pc-action bt-action${arme('centre') ? ' arme' : ''}" data-pc="bt-construire" data-bt="centre" ${bloque ? 'disabled' : ''}>${ICONE_CENTRE}<span>${arme('centre') ? `Confirmer : ${pc} lingots` : 'Construire le Centre de recherche ici'}<small>${bloque || `Prêt dans ${h} h · un seul · secret : les autres ne le voient pas sur la carte`}</small></span><span class="prix">${pc} ${ICONE_LINGOT}</span></button>`);
+  }
   return boutons.length ? `<p class="pc-titre-bt">Bâtiments</p><div class="pc-actions pc-actions-bt">${boutons.join('')}</div>` : '';
 }
 async function batimentConstruire(code, type){
-  const nom = type === 'fonderie' ? 'Fonderie' : 'Forteresse';
+  const nom = type === 'fonderie' ? 'Fonderie' : type === 'centre' ? 'Centre de recherche' : 'Forteresse';   // patch260
   const { error } = await sb.rpc('batiment_construire', { p_code: code, p_type: type });
   if(error) notifier({ type: 'erreur', titre: nom, texte: messageLisible(error.message) });
   else notifier({ type: 'succes', titre: nom + ' en construction', texte: `Prête dans ${btReglage('construction_h', 24)} h.` });
@@ -9878,7 +9910,7 @@ function renderBatimentsBloc(){
   const etat = (b) => btPretDans(b) <= 0 ? '<span class="btl-etat ok">Active</span>' : `<span class="btl-etat cours">prête dans ${formatDuree(btPretDans(b))}</span>`;
   const ligne = (ic, b, sous) => `<div class="btl"><span class="btl-ic">${ic}</span>
       <span class="btl-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(b.code)}">${echapperTexte(b.nom)} (${echapperTexte(b.dept)})</button><small>${sous}</small></span>${etat(b)}</div>`;
-  el.innerHTML = `<h2>Bâtiments</h2>
+  el.innerHTML = `<h2>Bâtiments</h2>${alertesBombesHtml()}
     <div class="bt-reserve"><span class="btr-nb">${n}</span>${ICONE_LINGOT}<span class="btr-max">/ ${max} lingots</span>
       <span class="btr-prod">${F ? (btProdTotale() > 0 ? `+${btProdTotale()} par jour<br>${pr ? 'prochain dans ' + formatDuree(pr) : 'réserve pleine'}` : 'Fonderie<br>en construction') : 'Pas encore<br>de Fonderie'}</span></div>
     <div class="btl-titre">Fonderies <em>${mesFonderies().length} / ${btReglage('fonderies_max', 1)}</em></div>
@@ -9890,6 +9922,7 @@ function renderBatimentsBloc(){
     ${F && forts.length < maxF ? (n >= prix
         ? `<input type="search" class="bourse-search gn-cherche" id="btCherche" placeholder="Fortifier une de mes communes (${prix} lingots)…" autocomplete="off" value="${echapperTexte(btRecherche)}"><div class="gn-choix" id="btChoix">${btChoixHtml()}</div>`
         : `<p class="gl-vide">Prochaine forteresse : ${prix} lingots (tu en as ${n}).</p>`) : ''}
+    ${centreHtml()}
     <p class="btl-regle">Les lingots ne servent qu’aux bâtiments : ils ne s’échangent pas, ne s’achètent pas et repartent à zéro à chaque saison. Un bâtiment est perdu si on prend sa commune.</p>`;
   const champ = document.getElementById('btCherche');
   if(champ) champ.addEventListener('input', (e) => {
@@ -9913,6 +9946,594 @@ function btChoixHtml(){
       <button class="gl-r bt-fortifier${a ? ' arme' : ''}" data-bt-fortifier="${echapperTexte(c.code)}">${a ? `Confirmer · ${prix} lingots` : 'Fortifier'}</button></div>`;
   }).join('') + (mes.length > 6 ? `<p class="gl-vide">+ ${mes.length - 6} autre${mes.length - 6 > 1 ? 's' : ''} : affine la recherche.</p>` : '');
 }
+
+// ---------- patch260 : le Centre de recherche et la bombe (s2-59) ----------
+// Le centre est secret (dévoilé à partir de 48 h de préparation et 24 h après
+// le lâcher). « Préparer une bombe » coûte 45 lingots ; la bombe grossit avec
+// le temps (10, 15, 20 km). On la lâche depuis la mallette de frappe.
+function bombeEtat(){
+  const B = BATIMENTS, P = B && B.preparation;
+  const H = btReglage('bombe_heures', [24, 48, 72]), R = btReglage('bombe_rayons', [10, 15, 20]);
+  if(!P) return { niv: 0, rayon: 0, ec: 0, H, R };
+  const ec = (Number(P.ecoule) || 0) + (Date.now() - batimentsLu) / 1000;
+  const niv = ec >= H[2] * 3600 ? 3 : ec >= H[1] * 3600 ? 2 : ec >= H[0] * 3600 ? 1 : 0;
+  return { niv, rayon: niv ? R[niv - 1] : 0, ec, H, R };
+}
+const nomDept = (d) => (DEPT_NAMES && DEPT_NAMES[d]) || d || '';
+// « dans le 25 (Doubs) » : marche pour tous les départements, sans souci d'article
+const dansDept = (d) => `dans le ${d}${DEPT_NAMES && DEPT_NAMES[d] ? ' (' + DEPT_NAMES[d] + ')' : ''}`;
+
+// Défendre : le bloc du centre
+function centreHtml(){
+  const B = BATIMENTS;
+  if(!B || !B.bombes_ouvertes) return '';
+  const ce = B.centre, P = B.preparation;
+  const pc = btReglage('centre_prix', 40), pb = btReglage('bombe_prix', 45), dv = btReglage('bombe_devoile_h', 48);
+  const tete = (sous, badge) => `<div class="cr-haut"><span class="cr-ic">${ICONE_CENTRE}</span>
+      <span class="cr-nom"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(ce.code)}">${echapperTexte(ce.nom)} (${echapperTexte(ce.dept)})</button><small>${sous}</small></span>${badge}</div>`;
+  const badge = ce && ce.devoile ? '<span class="cr-secret cr-devoile">Dévoilé</span>' : '<span class="cr-secret">Secret</span>';
+  let corps;
+  if(!ce){
+    corps = `<p class="gl-vide">${pc} lingots, il faut ${btReglage('centre_fonderies', 2)} Fonderies. Ouvre une de tes communes sur la carte et choisis « Construire le Centre de recherche ici ». Il est secret : les autres ne le voient pas sur la carte.</p>`;
+  } else if(btPretDans(ce) > 0){
+    corps = `<div class="cr">${tete('En construction : prêt dans ' + formatDuree(btPretDans(ce)), badge)}</div>`;
+  } else if(!P){
+    const n = lingotsActuels(), a = btArme === 'centre|prep';
+    const { H, R } = bombeEtat();
+    corps = `<div class="cr">${tete('Prêt · aucune bombe en préparation', badge)}
+      <p class="cr-txt">Une bombe est prête en <b>${H[0]} h</b> (rayon ${R[0]} km), puis grossit : <b>${R[1]} km</b> à ${H[1]} h, <b>${R[2]} km</b> à ${H[2]} h. Dès le départ, tout le monde apprend qu’une bombe se prépare ${echapperHtml(dansDept(ce.dept))}. À partir de ${dv} h, ton centre apparaît sur la carte.</p>
+      <button class="btn-mallette btn-prep${a ? ' arme' : ''}" data-bt-prep ${n < pb ? 'disabled' : ''}>${ICONE_CENTRE}${a ? `Confirmer : ${pb} lingots` : `Préparer une bombe · ${pb}`} ${a ? '' : ICONE_LINGOT}</button>
+      ${n < pb ? `<p class="cr-manque">Il te faut ${pb} lingots (tu en as ${n}).</p>` : ''}</div>`;
+  } else {
+    const { niv, ec, H, R } = bombeEtat();
+    const tuiles = [0, 1, 2].map(i => {
+      const avant = i ? H[i - 1] * 3600 : 0, fait = niv > i, cours = niv === i;
+      const k = cours ? Math.max(0, Math.min(1, (ec - avant) / (H[i] * 3600 - avant))) : 0;
+      return `<div class="cr-niv${fait ? ' fait' : ''}${cours ? ' cours' : ''}"><b>${R[i]} km</b><span>${cours ? 'dans ' + formatDuree((H[i] * 3600 - ec) * 1000) : `Niveau ${i + 1} · ${H[i]} h`}</span>${cours ? `<span class="cr-jauge"><i style="width:${Math.round(k * 100)}%"></i></span>` : ''}</div>`;
+    }).join('');
+    const txt = niv
+      ? `Bombe prête au <b>niveau ${niv}</b> : rayon <b>${R[niv - 1]} km</b>. ${niv < 3 ? `Attends ${formatDuree((H[niv] * 3600 - ec) * 1000)} pour ${R[niv]} km, ou lâche-la maintenant.` : 'Elle ne grossira plus.'} Cible : une commune à moins de ${btReglage('bombe_portee_km', 50)} km d’une des tiennes.`
+      : `Ta bombe sera prête dans <b>${formatDuree((H[0] * 3600 - ec) * 1000)}</b>.`;
+    const alerte = ce.devoile
+      ? `<p class="cr-alerte">Ton centre est <b>dévoilé</b> : tout le monde le voit sur la carte. S’il tombe, ta bombe est perdue.</p>`
+      : `<p class="cr-txt cr-dim">Encore secret ${formatDuree(Math.max(0, dv * 3600 - ec) * 1000)} : ensuite, ton centre apparaît sur la carte.</p>`;
+    corps = `<div class="cr">${tete('Bombe en préparation depuis ' + formatDuree(ec * 1000), badge)}
+      <div class="cr-niveaux">${tuiles}</div><p class="cr-txt">${txt}</p>${alerte}
+      <button class="btn-mallette" data-bt-mallette ${niv ? '' : 'disabled'}>${ICONE_MALLETTE}Ouvrir la mallette</button></div>`;
+  }
+  return `<div class="btl-titre">Centre de recherche <em>${ce ? 1 : 0} / 1</em></div>${corps}`;
+}
+// Défendre : les dernières annonces (préparations en cours, impacts)
+function alertesBombesHtml(){
+  const L = (BOMBES_ALERTES || []).filter(a => a.type === 'bombe' || a.etat === 'en_cours').slice(0, 4);
+  if(!L.length) return '';
+  return `<div class="btl-titre">Alertes <em>48 h</em></div><div class="bmb-alertes">${L.map(a => {
+    if(a.type === 'preparation') return `<div class="bmb-al"><span class="bmb-em">🧪</span><span>${a.moi ? '<b>Ta bombe</b> se prépare' : '<b>Quelqu’un</b> prépare une bombe'} ${echapperHtml(dansDept(a.dept))}<small>${ilYA(a.le)}</small></span></div>`;
+    const perte = (a.mes_garnisons || 0) + (a.mes_forteresses || 0);
+    return `<div class="bmb-al boum"><span class="bmb-em">💥</span><span><b>${a.moi ? 'Tu' : echapperHtml(a.lanceur_pseudo || 'Un joueur')}</b> ${a.moi ? 'as' : 'a'} lâché une bombe sur
+      <button type="button" class="btl-nom bmb-voir" data-voir-carte="${echapperTexte(a.cible_code)}">${echapperHtml(a.cible_nom || '')}</button> ${badgeDept(a.dept)} :
+      ${a.garnisons} garnison${a.garnisons > 1 ? 's' : ''} et ${a.forteresses} forteresse${a.forteresses > 1 ? 's' : ''} soufflée${a.garnisons + a.forteresses > 1 ? 's' : ''}${perte ? ` <em>dont ${[a.mes_garnisons ? a.mes_garnisons + ' garnison' + (a.mes_garnisons > 1 ? 's' : '') : '', a.mes_forteresses ? a.mes_forteresses + ' forteresse' + (a.mes_forteresses > 1 ? 's' : '') : ''].filter(Boolean).join(' et ')} à toi</em>` : ''}.
+      <small>${ilYA(a.le)}${a.etat === 'active' ? ` · +${btReglage('bombe_bonus', 15)} % en attaque dans la zone pendant ${btReglage('bombe_duree_h', 24)} h` : ''}</small></span></div>`;
+  }).join('')}</div>`;
+}
+async function bombePreparer(){
+  const { error } = await sb.rpc('bombe_preparer');
+  if(error) notifier({ type: 'erreur', titre: 'Préparer une bombe', texte: messageLisible(error.message) });
+  else notifier({ type: 'succes', titre: 'Bombe en préparation', texte: `Prête dans ${bombeEtat().H[0]} h. Tout le monde sait qu’une bombe se prépare dans ton département.` });
+  await chargerBatiments();
+}
+// les annonces en bandeau, comme les grandes conquêtes
+let bombesVues = null;
+function bombesAnnoncer(){
+  const L = BOMBES_ALERTES || [];
+  const cle = (a) => (a.type === 'bombe' ? 'b' : 'p') + a.id;
+  let vues = bombesVues;
+  if(vues === null){
+    try{ vues = JSON.parse(localStorage.getItem('tf-bombes-vues') || 'null'); }catch(e){ vues = null; }
+  }
+  const premier = !Array.isArray(vues);
+  const deja = new Set(premier ? [] : vues);
+  const neuves = L.filter(a => !deja.has(cle(a)) && !a.moi
+    && (a.type === 'bombe' || a.etat === 'en_cours')
+    && (!premier || (a.type === 'bombe' && (a.mes_garnisons || a.mes_forteresses))))
+    .sort((x, y) => new Date(x.le) - new Date(y.le));
+  bombesVues = L.map(cle).concat(premier ? [] : vues).slice(0, 80);
+  try{ localStorage.setItem('tf-bombes-vues', JSON.stringify(bombesVues)); }catch(e){}
+  neuves.slice(-3).forEach((a, i) => setTimeout(() => afficherAlerteBombe(a), i * 6500));
+}
+function afficherAlerteBombe(a){
+  const el = document.createElement('div');
+  el.className = 'grande-conquete gc-bombe';
+  el.setAttribute('role', 'status');
+  const perte = (a.mes_garnisons || 0) + (a.mes_forteresses || 0);
+  el.innerHTML = a.type === 'preparation'
+    ? `<span class="gc-ico">🧪</span><span class="gc-tx"><b>Quelqu’un prépare une bombe ${echapperTexte(dansDept(a.dept))}</b><small>Elle sera prête dans 24 h · son centre est secret</small></span>`
+    : `<span class="gc-ico">💥</span><span class="gc-tx"><b><em>${echapperTexte(a.lanceur_pseudo || 'Un joueur')}</em> a lâché une bombe sur ${echapperTexte(a.cible_nom || '')}</b><small>${perte ? `Tu y perds ${[a.mes_garnisons ? a.mes_garnisons + ' garnison' + (a.mes_garnisons > 1 ? 's' : '') : '', a.mes_forteresses ? a.mes_forteresses + ' forteresse' + (a.mes_forteresses > 1 ? 's' : '') : ''].filter(Boolean).join(' et ')} · ` : ''}+${btReglage('bombe_bonus', 15)} % en attaque dans la zone pendant 24 h</small></span>`;
+  el.addEventListener('click', () => el.remove());
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('visible'));
+  setTimeout(() => { el.classList.remove('visible'); setTimeout(() => el.remove(), 400); }, 7000);
+}
+// la carte : les zones bombardées (ellipses : la carte est en degrés)
+function dessinerZonesBombes(ctx, trait){
+  if(!mapBounds || !MAP_W) return;
+  const { latMin, latMax, lonMin, lonMax } = mapBounds;
+  for(const z of BOMBES_ZONES){
+    if(z.lat == null || new Date(z.fin).getTime() < Date.now()) continue;
+    const p = project(z.lat, z.lon);
+    const cx = p.x * MAP_W, cy = p.y * MAP_H;
+    const ry = z.rayon_km / 111.19 / (latMax - latMin) * MAP_H;
+    const rx = z.rayon_km / (111.19 * Math.cos(z.lat * Math.PI / 180)) / (lonMax - lonMin) * MAP_W;
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(229,72,77,0.15)'; ctx.fill();
+    ctx.setLineDash([trait(6), trait(4)]);
+    ctx.strokeStyle = 'rgba(255,90,82,0.95)'; ctx.lineWidth = trait(1.8); ctx.stroke();
+    ctx.setLineDash([]);
+    const f = trait(11), txt = `💥 +${btReglage('bombe_bonus', 15)} % · ${z.cible_nom || ''}`;
+    ctx.font = `600 ${f}px "Instrument Sans", system-ui, sans-serif`;
+    const w = ctx.measureText(txt).width + f * 1.2, h = f * 1.7, y = cy - ry - trait(6) - h;
+    ctx.fillStyle = 'rgba(229,72,77,0.92)';
+    ctx.beginPath();
+    if(ctx.roundRect) ctx.roundRect(cx - w / 2, y, w, h, h / 2); else ctx.rect(cx - w / 2, y, w, h);
+    ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(txt, cx, y + h / 2 + f * 0.05);
+    ctx.restore();
+  }
+}
+
+// ---------- la mallette de frappe ----------
+let ML = null;
+const mlNorm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z]/g, '');
+function ouvrirMallette(){
+  const B = BATIMENTS;
+  if(!B || !B.preparation || !B.centre || document.getElementById('ml-fond')) return;
+  const { niv, rayon } = bombeEtat();
+  if(!niv){ notifier({ type: 'info', titre: 'Mallette', texte: 'Ta bombe n’est pas encore prête.' }); return; }
+  const dep = String(B.centre.dept || '').padStart(2, '0'), portee = btReglage('bombe_portee_km', 50);
+  const fond = document.createElement('div');
+  fond.id = 'ml-fond';
+  fond.className = 'ml-fond';
+  fond.innerHTML = `<div class="ml-modale" role="dialog" aria-label="Mallette de frappe">
+    <div class="ml-m-tete"><span class="ml-m-ic">${ICONE_MALLETTE}</span><span><b>Mallette de frappe</b><small>Centre de ${echapperHtml(B.centre.nom)} (${echapperHtml(B.centre.dept)}) · niveau ${niv} · ${rayon} km</small></span><button type="button" class="ml-m-x" id="ml-x" aria-label="Fermer">✕</button></div>
+    ${ML_HTML(dep, niv, portee)}
+    <p class="ml-consigne" id="ml-consigne">Touche la mallette pour l’ouvrir.</p></div>`;
+  document.body.appendChild(fond);
+  document.body.classList.add('ml-ouverte');
+  const $m = (id) => document.getElementById('ml-' + id);
+  // le plan en km autour du centre (assez juste à l'échelle d'une région)
+  const ref = collectionMap.get(B.centre.code) || [...collectionMap.values()][0] || { lat: 46.6 };
+  const cosRef = Math.cos((ref.lat || 46.6) * Math.PI / 180);
+  const km = (lat, lon) => [lon * 111.19 * cosRef, -lat * 111.19];
+  const pts = [], moi = [];
+  for(const c of collectionMap.values()){
+    if(c.lat == null) continue;
+    const [x, y] = km(c.lat, c.lon), bt = BATIMENTS_CARTE.get(String(c.code)) || {};
+    const p = { x, y, c: '#F0B429', moi: true, g: garnisonsMoi.has(c.code), f: !!bt.forteresse };
+    pts.push(p); moi.push(p);
+  }
+  for(const e of othersMap.values()){
+    if(e.lat == null) continue;
+    const [x, y] = km(e.lat, e.lon), bt = BATIMENTS_CARTE.get(String(e.code)) || {};
+    pts.push({ x, y, c: colorForPlayer(e.joueurId), moi: false, g: false, f: !!bt.forteresse });
+  }
+  let mx = 0, my = 0; moi.forEach(p => { mx += p.x; my += p.y; });
+  mx /= moi.length || 1; my /= moi.length || 1;
+  let ext = 0; moi.forEach(p => { ext = Math.max(ext, Math.hypot(p.x - mx, p.y - my)); });
+  const vueGlobale = { x: mx, y: my, l: Math.max(140, Math.min(360, 2 * (ext + portee) * 1.05)) };
+  // contours des départements (chargés avec la carte ; sinon on les demande et ils arrivent en route)
+  if(!CONTOURS_DEPTS && typeof chargerDepartements === 'function') chargerDepartements();
+  const zones = (BOMBES_ZONES || []).filter(z => z.lat != null).map(z => { const [x, y] = km(z.lat, z.lon); return { x, y, r: z.rayon_km }; });
+  const cv = $m('cv');
+  cv.width = 656; cv.height = 356;
+  ML = { etat: 'ferme', $m, fond, g: cv.getContext('2d'), km, pts, moi, anneaux: null, zones, vueGlobale, vue: { ...vueGlobale }, vueDe: null, vueVers: null,
+         niv, rayon, portee, requete: '', res: [], sel: -1, apercu: null, cible: null, stats: null, souffle: false, tImpact: 0, raf: 0, tSugg: 0, code: [0, Number(dep.slice(-2, -1)) || 0, Number(dep.slice(-1)) || 0] };
+  mlRoues('serG', [7, 3, 1]); mlRoues('serD', [4, 9, 6]);
+  // les touches
+  const R = ['AZERTYUIOP', 'QSDFGHJKLM', 'WXCVBN'];
+  $m('clavier').innerHTML = R.map(r => [...r].map(l => `<button type="button" class="ml-k" data-k="${l}">${l}</button>`).join('')).join('')
+    + '<button type="button" class="ml-k ml-eff" data-k="⌫" aria-label="Effacer">⌫</button><button type="button" class="ml-k ml-ok" data-k="OK" id="ml-kOk" disabled>VALIDER</button>';
+  $m('clavier').addEventListener('pointerdown', (e) => { const b = e.target.closest('.ml-k'); if(b && !b.disabled){ e.preventDefault(); mlAppuyer(b.dataset.k); } });
+  $m('sugg').addEventListener('pointerdown', (e) => { const d = e.target.closest('.ml-sg'); if(!d || d.classList.contains('ml-loin') || d.classList.contains('ml-vide')) return; e.preventDefault(); mlVerrouiller(ML.res[+d.dataset.i]); });
+  $m('malle').addEventListener('click', () => { if(ML && ML.etat === 'ferme') mlOuvrir(); });
+  $m('cle').addEventListener('click', mlTournerCle);
+  $m('capot').addEventListener('click', mlLeverCapot);
+  $m('changer').addEventListener('click', mlChanger);
+  $m('x').addEventListener('click', fermerMallette);
+  const bouton = $m('bouton');
+  bouton.addEventListener('pointerdown', mlDebut);
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach(t => bouton.addEventListener(t, mlFin));
+  fond.addEventListener('click', (e) => { if(e.target === fond && ML && ['ferme', 'fini'].includes(ML.etat)) fermerMallette(); });
+  document.addEventListener('keydown', mlTouche);
+  window.addEventListener('resize', mlAjuster);
+  mlAjuster();
+  ML.raf = requestAnimationFrame(mlBoucle);
+}
+function fermerMallette(){
+  if(!ML) return;
+  cancelAnimationFrame(ML.raf); clearTimeout(ML.tSugg);
+  document.removeEventListener('keydown', mlTouche);
+  window.removeEventListener('resize', mlAjuster);
+  ML.fond.remove(); ML = null;
+  document.body.classList.remove('ml-ouverte');
+}
+function mlAjuster(){
+  if(!ML) return;
+  const k = Math.min(1, (window.innerWidth - 8) / 352, (window.innerHeight - 118) / 600);
+  ML.$m('scene').style.zoom = k < 1 ? String(Math.max(.6, k)) : '';
+}
+function mlRoues(id, chiffres, tour){
+  if(!ML) return;
+  [...ML.$m(id).querySelectorAll('.ml-roue i')].forEach((el, i) => {
+    if(!el.childElementCount) el.innerHTML = Array.from({ length: 30 }, (_, n) => `<span>${n % 10}</span>`).join('');
+    el.style.transform = `translateY(${-(chiffres[i] + (tour ? 10 : 0)) * 16}px)`;
+  });
+}
+const mlAtt = (ms) => new Promise(r => setTimeout(r, ms));
+const mlConsigne = (h) => { if(ML) ML.$m('consigne').innerHTML = h; };
+function mlTete(g, d){ if(!ML) return; ML.$m('eTeteG').textContent = g; ML.$m('eTeteD').textContent = d; ML.$m('eTete').classList.add('ml-vu'); }
+function mlEtape(n){ if(ML) [...ML.$m('etapes').children].forEach((e, i) => { e.className = i + 1 < n ? 'ml-fait' : i + 1 === n ? 'ml-ici' : ''; }); }
+function mlLampe(id, on){ if(ML) ML.$m(id).classList.toggle('ml-on', on); }
+function mlAller(v, ms = 900){ if(!ML) return; ML.vueDe = { ...ML.vue }; ML.vueVers = { ...v }; ML.t0Vue = performance.now(); ML.dureeVue = ms; }
+async function mlOuvrir(){
+  if(!ML || ML.etat !== 'ferme') return;
+  const m = ML;
+  m.etat = 'ouverture'; mlConsigne('Code bon. Ouverture…');
+  mlRoues('serG', m.code, true); await mlAtt(160); mlRoues('serD', [0, 0, m.niv], true);
+  await mlAtt(1050); if(ML !== m) return;
+  m.$m('malle').classList.add('ml-deverrouillee');
+  await mlAtt(420); if(ML !== m) return;
+  m.$m('malle').classList.add('ml-ouverte'); m.$m('scene').classList.add('ml-ouverte');
+  await mlAtt(1500); if(ML !== m) return;
+  m.$m('ledPwr').classList.add('ml-on');
+  m.$m('ecran').classList.add('ml-demarre'); await mlAtt(380); if(ML !== m) return;
+  const b = m.$m('boot'); b.innerHTML = ''; b.classList.add('ml-vu');
+  const C = BATIMENTS && BATIMENTS.centre;
+  const lignes = ['TERRAFRONT // CENTRE DE RECHERCHE', `SITE ........ ${(C ? C.nom + ' (' + C.dept + ')' : '').toUpperCase()}`,
+    `BOMBE ....... NIVEAU ${m.niv} · ${m.rayon} KM`, `PORTÉE ...... ${m.portee} KM DE TES COMMUNES`,
+    `ZONES ACTIVES ${String(m.zones.length).padStart(2, '0')}`, 'LIAISON CARTE ........... <span class="ml-ok">OK</span>', '&gt; SAISIS LA CIBLE_'];
+  for(const l of lignes){ const d = document.createElement('div'); d.innerHTML = l; b.appendChild(d); await mlAtt(200); if(ML !== m) return; }
+  await mlAtt(500); if(ML !== m) return;
+  m.$m('ecran').classList.add('ml-allume'); b.classList.remove('ml-vu'); m.$m('ledLien').classList.add('ml-on');
+  mlTete('Saisie de la cible', `Niv. ${m.niv} · ${m.rayon} km`);
+  m.etat = 'cible'; mlEtape(1);
+  mlConsigne('Tape le nom d’une commune sur le clavier, puis <b>VALIDER</b>.');
+}
+function mlTouche(e){
+  if(!ML) return;
+  if(e.key === 'Escape'){ if(['ferme', 'cible', 'fini', 'verrouille', 'cle', 'capot'].includes(ML.etat)) fermerMallette(); return; }
+  if(ML.etat !== 'cible' || e.metaKey || e.ctrlKey || e.altKey) return;
+  if(e.key === 'Backspace'){ e.preventDefault(); mlAppuyer('⌫'); }
+  else if(e.key === 'Enter'){ e.preventDefault(); mlAppuyer('OK'); }
+  else if(/^[a-zà-ÿ]$/i.test(e.key)){ const l = mlNorm(e.key).toUpperCase(); if(l){ e.preventDefault(); mlAppuyer(l); } }
+}
+function mlAppuyer(k){
+  if(!ML || ML.etat !== 'cible') return;
+  const b = ML.fond.querySelector(`.ml-k[data-k="${k}"]`);
+  if(b){ b.classList.add('ml-enf'); setTimeout(() => b.classList.remove('ml-enf'), 120); }
+  if(k === '⌫') ML.requete = ML.requete.slice(0, -1);
+  else if(k === 'OK'){ if(ML.sel >= 0) mlVerrouiller(ML.res[ML.sel]); return; }
+  else if(ML.requete.length < 24) ML.requete += k;
+  mlLcd(); mlMajSugg();
+}
+function mlLcd(){ if(!ML) return; const l = ML.$m('lcd'); l.textContent = ML.requete || 'TAPE UNE COMMUNE'; l.classList.toggle('ml-vide', !ML.requete); }
+function mlMajSugg(){
+  if(!ML) return;
+  clearTimeout(ML.tSugg);
+  const q = ML.requete;
+  if(mlNorm(q).length < 2){ ML.res = []; ML.sel = -1; mlAfficherSugg(); return; }
+  ML.tSugg = setTimeout(async () => {
+    const { data, error } = await sb.rpc('bombe_chercher', { p_texte: q });
+    if(!ML || ML.requete !== q || ML.etat !== 'cible') return;
+    ML.res = error ? [] : (data || []);
+    ML.erreur = error ? messageLisible(error.message) : '';
+    ML.sel = ML.res.findIndex(r => r.ok);
+    mlAfficherSugg();
+  }, 180);
+}
+function mlAfficherSugg(){
+  if(!ML) return;
+  const box = ML.$m('sugg'), m = ML;
+  m.$m('kOk').disabled = m.sel < 0;
+  if(m.etat !== 'cible' || mlNorm(m.requete).length < 2){ box.innerHTML = ''; if(m.apercu){ m.apercu = null; mlAller(m.vueGlobale, 700); } return; }
+  if(!m.res.length){ box.innerHTML = `<div class="ml-sg ml-vide">${m.erreur ? echapperHtml(m.erreur) : 'Aucune commune'}</div>`; return; }
+  box.innerHTML = m.res.map((r, i) => {
+    const txt = r.ok ? (r.distance_km < 1 ? '✓ Chez toi' : `✓ À ${r.distance_km} km de toi`)
+      : /portée/i.test(r.raison || '') ? `✗ Hors portée · ${r.distance_km} km` : '✗ ' + (r.raison || 'Impossible');
+    return `<div class="ml-sg${r.ok ? '' : ' ml-loin'}${i === m.sel ? ' ml-sel' : ''}" data-i="${i}"><b>${echapperHtml(r.nom)}</b><span class="ml-dp">${echapperHtml(r.dept)}</span><small>${echapperHtml(txt)}</small></div>`;
+  }).join('');
+  const r = m.sel >= 0 ? m.res[m.sel] : null;
+  const ap = r ? (() => { const [x, y] = m.km(r.lat, r.lon); return { x, y, code: r.code }; })() : null;
+  if((ap && ap.code) !== (m.apercu && m.apercu.code)){ m.apercu = ap; mlAller(ap ? { x: ap.x + 26, y: ap.y + 2, l: 118 } : m.vueGlobale, 750); }
+}
+async function mlVerrouiller(r){
+  if(!ML || ML.etat !== 'cible' || !r) return;
+  const m = ML;
+  m.etat = 'attente'; mlConsigne('Vérification de la cible…');
+  const { data, error } = await sb.rpc('bombe_apercu', { p_code: r.code });
+  if(ML !== m) return;
+  if(error || !data || data.refus){
+    m.etat = 'cible';
+    mlConsigne(`<b>Cible refusée.</b> ${echapperHtml(error ? messageLisible(error.message) : data && data.refus || '')}`);
+    return;
+  }
+  const [x, y] = m.km(data.lat, data.lon);
+  m.cible = { x, y, code: data.code, nom: data.nom, dept: data.dept }; m.apercu = null; m.stats = data;
+  if(data.rayon) m.rayon = data.rayon;
+  m.etat = 'verrouille';
+  m.$m('sugg').innerHTML = '';
+  mlAller({ x, y: y + 1, l: m.rayon * 4.8 }, 1000);
+  mlTete(`Cible verrouillée · ${data.nom} (${data.dept})`, `${m.rayon} km`);
+  const z = data;
+  m.$m('ePied').innerHTML = `<span><b>${z.communes}</b> communes</span><span class="ml-r"><b>${z.garnisons}</b> garnisons${z.garnisons_moi ? ` (${z.garnisons_moi} à toi)` : ''}</span><span class="ml-r"><b>${z.forteresses}</b> forteresse${z.forteresses > 1 ? 's' : ''}${z.forteresses_moi ? ` (${z.forteresses_moi} à toi)` : ''}</span>`;
+  m.$m('ePied').classList.add('ml-vu');
+  mlLampe('lCible', true);
+  m.$m('lcd').textContent = String(data.nom).toUpperCase();
+  setTimeout(() => { if(ML === m){ m.$m('baie').classList.add('ml-armement'); m.$m('cle').classList.remove('ml-bloque'); } }, 500);
+  mlEtape(2);
+  mlConsigne((z.garnisons_moi || z.forteresses_moi) ? 'Attention : tu perdras aussi tes propres défenses dans la zone. <b>Tourne la clé</b> pour armer.' : 'Cible verrouillée. <b>Tourne la clé</b> pour armer.');
+}
+function mlTournerCle(){
+  if(!ML || ML.etat !== 'verrouille') return;
+  ML.etat = 'cle'; ML.$m('cle').classList.add('ml-tournee', 'ml-bloque'); mlLampe('lCle', true); ML.$m('capot').classList.remove('ml-bloque');
+  mlEtape(3); mlConsigne('Armée. <b>Lève le capot</b> rouge.');
+}
+function mlLeverCapot(){
+  if(!ML || ML.etat !== 'cle') return;
+  ML.etat = 'capot'; ML.$m('capot').classList.add('ml-leve'); mlLampe('lCapot', true); ML.$m('socle').classList.add('ml-pret');
+  mlEtape(4); mlConsigne('<b>Maintiens le bouton rouge</b> 2 secondes.');
+}
+function mlChanger(){
+  if(!ML || !['verrouille', 'cle', 'capot'].includes(ML.etat)) return;
+  const m = ML;
+  m.cible = null; m.stats = null; m.etat = 'cible';
+  ['lCible', 'lCle', 'lCapot'].forEach(i => mlLampe(i, false));
+  m.$m('cle').classList.remove('ml-tournee'); m.$m('cle').classList.add('ml-bloque');
+  m.$m('capot').classList.remove('ml-leve'); m.$m('capot').classList.add('ml-bloque'); m.$m('socle').classList.remove('ml-pret');
+  m.$m('baie').classList.remove('ml-armement'); m.$m('ePied').classList.remove('ml-vu');
+  mlTete('Saisie de la cible', `Niv. ${m.niv} · ${m.rayon} km`); mlEtape(1); mlLcd(); mlAfficherSugg();
+  if(!m.apercu) mlAller(m.vueGlobale, 700);
+  mlConsigne('Tape le nom d’une commune sur le clavier, puis <b>VALIDER</b>.');
+}
+function mlTenir(){
+  if(!ML) return;
+  const k = Math.min(1, (performance.now() - ML.t0Tenue) / 2000);
+  ML.$m('anneau').style.strokeDashoffset = 264 * (1 - k);
+  if(k >= 1){ mlLacher(); return; }
+  ML.rafTenue = requestAnimationFrame(mlTenir);
+}
+function mlDebut(e){ if(e) e.preventDefault(); if(!ML || ML.etat !== 'capot') return; ML.$m('bouton').classList.add('ml-appuye'); ML.t0Tenue = performance.now(); ML.rafTenue = requestAnimationFrame(mlTenir); }
+function mlFin(){ if(!ML || ML.etat !== 'capot') return; ML.$m('bouton').classList.remove('ml-appuye'); cancelAnimationFrame(ML.rafTenue); ML.$m('anneau').style.strokeDashoffset = 264; }
+async function mlLacher(){
+  if(!ML) return;
+  const m = ML;
+  m.etat = 'feu'; cancelAnimationFrame(m.rafTenue);
+  m.$m('socle').classList.remove('ml-pret'); mlLampe('lFeu', true); mlEtape(5);
+  mlConsigne('Transmission…'); mlTete('Transmission', '…');
+  const { data, error } = await sb.rpc('bombe_lacher', { p_code: m.cible.code });
+  if(ML !== m) return;
+  if(error || !data){
+    m.etat = 'capot'; mlLampe('lFeu', false); m.$m('socle').classList.add('ml-pret');
+    m.$m('bouton').classList.remove('ml-appuye'); m.$m('anneau').style.strokeDashoffset = 264;
+    mlTete('Frappe refusée', ''); mlEtape(4);
+    mlConsigne(`<b>Frappe refusée.</b> ${echapperHtml(messageLisible(error ? error.message : ''))}`);
+    return;
+  }
+  mlConsigne('…');
+  const c = m.$m('compte');
+  for(const n of [3, 2, 1]){ c.innerHTML = `<span>${n}</span>`; mlTete('Frappe en cours', 'T-' + n); await mlAtt(750); if(ML !== m) return; }
+  c.innerHTML = '';
+  m.$m('bouton').classList.remove('ml-appuye'); m.$m('anneau').style.strokeDashoffset = 264;
+  m.souffle = true; m.tImpact = performance.now();
+  const fl = m.$m('flash'); fl.classList.remove('ml-go'); void fl.offsetWidth; fl.classList.add('ml-go');
+  m.$m('scene').animate([{ transform: 'translate(0,0)' }, { transform: 'translate(-5px,3px)' }, { transform: 'translate(5px,-3px)' }, { transform: 'translate(-3px,2px)' }, { transform: 'translate(2px,-1px)' }, { transform: 'translate(0,0)' }], { duration: 480 });
+  mlTete(`Impact · ${data.nom} (${data.dept})`, `+${data.bonus} % · 24 h`);
+  if(typeof chargerBatiments === 'function') chargerBatiments();
+  if(typeof chargerGarnisons === 'function') chargerGarnisons();
+  await mlAtt(1400); if(ML !== m) return;
+  const d = data, pl = (n, s) => `${n} ${s}${n > 1 ? 's' : ''}`;
+  const moiPerte = [d.garnisons_moi ? pl(d.garnisons_moi, 'garnison') : '', d.forteresses_moi ? pl(d.forteresses_moi, 'forteresse') : ''].filter(Boolean).join(' et ');
+  m.$m('resultat').innerHTML = `<h3>Impact sur ${echapperHtml(d.nom)}</h3>Rayon <b>${d.rayon} km</b> · <b>${d.communes}</b> communes touchées.<br><b>${pl(d.garnisons, 'garnison')}</b> soufflée${d.garnisons > 1 ? 's' : ''}, <b>${pl(d.forteresses, 'forteresse')}</b> détruite${d.forteresses > 1 ? 's' : ''}${moiPerte ? ` (dont ${moiPerte} à toi)` : ''}.<br>Tout le monde attaque ici à <b>+${d.bonus} %</b> pendant 24 h. Ton centre reste visible 24 h.<br><button type="button" class="ml-bt" id="ml-refermer">Refermer la mallette</button>`;
+  m.$m('resultat').classList.add('ml-vu'); m.$m('ePied').classList.remove('ml-vu');
+  m.$m('refermer').onclick = mlRefermer;
+  m.etat = 'fini';
+  mlConsigne(`Bombe lâchée. Le centre peut préparer une nouvelle bombe (${btReglage('bombe_prix', 45)} lingots).`);
+}
+async function mlRefermer(){
+  if(!ML || ML.etat !== 'fini') return;
+  const m = ML;
+  m.etat = 'fermeture'; mlConsigne('…');
+  m.$m('resultat').classList.remove('ml-vu'); m.$m('eTete').classList.remove('ml-vu');
+  ['lCible', 'lCle', 'lCapot', 'lFeu'].forEach(i => mlLampe(i, false));
+  m.$m('cle').classList.remove('ml-tournee'); m.$m('capot').classList.remove('ml-leve'); m.$m('baie').classList.remove('ml-armement');
+  m.$m('ecran').classList.remove('ml-allume', 'ml-demarre'); m.$m('ledPwr').classList.remove('ml-on'); m.$m('ledLien').classList.remove('ml-on');
+  await mlAtt(450); if(ML !== m) return;
+  m.$m('malle').classList.remove('ml-ouverte'); m.$m('scene').classList.remove('ml-ouverte');
+  await mlAtt(1900); if(ML !== m) return;
+  m.$m('malle').classList.remove('ml-deverrouillee'); mlRoues('serG', [7, 3, 1]); mlRoues('serD', [4, 9, 6]);
+  await mlAtt(500);
+  fermerMallette();
+}
+// l'écran : la carte de la zone
+const ML_CHATEAU = typeof Path2D === 'function' ? new Path2D('M5 21V8h2.4V5h2.4v3h2.4V5h2.4v3h2.4V5H19v16zM10 21v-4.2a2 2 0 0 1 4 0V21') : null;
+function mlBoucle(t){
+  if(!ML) return;
+  const m = ML;
+  if(m.vueVers){
+    const k = Math.min(1, (t - m.t0Vue) / m.dureeVue), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+    m.vue.x = m.vueDe.x + (m.vueVers.x - m.vueDe.x) * e; m.vue.y = m.vueDe.y + (m.vueVers.y - m.vueDe.y) * e;
+    m.vue.l = m.vueDe.l * Math.pow(m.vueVers.l / m.vueDe.l, e);
+    if(k >= 1) m.vueVers = null;
+  }
+  if(m.$m('ecran').classList.contains('ml-allume')) mlRendre(t);
+  m.raf = requestAnimationFrame(mlBoucle);
+}
+function mlRendre(t){
+  const m = ML, ctx = m.g, W = 328, H = 178, v = m.vue, s = W / v.l;
+  ctx.setTransform(2, 0, 0, 2, 0, 0);
+  const P = (x, y) => [(x - v.x) * s + W / 2, (y - v.y) * s + H / 2];
+  const hors = (X, Y) => X < -12 || X > W + 12 || Y < -12 || Y > H + 12;
+  ctx.fillStyle = '#04090f'; ctx.fillRect(0, 0, W, H);
+  const pas = s > 3 ? 5 : 10, hk = H / s;
+  ctx.beginPath();
+  for(let gx = Math.ceil((v.x - v.l / 2) / pas) * pas; gx <= v.x + v.l / 2; gx += pas){ const X = Math.round((gx - v.x) * s + W / 2) + .5; ctx.moveTo(X, 0); ctx.lineTo(X, H); }
+  for(let gy = Math.ceil((v.y - hk / 2) / pas) * pas; gy <= v.y + hk / 2; gy += pas){ const Y = Math.round((gy - v.y) * s + H / 2) + .5; ctx.moveTo(0, Y); ctx.lineTo(W, Y); }
+  ctx.strokeStyle = 'rgba(120,170,255,.065)'; ctx.lineWidth = 1; ctx.stroke();
+  // ta portée
+  ctx.beginPath();
+  for(const q of m.moi){ const [X, Y] = P(q.x, q.y); ctx.moveTo(X + m.portee * s, Y); ctx.arc(X, Y, m.portee * s, 0, 6.2832); }
+  ctx.fillStyle = 'rgba(240,180,41,.095)'; ctx.fill();
+  // départements
+  if(!m.anneaux && CONTOURS_DEPTS && typeof CONTOURS_DEPTS === 'object'){
+    m.anneaux = [];
+    const loin = m.vueGlobale.l;
+    for(const d in CONTOURS_DEPTS) for(const r of CONTOURS_DEPTS[d]){
+      const k = r.map(([lon, lat]) => m.km(lat, lon));
+      if(k.some(([x, y]) => Math.abs(x - m.vueGlobale.x) < loin && Math.abs(y - m.vueGlobale.y) < loin)) m.anneaux.push(k);
+    }
+  }
+  ctx.beginPath();
+  for(const r of m.anneaux || []){ r.forEach((pt, i) => { const [X, Y] = P(pt[0], pt[1]); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }); ctx.closePath(); }
+  ctx.strokeStyle = 'rgba(120,170,255,.3)'; ctx.lineWidth = .8; ctx.stroke();
+  // zones déjà bombardées (et leur marge de 20 km)
+  for(const z of m.zones){
+    const [X, Y] = P(z.x, z.y);
+    ctx.beginPath(); ctx.arc(X, Y, z.r * s, 0, 6.2832); ctx.fillStyle = 'rgba(229,72,77,.12)'; ctx.fill();
+    ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(255,90,82,.6)'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.beginPath(); ctx.arc(X, Y, (z.r + btReglage('bombe_ecart_km', 20)) * s, 0, 6.2832); ctx.strokeStyle = 'rgba(255,90,82,.22)'; ctx.stroke(); ctx.setLineDash([]);
+  }
+  // communes : les tiennes en or, les autres à leur couleur
+  const r = Math.max(1, Math.min(2.3, s * .42));
+  const parCouleur = new Map();
+  for(const p of m.pts){ const [X, Y] = P(p.x, p.y); if(hors(X, Y)) continue; if(!parCouleur.has(p.c)) parCouleur.set(p.c, []); parCouleur.get(p.c).push(X, Y); }
+  for(const [c, L] of parCouleur){ ctx.beginPath(); for(let i = 0; i < L.length; i += 2){ ctx.moveTo(L[i] + r, L[i + 1]); ctx.arc(L[i], L[i + 1], r, 0, 6.2832); } ctx.fillStyle = c; ctx.fill(); }
+  const c = m.cible || m.apercu;
+  const dedans = (p) => m.souffle && c && Math.hypot(p.x - c.x, p.y - c.y) <= m.rayon;
+  if(s > 2.3){
+    ctx.beginPath();
+    for(const p of m.pts){ if(!p.g || dedans(p)) continue; const [X, Y] = P(p.x, p.y); if(hors(X, Y)) continue; ctx.moveTo(X + r + 2.6, Y); ctx.arc(X, Y, r + 2.6, 0, 6.2832); }
+    ctx.strokeStyle = '#7FE0FF'; ctx.lineWidth = 1; ctx.stroke();
+    if(ML_CHATEAU) for(const p of m.pts){ if(!p.f) continue; const [X, Y] = P(p.x, p.y); if(hors(X, Y)) continue;
+      ctx.save(); ctx.translate(X + 8 - 4.3, Y - 1 - 4.6); ctx.scale(.36, .36); ctx.strokeStyle = dedans(p) ? 'rgba(255,178,122,.3)' : '#FFB27A'; ctx.lineWidth = 2.8; ctx.lineJoin = 'round'; ctx.stroke(ML_CHATEAU); ctx.restore(); }
+    if(m.souffle){
+      ctx.beginPath();
+      for(const p of m.pts){ if(!(p.g || p.f) || !dedans(p)) continue; const [X, Y] = P(p.x, p.y); const d = 3.2; ctx.moveTo(X - d, Y - d); ctx.lineTo(X + d, Y + d); ctx.moveTo(X + d, Y - d); ctx.lineTo(X - d, Y + d); }
+      ctx.strokeStyle = '#FF5A52'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+  } else if(m.moi.length){
+    const [X, Y] = P(m.vueGlobale.x, m.vueGlobale.y);
+    ctx.font = '700 8.5px ui-monospace, Menlo, monospace'; ctx.fillStyle = '#F0B429'; ctx.textAlign = 'center';
+    ctx.fillText('TES COMMUNES', X, Y - 20 * s - 6);
+  }
+  if(c){
+    const [X, Y] = P(c.x, c.y), R = m.rayon * s;
+    ctx.beginPath(); ctx.arc(X, Y, R, 0, 6.2832);
+    ctx.fillStyle = m.souffle ? 'rgba(229,72,77,.18)' : 'rgba(229,72,77,.1)'; ctx.fill();
+    ctx.setLineDash(m.cible || m.souffle ? [] : [5, 4]); ctx.strokeStyle = '#FF5A52'; ctx.lineWidth = 1.4; ctx.stroke(); ctx.setLineDash([]);
+    if(m.cible && !m.souffle && ctx.createConicGradient){
+      const gr = ctx.createConicGradient(t * .0042, X, Y);
+      gr.addColorStop(0, 'rgba(255,90,82,.38)'); gr.addColorStop(.09, 'rgba(255,90,82,0)'); gr.addColorStop(1, 'rgba(255,90,82,0)');
+      ctx.beginPath(); ctx.moveTo(X, Y); ctx.arc(X, Y, R, 0, 6.2832); ctx.fillStyle = gr; ctx.fill();
+      const pu = (Math.sin(t / 260) + 1) / 2;
+      ctx.beginPath(); ctx.arc(X, Y, R + 2 + pu * 3, 0, 6.2832); ctx.strokeStyle = 'rgba(255,90,82,' + (.15 + pu * .25) + ')'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    if(!m.souffle){
+      ctx.beginPath();
+      ctx.moveTo(X - 9, Y); ctx.lineTo(X - 3, Y); ctx.moveTo(X + 3, Y); ctx.lineTo(X + 9, Y);
+      ctx.moveTo(X, Y - 9); ctx.lineTo(X, Y - 3); ctx.moveTo(X, Y + 3); ctx.lineTo(X, Y + 9);
+      ctx.strokeStyle = '#FF5A52'; ctx.lineWidth = 1.3; ctx.stroke();
+    }
+    if(m.tImpact){
+      const k = (t - m.tImpact) / 1100;
+      if(k >= 0 && k < 1){
+        const e = 1 - Math.pow(1 - k, 3);
+        ctx.beginPath(); ctx.arc(X, Y, R * (.08 + .92 * e), 0, 6.2832);
+        ctx.fillStyle = 'rgba(255,240,200,' + (.35 * (1 - k)) + ')'; ctx.fill();
+        ctx.strokeStyle = 'rgba(255,224,138,' + (1 - k) + ')'; ctx.lineWidth = 1 + 4 * (1 - k); ctx.stroke();
+      }
+    }
+  }
+}
+
+const ML_HTML = (dep, niv, portee) => `<div class="ml-scene" id="ml-scene">
+<div class="ml-ombre"></div>
+<div class="ml-persp">
+<div class="ml-malle" id="ml-malle">
+<!-- base -->
+<div class="ml-face ml-b-fond ml-metal">
+<div class="ml-baie" id="ml-baie">
+<div class="ml-plaque ml-p-arm">
+<div class="ml-arm-grille">
+<div class="ml-cle ml-bloque" id="ml-cle">
+<div class="ml-cle-lbl"><span>SÛR</span><span class="ml-arme">ARMÉ</span></div><div class="ml-rosace"><i class="ml-trait ml-t1"></i><i class="ml-trait ml-t2"></i><div class="ml-barillet"></div><div class="ml-cle-corps"></div></div>
+<span class="ml-etiq">CLÉ</span>
+</div>
+<div class="ml-socle" id="ml-socle">
+<button class="ml-bouton" id="ml-bouton" aria-label="Lâcher la bombe"><svg viewBox="0 0 92 92"><circle id="ml-anneau" cx="46" cy="46" r="42"/></svg></button>
+<div class="ml-capot ml-bloque" id="ml-capot">FEU</div>
+</div>
+<div class="ml-annonc">
+<div class="ml-lampe ml-vert" id="ml-lCible">CIBLE</div>
+<div class="ml-lampe ml-ambre" id="ml-lCle">CLÉ</div>
+<div class="ml-lampe ml-ambre" id="ml-lCapot">CAPOT</div>
+<div class="ml-lampe ml-rouge" id="ml-lFeu">FEU</div>
+</div>
+</div>
+<div class="ml-arm-bas"><button class="ml-changer" id="ml-changer">◂ Changer de cible</button><span class="ml-grave">Toute frappe est définitive</span></div>
+</div>
+<div class="ml-plaque ml-p-clav" id="ml-pClav">
+<i class="ml-vis ml-a"></i><i class="ml-vis ml-b"></i><i class="ml-vis ml-c"></i><i class="ml-vis ml-d"></i>
+<div class="ml-lcd"><span class="ml-lcd-et">CIBLE</span><span class="ml-lcd-txt ml-vide" id="ml-lcd">TAPE UNE COMMUNE</span><span class="ml-curseur"></span></div>
+<div class="ml-clavier" id="ml-clavier"></div>
+<div class="ml-grave"><span>TF · CR-${dep}</span><span>Portée ${portee} km</span><span>Niveau ${niv}</span></div>
+</div>
+</div>
+</div>
+<div class="ml-face ml-b-av ml-cuir"><div class="ml-jonc"></div><div class="ml-couture-h"></div>
+<div class="ml-serrure ml-g" id="ml-serG"><span class="ml-roue"><i></i></span><span class="ml-roue"><i></i></span><span class="ml-roue"><i></i></span><span class="ml-loquet"></span></div>
+<span class="ml-attache ml-g"></span><span class="ml-attache ml-d"></span>
+<div class="ml-serrure ml-d" id="ml-serD"><span class="ml-roue"><i></i></span><span class="ml-roue"><i></i></span><span class="ml-roue"><i></i></span><span class="ml-loquet"></span></div>
+</div>
+<div class="ml-face ml-b-av-in"></div>
+<div class="ml-face ml-b-ar-in"><div class="ml-charniere"></div></div>
+<div class="ml-face ml-b-g-in"></div>
+<div class="ml-face ml-b-d-in"></div>
+<div class="ml-poignee"><svg viewBox="0 0 132 34"><defs><linearGradient id="ml-pgc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34363c"/><stop offset=".55" stop-color="#17181b"/><stop offset="1" stop-color="#0a0b0c"/></linearGradient></defs>
+<path d="M12 2V13Q12 29 28 29H104Q120 29 120 13V2" fill="none" stroke="#040405" stroke-width="12.5" stroke-linecap="round"/>
+<path d="M12 2V13Q12 29 28 29H104Q120 29 120 13V2" fill="none" stroke="url(#ml-pgc)" stroke-width="10" stroke-linecap="round"/>
+<path d="M15.5 4V13Q15.5 25.5 28 25.5H104Q116.5 25.5 116.5 13V4" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1" stroke-dasharray="2.2 2"/>
+<rect x="5" y="0" width="14" height="8" rx="2" fill="#b9bcc3" stroke="#555a62" stroke-width=".8"/><rect x="113" y="0" width="14" height="8" rx="2" fill="#b9bcc3" stroke="#555a62" stroke-width=".8"/></svg></div>
+<!-- couvercle -->
+<div class="ml-couv" id="ml-couv">
+<div class="ml-face ml-c-in ml-metal">
+<i class="ml-vis ml-a"></i><i class="ml-vis ml-b"></i><i class="ml-vis ml-c"></i><i class="ml-vis ml-d"></i>
+<div class="ml-c-in-tete"><span>TERRAFRONT · TERMINAL DE FRAPPE</span><span class="ml-leds">PWR<i class="ml-led ml-vert" id="ml-ledPwr"></i>&nbsp;LIEN<i class="ml-led ml-ambre" id="ml-ledLien"></i></span></div>
+<div class="ml-ecran" id="ml-ecran">
+<canvas id="ml-cv"></canvas>
+<div class="ml-boot" id="ml-boot"></div>
+<div class="ml-e-tete" id="ml-eTete"><span id="ml-eTeteG"></span><span id="ml-eTeteD"></span></div>
+<div class="ml-sugg" id="ml-sugg"></div>
+<div class="ml-e-pied" id="ml-ePied"></div>
+<div class="ml-compte" id="ml-compte"></div>
+<div class="ml-flash" id="ml-flash"></div>
+<div class="ml-resultat" id="ml-resultat"></div>
+</div>
+<div class="ml-etapes" id="ml-etapes"><span>1 · Cible</span><span>2 · Clé</span><span>3 · Capot</span><span>4 · Feu</span></div>
+</div>
+<div class="ml-face ml-c-sur ml-cuir">
+<div class="ml-couture"></div><div class="ml-liseret"></div>
+<span class="ml-coin ml-a"><svg viewBox="0 0 38 38"><defs><linearGradient id="ml-lt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBE6A6"/><stop offset=".45" stop-color="#D9A63A"/><stop offset="1" stop-color="#7a5512"/></linearGradient></defs><path d="M3 35V12a9 9 0 0 1 9-9h23v9H15a3 3 0 0 0-3 3v20z" fill="url(#ml-lt)" stroke="#4a3208" stroke-width=".9"/><circle cx="8.5" cy="8.5" r="2.1" fill="#5c3f0c"/><circle cx="8.2" cy="8.2" r=".9" fill="#f4dc9a"/></svg></span><span class="ml-coin ml-b"><svg viewBox="0 0 38 38"><defs><linearGradient id="ml-lt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBE6A6"/><stop offset=".45" stop-color="#D9A63A"/><stop offset="1" stop-color="#7a5512"/></linearGradient></defs><path d="M3 35V12a9 9 0 0 1 9-9h23v9H15a3 3 0 0 0-3 3v20z" fill="url(#ml-lt)" stroke="#4a3208" stroke-width=".9"/><circle cx="8.5" cy="8.5" r="2.1" fill="#5c3f0c"/><circle cx="8.2" cy="8.2" r=".9" fill="#f4dc9a"/></svg></span><span class="ml-coin ml-c"><svg viewBox="0 0 38 38"><defs><linearGradient id="ml-lt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBE6A6"/><stop offset=".45" stop-color="#D9A63A"/><stop offset="1" stop-color="#7a5512"/></linearGradient></defs><path d="M3 35V12a9 9 0 0 1 9-9h23v9H15a3 3 0 0 0-3 3v20z" fill="url(#ml-lt)" stroke="#4a3208" stroke-width=".9"/><circle cx="8.5" cy="8.5" r="2.1" fill="#5c3f0c"/><circle cx="8.2" cy="8.2" r=".9" fill="#f4dc9a"/></svg></span><span class="ml-coin ml-d"><svg viewBox="0 0 38 38"><defs><linearGradient id="ml-lt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FBE6A6"/><stop offset=".45" stop-color="#D9A63A"/><stop offset="1" stop-color="#7a5512"/></linearGradient></defs><path d="M3 35V12a9 9 0 0 1 9-9h23v9H15a3 3 0 0 0-3 3v20z" fill="url(#ml-lt)" stroke="#4a3208" stroke-width=".9"/><circle cx="8.5" cy="8.5" r="2.1" fill="#5c3f0c"/><circle cx="8.2" cy="8.2" r=".9" fill="#f4dc9a"/></svg></span>
+<div class="ml-tampon">TRÈS SECRET</div>
+<div class="ml-plaque-or"><i class="ml-g"></i><i class="ml-d"></i><b>TERRAFRONT</b><span>CENTRE DE RECHERCHE</span><em>N° TF-CR-${dep} · NIVEAU ${niv}</em></div>
+<div class="ml-serie">PROPRIÉTÉ DE L’ÉTAT-MAJOR · NE PAS OUVRIR</div>
+</div>
+<div class="ml-face ml-c-av ml-cuir"><div class="ml-couture-h"></div><div class="ml-jonc"></div><i class="ml-gache ml-g"></i><i class="ml-gache ml-d"></i></div>
+</div>
+</div>
+</div>
+</div>`;
+
 // la carte : une pastille par bâtiment (doré : les miens), pointillés tant qu'il est en construction
 function dessinerBatimentsCanvas(ctx, liste){
   if(!BT_TRACES) return;
@@ -9923,7 +10544,7 @@ function dessinerBatimentsCanvas(ctx, liste){
     if(!bt) continue;
     const x = c.x, y = c.y;
     if(x < vue[0] || x > vue[2] || y < vue[1] || y > vue[3]) continue;
-    const types = ['fonderie', 'forteresse'].filter(t => bt[t]);
+    const types = ['fonderie', 'forteresse', 'centre'].filter(t => bt[t]);   // patch260
     types.forEach((t, i) => {
       const r = 7 * e;
       // patch244 : à droite du point et de son étoile (rayon 7 au plus), côte à côte s'il y en a deux
@@ -9931,7 +10552,7 @@ function dessinerBatimentsCanvas(ctx, liste){
       ctx.globalAlpha = bt[t].pret ? 1 : 0.65;
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
       ctx.fillStyle = '#2A1A0E'; ctx.fill();
-      ctx.lineWidth = 1.6 * e; ctx.strokeStyle = bt[t].moi ? '#F0B429' : '#E8833A';
+      ctx.lineWidth = 1.6 * e; ctx.strokeStyle = bt[t].moi ? '#F0B429' : t === 'centre' ? '#FF5A52' : '#E8833A';
       if(!bt[t].pret) ctx.setLineDash([2.2 * e, 1.6 * e]);
       ctx.stroke(); ctx.setLineDash([]);
       ctx.save();

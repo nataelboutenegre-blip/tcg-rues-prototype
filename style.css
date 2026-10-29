@@ -6390,6 +6390,8 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .nc-cloche svg{ width:20px; height:20px; }
 .nc-cloche .nc-pastille{ position:absolute; top:-5px; right:-5px; min-width:19px; height:19px; padding:0 5px; border-radius:999px; background:#E5484D; color:#fff;
   font-size:.68rem; font-weight:800; display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 2px #0B1A30; }
+/* patch266 : rien de neuf = pas de pastille (avant, « 0 » restait affiché) */
+.nc-cloche .nc-pastille[hidden]{ display:none; }
 .nc-voile{ position:fixed; inset:0; background:rgba(3,8,18,.55); z-index:900; }
 .nc-panneau{ position:fixed; z-index:901; background:#0F213C; border:1px solid rgba(169,188,212,.2); box-shadow:0 24px 60px rgba(0,0,0,.6);
   display:flex; flex-direction:column; color:#E8EEF7; }

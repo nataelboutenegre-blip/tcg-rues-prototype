@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b20ac6207b22';
+const VERSION_JEU = 'ef3c04490911';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10596,7 +10596,9 @@ function renderGarnisons(){
   el.innerHTML = `<h2>Mes garnisons · ${liste.length} / 3</h2>
     ${liste.map(([code, g]) => {
       const tier = TIERS.find(t => t.id === g.tier) || TIERS[TIERS.length - 1];
-      return `<div class="gl"><i class="gl-c ${tier.id}"></i><div class="gl-t"><b>${echapperTexte(g.nom)}</b>
+      const dep = code.startsWith('97') ? code.slice(0, 3) : code.slice(0, 2);   // patch267
+      return `<div class="gl"><i class="gl-c ${tier.id}"></i><div class="gl-t">
+        <div class="gl-nom"><button type="button" class="df-voir" data-voir-carte="${echapperTexte(code)}" title="Voir sur la carte" aria-label="Voir ${echapperTexte(g.nom)} sur la carte"><b>${echapperTexte(g.nom)}</b><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></button>${badgeDept(dep)}</div>
         <span>${tier.label} · ${g.attaquants > 0 ? 'attaquée' : 'calme'} · ${g.energie} / 10</span>${barre(g.energie)}</div>
         <button class="gl-r" data-gn-recharger="${code}" ${g.energie >= 10 ? 'disabled' : ''}>Recharger</button></div>`;
     }).join('')}

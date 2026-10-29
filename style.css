@@ -7315,3 +7315,8 @@ body.hw-question-ouverte, body.hw-cri-ouvert{ overflow:hidden; overscroll-behavi
   .hw-cri .hw-glitch-r, .hw-cri .hw-glitch-c, .hw-etincelle{ display:none; }
   .hw-brume-cri{ animation:none; }
 }
+/* patch267 : « Mes garnisons » : nom vers la carte + département */
+.gl-t .gl-nom{ display:flex; align-items:center; gap:7px; min-width:0; }
+.gl-t .gl-nom b{ display:inline; }
+.gl-t .gl-nom .df-voir svg{ width:14px; height:14px; stroke:#F0B429; flex:none; }
+.gl-t .gl-nom .dep{ font-size:.66rem; color:#C8D5E6; }

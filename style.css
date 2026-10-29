@@ -7562,7 +7562,7 @@ body.hw-question-ouverte, body.hw-cri-ouvert{ overflow:hidden; overscroll-behavi
 }
 
 /* =====================================================================
-   patch270 — l'atelier des cartes, V1 : finitions et halos (s2-64)
+   patch270 + patch271 — l'atelier des cartes : styles, finitions, halos, bordures (s2-64, s2-65)
    Aperçus validés : canevas « Atelier des cartes TerraFront » (21/10),
    Chrome et Cristal (29/10). Jamais d'arc-en-ciel : il est à la brillante.
    Dans une grille, rien ne bouge (des centaines de cartes) ; en grand
@@ -7574,7 +7574,7 @@ body.hw-question-ouverte, body.hw-cri-ouvert{ overflow:hidden; overscroll-behavi
 
 .atl{ --atl-x:30%; --atl-y:26%; --halo:#FFE08A; }
 .atl.hc-ciel{ --halo:#7FD4FF; } .atl.hc-corail{ --halo:#FF8A80; } .atl.hc-vert{ --halo:#B8F27A; } .atl.hc-mauve{ --halo:#E3B8FF; }
-.mini.atl{ position:relative; }
+.mini.atl{ position:relative; isolation:isolate; }
 /* la lumière suit l'inclinaison de la carte en grand (fiche, atelier) */
 .c3d-carte .mini.atl{ --atl-x:calc(var(--gx) * 1.6 - 30%); --atl-y:calc(var(--gy) * 1.6 - 30%); }
 /* à la révélation : la souris si elle passe, sinon un lent va-et-vient */
@@ -7589,6 +7589,72 @@ body.hw-question-ouverte, body.hw-cri-ouvert{ overflow:hidden; overscroll-behavi
 /* une carte qui porte un skin garde son skin ; une Aurore garde ses couleurs (seuls les reflets passent) */
 .atl.skin :is(.atl-fond, .atl-a1, .atl-a2, .atl-reflet, .atl-scint){ display:none; }
 .atl.aurore :is(.atl-fond, .atl-a1, .atl-a2){ display:none; }
+
+/* ---------- patch271 : le cadre de l'atelier (Carte postale, bordures) ----------
+   La carte perd son fond de cadre ; un calque derrière la carte le redessine
+   (dentelé pour la carte postale, d'or, tricolore ou de nuit pour les bordures). */
+@property --atl-ang { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+@keyframes atlTourne{ to{ --atl-ang:360deg; } }
+.atl.commun{ --atl-cadre:var(--c-commun); } .atl.peucommun{ --atl-cadre:var(--c-peucommun); }
+.atl.rare{ --atl-cadre:linear-gradient(160deg, #7FB0FF, var(--c-rare) 45%, #1D4FB8); }
+.atl.epique{ --atl-cadre:linear-gradient(160deg, #D6BCFF, var(--c-epique) 45%, #5B2BB5); }
+.atl.legendaire{ --atl-cadre:linear-gradient(135deg, #FFF1B8, var(--c-legendaire) 35%, #B7791F 60%, #FCE38A 85%); }
+.atl.aurore{ --atl-cadre:var(--au-t, #7E8BA0); }
+.mini.atl:is(.st-postale, .bd-nuit, .bd-tricolore, .bd-doree){ background:none; }
+.card.atl:is(.st-postale, .bd-nuit, .bd-tricolore, .bd-doree) .carte-cadre{ background:none; isolation:isolate; }
+.atl-cadre{ position:absolute; inset:0; z-index:-1; pointer-events:none; display:block; font-style:normal; border-radius:10px; background:var(--atl-cadre); }
+.card .atl-cadre{ border-radius:14px; }
+.mini.atl:is(.bd-nuit, .bd-tricolore, .bd-doree){ padding:3px; }
+.card.atl:is(.bd-nuit, .bd-tricolore, .bd-doree) .carte-cadre{ padding:4px; }
+.atl.bd-doree .atl-cadre{ background:conic-gradient(from var(--atl-ang), #8A5A10, #FFE08A, #F0B429, #8A5A10, #FFF4C4, #F0B429, #8A5A10); }
+.atl.bd-tricolore .atl-cadre{ background:conic-gradient(from var(--atl-ang), #2B5BD7 0 30%, #F4F4F4 36% 64%, #D93A40 70% 94%, #2B5BD7 100%); }
+.atl.bd-nuit .atl-cadre{ background:radial-gradient(circle at 30% 20%, #3B2A7A, #0B1030 70%); box-shadow:inset 0 0 0 1px rgba(240,180,41,.6); }
+.atl.bd-doree:is(.atl-n1, .atl-n2) .atl-cadre, .card.atl.bd-doree .atl-cadre{ animation:atlTourne 4s linear infinite; }
+.atl.bd-tricolore:is(.atl-n1, .atl-n2) .atl-cadre, .card.atl.bd-tricolore .atl-cadre{ animation:atlTourne 6s linear infinite; }
+/* la carte postale : un timbre dentelé */
+.mini.atl.st-postale{ padding:4px; }
+.card.atl.st-postale .carte-cadre{ padding:6px; }
+.atl.st-postale .atl-cadre{ -webkit-mask:radial-gradient(circle at 4px 4px, transparent 2.3px, #000 2.7px) -4px -4px / 8px 8px;
+  mask:radial-gradient(circle at 4px 4px, transparent 2.3px, #000 2.7px) -4px -4px / 8px 8px; }
+.card .atl.st-postale .atl-cadre, .card.atl.st-postale .atl-cadre{ -webkit-mask:radial-gradient(circle at 5px 5px, transparent 3px, #000 3.4px) -5px -5px / 10px 10px;
+  mask:radial-gradient(circle at 5px 5px, transparent 3px, #000 3.4px) -5px -5px / 10px 10px; }
+
+/* ---------- patch271 : les styles (ni sur une Aurore, ni sur une carte à skin) ---------- */
+.atl:is(.st-postale, .st-etat):not(.skin):not(.aurore) :is(.mini-int, .carte-int){ position:relative; }
+.atl-tampon, .atl-nord{ display:none; }
+/* Carte postale (200 communes) : papier crème, photo sépia, tampon de la poste */
+.atl.st-postale:not(.skin):not(.aurore) :is(.mini-int, .carte-int){ background:#EFE3C8; color:#3B2A17; }
+.atl.st-postale:not(.skin):not(.aurore) :is(.mini-art, .carte-art) > :is(svg, .art-photo){ filter:sepia(.85) saturate(1.25) contrast(1.05); }
+.atl.st-postale:not(.skin):not(.aurore) :is(.mini-nom, .carte-nom){ font-family:Georgia, 'Times New Roman', serif; font-style:italic; font-weight:700; }
+.mini.atl.st-postale:not(.skin):not(.aurore) .mini-nom{ font-size:.86rem; } .mini.atl.st-postale:not(.skin):not(.aurore) .mini-nom.long{ font-size:.74rem; }
+.card.atl.st-postale:not(.skin):not(.aurore) .carte-nom{ font-size:1.3rem; }
+.atl.st-postale:not(.skin):not(.aurore) .mini-rarete{ color:#7A4E22 !important; }
+.atl.st-postale:not(.skin):not(.aurore) .carte-rarete{ background:#7A4E22; color:#fff; }
+.atl.st-postale:not(.skin):not(.aurore) :is(.mini-num, .carte-num, .carte-departement, .carte-stats span){ color:#6E5537; }
+.atl.st-postale:not(.skin):not(.aurore) .carte-stats{ border-top-color:#C9B48C; }
+.atl.st-postale:not(.skin):not(.aurore) .carte-stats b{ font-family:Georgia, serif; }
+.atl.st-postale:not(.skin):not(.aurore) .atl-tampon{ display:flex; position:absolute; z-index:4; right:6px; top:52%; width:44px; height:44px; box-sizing:border-box; padding:3px;
+  border-radius:50%; border:1.6px solid rgba(122,40,30,.62); color:rgba(122,40,30,.78); font:700 5.4px/1.2 Georgia, serif; letter-spacing:.04em;
+  text-align:center; align-items:center; justify-content:center; transform:rotate(-14deg); overflow:hidden; overflow-wrap:anywhere; pointer-events:none; }
+.mini.atl-n1.st-postale .atl-tampon{ width:34px; height:34px; font-size:4.4px; }
+.card.atl.st-postale:not(.skin):not(.aurore) .atl-tampon{ right:8px; top:100px; width:56px; height:56px; font-size:7px; border-width:2px; }
+/* État-major (un département fini) : papier de carte d'état-major, hachures, encre brune */
+.atl.st-etat:not(.skin):not(.aurore) :is(.mini-int, .carte-int){ background:#F1EAD3; color:#2E2618; }
+.atl.st-etat:not(.skin):not(.aurore) :is(.mini-art, .carte-art){ background:repeating-linear-gradient(45deg, #E4D9B8 0 3px, #D6C79E 3px 4px); }
+.atl.st-etat:not(.skin):not(.aurore) :is(.mini-art, .carte-art) > svg rect{ opacity:0; }
+.atl.st-etat:not(.skin):not(.aurore) :is(.mini-art, .carte-art) > svg path{ stroke:#6B4E2A; stroke-width:1.1; }
+.atl.st-etat:not(.skin):not(.aurore) :is(.mini-art, .carte-art) > svg :is(circle, ellipse){ fill:#8B1E1E; stroke:#F1EAD3; }
+.atl.st-etat:not(.skin):not(.aurore) :is(.mini-art, .carte-art) > .art-photo{ filter:sepia(.75) saturate(.8) contrast(1.1); }
+.atl.st-etat:not(.skin):not(.aurore) :is(.mini-dept, .carte-dept){ color:rgba(107,78,42,.3); }
+.atl.st-etat:not(.skin):not(.aurore) :is(.mini-nom, .carte-nom){ font-family:Georgia, serif; font-variant:small-caps; letter-spacing:.03em; font-weight:700; }
+.mini.atl.st-etat:not(.skin):not(.aurore) .mini-nom{ font-size:.86rem; } .mini.atl.st-etat:not(.skin):not(.aurore) .mini-nom.long{ font-size:.74rem; }
+.card.atl.st-etat:not(.skin):not(.aurore) .carte-nom{ font-size:1.3rem; }
+.atl.st-etat:not(.skin):not(.aurore) .mini-rarete{ color:#6B4E2A !important; }
+.atl.st-etat:not(.skin):not(.aurore) .carte-rarete{ background:#6B4E2A; color:#fff; }
+.atl.st-etat:not(.skin):not(.aurore) :is(.mini-num, .carte-num, .carte-departement, .carte-stats span){ color:#6B5A3E; }
+.atl.st-etat:not(.skin):not(.aurore) .carte-stats{ border-top-color:#CDBF98; }
+.atl.st-etat:not(.skin):not(.aurore) .atl-nord{ display:block; position:absolute; left:5px; top:4px; font:700 8px Georgia, serif; color:#6B4E2A; pointer-events:none; }
+.card.atl.st-etat:not(.skin):not(.aurore) .atl-nord{ left:7px; top:5px; font-size:9px; }
 
 /* ---------- Encre (se gagne) : papier blanc, dessin à l'encre ---------- */
 .atl.fn-encre:not(.skin):not(.aurore) :is(.mini-int, .carte-int){ background:#fff; }
@@ -7685,7 +7751,7 @@ body.hw-question-ouverte, body.hw-cri-ouvert{ overflow:hidden; overscroll-behavi
 @keyframes atlBraise{ 0%{ opacity:0; transform:translate(0, 0); } 15%{ opacity:1; } 100%{ opacity:0; transform:translate(var(--dx), var(--dy)); } }
 
 @media (prefers-reduced-motion: reduce){
-  .card.atl .carte-cadre, .atl-glow, .atl-p, .atl-scint i, .atl-ec-rayons, .atl-ec-flash{ animation:none !important; }
+  .card.atl .carte-cadre, .atl-glow, .atl-p, .atl-scint i, .atl-ec-rayons, .atl-ec-flash, .atl-cadre{ animation:none !important; }
   .atl.h-lueur .atl-glow{ box-shadow:0 0 18px 4px var(--halo); }
   .atl-parts, .atl-scint{ display:none; }
 }
@@ -7773,6 +7839,54 @@ html.atl-ouvert, html.atl-ouvert body{ overflow:hidden; }
 .atl-ec-flash{ position:absolute; inset:0; background:#fff; opacity:0; pointer-events:none; z-index:6; animation:atlFlash .7s ease-out; }
 @keyframes atlFlash{ 0%{ opacity:.7; } 100%{ opacity:0; } }
 
+/* ---------- patch271 : « Appliquer à », le sélecteur de cartes, la fiche ---------- */
+.atl-seg-b{ min-height:44px; padding:0 16px; border-radius:999px; border:1px solid rgba(169,188,212,.3); background:transparent; color:#EAF1F8;
+  font-family:inherit; font-size:14px; font-weight:500; cursor:pointer; }
+.atl-seg-b.on{ background:#EAF1F8; color:var(--nuit); border-color:#EAF1F8; }
+.atl-resume{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; padding:12px 14px; border-radius:12px; background:var(--nuit-2); border:1px solid rgba(169,188,212,.16); }
+.atl-resume p{ font-size:15px; line-height:1.4; }
+.atl-lien{ background:none; border:0; padding:0 4px; min-height:44px; color:#FFD56B; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;
+  text-decoration:underline; text-underline-offset:3px; }
+.atl-chip.petit{ min-height:40px; font-size:13px; white-space:nowrap; flex:none; }
+.atl-pk{ position:fixed; inset:0; z-index:5; background:rgba(4,10,22,.74); display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; }
+.atl-pk-boite{ width:min(1000px, 100%); max-height:100%; display:flex; flex-direction:column; border-radius:20px; background:#13284A; border:1px solid rgba(169,188,212,.22);
+  box-shadow:0 24px 60px rgba(0,0,0,.45); overflow:hidden; }
+.atl-pk-tete{ display:flex; justify-content:space-between; align-items:flex-start; gap:16px; padding:20px 22px 0; }
+.atl-pk-titre{ margin:0; font-family:var(--titre); font-weight:900; font-size:34px; line-height:1; outline:none; }
+.atl-pk-tete p{ margin-top:4px; font-size:14px; color:#C9D6E6; }
+.atl-pk-x{ flex:none; width:44px; height:44px; border-radius:50%; border:0; background:rgba(169,188,212,.12); color:#EAF1F8; font-size:22px; cursor:pointer; }
+.atl-pk-outils{ padding:14px 22px 0; }
+.atl-pk-q{ width:100%; min-height:44px; box-sizing:border-box; padding:0 14px; border-radius:12px; border:1px solid rgba(169,188,212,.3); background:var(--nuit); color:#EAF1F8; font-family:inherit; font-size:14px; }
+.atl-pk-filtres{ display:flex; gap:8px; padding:12px 22px 0; overflow-x:auto; scrollbar-width:none; }
+.atl-pk-grille{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; display:grid; grid-template-columns:repeat(auto-fill, minmax(104px, 1fr)); gap:14px;
+  align-content:start; padding:16px 22px 20px; }
+.atl-pk-grille .collection-empty, .atl-pk-plus{ grid-column:1 / -1; }
+.atl-pk-c{ position:relative; display:block; padding:0; border:0; background:none; cursor:pointer; border-radius:10px; text-align:left; font:inherit; }
+.atl-pk-c:disabled{ cursor:not-allowed; }
+.atl-pk-c .mini{ width:100%; content-visibility:visible; pointer-events:none; }
+.atl-pk-c .mini:hover{ transform:none; }
+.atl-pk-coche{ position:absolute; top:6px; right:6px; z-index:7; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background:rgba(15,31,56,.82); box-shadow:0 0 0 1.5px rgba(255,255,255,.85); }
+.atl-pk-coche svg{ width:14px; height:14px; stroke:#fff; fill:none; stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+.atl-pk-coche.oui{ background:var(--c-peucommun); } .atl-pk-coche.non{ background:var(--c-rouge); }
+.atl-pk-badge{ position:absolute; top:6px; right:6px; z-index:7; padding:2px 7px; border-radius:999px; background:rgba(15,31,56,.88); color:#FFE08A; font-size:10px; font-weight:700; }
+.atl-pk-pied{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding:14px 22px; border-top:1px solid rgba(169,188,212,.16); }
+.atl-pk-pied p{ font-size:15px; }
+.atl-pk-boutons{ display:flex; flex-wrap:wrap; gap:10px; }
+.atl-pk-c:focus-visible, .atl-seg-b:focus-visible, .atl-lien:focus-visible, .atl-pk-x:focus-visible, .atl-fc-seg:focus-visible, .atl-fc-o:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
+/* la fiche d'une carte : « Atelier de cette carte » */
+.atl-fc .atl-lien{ justify-self:start; min-height:40px; padding:0; }
+.atl-fc-segs{ display:flex; gap:4px; padding:4px; border-radius:12px; background:var(--nuit); }
+.atl-fc-seg{ flex:1; min-height:44px; border:0; border-radius:10px; background:transparent; color:var(--brume); font-family:inherit; font-size:13.5px; font-weight:600; cursor:pointer; }
+.atl-fc-seg.on{ background:#EAF1F8; color:var(--nuit); }
+.atl-fc-lbl{ margin:2px 0 0; font-size:.78rem; color:var(--brume); }
+.atl-fc-opts{ display:flex; flex-wrap:wrap; gap:6px; }
+.atl-fc-o{ min-height:44px; padding:0 13px; border-radius:12px; border:1px solid rgba(169,188,212,.25); background:#13284A; color:#EAF1F8; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; }
+.atl-fc-o.on{ border-color:var(--c-legendaire); background:#2A3346; box-shadow:inset 0 0 0 1px var(--c-legendaire); }
+.atl-fc-coul{ display:flex; align-items:center; gap:2px; font-size:.8rem; color:var(--brume); }
+.atl-fc-coul > span{ margin-right:6px; }
+.atl-fc-coul .atl-sw span{ width:24px; height:24px; }
+
 /* téléphone : la carte, les familles en onglets, un bouton en bas */
 @media (max-width: 760px){
   .atl-page{ padding:0 0 8px; }
@@ -7808,7 +7922,17 @@ html.atl-ouvert, html.atl-ouvert body{ overflow:hidden; }
   .atl-couleurs .atl-lbl{ font-size:13px; letter-spacing:0; text-transform:none; font-weight:400; margin-right:6px; }
   .atl-sws{ gap:2px; }
   .atl-sw span{ width:24px; height:24px; }
-  .atl-appliquer, .atl-eclat{ display:none; }
+  .atl-appliquer:not(.v2), .atl-eclat{ display:none; }
+  .atl-appliquer.v2{ margin:14px 16px 0; padding-top:14px; gap:10px; }
+  .atl-appliquer.v2 .atl-actions, .atl-appliquer.v2 .atl-note:not(.atl-note-mode){ display:none; }
+  .atl-seg-b{ flex:1 1 auto; padding:0 12px; font-size:13px; }
+  .atl-pk{ padding:0; }
+  .atl-pk-boite{ width:100%; height:100%; border-radius:0; border:0; }
+  .atl-pk-tete{ padding:14px 16px 0; } .atl-pk-titre{ font-size:26px; }
+  .atl-pk-outils{ padding:10px 16px 0; } .atl-pk-filtres{ padding:10px 16px 0; }
+  .atl-pk-grille{ grid-template-columns:repeat(3, 1fr); gap:10px; padding:12px 16px; }
+  .atl-pk-pied{ padding:12px 16px max(18px, env(safe-area-inset-bottom)); }
+  .atl-pk-boutons{ width:100%; } .atl-pk-boutons .atl-btn{ flex:1; min-height:50px; font-size:18px; padding:0 12px; }
   .atl-bas{ display:flex; flex:none; flex-direction:column; gap:8px; padding:12px 16px max(22px, env(safe-area-inset-bottom)); border-top:1px solid rgba(169,188,212,.14); background:var(--nuit); }
   .atl-bas p{ font-size:13px; color:var(--brume); text-align:center; }
   .atl-bas .atl-btn{ width:100%; min-height:50px; border-radius:13px; }

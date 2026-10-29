@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '16befa2cbe19';
+const VERSION_JEU = '39bc46d4bd11';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1573,7 +1573,7 @@ function ligneJournal(e){
   else if(e.type === 'achat') texte = `${acteur} ${a} acheté ${commune}${e.cible_pseudo ? ` à ${cible}` : ''}`;
   else if(e.type === 'echange') texte = `${acteur} ${a} reçu ${commune}${e.cible_pseudo ? ` de ${cible}` : ''} en échange`;
   else if(e.type === 'contrat') texte = `${acteur} ${a} obtenu ${commune} par un contrat`;
-  else texte = `${acteur} ${a} tiré ${e.tier === 'legendaire' ? 'une légendaire' : 'une rare'} : ${commune}`;
+  else texte = `${acteur} ${a} tiré ${({ legendaire: 'une légendaire', epique: 'une épique', rare: 'une rare', peucommun: 'une peu commune' })[e.tier] || 'une carte'} : ${commune}`;   // patch264 : l'épique était annoncée « rare »
   // Le monument change de mains avec la commune : quand la ligne en concerne
   // une, on le nomme. C'est ce qui transforme « Maroli a conquis Millau » en
   // une raison d'aller la reprendre, et c'est public : tout le monde le voit

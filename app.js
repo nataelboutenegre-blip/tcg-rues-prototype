@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ef3c04490911';
+const VERSION_JEU = 'fde34260d474';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3243,6 +3243,9 @@ function ouvrirPanneau(code, xCss, yCss){
   const autre = mienne ? null : othersMap.get(code);
   const c = mienne || autre;
   if(!c){ fermerPanneau(); return; }
+  // patch268 : le clan du propriétaire (idée d'Arkhannou)
+  const clanP = CLANS && (mienne ? window.__monId : c.joueurId) ? clansCarte.get(mienne ? window.__monId : c.joueurId) : null;
+  const allie = !mienne && !!c.joueurId && clanMembres.has(c.joueurId);
   panneauCommune = code;
   panneauDept = null;
   if(typeof xCss === 'number' && typeof yCss === 'number'){
@@ -3253,7 +3256,7 @@ function ouvrirPanneau(code, xCss, yCss){
   const protegee = c.bouclierJusqua > maintenant;
   // toutes les raretes sont attaquables depuis la carte ; l'onglet Combat
   // reste le tableau des grosses cibles, il ne liste que rares et legendaires
-  const attaquable = !mienne && !protegee;
+  const attaquable = !mienne && !protegee && !allie;   // patch268 : pas entre membres d'un clan
   const immunisee = !mienne && c.acquiredAt && c.acquiredAt > maintenant - 3 * 3600e3;
   const enVente = mienne ? myListings.get(code) : null;
 
@@ -3282,6 +3285,7 @@ function ouvrirPanneau(code, xCss, yCss){
   lignes.push(['Propriétaire', mienne
     ? '<b>Toi</b>'
     : `<button class="pc-proprio" data-profil="${echapperHtml(c.joueurId)}">${echapperHtml(c.pseudo)}</button>`]);
+  if(clanP) lignes.push(['Clan', `<span class="pc-clan">${blasonHtml(clanP.tag, clanP.couleur, true)}${echapperHtml(clanP.tag)}</span>`]);   // patch268
   if(protegee) lignes.push(['Bouclier', 'jusqu’à ' + new Date(c.bouclierJusqua).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' })]);
   else if(mienne) lignes.push(['Bouclier', 'Aucun']);
   if(enVente != null) lignes.push(['En vente', nbFr(enVente) + ' TP']);
@@ -3324,7 +3328,8 @@ function ouvrirPanneau(code, xCss, yCss){
   }
 
   let note = '';
-  if(!mienne && protegee) note = 'Protégée par un bouclier : impossible de l’attaquer pour l’instant.';
+  if(allie) note = 'Commune d’un membre de ton clan : vous ne pouvez pas vous attaquer.';   // patch268
+  else if(!mienne && protegee) note = 'Protégée par un bouclier : impossible de l’attaquer pour l’instant.';
   else if(immunisee) note = 'Prise il y a moins de 3 heures : encore immunisée.';
 
   el.innerHTML = `
@@ -3336,6 +3341,7 @@ function ouvrirPanneau(code, xCss, yCss){
       <span class="pc-rarete ${c.tier.id}">${c.tier.label || LIBELLE_TIER[c.tier.id]}</span>
       <button class="pc-fermer" data-pc="fermer" aria-label="Fermer">&times;</button>
     </div>
+    ${allie && clanP ? `<p class="pc-allie-bandeau">${blasonHtml(clanP.tag, clanP.couleur, true)}<span>Commune de ton clan</span></p>` : ''}
     ${alerte}
     ${gnBloc}${btEtat}
     ${propose ? `<p class="pc-propose">${ICONES_PC.echange}<span>${echapperHtml(propose)}</span></p>` : ''}
@@ -3344,6 +3350,8 @@ function ouvrirPanneau(code, xCss, yCss){
     ${actions.length ? `<div class="pc-actions">${actions.map(([cl, ic, txt, titre]) =>
       `<button class="pc-action ${cl}" data-pc="${ic}" title="${echapperHtml(titre)}">${ICONES_PC[ic]}${txt}</button>`).join('')}</div>` : ''}${btActions}`;
 
+  el.classList.toggle('pc-allie', allie && !!clanP);   // patch268 : liseré aux couleurs du clan
+  if(allie && clanP) el.style.setProperty('--clan', clanP.couleur || '#4C9BE8'); else el.style.removeProperty('--clan');
   el.hidden = false;
   const wrap = document.getElementById('mapWrap');
   if(wrap) wrap.classList.add('panneau-ouvert');

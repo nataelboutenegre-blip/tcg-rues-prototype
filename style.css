@@ -7320,3 +7320,11 @@ body.hw-question-ouverte, body.hw-cri-ouvert{ overflow:hidden; overscroll-behavi
 .gl-t .gl-nom b{ display:inline; }
 .gl-t .gl-nom .df-voir svg{ width:14px; height:14px; stroke:#F0B429; flex:none; }
 .gl-t .gl-nom .dep{ font-size:.66rem; color:#C8D5E6; }
+/* patch268 : le clan dans la fiche d'une commune */
+.pc-clan{ display:inline-flex; align-items:center; gap:6px; }
+.pc-clan .blason.petit{ margin:0; width:18px; height:22px; font-size:.5rem; }
+.pc-clan .blason.petit svg{ width:18px; height:22px; }
+#mapPanneau.pc-allie{ border:2px solid var(--clan); box-shadow:0 0 0 1px rgba(0,0,0,.4), 0 0 22px color-mix(in srgb, var(--clan) 45%, transparent), 0 18px 40px rgba(0,0,0,.5); }
+.pc-allie-bandeau{ display:flex; align-items:center; gap:8px; margin:2px 0 8px; padding:7px 10px; border-radius:10px; font-size:.8rem; font-weight:700; color:#fff;
+  background:color-mix(in srgb, var(--clan) 22%, transparent); border:1px solid color-mix(in srgb, var(--clan) 55%, transparent); }
+.pc-allie-bandeau .blason.petit{ margin:0; }

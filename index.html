@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=64998cf3c04a">
+<link rel="stylesheet" href="style.css?v=3c70258649fb">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -905,6 +905,7 @@
       </div>
       <div class="sub">Dépense tes TerraPoints : paquets spéciaux et dos de cartes.</div>
       <div class="puces" id="bqStatut"><span class="puce">Chargement…</span></div>
+      <div class="bq-terra-seul" id="bqTourne" hidden></div>
       <div class="bourse-section bq-section bq-terra-seul">
         <h2>Paquets</h2>
         <div class="bq-grille" id="bqPaquets"></div>
@@ -1214,6 +1215,7 @@
             <p>Toutes les communes ont <b>la même chance</b> de sortir : environ une carte sur deux est commune, une sur cent est légendaire. Les 129 communes d'<b>outre-mer</b> sont dans le même pot : environ une carte sur 270. Une carte que tu as déjà devient un <b>doublon</b>.</p>
             <p>Ta collection se regarde en cartes ou sur <b>Ma France</b>, une carte zoomable où tes communes apparaissent avec leur rareté. Le bouton <b>France | Outre-mer</b> passe aux 5 territoires d'outre-mer.</p>
             <p>Tu gardes toujours <b>au moins un exemplaire</b> de chaque commune : seuls les doublons se vendent, s'échangent ou partent en contrat.</p>
+            <p><b>Ta boutique</b> : chaque jour, 4 communes qui te manquent (communes et peu communes) ; chaque semaine, une rare, une épique et une légendaire. Chacune a une remise de 20 à 70 % et s'achète une fois. Payées en TP, elles ne s'échangent pas.</p>
             <p><b>Boutique</b> (en TerraPoints) : le paquet <b>garanti</b> (4 communes au hasard + 1 rare, épique ou légendaire), le paquet d'un <b>département</b> (5 communes différentes du département choisi) et les paquets de <b>collection</b>. 3 paquets de Boutique par jour au plus ; ils ne comptent pas pour les quêtes.</p>
             <p><b>Aurore</b> : 233 communes existent aussi en version Aurore. Quand l'une d'elles sort d'un paquet, elle a <b>1 chance sur 3</b> d'être une Aurore. Un exemplaire Aurore reste toujours dans ta collection : il ne se vend pas et ne s'échange pas.</p>
           </div>
@@ -1647,6 +1649,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=64998cf3c04a"></script>
+<script defer src="app.js?v=3c70258649fb"></script>
 </body>
 </html>

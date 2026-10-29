@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '64998cf3c04a';
+const VERSION_JEU = '3c70258649fb';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -16140,6 +16140,7 @@ async function loadBoutique(silencieux){
   appliquerHabillage(data.habillage === undefined ? (data.dos === 'dos-og' ? 'nacre' : null) : data.habillage);
   bqeVerifierAcces();
   renderBoutique();
+  if(!silencieux || boutiqueTournante) chargerBoutiqueTournante();   // patch261
   // patch159 : prevenir les OG une fois (par appareil)
   try{
     const og = (data.articles || []).some(a => a.id === 'dos-og' && a.possede);
@@ -16203,14 +16204,14 @@ function bqConfirmer(btn){
     return false;
   }
   if(btn.classList.contains('confirmer')) return true;
-  document.querySelectorAll('.bq-btn.confirmer').forEach(x => { x.classList.remove('confirmer'); x.textContent = bqPrix(x.dataset.prix); });
+  document.querySelectorAll('.bq-btn.confirmer').forEach(x => { x.classList.remove('confirmer'); x.textContent = x.dataset.libelle || bqPrix(x.dataset.prix); });
   btn.classList.add('confirmer');
   btn.textContent = 'Confirmer l\'achat';
   clearTimeout(btn._bqMinuteur);
   btn._bqMinuteur = setTimeout(() => {
     if(btn.isConnected && btn.classList.contains('confirmer')){
       btn.classList.remove('confirmer');
-      btn.textContent = bqPrix(btn.dataset.prix);
+      btn.textContent = btn.dataset.libelle || bqPrix(btn.dataset.prix);
     }
   }, 4000);
   return false;
@@ -16246,6 +16247,83 @@ async function acheterPaquetBoutique(id){
   if(titre) titre.textContent = id === 'paquet-departement' ? 'Département' : 'Garanti';
 }
 
+
+// ---------- patch261 : « Ta boutique », la boutique qui tourne (s2-60) ----------
+// Idée d'Oshannir : des communes qui te manquent, 4 par jour (communes, peu communes)
+// et 3 par semaine (rare, épique, légendaire), avec une remise. Une carte s'achète une fois.
+let boutiqueTournante = null;      // ma_boutique()
+let boutiqueTournanteLu = 0;
+let bqrMinuteur = null;
+const BQR_HORLOGE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+async function chargerBoutiqueTournante(){
+  const { data, error } = await sb.rpc('ma_boutique');
+  boutiqueTournante = !error && data && data.ouverte ? data : null;
+  boutiqueTournanteLu = Date.now();
+  renderBoutiqueTournante();
+}
+function bqrReste(sec){
+  const s = Math.max(0, sec - (Date.now() - boutiqueTournanteLu) / 1000);
+  if(s < 60) return 'Nouvelle sélection…';
+  const j = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+  return 'Change dans ' + (j >= 1 ? j + ' j' + (h ? ' ' + h + ' h' : '') : h >= 1 ? h + ' h ' + String(m).padStart(2, '0') : m + ' min');
+}
+function renderBoutiqueTournante(){
+  const el = document.getElementById('bqTourne');
+  if(!el) return;
+  const B = boutiqueTournante;
+  el.hidden = !B;
+  if(!B){ el.innerHTML = ''; return; }
+  const solde = boutiqueCache ? Number(boutiqueCache.solde) : Number(B.solde) || 0;
+  const item = (x) => {
+    const tier = TIERS.find(t => t.id === x.tier) || TIERS[0];
+    const carte = makeCardEl({ code: x.code, nom: x.nom, dept: x.dept, pop: Number(x.pop) || 0, tier, rank: Number(x.rang) || 0, tierSize: Number(x.palier_total) || 0 }, () => {});
+    carte.classList.add('flipped');
+    let action;
+    if(x.achete) action = '<span class="bqr-fait">✓ Dans ta collection</span>';
+    else if(x.possede) action = '<span class="bqr-deja">Déjà dans ta collection</span>';
+    else action = `<button class="bq-btn" data-bqr-periode="${x.periode}" data-bqr-case="${x.case}" data-prix="${x.prix}" data-libelle="Acheter"${solde < x.prix ? ' data-court="1"' : ''}>Acheter</button>`;
+    const libre = !x.achete && !x.possede;
+    return `<div class="bqr-item ${tier.id}${x.achete ? ' achete' : ''}${x.possede ? ' deja' : ''}">
+        <div class="bqr-carte">${carte.outerHTML}${libre ? `<span class="bqr-remise">−${x.remise} %</span>` : ''}${libre && x.album ? `<span class="bqr-album">Album · ${echapperTexte(x.album)}</span>` : ''}</div>
+        <div class="bqr-prix"><s>${Number(x.base).toLocaleString('fr-FR')}</s><b>${Number(x.prix).toLocaleString('fr-FR')}<small>TP</small></b></div>
+        ${action}</div>`;
+  };
+  const jour = (B.cartes || []).filter(x => x.periode === 'jour');
+  const semaine = (B.cartes || []).filter(x => x.periode === 'semaine');
+  el.innerHTML = `<div class="bqr">
+      <div class="bqr-tete"><h2>Ta boutique</h2><p>Que des communes qui te manquent, rien que pour toi. Chaque carte s’achète une fois.</p></div>
+      <div class="bqr-rang">Du jour<span class="bqr-minuteur" data-fin="${B.fin_jour}">${BQR_HORLOGE}${bqrReste(B.fin_jour)}</span></div>
+      ${jour.length ? `<div class="bqr-grille">${jour.map(item).join('')}</div>` : '<p class="bqr-vide">Tu as déjà toutes ces communes : bravo !</p>'}
+      <div class="bqr-rang">De la semaine<span class="bqr-minuteur" data-fin="${B.fin_semaine}">${BQR_HORLOGE}${bqrReste(B.fin_semaine)}</span></div>
+      ${semaine.length ? `<div class="bqr-grille semaine">${semaine.map(item).join('')}</div>` : '<p class="bqr-vide">Tu as déjà toutes ces communes : bravo !</p>'}
+      <p class="bqr-note">Les cartes achetées en TP ne s’échangent pas et ne vont pas à la Bourse. Elles ne comptent pas dans les 3 paquets de boutique par jour.</p>
+    </div>`;
+  clearInterval(bqrMinuteur);
+  bqrMinuteur = setInterval(() => {
+    const zone = document.getElementById('bqTourne');
+    if(!zone || !zone.isConnected || !boutiqueTournante){ clearInterval(bqrMinuteur); return; }
+    let fini = false;
+    zone.querySelectorAll('.bqr-minuteur').forEach(m => {
+      const f = Number(m.dataset.fin);
+      if(f - (Date.now() - boutiqueTournanteLu) / 1000 <= 0) fini = true;
+      m.innerHTML = BQR_HORLOGE + bqrReste(f);
+    });
+    if(fini){ clearInterval(bqrMinuteur); chargerBoutiqueTournante(); }
+  }, 30000);
+}
+async function acheterCarteBoutique(periode, n){
+  const { data, error } = await sb.rpc('ma_boutique_acheter', { p_periode: periode, p_case: Number(n) });
+  if(error){ notifier({ type: 'erreur', titre: 'Achat impossible', texte: messageLisible(error.message) }); return chargerBoutiqueTournante(); }
+  boutiqueTournante = data && data.ouverte ? data : null;
+  boutiqueTournanteLu = Date.now();
+  if(boutiqueCache && data && data.solde != null){ boutiqueCache.solde = data.solde; renderBoutique(); }
+  renderBoutiqueTournante();
+  const a = data && data.achat;
+  notifier({ type: 'succes', titre: a ? a.nom + ' rejoint ta collection' : 'Carte achetée', texte: a ? `${(TIERS.find(t => t.id === a.tier) || {}).label || ''} · ${DEPT_NAMES[a.dept] || a.dept} (${a.dept})` : '' });
+  if(typeof chargerCollectionTerra === 'function') chargerCollectionTerra();
+  if(typeof loadPackStatus === 'function') loadPackStatus();   // le solde affiché en haut
+}
+
 async function acheterDosBoutique(id){
   const { data, error } = await sb.rpc('boutique_acheter', { p_article: id });
   if(error){ notifier({ type: 'erreur', titre: 'Achat impossible', texte: messageLisible(error.message) }); return loadBoutique(); }
@@ -16272,6 +16350,7 @@ document.getElementById('panel-boutique').addEventListener('click', (e) => {
   btn.disabled = true;
   if(btn.dataset.bqPaquet) acheterPaquetBoutique(btn.dataset.bqPaquet).finally(() => { btn.disabled = false; });
   else if(btn.dataset.bqDos) acheterDosBoutique(btn.dataset.bqDos).finally(() => { btn.disabled = false; });
+  else if(btn.dataset.bqrPeriode) acheterCarteBoutique(btn.dataset.bqrPeriode, btn.dataset.bqrCase).finally(() => { if(btn.isConnected) btn.disabled = false; });   // patch261
 });
 
 

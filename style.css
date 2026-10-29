@@ -7052,3 +7052,46 @@ body.ml-ouverte{ overflow:hidden; }
 .ml-changer{ white-space:nowrap; font:700 8.5px/1 var(--mono); letter-spacing:.12em; text-transform:uppercase; color:#C8D5E6; padding:6px 9px; border-radius:5px; border:0; cursor:pointer;
   background:linear-gradient(180deg,#3c414a,#2a2e35); box-shadow:0 2px 0 #0d0e10, inset 0 1px 0 rgba(255,255,255,.12); }
 .ml-p-arm .ml-grave{ color:rgba(255,255,255,.24); text-shadow:0 1px 0 rgba(0,0,0,.8); font-size:7.5px; letter-spacing:.1em; white-space:nowrap; }
+/* ---------- patch261 : « Ta boutique », la boutique qui tourne ---------- */
+.bqr{ margin:4px 0 18px; padding:14px 14px 16px; border-radius:16px; border:1px solid rgba(240,180,41,.35);
+  background:radial-gradient(120% 90% at 50% 0%, rgba(240,180,41,.13), rgba(240,180,41,0) 60%), var(--nuit-2, #162C4B); }
+.bqr-tete{ display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap; }
+.bqr-tete h2{ margin:0; font-family:var(--titre); font-weight:900; font-size:1.55rem; line-height:1; }
+.bqr-tete p{ margin:4px 0 0; font-size:.78rem; color:var(--brume); width:100%; }
+.bqr-rang{ display:flex; align-items:center; gap:8px; margin:14px 2px 8px; font-size:.7rem; letter-spacing:.09em; text-transform:uppercase; color:#C8D5E6; font-weight:600; }
+.bqr-rang .bqr-minuteur{ margin-left:auto; display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:999px; background:rgba(15,31,56,.75);
+  border:1px solid rgba(169,188,212,.2); font-size:.7rem; letter-spacing:0; text-transform:none; color:#E6EDF7; font-weight:600; white-space:nowrap; }
+.bqr-rang .bqr-minuteur svg{ width:13px; height:13px; opacity:.8; }
+.bqr-grille{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
+.bqr-grille.semaine{ grid-template-columns:repeat(3, minmax(0,1fr)); }
+.bqr-item{ position:relative; display:flex; flex-direction:column; align-items:center; gap:6px; padding:8px 6px 10px; border-radius:12px;
+  background:rgba(11,24,48,.55); border:1px solid rgba(169,188,212,.12); }
+.bqr-carte{ position:relative; width:118px; height:165px; }
+.bqr-carte .card{ transform:scale(.627); transform-origin:0 0; cursor:default; }
+.bqr-carte .card .card-inner{ transform:rotateY(180deg); }
+.bqr-remise{ position:absolute; top:-6px; right:-8px; z-index:3; padding:3px 7px; border-radius:7px; font:900 .95rem/1 var(--titre); letter-spacing:.02em;
+  color:#fff; background:linear-gradient(180deg,#F05A5F,#C7343A); box-shadow:0 3px 8px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.25); transform:rotate(6deg); }
+.bqr-album{ position:absolute; left:50%; bottom:-7px; z-index:3; transform:translateX(-50%); white-space:nowrap; padding:3px 8px; border-radius:999px; font-size:.64rem; font-weight:600;
+  color:#06210f; background:linear-gradient(180deg,#7cf5b0,#2fbf6e); box-shadow:0 2px 6px rgba(0,0,0,.4); }
+.bqr-prix{ display:flex; align-items:baseline; gap:6px; margin-top:4px; }
+.bqr-prix s{ font-size:.74rem; color:#7B8FAB; }
+.bqr-prix b{ font-family:var(--titre); font-weight:900; font-size:1.2rem; color:#FFE08A; }
+.bqr-prix b small{ font-family:'Instrument Sans', system-ui, sans-serif; font-size:.68rem; font-weight:600; color:#C9AE97; margin-left:2px; }
+.bqr-item .bq-btn{ width:100%; margin:0; padding:7px 6px; font-size:.8rem; }
+.bqr-item.achete .bqr-carte{ opacity:.45; filter:saturate(.4); }
+.bqr-fait{ display:flex; align-items:center; justify-content:center; gap:5px; width:100%; padding:7px 6px; border-radius:9px; font-size:.78rem; font-weight:600;
+  color:#5BE3A6; background:rgba(43,212,139,.12); border:1px solid rgba(43,212,139,.3); }
+.bqr-grille.semaine .bqr-item{ background:linear-gradient(180deg, rgba(240,180,41,.08), rgba(11,24,48,.55)); border-color:rgba(240,180,41,.25); }
+.bqr-item.legendaire{ border-color:rgba(240,180,41,.65); box-shadow:0 0 18px rgba(240,180,41,.18); }
+.bqr-note{ margin:12px 2px 0; font-size:.72rem; color:#7B8FAB; line-height:1.45; }
+@media (max-width:560px){
+  .bqr-grille{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .bqr-grille.semaine{ grid-template-columns:repeat(3, minmax(0,1fr)); gap:6px; }
+  .bqr-grille.semaine .bqr-carte{ width:96px; height:134px; }
+  .bqr-grille.semaine .bqr-carte .card{ transform:scale(.51); }
+  .bqr-grille.semaine .bqr-prix b{ font-size:1.05rem; }
+  .bqr-grille.semaine .bq-btn{ font-size:.72rem; padding:6px 4px; }
+}
+.bqr-item.deja .bqr-carte{ opacity:.45; filter:saturate(.4); }
+.bqr-deja{ display:flex; align-items:center; justify-content:center; width:100%; padding:7px 6px; border-radius:9px; font-size:.74rem; font-weight:600; color:#A9BCD4; background:rgba(169,188,212,.08); border:1px solid rgba(169,188,212,.2); text-align:center; }
+.bqr-vide{ margin:0; font-size:.8rem; color:var(--brume); }

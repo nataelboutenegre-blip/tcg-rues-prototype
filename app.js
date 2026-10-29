@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'fde34260d474';
+const VERSION_JEU = '3c7f7a7f1a64';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -246,6 +246,10 @@ const ICONES_NOTIF = {
 function messageLisible(msg){
   const m = String(msg || '');
   const table = [
+    [/brillantes_ok/i, 'Une carte brillante ne quitte jamais ta collection : ses exemplaires brillants restent.'],   // patch269
+    [/deja son eclat/i, 'Cette carte a déjà son éclat.'],
+    [/il faut (\d+) doublons libres/i, (x) => `Il faut ${x[1]} doublons de cette carte, en plus de ta carte, pour un éclat.`],
+    [/eclats ne sont pas encore ouverts/i, 'Les éclats ne sont pas encore ouverts.'],
     [/invalid login credentials/i, 'Email ou mot de passe incorrect.'],
     [/user already registered/i, 'Un compte existe déjà avec cet email.'],
     [/password should be at least (\d+)/i, (x) => `Le mot de passe doit faire au moins ${x[1]} caractères.`],
@@ -829,6 +833,7 @@ async function showGame(session_){
   ifaceCharger();   // patch262 : interrupteurs d'interface (s2-61)
   recapDemarrer();   // patch262 : le récap d'arrivée
   hwCharger();   // patch265 : Halloween (s2-62)
+  briCharger();   // patch269 : brillantes et éclats (s2-63)
   dmEtape(25, 'La carte de France…');
   await loadOutline();
   dmMesure('carte');
@@ -7049,7 +7054,8 @@ document.getElementById('fenetre').addEventListener('click', async (e) => {
 function makeCardEl(draw, onFlip){
   const wrap = document.createElement('div');
   const mon = monumentDe(draw.code);
-  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '') + (draw.aurore ? ' aurore' : '') + (estOutremerCode(draw.code) ? ' outremer' : '');   // patch219
+  const bxg = briParts(draw, true);   // patch269
+  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '') + (draw.aurore ? ' aurore' : '') + (estOutremerCode(draw.code) ? ' outremer' : '') + bxg.cls;   // patch219, patch269
   wrap.innerHTML = `
     <div class="card-inner">
       <div class="face face-back">
@@ -7057,7 +7063,7 @@ function makeCardEl(draw, onFlip){
         <span class="dos-coin hg"></span><span class="dos-coin hd"></span><span class="dos-coin bg"></span><span class="dos-coin bd"></span>
         <div class="dos-embleme">${ICONE_EPINGLE}</div>
       </div>
-      <div class="face face-front">
+      <div class="face face-front">${bxg.dehors}
         <div class="carte-cadre">
           <div class="carte-int">
             ${draw.aurore ? fondAurore(draw.code, draw.tier.id, true) : ''}
@@ -7065,7 +7071,7 @@ function makeCardEl(draw, onFlip){
               <span class="carte-rarete">${draw.tier.label}</span>
               <span class="carte-num">${draw.rank.toLocaleString('fr-FR')} / ${draw.tierSize.toLocaleString('fr-FR')}</span>
             </div>
-            <div class="carte-art">${estOutremerCode(draw.code) ? OM_BADGE : ''}${carteArtSvg(draw.code, draw.tier.id)}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
+            <div class="carte-art">${estOutremerCode(draw.code) ? OM_BADGE : ''}${carteArtSvg(draw.code, draw.tier.id)}${bxg.art}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
             <div class="carte-infos">
               <p class="carte-nom ${draw.nom.length > 26 ? 'tres-long' : draw.nom.length > 16 ? 'long' : ''}" title="${echapperTexte(draw.nom)}">${draw.nom}</p>
               <p class="carte-departement">${DEPT_NAMES[draw.dept] ? `<span class="dep-nom">${DEPT_NAMES[draw.dept]}</span> <span class="dep-num">(${draw.dept})</span>` : `<span class="dep-num">${draw.dept}</span>`}</p>
@@ -7075,8 +7081,8 @@ function makeCardEl(draw, onFlip){
               </div>
               ${draw.aurore ? creditAurore(draw.code) : ''}
             </div>
-            <div class="carte-lisere"><span></span><span></span><span></span></div>
-          </div>
+            ${bxg.surface}<div class="carte-lisere"><span></span><span></span><span></span></div>
+          </div>${bxg.anneau}
         </div>
       </div>
     </div>
@@ -7166,7 +7172,7 @@ function revealCards(draws){
 const RANG_TIER = { commun: 0, peucommun: 1, rare: 2, epique: 3, legendaire: 4 };
 // la meilleure carte arrive en dernier
 const trierPourRevelation = (draws) =>
-  draws.slice().sort((a, b) => RANG_TIER[a.tier.id] - RANG_TIER[b.tier.id]
+  draws.slice().sort((a, b) => (a.brillante ? 1 : 0) - (b.brillante ? 1 : 0) || RANG_TIER[a.tier.id] - RANG_TIER[b.tier.id]
     || (monumentsNoms.has(a.code) ? 1 : 0) - (monumentsNoms.has(b.code) ? 1 : 0));
 const attendreOuv = (ms) => new Promise(r => setTimeout(r, REDUCED_MOTION ? 0 : ms));
 
@@ -7259,10 +7265,18 @@ const sonsOuverture = (() => {
     cede(lum){ if(!pret()) return;
       bruit(0.45, 900, 4200, 0.45);
       const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime;
-      const f0 = lum === 'lum-leg' ? 392 : lum === 'lum-epi' ? 360 : lum === 'lum-rare' ? 330 : 262;
+      const f0 = lum === 'lum-bri' ? 440 : lum === 'lum-leg' ? 392 : lum === 'lum-epi' ? 360 : lum === 'lum-rare' ? 330 : 262;
       o.type = 'triangle'; o.frequency.setValueAtTime(f0, t + 0.15); o.frequency.exponentialRampToValueAtTime(f0 * 2, t + 0.7);
       g.gain.setValueAtTime(0.0001, t + 0.15); g.gain.exponentialRampToValueAtTime(lum ? 0.18 : 0.08, t + 0.3); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
       o.connect(g); g.connect(maitre); o.start(t + 0.15); o.stop(t + 1.2); },
+    // patch269 : la brillante (carillon cristallin), l'éclat (souffle puis cloche chaude)
+    carillon(){ if(!pret()) return;
+      [1318.5, 1661.2, 1975.5, 2637, 3322.4].forEach((f, i) => { note(f, i * 0.07, 1.2, 'triangle', 0.32); note(f * 2.76, i * 0.07, 0.5, 'sine', 0.05); });
+      setTimeout(() => { if(pret()) bruit(0.9, 7000, 9500, 0.12, 'highpass'); }, 300); },
+    souffle(){ if(pret()) bruit(1.1, 500, 3800, 0.4); },
+    cloche(){ if(!pret()) return;
+      [[523.25, .4], [1046.5, .18], [1568, .12], [2093, .07]].forEach(([f, v]) => note(f, 0, 1.8, 'sine', v));
+      [[659.25, .22], [783.99, .16]].forEach(([f, v]) => note(f, 0.09, 1.7, 'sine', v)); },
     // patch86 : l'assaut
     assautChoc(){ if(pret()){ note(90, 0, 0.32, 'sine', 0.5); bruit(0.18, 300, 120, 0.25, 'lowpass'); } },
     assautTic(){ if(pret()) note(1700, 0, 0.025, 'square', 0.05); },
@@ -7368,8 +7382,8 @@ function lancerRevelation(zone, scene, tries){
     if(!pile.length) return;
     const p = construirePileOuv(pile);
     const prochaine = pile[pile.length - 1];
-    if(pile.length === 1 && RANG_TIER[prochaine.tier.id] >= 2){
-      [...p.querySelectorAll('.ouv-dos')].pop().classList.add(prochaine.tier.id === 'legendaire' ? 'lueur-leg' : prochaine.tier.id === 'epique' ? 'lueur-epi' : 'lueur-rare');
+    if(pile.length === 1 && (RANG_TIER[prochaine.tier.id] >= 2 || prochaine.brillante)){
+      [...p.querySelectorAll('.ouv-dos')].pop().classList.add(prochaine.brillante ? 'lueur-bri' : prochaine.tier.id === 'legendaire' ? 'lueur-leg' : prochaine.tier.id === 'epique' ? 'lueur-epi' : 'lueur-rare');
       setTimeout(() => sonsOuverture.tension(prochaine.tier.id), 450);
     }
     p.addEventListener('click', suivante);
@@ -7403,17 +7417,18 @@ function lancerRevelation(zone, scene, tries){
     sonsOuverture.retourne();
     requestAnimationFrame(() => requestAnimationFrame(async () => {
       el.click();                                  // retourne la carte et l'ajoute a la collection
-      decouvrir(draw);
+      if(draw.brillante) briDecouverte(decouverte, draw); else decouvrir(draw);   // patch269
       await attendreOuv(420);
       sonsOuverture.revele(draw.tier.id);
       if(RANG_TIER[draw.tier.id] >= 2 || monumentsNoms.has(draw.code)) el.classList.add('ouv-eclat');
+      if(draw.brillante) briFete(slotCarte, el, draw);   // patch269
       annoncerOuv(draw.nom + ', ' + draw.tier.label);
       verrou = false;
       if(!pile.length){
         consigne.textContent = '';
         btnTout.hidden = true;
         scene.classList.add('seule');            // la derniere carte se recentre
-        await attendreOuv(draw.tier.id === 'legendaire' ? 1800 : 1100);
+        await attendreOuv(draw.brillante ? 3200 : draw.tier.id === 'legendaire' ? 1800 : 1100);
         if(enCours){ versRangee(enCours.el); enCours = null; }
         terminer();
       }
@@ -7636,7 +7651,7 @@ async function payerPaquet(type){
     // patch107 : paquet de la boutique, paye et tire en un seul appel
     const achat = boutiqueAchat;
     boutiqueAchat = null;
-    const { data, error } = await sb.rpc('boutique_ouvrir_paquet', { p_article: achat.id, p_departement: achat.dep });
+    const { data, error } = await briRpcPaquet('boutique_ouvrir_paquet', { p_article: achat.id, p_departement: achat.dep });   // patch269
     terraPaquet = error ? null : (data || []);
     terraPaquetBloque = true;
     boutiqueOuvert = !error;
@@ -7645,7 +7660,7 @@ async function payerPaquet(type){
   }
   if(enTerra()){
     // Terra : le serveur paie et tire les 5 cartes en un seul appel
-    const { data, error } = await sb.rpc('terra_ouvrir_paquet', { p_paye: type === 'achete' });
+    const { data, error } = await briRpcPaquet('terra_ouvrir_paquet', { p_paye: type === 'achete' });   // patch269
     terraPaquet = error ? null : (data || []);
     terraPaquetBloque = type === 'achete';
     viderBilanTerra();
@@ -7732,6 +7747,7 @@ async function dechirerPaquet(pack, nbCartes){
 const SEUIL_COUPE = 0.4;
 function lumierePaquet(draws){
   const ids = draws.map(d => d.tier && d.tier.id);
+  if(draws.some(d => d.brillante)) return 'lum-bri';   // patch269
   return ids.includes('legendaire') ? 'lum-leg' : ids.includes('epique') ? 'lum-epi' : ids.includes('rare') ? 'lum-rare' : '';
 }
 function armerPaquet(pack, demarrer){
@@ -7792,7 +7808,7 @@ function armerPaquet(pack, demarrer){
   };
   const abandon = () => {
     fini = false; tirage = null; g = null; jeton++;
-    pack.classList.remove('coupe', 'attente', 'lum-rare', 'lum-epi', 'lum-leg');
+    pack.classList.remove('coupe', 'attente', 'lum-rare', 'lum-epi', 'lum-leg', 'lum-bri');
     if(rayons){ rayons.remove(); rayons = null; }
     poser(0);
   };
@@ -7828,14 +7844,14 @@ function armerPaquet(pack, demarrer){
     scene.querySelector('.ouv-echelle').appendChild(pile);
     const lum = lumierePaquet(draws);
     sonsOuverture.cede(lum);
-    if(navigator.vibrate) try{ navigator.vibrate(lum === 'lum-leg' ? [30, 40, 60] : 35); }catch(e){}
+    if(navigator.vibrate) try{ navigator.vibrate(lum === 'lum-leg' || lum === 'lum-bri' ? [30, 40, 60] : 35); }catch(e){}
     pack.classList.add('coupee');
     if(rayons){
       const r = rayons;
       r.animate([{ opacity: 0.5, transform: 'scale(.8)' },
                  { opacity: lum ? 0.85 : 0.45, transform: 'scale(1.25) rotate(20deg)' },
                  { opacity: 0, transform: 'scale(1.4) rotate(40deg)' }],
-        { duration: lum === 'lum-leg' ? 2200 : 1500, easing: 'ease-in-out', fill: 'forwards' }).onfinish = () => r.remove();
+        { duration: lum === 'lum-leg' || lum === 'lum-bri' ? 2200 : 1500, easing: 'ease-in-out', fill: 'forwards' }).onfinish = () => r.remove();
     }
     await attendreOuv(560);
     // le paquet tombe, la pile sort par le haut
@@ -7940,7 +7956,9 @@ function tirerPaquetTerra(){
     rank: row.rang, tierSize: row.palier_total,
     terraNouvelle: !!row.nouvelle, terraExemplaires: Number(row.exemplaires) || 1,
     aurore: !!row.aurore,
+    brillante: Number(row.brillante) || 0,   // patch269 : le numéro, ou 0
   }));
+  briEssaiPaquet(draws);   // patch269 : essai
   terraDernier = draws;
   prechargerAurore(draws);
   return draws;
@@ -10719,27 +10737,29 @@ function viderBilanTerra(){
 function terraCarteRetournee(draw){
   const e = terraCollection.get(draw.code);
   if(e){ e.exemplaires = draw.terraExemplaires; if(draw.aurore) e.aurore = (e.aurore || 0) + 1;
-         if(terraPaquetBloque) e.bloques = (e.bloques || 0) + 1; }
+         if(terraPaquetBloque) e.bloques = (e.bloques || 0) + 1; briCarteRetournee(e, draw); }
   else terraCollection.set(draw.code, { code: draw.code, nom: draw.nom, dept: draw.dept, tier: draw.tier,
     pop: draw.pop, exemplaires: draw.terraExemplaires, rank: draw.rank, tierSize: draw.tierSize,
-    aurore: draw.aurore ? 1 : 0, bloques: terraPaquetBloque ? 1 : 0 });
+    aurore: draw.aurore ? 1 : 0, bloques: terraPaquetBloque ? 1 : 0,
+    brillantes: draw.brillante ? 1 : 0, numeros: draw.brillante ? [draw.brillante] : [] });   // patch269
 }
 
 function miniTerra(e){
   const nom = echapperTexte(e.nom);
   const au = e.aurore > 0;
-  return `<div class="mini ${e.tier.id}${au ? ' aurore' : ''}${estOutremerCode(e.code) ? ' outremer' : ''}"${e.skin ? ` data-skin="${echapperTexte(e.skin)}"` : ''} title="${nom} (${e.dept}) — ${e.tier.label}${au ? ' — Aurore' + (e.aurore > 1 ? ' ×' + e.aurore : '') : ''}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}${au ? titreCreditAurore(e.code) : ''}">
-    <div class="mini-int">
+  const bx = briParts(e, false);   // patch269
+  return `<div class="mini ${e.tier.id}${au ? ' aurore' : ''}${estOutremerCode(e.code) ? ' outremer' : ''}${bx.cls}"${e.skin ? ` data-skin="${echapperTexte(e.skin)}"` : ''} title="${nom} (${e.dept}) — ${e.tier.label}${au ? ' — Aurore' + (e.aurore > 1 ? ' ×' + e.aurore : '') : ''}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}${au ? titreCreditAurore(e.code) : ''}">
+    ${bx.dehors}<div class="mini-int">
       ${au ? fondAurore(e.code, e.tier.id, false) : ''}
       ${e.exemplaires > 1 ? `<span class="mini-ex">×${e.exemplaires}</span>` : ''}
-      <div class="mini-art">${estOutremerCode(e.code) ? OM_BADGE_MINI : ''}${e.photo ? artCommune(e, e.tier.id, 'mini') : miniArtSvg(e.code, e.tier.id)}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
+      <div class="mini-art">${estOutremerCode(e.code) ? OM_BADGE_MINI : ''}${e.photo ? artCommune(e, e.tier.id, 'mini') : miniArtSvg(e.code, e.tier.id)}${bx.art}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
       <div class="mini-infos">
         <p class="mini-nom ${e.nom.length > 14 ? 'long' : ''}">${nom}</p>
         ${e.rank ? `<span class="mini-num">n° ${Number(e.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(e.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
         <span class="mini-rarete">${e.tier.label}${e.auroreS1 ? '<span class="mini-origine" title="Aurore gagnée dans le Front, saison 1">Front S1</span>' : ''}</span>
       </div>
-      <div class="mini-lisere"><span></span><span></span><span></span></div>
-    </div>
+      ${bx.surface}<div class="mini-lisere"><span></span><span></span><span></span></div>
+    </div>${bx.anneau}
   </div>`;
 }
 
@@ -10755,7 +10775,7 @@ function afficherBilanTerra(){
   el.id = 'terraBilan';
   el.className = 'tt-bilan-bloc';
   el.innerHTML = `<p class="tt-bilan">Dernier paquet : <b>${nouv} nouvelle${nouv > 1 ? 's' : ''}</b>, ${dbl} doublon${dbl > 1 ? 's' : ''}</p>
-    <div class="tt-res">${trierPourRevelation(draws).map(d => `<div class="tt-c"><span class="tt-tag ${d.terraNouvelle ? 'neuf' : 'dbl'}">${d.terraNouvelle ? 'NOUVELLE' : 'DOUBLON'}</span>${miniTerra({ code: d.code, nom: d.nom, dept: d.dept, tier: d.tier, exemplaires: d.terraExemplaires, rank: d.rank, tierSize: d.tierSize, aurore: d.aurore ? 1 : 0, skin: d.terraNouvelle ? undefined : skinDeMaCarte('terra', d.code) })}</div>`).join('')}</div>`;
+    <div class="tt-res">${trierPourRevelation(draws).map(d => `<div class="tt-c"><span class="tt-tag ${d.terraNouvelle ? 'neuf' : 'dbl'}">${d.terraNouvelle ? 'NOUVELLE' : 'DOUBLON'}</span>${miniTerra({ code: d.code, nom: d.nom, dept: d.dept, tier: d.tier, brillante: d.brillante || 0, exemplaires: d.terraExemplaires, rank: d.rank, tierSize: d.tierSize, aurore: d.aurore ? 1 : 0, skin: d.terraNouvelle ? undefined : skinDeMaCarte('terra', d.code) })}</div>`).join('')}</div>`;
   zone.insertAdjacentElement('afterend', el);
 }
 
@@ -10787,6 +10807,7 @@ async function chargerCollectionTerra(){
     const { data: s1, error: es } = await sb.rpc('terra_aurores_s1', { p_joueur: window.__monId });
     if(!es) for(const code of s1 || []){ const e = terraCollection.get(code); if(e) e.auroreS1 = true; }
   }catch(err){}
+  try{ await briLireCollection(); }catch(err){}   // patch269
   terraCharge = true;
   return true;
 }
@@ -10835,6 +10856,8 @@ function renderCollectionTerra(){
   const nbDbl = Object.values(dbl).reduce((s, n) => s + n, 0);
   let nbAur = 0; for(const e of terraCollection.values()) if(e.aurore > 0) nbAur++;   // patch236
   if(terraFiltre === 'aurore' && !nbAur) terraFiltre = 'tous';
+  let nbBri = 0; for(const e of terraCollection.values()) if(e.brillantes > 0 || e.eclat) nbBri++;   // patch269
+  if(terraFiltre === 'brillante' && !nbBri) terraFiltre = 'tous';
   const gainMax = Object.entries(dbl).reduce((s, [t, n]) => s + n * (TERRA_REVENTE[t] || 0), 0);
   const ordre = TIERS.filter(t => tot[t.id] || parTier[t.id]);
   if(terraVue === 'france') return renderMaFranceTerra(el, totalFrance);
@@ -10851,6 +10874,7 @@ function renderCollectionTerra(){
       <button class="coll-filtre ${terraFiltre === 'tous' ? 'actif' : ''}" data-tcf="tous">Toutes <span class="nb">${fmtNombre(terraCollection.size)}</span></button>
       <button class="coll-filtre ${terraFiltre === 'doublons' ? 'actif' : ''}" data-tcf="doublons">Doublons <span class="nb">${fmtNombre(nbDbl)}</span></button>
       ${nbAur ? `<button class="coll-filtre ${terraFiltre === 'aurore' ? 'actif' : ''}" data-tcf="aurore"><i class="au-pt" aria-hidden="true"></i>Aurore <span class="nb">${fmtNombre(nbAur)}</span></button>` : ''}
+      ${nbBri ? `<button class="coll-filtre ${terraFiltre === 'brillante' ? 'actif' : ''}" data-tcf="brillante"><i class="bri-pt" aria-hidden="true"></i>Brillantes et éclats <span class="nb">${fmtNombre(nbBri)}</span></button>` : ''}
       ${ordre.filter(t => parTier[t.id]).map(t => `<button class="coll-filtre ${terraFiltre === t.id ? 'actif' : ''}" data-tcf="${t.id}"><span class="point" style="background:${COULEURS_FILTRE[t.id]}"></span>${t.label} <span class="nb">${fmtNombre(parTier[t.id])}</span></button>`).join('')}
     </div>
     <input type="text" id="tcRecherche" class="bourse-search coll-recherche" placeholder="Rechercher une commune ou un département…" value="${echapperTexte(terraRecherche)}">
@@ -11419,7 +11443,7 @@ function renderGrilleTerra(){
   const grille = document.getElementById('tcGrille');
   if(!grille) return;
   const liste = [...terraCollection.values()]
-    .filter(e => terraFiltre === 'tous' || (terraFiltre === 'doublons' ? libresTerra(e) > 0 : terraFiltre === 'aurore' ? e.aurore > 0 : e.tier.id === terraFiltre))
+    .filter(e => terraFiltre === 'tous' || (terraFiltre === 'doublons' ? libresTerra(e) > 0 : terraFiltre === 'aurore' ? e.aurore > 0 : terraFiltre === 'brillante' ? (e.brillantes > 0 || e.eclat) : e.tier.id === terraFiltre))
     .filter(e => correspondRecherche(e.nom, e.dept, sansAccents(terraRecherche.trim())))
     .sort((a, b) => RANG_TIER[b.tier.id] - RANG_TIER[a.tier.id] || (b.pop || 0) - (a.pop || 0));
   grille.innerHTML = liste.length
@@ -11468,7 +11492,7 @@ function ouvrirVenteTerra(){
   f.setAttribute('role', 'dialog');
   f.setAttribute('aria-modal', 'true');
   f.setAttribute('aria-labelledby', 'tcVenteTitre');
-  f.innerHTML = `<h3 id="tcVenteTitre">Vendre mes doublons</h3><p>On garde toujours un exemplaire de chaque commune, et toutes tes cartes Aurore.</p>
+  f.innerHTML = `<h3 id="tcVenteTitre">Vendre mes doublons</h3><p>On garde toujours un exemplaire de chaque commune, et toutes tes cartes Aurore${BRI.lu ? ' et brillantes' : ''}.</p>
     ${lignes.map(t => `<label class="tc-ligne"><input type="checkbox" value="${t.id}" ${t.id === 'commun' || t.id === 'peucommun' ? 'checked' : ''}>
       <i class="pt" style="background:${COULEURS_FILTRE[t.id]}"></i>${t.label} <em>× ${fmtNombre(dbl[t.id])} · ${TERRA_REVENTE[t.id]} TP</em><b>+${fmtNombre(dbl[t.id] * TERRA_REVENTE[t.id])}</b></label>`).join('')}
     <button class="tc-ok" id="tcVenteOk"></button>
@@ -11498,7 +11522,7 @@ function ouvrirVenteTerra(){
     const r = data && data[0];
     for(const e of terraCollection.values()) if(choix.includes(e.tier.id) && libresTerra(e) > 0){
       const vendus = libresTerra(e);
-      e.exemplaires = Math.max(1, e.aurore || 0);
+      e.exemplaires = Math.max(1, (e.aurore || 0) + (e.brillantes || 0));
       e.bloques = Math.min(Math.max(0, (e.bloques || 0) - vendus), e.exemplaires);
     }
     if(r && packStatusCache){ packStatusCache.solde = r.solde; majBascule(); }
@@ -17192,9 +17216,9 @@ async function chargerAuroresFront(){
 const auroreFront = (code) => SAISON2 && !enTerra() && (FRONT_AURORES ? FRONT_AURORES.has(String(code)) : !!(AURORE && AURORE[code]));
 const auroreImage = (code) => AURORE && AURORE[code] ? 'aurore/' + code + '.jpg?v=' + AURORE_V : null;
 // les exemplaires qu'on peut vendre ou echanger : jamais le dernier, jamais une Aurore
-const libresTerra = (e) => e.exemplaires - Math.max(1, e.aurore || 0);
+const libresTerra = (e) => e.exemplaires - Math.max(1, (e.aurore || 0) + (e.brillantes || 0));   // patch269 : ni les brillantes
 // patch141 : ceux qu'on peut ECHANGER ou mettre en Bourse : ni Aurore, ni achetes en points
-const echangeablesTerra = (e) => Math.max(0, e.exemplaires - Math.max(1, (e.aurore || 0) + (e.bloques || 0)));
+const echangeablesTerra = (e) => Math.max(0, e.exemplaires - Math.max(1, (e.aurore || 0) + (e.brillantes || 0) + (e.bloques || 0)));
 // les doublons qui ne partent qu'au jeu : achetes en points
 const achetesTerra = (e) => Math.max(0, libresTerra(e) - echangeablesTerra(e));
 
@@ -17405,13 +17429,13 @@ async function chargerVitrine(id){
     if(!r6.error) for(const x of r6.data || []) skinsCartes.set(x.source + '|' + x.code, skinCle(x.skin)); }catch(err){}
   let s1 = new Set();   // patch170
   try{ const r2 = await sb.rpc('terra_aurores_s1', { p_joueur: id }); if(!r2.error) s1 = new Set(r2.data || []); }catch(err){}
-  return (data || []).map(r => ({ code: r.code, nom: r.nom, dept: r.departement,
+  return briVitrine(id, (data || []).map(r => ({ code: r.code, nom: r.nom, dept: r.departement,   // patch269
     tier: TIERS.find(t => t.id === r.tier) || TIERS[TIERS.length - 1], pop: r.population,
     exemplaires: 1, rank: r.rang, tierSize: r.palier_total, aurore: r.aurore ? 1 : 0,
     source: r.source === 'front' ? 'front' : 'terra',   // patch180
     dos: dosCartes.get((r.source === 'front' ? 'front' : 'terra') + '|' + r.code) || dos,
     skin: skinsCartes.get((r.source === 'front' ? 'front' : 'terra') + '|' + r.code),
-    auroreS1: r.source !== 'front' && s1.has(r.code), photo: photos.get(r.code) || '' }));
+    auroreS1: r.source !== 'front' && s1.has(r.code), photo: photos.get(r.code) || '' })));
 }
 
 // cinq cartes cote a cote : un nom de plus de 8 lettres passe en plus petit
@@ -19987,6 +20011,7 @@ async function ouvrirCarteTerra(code){
           <div class="fc-ch"><b class="fc-rar">${e.tier.label}</b><span>${e.rank ? 'n° ' + nb(e.rank) + ' / ' + nb(e.tierSize) : 'rareté'}</span></div>
           <div class="fc-ch"><b>×${nb(e.exemplaires)}</b><span>${e.aurore > 0 ? 'dont Aurore' : dbl > 0 ? dbl + ' doublon' + (dbl > 1 ? 's' : '') : 'exemplaire'}</span></div>
         </div>
+        ${briBlocEclat(e)}
         ${savais}
         <div class="fc-actions">
           <button class="fc-btn" data-ft="vitrine">Ma vitrine</button>
@@ -20007,6 +20032,7 @@ async function ouvrirCarteTerra(code){
       if(!b) return;
       if(b.dataset.ft === 'fermer'){ fermer(null); return; }
       if(b.dataset.ft === 'echange'){ fermer(null); const t = document.querySelector('.tab[data-tab="echange"]'); if(t) t.click(); return; }
+      if(b.dataset.ft === 'eclat'){ briFaireEclat(boite, code, b); return; }   // patch269
       if(b.dataset.ft === 'vitrine'){ b.disabled = true; const vt = await chargerVitrine(window.__monId); fermer(null); setTimeout(() => ouvrirChoixVitrine(vt, 'panneau'), 200); }
     });
   };
@@ -21178,3 +21204,302 @@ function hwCriMonter(fini, garder){
   });
 }
 
+// ---------- patch269 : cartes brillantes et éclats (s2-63) ----------
+// Brillante : 1 carte sur 800 dans les paquets Terra, numérotée sur tout le
+// jeu, ne quitte jamais la collection. Éclat : 3 doublons + 500 TP sur la
+// carte de son choix. Tout reste caché tant que brillantes_options() n'existe
+// pas (s2-63). Essai privé avant l'annonce : ?brillantes=test (cet onglet).
+const BRI = { lu: false, ouvert: false, test: false, taux: 800, eclatDoublons: 3, eclatTp: 500 };
+function briTest(){
+  try{
+    if(/[?&]brillantes=test\b/.test(location.search)) sessionStorage.setItem('tf-bri-test', '1');
+    return sessionStorage.getItem('tf-bri-test') === '1';
+  }catch(e){ return false; }
+}
+async function briCharger(){
+  if(!SAISON2) return;
+  if(briTest()){
+    Object.assign(BRI, { lu: true, ouvert: true, test: true });
+    setTimeout(() => notifier({ type: 'info', titre: '✦ Essai des brillantes',
+      texte: 'Dans cet onglet seulement : chaque paquet Terra contient une brillante, et l’éclat ne dépense rien. Rien n’est enregistré. Ferme l’onglet pour en sortir.' }), 1500);
+    if(terraCharge){ briMarquerEssai(); if(typeof renderCollectionTerra === 'function') try{ renderCollectionTerra(); }catch(e){} }
+    return;
+  }
+  try{
+    const { data, error } = await sb.rpc('brillantes_options');
+    if(error) return;   // s2-63 pas encore lancé : rien ne s'affiche
+    const o = data || {};
+    BRI.lu = true;
+    BRI.ouvert = Number(o.ouvert) === 1;
+    BRI.taux = Number(o.taux) || 800;
+    BRI.eclatDoublons = Number(o.eclat_doublons) || 3;
+    BRI.eclatTp = Number(o.eclat_tp) || 500;
+  }catch(e){}
+}
+// les paquets Terra passent par l'enveloppe qui tire la brillante, si elle est là
+async function briRpcPaquet(nom, args){
+  if(BRI.ouvert && !BRI.test){
+    const r = await sb.rpc(nom + '_b', args);
+    if(!fonctionAbsente(r.error)) return r;
+  }
+  return sb.rpc(nom, args);
+}
+// essai : la meilleure carte du paquet sort brillante (rien n'est enregistré)
+function briEssaiPaquet(draws){
+  if(!BRI.test || !draws.length) return;
+  const t = trierPourRevelation(draws);
+  t[t.length - 1].brillante = 1;
+}
+// essai : quelques cartes de la collection prennent les effets, pour les voir
+function briMarquerEssai(){
+  if(!BRI.test || !terraCollection || BRI.essaiMarque) return;
+  BRI.essaiMarque = true;
+  const par = (tier) => [...terraCollection.values()].filter(e => e.tier.id === tier).sort((a, b) => (b.pop || 0) - (a.pop || 0))[0];
+  const r = par('rare'), l = par('legendaire') || par('epique'), p = par('epique');
+  if(r){ r.brillantes = 1; r.numeros = [3]; }
+  if(l){ l.eclat = true; }
+  if(p && p !== l){ p.brillantes = 1; p.numeros = [12]; p.eclat = true; }
+}
+
+// lire les brillantes et éclats d'un joueur (le sien, ou celui d'une vitrine)
+async function briLire(joueur){
+  if(!SAISON2 || !joueur) return null;
+  try{
+    const { data, error } = await sb.rpc('terra_brillantes_joueur', { p_joueur: joueur });
+    if(error) return null;
+    const m = new Map();
+    for(const r of data || []) m.set(String(r.code), { numeros: (r.numeros || []).map(Number).filter(Boolean), eclat: !!r.eclat });
+    return m;
+  }catch(e){ return null; }
+}
+async function briLireCollection(){
+  const m = await briLire(window.__monId);
+  if(m) for(const [code, b] of m){
+    const e = terraCollection.get(code);
+    if(e){ e.numeros = b.numeros; e.brillantes = b.numeros.length; e.eclat = b.eclat; }
+  }
+  briMarquerEssai();
+}
+function briCarteRetournee(e, draw){
+  if(!e || !draw.brillante) return;
+  e.brillantes = (e.brillantes || 0) + 1;
+  e.numeros = (e.numeros || []).concat(draw.brillante);
+}
+
+// l'épingle de la commune, en % de la fenêtre de l'image (les rayons de l'éclat en partent)
+const BRI_EPINGLES = new Map();
+function briEpingle(code, grande, auCentre){
+  if(auCentre || estOutremerCode(code)) return [50, 50];
+  const cle = code + (grande ? '|g' : '|m');
+  if(BRI_EPINGLES.has(cle)) return BRI_EPINGLES.get(cle);
+  let p = [50, 50];
+  try{
+    if(grande){
+      // dessin 200×120 en « slice » dans une fenêtre de 168×113 : on recadre
+      const { cx, cy } = courbesDeNiveau(hashTexte(String(code)), 200, 120, 9);
+      const r = 168 / 113.08, w = 200 / 120;
+      p = [((cx / 120 - (w - r) / 2) / r) * 100, cy / 120 * 100];
+    } else {
+      const { cx, cy } = courbesDeNiveau(hashTexte(String(code)), 160, 100, 6, 36);
+      p = [cx / 160 * 100, cy];
+    }
+  }catch(e){}
+  p = p.map(v => Math.max(4, Math.min(96, v)).toFixed(1));
+  BRI_EPINGLES.set(cle, p);
+  return p;
+}
+const BRI_ETOILES = '<span class="bx-e-etoile e1"><i></i></span><span class="bx-e-etoile e2"><i></i></span>'
+  + '<span class="bx-e-etoile e3"><i></i></span><span class="bx-e-etoile e4"><i></i></span><span class="bx-e-etoile e5"><i></i></span>';
+// les calques d'une carte : derrière, dans l'image, sur la carte, sur le cadre
+function briParts(e, grande){
+  const b = !!(e && ((e.brillantes || 0) > 0 || e.brillante)), x = !!(e && e.eclat);
+  if(!b && !x) return { cls: '', dehors: '', art: '', surface: '', anneau: '' };
+  const num = e.brillante || (e.numeros && e.numeros.length ? Math.min(...e.numeros) : 0);
+  const pin = briEpingle(e.code, grande, (!grande && !!e.photo) || e.aurore > 0 || e.aurore === true);
+  const st = ` style="--pin-x:${pin[0]}%;--pin-y:${pin[1]}%"`;
+  return {
+    cls: (b ? ' bri' : '') + (x ? ' ecl' : ''),
+    dehors: (b ? '<i class="bx-c bx-b-halo"></i>' : '') + (x ? '<i class="bx-c bx-e-orbite2"></i><i class="bx-c bx-e-aura"></i>' : ''),
+    art: (b ? '<i class="bx-c bx-b-art"></i><i class="bx-c bx-b-paillettes"></i>' : '')
+      + (x ? `<i class="bx-c bx-e-rayons"${st}></i><i class="bx-c bx-e-noyau"${st}></i>` : '')
+      + (x ? '<span class="bx-sceau bx-e-sceau">✦<span>Éclat</span></span>' : '')
+      + (b ? `<span class="bx-sceau bx-b-sceau">✦<span>Brillante</span>${num ? `<b>n° ${fmtNombre(num)}</b>` : ''}</span>` : ''),
+    surface: b ? '<i class="bx-c bx-b-voile"></i><i class="bx-c bx-b-courbes"></i><i class="bx-c bx-b-reflet"></i>' : '',
+    anneau: (b ? '<i class="bx-c bx-b-cadre"></i>' : '') + (x ? '<i class="bx-c bx-e-orbite"></i>' + BRI_ETOILES : '')
+  };
+}
+// une mini-carte déjà affichée prend (ou perd) ses effets, sans être refaite
+function briDecorerMini(el, e){
+  if(!el) return;
+  el.querySelectorAll(':scope > .bx-c, :scope > .bx-e-etoile, .mini-art > .bx-c, .mini-art > .bx-sceau, .mini-int > .bx-c').forEach(x => x.remove());
+  el.classList.remove('bri', 'ecl');
+  const ex = el.querySelector('.mini-ex');   // le nombre d'exemplaires a peut-être changé (éclat)
+  if(ex && !(e.exemplaires > 1)) ex.remove(); else if(ex) ex.textContent = '×' + e.exemplaires;
+  const p = briParts(e, false);
+  if(!p.cls) return;
+  el.classList.add(...p.cls.trim().split(' '));
+  const art = el.querySelector('.mini-art'), lis = el.querySelector('.mini-lisere'), dept = art && art.querySelector('.mini-dept');
+  el.insertAdjacentHTML('afterbegin', p.dehors);
+  if(dept) dept.insertAdjacentHTML('beforebegin', p.art); else if(art) art.insertAdjacentHTML('beforeend', p.art);
+  if(lis) lis.insertAdjacentHTML('beforebegin', p.surface);
+  el.insertAdjacentHTML('beforeend', p.anneau);
+}
+
+// ---------- la révélation d'une brillante ----------
+function briFete(slot, el, draw){
+  if(!slot || REDUCED_MOTION) return;
+  const f = document.createElement('div');
+  f.className = 'bri-fete';
+  f.setAttribute('aria-hidden', 'true');
+  const couleurs = ['#ff8aa0', '#ffd06e', '#d2ff7a', '#5ff2d2', '#6aa6ff', '#b98bff', '#ff7ad6', '#ffffff'];
+  let parts = '';
+  for(let i = 0; i < 30; i++){
+    const a = Math.random() * Math.PI * 2, d = 130 + Math.random() * 120, t = 6 + Math.random() * 9;
+    parts += `<i class="bri-part" style="width:${t.toFixed(1)}px;height:${t.toFixed(1)}px;margin:${(-t / 2).toFixed(1)}px 0 0 ${(-t / 2).toFixed(1)}px;`
+      + `background:${couleurs[i % couleurs.length]};--dx:${(Math.cos(a) * d).toFixed(0)}px;--dy:${(Math.sin(a) * d).toFixed(0)}px;--dur:${Math.round(900 + Math.random() * 600)}ms"></i>`;
+  }
+  f.innerHTML = '<div class="bri-rayons"><i></i></div><i class="bri-onde"></i>' + parts
+    + '<p class="bri-titre"><span class="bx-holo-txt">✦ Brillante !</span></p>';
+  slot.insertBefore(f, slot.firstChild);
+  el.classList.add('ouv-eclat');
+  sonsOuverture.carillon();
+  if(navigator.vibrate) try{ navigator.vibrate([30, 40, 30, 40, 70]); }catch(e){}
+  setTimeout(() => f.classList.add('fin'), 2900);
+  setTimeout(() => f.remove(), 3600);
+}
+function briDecouverte(zone, draw){
+  if(!zone) return;
+  zone.classList.remove('monument');
+  zone.innerHTML = `<b class="bx-holo-txt">Brillante n° ${fmtNombre(draw.brillante)}</b> · environ une carte sur ${fmtNombre(BRI.taux)}. `
+    + 'Elle est numérotée, elle est à toi, et elle ne quitte jamais ta collection.';
+}
+
+// ---------- l'éclat, sur la fiche d'une carte Terra ----------
+function briBlocEclat(e){
+  if(!BRI.lu || !e) return '';
+  const nom = echapperTexte(e.nom);
+  if(e.eclat) return `<div class="bri-ec obtenu"><div class="bri-ec-tete"><b class="bx-or-txt">✦ Éclat</b></div>
+      <div class="bri-ec-fait"><span class="bri-ec-etoile" aria-hidden="true">✦</span><span>Ta ${nom} rayonne dans ta collection et dans ta vitrine.</span></div></div>`;
+  if(!BRI.ouvert) return '';
+  const libres = libresTerra(e), n = BRI.eclatDoublons, prix = BRI.eclatTp;
+  const solde = packStatusCache && packStatusCache.solde != null ? Number(packStatusCache.solde) : null;
+  const okDbl = libres >= n, okTp = BRI.test || solde === null || solde >= prix;
+  return `<div class="bri-ec" data-bri-ec>
+      <div class="bri-ec-tete"><b class="bx-or-txt">✦ Éclat</b><span>Fais rayonner ${nom}</span></div>
+      <div class="bri-ec-couts">
+        <span class="${okDbl ? 'ok' : 'manque'}">${n} doublons${okDbl ? '<i>✓</i>' : ` <em>(${Math.max(0, libres)}/${n})</em>`}</span>
+        <span class="${okTp ? 'ok' : 'manque'}">${fmtNombre(prix)} TP${okTp ? '<i>✓</i>' : ''}</span>
+      </div>
+      <button type="button" class="bri-ec-btn" data-ft="eclat"${okDbl && okTp ? '' : ' disabled'}>✦ Faire un éclat</button>
+      <p class="bri-ec-note">${okDbl ? `Tes ${n} doublons fondent dans la carte. L’éclat reste sur ta ${nom}.` : `Il te faut ${n} doublons de ${nom} en plus de ta carte.`}</p>
+    </div>`;
+}
+let briEclatEnCours = false;
+async function briFaireEclat(boite, code, btn){
+  const e = terraCollection.get(code);
+  if(!e || briEclatEnCours || !btn || btn.disabled) return;
+  briEclatEnCours = true;
+  btn.disabled = true; btn.textContent = 'Fusion…';
+  const carte = boite.querySelector('.c3d-carte') || boite.querySelector('.mini');
+  sonsOuverture.souffle();
+  const anim = briFusion(carte, btn, e);
+  let rep = null, err = null;
+  if(BRI.test) rep = { exemplaires: Math.max(1, e.exemplaires - BRI.eclatDoublons), solde: packStatusCache ? packStatusCache.solde : null };
+  else { const r = await sb.rpc('terra_faire_eclat', { p_code: code }); rep = r.data; err = r.error; }
+  if(err){
+    anim.arreter();
+    briEclatEnCours = false;
+    btn.disabled = false; btn.textContent = '✦ Faire un éclat';
+    notifier({ type: 'erreur', titre: 'Éclat impossible', texte: messageLisible(err.message) });
+    return;
+  }
+  await anim.arrivee;
+  // l'éclat prend : la carte change sous l'éclair doré
+  e.eclat = true;
+  if(rep && rep.exemplaires != null) e.exemplaires = Number(rep.exemplaires);
+  e.bloques = Math.min(e.bloques || 0, e.exemplaires);
+  if(rep && rep.solde != null && packStatusCache && !BRI.test){ packStatusCache.solde = Number(rep.solde); try{ majSoldeGlobal(packStatusCache.solde); majBascule(); }catch(x){} }
+  briDecorerMini(boite.querySelector('.c3d-devant .mini') || boite.querySelector('.mini'), e);
+  const nbEx = boite.querySelector('.fc-chiffres .fc-ch:nth-child(3) b');
+  if(nbEx){
+    nbEx.textContent = '×' + fmtNombre(e.exemplaires);
+    const dbl = libresTerra(e), sous = nbEx.nextElementSibling;
+    if(sous) sous.textContent = e.aurore > 0 ? 'dont Aurore' : dbl > 0 ? dbl + ' doublon' + (dbl > 1 ? 's' : '') : 'exemplaire';
+  }
+  sonsOuverture.cloche();
+  if(navigator.vibrate) try{ navigator.vibrate([20, 30, 80]); }catch(x){}
+  await anim.fin;
+  const bloc = boite.querySelector('[data-bri-ec]');
+  if(bloc) bloc.outerHTML = briBlocEclat(e);
+  briEclatEnCours = false;
+  notifier({ type: 'succes', titre: '✦ Éclat obtenu !',
+    texte: BRI.test ? 'Essai : rien n’a été dépensé ni enregistré.'
+      : `${BRI.eclatDoublons} doublons fondus et ${fmtNombre(BRI.eclatTp)} TP. Tu gardes 1 ${e.nom}, qui rayonne.` });
+  try{ renderCollectionTerra(); }catch(x){}
+}
+// les doublons sortent du bouton en éventail et plongent dans la carte ;
+// puis l'éclair doré, l'onde et la gerbe d'or
+function briFusion(carte, btn, e){
+  const calque = document.createElement('div');
+  calque.className = 'bri-fusion';
+  calque.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(calque);
+  const rc = carte.getBoundingClientRect(), rb = btn.getBoundingClientRect();
+  const cx = rc.left + rc.width / 2, cy = rc.top + rc.height * 0.38, bx = rb.left + rb.width / 2, by = rb.top + rb.height / 2;
+  const anims = [], minuteurs = [];
+  let fini = false;
+  const plusTard = (fn, ms) => minuteurs.push(setTimeout(fn, REDUCED_MOTION ? 0 : ms));
+  const fantome = miniTerra({ ...e, exemplaires: 1, eclat: false, brillantes: 0, numeros: [], brillante: 0, skin: undefined });
+  for(let i = 0; i < 3 && !REDUCED_MOTION; i++){
+    const g = document.createElement('div');
+    g.className = 'bri-fant';
+    g.innerHTML = fantome;
+    calque.appendChild(g);
+    const ex = bx + (i - 1) * 70, ey = by - 120;
+    const T = (x, y, s, r, o, b) => ({ transform: `translate(${(x - 40).toFixed(1)}px,${(y - 60).toFixed(1)}px) scale(${s}) rotate(${r}deg)`, opacity: o, filter: `brightness(${b || 1})` });
+    try{
+      anims.push(g.animate([T(bx, by, .3, 0, 0), T(ex, ey, .8, (i - 1) * 13, 1)], { duration: 440, delay: i * 90, easing: 'cubic-bezier(.2,.8,.3,1.25)', fill: 'forwards' }));
+      anims.push(g.animate([T(ex, ey, .8, (i - 1) * 13, 1), T(cx, cy, .15, (i - 1) * 90, .9, 3), T(cx, cy, .1, (i - 1) * 90, 0, 3)],
+        { duration: 540, delay: 820 + i * 230, easing: 'cubic-bezier(.6,0,.4,1)', fill: 'forwards' }));
+    }catch(x){}
+    plusTard(() => { try{ carte.animate([{ filter: 'brightness(1)' }, { filter: 'brightness(1.7)' }, { filter: 'brightness(1)' }], { duration: 280 }); }catch(x){} }, 1340 + i * 230);
+  }
+  let arrivee, finale;
+  const pArrivee = new Promise(r => { arrivee = r; }), pFin = new Promise(r => { finale = r; });
+  plusTard(() => {
+    if(fini) return;
+    // l'éclair doré sur la carte, l'onde et les rayons
+    const w = rc.width, h = rc.height;
+    calque.insertAdjacentHTML('beforeend',
+      `<i class="bri-or-rayons" style="left:${cx}px;top:${rc.top + h / 2}px"></i>`
+      + `<i class="bri-or-flash" style="left:${rc.left}px;top:${rc.top}px;width:${w}px;height:${h}px"></i>`
+      + `<i class="bri-or-onde" style="left:${rc.left}px;top:${rc.top}px;width:${w}px;height:${h}px"></i>`);
+    let parts = '';
+    const coul = ['#FFF3C8', '#FFD36A', '#F2A93B', '#ffffff'];
+    for(let i = 0; i < 24; i++){
+      const a = Math.random() * Math.PI * 2, d = 100 + Math.random() * 110, t = 6 + Math.random() * 9;
+      parts += `<i class="bri-part or" style="left:${cx}px;top:${cy}px;width:${t.toFixed(1)}px;height:${t.toFixed(1)}px;margin:${(-t / 2).toFixed(1)}px 0 0 ${(-t / 2).toFixed(1)}px;`
+        + `background:${coul[i % coul.length]};--dx:${(Math.cos(a) * d).toFixed(0)}px;--dy:${(Math.sin(a) * d).toFixed(0)}px;--dur:${Math.round(900 + Math.random() * 500)}ms;--del:180ms"></i>`;
+    }
+    calque.insertAdjacentHTML('beforeend', parts);
+    plusTard(() => arrivee(), 180);
+  }, 1950);
+  plusTard(() => { finale(); calque.classList.add('fin'); }, 3100);
+  plusTard(() => calque.remove(), 3700);
+  return {
+    arrivee: pArrivee, fin: pFin,
+    arreter(){ fini = true; minuteurs.forEach(clearTimeout); anims.forEach(a => { try{ a.cancel(); }catch(x){} }); calque.remove(); arrivee(); finale(); }
+  };
+}
+
+// la vitrine d'un autre joueur : ses brillantes et ses éclats
+async function briVitrine(id, cartes){
+  const m = await briLire(id);
+  if(!m) return cartes;
+  for(const c of cartes){
+    if(c.source === 'front') continue;
+    const b = m.get(String(c.code));
+    if(b){ c.numeros = b.numeros; c.brillantes = b.numeros.length; c.eclat = b.eclat; }
+  }
+  return cartes;
+}

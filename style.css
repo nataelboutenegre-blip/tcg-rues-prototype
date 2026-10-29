@@ -7328,3 +7328,235 @@ body.hw-question-ouverte, body.hw-cri-ouvert{ overflow:hidden; overscroll-behavi
 .pc-allie-bandeau{ display:flex; align-items:center; gap:8px; margin:2px 0 8px; padding:7px 10px; border-radius:10px; font-size:.8rem; font-weight:700; color:#fff;
   background:color-mix(in srgb, var(--clan) 22%, transparent); border:1px solid color-mix(in srgb, var(--clan) 55%, transparent); }
 .pc-allie-bandeau .blason.petit{ margin:0; }
+
+/* =====================================================================
+   patch269 — cartes brillantes et éclats (s2-63, aperçus validés le 29/10)
+   Brillante : le reflet arc-en-ciel. Éclat : la lumière dorée.
+   ===================================================================== */
+@property --bx-px { syntax: '<number>'; inherits: true; initial-value: 50; }
+@property --bx-py { syntax: '<number>'; inherits: true; initial-value: 50; }
+@property --bx-ang { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+@property --bx-orb { syntax: '<angle>'; inherits: true; initial-value: 0deg; }
+@keyframes bxBalade{ 0%{ --bx-px:28; --bx-py:30; } 22%{ --bx-px:72; --bx-py:24; } 47%{ --bx-px:80; --bx-py:66; }
+  72%{ --bx-px:24; --bx-py:74; } 100%{ --bx-px:28; --bx-py:30; } }
+@keyframes bxTourne{ to{ --bx-ang:360deg; } }
+@keyframes bxOrbite{ to{ --bx-orb:360deg; } }
+@keyframes bxRespire{ 0%, 100%{ opacity:.5; } 50%{ opacity:1; } }
+@keyframes bxRayons{ to{ transform:rotate(360deg); } }
+@keyframes bxPouls{ 0%, 100%{ transform:scale(.82); opacity:.75; } 50%{ transform:scale(1.14); opacity:1; } }
+@keyframes bxScintille{ 0%, 62%, 100%{ transform:scale(0) rotate(0); } 74%{ transform:scale(1) rotate(45deg); } 86%{ transform:scale(.25) rotate(90deg); } }
+@keyframes bxDefile{ to{ background-position:200% 0; } }
+
+/* la géométrie : épaisseur du cadre (--ep) et arrondis */
+.card .carte-cadre{ --ep:3px; }
+.card.commun .carte-cadre{ --ep:2px; }
+.card.legendaire .carte-cadre{ --ep:4px; }
+.card.aurore .carte-cadre{ --ep:2px; }
+.mini{ --ep:2px; }
+.mini.legendaire{ --ep:3px; }
+.mini.aurore{ --ep:2px; }
+.card.bri, .card.ecl{ --r:14px; }
+.mini.bri, .mini.ecl{ --r:10px; position:relative; isolation:isolate; content-visibility:visible; }
+.card.bri .carte-cadre, .card.ecl .carte-cadre, .mini.bri, .mini.ecl{ animation: bxBalade 11s ease-in-out infinite; }
+.card.bri .carte-int, .mini.bri .mini-int{ position:relative; }
+.bx-c{ position:absolute; pointer-events:none; display:block; font-style:normal; }
+
+/* ---------- Brillante ---------- */
+.bx-b-halo{ inset:-5px; border-radius:calc(var(--r) + 5px); opacity:.6; filter:blur(10px);
+  background: conic-gradient(from var(--bx-ang), #ff5f7e, #ffb36b, #f6f26a, #6dff9c, #45d4ff, #7f86ff, #e06bff, #ff5f7e);
+  animation: bxTourne 7s linear infinite; }
+.mini > .bx-b-halo{ inset:-3px; filter:blur(6px); }
+.mini > .bx-b-halo, .mini > .bx-e-aura, .mini > .bx-e-orbite2{ z-index:-1; }
+.bx-b-voile{ inset:0; mix-blend-mode:multiply; opacity:.62;
+  background: repeating-linear-gradient(118deg, hsla(0,0%,100%,0) 0%, hsl(350 95% 87%) 7%, hsl(38 98% 83%) 11%, hsl(92 85% 83%) 15%,
+    hsl(178 85% 82%) 19%, hsl(222 92% 87%) 23%, hsl(282 85% 88%) 27%, hsla(0,0%,100%,0) 34%, hsla(0,0%,100%,0) 50%);
+  background-size:300% 300%; background-position: calc(var(--bx-px) * 1%) calc(var(--bx-py) * 1%); }
+.bx-b-courbes{ inset:0; mix-blend-mode:multiply; opacity:.55;
+  background: linear-gradient(118deg, hsl(350 85% 66%), hsl(38 92% 58%), hsl(92 65% 52%), hsl(178 70% 50%), hsl(222 80% 64%), hsl(282 70% 66%), hsl(350 85% 66%));
+  background-size:260% 260%; background-position: calc(100% - var(--bx-px) * 1%) calc(var(--bx-py) * 1%);
+  -webkit-mask: url('brillante-courbes.svg') center / 100% 100% no-repeat; mask: url('brillante-courbes.svg') center / 100% 100% no-repeat; }
+.bx-b-art{ inset:0; overflow:hidden; mix-blend-mode:hard-light; opacity:.52;
+  background: repeating-linear-gradient(118deg, hsl(0 95% 62%) 0%, hsl(45 100% 58%) 4%, hsl(110 85% 52%) 8%, hsl(185 95% 55%) 12%,
+    hsl(235 95% 66%) 16%, hsl(300 90% 64%) 20%, hsl(0 95% 62%) 24%);
+  background-size:420% 420%; background-position: calc(var(--bx-px) * 1%) calc(var(--bx-py) * 1%); }
+.bx-b-art::after{ content:''; position:absolute; inset:0; mix-blend-mode:soft-light; opacity:.9;
+  background: repeating-linear-gradient(28deg, rgba(255,255,255,0) 0 1.5px, rgba(255,255,255,.7) 1.5px 2.5px, rgba(0,0,0,.25) 2.5px 4px); }
+.bx-b-paillettes{ inset:0; mix-blend-mode:screen;
+  background: radial-gradient(circle at calc(var(--bx-px) * 1.4% - 20%) calc(var(--bx-py) * 1.4% - 20%), #fff 0%, rgba(255,255,255,.75) 16%, rgba(255,255,255,.08) 42%, transparent 60%);
+  -webkit-mask: url('brillante-paillettes.png') 0 0 / 84px 84px repeat; mask: url('brillante-paillettes.png') 0 0 / 84px 84px repeat; }
+.mini .bx-b-paillettes{ -webkit-mask-size:56px 56px; mask-size:56px 56px; }
+.bx-b-cadre{ inset:0; z-index:2; border-radius:var(--r); padding:var(--ep); mix-blend-mode:hard-light; opacity:.95;
+  background: conic-gradient(from calc(var(--bx-ang) + var(--bx-px) * 3.6deg), #ff7a90, #ffd06e, #d2ff7a, #5ff2d2, #6aa6ff, #b98bff, #ff7ad6, #ff7a90);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); animation: bxTourne 7s linear infinite; }
+.bx-b-reflet{ inset:0; mix-blend-mode:overlay; opacity:.75;
+  background: radial-gradient(farthest-corner circle at calc(var(--bx-px) * 1%) calc(var(--bx-py) * 1%), rgba(255,255,255,.9) 0%, rgba(255,255,255,.28) 24%, rgba(0,0,0,.2) 88%); }
+
+/* les sceaux, en haut à gauche de l'image (le monument et le département restent lisibles en bas) */
+.bx-sceau{ position:absolute; z-index:3; left:5px; top:5px; height:16px; padding:0 7px 0 6px; border-radius:999px;
+  display:flex; align-items:center; gap:3px; white-space:nowrap; pointer-events:none;
+  font-weight:700; font-size:7.4px; line-height:1; letter-spacing:.06em; text-transform:uppercase; }
+.bx-sceau b{ font-weight:700; font-size:8.6px; letter-spacing:0; }
+.bx-sceau + .bx-sceau{ top:23px; }
+.aurore .carte-art .bx-sceau{ top:26px; }
+.aurore .carte-art .bx-sceau + .bx-sceau{ top:44px; }
+.bx-b-sceau{ color:#232A4D; background: linear-gradient(110deg, #ffd3ea, #fff0c0, #d3ffd8, #c8f1ff, #e4d5ff, #ffd3ea);
+  background-size:320% 100%; background-position: calc(var(--bx-px) * 1%) 50%;
+  box-shadow: 0 1px 4px rgba(10,20,50,.45), inset 0 0 0 .8px rgba(255,255,255,.95); }
+.bx-e-sceau{ color:#3B2500; background: linear-gradient(180deg, #FFF0BF 0%, #FFD36A 55%, #F2A93B 100%);
+  box-shadow: 0 1px 4px rgba(60,30,0,.5), 0 0 8px rgba(255,190,80,.7), inset 0 0 0 .8px rgba(255,255,255,.85); }
+/* sur une mini-carte, le sceau devient une pastille ; en grand dans la fiche */
+.mini .bx-sceau{ left:3px; top:3px; width:14px; height:14px; padding:0; justify-content:center; font-size:8.5px; }
+.mini .bx-sceau span, .mini .bx-sceau b{ display:none; }
+.mini .bx-sceau + .bx-sceau{ top:3px; left:20px; }
+.mini.aurore .bx-sceau{ left:auto; right:3px; top:auto; bottom:3px; }
+.mini.aurore .bx-sceau + .bx-sceau{ right:20px; }
+.c3d .mini .bx-sceau{ width:auto; height:13px; padding:0 5px; font-size:6px; gap:2px; }
+.c3d .mini .bx-sceau span, .c3d .mini .bx-sceau b{ display:inline; }
+.c3d .mini .bx-sceau b{ font-size:7px; }
+.c3d .mini .bx-sceau + .bx-sceau{ left:3px; top:19px; }
+.c3d .mini.aurore .bx-sceau + .bx-sceau{ left:auto; right:3px; top:auto; bottom:19px; }
+
+/* ---------- Éclat ---------- */
+.bx-e-aura{ inset:-2px; border-radius:calc(var(--r) + 2px); animation: bxRespire 2.8s ease-in-out infinite;
+  box-shadow: 0 0 14px 2px rgba(255,200,96,.6), 0 0 34px 8px rgba(255,166,64,.28); }
+.mini > .bx-e-aura{ box-shadow: 0 0 9px 1px rgba(255,200,96,.6), 0 0 20px 4px rgba(255,166,64,.28); }
+.bx-e-rayons{ inset:0; overflow:hidden; mix-blend-mode:screen; }
+.bx-e-rayons::before{ content:''; position:absolute; width:440px; height:440px;
+  left:calc(var(--pin-x) - 220px); top:calc(var(--pin-y) - 220px);
+  background: repeating-conic-gradient(from 0deg, rgba(255,238,196,0) 0deg 4deg, rgba(255,238,196,.46) 5.6deg 6.6deg, rgba(255,238,196,0) 8.2deg 12deg);
+  -webkit-mask: radial-gradient(circle, #000 0 3%, rgba(0,0,0,.7) 12%, rgba(0,0,0,.22) 30%, transparent 50%);
+  mask: radial-gradient(circle, #000 0 3%, rgba(0,0,0,.7) 12%, rgba(0,0,0,.22) 30%, transparent 50%);
+  animation: bxRayons 26s linear infinite; }
+.mini .bx-e-rayons::before{ width:260px; height:260px; left:calc(var(--pin-x) - 130px); top:calc(var(--pin-y) - 130px); }
+.bx-e-noyau{ width:48px; height:48px; left:calc(var(--pin-x) - 24px); top:calc(var(--pin-y) - 24px); border-radius:50%; mix-blend-mode:screen;
+  background: radial-gradient(circle, rgba(255,255,255,.95) 0 9%, rgba(255,228,150,.8) 20%, rgba(255,188,80,.28) 42%, transparent 68%);
+  animation: bxPouls 2.8s ease-in-out infinite; }
+.mini .bx-e-noyau{ width:30px; height:30px; left:calc(var(--pin-x) - 15px); top:calc(var(--pin-y) - 15px); }
+.bx-e-orbite, .bx-e-orbite2{ border-radius:calc(var(--r) + 1px);
+  background: conic-gradient(from var(--bx-orb), transparent 0deg 112deg, rgba(255,206,110,0) 112deg, rgba(255,214,120,.9) 160deg, #fff 176deg, transparent 180deg 292deg,
+    rgba(255,214,120,.9) 340deg, #fff 356deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); animation: bxOrbite 3.6s linear infinite; }
+.bx-e-orbite{ inset:-1px; z-index:2; padding:calc(var(--ep) + 1.5px); }
+.bx-e-orbite2{ inset:-7px; padding:10px; border-radius:calc(var(--r) + 7px); filter:blur(5px); opacity:.85; }
+.mini > .bx-e-orbite2{ inset:-4px; padding:6px; filter:blur(3px); }
+.bx-e-etoile{ position:absolute; z-index:3; width:16px; height:16px; margin:-8px 0 0 -8px; pointer-events:none;
+  filter: drop-shadow(0 0 2px #fff3c4) drop-shadow(0 0 5px rgba(255,186,72,.95)); }
+.bx-e-etoile i{ position:absolute; inset:0; background:#fff;
+  clip-path: polygon(50% 0, 59% 41%, 100% 50%, 59% 59%, 50% 100%, 41% 59%, 0 50%, 41% 41%);
+  animation: bxScintille 3s ease-in-out infinite; transform:scale(0); }
+.bx-e-etoile.e1{ left:-.5%; top:20.5%; }
+.bx-e-etoile.e2{ left:100.5%; top:11.4%; width:13px; height:13px; margin:-6.5px 0 0 -6.5px; }
+.bx-e-etoile.e2 i{ animation-delay:.9s; }
+.bx-e-etoile.e3{ left:97.9%; top:90.5%; width:17px; height:17px; margin:-8.5px 0 0 -8.5px; }
+.bx-e-etoile.e3 i{ animation-delay:1.7s; }
+.bx-e-etoile.e4{ left:2.7%; top:85.2%; width:12px; height:12px; margin:-6px 0 0 -6px; }
+.bx-e-etoile.e4 i{ animation-delay:2.3s; }
+.bx-e-etoile.e5{ left:51%; top:-.8%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; }
+.bx-e-etoile.e5 i{ animation-delay:1.3s; }
+.mini .bx-e-etoile{ transform:scale(.62); }
+
+/* le texte arc-en-ciel et le texte d'or */
+.bx-holo-txt{ background: linear-gradient(90deg, #ff8aa0, #ffd06e, #d2ff7a, #5ff2d2, #6aa6ff, #b98bff, #ff7ad6, #ff8aa0); background-size:200% 100%;
+  -webkit-background-clip:text; background-clip:text; color:transparent; animation: bxDefile 6s linear infinite; }
+.bx-or-txt{ background: linear-gradient(180deg, #FFF3C8, #FFD36A 55%, #F2A93B); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+/* ---------- au tirage : la lumière de coupe arc-en-ciel ---------- */
+@property --lum { syntax: '<color>'; inherits: true; initial-value: rgba(255,244,214,.95); }
+.paquet.lum-bri:not(.charge), .coupe-rayons.lum-bri{ animation: lumArc 1.2s linear infinite; }
+@keyframes lumArc{
+  0%, 100%{ --lum: rgba(255,122,160,.97); } 17%{ --lum: rgba(255,206,104,.97); } 33%{ --lum: rgba(196,255,110,.97); }
+  50%{ --lum: rgba(90,240,214,.97); } 67%{ --lum: rgba(100,160,255,.97); } 83%{ --lum: rgba(190,136,255,.97); } }
+.paquet.lum-bri .coupe-trace{ background: linear-gradient(90deg, #ff7a90, #ffd06e, #d2ff7a, #5ff2d2, #6aa6ff, #b98bff, #fff); }
+.ouv-echelle .coupe-rayons.lum-bri{ background: repeating-conic-gradient(from 0deg,
+  #ff7a90 0deg 6deg, transparent 6deg 20deg, #ffd06e 20deg 26deg, transparent 26deg 40deg, #d2ff7a 40deg 46deg, transparent 46deg 60deg,
+  #5ff2d2 60deg 66deg, transparent 66deg 80deg, #6aa6ff 80deg 86deg, transparent 86deg 100deg, #b98bff 100deg 106deg, transparent 106deg 120deg); }
+/* la dernière carte de la pile scintille */
+.ouv-dos.lueur-bri .face-back{ box-shadow: 0 0 0 2px #fff, 0 0 28px 6px rgba(255,140,200,.65), 0 0 46px 12px rgba(110,190,255,.45); }
+.ouv-dos.lueur-bri .face-back::after{ content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none; mix-blend-mode:screen;
+  background: linear-gradient(115deg, transparent 25%, rgba(255,120,160,.55) 36%, rgba(255,214,110,.6) 44%, rgba(120,255,170,.55) 52%, rgba(90,210,255,.6) 60%, rgba(180,140,255,.55) 68%, transparent 78%);
+  background-size:260% 100%; animation: briGlint 1.7s ease-in-out infinite; }
+@keyframes briGlint{ 0%{ background-position:120% 0; } 70%, 100%{ background-position:-60% 0; } }
+
+/* la révélation : rayons, onde, gerbe, titre */
+.bri-fete{ position:absolute; left:0; top:0; width:var(--cw, 188px); height:var(--ch, 263px); pointer-events:none; }
+.bri-rayons{ position:absolute; left:50%; top:50%; width:640px; height:640px; margin:-320px 0 0 -320px; opacity:0;
+  animation: briRayonsIn .9s ease-out forwards; }
+.bri-rayons i{ position:absolute; inset:0; border-radius:50%;
+  background: repeating-conic-gradient(from 0deg, rgba(255,140,170,0) 0deg 4deg, rgba(255,140,170,.5) 6deg, rgba(255,214,110,.5) 8deg, rgba(120,255,180,.45) 10deg, rgba(90,210,255,.5) 12deg, rgba(180,140,255,.45) 14deg, rgba(0,0,0,0) 16deg 24deg);
+  -webkit-mask: radial-gradient(circle, rgba(0,0,0,.95) 0 14%, rgba(0,0,0,.5) 30%, transparent 58%); mask: radial-gradient(circle, rgba(0,0,0,.95) 0 14%, rgba(0,0,0,.5) 30%, transparent 58%);
+  animation: bxRayons 40s linear infinite; }
+@keyframes briRayonsIn{ from{ opacity:0; transform:scale(.5) rotate(0deg); } to{ opacity:1; transform:scale(1) rotate(30deg); } }
+.bri-onde{ position:absolute; inset:0; border-radius:14px; padding:6px; opacity:0;
+  background: conic-gradient(#ff7a90, #ffd06e, #d2ff7a, #5ff2d2, #6aa6ff, #b98bff, #ff7ad6, #ff7a90);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: briOnde .9s cubic-bezier(.1,.6,.3,1) forwards; }
+@keyframes briOnde{ from{ opacity:1; transform:scale(1); } to{ opacity:0; transform:scale(1.7); } }
+.bri-part{ position:absolute; left:50%; top:50%; pointer-events:none; opacity:0;
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  animation: briGerbe var(--dur, 1.1s) linear var(--del, 0ms) forwards; }
+@keyframes briGerbe{
+  0%{ opacity:1; transform:translate(0px, 0px) scale(.4) rotate(0deg); animation-timing-function:cubic-bezier(.3,.7,.6,1); }
+  30%{ opacity:1; transform:translate(calc(var(--dx) * .7), calc(var(--dy) * .7)) scale(1.1) rotate(90deg); animation-timing-function:cubic-bezier(.2,.6,.4,1); }
+  100%{ opacity:0; transform:translate(var(--dx), var(--dy)) scale(.2) rotate(180deg); } }
+.bri-titre{ position:absolute; left:50%; bottom:calc(100% - 2px); margin:0; white-space:nowrap; opacity:0; z-index:6;
+  font-family: var(--titre, 'Big Shoulders Display'), Impact, sans-serif; font-weight:900; font-size:2.1rem; line-height:1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.6)) drop-shadow(0 0 12px rgba(255,255,255,.3)); animation: briTitre .52s ease-out .22s forwards; }
+@keyframes briTitre{ 0%{ opacity:0; transform:translateX(-50%) scale(.6); } 70%{ opacity:1; transform:translateX(-50%) scale(1.08); } 100%{ opacity:1; transform:translateX(-50%) scale(1); } }
+.bri-fete.fin{ opacity:0; transition: opacity .6s ease; }
+
+/* ---------- la fiche : le bloc Éclat ---------- */
+.bri-ec{ margin:14px 0 4px; border-radius:12px; padding:11px 12px 10px; background: rgba(255,186,72,.07); border:1px solid rgba(255,190,80,.38); }
+.bri-ec.obtenu{ border-color: rgba(255,190,80,.6); background: rgba(255,186,72,.12); }
+.bri-ec-tete{ display:flex; align-items:baseline; gap:8px; }
+.bri-ec-tete b{ font-size:.72rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; }
+.bri-ec-tete span{ font-size:.8rem; color:#C8D5E6; }
+.bri-ec-couts{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.bri-ec-couts span{ font-size:.75rem; font-weight:600; padding:4px 9px; border-radius:999px; background:rgba(8,18,35,.55); }
+.bri-ec-couts span.ok{ border:1px solid rgba(95,211,157,.45); color:#CDEFDD; }
+.bri-ec-couts span.manque{ border:1px solid rgba(169,188,212,.3); color:#A9BCD4; }
+.bri-ec-couts i{ font-style:normal; color:#5FD39D; margin-left:3px; }
+.bri-ec-couts em{ font-style:normal; opacity:.8; }
+.bri-ec-btn{ display:block; width:100%; margin-top:9px; min-height:44px; border:none; border-radius:10px; cursor:pointer;
+  background: linear-gradient(180deg, #FFE7A8 0%, #FFC94F 55%, #F2A93B 100%); color:#3B2500;
+  font-family: var(--titre, 'Big Shoulders Display'), Impact, sans-serif; font-weight:800; font-size:1.2rem;
+  box-shadow: 0 3px 0 #A86F12, 0 0 18px rgba(255,190,80,.25); }
+.bri-ec-btn:disabled{ cursor:default; filter:saturate(.5) brightness(.75); }
+.bri-ec-btn:not(:disabled):active{ transform:translateY(2px); box-shadow: 0 1px 0 #A86F12; }
+.bri-ec-note{ margin:7px 0 0; font-size:.72rem; line-height:1.35; color:#8FA4BF; text-align:center; }
+.bri-ec-fait{ display:flex; align-items:center; gap:10px; margin-top:8px; font-size:.84rem; line-height:1.35; color:#E8EEF7; }
+.bri-ec-etoile{ flex:none; width:34px; height:34px; border-radius:50%; display:grid; place-items:center; font-size:17px; color:#3B2500;
+  background: radial-gradient(circle at 40% 35%, #FFF3C8, #FFC94F 60%, #E8962B); box-shadow:0 0 14px rgba(255,190,80,.6); }
+/* la fusion : les doublons plongent dans la carte, l'éclair d'or */
+.bri-fusion{ position:fixed; inset:0; z-index:9000; pointer-events:none; overflow:hidden; }
+.bri-fusion.fin{ opacity:0; transition: opacity .5s ease; }
+.bri-fant{ position:absolute; left:0; top:0; width:80px; opacity:0; will-change:transform; }
+.bri-fant .mini{ width:80px; box-shadow:0 6px 14px rgba(0,0,0,.5); }
+.bri-or-flash{ position:absolute; border-radius:16px; opacity:0;
+  background: radial-gradient(circle at 60% 30%, #fff, #FFF3C8 55%, #FFD36A); animation: briOrFlash .74s linear forwards; }
+@keyframes briOrFlash{ 0%{ opacity:0; animation-timing-function:ease-in; } 24%{ opacity:.95; animation-timing-function:ease-out; } 100%{ opacity:0; } }
+.bri-or-onde{ position:absolute; border-radius:16px; padding:6px; opacity:0;
+  background: conic-gradient(#fff6d6, #ffd36a, #f2a93b, #fff6d6, #ffd36a, #f2a93b, #fff6d6);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: briOnde .85s cubic-bezier(.1,.6,.3,1) .18s forwards; }
+.bri-or-rayons{ position:absolute; width:620px; height:620px; margin:-310px 0 0 -310px; border-radius:50%; opacity:0;
+  background: repeating-conic-gradient(from 0deg, rgba(255,226,150,0) 0deg 5deg, rgba(255,226,150,.75) 7deg 8.5deg, rgba(255,226,150,0) 10.5deg 15deg);
+  -webkit-mask: radial-gradient(circle, #000 0 10%, rgba(0,0,0,.55) 28%, transparent 56%); mask: radial-gradient(circle, #000 0 10%, rgba(0,0,0,.55) 28%, transparent 56%);
+  animation: briOrRayons 1.7s linear forwards; }
+@keyframes briOrRayons{
+  0%{ opacity:0; transform:scale(.4) rotate(0deg); animation-timing-function:ease-out; }
+  40%{ opacity:1; transform:scale(1) rotate(20deg); animation-timing-function:ease-in-out; }
+  100%{ opacity:0; transform:scale(1.25) rotate(45deg); } }
+.bri-fusion .bri-part{ position:fixed; }
+
+/* la collection : le filtre « Brillantes » */
+.coll-filtre .bri-pt{ width:11px; height:11px; flex:none; border-radius:50%;
+  background: conic-gradient(#ff7a90, #ffd06e, #d2ff7a, #5ff2d2, #6aa6ff, #b98bff, #ff7a90); }
+
+@media (prefers-reduced-motion: reduce){
+  .card.bri .carte-cadre, .card.ecl .carte-cadre, .mini.bri, .mini.ecl, .bx-b-halo, .bx-b-cadre, .bx-e-aura, .bx-e-rayons::before,
+  .bx-e-noyau, .bx-e-orbite, .bx-e-orbite2, .bx-e-etoile i, .bx-holo-txt, .paquet.lum-bri, .coupe-rayons.lum-bri, .ouv-dos.lueur-bri .face-back::after{ animation:none; }
+}

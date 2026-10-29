@@ -7157,3 +7157,32 @@ body.ra-ouvert{ overflow:hidden; overscroll-behavior:none; }
   font-size:.88rem; cursor:pointer; }
 .ra-feuille button:focus-visible{ outline:2px solid #fff; outline-offset:2px; }
 @media (prefers-reduced-motion: reduce){ .ra-feuille, .ra-voile{ transition:none; } }
+
+/* ---------- patch263 : Plus ou moins, la mini-carte ---------- */
+.pom-carte{ margin:0; align-self:center; justify-self:center; width:190px; }
+.pom-carte svg{ display:block; width:100%; height:auto; overflow:visible; }
+.pom-fr{ fill:rgba(169,188,212,.10); stroke:rgba(169,188,212,.5); stroke-width:.045; stroke-linejoin:round; }
+.pom-paris{ fill:#8FA4BF; }
+.pom-paris-t{ fill:#8FA4BF; font-family:'Instrument Sans', system-ui, sans-serif; font-weight:600; }
+.pom-pin .pom-point{ stroke:#0B1830; }
+.pom-pin.a .pom-point, .pom-pin.a .pom-halo{ fill:#6CB8FF; }
+.pom-pin.b .pom-point, .pom-pin.b .pom-halo{ fill:#FFAE57; }
+.pom-pin text{ font-family:var(--titre); font-weight:800; text-anchor:middle; paint-order:stroke; stroke:#0B1830; stroke-linejoin:round; }
+.pom-pin.a text{ fill:#D4EBFF; } .pom-pin.b text{ fill:#FFE4C7; }
+.pom-pin.pom-om text{ text-anchor:start; stroke:none; font-family:'Instrument Sans', system-ui, sans-serif; font-weight:600; }
+.pom-om rect{ fill:rgba(15,31,56,.95); stroke:rgba(169,188,212,.4); stroke-width:.04; }
+.pom-pin{ transition:opacity .3s ease; }
+.pom-halo{ opacity:.18; animation:pomPouls 1.8s ease-in-out infinite; }
+@keyframes pomPouls{ 0%, 100%{ opacity:.12; } 50%{ opacity:.34; } }
+.pom-carte.revele .pom-halo{ animation:none; opacity:0; }
+.pom-carte.revele .pom-pin:not(.gagne){ opacity:.3; }
+.pom-carte.revele .pom-pin.gagne .pom-halo{ opacity:.4; }
+.pom-repere{ position:absolute; top:10px; left:10px; z-index:1; width:15px; height:15px; border-radius:50%; border:2px solid #0B1830;
+  box-shadow:0 0 0 2px rgba(255,255,255,.55); }
+.pom-repere.a{ background:#6CB8FF; } .pom-repere.b{ background:#FFAE57; }
+@media (max-width:560px){
+  .pom-duel.avec-carte{ grid-template-columns:minmax(0, 1fr) minmax(0, 1fr); gap:10px 12px; }
+  .pom-duel.avec-carte .pom-carte{ grid-column:1 / -1; order:-1; width:auto; }
+  .pom-duel.avec-carte .pom-carte svg{ height:150px; width:auto; }
+}
+@media (prefers-reduced-motion: reduce){ .pom-halo{ animation:none; } }

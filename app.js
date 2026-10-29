@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '77385e497886';
+const VERSION_JEU = '16befa2cbe19';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -14858,11 +14858,80 @@ function renderPomCarte(){
   document.getElementById('qgPomInfo').textContent = (e.gain > 0 ? `+${e.gain} TP gagnés · ` : '') + 'nouveaux duels à minuit';
 }
 const pomNb = (x) => Number(x || 0).toLocaleString('fr-FR');
-function pomTuile(c, k){
+// ---------- patch263 : Plus ou moins, la mini-carte (idée de H34VEN, 29/10) ----------
+// Les deux communes sur une petite France, avec Paris pour se repérer : on
+// voit si c'est en banlieue ou au fond de la campagne. Repères de couleur
+// partagés avec les photos (bleu = gauche, orange = droite). L'outre-mer
+// passe dans un encart.
+const POM_K = Math.cos(46.5 * Math.PI / 180);
+const POM_PARIS = { lon: 2.3522, lat: 48.8566 };
+let pomBornes = null;
+function pomOutreMer(c){ return c.lat == null || c.lon == null || +c.lat < 41 || +c.lat > 51.6 || +c.lon < -5.6 || +c.lon > 10; }
+function pomPx(lon, lat){ return [+lon * POM_K - pomBornes.x0, -lat - pomBornes.y0]; }
+function pomCarteFrance(d){
+  const contour = FRANCE_OUTLINE;
+  // pas de position (pom-5 pas encore lancé) : pas de carte, le « ou » reste
+  if(!contour || !d || !d.a || !d.b || d.a.lat == null || d.b.lat == null) return '';
+  if(!pomBornes){
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for(const anneau of contour) for(const [lo, la] of anneau){
+      x0 = Math.min(x0, lo * POM_K); x1 = Math.max(x1, lo * POM_K);
+      y0 = Math.min(y0, -la); y1 = Math.max(y1, -la);
+    }
+    const m = 0.35;
+    pomBornes = { x0: x0 - m, y0: y0 - m, w: x1 - x0 + 2 * m, h: y1 - y0 + 2 * m };
+  }
+  const W = pomBornes.w, H = pomBornes.h, r = W / 38, fs = W / 15;
+  let h = '';
+  for(const anneau of contour) h += `<path class="pom-fr" d="M${anneau.map(([lo, la]) => pomPx(lo, la).map(v => v.toFixed(2)).join(',')).join('L')}Z"/>`;
+  const pins = [[d.a, 'a'], [d.b, 'b']].map(([c, cote]) => ({ c, cote, om: pomOutreMer(c), p: pomOutreMer(c) ? null : pomPx(c.lon, c.lat) }));
+  const metro = pins.filter(x => !x.om);
+  // Paris pour se repérer, sauf si une des communes est collée dessus
+  const [px, py] = pomPx(POM_PARIS.lon, POM_PARIS.lat);
+  const presParis = metro.some(x => Math.hypot(x.p[0] - px, x.p[1] - py) < W / 20);
+  h += `<circle class="pom-paris" cx="${px.toFixed(2)}" cy="${py.toFixed(2)}" r="${(r * 0.55).toFixed(3)}"/>`;
+  if(!presParis) h += `<text class="pom-paris-t" x="${(px + r * 1.1).toFixed(2)}" y="${(py + fs * 0.32).toFixed(2)}" font-size="${(fs * 0.72).toFixed(3)}">Paris</text>`;
+  // les étiquettes au-dessus des repères ; la plus au sud passe dessous si elles se touchent
+  const proches = metro.length === 2 && Math.abs(metro[0].p[1] - metro[1].p[1]) < fs * 1.6 && Math.abs(metro[0].p[0] - metro[1].p[0]) < W / 2.2;
+  const dessous = proches ? (metro[0].p[1] > metro[1].p[1] ? metro[0] : metro[1]) : null;
+  for(const x of metro){
+    const [cx, cy] = x.p;
+    const tx = Math.min(W - fs * 2.6, Math.max(fs * 2.6, cx));
+    const ty = x === dessous ? cy + r + fs * 1.05 : cy - r - fs * 0.45;
+    h += `<g class="pom-pin ${x.cote}" data-pom-pin="${x.cote}">
+      <circle class="pom-halo" cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${(r * 2.2).toFixed(3)}"/>
+      <circle class="pom-point" cx="${cx.toFixed(2)}" cy="${cy.toFixed(2)}" r="${r.toFixed(3)}" stroke-width="${(r * 0.38).toFixed(3)}"/>
+      <text x="${tx.toFixed(2)}" y="${ty.toFixed(2)}" font-size="${fs.toFixed(3)}" stroke-width="${(fs * 0.22).toFixed(3)}">${echapperTexte(x.c.nom)}</text></g>`;
+  }
+  // l'outre-mer dans un encart, en bas à gauche
+  pins.filter(x => x.om).forEach((x, n) => {
+    const bx = fs * 0.3, by = H - fs * (1.9 + n * 1.7), bw = W * 0.5;
+    h += `<g class="pom-pin ${x.cote} pom-om" data-pom-pin="${x.cote}">
+      <rect x="${bx.toFixed(2)}" y="${by.toFixed(2)}" width="${bw.toFixed(2)}" height="${(fs * 1.45).toFixed(2)}" rx="${(fs * 0.3).toFixed(2)}"/>
+      <circle class="pom-point" cx="${(bx + fs * 0.75).toFixed(2)}" cy="${(by + fs * 0.72).toFixed(2)}" r="${r.toFixed(3)}" stroke-width="${(r * 0.38).toFixed(3)}"/>
+      <text x="${(bx + fs * 1.45).toFixed(2)}" y="${(by + fs * 1.06).toFixed(2)}" font-size="${(fs * 0.85).toFixed(3)}" text-anchor="start">${echapperTexte(DEPT_NAMES[x.c.departement] || 'Outre-mer')}</text></g>`;
+  });
+  return `<figure class="pom-carte" aria-label="Où sont ${echapperTexte(d.a.nom)} et ${echapperTexte(d.b.nom)}">
+    <svg viewBox="0 0 ${W.toFixed(2)} ${H.toFixed(2)}" role="img" aria-hidden="true">${h}</svg></figure>`;
+}
+// après la réponse : la plus peuplée garde son repère, l'autre s'efface
+function pomCarteReveler(grand){
+  const f = document.querySelector('#pomCorps .pom-carte');
+  if(!f) return;
+  f.classList.add('revele');
+  f.querySelectorAll('[data-pom-pin]').forEach(g => g.classList.toggle('gagne', g.dataset.pomPin === (grand === 0 ? 'a' : 'b')));
+}
+// le duel : les deux photos, et la carte à la place du « ou » quand on a les positions
+function pomDuelHtml(a, b){
+  const carte = pomCarteFrance({ a, b });
+  return `<div class="pom-duel${carte ? ' avec-carte' : ''}">${pomTuile(a, 0, !!carte)}${carte || '<span class="pom-ou">ou</span>'}${pomTuile(b, 1, !!carte)}</div>`;
+}
+
+function pomTuile(c, k, repere){
   const u = urlPhoto(c.photo);
   const photo = u ? `<img src="${echapperTexte(u)}" alt="" decoding="async" data-onfail="1">` : '';
   return `<button type="button" class="pom-commune" data-pom-choix="${k}">
-      <span class="pom-photo">${photo}<b>${echapperTexte(c.nom)}</b></span>
+      <span class="pom-photo">${repere ? `<i class="pom-repere ${k ? 'b' : 'a'}" aria-hidden="true"></i>` : ''}${photo}<b>${echapperTexte(c.nom)}</b></span>
       <span class="pom-bas"><span class="pom-pop" id="pomPop${k}">${c.population != null ? pomNb(c.population) + '<em>hab.</em>' : ''}</span>
         <small>${echapperTexte(DEPT_NAMES[c.departement] || '')} (${echapperTexte(c.departement)})</small></span>
     </button>`;
@@ -14912,7 +14981,7 @@ function renderPom(){
   const d = e.duels[i];
   corps.innerHTML = `<div class="pom-tete"><h2 id="pomTitre">Plus ou moins <span>#${e.numero} · duel ${i + 1} / 10</span></h2>${pomPastilles()}</div>
     <p class="pom-question">Laquelle a le plus d'habitants ?</p>
-    <div class="pom-duel">${pomTuile(d.a, 0)}<span class="pom-ou">ou</span>${pomTuile(d.b, 1)}</div>
+    ${pomDuelHtml(d.a, d.b)}
     <p class="pom-verdict" id="pomVerdict" aria-live="polite"></p>
     <button type="button" class="pom-btn" data-pom="suivant" id="pomSuivant" hidden>${i === 9 ? 'Voir mon score' : 'Duel suivant'}</button>
     ${pomCredits(d)}`;
@@ -14952,6 +15021,7 @@ async function pomChoisir(k){
     if(j === k && !data.juste) t.classList.add('mauvais');
     pomCompter(document.getElementById('pomPop' + j), j === 0 ? data.pop_a : data.pop_b);
   });
+  pomCarteReveler(grand);   // patch263
   const nomGrand = (grand === 0 ? d.a : d.b).nom;
   const rapport = Math.max(data.pop_a, data.pop_b) / Math.max(1, Math.min(data.pop_a, data.pop_b));
   const ecart = rapport >= 2 ? `${rapport.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} fois plus d'habitants`
@@ -15043,6 +15113,7 @@ function pomReveler(pa, pb, k, juste, tard){
     if(j === k && !juste) t.classList.add('mauvais');
     pomCompter(document.getElementById('pomPop' + j), j === 0 ? pa : pb);
   });
+  pomCarteReveler(grand);   // patch263
   return grand;
 }
 function pomOuvrirFenetre(mode){
@@ -15096,7 +15167,7 @@ function renderPomEntr(){
   const d = pomEntr.duels[i];
   corps.innerHTML = `<div class="pom-tete"><h2 id="pomTitre">Entraînement <span>duel ${i + 1} / ${total} · sans TP</span></h2>${pomPastillesListe(pomEntr.res, total)}</div>
     <p class="pom-question">Laquelle a le plus d'habitants ?</p>
-    <div class="pom-duel">${pomTuile(pomCacher(d.a), 0)}<span class="pom-ou">ou</span>${pomTuile(pomCacher(d.b), 1)}</div>
+    ${pomDuelHtml(pomCacher(d.a), pomCacher(d.b))}
     <p class="pom-verdict" id="pomVerdict" aria-live="polite"></p>
     <button type="button" class="pom-btn" data-pom2="entr-suivant" id="pomSuivant" hidden>${i === total - 1 ? 'Voir mon score' : 'Duel suivant'}</button>
     ${pomCredits(d)}`;
@@ -15156,7 +15227,7 @@ async function pomDuelQuestion(){
   corps.innerHTML = `${pomDuelTete()}
     <div class="pom-minuteur"><i id="pomBarre"></i></div>
     <p class="pom-question">Laquelle a le plus d'habitants ? <span class="pom-q-num">${data.i + 1} / ${data.total}</span></p>
-    <div class="pom-duel">${pomTuile(data.a, 0)}<span class="pom-ou">ou</span>${pomTuile(data.b, 1)}</div>
+    ${pomDuelHtml(data.a, data.b)}
     <p class="pom-verdict" id="pomVerdict" aria-live="polite"></p>
     <button type="button" class="pom-btn" data-pom2="duel-suivant" id="pomSuivant" hidden>${data.i === data.total - 1 ? 'Voir le résultat' : 'Duel suivant'}</button>`;
   const total = (pomDuelEtat && pomDuelEtat.ms) || 8000, fin = performance.now() + Number(data.reste_ms);

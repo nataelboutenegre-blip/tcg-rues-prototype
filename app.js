@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '3c70258649fb';
+const VERSION_JEU = '77385e497886';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -826,6 +826,8 @@ async function showGame(session_){
   document.getElementById('whoami').textContent = '';
   majWhoami(session_.user.id);
   ncDemarrer();   // patch222 : la cloche
+  ifaceCharger();   // patch262 : interrupteurs d'interface (s2-61)
+  recapDemarrer();   // patch262 : le récap d'arrivée
   dmEtape(25, 'La carte de France…');
   await loadOutline();
   dmMesure('carte');
@@ -865,6 +867,8 @@ async function showGame(session_){
   chargerRadar();
   chargerRafale();   // patch128
   verifierVersion();
+  await Promise.race([IFACE.pret, new Promise(r => setTimeout(r, 1500))]);   // patch262 : la barre stable avant les modes
+  ifaceAppliquer();
   if(SAISON2) initModes();
   if(SAISON2) loadBoutique(true);   // patch107 : le dos de carte choisi
   if(SAISON2) bqeRetourPaiement();   // patch175 : retour de la page de paiement Stripe
@@ -11632,6 +11636,7 @@ function ouvrirMenuPlus(ouvert){
 
 // La pastille des attaques suit l'onglet Combat : sur la barre, ou sur "Plus" s'il est dans le menu
 function majBadgePlus(){
+  if(IFACE && IFACE.barre) return majBadgePlusTout();   // patch262
   const source = document.getElementById('combatBadge');
   const cible = document.getElementById('plusBadge');
   if(!source || !cible) return;
@@ -12319,6 +12324,7 @@ function majBadgeEchange(){
   if(!badge) return;
   badge.hidden = recues + nouv === 0;
   badge.textContent = recues + nouv;
+  majBadgePlus();   // patch262
 }
 
 function ligneEchange(e){
@@ -16574,7 +16580,8 @@ function tchatMajBadge(){
   const ongletOuvert = document.getElementById('panel-clan') && document.getElementById('panel-clan').classList.contains('active');
   if(ongletOuvert && tchat.msgs.length){ vu = tchat.msgs[tchat.msgs.length - 1].id; try{ localStorage.setItem(tchatVuCle(), String(vu)); }catch(e){} }
   const n = tchat.msgs.filter(m => m.id > vu && m.auteur !== window.__monId && !m.supprime).length;
-  b.hidden = !n; b.textContent = n > 9 ? '9+' : String(n);
+  tchat.nonLus = n;   // patch262 : la pastille additionne tchat et échanges de clan
+  majBadgeClanTotal();
 }
 function tchatPseudo(id){
   const c = clanCache && clanCache.moi && clanCache.moi.clan;
@@ -16688,12 +16695,7 @@ async function chargerClanEch(){
 function majBadgeClanEch(){
   const tab = document.querySelector('.tab[data-tab="clan"]');
   if(!tab) return;
-  let b = tab.querySelector('.tab-badge');
-  const n = clanEch.etat && clanEch.etat.recus ? clanEch.etat.recus.length : 0;
-  if(!n){ if(b) b.hidden = true; return; }
-  if(!b){ b = document.createElement('span'); b.className = 'tab-badge'; tab.appendChild(b); }
-  b.hidden = false;
-  b.textContent = n;
+  majBadgeClanTotal();   // patch262 : le tchat et les échanges de clan partagent la pastille
 }
 function ceTier(id){ return TIERS.find(t => t.id === id) || TIERS[TIERS.length - 1]; }
 function ceCommune(c, tier){
@@ -19999,6 +20001,7 @@ async function ncCharger(){
     else { NC.prefsDispo = true; NC.prefs = ncPrefsDepuis(prefs); }
   }
   NC.d = { journal, sieges, ech, clanE, alertes, quetes, recolte: Array.isArray(recolte) ? recolte[0] : recolte, clan };
+  NC.charge = Date.now();   // patch262
   ncConstruire();
 }
 
@@ -20119,6 +20122,285 @@ function ncAller(mode, onglet, apres){
     if(apres) setTimeout(apres, 200);
   }, 60);
 }
+
+// ---------- patch262 : barre stable et récap d'arrivée (idées d'Oshannir) ----------
+// Comme « Ta boutique » : le code part caché, et s2-61 l'allume le jour de
+// l'annonce (config_jeu 'interface'). Tant que la fonction n'existe pas, tout
+// reste comme avant. `var` et non `const` : majBadgePlus peut être appelée
+// avant que cette ligne ne soit lue.
+var IFACE = { barre: false, recap: false, lu: false, depart: false, pret: null };
+function ifaceCharger(){
+  if(IFACE.depart) return IFACE.pret;
+  IFACE.depart = true;
+  IFACE.pret = (async () => {
+    try{
+      const { data, error } = await sb.rpc('interface_options');
+      const o = !error && data && typeof data === 'object' ? data : {};
+      IFACE.barre = Number(o.barre_stable) === 1;
+      IFACE.recap = Number(o.recap_arrivee) === 1;
+    }catch(e){}
+    IFACE.lu = true;
+    ifaceAppliquer();
+  })();
+  return IFACE.pret;
+}
+// La barre stable : en Terra le QG passe en 4e place, comme en Front ; la
+// 3e place est l'action du mode (Contrat en Terra, Combat en Front).
+function ifaceAppliquer(){
+  if(!IFACE.barre) return;
+  document.body.classList.add('iface-barre');
+  const t = ONGLETS_MODE.terra;
+  if(SAISON2 && t.barre.join() !== 'tirage,collection,contrat,qg'){
+    t.barre = ['tirage', 'collection', 'contrat', 'qg'];
+    // la réponse arrive après la mise en place des modes : on range la barre sans tout refaire
+    if(modeJeu === 'terra' && document.getElementById('modeBascule')){
+      ONGLETS_BARRE = t.barre.slice();
+      ONGLETS_BARRE.forEach((id, i) => { const tab = document.querySelector(`.tab[data-tab="${id}"]`); if(tab) tab.style.setProperty('--ordre-tel', i); });
+    }
+  }
+  majBadgePlus();
+}
+// Le bouton Plus additionne les pastilles des onglets rangés dans le menu
+// (Clan, Échange, Combat…) : avant, un message du clan ne se voyait qu'en ouvrant le menu.
+function majBadgePlusTout(){
+  const cible = document.getElementById('plusBadge');
+  if(!cible) return;
+  let n = 0, plus = false;
+  if(surTelephone()){
+    for(const id of ONGLETS_MENU){
+      const b = document.querySelector(`.tab[data-tab="${id}"] .tab-badge:not(.bq-nouveau)`);
+      if(!b || b.hidden) continue;
+      const t = String(b.textContent || '').trim();
+      if(t.endsWith('+')) plus = true;
+      n += parseInt(t, 10) || 0;
+    }
+  }
+  if(n > 0){
+    cible.hidden = false;
+    cible.classList.remove('point');
+    cible.textContent = plus || n > 9 ? '9+' : String(n);
+    return;
+  }
+  const bq = document.querySelector('.tab[data-tab="boutique"] .bq-nouveau');
+  const bqMenu = surTelephone() && ONGLETS_MENU.includes('boutique') && bq && !bq.hidden;
+  cible.hidden = !bqMenu;
+  cible.textContent = '';
+  cible.classList.toggle('point', !!bqMenu);
+}
+
+// La pastille de l'onglet Clan compte les messages non lus ET les échanges de
+// clan reçus. Avant, le tchat (patch258) et les échanges écrivaient chacun
+// dans la même pastille : l'un effaçait l'autre. Ce correctif n'attend pas s2-61.
+function majBadgeClanTotal(){
+  const tab = document.querySelector('.tab[data-tab="clan"]');
+  if(!tab) return;
+  let b = document.getElementById('clanBadge') || tab.querySelector('.tab-badge');
+  const n = (Number(tchat.nonLus) || 0) + (clanEch.etat && Array.isArray(clanEch.etat.recus) ? clanEch.etat.recus.length : 0);
+  if(!b){ if(!n) return; b = document.createElement('span'); b.className = 'tab-badge'; tab.appendChild(b); }
+  b.hidden = !n;
+  b.textContent = n > 9 ? '9+' : String(n);
+  majBadgePlus();
+}
+
+// Le récap d'arrivée : quand on revient après RECAP_ABSENCE_H heures, une
+// feuille résume ce qui s'est passé et ce qui attend. Tout vient de ce que la
+// cloche charge déjà, plus l'état des paquets des deux modes.
+var RECAP_ABSENCE_H = 3;
+var RECAP = { depart: false, ouvert: false, vu: 0, planifie: 0, touche: 0, essais: 0, timer: null, lignes: [] };
+function recapLireActivite(){
+  try{ return Number(localStorage.getItem('tf-derniere-activite')) || Number(localStorage.getItem('tf-defense-vu')) || 0; }
+  catch(e){ return 0; }
+}
+function recapNoterActivite(){ try{ localStorage.setItem('tf-derniere-activite', String(Date.now())); }catch(e){} }
+function recapDemarrer(){
+  if(RECAP.depart) return;
+  RECAP.depart = true;
+  // lu avant tout le reste : le réveil de Combat remet 'tf-defense-vu' à maintenant
+  RECAP.vu = recapLireActivite();
+  recapNoterActivite();
+  setInterval(() => { if(!document.hidden) recapNoterActivite(); }, 60000);
+  window.addEventListener('pagehide', recapNoterActivite);
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden){ recapNoterActivite(); return; }
+    const vu = recapLireActivite();
+    recapNoterActivite();
+    if(vu && Date.now() - vu >= RECAP_ABSENCE_H * 36e5){ RECAP.vu = vu; recapPlanifier(1500); }
+  });
+  // le joueur qui a déjà filé vers un onglet n'a pas besoin du récap (vrais clics seulement :
+  // le jeu clique lui-même sur Tirage en changeant de mode)
+  document.addEventListener('click', (e) => {
+    if(e.isTrusted && !RECAP.ouvert && e.target.closest('.tab, .fp-item, .mode-bascule button')) RECAP.touche = Date.now();
+  }, true);
+  if(RECAP.vu && Date.now() - RECAP.vu >= RECAP_ABSENCE_H * 36e5) recapPlanifier(2500);
+}
+function recapPlanifier(delai){
+  clearTimeout(RECAP.timer);
+  RECAP.planifie = Date.now();
+  RECAP.essais = 0;
+  RECAP.timer = setTimeout(recapEssayer, delai);
+}
+// une autre fenêtre est ouverte (bande-annonce, accueil, guide, paquet, mallette…) : on attend
+function recapBloque(){
+  const vis = (id) => { const e = document.getElementById(id); return !!e && !e.hidden && e.style.display !== 'none'; };
+  const jeu = document.getElementById('gameScreen');
+  return document.hidden || !!document.getElementById('demarrage') || ['voileBA', 'voileAccueil', 'guideVoile', 'fenetre'].some(vis)
+    || NC.ouvert || paquetEnCours || guideIndex >= 0 || !!document.querySelector('.ml-fond')
+    || !jeu || jeu.style.display === 'none';
+}
+async function recapEssayer(){
+  if(RECAP.ouvert || RECAP.touche > RECAP.planifie) return;
+  if(!IFACE.lu && IFACE.pret){ try{ await IFACE.pret; }catch(e){} }
+  if(!IFACE.recap || !accueilDejaVu()) return;
+  if(recapBloque()){
+    if(++RECAP.essais < 20) RECAP.timer = setTimeout(recapEssayer, 3000);
+    return;
+  }
+  let c = null;
+  try{ c = await recapConstruire(); }catch(e){ console.error('Récap :', e); }
+  if(!c || RECAP.ouvert || RECAP.touche > RECAP.planifie || recapBloque()) return;
+  recapOuvrir(c);
+}
+async function recapConstruire(){
+  const rpc = async (n, a) => { try{ const { data, error } = await sb.rpc(n, a); return error ? undefined : data; }catch(e){ return undefined; } };
+  const [, terra, front] = await Promise.all([
+    !NC.charge || Date.now() - NC.charge > 60000 ? ncCharger() : null,
+    SAISON2 ? rpc('terra_statut') : null,
+    rpc('statut_paquets'),
+  ]);
+  const d = NC.d || {}, vu = RECAP.vu;
+  const journal = Array.isArray(d.journal) ? d.journal : [];
+  const depuis = (e) => new Date(e.cree_le).getTime() > vu;
+  const pertes = journal.filter(e => e.type === 'conquete' && e.je_suis_cible && depuis(e)).length;
+  const repoussees = journal.filter(e => e.type === 'defense' && e.je_suis_acteur && depuis(e)).length;
+  const sieges = (Array.isArray(d.sieges) ? d.sieges : []).filter(m => Number(m.victoires_consecutives) >= 1);
+  const items = NC.items || [];
+  const de = (p) => items.filter(x => x.cle.startsWith(p));
+  const nomDe = (code) => { const e = collectionMap.get(code); return echapperTexte(e ? e.nom : String(code)); };
+  const pl = (n, un, plusieurs) => n > 1 ? plusieurs : un;
+  const L = [];
+
+  // 1. les sièges, filtrés comme dans la cloche (sourdine, seuil de rareté)
+  const att = new Set(de('att|').map(x => x.cle));
+  const s = sieges.filter(m => att.has(`att|${m.commune_code}|${m.attaquant_id}|${m.victoires_consecutives}`))
+    .sort((a, b) => Number(b.victoires_consecutives) - Number(a.victoires_consecutives));
+  if(s.length){
+    const m = s[0], v = Number(m.victoires_consecutives);
+    L.push({ tag: 'front', ton: 'danger', style: 'rouge', bouton: 'Défendre',
+      titre: s.length === 1 ? `Attaque sur ${nomDe(m.commune_code)}` : `${s.length} communes attaquées`,
+      sous: s.length === 1 ? `Série ${v} / 3 · par ${echapperTexte(m.attaquant_pseudo || 'un joueur')}` : `La plus menacée : ${nomDe(m.commune_code)}, ${v} / 3`,
+      aller: () => ncAller('front', 'defense') });
+  }
+  // 2. les paquets gratuits des deux modes
+  const jt = terra && terra[0] ? Math.floor(Number(terra[0].jetons) || 0) : 0;
+  const jf = front && front[0] ? Math.floor(Number(front[0].jetons_actuels) || 0) : 0;
+  if(jf > 0 && jt > 0){
+    L.push({ tag: null, style: 'or', bouton: 'Ouvrir', titre: 'Tes paquets gratuits sont prêts', sous: `${jf} en Front · ${jt} en Terra`,
+      aller: () => ncAller(null, 'tirage') });
+  } else if(jf > 0 || jt > 0){
+    const f = jf > 0, n = f ? jf : jt;
+    L.push({ tag: SAISON2 ? (f ? 'front' : 'terra') : null, style: 'or', bouton: 'Ouvrir', titre: `${n} ${pl(n, 'paquet gratuit', 'paquets gratuits')}`,
+      sous: n >= 3 ? 'Ta réserve est pleine' : 'Ils se rechargent tout seuls', aller: () => ncAller(f ? 'front' : 'terra', 'tirage') });
+  }
+  // 3. la récolte des légendaires
+  if(de('rc|').length && d.recolte){
+    const n = Number(d.recolte.pretes) || 0;
+    L.push({ tag: 'front', style: 'or', bouton: `+${Number(d.recolte.energie) || 0} énergie`, titre: 'Récolte prête',
+      sous: `${n} ${pl(n, 'légendaire tenue', 'légendaires tenues')} depuis 24 h`, aller: () => ncAller('front', 'combat') });
+  }
+  // 4. les quêtes à réclamer
+  for(const q of de('q|')){
+    const k = Number(q.cle.split('|')[3]) || 1;
+    L.push({ tag: SAISON2 ? q.cle.split('|')[1] : null, style: 'or', bouton: 'Réclamer', titre: `${k} ${pl(k, 'quête', 'quêtes')} à réclamer`,
+      sous: q.s || '', aller: q.aller });
+  }
+  // 5. la Commune du jour
+  if(cdjEtat && !cdjEtat.fini){
+    const c = (cdjEtat.essais || []).length;
+    L.push({ tag: 'qg', style: 'contour', bouton: c ? 'Reprendre' : 'Jouer', titre: 'Commune du jour',
+      sous: c ? 'Partie commencée' : 'Pas encore jouée · jusqu’à 50 TP', aller: () => ncAller(null, 'cdj') });
+  }
+  // 6. le clan : messages non lus, échanges de clan, invitations
+  const nm = Number(tchat.nonLus) || 0;
+  const msgs = nm > 9 ? '9+' : (nm ? String(nm) : '');
+  const cle = de('cle|').length, inv = de('inv|').length;
+  if(msgs || cle || inv){
+    L.push({ tag: 'clan', ton: 'clan', style: 'bleu', bouton: msgs ? 'Lire' : 'Voir',
+      titre: msgs ? `${msgs} ${pl(nm, 'nouveau message', 'nouveaux messages')}` : cle ? `${cle} ${pl(cle, 'échange de clan', 'échanges de clan')}` : `${inv} ${pl(inv, 'invitation', 'invitations')} dans un clan`,
+      sous: msgs && cle ? `et ${cle} ${pl(cle, 'échange de clan', 'échanges de clan')}` : msgs ? 'Dans le tchat de ton clan' : cle ? 'Proposé par un membre de ton clan' : 'Regarde qui t’invite',
+      aller: () => ncAller(null, 'clan') });
+  }
+  // 7. les échanges reçus et les alertes (Terra)
+  const ech = de('ech|');
+  if(ech.length) L.push({ tag: SAISON2 ? 'terra' : null, style: 'contour', bouton: 'Voir',
+    titre: ech.length === 1 ? 'Une proposition d’échange' : `${ech.length} propositions d’échange`, sous: ech[0].s || '', aller: ech[0].aller });
+  const al = de('al|');
+  if(al.length) L.push({ tag: 'terra', style: 'contour', bouton: 'Échanger',
+    titre: al.length === 1 ? 'Une commune de tes alertes' : `${al.length} communes de tes alertes`, sous: 'En double chez un joueur', aller: al[0].aller });
+
+  const lignes = L.slice(0, 6);
+  if(!lignes.length && !pertes && !repoussees && !sieges.length) return null;   // rien à dire : pas de récap
+  return { pertes, repoussees, sieges: sieges.length, lignes, reste: Math.max(0, L.length - lignes.length), quand: formatDuree(Date.now() - vu) };
+}
+function recapOuvrir(c){
+  RECAP.ouvert = true;
+  RECAP.lignes = c.lignes;
+  const pseudo = ((document.getElementById('whoami') || {}).textContent || '').trim();
+  const NOMS = { front: 'FRONT', terra: 'TERRA', qg: 'QG', clan: 'CLAN' };
+  const tag = (t) => t && NOMS[t] ? `<span class="ra-tag ${t}">${NOMS[t]}</span> ` : '';
+  const calme = !c.pertes && !c.repoussees && !c.sieges;
+  const chiffre = (n, un, plusieurs, cls) => `<div class="ra-chiffre ${cls}${n ? '' : ' zero'}"><b>${n}</b><span>${n > 1 ? plusieurs : un}</span></div>`;
+  document.body.insertAdjacentHTML('beforeend', `<div class="ra-voile" id="raVoile"></div>
+    <div class="ra-feuille" id="raFeuille" role="dialog" aria-modal="true" aria-labelledby="raTitre">
+      <button type="button" class="ra-poignee" aria-label="Fermer"></button>
+      <p class="ra-sur">Depuis ta dernière visite · il y a ${c.quand}</p>
+      <h2 id="raTitre">Bon retour${pseudo ? ', ' + echapperTexte(pseudo) : ''}</h2>
+      ${calme ? '<p class="ra-calme">Tout est calme sur le Front.</p>' : `<div class="ra-chiffres">
+        ${chiffre(c.pertes, 'commune perdue', 'communes perdues', 'perte')}
+        ${chiffre(c.repoussees, 'attaque repoussée', 'attaques repoussées', 'ok')}
+        ${chiffre(c.sieges, 'siège en cours', 'sièges en cours', 'siege')}</div>`}
+      ${c.lignes.length ? `<p class="ra-titre">À faire maintenant</p><div class="ra-liste">${c.lignes.map((l, i) => `
+        <div class="ra-ligne${l.ton ? ' ' + l.ton : ''}"><div class="ra-txt">${tag(l.tag)}<b>${l.titre}</b><small>${l.sous}</small></div>
+          <button type="button" class="ra-btn ${l.style}" data-ra-i="${i}">${l.bouton}</button></div>`).join('')}</div>` : ''}
+      ${c.reste ? `<p class="ra-reste">Et ${c.reste} autre${c.reste > 1 ? 's' : ''} dans la cloche.</p>` : ''}
+      <div class="ra-fin"><button type="button" class="ra-go" data-ra="go">C’est parti</button><button type="button" class="ra-tout" data-ra="tout">Tout voir</button></div>
+    </div>`);
+  const f = document.getElementById('raFeuille'), v = document.getElementById('raVoile');
+  v.addEventListener('click', recapFermer);
+  f.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-ra-i], [data-ra]');
+    if(!b) return;
+    if(b.dataset.raI !== undefined){
+      const l = RECAP.lignes[Number(b.dataset.raI)];
+      recapFermer();
+      if(l && l.aller) l.aller();
+      return;
+    }
+    recapFermer();
+    if(b.dataset.ra === 'tout') ncOuvrir();
+  });
+  // la poignée se tire vers le bas pour fermer (sans déclencher le « tirer pour rafraîchir »)
+  const p = f.querySelector('.ra-poignee');
+  let y0 = null, dy = 0;
+  p.addEventListener('pointerdown', (e) => { y0 = e.clientY; dy = 0; try{ p.setPointerCapture(e.pointerId); }catch(er){} f.style.transition = 'none'; });
+  p.addEventListener('pointermove', (e) => { if(y0 === null) return; dy = Math.max(0, e.clientY - y0); f.style.transform = `translateY(${dy}px)`; });
+  const lacher = () => { if(y0 === null) return; y0 = null; f.style.transition = ''; f.style.transform = ''; if(dy > 60) recapFermer(); };
+  p.addEventListener('pointerup', lacher);
+  p.addEventListener('pointercancel', lacher);
+  p.addEventListener('click', () => { if(dy < 6) recapFermer(); });
+  document.body.classList.add('ra-ouvert');
+  requestAnimationFrame(() => requestAnimationFrame(() => { v.classList.add('ouvert'); f.classList.add('ouvert'); }));
+  if(!surTelephone()){ const go = f.querySelector('.ra-go'); if(go) go.focus(); }
+}
+function recapFermer(){
+  if(!RECAP.ouvert) return;
+  RECAP.ouvert = false;
+  document.body.classList.remove('ra-ouvert');
+  const f = document.getElementById('raFeuille'), v = document.getElementById('raVoile');
+  if(f) f.classList.remove('ouvert');
+  if(v) v.classList.remove('ouvert');
+  setTimeout(() => { if(f) f.remove(); if(v) v.remove(); }, 300);
+}
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && RECAP.ouvert) recapFermer(); });
 
 function ncOuvrir(vue){
   NC.vue = vue || 'liste';

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '39bc46d4bd11';
+const VERSION_JEU = '1842e6a2173f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -828,6 +828,7 @@ async function showGame(session_){
   ncDemarrer();   // patch222 : la cloche
   ifaceCharger();   // patch262 : interrupteurs d'interface (s2-61)
   recapDemarrer();   // patch262 : le récap d'arrivée
+  hwCharger();   // patch265 : Halloween (s2-62)
   dmEtape(25, 'La carte de France…');
   await loadOutline();
   dmMesure('carte');
@@ -7500,6 +7501,7 @@ function makePackEl(type){
     <div class="coupe-lueur"></div><div class="coupe-trace"></div><div class="coupe-tete"></div><div class="coupe-eclair"></div>
     <span class="coupe-consigne" aria-hidden="true">Touche le paquet · ou coupe les pointillés</span>`;
   if(gl) setTimeout(() => habGl.demarrer(), 0);
+  if(HW && HW.actif) hw2Paquet(pack);   // patch265 : le paquet maudit
   return pack;
 }
 
@@ -7669,6 +7671,7 @@ async function openPack(type){
   paquetEnCours = true;
   await loadPackStatus();
   afficherPaquetATirer(type, 5);
+  if(type === 'gratuit'){ const pk = document.querySelector('#packZone .paquet'); if(pk) pk.dataset.hwGratuit = '1'; }   // patch265
 }
 
 // Le paquet se charge, puis se dechire. Le tirage part des le clic, pendant
@@ -7773,6 +7776,7 @@ function armerPaquet(pack, demarrer){
       pack.parentElement.insertBefore(rayons, pack);
     }
     tirage = Promise.resolve().then(demarrer).catch(e => { console.error(e); return null; });
+    if(HW && pack.dataset.hwGratuit) tirage = hwCriPaquet(tirage);   // patch265 : un screamer, peut-être
     tirage.then(draws => {
       const c = draws && draws.length ? lumierePaquet(draws) : '';
       if(c){ pack.classList.add(c); if(rayons) rayons.classList.add(c); }
@@ -7964,6 +7968,7 @@ function afficherPaquetPret(type){
   zone.innerHTML = '';
   const pack = makePackEl(type);
   pack.dataset.pret = '1';
+  if(type === 'gratuit') pack.dataset.hwGratuit = '1';   // patch265
   pack.setAttribute('aria-label', 'Ouvrir un paquet gratuit');
   appelerPaquet(pack);
   sceneOuverture(zone).echelle.appendChild(pack);
@@ -20315,7 +20320,7 @@ function recapBloque(){
   const vis = (id) => { const e = document.getElementById(id); return !!e && !e.hidden && e.style.display !== 'none'; };
   const jeu = document.getElementById('gameScreen');
   return document.hidden || !!document.getElementById('demarrage') || ['voileBA', 'voileAccueil', 'guideVoile', 'fenetre'].some(vis)
-    || NC.ouvert || paquetEnCours || guideIndex >= 0 || !!document.querySelector('.ml-fond')
+    || NC.ouvert || paquetEnCours || guideIndex >= 0 || !!document.querySelector('.ml-fond, .hw-voile, .hw-cri')
     || !jeu || jeu.style.display === 'none';
 }
 async function recapEssayer(){
@@ -20697,3 +20702,469 @@ document.addEventListener('click', (e) => {
   const k = m.closest('.mini').dataset.skin;
   if(k){ e.preventDefault(); ouvrirSkinBoutique(k); }
 });
+
+// ---------- patch265 : Halloween, « la nuit tombe » (aperçus validés le 29/10) ----------
+// Caché tant que s2-62 n'est pas lancé : halloween_options() dit si la fête est
+// en cours (config_jeu 'halloween', avec ses dates, relue toutes les 10 min).
+// Le décor reprend les courbes de niveau du jeu, qui rougeoient ; la brume et
+// les braises sont dessinées dans deux canvas. Les screamers ne viennent
+// qu'avec l'accord du joueur (réglage de cet appareil), à l'ouverture d'un
+// paquet GRATUIT : jamais pendant un achat, un combat ou la mallette.
+// `var` : makePackEl et recapBloque peuvent lire HW avant que ce bloc soit lu.
+var HW = { depart: false, actif: false, screamers: false, proba: 0.2, delai: 30, maxJour: 3, fin: 0,
+           jusqua: '1er novembre', cle: 'tf-hw2026', choix: null, ctx: null, img: null,
+           timerFin: null, timerQuestion: null, relance: null, question: false, cris: [] };
+var HW2 = { raf: 0, derBrume: 0, der: 0, braises: [], t0: performance.now(), bruit: null, sprite: null, d: '', n: 0 };
+var HW_VISAGE = 'halloween-visage.webp';
+// ?halloween=test : tout essayer sur son téléphone AVANT de lancer s2-62 (cet onglet seulement).
+// Le screamer sort alors à chaque paquet gratuit, sans limite ; choix et historique à part.
+// Les autres joueurs ne voient rien. Fermer l'onglet pour en sortir.
+try{ if(new URLSearchParams(location.search).get('halloween') === 'test') sessionStorage.setItem('tf-hw-test', '1'); }catch(e){}
+function hwTest(){ try{ return sessionStorage.getItem('tf-hw-test') === '1'; }catch(e){ return false; } }
+
+function hwCharger(){
+  if(HW.depart) return;
+  HW.depart = true;
+  try{ hwBrancher(); }catch(e){ console.error('Halloween :', e); }
+}
+function hwBrancher(){
+  hwLire();
+  // la fête s'allume (ou s'éteint) aussi pour qui a déjà le jeu ouvert
+  setInterval(() => { if(!document.hidden) hwLire(); }, 10 * 60000);
+  // le cri reste prêt : sur iPhone, le son ne part qu'après un geste du joueur
+  ['pointerup', 'touchend', 'keydown'].forEach(t => document.addEventListener(t, hwGeste, true));
+}
+async function hwLire(){
+  let o = {}, rate = false;
+  try{
+    const { data, error } = await sb.rpc('halloween_options');
+    if(!error && data && typeof data === 'object') o = data;
+    else if(error && !fonctionAbsente(error)) rate = true;   // fonction absente = s2-62 pas lancé : normal
+  }catch(e){ rate = true; }
+  if(rate && !hwTest()){
+    // le réseau a raté (iPhone qui se réveille…) : on garde l'état actuel et on réessaie bientôt
+    if(!HW.relance) HW.relance = setTimeout(() => { HW.relance = null; hwLire(); }, 45000);
+    return;
+  }
+  if(hwTest()){
+    if(Number(o.actif) !== 1) o = { actif: 1, fin: new Date(Date.now() + 3 * 36e5).toISOString() };
+    o = Object.assign({}, o, { screamers: 1, proba: 1, delai_min: 0, max_jour: 99 });
+  }
+  try{ hwAppliquer(o); }catch(e){ console.error('Halloween :', e); }
+}
+function hwAppliquer(o){
+  if(Number(o.actif) !== 1){ if(HW.actif) hwEteindre(); return; }
+  const nb = (v, d) => v === null || v === undefined || v === '' || !Number.isFinite(Number(v)) ? d : Number(v);
+  HW.screamers = Number(o.screamers) === 1;
+  HW.proba = Math.max(0, Math.min(1, nb(o.proba, 0.2)));
+  HW.delai = Math.max(0, nb(o.delai_min, 30));
+  HW.maxJour = Math.max(0, nb(o.max_jour, 3));
+  HW.fin = Date.parse(String(o.fin || '').replace(/(\.\d{3})\d+/, '$1')) || 0;
+  if(HW.fin){
+    try{
+      // la veille de minuit, heure de Paris : « jusqu'au 1er novembre »
+      const p = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', day: 'numeric', month: 'long', year: 'numeric' })
+        .formatToParts(new Date(HW.fin - 1));
+      const v = (t) => (p.find(x => x.type === t) || {}).value || '';
+      HW.jusqua = (v('day') === '1' ? '1er' : v('day')) + ' ' + v('month');
+      HW.cle = 'tf-hw' + v('year');
+    }catch(e){}
+    clearTimeout(HW.timerFin);
+    const reste = HW.fin - Date.now();
+    if(reste > 0 && reste < 2e9) HW.timerFin = setTimeout(hwEteindre, reste);
+  }
+  if(hwTest()) HW.cle = 'tf-hwtest';
+  HW.choix = hwLireChoix();
+  if(!HW.actif){ HW.actif = true; hwNuit(); }
+  hwReglageMaj();
+  if(!HW.screamers){
+    clearTimeout(HW.timerQuestion); HW.timerQuestion = null;
+    if(document.getElementById('hwVoile')) hwQuestionRetirer();
+    return;
+  }
+  if(HW.choix === 'oui') hwPrecharger();
+  else if(!HW.choix) hwQuestionPlanifier();
+}
+
+// ----- le choix du joueur, et l'historique de ses screamers (cet appareil) -----
+function hwLireChoix(){
+  try{ const v = localStorage.getItem(HW.cle + '-choix'); return v === 'oui' || v === 'non' ? v : null; }
+  catch(e){ return HW.choix; }
+}
+function hwChoisir(c){
+  HW.choix = c === 'oui' ? 'oui' : 'non';
+  try{ localStorage.setItem(HW.cle + '-choix', HW.choix); }catch(e){}
+  hwReglageMaj();
+  if(HW.choix === 'oui'){ hwAudio(); hwPrecharger(); }
+}
+function hwLireCris(){
+  let a = [];
+  try{ const v = JSON.parse(localStorage.getItem(HW.cle + '-cris') || '[]'); if(Array.isArray(v)) a = v.filter(Number.isFinite); }catch(e){}
+  for(const t of HW.cris) if(!a.includes(t)) a.push(t);   // copie en mémoire : les limites tiennent même sans stockage
+  return a;
+}
+function hwNoterCri(){
+  HW.cris.push(Date.now());
+  try{ localStorage.setItem(HW.cle + '-cris', JSON.stringify(hwLireCris().slice(-20))); }catch(e){}
+}
+function hwPrecharger(){
+  if(HW.img) return;
+  HW.img = new Image();
+  HW.img.decoding = 'async';
+  HW.img.src = HW_VISAGE;
+  if(HW.img.decode) HW.img.decode().catch(() => {});
+}
+
+// ----- le réglage dans Profil -----
+function hwReglageMaj(){
+  const r = document.getElementById('hwReglage'), c = document.getElementById('hwScreamers');
+  if(!r || !c) return;
+  r.hidden = !(HW.actif && HW.screamers);
+  c.checked = HW.choix === 'oui';
+  const t = document.getElementById('hwReglageFin');
+  if(t) t.textContent = HW.jusqua;
+  if(!r.dataset.branche){
+    r.dataset.branche = '1';
+    c.addEventListener('change', () => hwChoisir(c.checked ? 'oui' : 'non'));
+  }
+}
+
+// ----- le décor : la nuit tombe -----
+function hwNuit(){
+  document.body.classList.add('halloween');
+  if(!document.getElementById('hwBrume')){
+    document.body.insertAdjacentHTML('beforeend', '<div class="hw-voile-nuit" aria-hidden="true"></div>'
+      + '<canvas id="hwBrume" class="hw-brume2" aria-hidden="true"></canvas><canvas id="hwBraises" class="hw-braises" aria-hidden="true"></canvas>');
+  }
+  document.querySelectorAll('.brand').forEach(b => { if(!b.dataset.hwAvant){ b.dataset.hwAvant = b.innerHTML; b.innerHTML = 'Terreur<span>Front</span>'; } });
+  document.querySelectorAll('#packZone .paquet').forEach(hw2Paquet);
+  HW2.bruit = HW2.bruit || hw2Bruit();
+  HW2.sprite = HW2.sprite || hw2Sprite();
+  if(REDUCED_MOTION){ hw2Brume(0); return; }
+  if(!HW2.raf) HW2.raf = requestAnimationFrame(hw2Boucle);
+}
+function hwEteindre(){
+  HW.actif = false;
+  clearTimeout(HW.timerFin);
+  clearTimeout(HW.timerQuestion); HW.timerQuestion = null;
+  document.body.classList.remove('halloween');
+  document.querySelectorAll('.hw-voile-nuit, #hwBrume, #hwBraises').forEach(e => e.remove());
+  if(HW2.raf > 0){ cancelAnimationFrame(HW2.raf); HW2.raf = 0; }
+  document.querySelectorAll('.brand').forEach(b => { if(b.dataset.hwAvant){ b.innerHTML = b.dataset.hwAvant; delete b.dataset.hwAvant; } });
+  if(document.getElementById('hwVoile')) hwQuestionRetirer();
+  hwReglageMaj();
+  // le paquet posé (pas encore entamé) redevient normal, comme quand on change d'habillage
+  try{
+    const zone = document.getElementById('packZone');
+    if(zone && !paquetEnCours && zone.querySelector('.paquet[data-pret][data-hw]')){ zone.innerHTML = ''; afficherPaquetPret('gratuit'); }
+  }catch(e){}
+}
+// le paquet maudit : les courbes de niveau du paquet s'embrasent (les habillages achetés restent intacts)
+function hw2Motif(){
+  const k = ++HW2.n;
+  if(!HW2.d) HW2.d = courbesDeNiveau(hashTexte('paquet-halloween'), 200, 280, 13).d;
+  return '<svg class="paquet-motif" viewBox="0 0 200 280" aria-hidden="true"><defs>'
+    + `<linearGradient id="hwFond${k}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1A1022"/><stop offset=".55" stop-color="#0D0912"/><stop offset="1" stop-color="#060407"/></linearGradient>`
+    + `<radialGradient id="hwCoeur${k}" cx="50%" cy="48%" r="60%"><stop offset="0" stop-color="#FF7A1A" stop-opacity=".28"/><stop offset=".55" stop-color="#FF5A10" stop-opacity=".07"/><stop offset="1" stop-color="#FF5A10" stop-opacity="0"/></radialGradient>`
+    + `<radialGradient id="hwBraise${k}" gradientUnits="userSpaceOnUse" cx="100" cy="135" r="150"><stop offset="0" stop-color="#FFD089"/><stop offset=".45" stop-color="#FF8A2A"/><stop offset="1" stop-color="#7A2408"/></radialGradient>`
+    + `<filter id="hwLueur${k}" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="2.4" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`
+    + `<filter id="hwGrain${k}" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" seed="4"/><feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .06 0"/></filter></defs>`
+    + `<rect width="200" height="280" fill="url(#hwFond${k})"/><rect width="200" height="280" fill="url(#hwCoeur${k})"/>`
+    + `<path d="${HW2.d}" fill="none" stroke="url(#hwBraise${k})" stroke-opacity=".75" stroke-width="1.15" filter="url(#hwLueur${k})"/>`
+    + `<rect width="200" height="280" filter="url(#hwGrain${k})"/>`
+    + '<rect x="6" y="6" width="188" height="268" rx="3" fill="none" stroke="#C99A4A" stroke-opacity=".45" stroke-width="1"/></svg>';
+}
+function hw2Paquet(p){
+  if(!p || p.dataset.hw || document.body.dataset.habillage) return;
+  try{
+    const motif = hw2Motif(), motif2 = hw2Motif();
+    p.dataset.hw = '1';
+    p.querySelectorAll('.paquet-motif').forEach((m, i) => { m.outerHTML = i ? motif2 : motif; });
+    const bd = p.querySelector('.paquet-bande');
+    if(bd) bd.textContent = '5 communes hantées';
+  }catch(e){ console.error('Halloween (paquet) :', e); }
+}
+function hw2Bruit(){
+  let s = 1337; const alea = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const p = new Uint8Array(512), r = Array.from({ length: 256 }, (_, i) => i);
+  for(let i = 255; i > 0; i--){ const j = Math.floor(alea() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; }
+  for(let i = 0; i < 512; i++) p[i] = r[i & 255];
+  const f = (t) => t * t * (3 - 2 * t);
+  const v = (x, y) => {
+    const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+    const h = (i, j) => p[(p[i & 255] + (j & 255)) & 511] / 255;
+    const a = h(xi, yi), b = h(xi + 1, yi), c = h(xi, yi + 1), d = h(xi + 1, yi + 1), u = f(xf), w = f(yf);
+    return a + (b - a) * u + (c - a) * w + (a - b - c + d) * u * w;
+  };
+  return (x, y) => .55 * v(x, y) + .3 * v(x * 2.1 + 5.3, y * 2.1 + 1.7) + .15 * v(x * 4.3 + 9.1, y * 4.3 + 3.9);
+}
+// la brume : un petit canvas (96 px de large) étiré et flouté par le CSS
+function hw2Brume(t){
+  const cv = document.getElementById('hwBrume'); if(!cv) return;
+  const W = 96, H = Math.max(96, Math.round(96 * innerHeight / Math.max(1, innerWidth)));
+  if(cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
+  const ctx = cv.getContext('2d'), img = ctx.createImageData(W, H), d = img.data, n = HW2.bruit;
+  const k = 3.2 / W, dx = t * .018, dy = t * .006;
+  for(let y = 0; y < H; y++){
+    const fy = y / H;
+    const masque = Math.min(1, Math.max(0, (fy - .38) / .5)) * .95 + Math.max(0, (.2 - fy) / .2) * .35;
+    for(let x = 0; x < W; x++){
+      const v = n(x * k + dx, y * k + dy - t * .004);
+      const a = Math.max(0, Math.min(1, (v - .40) * 2.6)) * masque;
+      const i = (y * W + x) * 4;
+      d[i] = 150; d[i + 1] = 160; d[i + 2] = 196; d[i + 3] = a * 150;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+function hw2Sprite(){
+  const c = document.createElement('canvas'); c.width = c.height = 32;
+  const g = c.getContext('2d'), r = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+  r.addColorStop(0, 'rgba(255,244,200,1)'); r.addColorStop(.25, 'rgba(255,170,70,.9)'); r.addColorStop(.6, 'rgba(255,90,20,.25)'); r.addColorStop(1, 'rgba(255,60,10,0)');
+  g.fillStyle = r; g.fillRect(0, 0, 32, 32); return c;
+}
+function hw2Braise(W, H, debut){
+  return { x: Math.random() * W, y: debut ? Math.random() * H : H + 10, v: 12 + Math.random() * 22, r: 1.2 + Math.random() * 2.6,
+           ph: Math.random() * 6.3, f: 2 + Math.random() * 5, amp: 6 + Math.random() * 16 };
+}
+function hw2Boucle(now){
+  HW2.raf = requestAnimationFrame(hw2Boucle);
+  if(document.hidden) return;
+  try{ hw2Image(now); }
+  catch(e){ cancelAnimationFrame(HW2.raf); HW2.raf = -1; console.error('Halloween (brume) :', e); }
+}
+function hw2Image(now){
+  const t = (now - HW2.t0) / 1000;
+  if(now - HW2.derBrume > 66){ HW2.derBrume = now; hw2Brume(t); }
+  const cv = document.getElementById('hwBraises'); if(!cv) return;
+  const W = innerWidth, H = innerHeight;
+  if(cv.width !== W || cv.height !== H){ cv.width = W; cv.height = H; }
+  const ctx = cv.getContext('2d');
+  ctx.clearRect(0, 0, W, H);
+  ctx.globalCompositeOperation = 'lighter';
+  const dt = Math.min(.05, (now - (HW2.der || now)) / 1000); HW2.der = now;
+  const cible = Math.round(Math.min(26, W * H / 16000));
+  while(HW2.braises.length < cible) HW2.braises.push(hw2Braise(W, H, true));
+  for(const b of HW2.braises){
+    b.y -= b.v * dt;
+    const x = b.x + Math.sin(t * .7 + b.ph) * b.amp;
+    if(b.y < -20) Object.assign(b, hw2Braise(W, H, false));
+    const vie = Math.max(0, Math.min(1, b.y / H * 1.4));
+    const a = vie * (.55 + .45 * Math.sin(t * b.f + b.ph));
+    if(a <= 0.02) continue;
+    ctx.globalAlpha = a;
+    const s = b.r * 6;
+    ctx.drawImage(HW2.sprite, x - s / 2, b.y - s / 2, s, s);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// ----- la question, une fois par appareil -----
+function hwQuestionPlanifier(){
+  if(HW.timerQuestion || HW.question) return;
+  const essayer = () => {
+    HW.timerQuestion = null;
+    if(!HW.actif || !HW.screamers || HW.choix || HW.question) return;
+    // on attend que le reste soit fermé (accueil, guide, bande-annonce, paquet, récap…)
+    let bloque = true;
+    try{
+      bloque = !accueilDejaVu() || recapBloque() || RECAP.ouvert || !!panneauCommune
+        || !!document.querySelector('.hw-cri, #feuillePlus.ouvert, .tc-voile');
+    }catch(e){}
+    if(bloque){
+      HW.timerQuestion = setTimeout(essayer, 4000);
+      return;
+    }
+    hwQuestionOuvrir();
+  };
+  HW.timerQuestion = setTimeout(essayer, 1800);
+}
+function hwQuestionOuvrir(){
+  HW.question = true;
+  document.body.insertAdjacentHTML('beforeend', `<div class="hw-voile" id="hwVoile">
+    <div class="hw-question" role="dialog" aria-modal="true" aria-labelledby="hwTitre" tabindex="-1">
+      <div class="hw-yeux" aria-hidden="true"><i></i><i></i></div>
+      <h2 id="hwTitre">La nuit tombe sur <span>TerreurFront</span></h2>
+      <p>Jusqu'au ${HW.jusqua}, le jeu se couvre de brume. Et certains paquets cachent un <b>screamer</b> : une image qui surgit d'un coup, avec un cri.</p>
+      <p class="hw-avert">Déconseillé si tu as peur facilement, si tu es sensible aux bruits forts, ou si tu joues au travail. Le cri dure une seconde et rien ne clignote.</p>
+      <div class="hw-choix">
+        <button type="button" class="hw-oui" data-hw="oui">Oui, fais-moi peur</button>
+        <button type="button" class="hw-non" data-hw="non">Non merci, juste l'ambiance</button>
+      </div>
+      <p class="hw-note">Tu pourras changer d'avis dans ton Profil.</p>
+    </div>
+  </div>`);
+  document.body.classList.add('hw-question-ouverte');
+  const v = document.getElementById('hwVoile');
+  v.addEventListener('click', (e) => { const b = e.target.closest('[data-hw]'); if(b) hwQuestionRepondre(b.dataset.hw); });
+  try{ v.querySelector('.hw-question').focus({ preventScroll: true }); }catch(e){}
+}
+function hwQuestionRetirer(){
+  const v = document.getElementById('hwVoile');
+  if(v) v.remove();
+  document.body.classList.remove('hw-question-ouverte');
+  HW.question = false;
+}
+function hwQuestionRepondre(choix){
+  if(!document.getElementById('hwVoile')) return;
+  hwQuestionRetirer();
+  hwChoisir(choix);   // fermer sans répondre (Échap) = non
+  if(HW.choix === 'oui') notifier({ type: 'info', titre: 'Screamers activés', texte: 'Certains paquets gratuits cachent une surprise. Tu peux les couper à tout moment dans ton Profil.' });
+}
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && document.getElementById('hwVoile')) hwQuestionRepondre('non'); });
+
+// ----- le son : un cri synthétisé, aucun fichier ; volume plafonné, une seconde et demie -----
+function hwGeste(){
+  if(HW.actif && HW.screamers && HW.choix === 'oui') hwAudio();
+}
+function hwAudio(){
+  if(!ouvSon) return null;   // le bouton Son du Tirage vaut aussi pour le cri
+  try{
+    if(!HW.ctx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return null;
+      HW.ctx = new AC();
+      // un son vide joué pendant un geste : sur iPhone, c'est ce qui ouvre le son
+      const b = HW.ctx.createBuffer(1, 1, 22050), s = HW.ctx.createBufferSource();
+      s.buffer = b; s.connect(HW.ctx.destination); s.start(0);
+    }
+    if(HW.ctx.state !== 'running'){ const r = HW.ctx.resume(); if(r && r.catch) r.catch(() => {}); }
+    return HW.ctx;
+  }catch(e){ return null; }
+}
+function hwCrier(){
+  const ctx = hwAudio();
+  if(!ctx) return;
+  const t0 = performance.now();
+  const jouer = () => {
+    try{
+      const t = ctx.currentTime + Math.max(0.02, 0.18 - (performance.now() - t0) / 1000);
+      const sortie = ctx.createGain();
+      sortie.gain.setValueAtTime(0.0001, t);
+      sortie.gain.exponentialRampToValueAtTime(0.42, t + 0.04);
+      sortie.gain.setValueAtTime(0.42, t + 0.75);
+      sortie.gain.exponentialRampToValueAtTime(0.0001, t + 1.45);
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -14; comp.ratio.value = 6;
+      sortie.connect(comp); comp.connect(ctx.destination);
+      const dist = ctx.createWaveShaper(), n = 2048, courbe = new Float32Array(n);
+      for(let i = 0; i < n; i++){ const x = i * 2 / n - 1; courbe[i] = (Math.PI + 18) * x / (Math.PI + 18 * Math.abs(x)); }
+      dist.curve = courbe; dist.connect(sortie);
+      [0, 6, -11].forEach((dt, k) => {
+        const o = ctx.createOscillator(); o.type = 'sawtooth';
+        const f0 = 980 * Math.pow(2, dt / 12);
+        o.frequency.setValueAtTime(f0 * 0.7, t);
+        o.frequency.exponentialRampToValueAtTime(f0, t + 0.08);
+        o.frequency.exponentialRampToValueAtTime(f0 * 0.42, t + 1.4);
+        const lfo = ctx.createOscillator(); lfo.frequency.value = 11 + k * 2;
+        const lg = ctx.createGain(); lg.gain.value = 45; lfo.connect(lg); lg.connect(o.frequency);
+        const g = ctx.createGain(); g.gain.value = 0.2; o.connect(g); g.connect(dist);
+        o.start(t); o.stop(t + 1.5); lfo.start(t); lfo.stop(t + 1.5);
+      });
+      const len = Math.floor(ctx.sampleRate * 1.5), buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+      for(let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      const bruit = ctx.createBufferSource(); bruit.buffer = buf;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 1.1;
+      bp.frequency.setValueAtTime(3400, t); bp.frequency.exponentialRampToValueAtTime(900, t + 1.4);
+      const gb = ctx.createGain(); gb.gain.value = 0.55; bruit.connect(bp); bp.connect(gb); gb.connect(sortie);
+      bruit.start(t); bruit.stop(t + 1.5);
+    }catch(e){}
+  };
+  if(ctx.state === 'running') return jouer();
+  // son pas encore ouvert : on ne crie que s'il s'ouvre tout de suite (jamais en retard)
+  try{ ctx.resume().then(() => { if(performance.now() - t0 < 400) jouer(); }).catch(() => {}); }catch(e){}
+}
+
+// ----- le screamer -----
+// armerPaquet nous confie le tirage d'un paquet GRATUIT (marqué data-hw-gratuit par
+// openPack('gratuit') ou afficherPaquetPret) : quand les cartes sont arrivées, si
+// le sort tombe, le screamer passe et le paquet attend qu'il soit fermé pour s'ouvrir.
+function hwCriPossible(){
+  HW.choix = hwLireChoix();
+  if(!HW.actif || !HW.screamers || HW.choix !== 'oui' || document.hidden) return false;
+  if(!HW.img || !HW.img.complete || !HW.img.naturalWidth) return false;   // image pas encore là : pas de demi-screamer
+  if(document.querySelector('.hw-cri, .ml-fond')) return false;
+  const cris = hwLireCris(), maintenant = Date.now();
+  if(cris.length && maintenant - Math.max(...cris) < HW.delai * 60000) return false;
+  const minuit = new Date(); minuit.setHours(0, 0, 0, 0);
+  if(cris.filter(t => t >= minuit.getTime()).length >= HW.maxJour) return false;
+  return Math.random() < HW.proba;
+}
+function hwCriPaquet(tirage){
+  return tirage.then((cartes) => {
+    try{
+      if(!cartes || !cartes.length || !hwCriPossible()) return cartes;
+      return hwCri().catch(() => {}).then(() => cartes);
+    }catch(e){ console.error('Halloween (screamer) :', e); return cartes; }
+  });
+}
+function hwCri(){
+  return new Promise((fini) => {
+    let v = null;
+    try{ hwCriMonter(fini, (el) => { v = el; }); }
+    catch(e){
+      console.error('Halloween (screamer) :', e);
+      if(v) v.remove();
+      document.body.classList.remove('hw-cri-ouvert');
+      fini();
+    }
+  });
+}
+function hwCriMonter(fini, garder){
+  hwNoterCri();
+  const img = HW_VISAGE;
+  const v = document.createElement('div');
+  garder(v);
+  v.className = 'hw-cri';
+  v.setAttribute('role', 'dialog');
+  v.setAttribute('aria-modal', 'true');
+  v.setAttribute('aria-labelledby', 'hwCriTitre');
+  v.innerHTML = `<div class="hw-cri-scene" aria-hidden="true">
+      <div class="hw-brume-cri"></div>
+      <div class="hw-cri-visage"><img class="hw-glitch-r" src="${img}" alt=""><img class="hw-glitch-c" src="${img}" alt=""><img class="hw-surgit" src="${img}" alt=""></div>
+      ${Array.from({ length: 10 }, (_, i) => `<i class="hw-etincelle hw-e${i + 1}"></i>`).join('')}
+      <div class="hw-rouge"></div>
+    </div>
+    <div class="hw-cri-fin">
+      <div class="hw-yeux" aria-hidden="true"><i></i><i></i></div>
+      <p class="hw-bouh" id="hwCriTitre">Bouh !</p>
+      <p class="hw-joyeux">Joyeux Halloween</p>
+      <p class="hw-cri-texte">Ton paquet t'attend quand même. Les screamers restent actifs jusqu'au ${HW.jusqua}.</p>
+      <button type="button" class="hw-oui" data-hw="voir">Voir mes cartes</button>
+      <button type="button" class="hw-couper" data-hw="couper">Couper les screamers</button>
+    </div>`;
+  document.body.appendChild(v);
+  document.body.classList.add('hw-cri-ouvert');
+  hwCrier();
+  if(navigator.vibrate) try{ navigator.vibrate([80, 50, 160]); }catch(e){}
+  let ferme = false;
+  const minuteurs = [
+    setTimeout(() => v.classList.add('cri'), 180),
+    setTimeout(() => {
+      v.classList.add('fin');
+      if(!surTelephone()){ try{ v.querySelector('[data-hw="voir"]').focus({ preventScroll: true }); }catch(e){} }
+    }, 1500),
+  ];
+  const clavier = (e) => { if(e.key === 'Escape' && v.classList.contains('fin')){ e.preventDefault(); fermer(false); } };
+  const fermer = (couper) => {
+    if(ferme) return;
+    ferme = true;
+    minuteurs.forEach(clearTimeout);
+    document.removeEventListener('keydown', clavier, true);
+    v.remove();
+    document.body.classList.remove('hw-cri-ouvert');
+    fini();   // d'abord rendre la main au paquet
+    if(couper){
+      try{
+        hwChoisir('non');
+        notifier({ type: 'info', titre: 'Screamers coupés', texte: "Tu gardes l'ambiance. Tu peux les remettre dans ton Profil." });
+      }catch(e){}
+    }
+  };
+  document.addEventListener('keydown', clavier, true);
+  v.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-hw]');
+    if(b && v.classList.contains('fin')) fermer(b.dataset.hw === 'couper');
+  });
+}
+

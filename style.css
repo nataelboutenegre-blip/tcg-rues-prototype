@@ -8171,3 +8171,12 @@ button.hq-slot{ font:inherit; color:inherit; text-align:left; cursor:pointer; wi
 .hq-cta{ position:relative; z-index:2; margin-top:5px; align-self:flex-start; padding:4px 9px; border-radius:999px;
   font-size:.7rem; font-weight:700; letter-spacing:.02em; color:#1B0D04; background:#FF7A1A; box-shadow: 0 0 12px rgba(255,122,26,.5); }
 .hq-cible.moi .hq-cta{ color:#FFD9A8; background: rgba(20,10,22,.8); border:1px solid rgba(255,140,40,.6); box-shadow:none; }
+
+/* patch279 : avec un monument (bandeau en bas de la grande carte, pastille en bas des minis), le sceau « Hantée » se pousse */
+.card.a-monument .carte-art .hnt-sceau{ bottom:40px; }
+.mini-art:has(.mini-monument) .hnt-sceau{ left:28px; }
+@media (max-width: 760px){
+  .card .carte-art .hnt-sceau{ left:6px; bottom:6px; padding:3px 7px 3px 5px; font-size:.56rem; gap:3px; }
+  .card .carte-art .hnt-sceau svg{ width:10px; height:10px; }
+  .card.a-monument .carte-art .hnt-sceau{ bottom:30px; }
+}

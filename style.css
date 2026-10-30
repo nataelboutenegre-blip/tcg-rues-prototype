@@ -8257,3 +8257,27 @@ button.hq-slot{ font:inherit; color:inherit; text-align:left; cursor:pointer; wi
 .obj-fermer{ position:absolute; top:10px; right:12px; border:none; background:none; color:#fff; font-size:1.2rem; cursor:pointer; padding:6px; z-index:2; }
 .obj-feuille .objectifs{ margin:0; }
 body.obj-ouverte{ overflow:hidden; }
+
+/* patch287 : Tirage allégé, le paquet visible sans défiler */
+#panel-tirage:has(#packZone .paquet[data-pret]) #openFreeBtn{ display:none; }
+#panel-tirage:has(#packZone .paquet[data-pret]) .glisser{ width:min(330px, calc(100vw - 40px)); }   /* sans le bouton, la rangée ne donne plus de largeur au glisser */
+#packZone .coupe-consigne b{ color:#F0B429; font-weight:700; }
+#packStatus[hidden]{ display:none; }
+#panel-tirage > .ouv-reglages{ margin:2px 0 14px; justify-content:flex-start; }
+.pot-court{ display:none; }
+body.iface-barre #panel-tirage .sub{ display:none; }
+body.iface-barre #panel-tirage h1{ margin-bottom:10px; }
+body.iface-barre .cdj-carte{ margin:0 0 10px; padding:7px 10px 7px 12px; gap:10px; }
+body.iface-barre .cdj-carte svg{ width:28px; height:28px; }
+body.iface-barre .cdj-carte-txt{ flex-direction:row; align-items:baseline; gap:8px; }
+body.iface-barre .cdj-carte-txt b{ font-size:15px; }
+body.iface-barre .cdj-carte-txt span{ font-size:12px; }
+body.iface-barre .cdj-carte-btn{ font-size:13px; padding:6px 10px; border-radius:8px; }
+body.iface-barre .pot-libres{ width:100%; box-sizing:border-box; padding:9px 14px 10px; margin:0 0 12px; border-radius:12px; gap:7px; }
+body.iface-barre .pot-ligne{ flex-wrap:nowrap; }
+body.iface-barre .pot-nombre{ font-size:.8rem; white-space:nowrap; }
+body.iface-barre .pot-nombre b{ font-size:1.15rem; }
+body.iface-barre .pot-seuil{ font-size:.72rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+body.iface-barre .pot-long{ display:none; }
+body.iface-barre .pot-court{ display:inline; }
+body.iface-barre .pot-jauge{ height:4px; }

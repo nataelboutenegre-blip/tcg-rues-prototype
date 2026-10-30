@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=fb4d1b248b4f">
+<link rel="stylesheet" href="style.css?v=ef910edea353">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -512,14 +512,6 @@
       <button type="button" class="obj-bandeau" id="objBandeau" hidden aria-haspopup="dialog"></button><!-- patch284 -->
 
       <button type="button" class="cdj-carte" id="cdjCarte" hidden></button>
-      <div class="puces" id="packStatus"><span class="puce">Chargement…</span></div>
-      <div class="pot-libres" id="potLibres" hidden>
-        <div class="pot-ligne">
-          <span class="pot-nombre"><b id="potNombre">—</b> communes libres</span>
-          <span class="pot-seuil" id="potSeuil"></span>
-        </div>
-        <div class="pot-jauge" role="progressbar" aria-label="Avancée de la saison" aria-valuemin="0" aria-valuemax="100" id="potJauge"><i id="potBarre"></i></div>
-      </div>
       <div class="pack-buttons">
         <button class="open-btn" id="openFreeBtn">Ouvrir un paquet gratuit</button>
         <div class="glisser" id="glisserAchat">
@@ -527,13 +519,22 @@
           <span class="glisser-texte" id="glisserTexte">Glisse pour acheter<small>200 TP</small></span>
           <button type="button" class="glisser-bouton" id="openBuyBtn" aria-label="Glisse jusqu'au bout pour acheter un paquet à 200 TerraPoints"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h12M13 6l6 6-6 6"/></svg></button>
         </div>
-        <div class="ouv-reglages" aria-label="Réglages de l'ouverture">
-          <button type="button" class="ouv-bascule" id="ouvSon" aria-pressed="true">Son</button>
-          <button type="button" class="ouv-bascule" id="ouvAnim" aria-pressed="true">Animation</button>
-        </div>
       </div>
 
       <div class="pack-zone" id="packZone"></div>
+      <!-- patch287 : sous le paquet -->
+      <div class="puces" id="packStatus"><span class="puce">Chargement…</span></div>
+      <div class="ouv-reglages" aria-label="Réglages de l'ouverture">
+        <button type="button" class="ouv-bascule" id="ouvSon" aria-pressed="true">Son</button>
+        <button type="button" class="ouv-bascule" id="ouvAnim" aria-pressed="true">Animation</button>
+      </div>
+      <div class="pot-libres" id="potLibres" hidden>
+        <div class="pot-ligne">
+          <span class="pot-nombre"><b id="potNombre">—</b> communes libres</span>
+          <span class="pot-seuil" id="potSeuil"></span>
+        </div>
+        <div class="pot-jauge" role="progressbar" aria-label="Avancée de la saison" aria-valuemin="0" aria-valuemax="100" id="potJauge"><i id="potBarre"></i></div>
+      </div>
       <div class="hq-zone" id="hqZone" hidden></div><!-- patch276 : quête d'Halloween -->
 
       <div class="stats">
@@ -1659,6 +1660,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=fb4d1b248b4f"></script>
+<script defer src="app.js?v=ef910edea353"></script>
 </body>
 </html>

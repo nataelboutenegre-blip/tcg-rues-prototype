@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'fb4d1b248b4f';
+const VERSION_JEU = 'ef910edea353';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7503,7 +7503,8 @@ function renderPot(){
     const fin = new Date(s.fin_prevue).getTime();
     const jours = Math.max(0, Math.ceil((fin - Date.now()) / 86400000));
     const date = new Date(fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
-    document.getElementById('potSeuil').textContent = `Fin de saison dans ${jours} jour${jours > 1 ? 's' : ''} · le ${date}`;
+    const dateC = new Date(fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });   // patch287
+    document.getElementById('potSeuil').innerHTML = `<span class="pot-long">Fin de saison dans ${jours} jour${jours > 1 ? 's' : ''} · le ${date}</span><span class="pot-court">fin le ${dateC} · J-${jours}</span>`;
     pct = Math.max(0, Math.min(100, 100 - (fin - Date.now()) / (DUREE_SAISON_JOURS * 86400000) * 100));
   }
   document.getElementById('potBarre').style.width = pct.toFixed(1) + '%';
@@ -7643,6 +7644,15 @@ function renderPackStatus(){
     bouton.disabled = true;
     bouton.title = 'Touche le paquet ci-dessous';
   } else bouton.removeAttribute('title');
+  // patch287 : le paquet prêt porte le compte ; la puce et le bouton grisé s'effacent
+  const consigne = document.querySelector('#packZone .paquet[data-pret] .coupe-consigne');
+  const pucePaquets = document.querySelector('#packStatus .puce');
+  if(consigne){
+    consigne.innerHTML = `<b>${dispo > 3 ? dispo : dispo + ' / 3'} gratuit${dispo > 1 ? 's' : ''}</b> · touche le paquet ou coupe les pointillés`;
+    if(pucePaquets) pucePaquets.remove();
+  }
+  const ps = document.getElementById('packStatus');
+  if(ps) ps.hidden = !ps.children.length;
 }
 function paquetPretAffiche(){
   return !!document.querySelector('#packZone .paquet[data-pret]');

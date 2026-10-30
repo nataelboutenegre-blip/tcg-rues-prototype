@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ef910edea353';
+const VERSION_JEU = '8bbd6a9775f6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8777,6 +8777,7 @@ function renderMenaces(){
   });
   // la pastille est posee, elle : elle previent le joueur qui n'ouvre pas
   // l'onglet, c'est precisement a lui qu'elle sert
+  mfoRendre();   // patch288
   if(rendreALOuverture('defense', renderMenaces)) return;
   const bloc = document.getElementById('combatMenaces');
   const liste = document.getElementById('combatMenacesListe');
@@ -9073,9 +9074,13 @@ document.getElementById('reglesBtn').addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-document.getElementById('combatMenacesListe').addEventListener('click', async (e) => {
+document.getElementById('combatMenacesListe').addEventListener('click', (e) => {
   const btn = e.target.closest('.menace-defendre');
   if(!btn || btn.disabled) return;
+  defendreDepuis(btn);
+});
+// patch288 : la défense, depuis Défendre ou depuis Mon front
+async function defendreDepuis(btn){
   btn.disabled = true;
   const gn = SAISON2 ? garnisonsMoi.get(btn.dataset.commune) : null;
   const recharge = gn ? Math.min(3, 10 - gn.energie) : 0;
@@ -9110,7 +9115,7 @@ document.getElementById('combatMenacesListe').addEventListener('click', async (e
     notifier({ type: 'erreur', titre: 'Défense impossible', texte: messageLisible(err.message) });
     btn.disabled = false;
   }
-});
+}
 
 let combatCibles = [];
 let combatSieges = new Map();
@@ -10642,6 +10647,7 @@ async function chargerGarnisons(){
 }
 
 function renderGarnisons(){
+  setTimeout(mfoRendre, 0);   // patch288
   const el = document.getElementById('garnisonsBloc');
   if(!el) return;
   const liste = [...garnisonsMoi.entries()];
@@ -11662,6 +11668,7 @@ function renderJaugeEnergie(){
     <div class="je-haut"><b>${e} <small>/ ${max}</small></b><span>${e >= max ? 'Réserve pleine' : `+1 dans ${prochaineMin} min · pleine dans ${duree(pleinMin)}`}</span></div>
     <div class="je-barre">${Array.from({ length: max }, (_, i) => `<i class="${i < e ? 'p' : ''}"></i>`).join('')}</div>
     <p class="je-note">L'énergie se recharge seule : +1 toutes les 10 minutes.</p>${blocRecolteHtml()}`;
+  mfoRendre();   // patch288
 }
 
 function construireMenuPlus(){
@@ -11889,6 +11896,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); }
     if(tab.dataset.tab === 'defense'){ loadMenaces().then(loadReveil); loadCombat(); renderIntensite('defense'); if(SAISON2) chargerGarnisons(); }
     if(tab.dataset.tab === 'combat' && SAISON2) majEnergie();
+    if(tab.dataset.tab === 'combat') mfoEntrer();   // patch288
     if(tab.dataset.tab === 'combat'){
       // patch135 : la liste connue s'affiche tout de suite ; rechargee si elle a plus d'une minute
       if(combatCibles.length) renderCombatGrid();
@@ -11964,7 +11972,7 @@ function carteObjectif(o){
 }
 
 function renderObjectifs(){
-  setTimeout(majBandeauObjectifs, 0);   // patch284
+  setTimeout(() => { majBandeauObjectifs(); mfoRendre(); }, 0);   // patch284, patch288
   const bloc = document.getElementById('objectifs');
   if(!bloc) return;
   if(SAISON2) objectifsListe = quetesTout.filter(q => q.mode === modeJeu);
@@ -23085,3 +23093,216 @@ function majBandeauObjectifs(){
   b.innerHTML = `<span class="obj-b-l"><span class="obj-b-t">${OBJ_ECLAIR}Quêtes du jour</span><span class="obj-b-n">${faites} / ${jour.length} ›</span></span><span class="obj-b-seg">${cases}</span><small class="obj-b-sous">${sous}</small>`;   // patch285
 }
 document.getElementById('objBandeau')?.addEventListener('click', objOuvrirFeuille);
+
+// ---------- patch288 : « Mon front », le premier volet de Combat ----------
+const MFO = { vue: 'front', lu: 0, attaques: [], attaquesLu: false };
+(function mfoInit(){
+  const pc = document.getElementById('panel-combat');
+  if(!SAISON2 || !pc || document.getElementById('monFront')) return;
+  const z = document.createElement('div');
+  z.id = 'monFront'; z.className = 'mfo';
+  pc.querySelector('.volets').insertAdjacentElement('afterend', z);
+})();
+function mfoActif(){
+  const pan = document.getElementById('panel-combat');
+  return !!(pan && pan.classList.contains('active') && MFO.vue === 'front' && document.getElementById('monFront'));
+}
+function mfoAppliquer(){
+  const pan = document.getElementById('panel-combat');
+  if(!pan || !document.getElementById('monFront')) return;
+  const front = MFO.vue === 'front';
+  pan.classList.toggle('vue-front', front);
+  pan.querySelectorAll('.volets .volet').forEach(v => {
+    const on = v.dataset.volet === (front ? 'monfront' : 'combat');
+    v.classList.toggle('actif', on); v.setAttribute('aria-selected', String(on));
+  });
+  if(front) mfoRendre();
+}
+function mfoEntrer(){
+  if(!SAISON2 || !document.getElementById('monFront')) return;
+  mfoAppliquer();
+  if(MFO.vue !== 'front') return;
+  if(Date.now() - MFO.lu > 30000){
+    MFO.lu = Date.now();
+    loadMenaces(); chargerGarnisons(); mfoChargerAttaques();
+    if(quetesTout.length) renderObjectifs(); else loadObjectifs();
+  }
+  mfoRendre();
+}
+// mes attaques en cours : une requête légère (sans charger toutes les cibles d'Attaquer)
+async function mfoChargerAttaques(){
+  try{
+    const { data: u } = await sb.auth.getUser();
+    const uid = u && u.user && u.user.id;
+    if(!uid) return;
+    const { data, error } = await sb.from('sieges').select('commune_code, victoires_consecutives, dernier_round')
+      .eq('attacker_id', uid).gt('victoires_consecutives', 0);
+    if(error) return;
+    const codes = (data || []).map(x => x.commune_code);
+    const noms = new Map();
+    if(codes.length){
+      const { data: cs } = await sb.from('communes').select('code, nom, tier').in('code', codes.slice(0, 100));
+      (cs || []).forEach(c => noms.set(c.code, c));
+    }
+    MFO.attaques = (data || []).map(x => {
+      const c = noms.get(x.commune_code) || {};
+      return { code: x.commune_code, nom: c.nom || x.commune_code, tier: c.tier, v: Number(x.victoires_consecutives) || 0,
+        prochain: x.dernier_round ? new Date(x.dernier_round).getTime() + (DELAI_ATTAQUE_MS[c.tier] || 0) : 0 };
+    }).sort((a, b) => b.v - a.v || a.prochain - b.prochain);
+    MFO.attaquesLu = true;
+  }catch(e){}
+  mfoRendre();
+}
+const mfoTier = (id) => TIERS.find(t => t.id === id);
+function mfoRendre(){
+  if(!mfoActif()) return;
+  const z = document.getElementById('monFront');
+  const now = Date.now(), E = ICONE_ENERGIE;
+  // 1. à défendre maintenant (la plus menacée par commune ; un bouclier passe après)
+  const par = new Map();
+  for(const m of (menaces || [])){
+    if(!(m.victoires_consecutives > 0)) continue;
+    const g = par.get(m.commune_code);
+    if(!g || m.victoires_consecutives > g.victoires_consecutives) par.set(m.commune_code, m);
+  }
+  const danger = [...par.values()].map(m => {
+    const c = collectionMap.get(m.commune_code);
+    return { m, bouclier: c && c.bouclierJusqua > now ? c.bouclierJusqua : 0,
+      p: m.dernier_round ? new Date(m.dernier_round).getTime() + (DELAI_ATTAQUE_MS[m.tier] || 0) : 0 };
+  }).sort((a, b) => (!!a.bouclier - !!b.bouclier) || b.m.victoires_consecutives - a.m.victoires_consecutives || a.p - b.p);
+  const ligneDanger = ({ m, bouclier, p }) => {
+    const v = m.victoires_consecutives, t = mfoTier(m.tier);
+    const quand = bouclier ? 'en pause (bouclier)' : now < p ? `prochain assaut dans ${formatDuree(p - now)}` : 'peut attaquer maintenant';
+    const action = bouclier ? '' : m.defense_utilisee ? '<span class="mfo-note">deux défenses utilisées</span>'
+      : m.attaquant_id ? `<button type="button" class="menace-defendre mfo-btn mfo-rouge" data-commune="${echapperTexte(m.commune_code)}" data-attaquant="${echapperTexte(m.attaquant_id)}" data-nom="${echapperTexte(m.nom || '')}">Défendre · 1 ${E}</button>` : '';
+    return `<div class="mfo-l"><div><b>${echapperTexte(m.nom || m.commune_code)}</b>${t ? ' · ' + t.label.toLowerCase() : ''}<small>${v} round${v > 1 ? 's' : ''} sur 3 perdu${v > 1 ? 's' : ''} · ${quand}</small></div>${action}</div>`;
+  };
+  const blocDanger = danger.length
+    ? `<div class="mfo-t mfo-alerte"><div class="mfo-h"><span>⚠ À défendre maintenant</span><button type="button" class="mfo-lien" data-mfo="defendre">Tout voir${danger.length > 3 ? ` (${danger.length})` : ''} ›</button></div>${danger.slice(0, 3).map(ligneDanger).join('')}</div>`
+    : `<div class="mfo-t mfo-calme"><i>✓</i><span>Aucune de tes communes n'est attaquée.</span></div>`;
+  // 2. énergie et récolte
+  let blocEnergie = '';
+  if(energieEtat){
+    const e = energieEtat.energie, max = energieEtat.maximum || 40, manque = Math.max(0, max - e);
+    const pm = energieEtat.prochaine_dans != null ? Math.max(1, Math.ceil(energieEtat.prochaine_dans / 60)) : null;
+    const plein = manque > 0 && pm != null ? pm + (manque - 1) * 10 : 0;
+    const duree = (x) => x >= 60 ? Math.floor(x / 60) + ' h ' + String(x % 60).padStart(2, '0') : x + ' min';
+    const r = recolteEtat;
+    let rc = '';
+    if(r){
+      const n = Number(r.pretes) || 0;
+      rc = r.recoltee ? `<div class="mfo-rc"><span>★ Récolté aujourd'hui : +${Number(r.recoltee_energie) || 0}</span><span class="mfo-ok">✓ demain</span></div>`
+        : n > 0 ? `<div class="mfo-rc"><span>★ ${n} légendaire${n > 1 ? 's' : ''} tenue${n > 1 ? 's' : ''} depuis 24 h</span><button type="button" class="mfo-btn mfo-or" data-recolter${recolteEnCours ? ' disabled' : ''}>Récolter +${Number(r.energie) || 0} ${E}</button></div>`
+        : `<div class="mfo-rc"><span>★ Garde une légendaire 24 h : +2 énergie par jour</span></div>`;
+    }
+    blocEnergie = `<div class="mfo-t"><div class="mfo-h"><span>${E} Énergie</span><button type="button" class="mfo-lien" data-mfo="aide">Comment en gagner ›</button></div>
+      <div class="mfo-e"><b>${e} <small>/ ${max}</small></b><em>${e >= max ? 'Réserve pleine' : `+1 dans ${pm} min · pleine dans ${duree(plein)}`}</em></div>
+      <div class="mfo-jauge">${Array.from({ length: max }, (_, i) => `<i class="${i < e ? 'p' : ''}"></i>`).join('')}</div>${rc}</div>`;
+  }
+  // 3. mes attaques en cours
+  const att = MFO.attaques;
+  const ligneAtt = (a) => {
+    const pret = !a.prochain || now >= a.prochain;
+    return `<div class="mfo-l"><div><b>${echapperTexte(a.nom)}</b><small>${pret ? 'tu peux rejouer un round' : `prochain round dans ${formatDuree(a.prochain - now)}`}</small>
+      <span class="mfo-pr">${[0, 1, 2].map(i => `<i class="${i < a.v ? 'v' : ''}"></i>`).join('')}</span></div>
+      <button type="button" class="mfo-btn ${pret ? 'mfo-rouge' : 'mfo-sec'}" data-mfo="encours">${pret ? 'Attaquer' : 'Voir'}</button></div>`;
+  };
+  const blocAtt = `<div class="mfo-t"><div class="mfo-h"><span>⚔ Mes attaques en cours</span><button type="button" class="mfo-lien" data-mfo="attaquer">Attaquer ›</button></div>
+    ${!MFO.attaquesLu ? '<p class="mfo-p">Chargement…</p>' : att.length ? att.slice(0, 4).map(ligneAtt).join('') + (att.length > 4 ? `<p class="mfo-p">+ ${att.length - 4} autre${att.length - 4 > 1 ? 's' : ''} · <button type="button" class="mfo-lien" data-mfo="encours">tout voir ›</button></p>` : '')
+      : '<p class="mfo-p">Aucune attaque en cours. <button type="button" class="mfo-lien" data-mfo="attaquer">Choisir une cible ›</button></p>'}</div>`;
+  // 4. mes communes et protection
+  const mes = [...collectionMap.values()].filter(c => !c.perdue);
+  const compte = Object.fromEntries(TIERS.map(t => [t.id, 0]));
+  mes.forEach(c => { if(c.tier && compte[c.tier.id] != null) compte[c.tier.id]++; });
+  const points = TIERS.filter(t => compte[t.id] > 0).map(t => `<button type="button" class="mfo-point" data-mfo-tier="${t.id}" title="Voir mes ${t.label.toLowerCase()}s" aria-label="${compte[t.id]} ${t.label.toLowerCase()}, voir dans la collection"><i style="background:${COULEURS_FILTRE[t.id]}"></i>${compte[t.id]}</button>`).join('');
+  const gs = [...garnisonsMoi.values()];
+  const enGarnison = gs.reduce((t, g) => t + (Number(g.energie) || 0), 0);
+  const boucliers = mes.filter(c => c.bouclierJusqua > now).sort((a, b) => a.bouclierJusqua - b.bouclierJusqua);
+  const blocCom = `<div class="mfo-g">
+    <div class="mfo-t mfo-clic" data-mfo="collection" role="button" tabindex="0" aria-label="Ouvrir ma collection Front"><div class="mfo-h"><span>Mes communes</span></div>
+      <div class="mfo-n">${mes.length.toLocaleString('fr-FR')}<small>commune${mes.length > 1 ? 's' : ''}</small></div>
+      <div class="mfo-rar">${points}</div>
+      <div class="mfo-liens"><span class="mfo-lien">Voir la liste ›</span><button type="button" class="mfo-lien" data-mfo="carte">Sur la carte ›</button></div></div>
+    <div class="mfo-t mfo-clic" data-mfo="defendre" role="button" tabindex="0" aria-label="Gérer mes protections"><div class="mfo-h"><span>Protection</span></div>
+      <div class="mfo-n">${gs.length}<small>/ 3 garnison${gs.length > 1 ? 's' : ''}</small></div>
+      <p class="mfo-p">${gs.length ? `${enGarnison} énergie déposée` : 'Aucune garnison'}<br>${boucliers.length ? `${boucliers.length} bouclier${boucliers.length > 1 ? 's' : ''} actif${boucliers.length > 1 ? 's' : ''} · ${echapperTexte(boucliers[0].nom)}, ${formatDuree(boucliers[0].bouclierJusqua - now)}` : 'Aucun bouclier actif'}</p>
+      <div class="mfo-liens"><span class="mfo-lien">Gérer ›</span></div></div></div>`;
+  // 5. les quêtes du jour : le même bandeau que dans le Tirage
+  const ob = document.getElementById('objBandeau');
+  const blocQ = ob && !ob.hidden && ob.innerHTML ? `<button type="button" class="${ob.className} mfo-quetes" data-mfo="quetes" aria-label="${echapperTexte(ob.getAttribute('aria-label') || 'Quêtes du jour')}">${ob.innerHTML}</button>` : '';
+  z.innerHTML = blocDanger + blocEnergie + blocAtt + blocCom + blocQ;
+}
+// ouvrir un autre écran depuis Mon front
+function mfoVers(quoi, tier){
+  const tab = (id) => { const t = document.querySelector(`.tab[data-tab="${id}"]`); if(t) t.click(); };
+  if(quoi === 'defendre') return tab('defense');
+  if(quoi === 'attaquer' || quoi === 'encours'){
+    MFO.vue = 'attaquer'; mfoAppliquer();
+    if(quoi === 'encours' && !combatEnCours){ const b = document.getElementById('combatEnCoursToggle'); if(b) b.click(); }
+    if(!combatCibles.length) loadCombat(); else renderCombatGrid();
+    window.scrollTo({ top: 0 });
+    return;
+  }
+  if(quoi === 'collection'){
+    if(tier){ collectionFilterTier = tier; etiquetteFiltre = null; }
+    tab('collection');
+    if(tier) setTimeout(() => { try{ renderCollection(); }catch(e){} }, 0);
+    return;
+  }
+  if(quoi === 'carte') return tab('territoire');
+  if(quoi === 'quetes') return objOuvrirFeuille();
+  if(quoi === 'aide') return mfoAide();
+}
+function mfoAide(){
+  let f = document.getElementById('mfoAide');
+  if(!f){
+    f = document.createElement('div');
+    f.id = 'mfoAide'; f.className = 'obj-feuille'; f.hidden = true;
+    f.innerHTML = `<div class="obj-voile" data-mfoa="fermer"></div>
+      <div class="obj-panneau" role="dialog" aria-modal="true" aria-label="Gagner de l'énergie">
+        <div class="obj-poignee" aria-hidden="true"></div>
+        <button type="button" class="obj-fermer" data-mfoa="fermer" aria-label="Fermer">✕</button>
+        <h2 class="mfo-aide-titre">Gagner de l'énergie</h2>
+        <ul class="mfo-aide"><li>Elle se recharge seule : +1 toutes les 10 minutes, jusqu'au maximum.</li>
+          <li>Les quêtes du jour : +5 chacune, jusqu'à 50 par jour.</li>
+          <li>Tes légendaires tenues depuis 24 h : +2 chacune par jour, à récolter (10 au plus).</li>
+          <li>Retirer une garnison rend la moitié de son énergie.</li></ul>
+      </div>`;
+    document.body.appendChild(f);
+    f.addEventListener('click', (e) => { if(e.target.closest('[data-mfoa="fermer"]')){ f.hidden = true; document.body.classList.remove('obj-ouverte'); } });
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && !f.hidden){ f.hidden = true; document.body.classList.remove('obj-ouverte'); } });
+  }
+  f.hidden = false; document.body.classList.add('obj-ouverte');
+  const x = f.querySelector('.obj-fermer'); if(x) x.focus({ preventScroll: true });
+}
+// les volets et l'onglet : la barre ouvre Mon front, le volet « Attaquer » l'écran d'avant
+document.addEventListener('click', (e) => {
+  const v = e.target.closest('.volet[data-volet]');
+  if(v){
+    const pan = document.getElementById('panel-combat');
+    const ici = pan && pan.classList.contains('active');
+    if(v.dataset.volet === 'monfront'){
+      MFO.vue = 'front';
+      if(ici) mfoEntrer(); else { const t = document.querySelector('.tab[data-tab="combat"]'); if(t) t.click(); }
+    } else if(v.dataset.volet === 'combat'){
+      MFO.vue = 'attaquer';
+      if(ici){ mfoAppliquer(); if(combatCibles.length) renderCombatGrid(); else loadCombat(); }
+    }
+    return;
+  }
+  const t = e.target.closest('.tab[data-tab="combat"]');
+  if(t && e.isTrusted) MFO.vue = 'front';
+}, true);
+document.getElementById('monFront')?.addEventListener('click', (e) => {
+  const def = e.target.closest('.menace-defendre');
+  if(def){ if(!def.disabled) defendreDepuis(def); return; }
+  if(e.target.closest('[data-recolter]')) return;   // le bouton Récolter a déjà son écouteur
+  const p = e.target.closest('[data-mfo-tier]');
+  if(p) return mfoVers('collection', p.dataset.mfoTier);
+  const b = e.target.closest('[data-mfo]');
+  if(b) mfoVers(b.dataset.mfo);
+});
+document.getElementById('monFront')?.addEventListener('keydown', (e) => {
+  if((e.key === 'Enter' || e.key === ' ') && e.target.matches('.mfo-clic')){ e.preventDefault(); mfoVers(e.target.dataset.mfo); }
+});
+mfoAppliquer();

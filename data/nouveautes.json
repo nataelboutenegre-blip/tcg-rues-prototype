@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-10-31",
+    "nouveautes": [
+      "⚔ Combat : le volet « Mon front » résume tout (à défendre, énergie, attaques en cours, communes, protections, quêtes)"
+    ],
+    "correctifs": []
+  },
+  {
     "date": "2026-10-30",
     "nouveautes": [
       "📋 Quêtes du jour : un bandeau en haut du Tirage, la liste s’ouvre d’un geste",

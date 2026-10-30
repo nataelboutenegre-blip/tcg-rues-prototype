@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b615fd947042';
+const VERSION_JEU = 'fbec6e14609e';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -23062,12 +23062,16 @@ function majBandeauObjectifs(){
   const front = SAISON2 && modeJeu === 'front';
   const ej = front ? Number(liste[0].energie_jour) || 0 : null;
   const tpReste = jour.filter(o => !o.reclame).reduce((t, o) => t + (Number(o.points) || 0), 0);
+  // patch285 : une case par quête du jour, dans l'ordre faites, à récupérer, à faire
+  const cases = jour.map(o => o.reclamable ? 'pr' : ((o.reclame || Number(o.avancement) >= Number(o.cible)) ? 'on' : ''))
+    .sort((x, y) => ['on', 'pr', ''].indexOf(x) - ['on', 'pr', ''].indexOf(y))
+    .map(c => `<i class="${c}"></i>`).join('');
   const sous = (front ? `${ej} / 50 d’énergie gagnée`
       : (tpReste ? `encore ${tpReste.toLocaleString('fr-FR')} TP à gagner` : (faites === jour.length ? 'tout est fait pour aujourd’hui' : 'de nouvelles quêtes chaque jour')))
     + (prets ? ` · <b class="obj-b-pret">${prets} à récupérer</b>` : '');
   b.hidden = false;
   b.classList.toggle('pret', prets > 0);
   b.setAttribute('aria-label', `Quêtes du jour : ${faites} sur ${jour.length}${prets ? ', ' + prets + ' à récupérer' : ''}`);
-  b.innerHTML = `<span class="obj-b-ic">${OBJ_ECLAIR}</span><span class="obj-b-txt"><b>Quêtes du jour · ${faites} / ${jour.length}</b><small>${sous}</small></span><span class="obj-b-go">Voir ›</span>`;
+  b.innerHTML = `<span class="obj-b-l"><span class="obj-b-t">${OBJ_ECLAIR}Quêtes du jour</span><span class="obj-b-n">${faites} / ${jour.length} ›</span></span><span class="obj-b-seg">${cases}</span><small class="obj-b-sous">${sous}</small>`;   // patch285
 }
 document.getElementById('objBandeau')?.addEventListener('click', objOuvrirFeuille);

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'e0d9cf1c9934';
+const VERSION_JEU = 'cc8bc971d267';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -20674,6 +20674,7 @@ function recapFermer(){
 document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && RECAP.ouvert) recapFermer(); });
 
 function ncOuvrir(vue){
+  ncMajCharger();   // patch283
   NC.vue = vue || 'liste';
   NC.ouvert = true;
   if(!document.getElementById('ncPanneau')){
@@ -20715,7 +20716,7 @@ function ncRendre(){
       ${NC.items.some(x => x.neuf) ? '<button type="button" data-nc="lu">Tout marquer comme lu</button>' : ''}
       <button type="button" class="nc-reglage" data-nc="reglages" aria-label="Choisir mes notifications">${NC_REGLER}</button>
       <button type="button" class="nc-x" data-nc="fermer" aria-label="Fermer">✕</button></div>
-    <div class="nc-corps">
+    <div class="nc-corps">${ncMajHtml()}
       <p class="nc-titre">À faire</p>${af.length ? af.map(([x, k]) => ligne(x, k)).join('') : '<p class="nc-vide">Rien à faire pour l’instant.</p>'}
       <p class="nc-titre">Depuis ta dernière visite</p>${hi.length ? hi.map(([x, k]) => ligne(x, k)).join('') : '<p class="nc-vide">Rien de neuf ces 7 derniers jours.</p>'}
       <p class="nc-pied">Les 7 derniers jours · tout le reste est dans le Journal</p></div>`;
@@ -20818,6 +20819,7 @@ async function ncRegler(fn, args){
 async function ncClic(e){
   const b = e.target.closest('button');
   if(!b) return;
+  if(b.hasAttribute('data-nc-maj')){ NC.majOuvert = !NC.majOuvert; if(NC.majOuvert) ncMajVu(); return ncRendre(); }   // patch283
   if(b.dataset.ncVoir){   // patch227 : la commune attaquée, sur la carte du Front
     const code = b.dataset.ncVoir, entree = collectionMap.get(code) || { code };
     return ncAller('front', 'territoire', () => voirCommuneSurCarte(entree));
@@ -22974,4 +22976,43 @@ function evtGrilleTerra(liste){
   const vides = manquent.map(c => `<div class="evt-manque" aria-label="${echapperTexte(c.nom)} : à trouver"><span aria-hidden="true">?</span><b>${echapperTexte(c.nom)}</b><small>${echapperTexte(c.departement)} · à trouver dans un paquet</small></div>`).join('');
   const tete = `<div class="evt-tete">${HNT_FANTOME}<div><p>Événement · Halloween 2026</p><b>Les châteaux hantés</b><small>${H.actif ? 'jusqu’au ' + hntFin(H) + ' à minuit · 1 paquet sur 3' : 'terminé'}</small></div><span class="evt-compte">${n}<small>/${total}</small></span></div>`;
   return tete + cartes + vides + (!cartes && !vides ? '<p class="collection-empty">Aucune carte d’événement.</p>' : '');
+}
+
+// ---------- patch283 : nouveautés et correctifs, dans la cloche ----------
+// data/nouveautes.json : [{ date, nouveautes: [...], correctifs: [...] }], la plus récente d'abord.
+const NC_MAJ_VUE = 'tf-maj-vue';
+let ncMajLu = false;
+async function ncMajCharger(){
+  if(ncMajLu) return;
+  ncMajLu = true;
+  try{
+    const r = await fetch('data/nouveautes.json?v=' + encodeURIComponent(VERSION_JEU));
+    if(!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    NC.maj = Array.isArray(d) ? d.filter(x => x && x.date).sort((a, b) => String(b.date).localeCompare(String(a.date))) : [];
+  }catch(e){ ncMajLu = false; return; }
+  if(NC.ouvert && NC.vue === 'liste') ncRendre();
+}
+function ncMajNeuf(){
+  if(!NC.maj || !NC.maj.length) return false;
+  try{ return (localStorage.getItem(NC_MAJ_VUE) || '') < String(NC.maj[0].date); }catch(e){ return false; }
+}
+function ncMajVu(){ try{ if(NC.maj && NC.maj.length) localStorage.setItem(NC_MAJ_VUE, String(NC.maj[0].date)); }catch(e){} }
+function ncMajDate(d){
+  try{ return new Date(d + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }); }catch(e){ return d; }
+}
+function ncMajHtml(){
+  const L = NC.maj;
+  if(!L || !L.length) return '';
+  const ouvert = !!NC.majOuvert, neuf = ncMajNeuf();
+  const bloc = (titre, l, pre) => l && l.length ? `<p class="nc-maj-sous">${titre}</p><ul>${l.map(x => `<li>${pre}${echapperTexte(x)}</li>`).join('')}</ul>` : '';
+  return `<div class="nc-maj${ouvert ? ' ouvert' : ''}">
+    <button type="button" class="nc-maj-bouton" data-nc-maj aria-expanded="${ouvert}">
+      <span class="nc-ico histo" aria-hidden="true">📋</span>
+      <span class="nc-txt"><b>Nouveautés et correctifs</b><small>Mise à jour du ${echapperTexte(ncMajDate(L[0].date))}</small></span>
+      ${neuf ? '<span class="nc-maj-neuf">Nouveau</span>' : ''}<span class="nc-maj-chev" aria-hidden="true">›</span>
+    </button>
+    ${ouvert ? `<div class="nc-maj-corps">${L.slice(0, 3).map(j => `<p class="nc-maj-jour">${echapperTexte(ncMajDate(j.date))}</p>${bloc('Nouveautés', j.nouveautes, '')}${bloc('Correctifs', j.correctifs, '🔧 ')}`).join('')}
+      <p class="nc-maj-pied">Le détail est sur le Discord, salon #nouveautés.</p></div>` : ''}
+  </div>`;
 }

@@ -1,0 +1,25 @@
+[
+  {
+    "date": "2026-10-30",
+    "nouveautes": [
+      "🎃 Halloween : décor TerreurFront et screamers au choix, jusqu’au 2 novembre à minuit",
+      "👻 Quête des communes hantées : 1 paquet Terra sur 3, et en Front, celui qui en tient une à la fin gagne",
+      "🛒 Ta boutique : une vitrine de communes rien qu’à toi, renouvelée chaque jour et chaque semaine",
+      "👋 Récap d’arrivée après 3 h d’absence, et barre du bas revue sur téléphone",
+      "🗺️ Plus ou moins : la mini-carte de France entre les deux photos",
+      "🏅 Plus ou moins : de nouveaux rangs, plus serrés, et Préfet pour le n°1",
+      "🕊️ Libérer des communes du Front contre de l’énergie",
+      "⚡ Quêtes du Front : jusqu’à 50 d’énergie par jour, et « Joue 2 duels » au lieu de « Gagne un duel »",
+      "🛡️ Le blason de ton clan à côté de ton pseudo (classement, carte, journal)",
+      "🔁 Échange : la pastille « Toutes » pour voir toutes les raretés d’un coup",
+      "📒 Collection Terra : la catégorie « Événements »"
+    ],
+    "correctifs": [
+      "Les paquets Terra qui ne s’ouvraient plus entre 18 h 24 et 18 h 43 (rien n’a été perdu)",
+      "Le jeu qui se rechargeait en boucle vers 20 h 20",
+      "La vitrine qui s’étirait sur iPhone à partir de 5 cartes",
+      "Le sceau « Hantée » qui cachait le monument de la carte",
+      "La pastille « 0 » de la cloche, et le journal qui disait « une rare » pour une épique"
+    ]
+  }
+]

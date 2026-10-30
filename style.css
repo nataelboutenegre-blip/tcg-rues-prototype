@@ -8212,3 +8212,17 @@ button.hq-slot{ font:inherit; color:inherit; text-align:left; cursor:pointer; wi
 .evt-manque span{ position:absolute; top:18%; left:0; right:0; text-align:center; font-family: var(--titre); font-weight:900; font-size:2.2rem; color: rgba(255,179,71,.4); }
 .evt-manque b{ font-family: var(--titre); font-weight:800; font-size:.85rem; line-height:1.05; }
 .evt-manque small{ font-size:.6rem; color:#AFC0D8; line-height:1.25; }
+
+/* patch283 : nouveautés et correctifs dans la cloche */
+.nc-maj{ margin:8px 12px 2px; border:1px solid rgba(169,188,212,.16); border-radius:12px; background:rgba(169,188,212,.05); overflow:hidden; }
+.nc-maj-bouton{ display:flex; align-items:center; gap:11px; width:100%; padding:9px 12px; border:0; background:none; color:inherit; font:inherit; text-align:left; cursor:pointer; }
+.nc-maj-bouton:focus-visible{ outline:2px solid #F0B429; outline-offset:-2px; border-radius:12px; }
+.nc-maj-neuf{ flex:none; font-size:.62rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; padding:3px 8px; border-radius:999px; background:rgba(240,180,41,.16); color:#F7D27A; border:1px solid rgba(240,180,41,.4); }
+.nc-maj-chev{ flex:none; font-size:1.3rem; color:var(--brume); transition: transform .15s; }
+.nc-maj.ouvert .nc-maj-chev{ transform: rotate(90deg); }
+.nc-maj-corps{ padding:2px 14px 12px; border-top:1px solid rgba(169,188,212,.1); }
+.nc-maj-jour{ margin:10px 0 2px; font-family:var(--titre); font-weight:800; font-size:1rem; color:#fff; }
+.nc-maj-sous{ margin:8px 0 4px; font-size:.66rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--brume); }
+.nc-maj ul{ margin:0; padding:0 0 0 2px; list-style:none; display:flex; flex-direction:column; gap:5px; }
+.nc-maj li{ font-size:.8rem; line-height:1.35; color:#D5DEEA; }
+.nc-maj-pied{ margin:12px 0 0; font-size:.7rem; color:var(--brume); }

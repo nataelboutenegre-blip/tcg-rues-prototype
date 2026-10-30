@@ -8180,3 +8180,9 @@ button.hq-slot{ font:inherit; color:inherit; text-align:left; cursor:pointer; wi
   .card .carte-art .hnt-sceau svg{ width:10px; height:10px; }
   .card.a-monument .carte-art .hnt-sceau{ bottom:30px; }
 }
+
+/* patch280 : bande du choix de la vitrine, tailles fixes (Safari étirait les cartes dès que la bande défilait) */
+.vt-bande > .vt-case-w{ flex:0 0 66px; width:66px; height:99px; }
+.vt-bande > .vt-case-w > .vt-case{ display:block; width:66px; height:99px; }
+.vt-bande > .vt-case-w > .vt-case > .mini{ width:66px; height:99px; aspect-ratio:auto; }
+.vt-bande > .vt-case.vide{ flex:0 0 66px; width:66px; height:99px; aspect-ratio:auto; }

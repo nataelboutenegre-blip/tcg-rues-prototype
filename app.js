@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'fbec6e14609e';
+const VERSION_JEU = 'fb4d1b248b4f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7070,8 +7070,8 @@ function makeCardEl(draw, onFlip){
   const wrap = document.createElement('div');
   const mon = monumentDe(draw.code);
   const bxg = briParts(draw, true);   // patch269
-  const atg = atlParts(draw.terraExemplaires != null ? { ...draw, atelier: atlPour(draw.code, 2), skin: skinDeMaCarte('terra', draw.code) } : draw, true);   // patch270
   const hng = hntParts(draw.code, draw.terraExemplaires != null ? 'terra-tirage' : (enTerra() ? 'terra' : 'front'));   // patch276
+  const atg = atlParts(draw.terraExemplaires != null ? { ...draw, atelier: atlPour(draw.code, 2), skin: skinDeMaCarte('terra', draw.code) } : draw, true, !!hng.cls);   // patch270, patch286
   wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '') + (draw.aurore ? ' aurore' : '') + (estOutremerCode(draw.code) ? ' outremer' : '') + bxg.cls + atg.cls + hng.cls;   // patch219, patch269, patch270
   wrap.innerHTML = `
     <div class="card-inner">
@@ -10769,8 +10769,8 @@ function miniTerra(e){
   const nom = echapperTexte(e.nom);
   const au = e.aurore > 0;
   const bx = briParts(e, false);   // patch269
-  const at = atlParts(e, false);   // patch270
   const hn = hntParts(e.code, e.hntNon ? '' : 'terra');   // patch276
+  const at = atlParts(e, false, !!hn.cls);   // patch270, patch286
   return `<div class="mini ${e.tier.id}${au ? ' aurore' : ''}${estOutremerCode(e.code) ? ' outremer' : ''}${bx.cls}${at.cls}${hn.cls}"${e.skin ? ` data-skin="${echapperTexte(e.skin)}"` : ''} title="${nom} (${e.dept}) — ${e.tier.label}${au ? ' — Aurore' + (e.aurore > 1 ? ' ×' + e.aurore : '') : ''}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}${au ? titreCreditAurore(e.code) : ''}">
     ${bx.dehors}${at.dehors}<div class="mini-int">${at.fond}
       ${au ? fondAurore(e.code, e.tier.id, false) : ''}
@@ -21841,12 +21841,12 @@ function atlScint(niv){
   return `<i class="atl-scint" aria-hidden="true">${h}</i>`;
 }
 // les calques d'une carte : derrière (cadre, halo), au fond de la carte, dans l'image, par-dessus
-function atlParts(e, grande){
+function atlParts(e, grande, hantee){   // patch286 : hantee = la carte porte la hantise d'Halloween
   const vide = { cls: '', dehors: '', fond: '', art: '', anneau: '' };
   const a = e && e.atelier;
   if(!a || (e.brillantes || 0) > 0 || e.brillante || e.eclat) return vide;
   const n = atlNet(a), au = e.aurore > 0 || e.aurore === true;
-  const fn = e.skin ? 'aucune' : n.finition, ha = n.halo;
+  const fn = (e.skin || hantee) ? 'aucune' : n.finition, ha = n.halo;   // patch286
   const st = e.skin || au ? 'classique' : n.style, bd = e.skin ? 'rarete' : n.bordure;
   if(fn === 'aucune' && ha === 'aucun' && st === 'classique' && bd === 'rarete') return vide;
   const niv = grande ? 2 : (Number(a.niveau) || 0);

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '387e06911cd6';
+const VERSION_JEU = '2cd1a3cf51a2';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -841,6 +841,7 @@ async function showGame(session_){
   ifaceCharger();   // patch262 : interrupteurs d'interface (s2-61)
   recapDemarrer();   // patch262 : le récap d'arrivée
   hwCharger();   // patch265 : Halloween (s2-62)
+  hntCharger();   // patch276 : les communes hantées (s2-68)
   briCharger();   // patch269 : brillantes et éclats (s2-63)
   atlCharger();   // patch270 : l'atelier des cartes (s2-64)
   dmEtape(25, 'La carte de France…');
@@ -5877,11 +5878,11 @@ function renderCollection(){
       ? `<span class="mini-siege" title="${s.nb > 1 ? s.nb + ' joueurs attaquent cette commune' : 'Un joueur attaque cette commune'} — meilleure série ${s.max} sur 3">${s.max}/3${s.nb > 1 ? ' ×' + s.nb : ''}</span>`
       : '';
     return `
-    <div class="mini ${entry.tier.id}${auroreFront(entry.code) ? ' aurore' : ''}${entry.perdue ? ' perdue' : ''}${favorisSet.has(entry.code) ? ' favori' : ''}" data-code="${entry.code}" role="button" tabindex="0" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
+    <div class="mini ${entry.tier.id}${auroreFront(entry.code) ? ' aurore' : ''}${entry.perdue ? ' perdue' : ''}${favorisSet.has(entry.code) ? ' favori' : ''}${hntParts(entry.code, 'front').cls}" data-code="${entry.code}" role="button" tabindex="0" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
       <div class="mini-int">
         ${auroreFront(entry.code) ? fondAurore(entry.code, entry.tier.id, false) : ''}
         ${entry.perdue ? '<span class="mini-perdue">PERDUE</span>' : ''}${favorisSet.has(entry.code) ? '<span class="mini-fav" title="Gardée à la fin de la saison">★</span>' : ''}
-        <div class="mini-art">${artCommune(entry, entry.tier.id)}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}${monumentsNoms.has(entry.code) ? `<span class="mini-monument" title="Monument : ${echapperTexte(monumentsNoms.get(entry.code))}">${ICONE_MONUMENT}</span>` : ''}${entry.etiquette ? `<span class="mini-etiq" title="Ton étiquette">${echapperTexte(entry.etiquette)}</span>` : ''}</div>
+        <div class="mini-art">${artCommune(entry, entry.tier.id)}${hntParts(entry.code, 'front').art}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}${monumentsNoms.has(entry.code) ? `<span class="mini-monument" title="Monument : ${echapperTexte(monumentsNoms.get(entry.code))}">${ICONE_MONUMENT}</span>` : ''}${entry.etiquette ? `<span class="mini-etiq" title="Ton étiquette">${echapperTexte(entry.etiquette)}</span>` : ''}</div>
         <div class="mini-infos">
           <p class="mini-nom ${entry.nom.length > 14 ? 'long' : ''}">${entry.nom}</p>
           ${entry.rank ? `<span class="mini-num">n° ${Number(entry.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(entry.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
@@ -6562,7 +6563,7 @@ const BADGES = {
   ambassadeur:   { ico: '🌍', nom: 'L’Ambassadeur',    texte: '10 amis invités et actifs', u: 'amis actifs' },
 };
 // patch152 : titres a choisir a la place du titre de region (l'id vient du serveur)
-const TITRES = { parrain: 'Le Parrain',
+const TITRES = { parrain: 'Le Parrain', 'halloween-2026': 'Chasseur de fantômes',   // patch276
   // patch254 : les titres du pass « Brumes d'automne »
   'pass-s2-mecene': 'Mécène d’automne', 'pass-s2-recrue': 'Recrue d’automne', 'pass-s2-vignes': 'Seigneur des vignes',
   'pass-s2-brumes': 'Gardien des brumes', 'pass-s2-legende': 'Légende de la saison 2', 'pass-s2-veteran': 'Vétéran de la saison 2' };
@@ -7070,7 +7071,8 @@ function makeCardEl(draw, onFlip){
   const mon = monumentDe(draw.code);
   const bxg = briParts(draw, true);   // patch269
   const atg = atlParts(draw.terraExemplaires != null ? { ...draw, atelier: atlPour(draw.code, 2), skin: skinDeMaCarte('terra', draw.code) } : draw, true);   // patch270
-  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '') + (draw.aurore ? ' aurore' : '') + (estOutremerCode(draw.code) ? ' outremer' : '') + bxg.cls + atg.cls;   // patch219, patch269, patch270
+  const hng = hntParts(draw.code, draw.terraExemplaires != null ? 'terra-tirage' : (enTerra() ? 'terra' : 'front'));   // patch276
+  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '') + (draw.aurore ? ' aurore' : '') + (estOutremerCode(draw.code) ? ' outremer' : '') + bxg.cls + atg.cls + hng.cls;   // patch219, patch269, patch270
   wrap.innerHTML = `
     <div class="card-inner">
       <div class="face face-back">
@@ -7086,7 +7088,7 @@ function makeCardEl(draw, onFlip){
               <span class="carte-rarete">${draw.tier.label}</span>
               <span class="carte-num">${draw.rank.toLocaleString('fr-FR')} / ${draw.tierSize.toLocaleString('fr-FR')}</span>
             </div>
-            <div class="carte-art">${estOutremerCode(draw.code) ? OM_BADGE : ''}${carteArtSvg(draw.code, draw.tier.id)}${bxg.art}${atg.art}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
+            <div class="carte-art">${estOutremerCode(draw.code) ? OM_BADGE : ''}${carteArtSvg(draw.code, draw.tier.id)}${bxg.art}${atg.art}${hng.art}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
             <div class="carte-infos">
               <p class="carte-nom ${draw.nom.length > 26 ? 'tres-long' : draw.nom.length > 16 ? 'long' : ''}" title="${echapperTexte(draw.nom)}">${draw.nom}</p>
               <p class="carte-departement">${DEPT_NAMES[draw.dept] ? `<span class="dep-nom">${DEPT_NAMES[draw.dept]}</span> <span class="dep-num">(${draw.dept})</span>` : `<span class="dep-num">${draw.dept}</span>`}</p>
@@ -7148,6 +7150,7 @@ let paquetEnCours = false;
 function surCarteRetournee(draw){
   return () => {
     if(enTerra()) terraCarteRetournee(draw); else collectionMap.set(draw.code, draw);
+    hntApresRetournement(draw);   // patch276
     annoncerMonument(draw.code, draw.nom);
     session[draw.tier.id]++;
     session.total++;
@@ -10700,6 +10703,7 @@ function blocGarnisonFiche(code){
 
 function appliquerMode(){
   if(!SAISON2) return;
+  setTimeout(() => { try{ hntRendre(); }catch(e){} }, 0);   // patch276
   const m = ONGLETS_MODE[modeJeu];
   const visibles = m.propres.concat(ONGLETS_COMMUNS);
   ONGLETS_BARRE = m.barre.slice();
@@ -10766,11 +10770,12 @@ function miniTerra(e){
   const au = e.aurore > 0;
   const bx = briParts(e, false);   // patch269
   const at = atlParts(e, false);   // patch270
-  return `<div class="mini ${e.tier.id}${au ? ' aurore' : ''}${estOutremerCode(e.code) ? ' outremer' : ''}${bx.cls}${at.cls}"${e.skin ? ` data-skin="${echapperTexte(e.skin)}"` : ''} title="${nom} (${e.dept}) — ${e.tier.label}${au ? ' — Aurore' + (e.aurore > 1 ? ' ×' + e.aurore : '') : ''}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}${au ? titreCreditAurore(e.code) : ''}">
+  const hn = hntParts(e.code, e.hntNon ? '' : 'terra');   // patch276
+  return `<div class="mini ${e.tier.id}${au ? ' aurore' : ''}${estOutremerCode(e.code) ? ' outremer' : ''}${bx.cls}${at.cls}${hn.cls}"${e.skin ? ` data-skin="${echapperTexte(e.skin)}"` : ''} title="${nom} (${e.dept}) — ${e.tier.label}${au ? ' — Aurore' + (e.aurore > 1 ? ' ×' + e.aurore : '') : ''}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}${au ? titreCreditAurore(e.code) : ''}">
     ${bx.dehors}${at.dehors}<div class="mini-int">${at.fond}
       ${au ? fondAurore(e.code, e.tier.id, false) : ''}
       ${e.exemplaires > 1 ? `<span class="mini-ex">×${e.exemplaires}</span>` : ''}
-      <div class="mini-art">${estOutremerCode(e.code) ? OM_BADGE_MINI : ''}${e.photo ? artCommune(e, e.tier.id, 'mini') : miniArtSvg(e.code, e.tier.id)}${bx.art}${at.art}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
+      <div class="mini-art">${estOutremerCode(e.code) ? OM_BADGE_MINI : ''}${e.photo ? artCommune(e, e.tier.id, 'mini') : miniArtSvg(e.code, e.tier.id)}${bx.art}${at.art}${hn.art}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
       <div class="mini-infos">
         <p class="mini-nom ${e.nom.length > 14 ? 'long' : ''}">${nom}</p>
         ${e.rank ? `<span class="mini-num">n° ${Number(e.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(e.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
@@ -17555,7 +17560,7 @@ async function chargerVitrine(id){
 
 // cinq cartes cote a cote : un nom de plus de 8 lettres passe en plus petit
 function miniVitrine(c){
-  return miniTerra({ ...c, exemplaires: 1 }).replace('class="mini-nom', 'class="mini-nom' + (c.nom.length > 8 ? ' vt-l' : ''));
+  return miniTerra({ ...c, exemplaires: 1, hntNon: true }).replace('class="mini-nom', 'class="mini-nom' + (c.nom.length > 8 ? ' vt-l' : ''));
 }
 
 const VITRINE_MAX = 20;    // places de la grande vitrine
@@ -22756,3 +22761,145 @@ function libClic(e){
   if(t.closest('[data-lib-valider]')){ const s = libSelection(); libEnvoyer(s.codes); return; }
 }
 function libFocus(sel){ const b = document.querySelector('#libEcran ' + sel); if(b) try{ b.focus({ preventScroll: true }); }catch(e){} }
+
+// ---------- patch276 : les communes hantées d'Halloween (s2-68) ----------
+// Terra : 1 paquet sur 3 cache une des 3 communes hantées ; la carte tirée garde la brume pour toujours.
+// Front : les 3 communes portent la brume quel que soit leur propriétaire ; les tenir à la fin rapporte.
+const HNT_FANTOME = '<svg viewBox="0 0 24 24" fill="#FFB347" aria-hidden="true"><path d="M12 2C7.6 2 5 5.4 5 9.5V21l2.3-1.6L9.6 21l2.4-1.6 2.4 1.6 2.3-1.6L19 21V9.5C19 5.4 16.4 2 12 2Zm-2.6 7.2a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Zm5.2 0a1.4 1.4 0 1 1 0 2.8 1.4 1.4 0 0 1 0-2.8Z"/></svg>';
+const HNT_ART = '<i class="hnt-c hnt-nuit"></i><i class="hnt-c hnt-lueur"></i><i class="hnt-c hnt-brume"></i><i class="hnt-c hnt-brume b2"></i><i class="hnt-c hnt-braises"></i>';
+const HNT_LEGENDES = { '49050': 'La Dame Verte du château de Brissac', '86203': 'Fougeret, « le château le plus hanté de France »', '24255': 'La Dame Blanche de Puymartin' };
+let HNT = null;   // halloween_hantees_etat() ; null tant que s2-68 n'est pas lancé
+let hntDepart = false, hntRelance = null, hntEnvoi = false;
+const hntTest = () => /[?&]hantees=test(&|$)/.test(location.search);
+function hntCharger(){
+  if(hntDepart) return;
+  hntDepart = true;
+  hntLire();
+  setInterval(() => { if(!document.hidden) hntLire(); }, 10 * 60000);
+}
+async function hntLire(){
+  let d = null;
+  try{
+    const { data, error } = await sb.rpc('halloween_hantees_etat');
+    if(!error && data && typeof data === 'object') d = data;
+    else if(error && !fonctionAbsente(error)){   // réseau raté : on garde l'état, on réessaie
+      if(!hntRelance) hntRelance = setTimeout(() => { hntRelance = null; hntLire(); }, 45000);
+      return;
+    }
+  }catch(e){ return; }
+  if(hntTest() && !(d && Number(d.ouvert) === 1)) d = hntEssai();
+  hntAppliquer(d);
+}
+function hntEssai(){
+  return { ouvert: 1, actif: true, termine: false, test: true, fin: new Date(Date.now() + 30 * 36e5).toISOString(),
+    codes: ['49050', '86203', '24255'], proba: 0.3333, prime: 500, energie: 30, titre: 'halloween-2026',
+    communes: [{ code: '49050', nom: 'Brissac Loire Aubance', departement: '49', tier: 'epique', proprietaire: null, a_moi: false },
+               { code: '86203', nom: 'Queaux', departement: '86', tier: 'peucommun', proprietaire: 'un joueur', a_moi: false },
+               { code: '24255', nom: 'Marquay', departement: '24', tier: 'peucommun', proprietaire: null, a_moi: true }],
+    miennes: ['49050'], reclamee: false, front_gagnant: false, front_reclamee: false };
+}
+function hntAppliquer(d){
+  const cle = () => HNT ? JSON.stringify([HNT.codes, HNT.miennes]) : '';
+  const avant = cle();
+  HNT = d && Number(d.ouvert) === 1
+    ? Object.assign({}, d, { codes: (d.codes || []).map(String), miennes: (d.miennes || []).map(String) })
+    : null;
+  if(HNT){ HNT.codesSet = new Set(HNT.codes); HNT.miennesSet = new Set(HNT.miennes); }
+  hntRendre();
+  if(avant !== cle()){
+    try{ if(enTerra()) renderCollectionTerra(); else renderCollection(); }catch(e){}
+  }
+}
+// mode : 'terra' (ma carte hantée), 'terra-tirage' (une carte qui sort d'un paquet), 'front' (la commune elle-même)
+function hntEst(code, mode){
+  if(!HNT || code == null || !mode) return false;
+  const c = String(code);
+  if(!HNT.codesSet.has(c)) return false;
+  if(mode === 'front') return true;
+  if(mode === 'terra') return HNT.miennesSet.has(c);
+  if(mode === 'terra-tirage') return HNT.miennesSet.has(c) || !!HNT.actif;
+  return false;
+}
+function hntParts(code, mode){
+  if(!hntEst(code, mode)) return { cls: '', art: '' };
+  return { cls: ' hnt', art: HNT_ART + '<span class="hnt-sceau">' + HNT_FANTOME + 'Hantée</span>' };
+}
+function hntApresRetournement(draw){
+  if(!HNT || !draw || !HNT.codesSet.has(String(draw.code))) return;
+  const total = HNT.codes.length;
+  if(draw.terraExemplaires != null){
+    if(!HNT.actif && !HNT.miennesSet.has(String(draw.code))) return;
+    const neuve = !HNT.miennesSet.has(String(draw.code));
+    HNT.miennesSet.add(String(draw.code)); HNT.miennes = [...HNT.miennesSet];
+    const n = HNT.codes.filter(c => HNT.miennesSet.has(c)).length;
+    notifier({ type: 'succes', titre: neuve ? 'Commune hantée trouvée !' : 'Encore une commune hantée',
+               texte: `${draw.nom} · ${n}/${total}` + (n >= total && !HNT.reclamee ? ' : ta récompense t’attend sous le paquet.' : '') });
+    hntRendre();
+  } else {
+    notifier({ type: 'succes', titre: 'Une commune hantée !', texte: `${draw.nom} est à toi. Garde-la jusqu’à la fin d’Halloween.` });
+    hntLire();
+  }
+}
+function hntFin(H){
+  try{ return new Date(H.fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', timeZone: 'Europe/Paris' }); }catch(e){ return ''; }
+}
+function hntBlocTerra(H){
+  const total = H.codes.length;
+  const n = H.codes.filter(c => H.miennesSet.has(c)).length, fini = n >= total;
+  if(!H.actif && !(fini && !H.reclamee)) return '';
+  const sur = H.proba > 0 ? Math.round(1 / H.proba) : 3;
+  const slots = (H.communes || []).map(c => {
+    const ok = H.miennesSet.has(String(c.code)), leg = HNT_LEGENDES[c.code] || '';
+    return `<div class="hq-slot${ok ? ' ok' : ''}">${ok ? HNT_ART + '<span class="hq-ok" aria-label="Trouvée">✓</span>' : '<i class="hnt-c hnt-brume b2"></i><span class="hq-q" aria-hidden="true">?</span>'}<b>${echapperTexte(c.nom)}</b><small>${echapperTexte(c.departement)}${leg ? ' · ' + echapperTexte(leg) : ''}</small></div>`;
+  }).join('');
+  const bouton = H.reclamee ? '<span class="hq-fait">✓ Récompense récupérée</span>'
+    : `<button type="button" class="hq-btn" data-hq-reclamer="terra"${fini ? '' : ' disabled'}>${fini ? 'Réclamer' : 'Encore ' + (total - n) + ' à trouver'}</button>`;
+  return `<section class="hq" aria-label="Quête d’Halloween">
+    <div class="hq-tete">${HNT_FANTOME}<div><p class="hq-sur">Quête d’Halloween · ${H.actif ? 'jusqu’au ' + hntFin(H) + ' à minuit' : 'terminée'}</p><h3>Les châteaux hantés</h3></div><span class="hq-compte">${n}<small>/${total}</small></span></div>
+    <p class="hq-txt">Pendant Halloween, <b>1 paquet Terra sur ${sur}</b> cache une commune hantée. Chaque carte hantée garde la brume et les braises pour toujours.</p>
+    <div class="hq-cartes">${slots}</div>
+    <div class="hq-pied"><p class="hq-prime">Les trois : <b>${fmtNombre(Number(H.prime) || 0)} TP</b> et le titre <b>Chasseur de fantômes</b></p>${bouton}</div>
+  </section>`;
+}
+function hntBlocFront(H){
+  const fini = !!H.termine;
+  if(fini ? !(H.front_gagnant && !H.front_reclamee) : !H.actif) return '';
+  const miennes = (H.communes || []).filter(c => c.a_moi).length;
+  const slots = (H.communes || []).map(c => {
+    const etat = c.a_moi ? 'À toi : garde-la !' : c.proprietaire ? 'Tenue par ' + echapperTexte(c.proprietaire) : 'Libre : elle peut sortir d’un paquet';
+    return `<div class="hq-slot ok${c.a_moi ? ' moi' : ''}">${HNT_ART}<b>${echapperTexte(c.nom)}</b><small>${echapperTexte(c.departement)} · ${etat}</small></div>`;
+  }).join('');
+  const texte = fini
+    ? 'Tu tenais une commune hantée à la fin d’Halloween. Bien joué !'
+    : `Celui qui tient une de ces communes le ${hntFin(H)} à minuit gagne le titre <b>Chasseur de fantômes</b> et <b>${Number(H.energie) || 30} d’énergie</b>. La brume reste sur la carte, même quand elle change de main.`;
+  return `<section class="hq" aria-label="Quête d’Halloween">
+    <div class="hq-tete">${HNT_FANTOME}<div><p class="hq-sur">Quête d’Halloween · ${fini ? 'terminée' : 'jusqu’au ' + hntFin(H) + ' à minuit'}</p><h3>Tiens une commune hantée</h3></div><span class="hq-compte">${miennes}<small>/${(H.communes || []).length}</small></span></div>
+    <p class="hq-txt">${texte}</p>
+    <div class="hq-cartes">${slots}</div>
+    ${fini ? '<div class="hq-pied"><p class="hq-prime">Ta récompense : le titre <b>Chasseur de fantômes</b> et <b>' + (Number(H.energie) || 30) + ' d’énergie</b></p><button type="button" class="hq-btn" data-hq-reclamer="front">Réclamer</button></div>' : ''}
+  </section>`;
+}
+function hntRendre(){
+  const z = document.getElementById('hqZone');
+  if(!z) return;
+  const html = HNT && SAISON2 ? (enTerra() ? hntBlocTerra(HNT) : hntBlocFront(HNT)) : '';
+  z.hidden = !html;
+  z.innerHTML = html;
+}
+document.getElementById('hqZone')?.addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-hq-reclamer]');
+  if(!b || hntEnvoi) return;
+  const quete = b.dataset.hqReclamer;
+  if(HNT && HNT.test){ notifier({ type: 'info', titre: 'Essai', texte: 'En vrai, la récompense serait versée ici.' }); return; }
+  hntEnvoi = true; b.disabled = true;
+  try{
+    const { data, error } = await sb.rpc('halloween_quete_reclamer', { p_quete: quete });
+    if(error){ notifier({ type: 'erreur', titre: 'Quête d’Halloween', texte: messageLisible(error.message) }); b.disabled = false; return; }
+    hntAppliquer(data);
+    notifier({ type: 'succes', titre: 'Chasseur de fantômes !',
+               texte: quete === 'front' ? `+${Number(data && data.energie) || 30} d’énergie et un nouveau titre à choisir dans ton profil.`
+                                        : `+${fmtNombre(Number(data && data.prime) || 500)} TP et un nouveau titre à choisir dans ton profil.` });
+    try{ rafraichirSoldes(); }catch(err){}
+    try{ if(quete === 'front') majEnergie(); else loadPackStatus(); }catch(err){}
+  } finally { hntEnvoi = false; }
+});

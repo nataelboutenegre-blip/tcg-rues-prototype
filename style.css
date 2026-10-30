@@ -7957,7 +7957,7 @@ html.atl-ouvert, html.atl-ouvert body{ overflow:hidden; }
 .lib-fiche p{ margin:0; }
 .lib-haut{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; font-size:11px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#A9BCD4; }
 .lib-haut b{ font-size:13px; letter-spacing:0; text-transform:none; color:#FFE08A; display:inline-flex; align-items:center; gap:3px; }
-.lib-fiche svg, .lib-ecran svg{ width:12px; height:12px; vertical-align:-1px; }
+.lib-fiche svg, .lib-ecran svg, .lib-entree svg{ width:12px; height:12px; vertical-align:-1px; }   /* patch274 : + .lib-entree */
 .lib-txt{ font-size:12.5px; line-height:1.45; color:#C9D6E6; margin:0; }
 .lib-raison{ padding:8px 10px; border-radius:9px; background:rgba(229,72,77,.12); border:1px solid rgba(229,72,77,.35); font-size:12.5px; line-height:1.4; color:#FFB4B6; }
 .lib-btn{ min-height:44px; border-radius:10px; border:1px solid rgba(240,180,41,.55); background:transparent; color:#FFD56B; font:inherit; font-size:14px; font-weight:600; cursor:pointer; }

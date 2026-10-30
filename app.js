@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '55deedd74921';
+const VERSION_JEU = '44f8932fbf69';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -22867,6 +22867,10 @@ function hntBlocFront(H){
   const miennes = (H.communes || []).filter(c => c.a_moi).length;
   const slots = (H.communes || []).map(c => {
     const etat = c.a_moi ? 'À toi : garde-la !' : c.proprietaire ? 'Tenue par ' + echapperTexte(c.proprietaire) : 'Libre : elle peut sortir d’un paquet';
+    if(c.a_moi || c.proprietaire){   // patch278 : elle a un propriétaire, on peut aller la voir (et l'attaquer)
+      const cta = c.a_moi ? 'Voir sur la carte' : 'Aller l’attaquer';
+      return `<button type="button" class="hq-slot ok hq-cible${c.a_moi ? ' moi' : ''}" data-hq-carte="${echapperTexte(c.code)}" aria-label="${echapperTexte(c.nom)} : ${cta}">${HNT_ART}<b>${echapperTexte(c.nom)}</b><small>${echapperTexte(c.departement)} · ${etat}</small><span class="hq-cta">${cta} ›</span></button>`;
+    }
     return `<div class="hq-slot ok${c.a_moi ? ' moi' : ''}">${HNT_ART}<b>${echapperTexte(c.nom)}</b><small>${echapperTexte(c.departement)} · ${etat}</small></div>`;
   }).join('');
   const texte = fini
@@ -22886,7 +22890,32 @@ function hntRendre(){
   z.hidden = !html;
   z.innerHTML = html;
 }
+// patch278 : la carte du Front, centrée sur la commune, sa fiche ouverte
+function hntAllerA(code){
+  const e = collectionMap.get(code) || othersMap.get(code);
+  if(!e || e.lat == null){   // pas encore chargée : au moins la carte, comme ailleurs dans le jeu
+    const c = (HNT && (HNT.communes || []).find(x => String(x.code) === String(code))) || {};
+    sb.from('communes').select('latitude, longitude').eq('code', code).maybeSingle()
+      .then(({ data }) => voirCommuneSurCarte({ code, nom: c.nom, lat: data && data.latitude, lon: data && data.longitude }));
+    return;
+  }
+  voirCommuneSurCarte(e);
+  setTimeout(() => {
+    let x = null, y = null;
+    try{
+      const p = project(e.lat, e.lon), ech = echelleCarte();
+      x = p.x * MAP_W * ech * mapZoom + mapPanX; y = p.y * MAP_H * ech * mapZoom + mapPanY;
+    }catch(err){}
+    if(!isFinite(x) || !isFinite(y)){   // position inconnue : la fiche au milieu de la carte
+      const w = document.getElementById('mapWrap');
+      x = w ? w.clientWidth / 2 : 40; y = w ? w.clientHeight / 2 : 40;
+    }
+    ouvrirPanneau(code, x, y);
+  }, 450);
+}
 document.getElementById('hqZone')?.addEventListener('click', async (e) => {
+  const cible = e.target.closest('[data-hq-carte]');
+  if(cible){ hntAllerA(cible.dataset.hqCarte); return; }   // patch278
   const b = e.target.closest('[data-hq-reclamer]');
   if(!b || hntEnvoi) return;
   const quete = b.dataset.hqReclamer;

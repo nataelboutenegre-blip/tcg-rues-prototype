@@ -8162,3 +8162,12 @@ html.lib-ouvert, html.lib-ouvert body{ overflow:hidden; }
 /* patch277 : la quête d'Halloween sur toute la largeur du Tirage, donc centrée sous le paquet */
 .hq-zone{ width:100%; align-self:stretch; }
 .hq-zone .hq{ margin-left:auto; margin-right:auto; }
+
+/* patch278 : une commune hantée qui a un propriétaire se touche pour aller la voir */
+button.hq-slot{ font:inherit; color:inherit; text-align:left; cursor:pointer; width:100%; }
+.hq-cible{ transition: transform .15s, box-shadow .15s; }
+.hq-cible:hover{ transform: translateY(-2px); box-shadow: 0 0 0 1px #FFB347, 0 6px 22px rgba(255,122,26,.35); }
+.hq-cible:focus-visible{ outline:2px solid #FFB347; outline-offset:2px; }
+.hq-cta{ position:relative; z-index:2; margin-top:5px; align-self:flex-start; padding:4px 9px; border-radius:999px;
+  font-size:.7rem; font-weight:700; letter-spacing:.02em; color:#1B0D04; background:#FF7A1A; box-shadow: 0 0 12px rgba(255,122,26,.5); }
+.hq-cible.moi .hq-cta{ color:#FFD9A8; background: rgba(20,10,22,.8); border:1px solid rgba(255,140,40,.6); box-shadow:none; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1d94fb1d2c6d';
+const VERSION_JEU = 'c6450ac30018';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11952,7 +11952,8 @@ function renderObjectifs(){
   }
   const ej = SAISON2 && modeJeu === 'front' && objectifsListe.length ? Number(objectifsListe[0].energie_jour) || 0 : null;
   document.getElementById('objJour').innerHTML =
-    `<h3>Aujourd'hui${ej !== null ? `<span class="obj-plafond">⚡ ${ej} / 35 d'énergie de quêtes</span>` : ''}</h3>` + jour.map(carteObjectif).join('');
+    // patch272 : plafond de l'énergie des quêtes 50 / jour (s2-66)
+    `<h3>Aujourd'hui${ej !== null ? `<span class="obj-plafond">⚡ ${ej} / 50 d'énergie de quêtes</span>` : ''}</h3>` + jour.map(carteObjectif).join('');
   const blocUnique = document.getElementById('objUnique');
   blocUnique.hidden = uniques.length === 0;
   blocUnique.innerHTML = uniques.length

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '2cd1a3cf51a2';
+const VERSION_JEU = '55deedd74921';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -20459,7 +20459,7 @@ function recapDemarrer(){
   if(RECAP.depart) return;
   RECAP.depart = true;
   // lu avant tout le reste : le réveil de Combat remet 'tf-defense-vu' à maintenant
-  RECAP.vu = recapLireActivite();
+  RECAP.vu = /[?&]recap=test(&|$)/.test(location.search) ? Date.now() - 4 * 36e5 : recapLireActivite();   // patch277 : essai, comme après 4 h d'absence
   recapNoterActivite();
   setInterval(() => { if(!document.hidden) recapNoterActivite(); }, 60000);
   window.addEventListener('pagehide', recapNoterActivite);

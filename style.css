@@ -8158,3 +8158,7 @@ html.lib-ouvert, html.lib-ouvert body{ overflow:hidden; }
 .hq-slot .hnt-brume{ opacity:.5; }
 .hq-slot b, .hq-slot small{ text-shadow: 0 1px 3px rgba(0,0,0,.95), 0 0 8px rgba(0,0,0,.8); }
 .hq-slot small{ color:#D5DEEA; }
+
+/* patch277 : la quête d'Halloween sur toute la largeur du Tirage, donc centrée sous le paquet */
+.hq-zone{ width:100%; align-self:stretch; }
+.hq-zone .hq{ margin-left:auto; margin-right:auto; }

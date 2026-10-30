@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '3478862826e5';
+const VERSION_JEU = 'e0d9cf1c9934';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10881,6 +10881,9 @@ function renderCollectionTerra(){
   if(terraFiltre === 'aurore' && !nbAur) terraFiltre = 'tous';
   let nbBri = 0; for(const e of terraCollection.values()) if(e.brillantes > 0 || e.eclat) nbBri++;   // patch269
   if(terraFiltre === 'brillante' && !nbBri) terraFiltre = 'tous';
+  let nbEvt = 0; for(const e of terraCollection.values()) if(estCarteEvenement(e)) nbEvt++;   // patch282
+  const evtVisible = nbEvt > 0 || !!(HNT && HNT.actif);
+  if(terraFiltre === 'evenement' && !evtVisible) terraFiltre = 'tous';
   const gainMax = Object.entries(dbl).reduce((s, [t, n]) => s + n * (TERRA_REVENTE[t] || 0), 0);
   const ordre = TIERS.filter(t => tot[t.id] || parTier[t.id]);
   if(terraVue === 'france') return renderMaFranceTerra(el, totalFrance);
@@ -10898,6 +10901,7 @@ function renderCollectionTerra(){
       <button class="coll-filtre ${terraFiltre === 'doublons' ? 'actif' : ''}" data-tcf="doublons">Doublons <span class="nb">${fmtNombre(nbDbl)}</span></button>
       ${nbAur ? `<button class="coll-filtre ${terraFiltre === 'aurore' ? 'actif' : ''}" data-tcf="aurore"><i class="au-pt" aria-hidden="true"></i>Aurore <span class="nb">${fmtNombre(nbAur)}</span></button>` : ''}
       ${nbBri ? `<button class="coll-filtre ${terraFiltre === 'brillante' ? 'actif' : ''}" data-tcf="brillante"><i class="bri-pt" aria-hidden="true"></i>Brillantes et éclats <span class="nb">${fmtNombre(nbBri)}</span></button>` : ''}
+      ${evtVisible ? `<button class="coll-filtre ${terraFiltre === 'evenement' ? 'actif' : ''}" data-tcf="evenement"><i class="evt-pt" aria-hidden="true"></i>Événements <span class="nb">${fmtNombre(nbEvt)}</span></button>` : ''}
       ${ordre.filter(t => parTier[t.id]).map(t => `<button class="coll-filtre ${terraFiltre === t.id ? 'actif' : ''}" data-tcf="${t.id}"><span class="point" style="background:${COULEURS_FILTRE[t.id]}"></span>${t.label} <span class="nb">${fmtNombre(parTier[t.id])}</span></button>`).join('')}
     </div>
     <input type="text" id="tcRecherche" class="bourse-search coll-recherche" placeholder="Rechercher une commune ou un département…" value="${echapperTexte(terraRecherche)}">
@@ -11466,9 +11470,14 @@ function renderGrilleTerra(){
   const grille = document.getElementById('tcGrille');
   if(!grille) return;
   const liste = [...terraCollection.values()]
-    .filter(e => terraFiltre === 'tous' || (terraFiltre === 'doublons' ? libresTerra(e) > 0 : terraFiltre === 'aurore' ? e.aurore > 0 : terraFiltre === 'brillante' ? (e.brillantes > 0 || e.eclat) : e.tier.id === terraFiltre))
+    .filter(e => terraFiltre === 'tous' || (terraFiltre === 'doublons' ? libresTerra(e) > 0 : terraFiltre === 'aurore' ? e.aurore > 0 : terraFiltre === 'brillante' ? (e.brillantes > 0 || e.eclat) : terraFiltre === 'evenement' ? estCarteEvenement(e) : e.tier.id === terraFiltre))   // patch282 : + evenement
     .filter(e => correspondRecherche(e.nom, e.dept, sansAccents(terraRecherche.trim())))
     .sort((a, b) => RANG_TIER[b.tier.id] - RANG_TIER[a.tier.id] || (b.pop || 0) - (a.pop || 0));
+  if(terraFiltre === 'evenement'){   // patch282
+    grille.innerHTML = evtGrilleTerra(liste);
+    const p2 = document.getElementById('tcPlus'); if(p2) p2.innerHTML = '';
+    return;
+  }
   grille.innerHTML = liste.length
     ? liste.slice(0, terraLimite).map(e => miniTerra(atlMoi(e)).replace('<div class="mini ', '<div data-tcode="' + echapperTexte(e.code) + '" tabindex="0" role="button" class="mini ')).join('')
     : `<p class="collection-empty">${terraCollection.size ? 'Aucune commune ne correspond.' : 'Ta collection Terra est vide : ouvre un paquet dans l’onglet Tirage.'}</p>`;
@@ -22951,3 +22960,18 @@ document.getElementById('hqZone')?.addEventListener('click', async (e) => {
     try{ if(quete === 'front') majEnergie(); else loadPackStatus(); }catch(err){}
   } finally { hntEnvoi = false; }
 });
+
+// ---------- patch282 : Collection Terra, la catégorie « Événements » ----------
+// Une carte d'événement = une carte gagnée pendant un événement (Halloween 2026 : les communes hantées).
+function estCarteEvenement(e){ return !!(e && typeof hntEst === 'function' && hntEst(e.code, 'terra')); }
+function evtGrilleTerra(liste){
+  const H = HNT;
+  const cartes = liste.map(e => miniTerra(atlMoi(e)).replace('<div class="mini ', '<div data-tcode="' + echapperTexte(e.code) + '" tabindex="0" role="button" class="mini ')).join('');
+  if(!H) return cartes || '<p class="collection-empty">Aucune carte d’événement pour l’instant.</p>';
+  const total = (H.codes || []).length;
+  const n = (H.codes || []).filter(c => H.miennesSet.has(c)).length;
+  const manquent = H.actif ? (H.communes || []).filter(c => !H.miennesSet.has(String(c.code))) : [];
+  const vides = manquent.map(c => `<div class="evt-manque" aria-label="${echapperTexte(c.nom)} : à trouver"><span aria-hidden="true">?</span><b>${echapperTexte(c.nom)}</b><small>${echapperTexte(c.departement)} · à trouver dans un paquet</small></div>`).join('');
+  const tete = `<div class="evt-tete">${HNT_FANTOME}<div><p>Événement · Halloween 2026</p><b>Les châteaux hantés</b><small>${H.actif ? 'jusqu’au ' + hntFin(H) + ' à minuit · 1 paquet sur 3' : 'terminé'}</small></div><span class="evt-compte">${n}<small>/${total}</small></span></div>`;
+  return tete + cartes + vides + (!cartes && !vides ? '<p class="collection-empty">Aucune carte d’événement.</p>' : '');
+}

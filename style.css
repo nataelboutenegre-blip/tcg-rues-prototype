@@ -8195,3 +8195,20 @@ button.hq-slot{ font:inherit; color:inherit; text-align:left; cursor:pointer; wi
 .rang-pom-recenseur{ color:#FF9F43; }
 .rang-pom-prefet{ color: var(--c-legendaire); }
 #qgPomJaugeBloc[hidden]{ display:none; }
+
+/* patch282 : Collection Terra, la catégorie « Événements » */
+.coll-filtre .evt-pt{ width:11px; height:11px; flex:none; border-radius:50%; background: radial-gradient(circle at 40% 40%, #FFD9A8, #FF7A1A 60%, #8A3A0A); box-shadow: 0 0 6px rgba(255,122,26,.7); }
+.evt-tete{ grid-column: 1 / -1; display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:14px; color:#fff;
+  background: radial-gradient(120% 120% at 50% 130%, rgba(255,122,26,.22), rgba(255,122,26,0) 60%), linear-gradient(180deg, #141A33, #1B1226);
+  border:1px solid rgba(255,140,40,.45); }
+.evt-tete svg{ width:24px; height:24px; flex:none; filter: drop-shadow(0 0 6px rgba(255,140,40,.6)); }
+.evt-tete p{ margin:0; font-size:.66rem; letter-spacing:.12em; text-transform:uppercase; color:#FFB347; font-weight:600; }
+.evt-tete b{ display:block; font-family: var(--titre); font-weight:800; font-size:1.2rem; line-height:1.05; }
+.evt-tete small{ display:block; font-size:.74rem; color:#C9D3E3; margin-top:2px; }
+.evt-compte{ margin-left:auto; white-space:nowrap; font-family: var(--titre); font-weight:900; font-size:1.5rem; color:#FFB347; }
+.evt-compte small{ font-size:.85rem; color: var(--brume); }
+.evt-manque{ aspect-ratio: 2 / 3; border-radius:10px; border:1.5px dashed rgba(255,140,40,.5); padding:8px; display:flex; flex-direction:column; justify-content:flex-end; gap:2px;
+  background: linear-gradient(180deg, rgba(10,14,40,.85), rgba(30,14,30,.85)); position:relative; overflow:hidden; color:#fff; }
+.evt-manque span{ position:absolute; top:18%; left:0; right:0; text-align:center; font-family: var(--titre); font-weight:900; font-size:2.2rem; color: rgba(255,179,71,.4); }
+.evt-manque b{ font-family: var(--titre); font-weight:800; font-size:.85rem; line-height:1.05; }
+.evt-manque small{ font-size:.6rem; color:#AFC0D8; line-height:1.25; }

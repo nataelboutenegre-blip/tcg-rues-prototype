@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'cc8bc971d267';
+const VERSION_JEU = 'b615fd947042';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11954,6 +11954,7 @@ function carteObjectif(o){
 }
 
 function renderObjectifs(){
+  setTimeout(majBandeauObjectifs, 0);   // patch284
   const bloc = document.getElementById('objectifs');
   if(!bloc) return;
   if(SAISON2) objectifsListe = quetesTout.filter(q => q.mode === modeJeu);
@@ -20340,7 +20341,7 @@ function ncConstruire(){
       items.push({ cle: `q|${mode}|${jour}|${prets.length}`, sec: 'afaire', c: 'quete', i: '⭐', mode: SAISON2 ? mode : null,
         t: `<b>${prets.length} quête${prets.length > 1 ? 's' : ''}</b> à réclamer`,
         s: duJour ? 'Avant minuit, sinon celles du jour sont perdues' : 'Des défis permanents', a: 'Réclamer',
-        aller: () => ncAller(mode, 'tirage', () => { const o = document.getElementById('objectifs'); if(o && o.scrollIntoView) o.scrollIntoView({ behavior: 'smooth', block: 'center' }); }) });
+        aller: () => ncAller(mode, 'tirage', () => objOuvrirFeuille()) });   // patch284 : les quêtes s'ouvrent par-dessus le Tirage
       if(!SAISON2) break;
     }
   }
@@ -23016,3 +23017,57 @@ function ncMajHtml(){
       <p class="nc-maj-pied">Le détail est sur le Discord, salon #nouveautés.</p></div>` : ''}
   </div>`;
 }
+
+// ---------- patch284 : les quêtes du jour en haut du Tirage ----------
+const OBJ_ECLAIR = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 2.5 5 13.5h6l-1.5 8 8.5-11h-6z"/></svg>';
+function objFeuille(){
+  let f = document.getElementById('objFeuille');
+  if(f) return f;
+  f = document.createElement('div');
+  f.id = 'objFeuille'; f.className = 'obj-feuille'; f.hidden = true;
+  f.innerHTML = `<div class="obj-voile" data-objf="fermer"></div>
+    <div class="obj-panneau" role="dialog" aria-modal="true" aria-label="Quêtes du jour">
+      <div class="obj-poignee" aria-hidden="true"></div>
+      <button type="button" class="obj-fermer" data-objf="fermer" aria-label="Fermer">✕</button>
+      <div class="obj-place"></div>
+    </div>`;
+  document.body.appendChild(f);
+  const bloc = document.getElementById('objectifs');
+  if(bloc) f.querySelector('.obj-place').appendChild(bloc);   // le bloc garde ses boutons et son fonctionnement
+  f.addEventListener('click', (e) => { if(e.target.closest('[data-objf="fermer"]')) objFermerFeuille(); });
+  document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && !f.hidden) objFermerFeuille(); });
+  return f;
+}
+function objOuvrirFeuille(){
+  const f = objFeuille();
+  f.hidden = false;
+  document.body.classList.add('obj-ouverte');
+  const x = f.querySelector('.obj-fermer'); if(x) x.focus({ preventScroll: true });
+}
+function objFermerFeuille(){
+  const f = document.getElementById('objFeuille');
+  if(f) f.hidden = true;
+  document.body.classList.remove('obj-ouverte');
+  const b = document.getElementById('objBandeau'); if(b && !b.hidden) b.focus({ preventScroll: true });
+}
+function majBandeauObjectifs(){
+  objFeuille();   // le bloc quitte le bas du Tirage dès le premier rendu
+  const b = document.getElementById('objBandeau');
+  if(!b) return;
+  const liste = objectifsListe || [];
+  const jour = liste.filter(o => o.categorie === 'jour');
+  if(!jour.length){ b.hidden = true; return; }
+  const faites = jour.filter(o => o.reclame || Number(o.avancement) >= Number(o.cible)).length;
+  const prets = liste.filter(o => o.reclamable).length;
+  const front = SAISON2 && modeJeu === 'front';
+  const ej = front ? Number(liste[0].energie_jour) || 0 : null;
+  const tpReste = jour.filter(o => !o.reclame).reduce((t, o) => t + (Number(o.points) || 0), 0);
+  const sous = (front ? `${ej} / 50 d’énergie gagnée`
+      : (tpReste ? `encore ${tpReste.toLocaleString('fr-FR')} TP à gagner` : (faites === jour.length ? 'tout est fait pour aujourd’hui' : 'de nouvelles quêtes chaque jour')))
+    + (prets ? ` · <b class="obj-b-pret">${prets} à récupérer</b>` : '');
+  b.hidden = false;
+  b.classList.toggle('pret', prets > 0);
+  b.setAttribute('aria-label', `Quêtes du jour : ${faites} sur ${jour.length}${prets ? ', ' + prets + ' à récupérer' : ''}`);
+  b.innerHTML = `<span class="obj-b-ic">${OBJ_ECLAIR}</span><span class="obj-b-txt"><b>Quêtes du jour · ${faites} / ${jour.length}</b><small>${sous}</small></span><span class="obj-b-go">Voir ›</span>`;
+}
+document.getElementById('objBandeau')?.addEventListener('click', objOuvrirFeuille);

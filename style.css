@@ -8226,3 +8226,30 @@ button.hq-slot{ font:inherit; color:inherit; text-align:left; cursor:pointer; wi
 .nc-maj ul{ margin:0; padding:0 0 0 2px; list-style:none; display:flex; flex-direction:column; gap:5px; }
 .nc-maj li{ font-size:.8rem; line-height:1.35; color:#D5DEEA; }
 .nc-maj-pied{ margin:12px 0 0; font-size:.7rem; color:var(--brume); }
+
+/* patch284 : les quêtes du jour en haut du Tirage */
+.obj-bandeau{ display:flex; align-items:center; gap:10px; width:100%; max-width:620px; box-sizing:border-box; margin:0 0 12px; padding:10px 12px;
+  border-radius:14px; border:1px solid rgba(240,180,41,.45); background:linear-gradient(90deg, rgba(240,180,41,.16), rgba(240,180,41,.05));
+  color:#fff; font:inherit; text-align:left; cursor:pointer; }
+.obj-bandeau[hidden]{ display:none; }
+.obj-bandeau:hover{ border-color: rgba(240,180,41,.75); }
+.obj-bandeau:focus-visible{ outline:2px solid #F0B429; outline-offset:2px; }
+.obj-bandeau.pret{ border-color:#F0B429; box-shadow: 0 0 0 1px rgba(240,180,41,.35), 0 0 18px rgba(240,180,41,.18); }
+.obj-b-ic{ width:34px; height:34px; border-radius:10px; flex:none; display:flex; align-items:center; justify-content:center; background:rgba(240,180,41,.2); color:#F0B429; }
+.obj-b-ic svg{ width:18px; height:18px; }
+.obj-b-txt{ flex:1; min-width:0; }
+.obj-b-txt b{ display:block; font-size:.9rem; }
+.obj-b-txt small{ display:block; font-size:.74rem; color:#C9D3E3; margin-top:1px; }
+.obj-b-txt .obj-b-pret{ display:inline; font-size:inherit; color:#7FE3B4; }
+.obj-b-go{ flex:none; font-size:.76rem; font-weight:700; color:#1B1203; background:#F0B429; padding:6px 10px; border-radius:999px; white-space:nowrap; }
+.obj-feuille{ position:fixed; inset:0; z-index:950; }
+.obj-feuille[hidden]{ display:none; }
+.obj-voile{ position:absolute; inset:0; background:rgba(3,8,18,.6); }
+.obj-panneau{ position:absolute; background:#0F213C; border:1px solid rgba(169,188,212,.2); box-shadow:0 24px 60px rgba(0,0,0,.6); overflow:auto; padding:8px 16px 18px; box-sizing:border-box; }
+@media (max-width:760px){ .obj-panneau{ left:0; right:0; bottom:0; max-height:84vh; border-radius:20px 20px 0 0; } }
+@media (min-width:761px){ .obj-panneau{ left:50%; top:50%; transform:translate(-50%,-50%); width:min(620px, calc(100vw - 40px)); max-height:84vh; border-radius:18px; } }
+.obj-poignee{ width:40px; height:4px; border-radius:9px; background:rgba(169,188,212,.35); margin:2px auto 6px; }
+@media (min-width:761px){ .obj-poignee{ display:none; } }
+.obj-fermer{ position:absolute; top:10px; right:12px; border:none; background:none; color:#fff; font-size:1.2rem; cursor:pointer; padding:6px; z-index:2; }
+.obj-feuille .objectifs{ margin:0; }
+body.obj-ouverte{ overflow:hidden; }

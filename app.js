@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'c6450ac30018';
+const VERSION_JEU = 'a9b6bb339ca8';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -246,6 +246,8 @@ const ICONES_NOTIF = {
 function messageLisible(msg){
   const m = String(msg || '');
   const table = [
+    [/liberation n'est pas encore ouverte/i, 'La libération des communes n’est pas encore ouverte.'],   // patch273
+    [/aucune commune a liberer/i, 'Aucune de ces communes ne peut être libérée.'],
     [/brillantes_ok/i, 'Une carte brillante ne quitte jamais ta collection : ses exemplaires brillants restent.'],   // patch269
     [/deja son eclat/i, 'Cette carte a déjà son éclat.'],
     [/il faut (\d+) doublons libres/i, (x) => `Il faut ${x[1]} doublons de cette carte, en plus de ta carte, pour un éclat.`],
@@ -3258,6 +3260,7 @@ function ouvrirPanneau(code, xCss, yCss){
   // patch268 : le clan du propriétaire (idée d'Arkhannou)
   const clanP = CLANS && (mienne ? window.__monId : c.joueurId) ? clansCarte.get(mienne ? window.__monId : c.joueurId) : null;
   const allie = !mienne && !!c.joueurId && clanMembres.has(c.joueurId);
+  if(libArme && libArme !== code) libArme = null;   // patch273
   panneauCommune = code;
   panneauDept = null;
   if(typeof xCss === 'number' && typeof yCss === 'number'){
@@ -3325,7 +3328,7 @@ function ouvrirPanneau(code, xCss, yCss){
       gardee ? 'Retirer l’étoile de ' + c.nom : 'Garder ' + c.nom + ' à la fin de la saison']);
   if(mienne && !favorisCharges) chargerFavoris().then(() => { if(panneauCommune === code && favorisCharges){ const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); } });
   // patch91 : en saison 2, le Front n'a ni bouclier, ni echange, ni vente ; il a la garnison
-  let gnBloc = '', btEtat = '', btActions = '';
+  let gnBloc = '', btEtat = '', btActions = '', libBloc = '';
   if(SAISON2){
     for(let i = actions.length - 1; i >= 0; i--)
       if(['bouclier', 'echange', 'voir-echange', 'vente'].includes(actions[i][1])) actions.splice(i, 1);
@@ -3335,6 +3338,7 @@ function ouvrirPanneau(code, xCss, yCss){
       gnBloc = blocGarnisonFiche(code);
       btEtat = blocBatimentsEtat(code, c);   // patch243
       btActions = blocBatimentsActions(code, c);
+      libBloc = libFicheHtml(code, c);   // patch273
       if(!gnBloc) actions.push(['', 'gn-poser', `Mettre en garnison <span class="pc-gn-nb">${garnisonsMoi.size} / 3</span>`, 'Défense automatique sur ' + c.nom]);
     }
   }
@@ -3360,7 +3364,7 @@ function ouvrirPanneau(code, xCss, yCss){
     <div class="pc-lignes">${lignes.map(([a, b]) => `<div class="pc-ligne"><span>${a}</span><b>${b}</b></div>`).join('')}</div>
     ${note ? `<p class="pc-note">${note}</p>` : ''}
     ${actions.length ? `<div class="pc-actions">${actions.map(([cl, ic, txt, titre]) =>
-      `<button class="pc-action ${cl}" data-pc="${ic}" title="${echapperHtml(titre)}">${ICONES_PC[ic]}${txt}</button>`).join('')}</div>` : ''}${btActions}`;
+      `<button class="pc-action ${cl}" data-pc="${ic}" title="${echapperHtml(titre)}">${ICONES_PC[ic]}${txt}</button>`).join('')}</div>` : ''}${btActions}${libBloc}`;
 
   el.classList.toggle('pc-allie', allie && !!clanP);   // patch268 : liseré aux couleurs du clan
   if(allie && clanP) el.style.setProperty('--clan', clanP.couleur || '#4C9BE8'); else el.style.removeProperty('--clan');
@@ -3861,6 +3865,7 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
     batimentConstruire(code, t);
     return;
   }
+  if(libClicPanneau(quoi, code)) return;   // patch273
   if(quoi === 'gn-plus'){ gnRetraitArme = null; garnisonAction(code, Number(b.dataset.n) || 1); return; }
   if(quoi === 'gn-poser'){
     const dispo = energieEtat ? Math.floor(energieEtat.energie) : 5;
@@ -10618,6 +10623,7 @@ async function chargerGarnisons(){
     energie: Number(g.energie) || 0, nom: g.nom, tier: g.tier, attaquants: g.attaquants,
     repousses: g.repousses_24h, subis: g.subis_24h }]));
   renderGarnisons();
+  if(!LIB.lu) libCharger();   // patch273
 }
 
 function renderGarnisons(){
@@ -10640,6 +10646,7 @@ function renderGarnisons(){
       <input type="search" class="bourse-search gn-cherche" id="gnCherche" placeholder="Chercher une de mes communes…" autocomplete="off" value="${echapperTexte(gnRecherche)}">
       <div class="gn-choix" id="gnChoix">${gnChoixHtml()}</div>` : ''}
     ${recits}`;
+  if(LIB.lu) libEntree();   // patch273
   const champ = document.getElementById('gnCherche');
   if(champ) champ.addEventListener('input', (e) => {
     gnRecherche = e.target.value;
@@ -22270,3 +22277,384 @@ function atlBlocGardeRobe(){
         <button type="button" class="bq-btn" data-gr-atelier>Ouvrir l’atelier</button></div>
     </div>`;
 }
+
+// ---------- patch273 : libérer des communes du Front contre de l'énergie (idée de Maroli), caché jusqu'à s2-67 ----------
+// Aperçu validé le 30/10 : la fiche d'une commune, « Libérer plusieurs » (téléphone, ordinateur) avec la recherche.
+// La commune retourne dans les paquets du Front ; celui qui l'a libérée ne peut pas la retirer pendant 7 jours.
+// Pas de libération si la commune a une garnison, un bâtiment, ou si elle est attaquée.
+// Les chiffres viennent du serveur (config_jeu « liberation ») : énergie par rareté, plafond du jour, réservoir.
+// Essai privé : ?liberer=test (rien n'est envoyé au serveur).
+const LIB_TEST = new URLSearchParams(location.search).get('liberer') === 'test';
+const LIB_DEFAUT = { taux: { commun: 0.05, peucommun: 0.1, rare: 1, epique: 3, legendaire: 6 }, plafond: 20, reservoir: 60, jours: 7 };
+const LIB = { lu: false, ouvert: false, ...LIB_DEFAUT, aujourdhui: 0 };
+const LS = { q: '', filtre: 'tout', ouverts: new Set(), choix: new Set(), confirmer: false, enCours: false };
+let libArme = null;   // code de la commune dont la libération attend confirmation (fiche)
+let libRetourFocus = null;
+
+const libN = (x) => (Math.round(Number(x) * 100) / 100).toLocaleString('fr-FR');
+function libLire(d){
+  if(!d || !d.ouvert) return false;
+  const t = d.taux || {};
+  Object.assign(LIB, {
+    ouvert: true,
+    taux: { ...LIB_DEFAUT.taux, ...Object.fromEntries(Object.entries(t).map(([k, v]) => [k, Number(v)])) },
+    plafond: Number(d.plafond) || LIB_DEFAUT.plafond,
+    reservoir: Number(d.reservoir) || LIB_DEFAUT.reservoir,
+    jours: Number(d.jours) || LIB_DEFAUT.jours,
+    aujourdhui: Number(d.aujourdhui) || 0
+  });
+  return true;
+}
+async function libCharger(){
+  if(!SAISON2) return;
+  if(LIB_TEST){
+    Object.assign(LIB, { lu: true, ouvert: true, ...LIB_DEFAUT, aujourdhui: LIB.lu ? LIB.aujourdhui : 4 });
+    libEntree(); return;
+  }
+  try{
+    const { data, error } = await sb.rpc('front_liberation_etat');
+    LIB.lu = true;
+    if(error || !libLire(Array.isArray(data) ? data[0] : data)) LIB.ouvert = false;
+  }catch(e){ LIB.lu = true; LIB.ouvert = false; }
+  libEntree();
+}
+const libEnergie = () => energieEtat ? Number(energieEtat.energie) || 0 : 0;
+const libTaux = (c) => LIB.taux[c.tier.id] || 0;
+// pourquoi une commune ne se libère pas (null = elle se libère)
+function libBlocage(code){
+  if(garnisonsMoi.has(code)) return 'garnison';
+  const bt = BATIMENTS_CARTE.get(String(code));
+  if(bt && ['fonderie', 'forteresse', 'centre'].some(t => bt[t])) return 'batiment';
+  if(siegesParCommune().has(code)) return 'attaque';
+  return null;
+}
+const LIB_RAISON = { garnison: 'Garnison : retire-la d’abord', batiment: 'Bâtiment dessus', attaque: 'Attaquée en ce moment' };
+const LIB_RAISON_LONGUE = {
+  garnison: 'Retire d’abord ta garnison pour pouvoir la libérer.',
+  batiment: 'Il y a un bâtiment sur cette commune : elle ne se libère pas.',
+  attaque: 'Elle est attaquée : tu pourras la libérer une fois l’attaque finie.'
+};
+// ce que rapporte une liste : brut, compté (plafond du jour et réservoir), perdu
+function libCompte(total){
+  const place = Math.max(0, LIB.plafond - LIB.aujourdhui);
+  const gagne = Math.max(0, Math.min(total, place, LIB.reservoir - libEnergie()));
+  return { brut: total, gagne, perdu: Math.max(0, total - gagne) };
+}
+function libDateRetour(){
+  const d = new Date(Date.now() + LIB.jours * 864e5);
+  return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'numeric' });
+}
+
+// ----- la fiche d'une commune (le panneau de la carte) -----
+function libFicheHtml(code, c){
+  if(!LIB.ouvert || !c || !c.tier) return '';
+  const bloc = libBlocage(code), e = libTaux(c);
+  let corps;
+  if(bloc){
+    corps = `<p class="lib-raison">${LIB_RAISON_LONGUE[bloc]}</p>`;
+  } else if(libArme === code){
+    const k = libCompte(e), en = libEnergie();
+    corps = `<div class="lib-conf">
+        <div class="lib-gain"><b>+${libN(k.gagne)} ${ICONE_ENERGIE}</b><span>${echapperHtml(c.tier.label)}<br>Énergie : ${libN(en)} → ${libN(en + k.gagne)} / ${LIB.reservoir}</span></div>
+        <p>Aujourd’hui : ${libN(LIB.aujourdhui)} → ${libN(LIB.aujourdhui + k.gagne)} / ${LIB.plafond}${k.perdu > 0.001 ? ` · <b class="lib-perdu">${libN(k.perdu)} perdu${k.perdu >= 2 ? 's' : ''} (plafond)</b>` : ''}</p>
+        <p>Elle rejoint les paquets du Front et ne pourra pas te retomber avant le ${libDateRetour()}. Ça ne s’annule pas.</p>
+        <div class="lib-btns"><button type="button" class="sec" data-pc="lib-garder">Garder</button><button type="button" class="ok" data-pc="lib-ok">Libérer · +${libN(k.gagne)} ${ICONE_ENERGIE}</button></div>
+      </div>`;
+  } else {
+    corps = `<button type="button" class="lib-btn" data-pc="lib-liberer">Libérer ${echapperHtml(c.nom)}</button>`;
+  }
+  return `<div class="lib-fiche">
+      <div class="lib-haut"><span>Libérer la commune</span><b>+${libN(e)} ${ICONE_ENERGIE}</b></div>
+      <p class="lib-txt">Tu la rends au front contre de l’énergie. Elle retourne dans les paquets ; tu ne pourras pas la retirer pendant ${LIB.jours} jours.</p>
+      ${corps}
+      <button type="button" class="lib-lien" data-pc="lib-plusieurs">Libérer plusieurs communes…</button>
+    </div>`;
+}
+// renvoie vrai si le clic du panneau était pour nous
+function libClicPanneau(quoi, code){
+  if(!quoi.startsWith('lib-')) return false;
+  const rouvrir = () => { const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); };
+  if(quoi === 'lib-liberer'){ libArme = code; rouvrir(); return true; }
+  if(quoi === 'lib-garder'){ libArme = null; rouvrir(); return true; }
+  if(quoi === 'lib-ok'){ libArme = null; libEnvoyer([code]); return true; }
+  if(quoi === 'lib-plusieurs'){ libArme = null; libOuvrir(); return true; }
+  return true;
+}
+
+// ----- l'envoi au serveur (une ou plusieurs) -----
+async function libEnvoyer(codes){
+  if(LS.enCours || !codes.length) return false;
+  LS.enCours = true;
+  const noms = codes.map(c => (collectionMap.get(c) || {}).nom).filter(Boolean);
+  let r;
+  try{
+    if(LIB_TEST){
+      const total = codes.reduce((a, c) => a + (collectionMap.get(c) ? libTaux(collectionMap.get(c)) : 0), 0);
+      const k = libCompte(total);
+      r = { liberees: codes, energie_gagnee: k.gagne, perdue: k.perdu, refusees: [], etat: { ouvert: true, ...LIB_DEFAUT, aujourdhui: LIB.aujourdhui + k.gagne } };
+    } else {
+      const { data, error } = await sb.rpc('front_liberer', { p_codes: codes });
+      if(error) throw error;
+      r = data || {};
+    }
+  }catch(err){
+    LS.enCours = false;
+    notifier({ type: 'erreur', titre: 'Libérer', texte: messageLisible(err.message) });
+    return false;
+  }
+  LS.enCours = false;
+  if(r.etat) libLire(r.etat);
+  const faites = Array.isArray(r.liberees) ? r.liberees : [];
+  const refus = Array.isArray(r.refusees) ? r.refusees : [];
+  if(!LIB_TEST) for(const c of faites){ collectionMap.delete(c); LS.choix.delete(c); }
+  else for(const c of faites) LS.choix.delete(c);
+  if(panneauCommune && faites.includes(panneauCommune)) fermerPanneau();
+  const g = Number(r.energie_gagnee) || 0, p = Number(r.perdue) || 0;
+  if(faites.length){
+    const titre = faites.length === 1 ? `${(collectionMap.get(faites[0]) || {}).nom || noms[0] || 'La commune'} libérée` : `${faites.length} communes libérées`;
+    notifier({ type: 'succes', titre: (LIB_TEST ? '[essai] ' : '') + titre, texte: `+${libN(g)} énergie${p > 0.001 ? ` · ${libN(p)} au-delà du plafond` : ''}` });
+  }
+  if(refus.length) notifier({ type: 'erreur', titre: `${refus.length} commune${refus.length > 1 ? 's' : ''} gardée${refus.length > 1 ? 's' : ''}`,
+    texte: refus.slice(0, 3).map(x => `${(collectionMap.get(x.code) || {}).nom || x.code} : ${x.raison}`).join(' · ') });
+  if(!LIB_TEST && faites.length){
+    try{ renderCollection(); renderStats(); renderMapOverlay(); }catch(e){ console.error(e); }
+    majEnergie();
+    loadOthersPossessions().catch(() => {});
+  }
+  const ec = document.getElementById('libEcran');
+  if(ec && !ec.hidden){ LS.confirmer = false; libRendre(); }
+  libEntree();
+  return faites.length > 0;
+}
+
+// ----- l'entrée dans Défendre -----
+function libEntree(){
+  const defense = document.getElementById('panel-defense');
+  let el = document.getElementById('libEntree');
+  if(!LIB.ouvert || !SAISON2){ if(el) el.hidden = true; return; }
+  if(!defense) return;
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'libEntree';
+    el.className = 'garnisons-bloc lib-entree';
+    const g = document.getElementById('batimentsBloc') || document.getElementById('garnisonsBloc') || defense.querySelector('.bourse-section');
+    if(g) g.insertAdjacentElement('beforebegin', el); else defense.appendChild(el);
+    el.addEventListener('click', (e) => { if(e.target.closest('[data-lib-ouvrir]')) libOuvrir(); });
+  }
+  el.hidden = false;
+  el.innerHTML = `<h2>Libérer des communes</h2>
+    <p class="gl-vide">Rends au front les communes qui ne te servent plus, contre de l’énergie : ${libTauxTexte()}. Jusqu’à ${LIB.plafond} ${ICONE_ENERGIE} par jour (aujourd’hui ${libN(LIB.aujourdhui)}).</p>
+    <button type="button" class="gl-r lib-entree-btn" data-lib-ouvrir>Choisir les communes</button>`;
+}
+function libTauxTexte(){
+  const t = LIB.taux, f = (x) => x >= 1 ? libN(x) : '1/' + Math.round(1 / x);
+  return `commune ${f(t.commun)}, peu commune ${f(t.peucommun)}, rare ${f(t.rare)}, épique ${f(t.epique)}, légendaire ${f(t.legendaire)}`;
+}
+
+// ----- l'écran « Libérer plusieurs » -----
+function libOuvrir(){
+  if(!LIB.ouvert) return;
+  let ec = document.getElementById('libEcran');
+  if(!ec){
+    ec = document.createElement('div');
+    ec.id = 'libEcran';
+    ec.className = 'lib-ecran';
+    ec.setAttribute('role', 'dialog');
+    ec.setAttribute('aria-modal', 'true');
+    ec.setAttribute('aria-labelledby', 'libTitre');
+    ec.hidden = true;
+    document.body.appendChild(ec);
+    ec.addEventListener('click', libClic);
+    ec.addEventListener('input', (e) => {
+      if(!e.target.matches('[data-lib-q]')) return;
+      LS.q = e.target.value;
+      libRendreListe();
+      const x = ec.querySelector('[data-lib-effacer]'); if(x) x.hidden = !LS.q;
+    });
+  }
+  if(ec.hidden) libRetourFocus = document.activeElement;
+  // ce qui a disparu depuis (prise, libérée) ne reste pas coché
+  for(const c of [...LS.choix]) if(!collectionMap.has(c) || libBlocage(c)) LS.choix.delete(c);
+  LS.confirmer = false;
+  ec.hidden = false;
+  document.documentElement.classList.add('lib-ouvert');
+  libRendre();
+  document.removeEventListener('keydown', libTouche);
+  document.addEventListener('keydown', libTouche);
+  requestAnimationFrame(() => {
+    ec.classList.add('visible');
+    const q = ec.querySelector('[data-lib-q]');
+    if(q && matchMedia('(min-width: 900px)').matches) try{ q.focus({ preventScroll: true }); }catch(e){}
+    else { const f = ec.querySelector('.lib-fermer'); if(f) try{ f.focus({ preventScroll: true }); }catch(e){} }
+  });
+  majEnergie().then(() => { if(!ec.hidden) libRendreBarre(); }).catch(() => {});
+}
+function libFermer(){
+  const ec = document.getElementById('libEcran');
+  if(!ec || ec.hidden) return;
+  ec.classList.remove('visible');
+  ec.hidden = true;
+  ec.innerHTML = '';
+  document.documentElement.classList.remove('lib-ouvert');
+  document.removeEventListener('keydown', libTouche);
+  if(libRetourFocus && libRetourFocus.isConnected && libRetourFocus.focus) try{ libRetourFocus.focus({ preventScroll: true }); }catch(e){}
+}
+function libTouche(e){
+  if(e.key !== 'Escape') return;
+  if(LS.confirmer){ LS.confirmer = false; libRendre(); return; }
+  libFermer();
+}
+const LIB_ORDRE = ['legendaire', 'epique', 'rare', 'peucommun', 'commun'];
+const LIB_PLURIEL = { legendaire: 'légendaires', epique: 'épiques', rare: 'rares', peucommun: 'peu communes', commun: 'communes' };
+const LIB_SING = { legendaire: 'légendaire', epique: 'épique', rare: 'rare', peucommun: 'peu commune', commun: 'commune' };
+const libDepNom = (d) => `${DEPT_NAMES[d] || d} (${d})`;
+const libPlat = (t) => sansAccents(String(t)).replace(/[-'’]/g, ' ').replace(/\s+/g, ' ').trim();
+// les départements, et dans chacun les communes qui passent la recherche et le filtre
+function libDeps(){
+  const q = libPlat(LS.q), par = new Map();
+  for(const c of collectionMap.values()){
+    if(!c.tier || (LS.filtre !== 'tout' && c.tier.id !== LS.filtre)) continue;
+    const d = String(c.dept);
+    const depOk = !q || libPlat(d) === q || libPlat(DEPT_NAMES[d] || '').includes(q);
+    if(!depOk && !libPlat(c.nom).includes(q)) continue;
+    if(!par.has(d)) par.set(d, { d, depOk, communes: [] });
+    par.get(d).communes.push(c);
+  }
+  const rang = (c) => LIB_ORDRE.indexOf(c.tier.id);
+  const deps = [...par.values()];
+  deps.forEach(x => x.communes.sort((a, b) => rang(a) - rang(b) || a.nom.localeCompare(b.nom, 'fr')));
+  deps.sort((a, b) => a.d.localeCompare(b.d, 'fr', { numeric: true }));
+  return deps;
+}
+function libCase(etat, label, attrs, non){
+  const cls = non ? ' non' : etat === true ? ' on' : etat === 'mixed' ? ' mi' : '';
+  return `<button type="button" class="lib-case${cls}" role="checkbox" aria-checked="${non ? 'false' : etat}" aria-label="${echapperHtml(label)}"${non ? ' aria-disabled="true"' : ''} ${attrs}><span>${etat === true && !non ? '✓' : etat === 'mixed' ? '–' : ''}</span></button>`;
+}
+function libRendreListe(){
+  const z = document.getElementById('libListe');
+  if(!z) return;
+  if(!collectionMap.size){ z.innerHTML = '<p class="lib-vide">Tu n’as pas de commune dans le Front.</p>'; return; }
+  const deps = libDeps(), q = LS.q.trim();
+  if(!deps.length){ z.innerHTML = `<p class="lib-vide">Aucune de tes communes du Front ne correspond${q ? ` à « ${echapperHtml(q)} »` : ''}.</p>`; return; }
+  const limite = 60;   // au-delà, on déplie à la demande : une liste de 2 000 communes ne s'écrit pas d'un coup
+  z.innerHTML = deps.map(x => {
+    const libres = x.communes.filter(c => !libBlocage(c.code));
+    const pris = libres.filter(c => LS.choix.has(c.code));
+    const tous = libres.length > 0 && pris.length === libres.length;
+    const bloq = x.communes.length - libres.length;
+    const gain = pris.reduce((a, c) => a + libTaux(c), 0);
+    const ouvert = (q && !x.depOk) || LS.ouverts.has(x.d);
+    const tete = `<div class="lib-tete">
+        ${libCase(tous ? true : pris.length ? 'mixed' : false, 'Tout libérer en ' + libDepNom(x.d), `data-lib-dep="${echapperHtml(x.d)}"`, !libres.length)}
+        <button type="button" class="lib-deplier" aria-expanded="${ouvert}" data-lib-deplier="${echapperHtml(x.d)}">
+          <span class="lib-dn"><b>${echapperHtml(libDepNom(x.d))}</b><small>${x.communes.length} à toi${bloq ? ` · ${bloq} bloquée${bloq > 1 ? 's' : ''}` : ''}${pris.length ? ` · ${pris.length} choisie${pris.length > 1 ? 's' : ''}` : ''}</small></span>
+          ${pris.length ? `<span class="lib-g">+${libN(gain)} ${ICONE_ENERGIE}</span>` : ''}
+          <span class="lib-fl" aria-hidden="true">${ouvert ? '▴' : '▾'}</span>
+        </button></div>`;
+    if(!ouvert) return `<div class="lib-dep">${tete}</div>`;
+    const lignes = x.communes.slice(0, LS.ouverts.has(x.d + '+') ? Infinity : limite).map(c => {
+      const b = libBlocage(c.code), on = LS.choix.has(c.code);
+      return `<div class="lib-com${b ? ' off' : ''}">
+          ${libCase(on, 'Libérer ' + c.nom, `data-lib-com="${echapperHtml(c.code)}"`, !!b)}
+          <i class="lib-pt ${c.tier.id}" aria-hidden="true"></i>
+          <span class="lib-cn"><span>${echapperHtml(c.nom)}</span><small class="${b ? 'bloq' : ''}">${b ? LIB_RAISON[b] : echapperHtml(c.tier.label)}</small></span>
+          <span class="lib-v">${b ? '' : '+' + libN(libTaux(c)) + ' ' + ICONE_ENERGIE}</span>
+        </div>`;
+    }).join('');
+    const reste = LS.ouverts.has(x.d + '+') ? 0 : x.communes.length - limite;
+    return `<div class="lib-dep">${tete}<div>${lignes}${reste > 0 ? `<button type="button" class="lib-plus" data-lib-tout="${echapperHtml(x.d)}">Voir les ${reste} autres</button>` : ''}</div></div>`;
+  }).join('');
+}
+function libSelection(){
+  let total = 0; const par = {}; const codes = [];
+  for(const code of LS.choix){
+    const c = collectionMap.get(code);
+    if(!c || libBlocage(code)) continue;
+    codes.push(code); total += libTaux(c); par[c.tier.id] = (par[c.tier.id] || 0) + 1;
+  }
+  return { codes, total, par, ...libCompte(total) };
+}
+function libRendreBarre(){
+  const z = document.getElementById('libBarre');
+  if(!z) return;
+  const s = libSelection(), n = s.codes.length, en = libEnergie();
+  const titre = n ? `${n} commune${n > 1 ? 's' : ''} · +${libN(s.gagne)} ${ICONE_ENERGIE}` : 'Aucune commune choisie';
+  const detail = LIB_ORDRE.filter(r => s.par[r]).map(r => `<div class="lib-l"><span>${s.par[r]} ${s.par[r] > 1 ? LIB_PLURIEL[r] : LIB_SING[r]}</span><span>+${libN(s.par[r] * LIB.taux[r])} ${ICONE_ENERGIE}</span></div>`).join('');
+  const bouton = `Libérer ${n} commune${n > 1 ? 's' : ''} · +${libN(s.gagne)} ${ICONE_ENERGIE}`;
+  const perdu = s.perdu > 0.001
+    ? `<p class="lib-avert">${LIB.aujourdhui + s.gagne >= LIB.plafond - 0.001 ? 'Plafond du jour atteint' : 'Réservoir plein'} : ${libN(s.perdu)} ${ICONE_ENERGIE} ne seraient pas comptés. Libère le reste demain.</p>` : '';
+  z.innerHTML = `<p class="lib-lbl">Ta sélection</p>
+    <p class="lib-bt">${titre}</p>
+    <div class="lib-detail">${detail}</div>
+    <div class="lib-l lib-sep"><span>Aujourd’hui</span><span>${libN(LIB.aujourdhui)} → ${libN(LIB.aujourdhui + s.gagne)} / ${LIB.plafond}</span></div>
+    <div class="lib-l"><span>Énergie</span><span class="lib-or">${libN(en)} → ${libN(en + s.gagne)} / ${LIB.reservoir}</span></div>
+    ${perdu}
+    ${n ? `<button type="button" class="lib-ok" data-lib-confirmer>${bouton}</button>` : '<button type="button" class="lib-ok" disabled>Choisis des communes</button>'}
+    ${n ? '<button type="button" class="lib-lien lib-vider" data-lib-vider>Tout décocher</button>' : ''}`;
+  const c = document.getElementById('libConf');
+  if(c){
+    c.hidden = !LS.confirmer || !n;
+    if(!c.hidden) c.innerHTML = `<div class="lib-feuille" role="alertdialog" aria-modal="true" aria-labelledby="libConfT">
+        <p class="lib-ft" id="libConfT">Libérer ${n} commune${n > 1 ? 's' : ''} ?</p>
+        ${detail}
+        <div class="lib-l lib-sep"><span>Énergie</span><span class="lib-or">${libN(en)} → ${libN(en + s.gagne)} / ${LIB.reservoir}${s.perdu > 0.001 ? ` (${libN(s.perdu)} perdu${s.perdu >= 2 ? 's' : ''})` : ''}</span></div>
+        <p class="lib-txt">Elles retournent dans les paquets du Front et ne pourront pas te retomber avant le ${libDateRetour()}. Ça ne s’annule pas.</p>
+        <div class="lib-btns"><button type="button" class="sec" data-lib-annuler>Garder</button><button type="button" class="ok" data-lib-valider ${LS.enCours ? 'disabled' : ''}>${bouton}</button></div>
+      </div>`;
+  }
+}
+function libRendre(){
+  const ec = document.getElementById('libEcran');
+  if(!ec) return;
+  const filtres = [['tout', 'Toutes']].concat(LIB_ORDRE.slice().reverse().map(r => [r, (TIERS.find(t => t.id === r) || {}).label || r]));
+  ec.innerHTML = `<div class="lib-haut-e">
+      <button type="button" class="lib-fermer" data-lib-fermer aria-label="Fermer">&larr;</button>
+      <div class="lib-titres"><p class="lib-titre" id="libTitre">Libérer des communes</p>
+        <p class="lib-sous">${libTauxTexte()} ${ICONE_ENERGIE}. Garnison, bâtiment ou attaque : la commune reste.</p></div>
+      <p class="lib-en">${ICONE_ENERGIE} ${libN(libEnergie())} / ${LIB.reservoir}</p>
+    </div>
+    <div class="lib-outils">
+      <div class="lib-recherche"><span class="lib-loupe" aria-hidden="true">⌕</span>
+        <input type="search" data-lib-q value="${echapperHtml(LS.q)}" placeholder="Commune, département ou n° (16…)" aria-label="Chercher une commune ou un département" autocomplete="off">
+        <button type="button" class="lib-effacer" data-lib-effacer aria-label="Effacer la recherche"${LS.q ? '' : ' hidden'}>×</button></div>
+      <div class="lib-filtres" role="group" aria-label="Filtrer par rareté">${filtres.map(([id, nom]) =>
+        `<button type="button" class="lib-chip${LS.filtre === id ? ' on' : ''}" aria-pressed="${LS.filtre === id}" data-lib-filtre="${id}"><i class="lib-pt ${id}"></i>${echapperHtml(nom)}</button>`).join('')}</div>
+    </div>
+    <div class="lib-corps"><div class="lib-liste" id="libListe"></div><aside class="lib-barre" id="libBarre"></aside></div>
+    <div class="lib-conf-fond" id="libConf" hidden></div>`;
+  libRendreListe();
+  libRendreBarre();
+}
+function libClic(e){
+  const t = e.target;
+  if(t.closest('[data-lib-fermer]')){ libFermer(); return; }
+  if(t.closest('[data-lib-effacer]')){ LS.q = ''; const q = document.querySelector('[data-lib-q]'); if(q){ q.value = ''; q.focus(); } t.closest('[data-lib-effacer]').hidden = true; libRendreListe(); return; }
+  const f = t.closest('[data-lib-filtre]');
+  if(f){ LS.filtre = f.dataset.libFiltre; libRendre(); return; }
+  const dep = t.closest('[data-lib-dep]');
+  if(dep){
+    if(dep.getAttribute('aria-disabled') === 'true') return;
+    const x = libDeps().find(y => y.d === dep.dataset.libDep);
+    if(!x) return;
+    const libres = x.communes.filter(c => !libBlocage(c.code));
+    const tous = libres.every(c => LS.choix.has(c.code));
+    libres.forEach(c => tous ? LS.choix.delete(c.code) : LS.choix.add(c.code));
+    libRendreListe(); libRendreBarre(); libFocus(`[data-lib-dep="${CSS.escape(x.d)}"]`); return;
+  }
+  const dp = t.closest('[data-lib-deplier]');
+  if(dp){ const d = dp.dataset.libDeplier; LS.ouverts.has(d) ? LS.ouverts.delete(d) : LS.ouverts.add(d); libRendreListe(); libFocus(`[data-lib-deplier="${CSS.escape(d)}"]`); return; }
+  const tout = t.closest('[data-lib-tout]');
+  if(tout){ LS.ouverts.add(tout.dataset.libTout + '+'); libRendreListe(); return; }
+  const com = t.closest('[data-lib-com]');
+  if(com){
+    if(com.getAttribute('aria-disabled') === 'true') return;
+    const c = com.dataset.libCom;
+    LS.choix.has(c) ? LS.choix.delete(c) : LS.choix.add(c);
+    libRendreListe(); libRendreBarre(); libFocus(`[data-lib-com="${CSS.escape(c)}"]`); return;
+  }
+  if(t.closest('[data-lib-vider]')){ LS.choix.clear(); libRendreListe(); libRendreBarre(); return; }
+  if(t.closest('[data-lib-confirmer]')){ LS.confirmer = true; libRendreBarre(); const v = document.querySelector('[data-lib-valider]'); if(v) v.focus(); return; }
+  if(t.closest('[data-lib-annuler]') || t.id === 'libConf'){ LS.confirmer = false; libRendreBarre(); return; }
+  if(t.closest('[data-lib-valider]')){ const s = libSelection(); libEnvoyer(s.codes); return; }
+}
+function libFocus(sel){ const b = document.querySelector('#libEcran ' + sel); if(b) try{ b.focus({ preventScroll: true }); }catch(e){} }

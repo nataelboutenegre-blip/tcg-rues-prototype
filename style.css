@@ -8058,3 +8058,28 @@ html.lib-ouvert, html.lib-ouvert body{ overflow:hidden; }
   .lib-feuille{ width:440px; border-radius:20px; border:1px solid rgba(240,180,41,.35); }
 }
 @media (prefers-reduced-motion: reduce){ .lib-ecran{ transition:none; } }
+
+/* patch275 : blason du clan à côté des pseudos (classement, légende, journal) */
+.bl-nom{ display:inline-block; flex:none; width:14px; height:17px; margin-left:5px; vertical-align:-3px; }
+.bl-nom.grand{ width:18px; height:22px; vertical-align:-5px; }
+.bl-nom svg{ width:100%; height:100%; display:block; filter:drop-shadow(0 1px 2px rgba(0,0,0,.4)); }
+.bl-nom-ecu{ background: var(--clan); clip-path: polygon(50% 0, 100% 15%, 100% 55%, 50% 100%, 0 55%, 0 15%); }
+.cl-pseudo:has(> .bl-nom), .leg-pseudo:has(> .bl-nom){ display:flex; align-items:center; }
+.cl-marche .cl-pseudo:has(> .bl-nom){ justify-content:center; width:100%; }
+.cl-podium > .cl-marche{ min-width:0; }   /* un long pseudo ne doit pas élargir sa marche */
+.nom-txt{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.jr-qui{ white-space:nowrap; }
+.jr-qui .bl-nom{ margin:0 4px 0 0; }
+
+/* patch275 : Terra › Échange, « Toutes » */
+.pill-point.pill-toutes{ background: conic-gradient(var(--c-commun) 0 20%, var(--c-peucommun) 0 40%, var(--c-rare) 0 60%, var(--c-epique) 0 80%, var(--c-legendaire) 0); }
+.ech-rar{ font-style:normal; font-weight:600; }
+.ech-rar.commun{ color:#A9B4C6; }
+.ech-rar.peucommun{ color:#3DCB8E; }
+.ech-rar.rare{ color:#5C9BFF; }
+.ech-rar.epique{ color:#B38BFA; }
+.ech-rar.legendaire{ color: var(--c-legendaire); }
+.ech-note-rar{ flex-basis:100%; display:flex; align-items:center; gap:10px; margin:0 0 4px; padding:7px 10px;
+  font-size:.8rem; line-height:1.4; color:#D5DEEA; background: rgba(47,124,246,.1); border:1px solid rgba(47,124,246,.35); border-radius:10px; }
+.ech-note-rar button{ margin-left:auto; padding:4px 2px; background:none; border:none; font:inherit; font-weight:600; color: var(--c-legendaire); cursor:pointer; white-space:nowrap; }
+.ech-note-rar button:focus-visible{ outline:2px solid var(--c-legendaire); outline-offset:2px; border-radius:4px; }

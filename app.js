@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd559852ae691';
+const VERSION_JEU = '387e06911cd6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1570,7 +1570,7 @@ function ilYA(date){
 }
 
 function ligneJournal(e){
-  const moi = (p) => p ? `<b>${echapperTexte(p)}</b>` : 'un joueur';
+  const moi = (p) => p ? `<span class="jr-qui" data-jr-pseudo="${echapperTexte(p)}">${blasonParPseudo(p)}<b>${echapperTexte(p)}</b></span>` : 'un joueur';   // patch275 : + blason
   // "Tu as conquis" quand c'est moi, "ROBOI a conquis" sinon
   const acteur = e.je_suis_acteur ? '<b>Tu</b>' : moi(e.acteur_pseudo);
   const a = e.je_suis_acteur ? 'as' : 'a';
@@ -1860,6 +1860,7 @@ function renderClassementClans(podium, liste, plus){
   if(plus) plus.hidden = classementComplet || (d.total || 0) <= 10;
 }
 
+function blClassement(nom, l, grand){ return classementMode === 'palmares' ? nom : pseudoBlason(nom, l.joueur_id, l.est_moi, grand); }   // patch275
 function renderClassement(){
   renderSaisonsPalmares();
   const podium = document.getElementById('clPodium');
@@ -1883,7 +1884,7 @@ function renderClassement(){
       ? `<button class="cl-ligne moi" data-joueur-id="${echapperTexte(moi.joueur_id)}">
            <span class="cl-rang">${moi.rang}</span>
            <span class="cl-pastille" style="background:${COULEUR_MOI}"></span>
-           <span class="cl-pseudo"><b>Toi</b></span>
+           <span class="cl-pseudo">${blClassement('<b>Toi</b>', moi)}</span>
            <span class="cl-detail">${Number(moi.communes).toLocaleString('fr-FR')}</span>
            <span class="cl-score">${Number(moi.score).toLocaleString('fr-FR')}<small>pts</small></span>
          </button>` : '';
@@ -1917,7 +1918,7 @@ function renderClassement(){
     <button class="cl-marche r${l.rang} ${l.est_moi ? 'moi' : ''}" data-joueur-id="${echapperTexte(l.joueur_id)}" title="Mettre son territoire en évidence">
       <span class="cl-rang">${l.rang}</span>
       <span class="cl-pastille" style="background:${couleur(l)}"></span>
-      <span class="cl-pseudo">${l.est_moi ? 'Toi' : echapperTexte(l.pseudo)}${pointEnLigne(l.joueur_id)}</span>
+      <span class="cl-pseudo">${blClassement(l.est_moi ? 'Toi' : echapperTexte(l.pseudo), l, true)}${pointEnLigne(l.joueur_id)}</span>
       <span class="cl-score">${nb(l.score)}<small>pts</small></span>
       <span class="cl-detail">${nb(l.communes)} commune${l.communes > 1 ? 's' : ''}</span>
       ${scoreBarre(l.joueur_id)}
@@ -1929,8 +1930,8 @@ function renderClassement(){
       <span class="cl-rang">${l.rang}</span>
       <span class="cl-pastille" style="background:${couleur(l)}"></span>
       ${scoreDetail.size
-        ? `<span class="sc-nom"><span class="cl-pseudo">${l.est_moi ? '<b>Toi</b>' : echapperTexte(l.pseudo)}${pointEnLigne(l.joueur_id)}</span>${scoreBarre(l.joueur_id)}</span>`
-        : `<span class="cl-pseudo">${l.est_moi ? '<b>Toi</b>' : echapperTexte(l.pseudo)}${pointEnLigne(l.joueur_id)}</span>`}
+        ? `<span class="sc-nom"><span class="cl-pseudo">${blClassement(l.est_moi ? '<b>Toi</b>' : echapperTexte(l.pseudo), l)}${pointEnLigne(l.joueur_id)}</span>${scoreBarre(l.joueur_id)}</span>`
+        : `<span class="cl-pseudo">${blClassement(l.est_moi ? '<b>Toi</b>' : echapperTexte(l.pseudo), l)}${pointEnLigne(l.joueur_id)}</span>`}
       <span class="cl-mini">${l.legendaires > 0 ? `<i class="cl-etoile">★</i>${nb(l.legendaires)}` : ''}${l.rares > 0 ? `<i class="cl-rond"></i>${nb(l.rares)}` : ''}</span>
       <span class="cl-detail">${nb(l.communes)}</span>
       <span class="cl-score">${nb(l.score)}<small>pts</small></span>
@@ -4234,7 +4235,7 @@ function renderLegendeCarte(joueurs, idSvg){
       <span class="leg-rang">${rangs.get(j.id) || ''}</span>
       <span class="leg-pastille" style="background:${j.couleur}"></span>
       <span class="leg-mid">
-        <span class="leg-pseudo">${j.moi ? '<b>Toi</b>' : echapperHtml(j.pseudo)}</span>
+        <span class="leg-pseudo">${pseudoBlason(j.moi ? '<b>Toi</b>' : echapperHtml(j.pseudo), j.id, j.moi)}</span>
         <span class="leg-sous">${d > 0 ? d + ' dép. dominé' + (d > 1 ? 's' : '') : 'aucun département'}</span>
         <span class="leg-barre"><i style="width:${largeur.toFixed(1)}%;background:${j.couleur}"></i></span>
       </span>
@@ -4376,6 +4377,7 @@ async function loadOthersPossessions(){
     });
   }
   renderMapOverlay();
+  majBlasonsJournal();   // patch275
 }
 
 // ---------- Collection (depuis la base de donnees) ----------
@@ -12298,6 +12300,40 @@ let echangeTier = 'commun';
 let echangeMien = null;    // code de ma commune
 let echangeCible = null;   // { commune_code, nom, departement, pseudo }
 let echangeCibles = [];
+// patch275 : « Toutes » (Terra seulement, idée d'Arkhannou). L'échange reste à rareté égale :
+// un choix d'un côté resserre l'autre côté sur sa rareté.
+function echToutes(){ return echangeTier === 'tout'; }
+function echTierImpose(cote){
+  if(!echToutes()) return echangeTier;
+  if(cote === 'mien') return echangeCible && echangeCible.tier ? echangeCible.tier : null;
+  const m = echangeMien && terraCollection.get(echangeMien);
+  return m ? m.tier.id : null;
+}
+function echTierOk(id, cote){ const t = echTierImpose(cote); return !t || id === t; }
+function echTierEffectif(){
+  if(!echToutes()) return echangeTier;
+  const m = echangeMien && terraCollection.get(echangeMien);
+  return m ? m.tier.id : ((echangeCible && echangeCible.tier) || 'commun');
+}
+function rangTier(id){ return TIERS.findIndex(t => t.id === id); }
+function echRarHtml(id){ return echToutes() && id ? `<em class="ech-rar ${id}">${tierInfo(id).label}</em> · ` : ''; }
+function echNoteRarete(cote){
+  if(!echToutes()) return '';
+  if(cote === 'mien' && echangeMien) return '';   // les deux côtés choisis : une seule note, sous « Tu reçois »
+  const t = echTierImpose(cote);
+  if(!t) return '';
+  const lab = { commun: 'communes', peucommun: 'peu communes', rare: 'rares', epique: 'épiques', legendaire: 'légendaires' }[t] || t;
+  return `<p class="ech-note-rar"><span>Un échange se fait à rareté égale : on ne te montre plus que les <b class="ech-rar ${t}">${lab}</b>.</span><button type="button" data-ech-revoir="${cote}">Tout revoir</button></p>`;
+}
+function echPillToutes(){
+  const terra = marcheTerra();
+  const p = document.querySelector('#echTiers [data-tier="tout"]');
+  if(p) p.hidden = !terra;
+  if(!terra && echToutes()){
+    echangeTier = 'commun'; echangeMien = null; echangeCible = null;
+    document.querySelectorAll('#echTiers .filter-pill').forEach(x => x.classList.toggle('active', x.dataset.tier === 'commun'));
+  }
+}
 let echangeRecherche = '';
 let echangeCoupee = false;   // patch149 : le serveur a renvoye son maximum et des exclusions ont retire des communes
 let echangeMinuteur = null;
@@ -12442,6 +12478,7 @@ function renderEchangePropositions(){
 function renderEchangeMien(){
   const zone = document.getElementById('echMien');
   if(!zone) return;
+  echPillToutes();   // patch275
   const maintenant = Date.now();
   const champM = document.getElementById('echSearchMien');
   const rechercheM = sansAccents(champM ? champM.value.trim() : '');
@@ -12491,29 +12528,30 @@ function renderEchangeMienTerra(zone, rechercheM){
   const promis = {};
   for(const e of echangesEnCours || []) if(e.sens === 'envoye') promis[e.je_donne_code] = (promis[e.je_donne_code] || 0) + 1;
   const duPalier = [...terraCollection.values()]
-    .filter(c => c.tier.id === echangeTier && echangeablesTerra(c) > 0);
+    .filter(c => echTierOk(c.tier.id, 'mien') && echangeablesTerra(c) > 0);   // patch275
   const miennes = duPalier
     .map(c => Object.assign({}, c, { libres: echangeablesTerra(c) - (promis[c.code] || 0) }))
     .filter(c => c.libres > 0)
     .filter(c => correspondUnTerme(c.nom, c.dept, rechercheM))
-    .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+    .sort((a, b) => (echToutes() ? rangTier(a.tier.id) - rangTier(b.tier.id) : 0) || a.nom.localeCompare(b.nom, 'fr'));
   if(!miennes.length){
-    zone.innerHTML = rechercheM
+    zone.innerHTML = echNoteRarete('mien') + (rechercheM
       ? '<p class="collection-empty">Aucun de tes doublons ne correspond à cette recherche.</p>'
       : (duPalier.length
          ? '<p class="collection-empty">Tous tes doublons de cette rareté sont déjà promis dans une proposition.</p>'
-         : '<p class="collection-empty">Tu n\'as aucun doublon de cette rareté.</p>');
+         : (echToutes() && !echTierImpose('mien') ? '<p class="collection-empty">Tu n\'as aucun doublon échangeable.</p>' : '<p class="collection-empty">Tu n\'as aucun doublon de cette rareté.</p>')));
     echangeMien = null;
     majResumeEchange();
     return;
   }
   if(echangeMien && !miennes.some(c => c.code === echangeMien)) echangeMien = null;
   zone.innerHTML = miennes.map(c => `
-    <button class="ech-item ${echangeTier} ${echangeMien === c.code ? 'choisi' : ''}" data-mien="${echapperTexte(c.code)}">
+    <button class="ech-item ${c.tier.id} ${echangeMien === c.code ? 'choisi' : ''}" data-mien="${echapperTexte(c.code)}">
       <b>${echapperTexte(c.nom)}</b>
-      <small>${echapperTexte(c.dept)} · ${c.libres} doublon${c.libres > 1 ? 's' : ''} échangeable${c.libres > 1 ? 's' : ''}</small>
+      <small>${echRarHtml(c.tier.id)}${echapperTexte(c.dept)} · ${c.libres} doublon${c.libres > 1 ? 's' : ''} échangeable${c.libres > 1 ? 's' : ''}</small>
     </button>`).join('');
-  if([...terraCollection.values()].some(c => c.tier.id === echangeTier && achetesTerra(c) > 0))
+  { const n = echNoteRarete('mien'); if(n) zone.insertAdjacentHTML('afterbegin', n); }   // patch275
+  if([...terraCollection.values()].some(c => echTierOk(c.tier.id, 'mien') && achetesTerra(c) > 0))
     zone.insertAdjacentHTML('afterbegin', '<p class="ech-note">🔒 Les cartes des paquets achetés en TP ne s\u2019échangent pas : elles restent dans ta collection ou se revendent au jeu.</p>');
   majResumeEchange();
 }
@@ -12525,9 +12563,14 @@ async function chargerCiblesEchange(){
   zone.innerHTML = '<p class="collection-empty">Chargement…</p>';
   // le serveur ne connait que les numeros de departement : "charente" devient "16"
   const { recherche: rechercheEch, exclus: exclusEch } = separerExclusions(echangeRecherche);
-  const { data, error } = await sb.rpc(marcheTerra() ? 'terra_cibles_echange' : 'cibles_echange', {
-    p_tier: echangeTier, p_recherche: criteresEchange(rechercheEch)
-  });
+  echPillToutes();   // patch275
+  const tiersDemandes = echToutes() ? TIERS.map(t => t.id).filter(id => id !== 'epique' || EPIQUE_VISIBLE) : [echangeTier];
+  const reps = await Promise.all(tiersDemandes.map(t => sb.rpc(marcheTerra() ? 'terra_cibles_echange' : 'cibles_echange', {
+    p_tier: t, p_recherche: criteresEchange(rechercheEch)
+  }).then(r => ({ t, data: r.data, error: r.error }))));
+  const error = (reps.find(r => r.error) || {}).error || null;
+  const data = error ? null : reps.flatMap(r => (r.data || []).map(c => Object.assign({}, c, { tier: r.t })));
+  const coupees = reps.some(r => (r.data || []).length >= 120);
   if(error){
     console.error(error);
     zone.innerHTML = '<p class="collection-empty">Impossible de charger les communes des autres joueurs.</p>';
@@ -12536,7 +12579,7 @@ async function chargerCiblesEchange(){
   const recues = data || [];
   echangeCibles = exclusEch.length ? recues.filter(c => !estExclu(c.nom, c.departement, c.pseudo, exclusEch)) : recues;
   // le serveur s'arrete a 120 : apres des exclusions, d'autres communes peuvent exister plus loin
-  echangeCoupee = recues.length >= 120 && echangeCibles.length < recues.length;
+  echangeCoupee = coupees && echangeCibles.length < recues.length;   // patch275 : par rareté
   await chargerSieges(echangeCibles.map(c => c.commune_code));
   renderEchangeCibles();
 }
@@ -12544,20 +12587,21 @@ async function chargerCiblesEchange(){
 function renderEchangeCibles(){
   const zone = document.getElementById('echCibles');
   if(!zone) return;
-  if(echangeCibles.length === 0){
-    zone.innerHTML = echangeCoupee
+  const visibles = echangeCibles.filter(c => !c.tier || echTierOk(c.tier, 'cible'));   // patch275
+  if(visibles.length === 0){
+    zone.innerHTML = echNoteRarete('cible') + (echangeCoupee
       ? '<p class="collection-empty">Rien dans les 120 premières communes une fois les exclusions retirées : ajoute un département pour chercher plus loin.</p>'
-      : '<p class="collection-empty">Aucune commune disponible de cette rareté.</p>';
+      : (echToutes() && !echTierImpose('cible') ? '<p class="collection-empty">Aucune commune disponible.</p>' : '<p class="collection-empty">Aucune commune disponible de cette rareté.</p>'));
     echangeCible = null;
     majResumeEchange();
     return;
   }
-  if(echangeCible && !echangeCibles.some(c => cleCible(c) === cleCible(echangeCible))) echangeCible = null;
+  if(echangeCible && !visibles.some(c => cleCible(c) === cleCible(echangeCible))) echangeCible = null;
 
-  zone.innerHTML = echangeCibles.map(c => `
-    <button class="ech-item ${echangeTier} ${echangeCible && cleCible(echangeCible) === cleCible(c) ? 'choisi' : ''}" data-cible="${echapperTexte(cleCible(c))}">
+  zone.innerHTML = echNoteRarete('cible') + visibles.map(c => `
+    <button class="ech-item ${c.tier || echangeTier} ${echangeCible && cleCible(echangeCible) === cleCible(c) ? 'choisi' : ''}" data-cible="${echapperTexte(cleCible(c))}">
       <b>${echapperTexte(c.nom)}${c.nouvelle === true ? TAG_NEUF : ''}</b>
-      <small>${echapperTexte(c.departement)} · ${echapperTexte(c.pseudo || 'un joueur')}</small>${tagSiege(siegesConnus.get(c.commune_code))}
+      <small>${echRarHtml(c.tier)}${echapperTexte(c.departement)} · ${echapperTexte(c.pseudo || 'un joueur')}</small>${tagSiege(siegesConnus.get(c.commune_code))}
     </button>`).join('')
     + (echangeCoupee ? '<p class="ech-astuce">Liste limitée aux 120 premières communes : ajoute un département pour voir les autres.</p>' : '');
   majResumeEchange();
@@ -12575,7 +12619,7 @@ function majResumeEchange(){
     return;
   }
   const mienne = (marcheTerra() ? terraCollection : collectionMap).get(echangeMien);
-  const commission = COMMISSION_ECHANGE[echangeTier] || 1;
+  const commission = COMMISSION_ECHANGE[echTierEffectif()] || 1;   // patch275
   resume.innerHTML = `
     <span><b>${echapperTexte(mienne ? mienne.nom : echangeMien)}</b> contre <b>${echapperTexte(echangeCible.nom)}</b></span>
     <span class="ech-commission">${commission} TP de commission pour chacun</span>`;
@@ -12796,19 +12840,30 @@ document.getElementById('echSearch').addEventListener('input', (e) => {
   echangeMinuteur = setTimeout(chargerCiblesEchange, 300);
 });
 
+function echRevoir(e){   // patch275 : « Tout revoir » défait le choix de l'autre côté
+  const rv = e.target.closest('[data-ech-revoir]');
+  if(!rv) return false;
+  if(rv.dataset.echRevoir === 'mien') echangeCible = null; else echangeMien = null;
+  renderEchangeMien(); renderEchangeCibles();
+  return true;
+}
 document.getElementById('echMien').addEventListener('click', (e) => {
+  if(echRevoir(e)) return;
   const b = e.target.closest('[data-mien]');
   if(!b) return;
   echangeMien = echangeMien === b.dataset.mien ? null : b.dataset.mien;
   renderEchangeMien();
+  if(echToutes()) renderEchangeCibles();   // patch275
 });
 
 document.getElementById('echCibles').addEventListener('click', (e) => {
+  if(echRevoir(e)) return;   // patch275
   const b = e.target.closest('[data-cible]');
   if(!b) return;
   const c = echangeCibles.find(x => cleCible(x) === b.dataset.cible);
   echangeCible = (echangeCible && cleCible(echangeCible) === b.dataset.cible) ? null : c;
   renderEchangeCibles();
+  if(echToutes()) renderEchangeMien();   // patch275
 });
 
 document.getElementById('echEnvoyer').addEventListener('click', async (e) => {
@@ -16925,6 +16980,7 @@ async function loadClansCarte(){
     if(error) return;
     clansCarte = new Map((data || []).map(r => [r.joueur_id, { tag: r.tag, couleur: r.couleur }]));
     clansCarteVersion++;
+    setTimeout(majBlasonsNoms, 0);   // patch275
     const moi = monUidClan ? clansCarte.get(monUidClan) : null;
     clanMembres = new Set(moi ? (data || []).filter(r => r.tag === moi.tag && r.joueur_id !== monUidClan).map(r => r.joueur_id) : []);
     if(typeof demanderDessin === 'function'){ CV.donneesSignature = ''; demanderDessin(); }
@@ -16957,6 +17013,48 @@ async function loadClan(){
     const el = document.querySelector('#clanZone [data-clan-voir="' + CSS.escape(id) + '"]');
     if(el && !estLeMien) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
   }
+}
+// patch275 : le blason du clan à côté d'un pseudo (idée d'Arkhannou). Pas de clan = rien.
+function blasonPseudo(id, estMoi, grand){
+  if(!CLANS || !clansCarte.size || !id) return '';
+  const k = clansCarte.get(estMoi || id === ID_MOI ? monUidClan : id);
+  if(!k) return '';
+  const bl = BLASONS.get(k.tag), t = echapperTexte('Clan ' + k.tag);
+  return bl && bl.blason
+    ? `<span class="bl-nom${grand ? ' grand' : ''}" role="img" aria-label="${t}" title="${t}"><svg viewBox="0 0 100 120" aria-hidden="true">${blasonSVG(bl.blason)}</svg></span>`
+    : `<span class="bl-nom bl-nom-ecu${grand ? ' grand' : ''}" role="img" aria-label="${t}" title="${t}" style="--clan:${echapperTexte(k.couleur || '#E07A2E')}"></span>`;
+}
+// le nom puis son blason ; sans blason, le nom reste exactement comme avant
+function pseudoBlason(nomHtml, id, estMoi, grand){
+  const b = blasonPseudo(id, estMoi, grand);
+  return b ? `<span class="nom-txt">${nomHtml}</span>${b}` : nomHtml;
+}
+// le journal ne connaît que des pseudos : on retrouve le joueur par ses communes sur la carte
+var pseudosClan = { cle: '', map: new Map() };
+function blasonParPseudo(p){
+  if(!CLANS || !clansCarte.size || !p) return '';
+  const cle = othersMap.size + '|' + clansCarteVersion;
+  if(pseudosClan.cle !== cle){
+    const m = new Map();
+    for(const e of othersMap.values()) if(e.pseudo && !m.has(e.pseudo)) m.set(e.pseudo, e.joueurId);
+    pseudosClan = { cle, map: m };
+  }
+  const id = pseudosClan.map.get(p);
+  return id ? blasonPseudo(id) : '';
+}
+function majBlasonsJournal(){
+  document.querySelectorAll('.jr-qui[data-jr-pseudo]').forEach(el => {
+    const ancien = el.querySelector('.bl-nom');
+    if(ancien) ancien.remove();
+    const b = blasonParPseudo(el.dataset.jrPseudo);
+    if(b) el.insertAdjacentHTML('afterbegin', b);
+  });
+}
+function majBlasonsNoms(){
+  try{
+    if(classementMode !== 'clans' && classementDonnees && classementDonnees.length) renderClassement();
+    majBlasonsJournal();
+  }catch(e){ /* les blasons ne sont qu'un ornement */ }
 }
 function blasonHtml(tag, couleur, petit){
   const bl = BLASONS.get(tag);   // patch253

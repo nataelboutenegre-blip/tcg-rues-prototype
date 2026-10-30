@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=9a9eab86bb7b">
+<link rel="stylesheet" href="style.css?v=3478862826e5">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -578,6 +578,10 @@
           <div class="qg-rang" id="qgPomRang" hidden>
             <div><b id="qgPomRangNom">—</b><span class="qg-petit" id="qgPomGains"></span></div>
             <span class="qg-elo"><b id="qgPomElo">—</b> Elo</span>
+          </div>
+          <div id="qgPomJaugeBloc" hidden><!-- patch281 -->
+            <div class="qg-jauge"><i id="qgPomJauge"></i></div>
+            <div class="qg-paliers"><span>Arpenteur</span><span>Topographe</span><span>Cartographe</span><span>Géomètre</span><span>Recenseur</span></div>
           </div>
           <div class="qg-actions"><button type="button" class="qg-btn" id="qgPomBtn">Jouer</button>
             <button type="button" class="qg-btn" id="qgPomDuel" hidden>Duel classé</button>
@@ -1654,6 +1658,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=9a9eab86bb7b"></script>
+<script defer src="app.js?v=3478862826e5"></script>
 </body>
 </html>

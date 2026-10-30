@@ -8186,3 +8186,12 @@ button.hq-slot{ font:inherit; color:inherit; text-align:left; cursor:pointer; wi
 .vt-bande > .vt-case-w > .vt-case{ display:block; width:66px; height:99px; }
 .vt-bande > .vt-case-w > .vt-case > .mini{ width:66px; height:99px; aspect-ratio:auto; }
 .vt-bande > .vt-case.vide{ flex:0 0 66px; width:66px; height:99px; aspect-ratio:auto; }
+
+/* patch281 : Plus ou moins, une couleur par rang (comme Rafale) */
+.rang-pom-arpenteur{ color: var(--brume); }
+.rang-pom-topographe{ color:#9DC3FF; }
+.rang-pom-cartographe{ color: var(--c-peucommun); }
+.rang-pom-geometre{ color: var(--c-epique, #B07CFF); }
+.rang-pom-recenseur{ color:#FF9F43; }
+.rang-pom-prefet{ color: var(--c-legendaire); }
+#qgPomJaugeBloc[hidden]{ display:none; }

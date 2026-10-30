@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '9a9eab86bb7b';
+const VERSION_JEU = '3478862826e5';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -15198,14 +15198,33 @@ function renderPomDuelCarte(){
   if(r) r.hidden = !ok;
   if(!ok) return;
   const e = pomDuelEtat;
-  document.getElementById('qgPomRangNom').textContent = e.rang;
-  document.getElementById('qgPomElo').textContent = Number(e.elo).toLocaleString('fr-FR');
-  document.getElementById('qgPomGains').textContent = ` · ${e.gains_jour} / ${e.gains_max} victoires payées`
+  // patch281 : comme Rafale — le rang en couleur, la jauge, les points jusqu'au rang suivant
+  const elo = Number(e.elo) || 0;
+  const nomR = document.getElementById('qgPomRangNom');
+  nomR.textContent = e.rang;
+  nomR.className = 'rang-pom-' + sansAccents(String(e.rang || '')).toLowerCase().replace(/\s+/g, '-');
+  document.getElementById('qgPomElo').textContent = elo.toLocaleString('fr-FR');
+  let suiv = null;
+  for(const [n, seuil] of POM_RANGS) if(elo < seuil){ suiv = [n, seuil]; break; }
+  const prochain = e.rang === 'Préfet' ? 'n°1 du classement'
+    : (suiv ? `encore ${suiv[1] - elo} pt${suiv[1] - elo > 1 ? 's' : ''} pour ${suiv[0]}` : 'deviens n°1 pour être Préfet');
+  document.getElementById('qgPomGains').textContent = `${prochain} · ${e.gains_jour} / ${e.gains_max} victoires payées`
     + (e.en_attente > 0 ? ` · ${e.en_attente} en attente` : '');
+  const jb = document.getElementById('qgPomJaugeBloc');
+  if(jb){ jb.hidden = false; document.getElementById('qgPomJauge').style.width = (e.rang === 'Préfet' ? 100 : pomJauge(elo)) + '%'; }
   const d = document.getElementById('qgPomDuel');
   d.textContent = e.en_cours ? 'Reprendre le duel' : 'Duel classé';
   try{ renderQGListes(); }catch(err){}   // patch172
   d.classList.add('plein');
+}
+// patch281 : les rangs de Plus ou moins (pom_rang, s2-70) ; la jauge place chaque rang sur un cinquième
+const POM_RANGS = [['Arpenteur', 0], ['Topographe', 960], ['Cartographe', 990], ['Géomètre', 1010], ['Recenseur', 1030]];
+function pomJauge(elo){
+  const bornes = [900, 960, 990, 1010, 1030, 1060];
+  for(let i = 0; i < 5; i++){
+    if(elo < bornes[i + 1]) return Math.max(2, Math.min(100, 20 * i + 20 * Math.max(0, elo - bornes[i]) / (bornes[i + 1] - bornes[i])));
+  }
+  return 100;
 }
 function pomCacher(c){ return Object.assign({}, c, { population: null }); }
 function pomStopMinuteur(){ if(pomMinuteur){ cancelAnimationFrame(pomMinuteur); pomMinuteur = null; } }

@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=255fc7a1d06d">
+<link rel="stylesheet" href="style.css?v=eec3877ff4f1">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -1145,6 +1145,7 @@
       <div class="sub">Ton niveau monte avec ce que tu fais : conquérir, défendre, signer des contrats, revenir chaque jour. Il ne redescend jamais, même quand on te prend des communes.</div>
       <!-- patch265 : Halloween, réglage de cet appareil -->
       <label class="presence-reglage hw-reglage" id="hwReglage" hidden><input type="checkbox" id="hwScreamers"> <span><b>Screamers d'Halloween</b> · une image qui surgit avec un cri à l'ouverture de certains paquets gratuits, jusqu'au <span id="hwReglageFin">1er novembre</span> (réglage de cet appareil)</span></label>
+      <label class="presence-reglage hw-reglage" id="hwPaquetReglage" hidden><input type="checkbox" id="hwPaquetCase"> <span><b>Paquet maudit d'Halloween</b> · ton paquet prend le décor d'Halloween jusqu'au <span id="hwPaquetFin">1er novembre</span>, à la place de ton habillage (réglage de cet appareil)</span></label><!-- patch296 -->
       <div id="pfCorps"></div>
       <p class="collection-empty" id="pfVide" hidden>Chargement…</p>
     </section>
@@ -1668,6 +1669,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=255fc7a1d06d"></script>
+<script defer src="app.js?v=eec3877ff4f1"></script>
 </body>
 </html>

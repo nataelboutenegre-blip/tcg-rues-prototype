@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '255fc7a1d06d';
+const VERSION_JEU = 'eec3877ff4f1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7556,7 +7556,7 @@ function potRetirer(n){
 // Paquet bleu pour le gratuit, dore pour celui achete
 function makePackEl(type){
   // patch175 : l'habillage choisi dans la garde-robe (Nacre : patch159)
-  const hab = document.body.dataset.habillage || '';
+  const hab = (HW && HW.actif && hwPaquetVoulu()) ? '' : (document.body.dataset.habillage || '');   // patch296 : le paquet maudit passe devant
   const og = hab === 'nacre';
   const gl = HAB_PAQ[hab] != null;
   const motif = gl ? habCanvas(hab, false) : paquetMotifSvg(og ? 'og' : type);
@@ -18049,6 +18049,7 @@ function appliquerHabillage(id){
   const avant = document.body.dataset.habillage || '';
   const k = habCle(id);
   document.body.dataset.habillage = k;
+  if(typeof hwPaquetReglageMaj === 'function') setTimeout(hwPaquetReglageMaj, 0);   // patch296
   if(avant !== k && !paquetEnCours){
     const zone = document.getElementById('packZone');
     if(zone && zone.querySelector('.paquet[data-pret]')){ zone.innerHTML = ''; afficherPaquetPret('gratuit'); }
@@ -21120,6 +21121,7 @@ function hwPrecharger(){
 
 // ----- le réglage dans Profil -----
 function hwReglageMaj(){
+  hwPaquetReglageMaj();   // patch296
   const r = document.getElementById('hwReglage'), c = document.getElementById('hwScreamers');
   if(!r || !c) return;
   r.hidden = !(HW.actif && HW.screamers);
@@ -21141,6 +21143,7 @@ function hwNuit(){
   }
   document.querySelectorAll('.brand').forEach(b => { if(!b.dataset.hwAvant){ b.dataset.hwAvant = b.innerHTML; b.innerHTML = 'Terreur<span>Front</span>'; } });
   document.querySelectorAll('#packZone .paquet').forEach(hw2Paquet);
+  hwPaquetRefaire();   // patch296
   HW2.bruit = HW2.bruit || hw2Bruit();
   HW2.sprite = HW2.sprite || hw2Sprite();
   if(REDUCED_MOTION){ hw2Brume(0); return; }
@@ -21178,7 +21181,7 @@ function hw2Motif(){
     + '<rect x="6" y="6" width="188" height="268" rx="3" fill="none" stroke="#C99A4A" stroke-opacity=".45" stroke-width="1"/></svg>';
 }
 function hw2Paquet(p){
-  if(!p || p.dataset.hw || document.body.dataset.habillage) return;
+  if(!p || p.dataset.hw || !hwPaquetVoulu() || p.classList.contains('hab') || p.classList.contains('og')) return;   // patch296
   try{
     const motif = hw2Motif(), motif2 = hw2Motif();
     p.dataset.hw = '1';
@@ -23614,4 +23617,38 @@ function rarDeptTexte(dep){
   const pl = (k, un, plus) => `${k} ${k > 1 ? plus : un}`;
   const morceaux = [n.legendaire ? pl(n.legendaire, 'légendaire', 'légendaires') : '', n.epique ? pl(n.epique, 'épique', 'épiques') : '', n.rare ? pl(n.rare, 'rare', 'rares') : ''].filter(Boolean);
   return morceaux.length ? '★ ' + morceaux.join(' · ') + ' détenue' + (n.legendaire + n.epique + n.rare > 1 ? 's' : '') : 'Aucune rare détenue ici';
+}
+
+// ---------- patch296 : le paquet maudit, voulu ou non ----------
+function hwPaquetChoix(){
+  try{ const v = localStorage.getItem((HW && HW.cle ? HW.cle : 'tf-hw') + '-paquet'); return v === 'oui' || v === 'non' ? v : null; }catch(e){ return null; }
+}
+// par défaut : oui avec le paquet classique ou le Nacre (offert aux OG), non avec un habillage acheté
+function hwPaquetVoulu(){
+  const c = hwPaquetChoix();
+  if(c) return c === 'oui';
+  const hab = document.body.dataset.habillage || '';
+  return hab === '' || hab === 'nacre';
+}
+function hwPaquetRefaire(){
+  try{
+    const zone = document.getElementById('packZone');
+    if(zone && !paquetEnCours && zone.querySelector('.paquet[data-pret]')){ zone.innerHTML = ''; afficherPaquetPret('gratuit'); }
+  }catch(e){}
+}
+function hwPaquetReglageMaj(){
+  const r = document.getElementById('hwPaquetReglage'), c = document.getElementById('hwPaquetCase');
+  if(!r || !c) return;
+  r.hidden = !(HW && HW.actif);
+  c.checked = hwPaquetVoulu();
+  const t = document.getElementById('hwPaquetFin');
+  if(t && HW && HW.jusqua) t.textContent = HW.jusqua;
+  if(!r.dataset.branche){
+    r.dataset.branche = '1';
+    c.addEventListener('change', () => {
+      try{ localStorage.setItem((HW && HW.cle ? HW.cle : 'tf-hw') + '-paquet', c.checked ? 'oui' : 'non'); }catch(e){}
+      hwPaquetRefaire();
+      notifier({ type: 'info', titre: c.checked ? 'Paquet maudit choisi' : 'Ton habillage revient', texte: c.checked ? 'Ton paquet prend le décor d’Halloween.' : 'Ton paquet garde son habillage.' });
+    });
+  }
 }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b24cc1b3f2f2';
+const VERSION_JEU = '3abb54a55a27';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11706,6 +11706,7 @@ function construireMenuPlus(){
     <button class="fp-item" data-aller="regles">${ICONE_REGLES}Règles du jeu</button>
     <a class="fp-item fp-lien" href="${LIEN_DISCORD}" target="_blank" rel="noopener">${ICONE_DISCORD}Rejoindre le Discord</a>
     <button class="fp-item sortie" data-deconnexion>${ICONE_SORTIE}Se déconnecter</button>`;
+  liste.insertAdjacentHTML('afterbegin', soutienHtml());   // patch291
 }
 
 function ouvrirMenuPlus(ouvert){
@@ -18752,6 +18753,7 @@ function bqeVus(){
 function majPastilleBoutique(){
   const vus = bqeVus();
   const nouveau = !!bqeAcces && bqeEnVente().some(id => !vus.includes(id));
+  bqrMaj(nouveau);   // patch291
   const tab = document.querySelector('.tab[data-tab="boutique"]');
   if(tab){
     let b = tab.querySelector('.tab-badge.bq-nouveau');
@@ -18773,11 +18775,13 @@ function bqeMarquerVus(){
 }
 
 async function loadBoutiqueEuros(){
+  try{ localStorage.setItem('tf-bqr-vu', new Date().toDateString()); }catch(e){}   // patch291
   const corps = document.getElementById('bqeCorps');
   if(!corps) return;
   const [c, b, m] = await Promise.all([sb.rpc('euros_catalogue'), sb.rpc('euros_bandeau'), sb.rpc('euros_mes_commandes')]);
   if(c.error || !c.data){ corps.innerHTML = '<p class="collection-empty">La boutique est indisponible pour le moment.</p>'; return; }
   bqeCat = c.data; bqeBandeau = b.error ? null : b.data; bqeCommandes = m.error ? [] : (m.data || []);
+  soutienMaj();   // patch291
   renderBoutiqueEuros();
   bqeMarquerVus();   // patch205
 }
@@ -23332,3 +23336,92 @@ document.getElementById('monFront')?.addEventListener('keydown', (e) => {
   if((e.key === 'Enter' || e.key === ' ') && e.target.matches('.mfo-clic')){ e.preventDefault(); mfoVers(e.target.dataset.mfo); }
 });
 mfoAppliquer();
+
+// ---------- patch291 : la boutique plus proche ----------
+const BQR_SAC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>';
+const BQR = { bandeauLu: false, timer: 0 };
+function bqrOuvrir(){
+  const t = document.querySelector(`.tab[data-tab="${bqeAcces ? 'boutiqueeuros' : 'boutique'}"]`);
+  if(t) t.click();
+  window.scrollTo({ top: 0 });
+}
+function bqrPoser(){
+  const poser = (id, apres, avant) => {
+    if(document.getElementById(id)) return;
+    const ref = document.getElementById(apres) || document.getElementById(avant);
+    if(!ref) return;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'bqr'; b.id = id; b.hidden = true;
+    b.setAttribute('aria-label', 'Boutique'); b.title = 'Boutique';
+    b.innerHTML = BQR_SAC + '<span class="bqr-point" hidden></span>';
+    b.addEventListener('click', bqrOuvrir);
+    ref.insertAdjacentElement(document.getElementById(apres) ? 'afterend' : 'beforebegin', b);
+  };
+  poser('bqrMobile', 'ncClocheMobile', 'reglesBtnMobile');
+  poser('bqrRail', 'ncCloche', 'reglesBtn');
+  const pied = document.querySelector('.sidebar-footer');
+  if(pied && !document.getElementById('soutienRail')){
+    const s = document.createElement('button');
+    s.type = 'button'; s.id = 'soutienRail'; s.className = 'soutien-rail'; s.hidden = true;
+    s.addEventListener('click', bqrOuvrir);
+    pied.insertBefore(s, pied.firstChild);
+  }
+}
+function bqrMaj(nouveau){
+  bqrPoser();
+  const ok = SAISON2 && bqeAcces === true;
+  document.querySelectorAll('.bqr').forEach(b => {
+    b.hidden = !ok;
+    const p = b.querySelector('.bqr-point'); if(p) p.hidden = !nouveau;
+    b.setAttribute('aria-label', nouveau ? 'Boutique, nouveautés' : 'Boutique');
+  });
+  if(ok && !BQR.bandeauLu){
+    BQR.bandeauLu = true;
+    sb.rpc('euros_bandeau').then(({ data, error }) => { if(!error && data){ bqeBandeau = data; soutienMaj(); } }).catch(() => {});
+  }
+  if(ok && !BQR.timer) bqrBouger();
+}
+// de temps en temps, le sac bouge un peu (une première fois après 20 s, puis toutes les 2 min 30)
+function bqrBouger(){
+  const une = () => {
+    let vu = false;
+    try{ vu = localStorage.getItem('tf-bqr-vu') === new Date().toDateString(); }catch(e){}
+    if(vu || document.hidden || REDUCED_MOTION) return;
+    document.querySelectorAll('.bqr:not([hidden])').forEach(b => { b.classList.remove('bouge'); void b.offsetWidth; b.classList.add('bouge'); });
+  };
+  BQR.timer = setTimeout(function boucle(){ une(); BQR.timer = setTimeout(boucle, 150000); }, 20000);
+}
+// le bandeau de financement, en court : un pourcentage et un merci
+function soutienInfo(){
+  const b = bqeBandeau;
+  if(!bqeAcces || !b || b.mois_pourcent == null) return null;
+  const mois = new Date().toLocaleDateString('fr-FR', { month: 'long' });
+  const moisDe = /^[aeiouyéèh]/i.test(mois) ? `d’${mois}` : `de ${mois}`;
+  const trois = b.conformite_pourcent != null;
+  const borne = (x) => Math.max(0, Math.min(100, Math.round(Number(x) || 0)));
+  if(b.mois_pourcent < 100) return { pct: borne(b.mois_pourcent), txt: `Frais ${moisDe} couverts à ${borne(b.mois_pourcent)} % · merci pour ton soutien` };
+  if(trois && b.conformite_pourcent < 100) return { pct: borne(b.conformite_pourcent), txt: `Frais ${moisDe} couverts, merci ! Étape suivante : la mise en conformité (${borne(b.conformite_pourcent)} %)` };
+  return { pct: borne(b.app_pourcent), txt: `Frais ${moisDe} couverts, merci ! Étape suivante : TerraFront sur iPhone et Android (${borne(b.app_pourcent)} %)` };
+}
+function soutienHtml(){
+  const i = soutienInfo();
+  if(!i) return '';
+  return `<button type="button" class="soutien" data-aller="${bqeAcces ? 'boutiqueeuros' : 'boutique'}">
+    <span class="soutien-l1"><b>💛 Soutiens le développement du jeu</b><span class="soutien-go">Boutique ›</span></span>
+    <span class="soutien-barre"><i style="width:${i.pct}%"></i></span><small>${echapperTexte(i.txt)}</small></button>`;
+}
+function soutienMaj(){
+  bqrPoser();
+  const i = soutienInfo();
+  const r = document.getElementById('soutienRail');
+  if(r){
+    r.hidden = !i;
+    if(i) r.innerHTML = `<span class="sr-coeur" aria-hidden="true">💛</span><span class="sr-txt">Soutiens le jeu · ${i.pct} %</span>`;
+    r.setAttribute('aria-label', i ? `Soutiens le développement du jeu : ${i.txt}` : 'Soutiens le jeu');
+  }
+  const l = document.getElementById('feuilleListe');
+  if(l && document.getElementById('feuillePlus') && !document.getElementById('feuillePlus').hidden){
+    const v = l.querySelector('.soutien'); if(v) v.remove();
+    l.insertAdjacentHTML('afterbegin', soutienHtml());
+  }
+}

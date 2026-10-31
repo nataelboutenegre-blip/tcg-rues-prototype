@@ -8346,3 +8346,7 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .sk-tout{ font:inherit; font-size:.82rem; font-weight:700; color:#F0B429; background:none; border:1px solid rgba(240,180,41,.45); border-radius:999px; padding:5px 12px; cursor:pointer; white-space:nowrap; }
 .sk-tout:hover{ background:rgba(240,180,41,.1); }
 .sk-tout[hidden]{ display:none; }
+
+/* patch290 : notification cliquable */
+.notif.cliquable{ cursor:pointer; }
+.notif.cliquable:hover{ filter:brightness(1.08); }

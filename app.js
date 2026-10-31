@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '08234a7b714d';
+const VERSION_JEU = 'b24cc1b3f2f2';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -306,7 +306,7 @@ function messageLisible(msg){
   return m;
 }
 
-function notifier({ type = 'info', titre, texte = '', serie = null, duree }){
+function notifier({ type = 'info', titre, texte = '', serie = null, duree, aller }){   // patch290 : aller = où mène un toucher
   const zone = document.getElementById('notifs');
   if(!zone) return;
   const el = document.createElement('div');
@@ -326,6 +326,10 @@ function notifier({ type = 'info', titre, texte = '', serie = null, duree }){
     setTimeout(() => el.remove(), 220);
   };
   el.querySelector('.notif-fermer').addEventListener('click', fermer);
+  if(typeof aller === 'function'){   // patch290
+    el.classList.add('cliquable');
+    el.addEventListener('click', (e) => { if(e.target.closest('.notif-fermer')) return; fermer(); try{ aller(); }catch(err){} });
+  }
   zone.appendChild(el);
   // au-dela de 3 notifications, la plus ancienne s'en va
   const toutes = zone.querySelectorAll('.notif:not(.sortie)');
@@ -7633,7 +7637,8 @@ function renderPackStatus(){
     notifier({
       type: 'succes',
       titre: 'Un paquet gratuit t\'attend',
-      texte: dispo > 1 ? `Tu en as ${dispo} en réserve.` : 'Clique dessus pour le déchirer.'
+      texte: dispo > 1 ? `Tu en as ${dispo} en réserve. Touche ici pour l'ouvrir.` : 'Touche ici pour aller l\'ouvrir.',
+      aller: () => { const t = document.querySelector('.tab[data-tab="tirage"]'); if(t) t.click(); window.scrollTo({ top: 0 }); }   // patch290
     });
   }
   dispoPrecedente = dispo;

@@ -8387,3 +8387,14 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 #combatTri .filter-pill.active{ background:#F0B429; color:#13233B; border-color:#F0B429; font-weight:700; }
 .tri-note{ flex-basis:100%; margin:2px 0 0; font-size:.78rem; color:#C9D3E3; }
 .tri-note[hidden]{ display:none; }
+
+/* patch294 : Couleurs : Joueurs | Raretés */
+.map-couleurs{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; width:100%; font-size:.8rem; color:#C9D3E3; }
+.mc-seg{ display:inline-flex; padding:3px; border-radius:10px; background:rgba(169,188,212,.1); border:1px solid rgba(169,188,212,.2); }
+.mc-seg button{ font:inherit; font-size:.8rem; font-weight:600; color:#A9BCD4; background:none; border:none; padding:5px 11px; border-radius:7px; cursor:pointer; }
+.mc-seg button.on{ background:#F0B429; color:#13233B; }
+.mc-seg button:focus-visible{ outline:2px solid #F0B429; outline-offset:1px; }
+.mc-leg{ display:flex; flex-wrap:wrap; gap:4px 10px; font-size:.74rem; }
+.mc-leg i{ display:inline-block; width:9px; height:9px; border-radius:3px; margin-right:4px; vertical-align:-1px; }
+.ib-rar{ display:block; margin-top:4px; padding-top:4px; border-top:1px solid rgba(169,188,212,.18); color:#FFE08A; font-size:.78rem; }
+.pd-rar span{ color:#FFE08A; }

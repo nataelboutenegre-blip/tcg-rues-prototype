@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '396f67ed7f94';
+const VERSION_JEU = 'a0183b371797';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2573,6 +2573,8 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
       const perduLibre = new Path2D();
       const perduPris = new Path2D();
       const parClan = CLANS && CALQUES.clans ? new Map() : null;   // patch212
+      const rar = SAISON2 && CALQUES.couleur === 'raretes';   // patch294
+      const parJT = rar ? new Map() : null;                  // 'joueur|rareté' -> chemin
       for(const dep of deps){
         const contours = CONTOURS.get(dep);
         if(!contours || contours === 'erreur') continue;
@@ -2589,6 +2591,7 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
           if(etaitAMoi) perduPris.addPath(p);
           if(!parJoueur.has(c.joueur)) parJoueur.set(c.joueur, new Path2D());
           parJoueur.get(c.joueur).addPath(p);
+          if(parJT){ const kt = c.joueur + '|' + c.tier; if(!parJT.has(kt)) parJT.set(kt, new Path2D()); parJT.get(kt).addPath(p); }   // patch294
           const jc = parClan && joueurs.get(c.joueur);   // patch212
           if(jc && jc.clan){
             if(!parClan.has(jc.clan)) parClan.set(jc.clan, { couleur: jc.clanCouleur, chemin: new Path2D() });
@@ -2615,6 +2618,29 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
         ctx.globalAlpha = 1;
       }
 
+      if(parJT){   // patch294 : la couleur de la rareté, puis un seul trait autour de chaque territoire
+        for(const [kt, p] of parJT){
+          const sep = kt.lastIndexOf('|'), id = kt.slice(0, sep), t = kt.slice(sep + 1);
+          ctx.globalAlpha = opaciteJoueur(id, 0.9);
+          ctx.fillStyle = COULEURS_FILTRE[t] || '#7E8BA0'; ctx.fill(p);
+          ctx.globalAlpha = opaciteJoueur(id, 0.55);
+          ctx.strokeStyle = '#07111F'; ctx.lineWidth = trait(0.7); ctx.stroke(p);
+        }
+        ctx.globalAlpha = 1;
+        for(const id of ordre([...parJoueur.keys()])){
+          const j = joueurs.get(id), chemin = parJoueur.get(id);
+          const dehors = new Path2D();
+          dehors.rect(-MAP_W, -MAP_H, MAP_W * 3, MAP_H * 3);
+          dehors.addPath(chemin);
+          ctx.save();
+          ctx.clip(dehors, 'evenodd');
+          ctx.globalAlpha = opaciteJoueur(id, 1);
+          ctx.strokeStyle = '#07111F'; ctx.lineWidth = trait(j.moi ? 8 : 7); ctx.stroke(chemin);
+          ctx.strokeStyle = j.couleur; ctx.lineWidth = trait(j.moi ? 5 : 4); ctx.stroke(chemin);
+          ctx.restore();
+        }
+        ctx.globalAlpha = 1;
+      } else
       for(const id of ordre([...parJoueur.keys()])){
         const j = joueurs.get(id);
         const p = parJoueur.get(id);
@@ -2767,8 +2793,10 @@ function dessinerEtoileAurore(ctx, x, y, r){
 function dessinerMarqueursCanvas(ctx, liste, joueurs, k, legendairesSeules){
   const e = 1 / Math.max(1, mapZoom);
   const vue = vueCarteUnites(12);   // patch145
+  const rarCouleur = SAISON2 && CALQUES.couleur === 'raretes' && mapZoom >= SEUIL_CONTOURS;   // patch294
   for(const c of liste){
     const au = auroreFront(c.code);   // patch228
+    if(rarCouleur && !au) continue;   // patch294
     if(!au && c.tier !== 'legendaire' && (legendairesSeules || (c.tier !== 'rare' && c.tier !== 'epique'))) continue;
     const x = c.x, y = c.y;
     if(x < vue[0] || x > vue[2] || y < vue[1] || y > vue[3]) continue;
@@ -2844,7 +2872,7 @@ const CALQUES = (() => {
   // « passage » est eteint au depart : il demande un chargement de plus et
   // n'a de sens que pour un joueur qui a deja perdu des communes
   const defaut = { regions: true, depts: true, communes: true, noms: true,
-                   raretes: true, passage: false, clans: false, batiments: true };
+                   raretes: true, passage: false, clans: false, batiments: true, couleur: 'joueurs' };   // patch294 : couleur
   try {
     const v = JSON.parse(localStorage.getItem(CLE_CALQUES) || '{}');
     return Object.assign(defaut, v);
@@ -2986,6 +3014,7 @@ function rendreCalques(){
   zone.innerHTML = ordre.map(id =>
     `<button data-calque="${id}" class="${CALQUES[id] ? 'actif' : ''}" aria-pressed="${!!CALQUES[id]}">${ICONES[id]}${NOMS[id]}</button>`
   ).join('');
+  couleursRendre();   // patch294
 }
 
 // Sur telephone la carte fait 350 px de large : une legende posee dessus en
@@ -3224,6 +3253,7 @@ function ouvrirPanneauDept(dep, xCss, yCss){
       ${s.joueurs.length ? lignes : '<p class="pc-note">Personne n’a encore de commune ici.</p>'}
       ${autres > 0 ? `<div class="pc-ligne"><span>${autres} autre${autres > 1 ? 's' : ''} joueur${autres > 1 ? 's' : ''}</span><b></b></div>` : ''}
       <div class="pc-ligne pd-libre"><span>Libres</span><b>${partDept(s.total - s.pris, s.total)} <small>· ${nbFr(s.total - s.pris)}</small></b></div>
+      ${CALQUES.couleur === 'raretes' ? `<div class="pc-ligne pd-rar"><span>${rarDeptTexte(dep)}</span><b></b></div>` : ''}
     </div>
     <div class="pc-actions"><button class="pc-action" data-pc="zoom-dept">${ICONE_LOUPE_PC}Zoomer ici</button></div>`;
   el.hidden = false;
@@ -3940,7 +3970,8 @@ function brancherSurvolCanvas(){
         bulle.classList.add('dept');
         bulle.innerHTML = `<b class="ib-titre">${echapperHtml(DEPT_NAMES[dep] || dep)} (${echapperHtml(dep)})</b>`
           + lignesDept(s).map(j => `<span class="ib-j${j.moi ? ' moi' : ''}"><i style="background:${j.couleur}"></i>${echapperHtml(j.pseudo)}<em>${partDept(j.n, s.total)}</em></span>`).join('')
-          + `<span class="ib-libre">Libres<em>${partDept(s.total - s.pris, s.total)}</em></span>`;
+          + `<span class="ib-libre">Libres<em>${partDept(s.total - s.pris, s.total)}</em></span>`
+          + (CALQUES.couleur === 'raretes' ? `<span class="ib-rar">${rarDeptTexte(dep)}</span>` : '');   // patch294
       }
       bulle.hidden = false;
     } else {
@@ -10642,19 +10673,20 @@ function dessinerBatimentsCanvas(ctx, liste){
     if(x < vue[0] || x > vue[2] || y < vue[1] || y > vue[3]) continue;
     const types = ['fonderie', 'forteresse', 'centre'].filter(t => bt[t]);   // patch260
     types.forEach((t, i) => {
-      const r = 7 * e;
+      const r = 10 * e;   // patch294 : plus grands (7 avant)
       // patch244 : à droite du point et de son étoile (rayon 7 au plus), côte à côte s'il y en a deux
       const cx = x + 9 * e + r + i * (2 * r + 2 * e), cy = y;
       ctx.globalAlpha = bt[t].pret ? 1 : 0.65;
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.fillStyle = '#2A1A0E'; ctx.fill();
-      ctx.lineWidth = 1.6 * e; ctx.strokeStyle = bt[t].moi ? '#F0B429' : t === 'centre' ? '#FF5A52' : '#E8833A';
+      ctx.save(); ctx.shadowColor = t === 'centre' ? 'rgba(255,90,82,.7)' : 'rgba(255,150,60,.75)'; ctx.shadowBlur = 10;   // patch294 : un léger halo
+      ctx.fillStyle = '#3A220F'; ctx.fill(); ctx.restore();
+      ctx.lineWidth = 2.6 * e; ctx.strokeStyle = bt[t].moi ? '#F0B429' : t === 'centre' ? '#FF6B63' : '#FFB347';
       if(!bt[t].pret) ctx.setLineDash([2.2 * e, 1.6 * e]);
       ctx.stroke(); ctx.setLineDash([]);
       ctx.save();
       const k = r / 14;
       ctx.translate(cx - 12 * k, cy - 12 * k); ctx.scale(k, k);
-      ctx.strokeStyle = '#FFB27A'; ctx.fillStyle = '#FFB27A'; ctx.lineWidth = 1.9; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.strokeStyle = '#FFE0B8'; ctx.fillStyle = '#FFE0B8'; ctx.lineWidth = 2.1;   // patch294 ctx.lineJoin = 'round'; ctx.lineCap = 'round';
       ctx.stroke(BT_TRACES[t][0]); if(BT_TRACES[t][1]) ctx.fill(BT_TRACES[t][1]);
       ctx.restore();
     });
@@ -23544,3 +23576,42 @@ document.getElementById('combatTri')?.addEventListener('click', (e) => {
   try{ localStorage.setItem('tf-tri-chances', v ? '1' : '0'); }catch(err){}
   renderCombatGrid();
 });
+
+// ---------- patch294 : « Couleurs : Joueurs | Raretés » sur la carte ----------
+function couleursRendre(){
+  if(!SAISON2) return;
+  let z = document.getElementById('mapCouleurs');
+  if(!z){
+    const outils = document.querySelector('#panel-territoire .map-outils');
+    if(!outils) return;
+    z = document.createElement('div');
+    z.id = 'mapCouleurs'; z.className = 'map-couleurs';
+    outils.appendChild(z);
+    z.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-couleur]');
+      if(!b || b.dataset.couleur === CALQUES.couleur) return;
+      CALQUES.couleur = b.dataset.couleur;
+      enregistrerCalques();
+      const bulle = document.getElementById('mapInfobulle'); if(bulle) bulle.dataset.dep = '';
+      couleursRendre();
+      CV.donneesSignature = '';
+      demanderDessin();
+      if(typeof panneauDept !== 'undefined' && panneauDept && panneauAncre) ouvrirPanneauDept(panneauDept, panneauAncre.x, panneauAncre.y);
+    });
+  }
+  const r = CALQUES.couleur === 'raretes';
+  const LIB = { commun: 'Commune', peucommun: 'Peu commune', rare: 'Rare', epique: 'Épique', legendaire: 'Légendaire' };
+  z.innerHTML = `<span class="mc-lib">Couleurs :</span><span class="mc-seg" role="group" aria-label="Couleurs de la carte">
+      <button type="button" data-couleur="joueurs" aria-pressed="${!r}" class="${r ? '' : 'on'}">Joueurs</button>
+      <button type="button" data-couleur="raretes" aria-pressed="${r}" class="${r ? 'on' : ''}">Raretés</button></span>
+    ${r ? `<span class="mc-leg">${['commun', 'peucommun', 'rare', 'epique', 'legendaire'].map(t => `<span><i style="background:${COULEURS_FILTRE[t]}"></i>${LIB[t]}</span>`).join('')}</span>` : ''}`;
+}
+function rarDeptTexte(dep){
+  const n = { legendaire: 0, epique: 0, rare: 0 };
+  const compter = (c) => { if(c.dept !== dep) return; const t = c.tier && (c.tier.id || c.tier); if(n[t] != null) n[t]++; };
+  for(const c of collectionMap.values()) compter(c);
+  for(const c of othersMap.values()) compter(c);
+  const pl = (k, un, plus) => `${k} ${k > 1 ? plus : un}`;
+  const morceaux = [n.legendaire ? pl(n.legendaire, 'légendaire', 'légendaires') : '', n.epique ? pl(n.epique, 'épique', 'épiques') : '', n.rare ? pl(n.rare, 'rare', 'rares') : ''].filter(Boolean);
+  return morceaux.length ? '★ ' + morceaux.join(' · ') + ' détenue' + (n.legendaire + n.epique + n.rare > 1 ? 's' : '') : 'Aucune rare détenue ici';
+}

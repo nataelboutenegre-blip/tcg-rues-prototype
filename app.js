@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1c00915f7459';
+const VERSION_JEU = '45a682c3d88b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9823,7 +9823,7 @@ function initModes(){
   el.setAttribute('aria-label', 'Mode de jeu');
   el.innerHTML = `
     <button class="terra" data-mode="terra" role="tab"><span class="mb-nom">Terra</span><span class="mb-res"><b id="mbPoints">—</b>TP</span></button>
-    <button class="front" data-mode="front" role="tab"><span class="mb-nom">Front</span><span class="mb-res">${ICONE_ENERGIE}<b id="mbEnergie">—</b>/ 40 énergie</span></button>`;
+    <button class="front" data-mode="front" role="tab"><span class="mb-nom">Front</span><span class="mb-res">${ICONE_ENERGIE}<b id="mbEnergie">—</b>/ <span id="mbMax">50</span> énergie</span></button>`;
   const entete = document.querySelector('.content .entete-mobile');
   entete.insertAdjacentElement('afterend', el);
   el.addEventListener('click', (e) => {
@@ -11668,6 +11668,7 @@ async function majEnergie(){
   const el = document.getElementById('mbEnergie');
   if(el) el.textContent = data[0].energie;
   energieEtat = { energie: Number(data[0].energie), maximum: Number(data[0].maximum) || 40, prochaine_dans: data[0].prochaine_dans, lu: Date.now() };
+  const mx = document.getElementById('mbMax'); if(mx) mx.textContent = energieEtat.maximum;   // patch299 : le maximum du serveur
   renderJaugeEnergie();
   if(!recolteLu || Date.now() - recolteLu > 300000) chargerRecolte();   // patch211
 }
@@ -13433,7 +13434,7 @@ const ETAPES_GUIDE_S2 = [
   { mode: 'terra', cible: '.tab[data-tab="collection"]', titre: 'Ta collection',
     texte: 'Ta France se remplit ici, en cartes ou sur la carte. Tes doublons se revendent, s\'échangent avec les autres joueurs ou partent en contrat.' },
   { mode: 'front', cible: '#modeBascule [data-mode="front"]', titre: 'Le Front',
-    texte: 'Ici, l\'énergie remplace les TerraPoints : 40 au maximum, +1 toutes les 10 minutes. Elle sert à attaquer et à défendre.' },
+    texte: 'Ici, l\'énergie remplace les TerraPoints : 50 au maximum, +1 toutes les 10 minutes. Elle sert à attaquer et à défendre.' },   // patch299
   { mode: 'front', cible: '.tab[data-tab="combat"]', titre: 'Attaque et défends',
     texte: 'Trois victoires prennent une commune, et une défaite ne te fait rien perdre. Mets tes communes clés en garnison : elles se défendent seules pendant ton absence.' },
   { cible: '.tab[data-tab="qg"]', titre: 'Chaque jour',

@@ -8380,3 +8380,10 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .soutien-rail .sr-txt{ display:none; font-size:.8rem; font-weight:600; white-space:nowrap; }
 .sidebar:hover .soutien-rail, .sidebar:focus-within .soutien-rail{ width:auto; justify-content:flex-start; padding:7px 10px; margin:0 0 10px; }
 .sidebar:hover .soutien-rail .sr-txt, .sidebar:focus-within .soutien-rail .sr-txt{ display:inline; }
+
+/* patch293 : trier les cibles par chance */
+.tri-combat{ align-items:center; }
+.tri-lib{ font-size:.8rem; color:#C9D3E3; }
+#combatTri .filter-pill.active{ background:#F0B429; color:#13233B; border-color:#F0B429; font-weight:700; }
+.tri-note{ flex-basis:100%; margin:2px 0 0; font-size:.78rem; color:#C9D3E3; }
+.tri-note[hidden]{ display:none; }

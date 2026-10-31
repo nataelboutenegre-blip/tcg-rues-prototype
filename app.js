@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '27843f4dd2ec';
+const VERSION_JEU = '396f67ed7f94';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9292,6 +9292,7 @@ const CHANCES_MAX = 400;           // la limite du serveur, à ne pas dépasser
 
 function oublierChances(){
   chancesCibles = new Map();
+  chancesInconnues = new Set();   // patch293
   chancesPour = intensiteChoisie;
 }
 
@@ -9569,9 +9570,31 @@ function renderCombatGrid(){
       ${bouton}${noteAlerte ? `<p class="ca-note">${note}</p>` : ''}</article>`;
   };
 
+  // patch293 : les meilleures chances d'abord (tri choisi, ou « Près de mon territoire »)
+  triMajBoutons(false);
+  if(!combatEnCours && (triChances || combatProximite) && cibles.length){
+    const codes = cibles.map(c => c.commune_code);
+    if(codes.length > TRI_MAX){
+      if(triChances) triMajBoutons(true);
+    } else {
+      const pret = chancesPour === intensiteChoisie && codes.every(k => chancesCibles.has(k) || chancesInconnues.has(k));
+      if(!pret){
+        grid.innerHTML = `<p class="collection-empty" id="triProgres">Calcul des chances… 0 / ${codes.length.toLocaleString('fr-FR')}</p>`;
+        chargerChancesListe(codes);
+        return;
+      }
+      const ch = (c) => { const v = chancesCibles.get(c.commune_code); return v ? v.chances : -1; };
+      const rang = (c) => TIERS.findIndex(t => t.id === c.communes.tier);
+      const dist = (c) => (c._distKm == null ? 1e9 : c._distKm);
+      cibles = cibles.slice().sort((a, b) => ch(b) - ch(a)
+        || (combatProximite ? dist(a) - dist(b) : 0)
+        || rang(a) - rang(b) || String(a.communes.nom).localeCompare(String(b.communes.nom), 'fr'));
+    }
+  }
+
   // la signature dit si c'est un nouveau filtrage ou un simple rafraichissement
   const signature = [combatFilterTier, searchText, combatProximite,
-                     combatRayonKm, combatEnCours, cibles.length].join('|');
+                     combatRayonKm, combatEnCours, cibles.length, triChances ? 'tri' : ''].join('|');   // patch293
   combatAffichees = cibles;
   afficherParLots(grid, cibles, carteCible, signature);
   demanderChances();
@@ -23470,3 +23493,54 @@ async function skRetirerPartout(btn){
   rafraichirPanneauProfil();
   renderGardeRobe();
 }
+
+// ---------- patch293 : trier les cibles par chance ----------
+const TRI_MAX = 4000;
+let triChances = (() => { try{ return localStorage.getItem('tf-tri-chances') === '1'; }catch(e){ return false; } })();
+let chancesInconnues = new Set();   // des codes que le serveur n'a pas renvoyés (on ne les redemande pas)
+let triJeton = null;
+function triMajBoutons(trop){
+  document.querySelectorAll('#combatTri [data-tri]').forEach(b => {
+    const on = (b.dataset.tri === 'chances') === triChances;
+    b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on));
+  });
+  const n = document.getElementById('combatTriNote');
+  if(n){ n.hidden = !trop; n.textContent = trop ? 'Trop de cibles pour les trier toutes : choisis une rareté, un département ou « Près de mon territoire ».' : ''; }
+}
+async function chargerChancesListe(codes){
+  const jeton = {}; triJeton = jeton;
+  if(chancesPour !== intensiteChoisie) oublierChances();
+  const voulue = intensiteChoisie;
+  const manque = codes.filter(k => !chancesCibles.has(k) && !chancesInconnues.has(k));
+  const total = codes.length, deja = total - manque.length;
+  for(let i = 0; i < manque.length; i += CHANCES_MAX){
+    if(triJeton !== jeton || voulue !== intensiteChoisie) return;
+    const p = document.getElementById('triProgres');
+    if(p) p.textContent = `Calcul des chances… ${(deja + i).toLocaleString('fr-FR')} / ${total.toLocaleString('fr-FR')}`;
+    const lot = manque.slice(i, i + CHANCES_MAX);
+    let r;
+    try{ r = await sb.rpc('apercu_attaques', { p_codes: lot, p_intensite: voulue }); }catch(e){ r = { error: e }; }
+    if(triJeton !== jeton || voulue !== intensiteChoisie) return;
+    if(r.error){
+      // pas de faux pourcentage : on revient à l'ordre par défaut et on le dit
+      console.warn('TERRAFRONT tri des chances indisponible', r.error);
+      triJeton = null;
+      if(triChances){ triChances = false; notifier({ type: 'erreur', titre: 'Tri impossible', texte: 'Les chances n’ont pas pu être calculées. Réessaie dans un instant.' }); }
+      renderCombatGrid();
+      return;
+    }
+    for(const x of (r.data || [])) chancesCibles.set(x.commune_code, { chances: x.chances, cout: x.cout });
+    for(const k of lot) if(!chancesCibles.has(k)) chancesInconnues.add(k);
+  }
+  chancesPour = voulue;
+  if(triJeton === jeton){ triJeton = null; renderCombatGrid(); }
+}
+document.getElementById('combatTri')?.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-tri]');
+  if(!b) return;
+  const v = b.dataset.tri === 'chances';
+  if(v === triChances) return;
+  triChances = v;
+  try{ localStorage.setItem('tf-tri-chances', v ? '1' : '0'); }catch(err){}
+  renderCombatGrid();
+});

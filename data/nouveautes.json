@@ -11,7 +11,8 @@
       "⚔ Combat : le volet « Mon front » résume tout (à défendre, énergie, attaques en cours, communes, protections, quêtes)"
     ],
     "correctifs": [
-      "Sur téléphone, la fiche d’une commune ne se fermait plus quand la carte était en plein écran"
+      "Sur téléphone, la fiche d’une commune ne se fermait plus quand la carte était en plein écran",
+      "« Ta boutique » : les cartes se chevauchaient et débordaient sur la page"
     ]
   },
   {

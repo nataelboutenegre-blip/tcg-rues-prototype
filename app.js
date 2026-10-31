@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'eec3877ff4f1';
+const VERSION_JEU = 'de89258e63bf';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -23411,9 +23411,9 @@ function bqrPoser(){
     const ref = document.getElementById(apres) || document.getElementById(avant);
     if(!ref) return;
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'bqr'; b.id = id; b.hidden = true;
+    b.type = 'button'; b.className = 'bqs'; b.id = id; b.hidden = true;   // patch297 : .bqr est pris par « Ta boutique »
     b.setAttribute('aria-label', 'Boutique'); b.title = 'Boutique';
-    b.innerHTML = BQR_SAC + '<span class="bqr-point" hidden></span>';
+    b.innerHTML = BQR_SAC + '<span class="bqs-point" hidden></span>';
     b.addEventListener('click', bqrOuvrir);
     ref.insertAdjacentElement(document.getElementById(apres) ? 'afterend' : 'beforebegin', b);
   };
@@ -23430,9 +23430,9 @@ function bqrPoser(){
 function bqrMaj(nouveau){
   bqrPoser();
   const ok = SAISON2 && bqeAcces === true;
-  document.querySelectorAll('.bqr').forEach(b => {
+  document.querySelectorAll('.bqs').forEach(b => {
     b.hidden = !ok;
-    const p = b.querySelector('.bqr-point'); if(p) p.hidden = !nouveau;
+    const p = b.querySelector('.bqs-point'); if(p) p.hidden = !nouveau;
     b.setAttribute('aria-label', nouveau ? 'Boutique, nouveautés' : 'Boutique');
   });
   if(ok && !BQR.bandeauLu){
@@ -23447,7 +23447,7 @@ function bqrBouger(){
     let vu = false;
     try{ vu = localStorage.getItem('tf-bqr-vu') === new Date().toDateString(); }catch(e){}
     if(vu || document.hidden || REDUCED_MOTION) return;
-    document.querySelectorAll('.bqr:not([hidden])').forEach(b => { b.classList.remove('bouge'); void b.offsetWidth; b.classList.add('bouge'); });
+    document.querySelectorAll('.bqs:not([hidden])').forEach(b => { b.classList.remove('bouge'); void b.offsetWidth; b.classList.add('bouge'); });
   };
   BQR.timer = setTimeout(function boucle(){ une(); BQR.timer = setTimeout(boucle, 150000); }, 20000);
 }

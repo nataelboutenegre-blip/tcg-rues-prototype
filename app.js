@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '3abb54a55a27';
+const VERSION_JEU = '27843f4dd2ec';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -19989,7 +19989,7 @@ function blocSkinsHtml(){
     <div class="gr-objets gr-skins">${liste.map(o => { const k = skinCle(o.id);   // patch289 : le skin se voit, avant même d'être posé
       return `<div class="gr-objet gr-skin">${skinVignetteHtml(o.id)}<span class="gr-nom">${echapperTexte(SKIN_NOMS[k] || o.nom || '')}</span>
         <button type="button" class="bq-btn secondaire" data-gr-sk-choisir data-sk-pre="${echapperTexte(o.id)}">Poser</button></div>`; }).join('')}</div>
-    ${lignes.length ? `<div class="gr-dc-liste">${lignes.map(([cle, r]) => {
+    ${lignes.length > 5 ? skResumeHtml(lignes) : lignes.length ? `<div class="gr-dc-liste">${lignes.map(([cle, r]) => {
       const [source] = cle.split('|'); const k = skinCle(r.skin);
       return `<div class="gr-dc-ligne gr-sk-ligne"><i class="sk-pastille sk-p-${k}" aria-hidden="true"></i>
         <div class="gr-dc-nom"><b>${echapperTexte(r.nom)}</b><span>${source === 'front' ? 'Front' : 'Terra'} · ${echapperTexte(SKIN_NOMS[k] || '')}</span></div>
@@ -19999,6 +19999,8 @@ function blocSkinsHtml(){
       <small>Terra et Front. Une carte vendue, échangée ou prise perd ton skin ; le skin reste à toi.</small></div>`;
 }
 document.getElementById('grCorps').addEventListener('click', async (e) => {
+  const tt = e.target.closest('[data-gr-sk-tout]');   // patch292
+  if(tt){ skRetirerPartout(tt); return; }
   const r = e.target.closest('[data-gr-sk-retirer]');
   if(r){
     r.disabled = true;
@@ -23424,4 +23426,47 @@ function soutienMaj(){
     const v = l.querySelector('.soutien'); if(v) v.remove();
     l.insertAdjacentHTML('afterbegin', soutienHtml());
   }
+}
+
+// ---------- patch292 : beaucoup de cartes habillées = une ligne par skin ----------
+function skResumeHtml(lignes){
+  const par = new Map();
+  for(const [cle, r] of lignes){
+    const [source] = cle.split('|');
+    const g = par.get(r.skin) || { terra: 0, front: 0 };
+    g[source === 'front' ? 'front' : 'terra']++;
+    par.set(r.skin, g);
+  }
+  const fmt = (n) => n.toLocaleString('fr-FR');
+  return `<div class="gr-dc-liste">${[...par.entries()].map(([id, g]) => { const k = skinCle(id);
+    const det = [g.terra ? `${fmt(g.terra)} carte${g.terra > 1 ? 's' : ''} Terra` : '', g.front ? `${fmt(g.front)} carte${g.front > 1 ? 's' : ''} Front` : ''].filter(Boolean).join(' · ');
+    return `<div class="gr-dc-ligne gr-sk-ligne"><i class="sk-pastille sk-p-${k}" aria-hidden="true"></i>
+      <div class="gr-dc-nom"><b>${echapperTexte(SKIN_NOMS[k] || id)}</b><span>${det}</span></div>
+      <button type="button" class="bq-btn secondaire" data-gr-sk-tout="${echapperTexte(id)}">Retirer partout</button></div>`; }).join('')}</div>`;
+}
+async function skRetirerPartout(btn){
+  if(!btn.dataset.confirme){
+    btn.dataset.confirme = '1'; btn.textContent = 'Confirmer ?';
+    setTimeout(() => { if(btn.isConnected && btn.dataset.confirme){ delete btn.dataset.confirme; btn.textContent = 'Retirer partout'; } }, 3500);
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'Retrait…';
+  const id = btn.dataset.grSkTout;
+  const parSource = { terra: [], front: [] };
+  for(const [cle, r] of (mesSkinsCartes || new Map())){
+    if(r.skin !== id) continue;
+    const [source, code] = cle.split('|');
+    (parSource[source] || parSource.terra).push(code);
+  }
+  let error = null;
+  for(const source of ['terra', 'front']){
+    const codes = parSource[source];
+    for(let i = 0; i < codes.length && !error; i += 500){
+      ({ error } = await sb.rpc('skin_cartes_definir', { p_source: source, p_codes: codes.slice(i, i + 500), p_skin: null }));
+    }
+  }
+  if(error) notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) });
+  await chargerMesSkinsCartes(true);
+  rafraichirPanneauProfil();
+  renderGardeRobe();
 }

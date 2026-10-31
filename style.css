@@ -8398,3 +8398,8 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .mc-leg i{ display:inline-block; width:9px; height:9px; border-radius:3px; margin-right:4px; vertical-align:-1px; }
 .ib-rar{ display:block; margin-top:4px; padding-top:4px; border-top:1px solid rgba(169,188,212,.18); color:#FFE08A; font-size:.78rem; }
 .pd-rar span{ color:#FFE08A; }
+
+/* patch295 : en plein écran sur téléphone, la fiche s'arrête sous « Réduire » (sa croix restait cachée dessous) */
+@media (max-width: 720px){
+  .map-wrap.plein-ecran .pc{ max-height: calc(100% - 66px - env(safe-area-inset-top, 0px)); }
+}

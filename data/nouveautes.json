@@ -9,7 +9,9 @@
       "🎨 Skins : ils s’affichent dans Personnaliser, et « Tout choisir » les pose sur toutes tes cartes d’un coup",
       "⚔ Combat : le volet « Mon front » résume tout (à défendre, énergie, attaques en cours, communes, protections, quêtes)"
     ],
-    "correctifs": []
+    "correctifs": [
+      "Sur téléphone, la fiche d’une commune ne se fermait plus quand la carte était en plein écran"
+    ]
   },
   {
     "date": "2026-10-30",

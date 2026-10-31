@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '45a682c3d88b';
+const VERSION_JEU = '13ae04d55a3c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -462,6 +462,7 @@ function mettreEnSceneAssaut(cible, r){
   // patch91 : une victoire annulee par la garnison revient perdue mais avec une serie intacte
   const parGarnison = SAISON2 && !r.gagne && !r.conquise && (r.par_garnison !== undefined ? !!r.par_garnison : Number(r.victoires_consecutives) > 0);   // patch240 : s2-46 le dit
   const soldeAvant = packStatusCache ? Number(packStatusCache.solde) : null;
+  const lcAvant = LINGOTS_COMBAT ? Object.assign({}, LINGOTS_COMBAT) : null;   // patch300
   if(SAISON2) setTimeout(majEnergie, 300);
   // ou l'aiguille s'arrete : dans le vert si gagne, dans le rouge sinon
   const arret = res === 'ko' ? chances + (100 - chances) * (0.25 + Math.random() * 0.6)
@@ -561,7 +562,22 @@ function mettreEnSceneAssaut(cible, r){
                              : `+${bonus.toLocaleString('fr-FR')} pts de bonus · protégée 3 h · revente au jeu dans 12 h`)
         + (mon ? `<span class="as-mon">${ICONE_MONUMENT}Monument conquis : <b>${echapperTexte(mon.nom)}</b></span>` : '')
         + (SAISON2 && (BATIMENTS_CARTE.get(String(cible.code)) || {}).fonderie ? `<span class="as-mon as-bt">${ICONE_FONDERIE}Fonderie détruite : tu pilles la moitié de ses lingots</span>` : '')   // patch243
-        + (SAISON2 && (BATIMENTS_CARTE.get(String(cible.code)) || {}).centre ? `<span class="as-mon as-bt">${ICONE_CENTRE}Centre de recherche détruit : sa bombe est perdue</span>` : '');   // patch260
+        + (SAISON2 && (BATIMENTS_CARTE.get(String(cible.code)) || {}).centre ? `<span class="as-mon as-bt">${ICONE_CENTRE}Centre de recherche détruit : sa bombe est perdue</span>` : '')   // patch260
+        + (SAISON2 ? '<span class="as-mon as-lg" hidden></span>' : '');   // patch300
+      if(SAISON2) chargerLingotsCombat().then((L) => {   // patch300 : ce que la conquête a rapporté en lingots
+        const el = fen.querySelector('.as-lg');
+        if(!el || !L) return;
+        const g = lingotsCombatGain(lcAvant, L, 'conquete'), n = Number(L.aujourdhui) || 0, p = Number(L.plafond) || 10;
+        let t = '';
+        if(g > 0) t = `<span><b>+${g} lingot${g > 1 ? 's' : ''}</b> <small>· ${n} / ${p} aujourd’hui par les combats</small></span>`;
+        else if(n >= p) t = `<span>Plafond du jour atteint (${p} / ${p} lingots)</span>`;
+        else if(BATIMENTS && lingotsActuels() >= (Number(BATIMENTS.max) || 30)) t = '<span>Réserve pleine : pas de lingot cette fois</span>';
+        if(!t) return;
+        el.innerHTML = ICONE_LINGOT + t;
+        el.classList.toggle('plein', g <= 0);
+        el.hidden = false;
+        renderBatimentsBloc();
+      });
       if(SAISON2 && BATIMENTS) setTimeout(chargerBatiments, 800);
       if(SAISON2 && soldeAvant != null){
         // le gain reel (plafond du jour, reprise, degressif) se lit sur le solde
@@ -9127,12 +9143,22 @@ async function defendreDepuis(btn){
     }
     if(error) throw error;
     const r = data && data[0];
+    let lgTexte = '';   // patch300 : ce que la défense a rapporté en lingots
+    if(r && r.reussie && SAISON2){
+      const lcAvant = LINGOTS_COMBAT ? Object.assign({}, LINGOTS_COMBAT) : null;
+      const L = await chargerLingotsCombat();
+      if(L){
+        const g = lingotsCombatGain(lcAvant, L, 'defense'), n = Number(L.aujourdhui) || 0, p = Number(L.plafond) || 10;
+        lgTexte = g > 0 ? ` +${g} lingot${g > 1 ? 's' : ''} (${n} / ${p} aujourd’hui).` : n >= p ? ` Plafond du jour atteint (${p} / ${p} lingots).` : '';
+        renderBatimentsBloc();
+      }
+    }
     if(r && r.reussie){
       notifier({
         type: 'victoire',
         titre: `Défense réussie à ${btn.dataset.nom}`,
         texte: (r.victoires_restantes > 0 ? `L'attaquant perd une victoire (plus que ${r.victoires_restantes} sur 3).` : 'L\'attaquant perd sa victoire : son attaque repart de zéro.')
-          + (recharge > 0 ? ` +${recharge} énergie dans la garnison.` : ''),
+          + (recharge > 0 ? ` +${recharge} énergie dans la garnison.` : '') + lgTexte,
         serie: r.victoires_restantes
       });
     } else {
@@ -9893,8 +9919,33 @@ function initModes(){
 }
 
 // ---------- patch243 : les bâtiments ----------
+// patch300 : les lingots gagnés en combattant (s2-72)
+let LINGOTS_COMBAT = null;
+const ICONE_COMBAT_LG = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5 3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2"/></svg>';
+async function chargerLingotsCombat(){
+  try{
+    const { data, error } = await sb.rpc('lingots_combat_moi');
+    LINGOTS_COMBAT = !error && data && data.ouvert ? data : null;
+  }catch(e){ LINGOTS_COMBAT = null; }
+  return LINGOTS_COMBAT;
+}
+// ce que la dernière victoire a rapporté : écart avec avant le combat, sinon le dernier gain s'il est tout frais
+function lingotsCombatGain(avant, apres, source){
+  if(!apres) return 0;
+  if(avant && Number(apres.aujourdhui) >= Number(avant.aujourdhui)) return Number(apres.aujourdhui) - Number(avant.aujourdhui);
+  const d = apres.dernier;
+  return d && d.source === source && Math.abs(Date.now() - Date.parse(d.le)) < 180000 ? Number(d.quantite) || 0 : 0;
+}
+function lingotsCombatHtml(){
+  const L = LINGOTS_COMBAT; if(!L) return '';
+  const n = Number(L.aujourdhui) || 0, p = Number(L.plafond) || 10;
+  return `<div class="bt-combat"><div class="btc-haut">${ICONE_COMBAT_LG}<span>Combats : <b>+${n}</b> aujourd’hui</span><em>${n} / ${p}</em></div>
+      <div class="btc-barre"><i style="width:${Math.min(100, Math.round(100 * n / p))}%"></i></div>
+      <div class="btc-regle">+${L.conquete} par commune conquise, +${L.defense} par défense réussie, ${p} au plus par jour (remis à zéro à minuit).</div></div>`;
+}
 async function chargerBatiments(){
   if(!SAISON2) return;
+  chargerLingotsCombat().then(() => renderBatimentsBloc());   // patch300
   try{
     const [m, v, z, al] = await Promise.all([sb.rpc('mes_batiments'), sb.rpc('batiments_visibles'),
       sb.rpc('bombes_actives'), sb.rpc('bombes_alertes', { p_jours: 2 })]);   // patch260
@@ -10040,6 +10091,7 @@ function renderBatimentsBloc(){
   el.innerHTML = `<h2>Bâtiments</h2>${alertesBombesHtml()}
     <div class="bt-reserve"><span class="btr-nb">${n}</span>${ICONE_LINGOT}<span class="btr-max">/ ${max} lingots</span>
       <span class="btr-prod">${F ? (btProdTotale() > 0 ? `+${btProdTotale()} par jour<br>${pr ? 'prochain dans ' + formatDuree(pr) : 'réserve pleine'}` : 'Fonderie<br>en construction') : 'Pas encore<br>de Fonderie'}</span></div>
+    ${lingotsCombatHtml()}
     <div class="btl-titre">Fonderies <em>${mesFonderies().length} / ${btReglage('fonderies_max', 1)}</em></div>
     ${F ? mesFonderies().map(x => ligne(ICONE_FONDERIE, x, btPretDans(x) <= 0 ? `Produit ${B.production} lingots par jour` : 'En construction')).join('')
         + (mesFonderies().length < btReglage('fonderies_max', 1) ? `<p class="gl-vide">2e Fonderie : ${btReglage('fonderie2_prix', 30)} lingots. Ouvre une de tes communes sur la carte et choisis « Construire une 2e Fonderie ici ». La réserve monte alors à ${btReglage('fonderie_max2', 45)}.</p>` : '')
@@ -10050,7 +10102,7 @@ function renderBatimentsBloc(){
         ? `<input type="search" class="bourse-search gn-cherche" id="btCherche" placeholder="Fortifier une de mes communes (${prix} lingots)…" autocomplete="off" value="${echapperTexte(btRecherche)}"><div class="gn-choix" id="btChoix">${btChoixHtml()}</div>`
         : `<p class="gl-vide">Prochaine forteresse : ${prix} lingots (tu en as ${n}).</p>`) : ''}
     ${centreHtml()}
-    <p class="btl-regle">Les lingots ne servent qu’aux bâtiments : ils ne s’échangent pas, ne s’achètent pas et repartent à zéro à chaque saison. Un bâtiment est perdu si on prend sa commune.</p>`;
+    <p class="btl-regle">${LINGOTS_COMBAT ? 'Les lingots viennent des Fonderies et des combats. Ils ne servent qu’aux bâtiments : ils' : 'Les lingots ne servent qu’aux bâtiments : ils'} ne s’échangent pas, ne s’achètent pas et repartent à zéro à chaque saison. Un bâtiment est perdu si on prend sa commune.</p>`;
   const champ = document.getElementById('btCherche');
   if(champ) champ.addEventListener('input', (e) => {
     btRecherche = e.target.value;

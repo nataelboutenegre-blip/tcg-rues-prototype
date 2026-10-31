@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-11-01",
+    "nouveautes": [
+      "⚔ Front : les combats rapportent des lingots (+2 par conquête, +1 par défense réussie, 10 au plus par jour)"
+    ],
+    "correctifs": []
+  },
+  {
     "date": "2026-10-31",
     "nouveautes": [
       "⚡ Front : la réserve d’énergie passe de 40 à 50 (toujours +1 toutes les 10 minutes)",

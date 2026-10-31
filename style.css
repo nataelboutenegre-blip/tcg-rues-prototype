@@ -6576,6 +6576,19 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .bt-appui b{ color:#fff; }
 .as-mon.as-bt{ color:#FFD9B8; }
 .as-mon.as-bt svg{ color:#FFB27A; }
+/* patch300 : lingots gagnés en combattant */
+.as-mon.as-lg{ color:#FFE7A8; }
+.as-mon.as-lg b{ color:#FFE08A; }
+.as-mon.as-lg small{ color:#B9A08C; font-size:.78rem; }
+.as-mon.as-lg.plein{ color:#B9A08C; }
+.bt-combat{ margin-top:8px; padding:10px 12px; border-radius:12px; background:rgba(232,131,58,.07); border:1px dashed rgba(232,131,58,.35); }
+.btc-haut{ display:flex; align-items:center; gap:7px; font-size:.8rem; color:#FFD9B8; }
+.btc-haut svg{ width:15px; height:15px; color:#FFB27A; flex:none; }
+.btc-haut b{ color:#fff; font-weight:700; }
+.btc-haut em{ margin-left:auto; font-style:normal; color:#fff; font-weight:700; }
+.btc-barre{ height:5px; border-radius:3px; background:rgba(255,255,255,.08); margin:8px 0 6px; overflow:hidden; }
+.btc-barre i{ display:block; height:100%; border-radius:3px; background:linear-gradient(90deg,#F0B429,#FFE08A); }
+.btc-regle{ font-size:.72rem; color:#B9A08C; line-height:1.4; }
 .batiments-bloc[hidden]{ display:none; }
 .bt-reserve{ display:flex; align-items:center; gap:8px; padding:12px; border-radius:13px; background:linear-gradient(160deg,rgba(232,131,58,.18),rgba(232,131,58,.05)); border:1px solid rgba(232,131,58,.4); }
 .bt-reserve .lingot{ width:20px; height:13px; }

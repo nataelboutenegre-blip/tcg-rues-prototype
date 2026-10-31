@@ -8338,3 +8338,11 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 #monFront .mfo-quetes{ margin:0; max-width:none; }
 .mfo-aide-titre{ font-family:var(--titre); font-weight:900; font-size:1.6rem; margin:2px 0 10px; }
 .mfo-aide{ margin:0 0 6px; padding-left:18px; color:#D5DEEA; font-size:.9rem; line-height:1.6; }
+
+/* patch289 : skins plus faciles à poser */
+.gr-skin .sk-vig{ margin:0 auto; }
+.sk-compte-ligne{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.sk-compte-ligne .vt-compte{ margin:0; }
+.sk-tout{ font:inherit; font-size:.82rem; font-weight:700; color:#F0B429; background:none; border:1px solid rgba(240,180,41,.45); border-radius:999px; padding:5px 12px; cursor:pointer; white-space:nowrap; }
+.sk-tout:hover{ background:rgba(240,180,41,.1); }
+.sk-tout[hidden]{ display:none; }

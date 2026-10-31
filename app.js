@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '8bbd6a9775f6';
+const VERSION_JEU = '08234a7b714d';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -19977,6 +19977,9 @@ function blocSkinsHtml(){
     <p class="gr-dc-vide">Un skin habille les cartes de ton choix (photo, fond, textes). Ils sont dans la boutique.</p>`;
   const lignes = mesSkinsCartes ? [...mesSkinsCartes.entries()].sort((a, b) => a[1].nom.localeCompare(b[1].nom, 'fr')) : [];
   return `<div class="gr-titre">Skins de carte <span>${liste.length} possédé${liste.length > 1 ? 's' : ''} · ${lignes.length} carte${lignes.length > 1 ? 's' : ''} habillée${lignes.length > 1 ? 's' : ''}</span></div>
+    <div class="gr-objets gr-skins">${liste.map(o => { const k = skinCle(o.id);   // patch289 : le skin se voit, avant même d'être posé
+      return `<div class="gr-objet gr-skin">${skinVignetteHtml(o.id)}<span class="gr-nom">${echapperTexte(SKIN_NOMS[k] || o.nom || '')}</span>
+        <button type="button" class="bq-btn secondaire" data-gr-sk-choisir data-sk-pre="${echapperTexte(o.id)}">Poser</button></div>`; }).join('')}</div>
     ${lignes.length ? `<div class="gr-dc-liste">${lignes.map(([cle, r]) => {
       const [source] = cle.split('|'); const k = skinCle(r.skin);
       return `<div class="gr-dc-ligne gr-sk-ligne"><i class="sk-pastille sk-p-${k}" aria-hidden="true"></i>
@@ -19999,15 +20002,15 @@ document.getElementById('grCorps').addEventListener('click', async (e) => {
     renderGardeRobe();
     return;
   }
-  if(e.target.closest('[data-gr-sk-choisir]')) ouvrirChoixSkinCartes();
+  { const sk = e.target.closest('[data-gr-sk-choisir]'); if(sk) ouvrirChoixSkinCartes(sk.dataset.skPre); }   // patch289
 });
-async function ouvrirChoixSkinCartes(){
+async function ouvrirChoixSkinCartes(pre){
   const liste = await chargerMesSkins();
   if(!liste.length) return;
   if(!terraCharge) await chargerCollectionTerra();
-  let skin = liste[0].id;
+  let skin = (pre && liste.some(o => o.id === pre)) ? pre : liste[0].id;   // patch289
   let source = modeJeu === 'front' ? 'front' : 'terra';
-  let choix = new Set(), recherche = '';
+  let choix = new Set(), recherche = '', visibles = [];   // patch289 : visibles = les cartes de la recherche en cours
   const rangTier = (t) => TIERS.findIndex(x => x.id === t.id);
   const cartesDe = (s) => [...(s === 'front' ? collectionMap.values() : terraCollection.values())]
     .filter(c => !c.perdue && !(s === 'front' ? (AURORE && AURORE[c.code]) : c.aurore > 0))   // patch203 : pas d'Aurore
@@ -20020,7 +20023,7 @@ async function ouvrirChoixSkinCartes(){
       <div class="dc-sources" role="group" aria-label="Mode">
         <button type="button" data-sk-source="terra">Terra</button><button type="button" data-sk-source="front">Front</button>
       </div>
-      <p class="vt-compte" id="skCompte"></p>
+      <div class="sk-compte-ligne"><p class="vt-compte" id="skCompte"></p><button type="button" class="sk-tout" data-sk="tout"></button></div>
       <input type="search" id="skRecherche" class="bourse-search" placeholder="Rechercher une commune ou un département…" autocomplete="off">
       <div class="vt-grille" id="skGrille"></div>
       <p class="prix-erreur" id="skErreur" role="alert"></p>
@@ -20039,7 +20042,13 @@ async function ouvrirChoixSkinCartes(){
     const q = recherche.trim().toLowerCase();
     const dep = q ? codeDepartement(q) : null;
     const qs = sansAccents(recherche.trim());
-    const cartes = cartesDe(source).filter(c => !q || correspondRecherche(c.nom, c.dept, qs) || c.dept === dep).slice(0, 150);
+    const toutes = cartesDe(source).filter(c => !q || correspondRecherche(c.nom, c.dept, qs) || c.dept === dep);   // patch289
+    const cartes = toutes.slice(0, 150);
+    visibles = toutes.map(c => c.code);
+    const tout = boite.querySelector('[data-sk="tout"]');
+    const tousPris = visibles.length > 0 && visibles.every(k => choix.has(k));
+    tout.textContent = tousPris ? 'Tout enlever' : `Tout choisir (${visibles.length.toLocaleString('fr-FR')})`;
+    tout.hidden = !visibles.length;
     boite.querySelector('#skGrille').innerHTML = cartes.map(c => `<button type="button" class="vt-carte${choix.has(c.code) ? ' pris' : ''}" data-sk-code="${echapperTexte(c.code)}" aria-pressed="${choix.has(c.code)}">
         ${miniVitrine({ ...c, aurore: source === 'front' ? (AURORE && AURORE[c.code] ? 1 : 0) : c.aurore })}${choix.has(c.code) ? '<span class="vt-num">✓</span>' : ''}</button>`).join('')
       || '<p class="collection-empty">Aucune carte ne correspond.</p>';
@@ -20056,10 +20065,22 @@ async function ouvrirChoixSkinCartes(){
     const b = e.target.closest('[data-sk]');
     if(!b) return;
     if(b.dataset.sk === 'annuler'){ fermer(null); return; }
+    if(b.dataset.sk === 'tout'){   // patch289
+      const tousPris = visibles.length > 0 && visibles.every(k => choix.has(k));
+      visibles.forEach(k => tousPris ? choix.delete(k) : choix.add(k));
+      boite.querySelector('#skErreur').textContent = '';
+      dessiner(); return;
+    }
     if(!choix.size){ boite.querySelector('#skErreur').textContent = 'Touche au moins une carte.'; return; }
     b.disabled = true; b.textContent = 'Enregistrement…';
-    const { error } = await sb.rpc('skin_cartes_definir', { p_source: source, p_codes: [...choix], p_skin: skin });
-    if(error){ boite.querySelector('#skErreur').textContent = messageLisible(error.message); b.disabled = false; b.textContent = 'Enregistrer'; return; }
+    // patch289 : le serveur prend 500 cartes à la fois
+    const codes = [...choix];
+    let error = null;
+    for(let i = 0; i < codes.length && !error; i += 500){
+      if(codes.length > 500) b.textContent = `Enregistrement… ${Math.min(i + 500, codes.length).toLocaleString('fr-FR')} / ${codes.length.toLocaleString('fr-FR')}`;
+      ({ error } = await sb.rpc('skin_cartes_definir', { p_source: source, p_codes: codes.slice(i, i + 500), p_skin: skin }));
+    }
+    if(error){ boite.querySelector('#skErreur').textContent = messageLisible(error.message); b.disabled = false; b.textContent = 'Enregistrer'; await chargerMesSkinsCartes(true); renderGardeRobe(); return; }
     fermer(null);
     await chargerMesSkinsCartes(true);
     rafraichirPanneauProfil();   // patch203

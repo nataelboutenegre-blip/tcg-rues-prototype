@@ -8403,3 +8403,55 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 @media (max-width: 720px){
   .map-wrap.plein-ecran .pc{ max-height: calc(100% - 66px - env(safe-area-inset-top, 0px)); }
 }
+
+/* patch298 : le Marché (Mes doublons · Bourse · Échange · Contrat) */
+.volets.mdb-volets{ display:flex; width:100%; max-width:560px; box-sizing:border-box; }
+.mdb-volets .volet{ flex:1 1 auto; padding-left:6px; padding-right:6px; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:5px; }
+@media (max-width:720px){ .mdb-volets .volet{ font-size:.8rem; padding-left:3px; padding-right:3px; } .mdb-volets .volet-badge{ min-width:16px; height:16px; font-size:.62rem; padding:0 4px; } }
+#panel-contrat.vue-doublons > :not(h1):not(.volets):not(#mesDoublons){ display:none !important; }
+#panel-contrat:not(.vue-doublons) > #mesDoublons{ display:none; }
+.mdb{ max-width:560px; }
+.mdb-sub{ color:var(--brume); font-size:.9rem; margin:0 0 12px; }
+.mdb-resume{ border-radius:16px; padding:14px 14px 12px; border:1px solid rgba(240,180,41,.35); background:linear-gradient(135deg, rgba(240,180,41,.13), rgba(22,44,75,.6) 60%); margin-bottom:4px; }
+.mdb-l1{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; flex-wrap:wrap; }
+.mdb-n{ font-family:var(--titre); font-weight:900; font-size:2.3rem; line-height:1; color:#fff; }
+.mdb-n small{ font-family:var(--texte); font-size:.85rem; font-weight:600; color:#C9D3E3; margin-left:4px; }
+.mdb-v{ text-align:right; font-size:.74rem; color:#C9D3E3; }
+.mdb-v b{ display:block; font-family:var(--titre); font-weight:900; font-size:1.35rem; color:#FFE08A; }
+.mdb-barre{ display:flex; height:9px; border-radius:5px; overflow:hidden; margin:12px 0 8px; gap:2px; background:rgba(169,188,212,.1); }
+.mdb-barre i{ display:block; height:100%; }
+.mdb-leg{ display:flex; flex-wrap:wrap; gap:4px 12px; font-size:.74rem; color:#C9D3E3; }
+.mdb-leg span{ display:inline-flex; align-items:center; gap:5px; }
+.mdb-leg span::before{ content:''; width:8px; height:8px; border-radius:50%; background:var(--c); }
+.mdb-h{ font-size:.7rem; letter-spacing:.1em; text-transform:uppercase; color:#C8D5E6; font-weight:700; margin:16px 2px 8px; }
+.mdb-grille{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.mdb-t{ border-radius:14px; border:1px solid rgba(169,188,212,.16); background:rgba(169,188,212,.06); padding:11px 12px; text-align:left; color:#fff; font:inherit; cursor:pointer; display:flex; flex-direction:column; gap:4px; min-width:0; box-sizing:border-box; }
+.mdb-t:hover{ border-color:rgba(169,188,212,.34); }
+.mdb-t:focus-visible{ outline:2px solid #F0B429; outline-offset:2px; }
+.mdb-k{ display:flex; align-items:center; gap:6px; font-size:.66rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:var(--brume); }
+.mdb-k svg{ width:13px; height:13px; flex:none; }
+.mdb-g{ font-family:var(--titre); font-weight:900; font-size:1.55rem; line-height:1.05; }
+.mdb-p{ font-size:.76rem; color:#C9D3E3; line-height:1.35; }
+.mdb-a{ margin-top:auto; padding-top:6px; font-size:.78rem; font-weight:700; color:#FFE08A; }
+.mdb-t.urgent{ border-color:rgba(229,72,77,.55); background:linear-gradient(180deg, rgba(229,72,77,.14), rgba(169,188,212,.04)); }
+.mdb-t.urgent .mdb-k{ color:#FF8A8E; }
+.mdb-t.or .mdb-k{ color:#FFE08A; }
+.mdb-t.vert .mdb-k{ color:#7CF0B5; }
+.mdb-t.calme .mdb-g{ color:#8EA2BF; }
+.mdb-rar{ border-radius:14px; border:1px solid rgba(169,188,212,.16); overflow:hidden; }
+.mdb-ligne{ padding:10px 12px; border-top:1px solid rgba(169,188,212,.1); }
+.mdb-ligne:first-child{ border-top:none; }
+.mdb-lh{ display:flex; align-items:center; gap:8px; }
+.mdb-lh .pt{ width:10px; height:10px; border-radius:50%; background:var(--c); flex:none; }
+.mdb-lh b{ font-size:.92rem; color:#fff; }
+.mdb-lh .n{ margin-left:auto; font-family:var(--titre); font-weight:800; font-size:1.2rem; color:#fff; }
+.mdb-li{ font-size:.74rem; color:#A9BCD4; margin:3px 0 8px 18px; }
+.mdb-li em{ font-style:normal; color:#7CF0B5; }
+.mdb-acts{ display:flex; gap:5px; margin-left:18px; flex-wrap:wrap; }
+.mdb-act{ font:inherit; font-size:.74rem; font-weight:600; color:#E6ECF5; background:rgba(169,188,212,.08); border:1px solid rgba(169,188,212,.22); border-radius:8px; padding:6px 9px; cursor:pointer; }
+.mdb-act:hover:not(:disabled){ border-color:rgba(169,188,212,.45); }
+.mdb-act.plein{ background:var(--c-legendaire); border-color:var(--c-legendaire); color:var(--encre); font-weight:700; }
+.mdb-act:disabled{ opacity:.38; cursor:default; }
+.mdb-note{ font-size:.74rem; color:#8EA2BF; line-height:1.45; margin:10px 2px 0; }
+.mdb-note b{ color:#C9D3E3; }
+.mdb-vide{ border:1px dashed rgba(169,188,212,.3); border-radius:14px; padding:16px 14px; color:#A9BCD4; font-size:.86rem; line-height:1.5; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'de89258e63bf';
+const VERSION_JEU = '1c00915f7459';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4730,7 +4730,7 @@ async function loadContrat(){
 // L'onglet charge sa liste d'exclusions en meme temps que ses candidats.
 async function loadContratEtExclusions(){
   // en Terra rien ne peut etre perdu : pas de liste d'exclusions
-  if(ctTerra()){ await loadContrat(); return; }
+  if(ctTerra()){ await loadContrat(); mdbApres(); return; }   // patch298
   const ok = await chargerExclusions();
   if(ok) renderExclusions();
   await loadContrat();
@@ -9704,9 +9704,9 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // revient a Collection. L'onglet Defense reste dans la page, cache, et
 // n'apparait ni dans la barre ni dans le menu.
 let ONGLETS_BARRE = ['tirage', 'territoire', 'qg', 'combat'];
-const ONGLETS_FUSIONNES = ['defense', 'succes', 'cdj', 'radar', 'rafale', 'boutiqueeuros', 'personnaliser', 'monuments', 'pass'];   // patch254 : pass   // patch191 : monuments
+const ONGLETS_FUSIONNES = ['defense', 'succes', 'cdj', 'radar', 'rafale', 'boutiqueeuros', 'personnaliser', 'monuments', 'pass', 'bourse', 'echange'];   // patch298 : bourse, echange   // patch254 : pass   // patch191 : monuments
 // l'onglet qui s'allume quand on ouvre un volet fusionne
-const ONGLET_PARENT = { defense: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg', boutiqueeuros: 'boutique', personnaliser: 'profil', monuments: 'collection', pass: 'qg' };
+const ONGLET_PARENT = { defense: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg', boutiqueeuros: 'boutique', personnaliser: 'profil', monuments: 'collection', pass: 'qg', bourse: 'contrat', echange: 'contrat' };   // patch298
 
 // ---------- patch89 : saison 2, deux modes ----------
 // SAISON2 = false : la saison 1 tourne comme avant, rien de ce bloc ne
@@ -9715,14 +9715,14 @@ const SAISON2 = true;
 document.documentElement.classList.toggle('saison-2', SAISON2);
 const ONGLETS_MODE = {
   terra: { nom: 'Terra', barre: ['tirage', 'collection', 'qg', 'contrat'],
-           propres: ['tirage', 'collection', 'qg', 'contrat', 'bourse', 'echange', 'boutique'] },   // patch191 : monuments dans Collection
+           propres: ['tirage', 'collection', 'qg', 'contrat', 'boutique'] },   // patch191 : monuments dans Collection   // patch298 : bourse et echange dans le Marché
   front: { nom: 'Front', barre: ['tirage', 'territoire', 'combat', 'qg'],
            propres: ['tirage', 'territoire', 'qg', 'combat', 'collection', 'boutique'] },   // patch178 : boutique sans paquets
 };
 const ONGLETS_COMMUNS = CLANS ? ['profil', 'communaute', 'clan'] : ['profil', 'communaute'];
 // patch191 : les onglets ranges en groupes (rail PC et menu Plus)
 const ONGLETS_GROUPES = {
-  terra: [['Jouer', ['tirage', 'collection', 'qg']], ['Marché', ['contrat', 'bourse', 'echange', 'boutique']],
+  terra: [['Jouer', ['tirage', 'collection', 'qg']], ['Marché', ['contrat', 'boutique']],   // patch298
           ['Joueurs', ['communaute', 'clan']], ['Moi', ['profil']]],
   front: [['Jouer', ['tirage', 'territoire', 'combat', 'qg']], ['Mes cartes', ['collection', 'boutique']],
           ['Joueurs', ['communaute', 'clan']], ['Moi', ['profil']]],
@@ -11589,7 +11589,7 @@ function clicCollectionTerra(e){
   }
 }
 
-function ouvrirVenteTerra(){
+function ouvrirVenteTerra(pre){   // patch298 : pre = la rareté cochée seule
   const dbl = doublonsTerra();
   const lignes = TIERS.slice().reverse().filter(t => dbl[t.id]);
   if(!lignes.length) return;
@@ -11601,7 +11601,7 @@ function ouvrirVenteTerra(){
   f.setAttribute('aria-modal', 'true');
   f.setAttribute('aria-labelledby', 'tcVenteTitre');
   f.innerHTML = `<h3 id="tcVenteTitre">Vendre mes doublons</h3><p>On garde toujours un exemplaire de chaque commune, et toutes tes cartes Aurore${BRI.lu ? ' et brillantes' : ''}.</p>
-    ${lignes.map(t => `<label class="tc-ligne"><input type="checkbox" value="${t.id}" ${t.id === 'commun' || t.id === 'peucommun' ? 'checked' : ''}>
+    ${lignes.map(t => `<label class="tc-ligne"><input type="checkbox" value="${t.id}" ${(pre ? t.id === pre : (t.id === 'commun' || t.id === 'peucommun')) ? 'checked' : ''}>
       <i class="pt" style="background:${COULEURS_FILTRE[t.id]}"></i>${t.label} <em>× ${fmtNombre(dbl[t.id])} · ${TERRA_REVENTE[t.id]} TP</em><b>+${fmtNombre(dbl[t.id] * TERRA_REVENTE[t.id])}</b></label>`).join('')}
     <button class="tc-ok" id="tcVenteOk"></button>
     <button class="tc-annuler" id="tcVenteNon">Annuler</button>`;
@@ -11636,6 +11636,7 @@ function ouvrirVenteTerra(){
     if(r && packStatusCache){ packStatusCache.solde = r.solde; majBascule(); }
     notifier({ type: 'succes', titre: 'Doublons vendus', texte: r ? `${fmtNombre(r.vendus)} doublon${r.vendus > 1 ? 's' : ''} · +${fmtNombre(r.gain)} TP` : '' });
     renderCollectionTerra();
+    if(mdbActif()) mdbRendre();   // patch298
   });
 }
 
@@ -11971,6 +11972,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'pass') chargerPass();   // patch254
     if(tab.dataset.tab === 'profil') loadProfilPanneau();
     if(tab.dataset.tab === 'contrat') loadContratEtExclusions();
+    if(tab.dataset.tab === 'contrat') mdbEntrer();   // patch298
     if(tab.dataset.tab === 'echange') loadEchanges();
     if(tab.dataset.tab === 'regles') loadTauxTirage();
   });
@@ -12478,7 +12480,7 @@ function signalerNouveauxEchanges(){
                       + `${e.je_recois_nom} contre ${e.je_donne_nom}.` });
     } else if(neuves.length > 1){
       notifier({ type: 'info', titre: `${neuves.length} nouvelles propositions d’échange`,
-                 texte: 'Elles t’attendent dans l’onglet Échange.' });
+                 texte: 'Elles t’attendent dans le Marché, volet Échange.' });   // patch298
     }
   }
   echangesVus = ids;
@@ -12506,6 +12508,10 @@ function majBadgeEchange(){
   if(pc){ pc.hidden = recues === 0; pc.textContent = recues; }
   const pa = document.getElementById('echAlertesBadge');
   if(pa){ pa.hidden = nouv === 0; pa.textContent = nouv; }
+  const mb = document.getElementById('marcheBadge');   // patch298
+  if(mb){ mb.hidden = recues + nouv === 0; mb.textContent = recues + nouv; }
+  document.querySelectorAll('[data-badge-echange]').forEach(x => { x.hidden = recues === 0; x.textContent = recues; });
+  if(mdbActif()) mdbRendre();
   const badge = document.getElementById('echangeBadge');
   if(!badge) return;
   badge.hidden = recues + nouv === 0;
@@ -23652,3 +23658,173 @@ function hwPaquetReglageMaj(){
     });
   }
 }
+
+
+// ---------- patch298 : le Marché, « Mes doublons » ----------
+// Bourse, Échange et Contrat sont des volets ; l'onglet Contrat (« Marché » dans la barre)
+// ouvre Mes doublons. Un clic du joueur sur l'onglet → Mes doublons ; un clic venu du code
+// (rappel de contrat, bouton Contrat de la Collection) → l'écran Contrat, comme avant.
+// var et non const : l'onglet peut être ouvert par le code avant que cette ligne soit lue
+var MDB = { vue: 'doublons', forcer: null, marcheLu: 0, chargement: false };
+var MDB_ICO = {
+  echange: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3.5-3.5M17 8l-3.5 3.5"/><path d="M20 16H7l3.5-3.5M7 16l3.5 3.5"/></svg>',
+  contrat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h8.5L19 8v12.5H6z"/><path d="M9 12.5h6M9 16h4"/></svg>',
+  loupe: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg>',
+  etiquette: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12.6V5.2a1.7 1.7 0 0 1 1.7-1.7h7.4l7.9 7.9a1.7 1.7 0 0 1 0 2.4l-7.4 7.4a1.7 1.7 0 0 1-2.4 0z"/><circle cx="8.2" cy="8.2" r="1.5"/></svg>',
+};
+function mdbActif(){
+  if(typeof MDB === 'undefined' || !MDB) return false;
+  const p = document.getElementById('panel-contrat');
+  return !!(SAISON2 && p && p.classList.contains('active') && MDB.vue === 'doublons' && document.getElementById('mesDoublons'));
+}
+function mdbAppliquer(){
+  if(typeof MDB === 'undefined' || !MDB) return;
+  const p = document.getElementById('panel-contrat');
+  if(!p || !document.getElementById('mesDoublons')) return;
+  const d = SAISON2 && MDB.vue === 'doublons';
+  p.classList.toggle('vue-doublons', d);
+  p.querySelectorAll('.volets .volet').forEach(v => {
+    const on = v.dataset.volet === (d ? 'doublons' : 'contrat');
+    v.classList.toggle('actif', on); v.setAttribute('aria-selected', String(on));
+  });
+}
+async function mdbEntrer(){
+  if(!SAISON2 || typeof MDB === 'undefined' || !MDB) return;
+  mdbAppliquer();
+  if(MDB.vue !== 'doublons') return;
+  mdbRendre();
+  if(MDB.chargement) return;
+  MDB.chargement = true;
+  try{
+    const att = [];
+    if(!terraCharge) att.push(chargerCollectionTerra());
+    if(Date.now() - MDB.marcheLu > 120000) att.push(sb.rpc('terra_marche').then(({ data, error }) => {
+      if(!error){ marcheTerraLignes = data || []; MDB.marcheLu = Date.now(); }
+    }).catch(() => {}));
+    if(!Array.isArray(echangesEnCours) || !echangesEnCours.length) att.push(chargerEchangesEnCours().catch(() => {}));
+    await Promise.all(att);
+  }finally{ MDB.chargement = false; }
+  if(mdbActif()) mdbRendre();
+}
+function mdbApres(){ if(mdbActif()) mdbRendre(); }
+// contrats possibles par rareté : la liste du serveur si on l'a (elle tient compte de tout), sinon les doublons
+function mdbContrats(dbl){
+  const r = {};
+  for(const c of CONTRATS){
+    const conn = Array.isArray(contratDispo[c.de]) ? contratDispo[c.de].length : null;
+    const n = conn != null ? conn : (dbl[c.de] || 0);
+    r[c.de] = { nb: Math.floor(n / c.n), reste: c.n - (n % c.n), vers: c.vers, n: c.n };
+  }
+  return r;
+}
+function mdbRendre(){
+  const el = document.getElementById('mesDoublons');
+  if(!el) return;
+  if(!terraCharge){ el.innerHTML = '<p class="mdb-sub">Tes doublons : les vendre, les échanger, ou en faire des contrats.</p><p class="collection-empty">Chargement de ta collection…</p>'; return; }
+  const dbl = doublonsTerra();
+  const ech = {}, ach = {};
+  for(const e of terraCollection.values()){
+    const x = echangeablesTerra(e), a = achetesTerra(e);
+    if(x) ech[e.tier.id] = (ech[e.tier.id] || 0) + x;
+    if(a) ach[e.tier.id] = (ach[e.tier.id] || 0) + a;
+  }
+  const total = Object.values(dbl).reduce((s, n) => s + n, 0);
+  const gain = Object.entries(dbl).reduce((s, [t, n]) => s + n * (TERRA_REVENTE[t] || 0), 0);
+  const nbAch = Object.values(ach).reduce((s, n) => s + n, 0);
+  const ordre = TIERS.filter(t => dbl[t.id]);                 // légendaire → commun
+  const cts = mdbContrats(dbl);
+  const nbCt = Object.values(cts).reduce((s, c) => s + c.nb, 0);
+  const lab = (id, n) => { const t = TIERS.find(x => x.id === id); const l = t ? t.label.toLowerCase() : id; return n > 1 ? l + 's' : l; };   // 90 communs, 36 peu communs
+  const labF = (id, n) => ({ peucommun: 'peu commune', rare: 'rare' }[id] || lab(id, 1)) + (n > 1 ? 's' : '');   // 3 rares nouvelles
+  const recues = (echangesEnCours || []).filter(e => e.sens === 'recu');
+  const exp = recues.map(e => new Date(e.expire_le).getTime() - Date.now()).filter(x => x > 0).sort((a, b) => a - b)[0];
+  const lignes = Array.isArray(marcheTerraLignes) ? marcheTerraLignes : [];
+  const pourMoi = lignes.filter(a => !a.mienne && !a.je_l_ai).length;
+  const mes = lignes.filter(a => a.mienne).length;
+  const marcheConnu = (MDB && MDB.marcheLu > 0) || lignes.length > 0;
+
+  const tuile = (cls, vers, ico, k, g, p, a) => `<button type="button" class="mdb-t ${cls}" data-mdb="${vers}"><span class="mdb-k">${ico}${k}</span><span class="mdb-g">${g}</span><span class="mdb-p">${p}</span><span class="mdb-a">${a} →</span></button>`;
+  const tuiles = [
+    recues.length
+      ? tuile('urgent', 'echange-cours', MDB_ICO.echange, `Échange${recues.length > 1 ? 's' : ''} reçu${recues.length > 1 ? 's' : ''}`, recues.length, exp ? `${recues.length > 1 ? 'Le premier expire' : 'Expire'} dans ${formatDuree(exp)}` : 'À regarder', 'Répondre')
+      : tuile('calme', 'echange', MDB_ICO.echange, 'Échanges reçus', 0, 'Aucune proposition en attente', 'Proposer'),
+    tuile(nbCt ? 'or' : 'calme', 'contrat', MDB_ICO.contrat, 'Contrats possibles', fmtNombre(nbCt), nbCt ? 'Que des communes que tu n’as pas encore' : 'Il faut 10 doublons communs ou peu communs', nbCt ? 'Signer' : 'Voir'),
+    tuile(pourMoi ? 'vert' : 'calme', 'bourse', MDB_ICO.loupe, 'En vente pour toi', marcheConnu ? fmtNombre(pourMoi) : '…', !marcheConnu ? 'Chargement de la Bourse…' : pourMoi ? `Commune${pourMoi > 1 ? 's' : ''} qui te manque${pourMoi > 1 ? 'nt' : ''}, à la Bourse` : 'Rien qui te manque pour l’instant', 'Voir'),
+    tuile('', 'bourse', MDB_ICO.etiquette, 'Tes annonces', marcheConnu ? fmtNombre(mes) : '…', !marcheConnu ? 'Chargement de la Bourse…' : mes ? `En vente à la Bourse` : 'Aucune commune en vente', mes ? 'Gérer' : 'Vendre'),
+  ];
+
+  const ligne = (t) => {
+    const n = dbl[t.id], c = cts[t.id], x = ech[t.id] || 0;
+    let info = `${fmtNombre(TERRA_REVENTE[t.id] || 0)} TP pièce au jeu`;
+    let ctBtn = '';
+    if(c){
+      if(c.nb) info += ` · <em>${c.nb} contrat${c.nb > 1 ? 's' : ''} → ${c.nb} ${labF(c.vers, c.nb)} nouvelle${c.nb > 1 ? 's' : ''}</em>`;
+      else info += ` · encore ${c.reste} pour un contrat`;
+      ctBtn = `<button type="button" class="mdb-act${c.nb ? ' plein' : ''}" data-mdb="contrat"${c.nb ? '' : ' disabled'}>Contrat${c.nb ? '' : ` (${c.n - c.reste}/${c.n})`}</button>`;
+    } else info += ' · Bourse à partir de ' + fmtNombre(TERRA_REVENTE[t.id] || 0) + ' TP';
+    const vendre = `<button type="button" class="mdb-act" data-mdb="vendre" data-tier="${t.id}">${t.id === 'commun' ? `Tout vendre (${fmtNombre(n * (TERRA_REVENTE[t.id] || 0))} TP)` : 'Vendre'}</button>`;
+    const bourse = `<button type="button" class="mdb-act" data-mdb="bourse-tier" data-tier="${t.id}"${x ? '' : ' disabled title="Achetées en TP : elles ne vont pas à la Bourse"'}>Bourse</button>`;
+    const echg = `<button type="button" class="mdb-act" data-mdb="echange-tier" data-tier="${t.id}"${x ? '' : ' disabled title="Achetées en TP : elles ne s’échangent pas"'}>Échanger</button>`;
+    return `<div class="mdb-ligne">
+        <div class="mdb-lh"><span class="pt" style="--c:${COULEURS_FILTRE[t.id]}"></span><b>${t.label}${n > 1 ? 's' : ''}</b><span class="n">${fmtNombre(n)}</span></div>
+        <div class="mdb-li">${info}</div>
+        <div class="mdb-acts">${c && c.nb ? ctBtn + vendre : vendre}${t.id === 'commun' ? '' : bourse}${echg}${c && !c.nb ? ctBtn : ''}</div>
+      </div>`;
+  };
+
+  el.innerHTML = `<p class="mdb-sub">Tes doublons : les vendre, les échanger, ou en faire des contrats. Tu gardes toujours un exemplaire de chaque commune.</p>
+    ${total ? `<div class="mdb-resume">
+      <div class="mdb-l1"><div class="mdb-n">${fmtNombre(total)}<small>doublon${total > 1 ? 's' : ''}</small></div>
+        <div class="mdb-v">vendus au jeu<b>jusqu’à ${fmtNombre(gain)} TP</b></div></div>
+      <div class="mdb-barre">${TIERS.slice().reverse().filter(t => dbl[t.id]).map(t => `<i style="flex:${dbl[t.id]};background:${COULEURS_FILTRE[t.id]}"></i>`).join('')}</div>
+      <div class="mdb-leg">${TIERS.slice().reverse().filter(t => dbl[t.id]).map(t => `<span style="--c:${COULEURS_FILTRE[t.id]}">${fmtNombre(dbl[t.id])} ${lab(t.id, dbl[t.id])}</span>`).join('')}</div>
+    </div>` : `<div class="mdb-vide">Pas encore de doublon : ils arrivent quand tu tires une commune que tu as déjà. Tu peux quand même acheter à la Bourse ou proposer un échange.</div>`}
+    <div class="mdb-h">À faire</div>
+    <div class="mdb-grille">${tuiles.join('')}</div>
+    ${total ? `<div class="mdb-h">Par rareté</div><div class="mdb-rar">${ordre.map(ligne).join('')}</div>` : ''}
+    ${nbAch ? `<p class="mdb-note"><b>${fmtNombre(nbAch)} de tes doublons viennent d’achats en TP.</b> Ils se vendent au jeu et comptent pour les contrats, mais ne vont ni à la Bourse ni à l’Échange.</p>` : ''}`;
+}
+function mdbVers(quoi, tier){
+  const onglet = (id) => { const t = document.querySelector(`.tab[data-tab="${id}"]`); if(t) t.click(); };
+  if(quoi === 'contrat'){ MDB.vue = 'contrat'; mdbAppliquer(); return; }
+  if(quoi === 'vendre') return ouvrirVenteTerra(tier);
+  if(quoi === 'echange-cours'){ echVue = 'cours'; return onglet('echange'); }
+  if(quoi === 'echange'){ echVue = 'proposer'; return onglet('echange'); }
+  if(quoi === 'echange-tier'){
+    echVue = 'proposer'; echangeTier = tier; echangeMien = null; echangeCible = null;
+    document.querySelectorAll('#echTiers .filter-pill').forEach(x => x.classList.toggle('active', x.dataset.tier === tier));
+    return onglet('echange');
+  }
+  if(quoi === 'bourse-tier'){
+    sellFilterTier = tier;
+    document.querySelectorAll('#sellFilters .filter-pill').forEach(x => x.classList.toggle('active', x.dataset.tier === tier));
+    onglet('bourse');
+    setTimeout(() => { const g = document.getElementById('sellFilters'); if(g) g.scrollIntoView({ block: 'start', behavior: 'smooth' }); }, 350);
+    return;
+  }
+  if(quoi === 'bourse') return onglet('bourse');
+}
+(function mdbInit(){
+  if(!SAISON2) return;
+  document.getElementById('mesDoublons')?.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-mdb]');
+    if(b && !b.disabled) mdbVers(b.dataset.mdb, b.dataset.tier);
+  });
+  // les volets du Marché et l'onglet : en phase de capture, avant l'écouteur général des volets
+  document.addEventListener('click', (e) => {
+    const v = e.target.closest('.mdb-volets .volet[data-volet]');
+    if(v){
+      const ici = document.getElementById('panel-contrat')?.classList.contains('active');
+      if(v.dataset.volet === 'doublons' || v.dataset.volet === 'contrat'){
+        e.stopPropagation();
+        MDB.vue = v.dataset.volet;
+        if(ici){ mdbEntrer(); if(MDB.vue === 'contrat') mdbAppliquer(); }
+        else { MDB.forcer = MDB.vue; const t = document.querySelector('.tab[data-tab="contrat"]'); if(t) t.click(); }
+      }
+      return;   // Bourse, Échange : l'écouteur général ouvre l'onglet
+    }
+    const t = e.target.closest('.tab[data-tab="contrat"]');
+    if(t){ MDB.vue = MDB.forcer || (e.isTrusted ? 'doublons' : 'contrat'); MDB.forcer = null; }
+  }, true);
+  mdbAppliquer();
+})();

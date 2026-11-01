@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '9f7b393fc32a';
+const VERSION_JEU = '5b882be05296';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1504,7 +1504,10 @@ function setupMapInteraction(){
   window.addEventListener('mouseup', () => { mapDragging = false; });
 
   // --- Tactile : un doigt = deplacer, deux doigts = pincer pour zoomer ---
+  // patch302 : un geste commencé sur la fiche ou la légende leur appartient (elles défilent)
+  const gesteHorsCarte = (e) => !!(e.target && e.target.closest && e.target.closest('#mapPanneau, #mapLegende'));
   wrap.addEventListener('touchstart', (e) => {
+    if(gesteHorsCarte(e)){ mapDragging = false; touchPinch = null; return; }   // patch302
     const rect = wrap.getBoundingClientRect();
     if(e.touches.length === 2){
       mapDragging = false;
@@ -1523,6 +1526,7 @@ function setupMapInteraction(){
   }, { passive: false });
 
   wrap.addEventListener('touchmove', (e) => {
+    if(gesteHorsCarte(e)) return;   // patch302 : laisser défiler la fiche
     e.preventDefault();
     if(touchPinch && e.touches.length === 2){
       const rect = wrap.getBoundingClientRect();
@@ -1546,6 +1550,7 @@ function setupMapInteraction(){
   }, { passive: false });
 
   wrap.addEventListener('touchend', (e) => {
+    if(gesteHorsCarte(e)) return;   // patch302
     if(e.touches.length === 1){
       // on leve un doigt pendant un pincement : on continue a deplacer sans saut
       touchPinch = null;

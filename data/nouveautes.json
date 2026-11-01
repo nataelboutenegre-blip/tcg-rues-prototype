@@ -5,6 +5,7 @@
       "⚔ Front : les combats rapportent des lingots (+2 par conquête, +1 par défense réussie, 10 au plus par jour)"
     ],
     "correctifs": [
+      "Sur téléphone, la fiche d’une commune défile de nouveau au doigt (le bas, avec les bâtiments, restait inaccessible)",
       "Après une défense réussie avec la réserve de lingots pleine, la notification le dit"
     ]
   },

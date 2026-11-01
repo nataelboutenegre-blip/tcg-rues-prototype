@@ -8416,6 +8416,8 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 @media (max-width: 720px){
   .map-wrap.plein-ecran .pc{ max-height: calc(100% - 66px - env(safe-area-inset-top, 0px)); }
 }
+/* patch302 : la fiche défile au doigt sans entraîner la page */
+.pc{ overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
 
 /* patch298 : le Marché (Mes doublons · Bourse · Échange · Contrat) */
 .volets.mdb-volets{ display:flex; width:100%; max-width:560px; box-sizing:border-box; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '5b882be05296';
+const VERSION_JEU = 'eef7b21b5bf1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3896,6 +3896,12 @@ function allerVers(onglet, champId, texte, apres){
   }, 140);
 }
 
+// patch304 : après l'ouverture de la fiche au doigt, le navigateur envoie un clic au même endroit,
+// qui tombait sur le bouton apparu dessous (« +1 » de la garnison) : on l'ignore.
+let panneauOuvertAuDoigt = 0;
+document.getElementById('mapPanneau').addEventListener('click', (e) => {
+  if(performance.now() - panneauOuvertAuDoigt < 400){ e.stopPropagation(); e.preventDefault(); }
+}, true);
 document.getElementById('mapPanneau').addEventListener('click', (e) => {
   const prof = e.target.closest('[data-profil]');
   if(prof){ ouvrirProfil(prof.dataset.profil); return; }
@@ -4026,12 +4032,12 @@ function brancherSurvolCanvas(){
     const x = e.clientX - rect.left, y = e.clientY - rect.top;
     if(vueDepartements()){
       const dep = departementSousLePoint(x, y);
-      if(dep) ouvrirPanneauDept(dep, x, y);
+      if(dep){ ouvrirPanneauDept(dep, x, y); if(e.pointerType !== 'mouse') panneauOuvertAuDoigt = performance.now(); }   // patch304
       else fermerPanneau();
       return;
     }
     const t = communeSousLePoint(x, y);
-    if(t) ouvrirPanneau(t.commune.code, x, y);
+    if(t){ ouvrirPanneau(t.commune.code, x, y); if(e.pointerType !== 'mouse') panneauOuvertAuDoigt = performance.now(); }   // patch304
     else fermerPanneau();
   });
 }
@@ -17125,15 +17131,24 @@ function blocEchangesClan(){
     ${(e.envoyes || []).length ? `<h3 class="ce-h3">Envoyés</h3>${e.envoyes.map(x => prop(x, false)).join('')}` : ''}
     <ul class="clan-regles"><li>Seulement entre membres du clan, une commune contre une commune de même rareté.</li><li>3 échanges par jour et par joueur, 3 propositions en attente au plus. Une proposition expire au bout de 24 h.</li><li>Impossible pour une commune prise il y a moins de 24 h, en garnison, ou échangée il y a moins de 48 h.</li><li>Il faut être dans le clan depuis 48 h. Un échange ne rapporte aucun point de combat.</li></ul></div>`;
 }
+// patch304 : par pages (plus de 1 000 communes chez les gros joueurs), de la plus rare à la plus commune
+async function ceCommunesDe(joueur){
+  const { data, error } = await toutesLesLignes(() => sb.rpc('clan_ech_communes', { p_joueur: joueur }), 'code');
+  if(error) return null;
+  const rang = (t) => { const i = TIERS.findIndex(x => x.id === t); return i < 0 ? 99 : i; };
+  return (data || []).sort((a, b) => rang(a.tier) - rang(b.tier) || String(a.nom).localeCompare(String(b.nom), 'fr'));
+}
 async function ceChargerCommunes(){
   if(!monUidClan){ const { data: u } = await sb.auth.getUser(); monUidClan = u && u.user ? u.user.id : null; }
+  if(clanEch.mesErreur){ clanEch.mes = null; clanEch.mesErreur = false; }   // patch304 : on réessaie
+  if(clanEch.leursErreur){ clanEch.leurs = null; clanEch.leursErreur = false; }
   if(!clanEch.mes && monUidClan){
-    const { data, error } = await sb.rpc('clan_ech_communes', { p_joueur: monUidClan });
-    clanEch.mes = error ? [] : (data || []);
+    const l = await ceCommunesDe(monUidClan);
+    clanEch.mes = l || []; clanEch.mesErreur = !l;
   }
   if(clanEch.qui && !clanEch.leurs){
-    const { data, error } = await sb.rpc('clan_ech_communes', { p_joueur: clanEch.qui });
-    clanEch.leurs = error ? [] : (data || []);
+    const qui = clanEch.qui, l = await ceCommunesDe(qui);
+    if(clanEch.qui === qui){ clanEch.leurs = l || []; clanEch.leursErreur = !l; }
   }
   majListesCe();
 }

@@ -5,6 +5,7 @@
       "⚔ Front : les combats rapportent des lingots (+2 par conquête, +1 par défense réussie, 10 au plus par jour)"
     ],
     "correctifs": [
+      "Échanges de clan : toutes tes communes sont proposées, même au-delà de 1 000 ; et toucher une ville sur la carte n’ajoute plus d’énergie en garnison par erreur",
       "Sur téléphone, la fiche d’une commune défile de nouveau au doigt (le bas, avec les bâtiments, restait inaccessible)",
       "Après une défense réussie avec la réserve de lingots pleine, la notification le dit"
     ]

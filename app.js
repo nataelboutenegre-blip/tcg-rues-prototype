@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '13ae04d55a3c';
+const VERSION_JEU = '9f7b393fc32a';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9149,7 +9149,8 @@ async function defendreDepuis(btn){
       const L = await chargerLingotsCombat();
       if(L){
         const g = lingotsCombatGain(lcAvant, L, 'defense'), n = Number(L.aujourdhui) || 0, p = Number(L.plafond) || 10;
-        lgTexte = g > 0 ? ` +${g} lingot${g > 1 ? 's' : ''} (${n} / ${p} aujourd’hui).` : n >= p ? ` Plafond du jour atteint (${p} / ${p} lingots).` : '';
+        lgTexte = g > 0 ? ` +${g} lingot${g > 1 ? 's' : ''} (${n} / ${p} aujourd’hui).` : n >= p ? ` Plafond du jour atteint (${p} / ${p} lingots).`
+          : BATIMENTS && lingotsActuels() >= (Number(BATIMENTS.max) || 30) ? ' Réserve pleine : pas de lingot.' : '';   // patch301
         renderBatimentsBloc();
       }
     }

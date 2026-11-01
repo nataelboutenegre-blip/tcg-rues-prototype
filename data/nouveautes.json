@@ -4,7 +4,9 @@
     "nouveautes": [
       "⚔ Front : les combats rapportent des lingots (+2 par conquête, +1 par défense réussie, 10 au plus par jour)"
     ],
-    "correctifs": []
+    "correctifs": [
+      "Après une défense réussie avec la réserve de lingots pleine, la notification le dit"
+    ]
   },
   {
     "date": "2026-10-31",

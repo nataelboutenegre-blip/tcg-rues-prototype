@@ -8542,3 +8542,9 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .cl-calc-pied, .cl-calc-txt{ font-size:.74rem; color:#A9BCD4; margin:6px 0 0; line-height:1.45; }
 .cl-calc-txt{ margin:0; color:#C9D3E3; }
 .cl-calc-txt b{ color:#fff; }
+
+/* patch310 : les bâtiments dans le journal */
+.jr-ligne.fonderie, .jr-ligne.forteresse{ border-left-color:#E8833A; }
+.jr-ligne.fonderie .jr-icone, .jr-ligne.forteresse .jr-icone{ color:#FFB27A; background:rgba(232,131,58,.16); }
+.jr-ligne.fonderie_detruite{ border-left-color:#E5484D; }
+.jr-ligne.fonderie_detruite .jr-icone{ color:#FF8F92; background:rgba(229,72,77,.15); }

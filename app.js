@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '6cb05bf23860';
+const VERSION_JEU = 'a45be4c1909b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1616,6 +1616,9 @@ function ligneJournal(e){
   else if(e.type === 'achat') texte = `${acteur} ${a} acheté ${commune}${e.cible_pseudo ? ` à ${cible}` : ''}`;
   else if(e.type === 'echange') texte = `${acteur} ${a} reçu ${commune}${e.cible_pseudo ? ` de ${cible}` : ''} en échange`;
   else if(e.type === 'contrat') texte = `${acteur} ${a} obtenu ${commune} par un contrat`;
+  else if(e.type === 'fonderie') texte = `${acteur} ${a} construit une Fonderie à ${commune}`;   // patch310
+  else if(e.type === 'forteresse') texte = `${acteur} ${a} construit une Forteresse à ${commune}`;
+  else if(e.type === 'fonderie_detruite') texte = `${acteur} ${a} détruit ${e.je_suis_cible ? '<b>ta</b> Fonderie' : `la Fonderie de ${cible}`} à ${commune}`;
   else texte = `${acteur} ${a} tiré ${({ legendaire: 'une légendaire', epique: 'une épique', rare: 'une rare', peucommun: 'une peu commune' })[e.tier] || 'une carte'} : ${commune}`;   // patch264 : l'épique était annoncée « rare »
   // Le monument change de mains avec la commune : quand la ligne en concerne
   // une, on le nomme. C'est ce qui transforme « Maroli a conquis Millau » en
@@ -1624,7 +1627,7 @@ function ligneJournal(e){
   // passe ; avant, la ligne reste exactement telle qu'elle etait.
   const mon = monumentsNoms.get(e.commune_code);
   if(mon) texte += ` <span class="jr-monument" title="Monument de la commune">${ICONE_MONUMENT}${echapperTexte(mon)}</span>`;
-  const perso = e.je_suis_cible && (e.type === 'conquete' || e.type === 'achat');
+  const perso = e.je_suis_cible && (e.type === 'conquete' || e.type === 'achat' || e.type === 'fonderie_detruite');   // patch310
   return `
     <div class="jr-ligne ${e.type} ${perso ? 'perdu' : ''} ${e.je_suis_acteur ? 'moi' : ''}">
       <span class="jr-icone">${ICONES_JOURNAL[e.type] || ICONES_JOURNAL.tirage}</span>
@@ -2193,6 +2196,10 @@ const LIBELLE_TIER = {commun: 'commun', peucommun: 'peu commun', rare: 'rare', e
 // ---------- patch243 : les bâtiments du Front (s2-48) ----------
 const ICONE_FONDERIE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" d="M3 20.5h18M4 20.5V11l5 3V11l5 3V5.5h3.2V20.5M17.2 9.5H20v11"/><path fill="currentColor" d="M15.6 2.2c.9.9 1 1.8.4 2.6-.5-.5-1.3-.6-1.6.1-.5-1 .1-2 1.2-2.7z"/></svg>';
 const ICONE_FORTERESSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M5 21V8h2.4V5h2.4v3h2.4V5h2.4v3h2.4V5H19v16zM10 21v-4.2a2 2 0 0 1 4 0V21"/></svg>';
+// patch310 : les bâtiments dans le journal
+ICONES_JOURNAL.fonderie = ICONE_FONDERIE;
+ICONES_JOURNAL.forteresse = ICONE_FORTERESSE;
+ICONES_JOURNAL.fonderie_detruite = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c.6 3.2 4.5 4.6 4.5 9a4.5 4.5 0 0 1-9 0c0-2 1-3.2 2-4.2.2 1.6 1 2.4 1.9 2.7C11 8.6 11.2 5.5 12 3z"/><path d="M4 21h16"/></svg>';
 const ICONE_LINGOT = '<i class="lingot" aria-hidden="true"></i>';
 const BT_TRACES = typeof Path2D === 'function' ? {
   fonderie: [new Path2D('M3 20.5h18M4 20.5V11l5 3V11l5 3V5.5h3.2V20.5M17.2 9.5H20v11'), new Path2D('M15.6 2.2c.9.9 1 1.8.4 2.6-.5-.5-1.3-.6-1.6.1-.5-1 .1-2 1.2-2.7z')],

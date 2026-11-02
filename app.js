@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '56f364933793';
+const VERSION_JEU = '6cb05bf23860';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1850,8 +1850,9 @@ async function chargerClassementClans(){
   renderClassement();
 }
 function renderClassementClans(podium, liste, plus){
-  const leg = document.getElementById('clLegende');
-  if(leg) leg.hidden = true;
+  let leg = document.getElementById('clLegende');
+  if(!leg && podium){ leg = document.createElement('p'); leg.id = 'clLegende'; leg.className = 'sc-legende'; podium.before(leg); }   // patch309
+  clCalcRendre(leg, classementOuvert && classementDonnees.length ? 'clans' : null);   // patch309
   const nb = (n) => Number(n || 0).toLocaleString('fr-FR');
   const d = classementDonnees;
   const qui = (x) => x.actifs != null ? `${nb(x.actifs)} actif${x.actifs > 1 ? 's' : ''} sur ${nb(x.membres)}` : `${nb(x.membres)} membres`;
@@ -1888,6 +1889,37 @@ function renderClassementClans(podium, liste, plus){
   if(plus) plus.hidden = classementComplet || (d.total || 0) <= 10;
 }
 
+// patch309 : le détail du calcul, sous la légende
+let clCalcOuvert = (() => { try{ return localStorage.getItem('tf-cl-calcul') === '1'; }catch(e){ return false; } })();
+const CL_CALC_FRONT = `<div class="cl-calc-l"><i class="sc-pt c"></i><div><b>Cartes</b><span>Chaque commune que tu tiens : commune <b>1</b> · peu commune <b>3</b> · rare <b>12</b> · épique <b>25</b> · légendaire <b>60</b>.</span></div></div>
+  <div class="cl-calc-l"><i class="sc-pt co"></i><div><b>Combats</b><span><b>+10</b> par victoire : conquête, défense, garnison qui repousse. 10 par jour au plus, 2 par jour contre un même joueur. Acquis même si tu reperds la commune.</span></div></div>
+  <div class="cl-calc-l"><i class="sc-pt t"></i><div><b>Territoires</b><span>Par département, ton meilleur palier : 5 % <b>+100</b> · 10 % <b>+200</b> · 25 % <b>+300</b> (seul en tête) · 50 % <b>+600</b> · 75 % <b>+900</b> · 100 % <b>+1&nbsp;400</b>. Région : <b>+1&nbsp;200</b> si plus de la moitié de ses départements sont à 10 % ou plus.</span></div></div>
+  <p class="cl-calc-pied">Cartes et territoires se comptent en direct : perdre une commune fait baisser ton score. Les combats restent acquis.</p>`;
+const CL_CALC_CLANS = `<p class="cl-calc-txt">Le nombre de communes du Front de chaque membre <b>actif</b> (jeu ouvert dans les 7 derniers jours), divisé par le nombre de membres actifs. Jamais le total : un gros clan n’a pas d’avantage, et un membre absent ne fait pas baisser son clan. Un clan est classé à partir de <b>3 membres</b>.</p>`;
+// quoi : 'front', 'clans' ou null (rien à expliquer : palmarès, classement replié…)
+function clCalcRendre(legende, quoi){
+  let panneau = document.getElementById('clCalc');
+  if(!panneau && legende){
+    panneau = document.createElement('div');
+    panneau.id = 'clCalc'; panneau.className = 'cl-calc';
+    legende.after(panneau);
+  }
+  if(!legende || !panneau) return;
+  if(!quoi){ legende.hidden = true; panneau.hidden = true; return; }
+  const bouton = `<button type="button" class="cl-calc-btn" data-cl-calc aria-expanded="${clCalcOuvert}">${clCalcOuvert ? 'Masquer le calcul' : 'Comment c’est calculé ?'}</button>`;
+  legende.innerHTML = (quoi === 'clans' ? 'Moyenne par membre actif'
+    : '<i class="sc-pt c"></i>cartes <i class="sc-pt co"></i>combats <i class="sc-pt t"></i>territoires') + bouton;
+  legende.hidden = false;
+  panneau.hidden = !clCalcOuvert;
+  if(clCalcOuvert) panneau.innerHTML = quoi === 'clans' ? CL_CALC_CLANS : CL_CALC_FRONT;
+}
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('[data-cl-calc]')) return;
+  clCalcOuvert = !clCalcOuvert;
+  try{ localStorage.setItem('tf-cl-calcul', clCalcOuvert ? '1' : '0'); }catch(err){}
+  renderClassement();
+});
+
 function blClassement(nom, l, grand){ return classementMode === 'palmares' ? nom : pseudoBlason(nom, l.joueur_id, l.est_moi, grand); }   // patch275
 function renderClassement(){
   renderSaisonsPalmares();
@@ -1904,6 +1936,7 @@ function renderClassement(){
     bouton.setAttribute('aria-label', classementOuvert ? 'Replier le classement' : 'Afficher le classement');
   }
   if(classementMode === 'clans'){ renderClassementClans(podium, liste, plus); return; }   // patch210
+  if(!classementOuvert || classementMode === 'palmares') clCalcRendre(document.getElementById('clLegende'), null);   // patch309
   if(!classementOuvert){
     // replie : on ne garde que ma position, en une ligne
     const moi = classementDonnees.find(l => l.est_moi);
@@ -1938,7 +1971,7 @@ function renderClassement(){
     legende.innerHTML = '<i class="sc-pt c"></i>cartes <i class="sc-pt co"></i>combats <i class="sc-pt t"></i>territoires';
     podium.before(legende);
   }
-  legende.hidden = scoreDetail.size === 0;
+  clCalcRendre(legende, scoreDetail.size === 0 || classementMode === 'palmares' ? null : 'front');   // patch309
 
   const trois = classementDonnees.filter(l => l.rang <= 3);
   const ordre = [trois.find(l => l.rang === 2), trois.find(l => l.rang === 1), trois.find(l => l.rang === 3)].filter(Boolean);

@@ -8528,3 +8528,17 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .cl-recrute{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0 4px; font-size:.8rem; color:#DCE6F2; }
 .cl-recrute small{ display:block; font-size:.7rem; color:#7B8FAB; }
 .cl-recrute .filter-pill{ white-space:nowrap; }
+
+/* patch309 : le calcul du classement */
+.sc-legende .cl-calc-btn{ margin-left:auto; border:0; background:none; padding:2px 0; font:inherit; font-size:.74rem; font-weight:700; color:#FFB27A; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.cl-calc{ background:rgba(10,22,40,.5); border:1px solid rgba(169,188,212,.16); border-radius:12px; padding:10px 12px; margin:-2px 0 12px; }
+.cl-calc[hidden]{ display:none; }
+.cl-calc-l{ display:grid; grid-template-columns:10px minmax(0,1fr); gap:9px; padding:7px 0; border-top:1px solid rgba(169,188,212,.1); }
+.cl-calc-l:first-child{ border-top:0; padding-top:2px; }
+.cl-calc-l .sc-pt{ margin:5px 0 0; }
+.cl-calc-l b{ color:#fff; }
+.cl-calc-l > div > b{ display:block; font-size:.84rem; margin-bottom:2px; }
+.cl-calc-l span{ display:block; font-size:.76rem; color:#C9D3E3; line-height:1.45; }
+.cl-calc-pied, .cl-calc-txt{ font-size:.74rem; color:#A9BCD4; margin:6px 0 0; line-height:1.45; }
+.cl-calc-txt{ margin:0; color:#C9D3E3; }
+.cl-calc-txt b{ color:#fff; }

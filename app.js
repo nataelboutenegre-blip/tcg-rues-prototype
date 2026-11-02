@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'f79f9ec309b2';
+const VERSION_JEU = 'ad9300ad56c9';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -22722,6 +22722,17 @@ function atlScint(niv){
   return `<i class="atl-scint" aria-hidden="true">${h}</i>`;
 }
 // les calques d'une carte : derrière (cadre, halo), au fond de la carte, dans l'image, par-dessus
+// patch320 : le cachet de la poste, en SVG (le nom suit l'arc et tient toujours)
+let atlTamponN = 0;
+function atlTampon(nom, dept){
+  const id = 'atlTp' + (++atlTamponN), n = String(nom || '').length;
+  const taille = n <= 10 ? 13 : n <= 16 ? 11.5 : 10;
+  return `<span class="atl-tampon" aria-hidden="true"><svg viewBox="0 0 100 100"><defs><path id="${id}" d="M 15 52 A 35 35 0 0 1 85 52"/></defs>`
+    + `<circle cx="50" cy="50" r="46" class="tp-o"/><circle cx="50" cy="50" r="23" class="tp-i"/>`
+    + `<text font-size="${taille}"><textPath href="#${id}" startOffset="50%" text-anchor="middle"${n > 11 ? ' textLength="106" lengthAdjust="spacingAndGlyphs"' : ''}>${echapperTexte(String(nom || '').toUpperCase())}</textPath></text>`
+    + `<text x="50" y="57" class="tp-d" text-anchor="middle">${echapperTexte(dept || '')}</text>`
+    + `<text x="50" y="88" class="tp-a" text-anchor="middle">2026</text></svg></span>`;
+}
 function atlParts(e, grande, hantee){   // patch286 : hantee = la carte porte la hantise d'Halloween
   const vide = { cls: '', dehors: '', fond: '', art: '', anneau: '' };
   const a = e && e.atelier;
@@ -22737,7 +22748,7 @@ function atlParts(e, grande, hantee){   // patch286 : hantee = la carte porte la
     dehors: (cadre ? '<i class="atl-cadre" aria-hidden="true"></i>' : '')
       + (ha !== 'aucun' && niv > 0 ? '<i class="atl-glow" aria-hidden="true"></i>' : '') + (niv > 0 ? atlParticules(ha, e.code, niv, grande) : ''),
     fond: (fn !== 'aucune' ? '<i class="atl-fond" aria-hidden="true"></i>' : '')
-      + (st === 'postale' && niv > 0 ? `<span class="atl-tampon" aria-hidden="true">${echapperTexte(String(e.nom || '').toUpperCase())}<br>· ${echapperTexte(e.dept || '')} ·<br>2026</span>` : ''),
+      + (st === 'postale' && niv > 0 ? atlTampon(e.nom, e.dept) : ''),   // patch320
     art: (fn !== 'aucune' ? '<i class="atl-a1" aria-hidden="true"></i><i class="atl-a2" aria-hidden="true"></i>' : '')
       + (st === 'etat' ? '<span class="atl-nord" aria-hidden="true">N ↑</span>' : ''),
     anneau: (fn !== 'aucune' ? '<i class="atl-reflet" aria-hidden="true"></i>' : '') + (fn === 'cristal' && niv > 0 && !REDUCED_MOTION ? atlScint(niv) : '')

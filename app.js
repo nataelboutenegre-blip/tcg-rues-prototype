@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '0de730282264';
+const VERSION_JEU = '218762effcb7';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -17745,7 +17745,9 @@ async function loadClansCarte(){
     clansCarteVersion++;
     setTimeout(majBlasonsNoms, 0);   // patch275
     const moi = monUidClan ? clansCarte.get(monUidClan) : null;
+    const avantClan = [...clanMembres].sort().join(',');   // patch315
     clanMembres = new Set(moi ? (data || []).filter(r => r.tag === moi.tag && r.joueur_id !== monUidClan).map(r => r.joueur_id) : []);
+    if([...clanMembres].sort().join(',') !== avantClan && combatCibles.length){ try{ renderCombatGrid(); }catch(e){} }   // patch315
     if(typeof demanderDessin === 'function'){ CV.donneesSignature = ''; demanderDessin(); }
   }catch(e){ /* les clans restent invisibles */ }
 }

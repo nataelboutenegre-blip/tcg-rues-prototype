@@ -8683,3 +8683,17 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 
 /* patch314 : garnison retirée près du plafond */
 .gn-plafond{ color:#FFB27A !important; margin-top:6px; }
+
+/* patch316 : la France au survol du numéro de département ; l'échange de clan depuis la fiche */
+.dep[data-dep]{ cursor:pointer; }
+.dep.dep-on{ outline:1px solid #F0B429; color:#FFD56B; }
+.dep-bulle{ position:fixed; z-index:9000; width:190px; padding:8px 8px 6px; background:#0B1A33; border:1px solid rgba(240,180,41,.55);
+  border-radius:12px; box-shadow:0 10px 24px rgba(0,0,0,.45); color:#EAF1F8; pointer-events:none; text-align:center; }
+.dep-bulle[hidden]{ display:none; }
+.dep-bulle svg{ display:block; width:100%; height:auto; }
+.dep-bulle p{ margin:4px 0 0; font-size:.8rem; }
+.dep-bulle p b{ color:#FFD56B; }
+.dep-bulle p small{ display:block; color:#A9BCD4; font-size:.7rem; }
+.pc-action.pc-ech-clan{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin:8px 0 4px;
+  min-height:42px; border:0; border-radius:12px; background:#2BD48B; color:#0F1F38; font:inherit; font-weight:700; cursor:pointer; }
+.pc-action.pc-ech-clan:disabled{ background:#2A3E5C; color:#A9BCD4; cursor:default; }

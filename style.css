@@ -8614,6 +8614,12 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .ch-mon small{ font-size:0.74rem; color: var(--brume); }
 .ch-mon-info{ font-size:0.74rem; color:#7EE2B0; font-weight:600; }
 .ch-mon-grave{ font-size:0.72rem; color:#FFD56B; }
+/* patch319 : la course au nom gravé */
+.ch-mon-course{ font-size:0.7rem; font-weight:600; }
+.ch-mon-course.ok{ color:#7EE2B0; } .ch-mon-course.ko{ color:#FF8F92; }
+.ch-course{ margin:0; font-size:0.82rem; line-height:1.35; color:#C9D6E6; padding:7px 10px; border-radius:10px; background:#162C4B; border-left:3px solid #FFD56B; }
+.ch-course.ok{ border-left-color:#7EE2B0; } .ch-course.ko{ border-left-color:#FF8F92; }
+.ch-course b{ color:#fff; }
 .ch-grille{ display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:10px; }
 .ch-carte{ display:flex; flex-direction:column; gap:8px; padding:12px 14px; border-radius:14px; background:#162C4B; border:1px solid rgba(169,188,212,0.14); }
 .ch-carte h3{ margin:0; font-family: var(--titre); font-weight:800; font-size:1.3rem; line-height:1.05; color:#fff; }

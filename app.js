@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '0346d663adaf';
+const VERSION_JEU = 'f79f9ec309b2';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -12480,6 +12480,32 @@ function chDuree(h){
   return r ? `${j} j ${r} h` : `${j} jour${j > 1 ? 's' : ''}`;
 }
 
+// patch319 : la course au nom gravé (les autres chantiers sur ce monument, jamais de pseudo)
+function chCourse(m){
+  const n = Number(m && m.autres) || 0;
+  const fin = m && m.autres_fin ? new Date(m.autres_fin).getTime() : null;
+  return { n, reste: fin == null ? null : Math.max(0, fin - chMaintenant()) / 3600e3 };   // en heures
+}
+function chJoueurs(n){ return chNb(n) + ' joueur' + (n > 1 ? 's' : ''); }
+function chCourseChoix(m, monDuree){
+  if(m.graveur) return `<span class="ch-mon-grave">★ Gravé : ${echapperTexte(m.graveur)}</span>`;
+  const k = chCourse(m);
+  if(!k.n || !('autres' in m)) return '<span class="ch-mon-grave">Personne ne l’a encore restauré</span>';
+  const tete = k.reste == null ? `${chJoueurs(k.n)} en chantier, en pause` : `${chJoueurs(k.n)} en chantier · le plus avancé finit dans ${chDuree(k.reste)}`;
+  const devant = k.reste == null || monDuree < k.reste;
+  return `<span class="ch-mon-grave">⚒ ${tete}</span><span class="ch-mon-course ${devant ? 'ok' : 'ko'}">${devant ? 'Tu peux encore passer devant' : 'Il finira avant toi, sauf renfort'}</span>`;
+}
+function chCourseLigne(mon, c){
+  if(!mon || mon.graveur || !('autres' in mon)) return '';
+  const k = chCourse(mon);
+  if(!k.n) return '<p class="ch-course">Personne d’autre ne restaure ce monument en ce moment : le premier qui le finit y grave son nom.</p>';
+  const qui = `${chJoueurs(k.n)} ${k.n > 1 ? 'le restaurent' : 'le restaure'} aussi`;
+  if(c.en_pause || !c.fin_prevue) return `<p class="ch-course">Course au nom gravé : ${qui}.${k.reste != null ? ` Le plus avancé finit dans ${chDuree(k.reste)}.` : ''} Ton chantier est en pause.</p>`;
+  const moi = Math.max(0, new Date(c.fin_prevue).getTime() - chMaintenant()) / 3600e3;
+  if(k.reste == null || moi <= k.reste) return `<p class="ch-course ok">Course au nom gravé : ${qui}. <b>Tu es en tête</b>${k.reste != null ? ` : le suivant finit ${chDuree(k.reste - moi)} après toi` : ''}.</p>`;
+  return `<p class="ch-course ko">Course au nom gravé : ${qui}. Le plus avancé finit dans ${chDuree(k.reste)}, <b>${chDuree(moi - k.reste)} avant toi</b>. Des ouvriers ou de meilleurs outils peuvent te faire passer devant.</p>`;
+}
+
 // les dessins : chargés une fois, à la demande
 function chMoteur(){
   if(window.TF_CHANTIERS) return Promise.resolve(window.TF_CHANTIERS);
@@ -12634,7 +12660,7 @@ function renderChantiers(){
       ${vue.type === 'inaug' ? chVoileHtml(mon, vue.r) : ''}
     </div>`;
     if(enCours){
-      h += chSegs('chSegs') + `<div class="ch-lignes"><p id="chLigneFin"></p><p id="chLigneRythme"></p></div>
+      h += chSegs('chSegs') + `<div class="ch-lignes"><p id="chLigneFin"></p><p id="chLigneRythme"></p></div>${chCourseLigne(mon, c)}
         <div class="ch-actions"><button type="button" class="ch-lien${chArme === 'abandonner' ? ' arme' : ''}" data-ch="abandonner">${chArme === 'abandonner' ? 'Sûr ? Le travail fait sera perdu. Touche encore pour abandonner' : 'Abandonner ce chantier'}</button></div>`;
     }
   }
@@ -12653,7 +12679,7 @@ function renderChantiers(){
           <b>${echapperTexte(chMaj(m.embleme))}</b>
           <small>${echapperTexte(m.commune)} (${echapperTexte(m.dept)}) · ${CH_TAILLE[m.taille]}</small>
           <span class="ch-mon-info">${chDuree((Number(T[m.taille]) || 0) / r)} avec ton équipe · +${chTp(m.taille)} TP/jour</span>
-          <span class="ch-mon-grave">${m.graveur ? '★ Gravé : ' + echapperTexte(m.graveur) : 'Personne ne l’a encore restauré'}</span>
+          ${chCourseChoix(m, (Number(T[m.taille]) || 0) / r)}
         </button>`).join('')}</div>`;
     } else {
       const total = (CH.monuments || []).filter(m => m.taille !== 'merveille').length;

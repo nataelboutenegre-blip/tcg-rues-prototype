@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '8e054dfcfb29';
+const VERSION_JEU = '0de730282264';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10920,7 +10920,7 @@ async function garnisonAction(code, n){
   const { data, error } = await rpc;
   if(error){ notifier({ type: 'erreur', titre: 'Garnison', texte: messageLisible(error.message) }); return; }
   const r = data && data[0];
-  if(n === 'retirer') notifier({ type: 'info', titre: 'Garnison retirée', texte: `${r ? r.rendue : 0} énergie te revient.` });
+  if(n === 'retirer') notifier({ type: 'info', titre: 'Garnison retirée', texte: r && Number(r.rendue) > 0 ? `+${r.rendue} énergie.` : 'Aucune énergie rendue : tu étais déjà au plafond de 60.' });   // patch314
   await Promise.all([chargerGarnisons(), majEnergie()]);
   if(panneauCommune === code && collectionMap.get(code)){
     const a = panneauAncre;
@@ -10932,6 +10932,10 @@ function blocGarnisonFiche(code){
   const g = garnisonsMoi.get(code);
   if(!g) return '';
   const armee = gnRetraitArme === code;
+  // patch314 : le remboursement ne fait pas dépasser 60 d'énergie
+  const rendu = Math.floor(g.energie * 3 / 4);
+  const dispo = energieEtat ? Math.floor(Number(energieEtat.energie) || 0) : 0;
+  const recu = Math.max(0, Math.min(rendu, 60 - dispo));
   return `<div class="gn">
     <div class="gn-haut">${ICONES_PC.bouclier} Garnison <b>${ICONE_ENERGIE} ${g.energie} / 10</b></div>
     <div class="gn-barre">${Array.from({ length: 10 }, (_, i) => `<i class="${i < g.energie ? 'p' : ''}"></i>`).join('')}</div>
@@ -10939,8 +10943,8 @@ function blocGarnisonFiche(code){
     <div class="gn-btns">
       <button data-pc="gn-plus" data-n="1" ${g.energie >= 10 ? 'disabled' : ''}>+1 ${ICONE_ENERGIE}</button>
       <button data-pc="gn-plus" data-n="5" ${g.energie >= 10 ? 'disabled' : ''}>+5 ${ICONE_ENERGIE}</button>
-      <button class="sec ${armee ? 'arme' : ''}" data-pc="gn-retirer">${armee ? `Confirmer (+${Math.floor(g.energie * 3 / 4)})` : 'Retirer'}</button>
-    </div></div>`;
+      <button class="sec ${armee ? 'arme' : ''}" data-pc="gn-retirer">${armee ? `Confirmer (+${recu})` : 'Retirer'}</button>
+    </div>${armee && recu < rendu ? `<p class="gn-txt gn-plafond">Tu as déjà ${dispo} d’énergie : tu ne récupérerais que ${recu} sur ${rendu}, l’énergie ne dépasse pas 60.</p>` : ''}</div>`;
 }
 
 function appliquerMode(){

@@ -8680,3 +8680,6 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .sd-pied{ font-size:.72rem; color:#A9BCD4; margin:8px 0 0; text-align:center; }
 .sd.merci{ background:linear-gradient(160deg,rgba(43,212,139,.16),rgba(15,31,56,.6) 55%); border-color:rgba(43,212,139,.5); }
 .sd.merci .sd-t{ color:#7EE2B0; }
+
+/* patch314 : garnison retirée près du plafond */
+.gn-plafond{ color:#FFB27A !important; margin-top:6px; }

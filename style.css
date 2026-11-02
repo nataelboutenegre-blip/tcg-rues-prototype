@@ -8548,3 +8548,108 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .jr-ligne.fonderie .jr-icone, .jr-ligne.forteresse .jr-icone{ color:#FFB27A; background:rgba(232,131,58,.16); }
 .jr-ligne.fonderie_detruite{ border-left-color:#E5484D; }
 .jr-ligne.fonderie_detruite .jr-icone{ color:#FF8F92; background:rgba(229,72,77,.15); }
+
+/* patch311 : les grands chantiers (onglet Monuments, Terra) */
+.ch{ width:100%; min-width:0; display:flex; flex-direction:column; gap:12px; margin:4px 0 6px; color:#EAF1F8; }
+.ch[hidden]{ display:none; }
+.ch p{ margin:0; }
+.ch-tete{ display:flex; flex-direction:column; gap:6px; }
+.ch-h2{ margin:6px 0 0; font-family: var(--titre); font-weight:800; font-size:clamp(1.7rem, 6vw, 2.3rem); line-height:1; color:#fff; }
+.ch-h3{ margin:10px 0 0; font-family: var(--titre); font-weight:800; font-size:1.45rem; line-height:1.05; color:#FFD56B; }
+.ch-h3.merv{ color:#D3B8FF; }
+.ch-intro{ color: var(--brume); font-size:0.92rem; max-width:62ch; }
+.ch-note{ color: var(--brume); font-size:0.86rem; max-width:70ch; }
+.ch-essai{ align-self:flex-start; padding:5px 10px; border-radius:8px; font-size:0.8rem; font-weight:600;
+  color:#13233B; background:#FFD56B; }
+.ch-scene{ position:relative; border-radius:16px; overflow:hidden; border:1px solid rgba(169,188,212,0.18);
+  background-color:#0B1A33;
+  background-image: linear-gradient(rgba(90,169,255,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(90,169,255,0.12) 1px, transparent 1px);
+  background-size: 3.125% 5.555%; }
+.ch-scene canvas{ display:block; width:100%; height:auto; image-rendering:pixelated; image-rendering:crisp-edges; }
+.ch-scene-tete{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding:9px 11px 2px; }
+.ch-scene-titre{ min-width:0; font-family: var(--titre); font-weight:700; font-size:clamp(1.15rem, 4.6vw, 1.8rem); line-height:0.95;
+  text-transform:uppercase; color:#fff; text-shadow:0 2px 0 #0B1A33, 0 0 8px rgba(11,26,51,0.9); }
+.ch-scene-titre small{ display:block; margin-top:4px; font-family: var(--texte); font-size:0.74rem; font-weight:600; text-transform:none; color: var(--brume); text-shadow:0 1px 2px #0B1A33; }
+.ch-boite{ flex:none; padding:3px 9px 5px; border:2px solid var(--c-legendaire); border-radius:10px; background:rgba(11,26,51,0.88); text-align:center; }
+.ch-boite span{ display:block; font-family: var(--titre); font-size:0.66rem; letter-spacing:0.18em; color:#FFD56B; }
+.ch-boite b{ display:block; font-family: var(--titre); font-weight:700; font-size:clamp(1.15rem, 4.4vw, 1.7rem); line-height:1; color:#fff; }
+.ch-boite.merv{ border-color:#B794F4; }
+.ch-boite.merv span{ color:#D3B8FF; }
+.ch-voile{ position:absolute; left:50%; top:52%; z-index:2; transform:translate(-50%, -50%); width:min(90%, 430px);
+  display:flex; flex-direction:column; align-items:center; gap:7px; padding:12px 14px;
+  background:rgba(11,26,51,0.94); border:2px solid #7EE2B0; border-radius:16px; text-align:center; font-size:0.86rem; color:#C9D6E6; }
+.ch-gros{ font-family: var(--titre); font-weight:700; font-size:clamp(1.6rem, 6vw, 2.3rem); line-height:1; color:#7EE2B0; }
+.ch-plaque{ display:inline-block; padding:5px 12px; border-radius:6px; background:linear-gradient(180deg, #F7D774, #C9962A);
+  color:#3A2A08; font-family: var(--titre); font-weight:700; font-size:0.95rem; line-height:1.15;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.45), 0 2px 0 #7A5106; }
+.ch-plaque small{ font-family: var(--texte); font-weight:600; font-size:0.72rem; color:#5A4108; }
+.ch-plaque.petite{ align-self:flex-start; padding:3px 8px; font-family: var(--texte); font-size:0.72rem; font-weight:700; }
+.ch-segs{ display:flex; gap:3px; }
+.ch-segs i{ flex:1; height:9px; border-radius:3px; background:#1F3A60; }
+.ch-segs i.on{ background: var(--c-legendaire); }
+.ch-segs i.vert{ background:#7EE2B0; }
+.ch-lignes{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:3px 16px; font-size:0.84rem; color:#C9D6E6; }
+.ch-actions{ display:flex; justify-content:flex-end; }
+.ch-lien{ background:none; border:0; padding:4px 0; font:inherit; font-size:0.82rem; color: var(--brume); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.ch-lien.arme{ color:#FF8F92; font-weight:700; }
+.ch-choix{ display:grid; grid-template-columns:repeat(auto-fill, minmax(168px, 1fr)); gap:10px; }
+.ch-mon{ display:flex; flex-direction:column; gap:3px; padding:6px 6px 8px; border-radius:12px; border:1px solid rgba(169,188,212,0.18);
+  background:#162C4B; color:#EAF1F8; font:inherit; text-align:left; cursor:pointer; }
+.ch-mon:hover{ border-color: var(--c-legendaire); }
+.ch-mon canvas{ width:100%; height:auto; image-rendering:pixelated; border-radius:7px; background:#0B1A33; margin-bottom:3px; }
+.ch-mon b{ font-size:0.86rem; line-height:1.2; }
+.ch-mon small{ font-size:0.74rem; color: var(--brume); }
+.ch-mon-info{ font-size:0.74rem; color:#7EE2B0; font-weight:600; }
+.ch-mon-grave{ font-size:0.72rem; color:#FFD56B; }
+.ch-grille{ display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:10px; }
+.ch-carte{ display:flex; flex-direction:column; gap:8px; padding:12px 14px; border-radius:14px; background:#162C4B; border:1px solid rgba(169,188,212,0.14); }
+.ch-carte h3{ margin:0; font-family: var(--titre); font-weight:800; font-size:1.3rem; line-height:1.05; color:#fff; }
+.ch-carte p{ font-size:0.86rem; color:#C9D6E6; }
+.ch-carte p b{ color:#fff; }
+.ch-haut{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+.ch-val{ font-family: var(--titre); font-weight:800; font-size:1.35rem; line-height:1; color:#FFD56B; white-space:nowrap; }
+.ch-carte.ch-vis{ background:#13314A; border-color:rgba(126,226,176,0.45); }
+.ch-carte.ch-vis .ch-val{ color:#7EE2B0; }
+.ch-carte.merv{ background:#1A1F45; border-color:#6B4FB0; }
+.ch-carte.merv h3{ color:#D3B8FF; }
+.ch-carte.merv .ch-val{ color:#D3B8FF; }
+.ch-petit{ font-size:0.78rem !important; color: var(--brume) !important; }
+.ch-bouton{ min-height:44px; padding:0 16px; border:0; border-radius:12px; background: var(--c-legendaire); color:#13233B;
+  font-family: var(--titre); font-weight:800; font-size:1.12rem; cursor:pointer; }
+.ch-bouton.vert{ background:#7EE2B0; }
+.ch-bouton.violet{ background:#B794F4; color:#1A1240; }
+.ch-bouton.sec{ background:transparent; color:#FFD56B; box-shadow: inset 0 0 0 2px rgba(240,180,41,0.55); }
+.ch-bouton:disabled{ background:#2A3E5C; color: var(--brume); box-shadow:none; cursor:default; }
+.ch-liste-v{ display:flex; flex-direction:column; gap:4px; font-size:0.84rem; }
+.ch-liste-v div{ display:flex; justify-content:space-between; gap:10px; color:#C9D6E6; }
+.ch-liste-v div i{ font-style:normal; color:#FFD56B; }
+.ch-liste-v div b{ color:#7EE2B0; font-weight:600; white-space:nowrap; }
+.ch-jauge{ height:8px; border-radius:4px; background:#1F3A60; overflow:hidden; }
+.ch-jauge i{ display:block; height:100%; width:0; background:#7EE2B0; }
+.ch-mecenes{ display:flex; flex-direction:column; gap:2px; font-size:0.84rem; }
+.ch-mecenes > div{ display:grid; grid-template-columns:2.4ch 1fr auto; gap:8px; padding:2px 6px; border-radius:6px; color:#C9D6E6; }
+.ch-mecenes > div span:nth-child(2){ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ch-mecenes > div span:last-child{ color:#D3B8FF; white-space:nowrap; }
+.ch-mecenes > div.moi{ background:rgba(255,255,255,0.08); color:#fff; font-weight:600; }
+.ch-finies{ display:flex; flex-direction:column; gap:8px; }
+.ch-finie{ display:grid; grid-template-columns:96px 1fr; gap:10px; align-items:center; padding:8px; border-radius:12px;
+  background:linear-gradient(160deg, #3A2E10, #1B2B45 60%); border:2px solid #E3B53F; }
+.ch-finie canvas{ width:96px; height:auto; image-rendering:pixelated; border-radius:6px; }
+.ch-finie div{ display:flex; flex-direction:column; gap:3px; min-width:0; }
+.ch-finie b{ font-size:0.9rem; }
+.ch-finie small{ font-size:0.74rem; color: var(--brume); }
+.ch-album-titre{ margin-top:14px; }
+/* l'album : un monument restauré passe en or */
+.mon.restaure{ background: linear-gradient(135deg, #FFF6D0, #F0B429 30%, #FFE7A0 52%, #B7791F 78%, #FCE38A);
+  box-shadow: 0 0 0 1px rgba(255,214,107,0.6), 0 8px 22px rgba(240,180,41,0.35); }
+.mon-restaure{ position:absolute; left:5px; top:5px; padding:1px 6px 2px; border-radius:5px; background:rgba(11,26,51,0.85);
+  color:#FFD56B; font-family: var(--titre); font-weight:800; font-size:0.7rem; letter-spacing:0.06em; text-transform:uppercase; }
+.mon-grave{ margin:0; padding:0 8px; font-size:0.7rem; font-weight:700; color:#8A6410;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mon.libre .mon-grave, .mon.pris .mon-grave{ color:#6B5A2A; }
+@media (max-width: 560px){
+  .ch-choix{ grid-template-columns:repeat(2, minmax(0, 1fr)); gap:8px; }
+  .ch-mon b{ font-size:0.8rem; }
+  .ch-boite{ padding:2px 7px 4px; }
+  .ch-voile{ top:56%; padding:10px 12px; gap:5px; font-size:0.8rem; }
+}

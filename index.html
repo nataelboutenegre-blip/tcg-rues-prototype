@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=a45be4c1909b">
+<link rel="stylesheet" href="style.css?v=ceb67bfb32d9">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -1150,6 +1150,7 @@
 
     <section class="tab-panel" id="panel-monuments">
       <h1>Monuments <span class="mon-compteur" id="monCompteur">—</span></h1>
+      <div id="chantiersZone" class="ch" hidden></div><!-- patch311 : les grands chantiers -->
       <div class="sub">Un lieu connu par commune : qui possède la commune possède son monument, et le perd avec elle. Les cartes en gris sont celles que tu n'as pas, avec le nom de celui qui les a.</div>
       <div class="coll-filtres" id="monFiltres"></div>
       <input type="text" id="monRech" class="bourse-search" placeholder="Rechercher un monument, une commune, un département…">
@@ -1690,6 +1691,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=a45be4c1909b"></script>
+<script defer src="app.js?v=ceb67bfb32d9"></script>
 </body>
 </html>

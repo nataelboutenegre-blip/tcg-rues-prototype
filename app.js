@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'e16cfddbdcc8';
+const VERSION_JEU = 'fd5b1115937a';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -891,6 +891,7 @@ async function showGame(session_){
   parrainDeclare.then(parrainageDuJour);
   loadObjectifs();
   chargerPremiersPas();   // patch306
+  chargerReserveAccueil(); setInterval(siVisible(chargerReserveAccueil), 300000);   // patch322
   chargerSondagePays();   // patch313
   chargerCandidatures(); setInterval(siVisible(chargerCandidatures), 300000);   // patch307
   loadClassement();
@@ -7634,6 +7635,7 @@ function renderPot(){
   document.getElementById('potBarre').style.width = pct.toFixed(1) + '%';
   document.getElementById('potJauge').setAttribute('aria-valuenow', String(Math.round(pct)));
   bloc.hidden = false;
+  if(typeof renderReserveAccueil === 'function') renderReserveAccueil();   // patch322
 }
 function potRetirer(n){
   if(enTerra()) return;   // pas de pot en Terra
@@ -7754,7 +7756,7 @@ function renderPackStatus(){
     : packStatusCache.solde < 200 ? 'Solde insuffisant' : null);   // patch156
 
   // un jeton vient de se recharger pendant que le joueur est sur le jeu
-  if(dispoPrecedente !== null && dispo > dispoPrecedente && !paquetEnCours){
+  if(dispoPrecedente !== null && dispo > dispoPrecedente && !paquetEnCours && !raBloque()){   // patch322
     notifier({
       type: 'succes',
       titre: 'Un paquet gratuit t\'attend',
@@ -7779,6 +7781,7 @@ function renderPackStatus(){
   }
   const ps = document.getElementById('packStatus');
   if(ps) ps.hidden = !ps.children.length;
+  renderReserveAccueil();   // patch322
 }
 function paquetPretAffiche(){
   return !!document.querySelector('#packZone .paquet[data-pret]');
@@ -7834,6 +7837,10 @@ async function tirerUneCarte(){
 }
 
 async function openPack(type){
+  if(type === 'gratuit' && raBloque()){   // patch322
+    notifier({ type: 'info', titre: 'Réserve d\'accueil', texte: 'Les dernières communes du pot sont réservées aux nouveaux joueurs : ton paquet est gardé. Pour gagner du terrain, attaque !' });
+    return;
+  }
   chargerNomsMonuments();
   document.getElementById('openFreeBtn').disabled = true;
   document.getElementById('openBuyBtn').disabled = true;
@@ -8175,6 +8182,7 @@ function majPaquetPret(dispo){
   const zone = document.getElementById('packZone');
   if(!zone || paquetEnCours) return;
   const pret = zone.querySelector('.paquet[data-pret]');
+  if(raBloque()){ if(pret) zone.innerHTML = ''; return; }   // patch322
   if(dispo >= 1 && zone.children.length === 0) afficherPaquetPret('gratuit');
   else if(dispo < 1 && pret) zone.innerHTML = '';
 }
@@ -24703,6 +24711,83 @@ async function ppAction(quoi, bouton){
 document.getElementById('premiersPas')?.addEventListener('click', (e) => {
   const b = e.target.closest('[data-pp]');
   if(b) ppAction(b.dataset.pp, b);
+});
+
+// ---------- patch322 : le bandeau de la réserve d'accueil (s2-76) ----------
+// Les dernières communes libres du Front vont aux comptes de moins de 7 jours.
+// Le serveur dit si CE joueur est bloqué ; le nombre de communes libres vient
+// de saison_courante() (potLibres). Trois cas : bientôt, bloqué, nouveau.
+var RESERVE_ACCUEIL = null, raRelu = 0, raHtml = null, raCree = null;
+var RA_AVANT = 6000;   // le bandeau « bientôt » s'affiche 6 000 communes avant la réserve
+async function chargerReserveAccueil(){
+  if(!SAISON2) return;
+  raRelu = Date.now();
+  if(raCree == null){
+    try{ const { data: ss } = await sb.auth.getSession(); const c = ss && ss.session && ss.session.user && ss.session.user.created_at; if(c) raCree = new Date(c).getTime(); }catch(e){}
+  }
+  try{
+    const { data, error } = await sb.rpc('reserve_accueil_etat');
+    RESERVE_ACCUEIL = !error && data ? data : null;   // s2-76 pas lancé : rien
+  }catch(e){ RESERVE_ACCUEIL = null; }
+  renderReserveAccueil();
+  if(typeof renderPackStatus === 'function' && packStatusCache) renderPackStatus();
+}
+function raBloque(){
+  return !!(SAISON2 && !enTerra() && RESERVE_ACCUEIL && RESERVE_ACCUEIL.ouvert && RESERVE_ACCUEIL.bloque);
+}
+function raLibres(){
+  if(typeof potLibres === 'number' && potLibres !== null) return Math.max(0, potLibres);
+  const s = (typeof saisonEtat !== 'undefined') ? saisonEtat : null;
+  return s && s.libres != null ? Number(s.libres) : null;
+}
+function raInscription(){ return raCree; }
+function renderReserveAccueil(){
+  const el = document.getElementById('reserveAccueil');
+  const btn = document.getElementById('openFreeBtn');
+  const R = RESERVE_ACCUEIL;
+  const bloque = raBloque();
+  if(btn){
+    btn.classList.toggle('ra-pause', bloque);
+    btn.textContent = bloque ? 'Paquets du Front en pause' : 'Ouvrir un paquet gratuit';
+    if(bloque){ btn.disabled = true; btn.title = 'Réserve d\'accueil : les dernières communes sont pour les nouveaux joueurs'; }
+  }
+  if(!el) return;
+  let cas = null, html = '';
+  const libres = raLibres();
+  const fr = (n) => Number(n).toLocaleString('fr-FR').replace(/\u202f/g, '\u00a0');   // espace fine absente de la police : espace insécable
+  if(SAISON2 && !enTerra() && R && R.ouvert && libres != null){
+    const seuil = Number(R.communes) || 3000, jours = Number(R.jours) || 7;
+    const ins = raInscription();
+    const ancien = ins == null || ins < Date.now() - jours * 86400000;
+    if(bloque){
+      cas = 'bloque';
+      html = `<span class="ra-ic">🛡️</span><span class="ra-t">Réserve d'accueil active</span>
+        <p class="ra-x">Les <b>${fr(Math.min(libres, seuil))}</b> dernières communes libres sont réservées aux joueurs arrivés depuis moins de ${jours} jours. Tes paquets du Front sont gardés. Pour gagner du terrain, attaque !</p>
+        <div class="ra-act"><button type="button" class="ra-go fort" data-ra="attaquer">Attaquer</button><button type="button" class="ra-go" data-ra="terra">Paquets Terra</button></div>`;
+    } else if(libres <= seuil && !ancien){
+      cas = 'nouveau';
+      const date = new Date(ins + jours * 86400000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
+      html = `<span class="ra-ic">🎁</span><span class="ra-t">Les dernières communes sont pour toi</span>
+        <p class="ra-x">Les <b>${fr(libres)}</b> dernières communes libres sont réservées aux nouveaux joueurs. Tu peux en tirer jusqu'au <b>${date}</b>, profites-en !</p>`;
+    } else if(libres <= seuil && ancien){
+      // le serveur ne nous a pas encore dit bloqué : on lui redemande (une fois par minute au plus)
+      if(Date.now() - raRelu > 60000) setTimeout(chargerReserveAccueil, 0);
+    } else if(ancien && libres - seuil <= RA_AVANT){
+      cas = 'bientot';
+      const n = libres - seuil;
+      html = `<span class="ra-ic">⏳</span><span class="ra-t">Plus que <b>${fr(n)}</b> commune${n > 1 ? 's' : ''} avant la réserve d'accueil</span>
+        <p class="ra-x">Ensuite, les ${fr(seuil)} dernières communes libres iront aux joueurs arrivés depuis moins de ${jours} jours. Tes paquets du Front seront gardés, et pour gagner du terrain il faudra attaquer. Terra n'est pas concerné.</p>`;
+    }
+  }
+  el.hidden = !cas;
+  el.className = 'ra' + (cas ? ' ' + cas : '');
+  if(raHtml !== html){ el.innerHTML = html; raHtml = html; }
+}
+document.getElementById('reserveAccueil')?.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-ra]');
+  if(!b) return;
+  if(b.dataset.ra === 'attaquer') ncAller('front', 'combat');
+  else if(b.dataset.ra === 'terra') ncAller('terra', 'tirage');
 });
 
 // ---------- patch313 : le sondage « d'autres pays ? » (s2-80) ----------

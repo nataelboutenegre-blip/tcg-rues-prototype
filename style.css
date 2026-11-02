@@ -8728,3 +8728,29 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .pc-action.pc-ech-clan{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin:8px 0 4px;
   min-height:42px; border:0; border-radius:12px; background:#2BD48B; color:#0F1F38; font:inherit; font-weight:700; cursor:pointer; }
 .pc-action.pc-ech-clan:disabled{ background:#2A3E5C; color:#A9BCD4; cursor:default; }
+
+/* patch322 : le bandeau de la réserve d'accueil (Tirage, Front) */
+.ra{ display:grid; grid-template-columns:28px minmax(0,1fr); gap:4px 10px; align-items:start;
+  max-width:620px; box-sizing:border-box; margin:0 0 14px; padding:12px 14px 13px; border-radius:14px;
+  border:1px solid rgba(169,188,212,.3); background:rgba(169,188,212,.07); color:#fff; text-align:left; }
+.ra[hidden]{ display:none; }
+.ra-ic{ width:28px; height:28px; border-radius:50%; display:grid; place-items:center; font-size:.95rem;
+  background:rgba(169,188,212,.16); grid-row:span 2; margin-top:1px; }
+.ra-t{ font-size:.9rem; font-weight:700; line-height:1.3; }
+.ra-t b{ font-family:var(--titre); font-weight:900; font-size:1.1rem; letter-spacing:.01em; font-variant-numeric:tabular-nums; }
+.ra-x{ font-size:.76rem; color:#C3D0E0; line-height:1.45; margin:0; }
+.ra-x b{ color:#fff; }
+.ra-act{ grid-column:2; display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.ra-go{ font:inherit; font-size:.76rem; font-weight:700; border-radius:999px; padding:7px 13px; cursor:pointer; white-space:nowrap;
+  border:1px solid rgba(255,255,255,.3); background:rgba(255,255,255,.08); color:#fff; }
+.ra.bientot{ border-color:rgba(91,155,255,.4); background:linear-gradient(160deg,rgba(47,124,246,.14),rgba(15,31,56,.5) 60%); }
+.ra.bientot .ra-ic{ background:rgba(47,124,246,.25); }
+.ra.bientot .ra-t b{ color:#8DB8FF; }
+.ra.bloque{ border-color:rgba(229,72,77,.55); background:linear-gradient(160deg,rgba(229,72,77,.18),rgba(15,31,56,.55) 60%); }
+.ra.bloque .ra-ic{ background:rgba(229,72,77,.3); }
+.ra.bloque .ra-go.fort{ background:#E5484D; border-color:#E5484D; }
+.ra.nouveau{ border-color:rgba(43,212,139,.5); background:linear-gradient(160deg,rgba(43,212,139,.14),rgba(15,31,56,.5) 60%); }
+.ra.nouveau .ra-ic{ background:rgba(43,212,139,.24); }
+.ra.nouveau .ra-t b{ color:#5BE3A6; }
+button.open-btn.ra-pause{ opacity:.5; cursor:not-allowed; }
+body.mode-terra #reserveAccueil{ display:none !important; }

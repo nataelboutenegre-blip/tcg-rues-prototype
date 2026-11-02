@@ -8480,3 +8480,28 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .bt-annuler-note{ font-size:.7rem; color:#B9A08C; margin:5px 0 0; text-align:center; }
 .btl .gl-r.bt-ann{ padding:6px 10px; font-size:.74rem; border-color:rgba(232,131,58,.55); background:rgba(232,131,58,.14); }
 .btl .gl-r.bt-ann.arme{ background:rgba(229,72,77,.3); border-color:rgba(229,72,77,.8); }
+
+/* patch306 : Premiers pas */
+.pp{ background:linear-gradient(160deg,rgba(232,131,58,.16),rgba(15,31,56,.6) 55%); border:1px solid rgba(232,131,58,.45); border-radius:14px; padding:14px 14px 12px; color:#fff; margin:0 0 14px; text-align:left; }
+.pp[hidden]{ display:none; }
+.pp-haut{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; }
+.pp-t{ font-family:var(--titre); font-weight:900; font-size:1.05rem; letter-spacing:.01em; }
+.pp-n{ font-size:.78rem; color:#FFB27A; font-weight:700; white-space:nowrap; }
+.pp-sous{ font-size:.76rem; color:#A9BCD4; margin:3px 0 10px; }
+.pp-seg{ display:grid; grid-template-columns:repeat(4,1fr); gap:4px; margin-bottom:10px; }
+.pp-seg i{ height:5px; border-radius:3px; background:rgba(169,188,212,.18); }
+.pp-seg i.on{ background:#2BD48B; }
+.pp-e{ display:grid; grid-template-columns:26px minmax(0,1fr) auto; gap:10px; align-items:center; padding:8px 0; border-top:1px solid rgba(169,188,212,.1); }
+.pp-c{ width:24px; height:24px; border-radius:50%; display:grid; place-items:center; font-size:.75rem; font-weight:800; border:1.5px solid rgba(169,188,212,.35); color:#A9BCD4; box-sizing:border-box; }
+.pp-e.fait .pp-c{ background:#2BD48B; border-color:#2BD48B; color:#0F1F38; }
+.pp-e.cours .pp-c{ border-color:#E8833A; color:#FFB27A; }
+.pp-l b{ display:block; font-size:.86rem; }
+.pp-l small{ display:block; font-size:.72rem; color:#A9BCD4; margin-top:2px; line-height:1.35; }
+.pp-e.fait .pp-l b{ color:#A9BCD4; text-decoration:line-through; text-decoration-color:rgba(169,188,212,.5); }
+.pp-go{ font:inherit; font-size:.74rem; font-weight:700; border-radius:999px; padding:7px 12px; border:1px solid rgba(232,131,58,.6); background:rgba(232,131,58,.18); color:#fff; white-space:nowrap; cursor:pointer; }
+.pp-go.fort{ background:#E8833A; border-color:#E8833A; }
+.pp-recomp{ display:flex; align-items:center; gap:10px; margin-top:8px; padding:9px 11px; border-radius:10px; background:rgba(10,22,40,.45); border:1px dashed rgba(255,178,122,.45); font-size:.78rem; color:#FFD9B8; }
+.pp-recomp b{ color:#fff; }
+.pp-recomp .gift{ font-size:1.1rem; }
+.pp-reclamer{ display:block; width:100%; margin-top:10px; padding:11px 12px; border-radius:10px; border:0; background:#2BD48B; color:#0F1F38; font:inherit; font-weight:800; font-size:.88rem; cursor:pointer; }
+.pp-reclamer:disabled{ opacity:.6; cursor:default; }

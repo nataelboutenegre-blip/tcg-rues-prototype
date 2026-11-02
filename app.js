@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '7a5e3175d174';
+const VERSION_JEU = '7c70504f6715';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -890,6 +890,7 @@ async function showGame(session_){
   Promise.all([peutEtreMontrerBandeAnnonce(), parrainDeclare]).then(peutEtreAfficherAccueil);
   parrainDeclare.then(parrainageDuJour);
   loadObjectifs();
+  chargerPremiersPas();   // patch306
   loadClassement();
   loadJournal();
   loadAmis();
@@ -3770,6 +3771,7 @@ async function lancerAssaut(code){
     const r = data[0];
     // patch86 : l'assaut mis en scene remplace les notifications
     mettreEnSceneAssaut(cibleVue, r);
+    if((r.gagne || r.conquise) && PREMIERS_PAS && !PREMIERS_PAS.attaque) ppRelire(800);   // patch306
     if(r.conquise){
       // patch145 : la commune change de couleur tout de suite ; le
       // rechargement complet passe 8 s apres le dernier assaut, sans bloquer
@@ -7650,6 +7652,7 @@ async function loadPackStatusTerra(){
 }
 
 async function loadPackStatus(){
+  if(PREMIERS_PAS && !PREMIERS_PAS.paquet) ppRelire(4000);   // patch306
   if(enTerra()) return loadPackStatusTerra();
   const { data, error } = await sb.rpc('statut_paquets');
   if(error){ console.error(error); return; }
@@ -10127,7 +10130,7 @@ async function batimentConstruire(code, type){
   const nom = type === 'fonderie' ? 'Fonderie' : type === 'centre' ? 'Centre de recherche' : 'Forteresse';   // patch260
   const { error } = await sb.rpc('batiment_construire', { p_code: code, p_type: type });
   if(error) notifier({ type: 'erreur', titre: nom, texte: messageLisible(error.message) });
-  else notifier({ type: 'succes', titre: nom + ' en construction', texte: `Prête dans ${btReglage('construction_h', 6)} h.` });
+  else { notifier({ type: 'succes', titre: nom + ' en construction', texte: `Prête dans ${btReglage('construction_h', 6)} h.` }); ppRelire(800); }   // patch306
   await chargerBatiments();
   if(panneauCommune === code && collectionMap.get(code)){ const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); }
 }
@@ -12075,7 +12078,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'boutiqueeuros') loadBoutiqueEuros();   // patch175
     if(tab.dataset.tab === 'personnaliser') loadGardeRobe();
     if(tab.dataset.tab === 'clan'){ loadClan(); setTimeout(tchatMajBadge, 0); }
-    if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); }
+    if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); ppRelire(300); }   // patch306
     if(tab.dataset.tab === 'defense'){ loadMenaces().then(loadReveil); loadCombat(); renderIntensite('defense'); if(SAISON2) chargerGarnisons(); }
     if(tab.dataset.tab === 'combat' && SAISON2) majEnergie();
     if(tab.dataset.tab === 'combat') mfoEntrer();   // patch288
@@ -17459,6 +17462,7 @@ async function actionClan(nom, args, succes){
   const { data, error } = await sb.rpc(nom, args || {});
   if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); return false; }
   if(succes) notifier({ type: 'succes', titre: succes });
+  ppRelire(800);   // patch306
   clanCache = clanCache || { classement: [] };
   clanCache.moi = data || {};
   await loadClansCarte();
@@ -23957,3 +23961,101 @@ function mdbVers(quoi, tier){
   }, true);
   mdbAppliquer();
 })();
+
+// ---------- patch306 : Premiers pas (s2-74) ----------
+// Les nouveaux qui combattent le 1er jour reviennent ; les autres presque jamais.
+// La carte les mène à leur première attaque. Le serveur coche les étapes.
+let PREMIERS_PAS = null, ppMinuteur = null;
+async function chargerPremiersPas(){
+  if(!SAISON2) return;
+  try{
+    const { data, error } = await sb.rpc('premiers_pas');
+    PREMIERS_PAS = !error && data && data.eligible ? data : null;
+  }catch(e){ PREMIERS_PAS = null; }
+  renderPremiersPas();
+}
+// après une action qui peut cocher une étape : relire un peu plus tard (une seule fois)
+function ppRelire(delai){
+  if(!PREMIERS_PAS) return;
+  clearTimeout(ppMinuteur);
+  ppMinuteur = setTimeout(chargerPremiersPas, delai || 1500);
+}
+// une cible facile : la commune d'un autre joueur la plus proche des miennes, plutôt commune
+function ppCible(){
+  const maintenant = Date.now();
+  const miennes = [...collectionMap.values()].filter(m => m.lat != null && m.lon != null && !estOutremerCode(m.code));
+  const rangT = (t) => ({ commun: 0, peucommun: 1, rare: 2, epique: 3, legendaire: 4 })[t && t.id] ?? 2;
+  let meilleure = null, score = Infinity;
+  for(const c of othersMap.values()){
+    if(c.lat == null || c.lon == null || estOutremerCode(c.code)) continue;
+    if(clanMembres.has(c.joueurId) || c.bouclierJusqua > maintenant) continue;
+    let d = 300;
+    for(const m of miennes){
+      if(Math.abs(m.lat - c.lat) > 1.5) continue;
+      const x = distanceKm(c.lat, c.lon, m.lat, m.lon);
+      if(x < d) d = x;
+    }
+    const sc = d + rangT(c.tier) * 15;
+    if(sc < score){ score = sc; meilleure = c; }
+  }
+  return meilleure;
+}
+function renderPremiersPas(){
+  const el = document.getElementById('premiersPas');
+  if(!el) return;
+  const P = PREMIERS_PAS;
+  el.hidden = !P;
+  if(!P) return;
+  const cible = P.attaque ? null : ppCible();
+  const etapes = [
+    ['paquet', 'Ouvre ton premier paquet', '5 vraies communes, à leur place sur la carte', 'Ouvrir'],
+    ['attaque', 'Gagne ta première attaque', cible ? `Une cible facile près de chez toi : ${echapperHtml(cible.nom)} (${echapperHtml(cible.dept)})` : 'Choisis une commune proche dans l’onglet Combat', 'Attaquer'],
+    ['clan', 'Rejoins un clan ou crée le tien', 'Les membres ne s’attaquent pas entre eux, et s’échangent des communes', 'Voir les clans'],
+    ['fonderie', 'Construis ta Fonderie', `Gratuite : ${(BATIMENTS && BATIMENTS.production) || 10} lingots par jour pour tes bâtiments`, 'Comment ?'],
+  ];
+  const faites = etapes.filter(e => P[e[0]]).length;
+  const premiere = etapes.findIndex(e => !P[e[0]]);
+  const R = P.recompense || { paquets: 1, lingots: 10 };
+  const lots = `${R.paquets} paquet Terra en plus et ${R.lingots} lingots`;
+  el.innerHTML = `<div class="pp-haut"><span class="pp-t">Premiers pas</span><span class="pp-n">${faites} / 4</span></div>
+    <p class="pp-sous">${faites === 4 ? 'Bravo, tout est fait : ta récompense t’attend.' : 'Fais ces 4 choses pour bien démarrer ta conquête.'}</p>
+    <div class="pp-seg">${etapes.map(e => `<i class="${P[e[0]] ? 'on' : ''}"></i>`).join('')}</div>
+    ${etapes.map((e, i) => `<div class="pp-e${P[e[0]] ? ' fait' : i === premiere ? ' cours' : ''}"><span class="pp-c">${P[e[0]] ? '✓' : i + 1}</span>
+      <span class="pp-l"><b>${e[1]}</b><small>${e[2]}</small></span>
+      ${P[e[0]] ? '<span></span>' : `<button type="button" class="pp-go${i === premiere ? ' fort' : ''}" data-pp="${e[0]}">${e[3]}</button>`}</div>`).join('')}
+    ${faites === 4
+      ? `<button type="button" class="pp-reclamer" data-pp="reclamer">🎁 Récupérer : ${lots}</button>`
+      : `<div class="pp-recomp"><span class="gift">🎁</span><span>Les 4 faites : <b>${lots}</b></span></div>`}`;
+}
+async function ppAction(quoi, bouton){
+  if(quoi === 'paquet'){
+    const b = document.getElementById('openFreeBtn');
+    if(b && !b.disabled) b.click();
+    else { if(b) b.scrollIntoView({ behavior: 'smooth', block: 'center' }); notifier({ type: 'info', titre: 'Paquet', texte: 'Ton prochain paquet gratuit arrive bientôt : le compte à rebours est juste en dessous.' }); }
+    return;
+  }
+  if(quoi === 'attaque'){
+    ncAller('front', 'territoire', () => {
+      const c = ppCible();
+      if(!c){ ncAller('front', 'combat'); return; }
+      voirCommuneSurCarte(c);
+      setTimeout(() => { try{ ouvrirAttaque(c.code); }catch(e){} }, 450);
+    });
+    return;
+  }
+  if(quoi === 'clan'){ ncAller(null, 'clan'); return; }
+  if(quoi === 'fonderie'){ ncAller('front', 'defense'); return; }
+  if(quoi === 'reclamer'){
+    bouton.disabled = true;
+    const { data, error } = await sb.rpc('premiers_pas_reclamer');
+    if(error){ bouton.disabled = false; notifier({ type: 'erreur', titre: 'Premiers pas', texte: messageLisible(error.message) }); return; }
+    notifier({ type: 'succes', titre: 'Premiers pas terminés !', texte: `+${(data && data.paquets) || 1} paquet Terra et +${(data && data.lingots) || 10} lingots. Bonne conquête !` });
+    PREMIERS_PAS = null; renderPremiersPas();
+    loadPackStatus();
+    if(typeof chargerBatiments === 'function') chargerBatiments();
+  }
+}
+document.getElementById('premiersPas')?.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pp]');
+  if(b) ppAction(b.dataset.pp, b);
+});

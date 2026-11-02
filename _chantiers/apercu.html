@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aperçu — Les grands chantiers (V1)</title>
+<link rel="stylesheet" href="fonts/polices.css">
+<style>
+:root{--nuit:#0F1F38;--carte:#162C4B;--texte:#EAF1F8;--brume:#A9BCD4;--or:#F0B429;--or-clair:#FFD56B;--vert:#7EE2B0;--bleu:#5AA9FF;--titre:'Big Shoulders Display',Impact,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--nuit);color:var(--texte);font-family:'Instrument Sans',system-ui,sans-serif;font-size:15px;line-height:1.5}
+main{max-width:1000px;margin:0 auto;padding:22px 14px 60px;display:flex;flex-direction:column;gap:34px}
+h1{font-family:var(--titre);font-weight:900;font-size:clamp(40px,9vw,64px);line-height:.92;margin:4px 0 8px}
+h2{font-family:var(--titre);font-weight:800;font-size:clamp(28px,6vw,38px);line-height:1;margin:0 0 6px}
+h3{font-family:var(--titre);font-weight:800;font-size:22px;line-height:1.05;margin:0}
+p{margin:0}
+.surtitre{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--or-clair);font-weight:600}
+.intro{color:var(--brume);max-width:62ch}
+.note{color:var(--brume);font-size:13.5px;max-width:70ch}
+.ressorts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.ressort{padding:7px 12px;border-radius:999px;border:1px solid rgba(169,188,212,.25);font-size:13.5px;color:var(--texte);background:rgba(22,44,75,.6)}
+.ressort b{color:var(--or-clair);font-weight:600}
+/* la scène en pixel art */
+.scene{position:relative;background-color:#0B1A33;background-image:linear-gradient(rgba(90,169,255,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(90,169,255,.12) 1px,transparent 1px);background-size:3.125% 5.555%;border:1px solid rgba(169,188,212,.18);border-radius:16px;overflow:hidden}
+.scene canvas{display:block;width:100%;height:auto;image-rendering:pixelated;image-rendering:crisp-edges}
+.scene-tete{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:10px 12px 2px}
+.scene-titre{font-family:var(--titre);font-weight:700;font-size:clamp(20px,4.6vw,30px);line-height:.95;text-transform:uppercase;text-shadow:0 2px 0 #0B1A33;min-width:0}
+.scene-titre small{display:block;font-family:'Instrument Sans',sans-serif;text-transform:none;font-size:12.5px;font-weight:500;color:var(--brume);text-shadow:none;margin-top:4px}
+.boite{flex:none;padding:4px 10px 6px;border:2px solid var(--or);border-radius:10px;background:rgba(11,26,51,.88);text-align:center}
+.boite span{display:block;font-family:var(--titre);font-size:11px;letter-spacing:.18em;color:var(--or-clair)}
+.boite b{display:block;font-family:var(--titre);font-weight:700;font-size:clamp(20px,4.5vw,30px);line-height:1}
+.voile{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:min(88%,430px);display:flex;flex-direction:column;align-items:center;gap:8px;padding:14px 16px;background:rgba(11,26,51,.93);border:2px solid var(--vert);border-radius:16px;text-align:center}
+.voile[hidden]{display:none}
+.voile .gros{font-family:var(--titre);font-weight:700;font-size:clamp(26px,6vw,38px);line-height:1;color:var(--vert)}
+.plaque{display:inline-block;padding:6px 12px;border-radius:6px;background:linear-gradient(180deg,#F7D774,#C9962A);color:#3A2A08;font-family:var(--titre);font-weight:700;font-size:15px;letter-spacing:.02em;box-shadow:inset 0 0 0 1px rgba(255,255,255,.45),0 2px 0 #7A5106}
+.plaque small,.carte-album .plaque small{font-family:'Instrument Sans',sans-serif;font-weight:600;font-size:11.5px;letter-spacing:0;color:#5A4108}
+/* curseur et vignettes */
+.curseur{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:14px;color:var(--brume)}
+.curseur input{flex:1;accent-color:var(--or)}
+.curseur b{color:var(--texte);min-width:4.5ch;display:inline-block;text-align:right}
+.vignettes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:14px}
+.vig{display:flex;flex-direction:column;gap:5px;padding:6px;border-radius:12px;border:1px solid rgba(169,188,212,.16);background:var(--carte);color:var(--texte);font:inherit;text-align:left;cursor:pointer}
+.vig canvas{width:100%;height:auto;image-rendering:pixelated;border-radius:7px;background:#0B1A33}
+.vig b{font-size:13.5px;line-height:1.2}
+.vig small{font-size:12px;color:var(--brume);line-height:1.25}
+.vig.merv small{color:#D3B8FF}
+.vig[aria-pressed="true"]{border-color:var(--or);box-shadow:0 0 0 1px var(--or)}
+.groupe-titre{font-family:var(--titre);font-weight:800;font-size:20px;margin:16px 0 0;color:var(--texte)}
+.groupe-titre small{font-family:'Instrument Sans',sans-serif;font-weight:500;font-size:13px;color:var(--brume);margin-left:6px}
+/* jeu */
+.puces{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.puce{min-height:40px;padding:0 14px;border-radius:999px;border:1px solid rgba(169,188,212,.3);background:transparent;color:var(--texte);font:inherit;font-size:14px;cursor:pointer}
+.puce[aria-pressed="true"]{background:var(--texte);color:var(--nuit);border-color:var(--texte)}
+.puce:disabled{opacity:.45;cursor:default}
+.segs{display:flex;gap:3px;margin-top:10px}
+.seg{flex:1;height:9px;border-radius:3px;background:#1F3A60}
+.seg.on{background:var(--or)}
+.seg.vert{background:var(--vert)}
+.lignes{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 18px;margin-top:8px;font-size:13.5px;color:#C9D6E6}
+.grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:14px}
+.carte{background:var(--carte);border:1px solid rgba(169,188,212,.14);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.carte .haut{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.carte .val{font-family:var(--titre);font-weight:800;font-size:22px;color:var(--or-clair);line-height:1}
+.carte p{font-size:14px;color:#C9D6E6}
+.carte.visiteurs{border-color:rgba(126,226,176,.45);background:#13314A}
+.carte.visiteurs .val{color:var(--vert)}
+.carte.merv{border-color:#6B4FB0;background:#1A1F45}
+.carte.merv h3{color:#D3B8FF}
+.bouton{min-height:46px;padding:0 18px;border:0;border-radius:12px;background:var(--or);color:#13233B;font-family:var(--titre);font-weight:800;font-size:19px;cursor:pointer}
+.bouton.vert{background:var(--vert)}
+.bouton.violet{background:#B794F4;color:#1A1240}
+.bouton.sec{background:transparent;color:var(--or-clair);box-shadow:inset 0 0 0 2px rgba(240,180,41,.55)}
+.bouton:disabled{background:#2A3E5C;color:var(--brume);box-shadow:none;cursor:default}
+.liste-v{display:flex;flex-direction:column;gap:5px;font-size:13.5px}
+.liste-v div{display:flex;justify-content:space-between;gap:10px;color:#C9D6E6}
+.liste-v div b{color:var(--vert);font-weight:600;white-space:nowrap}
+.jauge{height:8px;border-radius:4px;background:#1F3A60;overflow:hidden}
+.jauge i{display:block;height:100%;background:var(--vert)}
+/* mécènes */
+.mecenes{display:flex;flex-direction:column;gap:3px;font-size:13.5px}
+.mecenes div{display:grid;grid-template-columns:2ch 1fr auto;gap:8px;padding:3px 6px;border-radius:6px;color:#C9D6E6}
+.mecenes div.moi{background:rgba(255,255,255,.08);color:#fff;font-weight:600}
+.mecenes div span:last-child{color:#D3B8FF;white-space:nowrap}
+/* album */
+.album{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:12px}
+.carte-album{border-radius:14px;padding:10px;background:#1B2B45;border:2px solid #3A4E6E;display:flex;flex-direction:column;gap:8px}
+.carte-album canvas{width:100%;height:auto;image-rendering:pixelated;border-radius:8px;background:#0B1A33;filter:grayscale(1) brightness(.75)}
+.carte-album.or{background:linear-gradient(160deg,#3A2E10,#1B2B45 60%);border-color:#E3B53F;box-shadow:0 0 0 1px rgba(255,214,107,.35),0 8px 24px rgba(240,180,41,.12)}
+.carte-album.or canvas{filter:none}
+.carte-album b{font-size:15px}
+.carte-album small{color:var(--brume);font-size:12.5px}
+.regles{display:flex;flex-direction:column;gap:8px;padding-left:18px;margin:8px 0 0;color:#C9D6E6;font-size:14.5px}
+.regles b{color:var(--texte)}
+@media (max-width:560px){main{padding:16px 10px 50px}.vignettes{grid-template-columns:repeat(2,1fr)}.boite{padding:3px 7px 4px}}
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <p class="surtitre">Aperçu · module Monuments en Terra</p>
+  <h1>Les grands chantiers</h1>
+  <p class="intro">Restaure les monuments de tes communes Terra. Tes ouvriers travaillent même quand tu n'es pas là. Trois raisons de le faire :</p>
+  <div class="ressorts">
+    <span class="ressort"><b>Les visiteurs</b> : chaque monument restauré rapporte des points chaque jour</span>
+    <span class="ressort"><b>Le nom gravé</b> : le premier à restaurer un monument y laisse son nom</span>
+    <span class="ressort"><b>Les merveilles</b> : les plus grands se restaurent à plusieurs</span>
+  </div>
+</header>
+
+<!-- ============================================================ LES DESSINS -->
+<section aria-labelledby="t-dessins">
+  <h2 id="t-dessins">Les 20 dessins</h2>
+  <p class="note">8 dessins de type couvrent environ 90 monuments ; Cordouan, Ronchamp et les 10 merveilles ont le leur. Touche un dessin pour le voir en grand. Le curseur montre le chantier : le plan bleu, l'échafaudage, puis le monument restauré avec ses visiteurs.</p>
+  <div class="scene" style="margin-top:12px">
+    <div class="scene-tete"><p class="scene-titre" id="vueTitre"></p><div class="boite"><span id="vueLib">RESTAURÉ</span><b id="vueVal">100 %</b></div></div>
+    <canvas id="cvVue" width="192" height="108" role="img" aria-label="Le dessin choisi"></canvas>
+    
+    
+  </div>
+  <div class="curseur">
+    <label for="vueCurseur">Avancement</label>
+    <input type="range" id="vueCurseur" min="0" max="100" value="100">
+    <b id="vuePct">100 %</b>
+  </div>
+  <p class="groupe-titre">Les types <small>un dessin pour tous les monuments du même genre</small></p>
+  <div class="vignettes" id="vigTypes"></div>
+  <p class="groupe-titre">Les merveilles <small>restaurées à plusieurs, une à la fois</small></p>
+  <div class="vignettes" id="vigMerv"></div>
+</section>
+
+<!-- ============================================================ TON CHANTIER -->
+<section aria-labelledby="t-jeu">
+  <h2 id="t-jeu">Ton chantier</h2>
+  <p class="note">Aperçu jouable, temps accéléré : 1 seconde = 1 heure. Choisis un monument, regarde le chantier avancer, inaugure-le, puis récolte ses visiteurs.</p>
+  <div class="puces" id="choix"></div>
+  <div class="scene">
+    <div class="scene-tete"><p class="scene-titre" id="jeuTitre"></p><div class="boite"><span id="jeuLib">CHANTIER</span><b id="jeuVal">0 %</b></div></div>
+    <canvas id="cvJeu" width="192" height="108" role="img" aria-label="Ton chantier"></canvas>
+    
+    
+    <div class="voile" id="voileJeu" hidden>
+      <p class="gros">RESTAURÉ !</p>
+      <p id="voileTexte" style="font-size:14px"></p>
+      <p class="plaque" id="voilePlaque"></p>
+      <button type="button" class="bouton vert" id="inaugurer">Inaugurer</button>
+    </div>
+  </div>
+  <div class="segs" id="segs" role="progressbar" aria-label="Avancement du chantier" aria-valuemin="0" aria-valuemax="100"></div>
+  <div class="lignes"><p id="ligneFin"></p><p id="ligneRythme"></p></div>
+  <div class="grille">
+    <div class="carte visiteurs">
+      <div class="haut"><h3>Les visiteurs</h3><span class="val" id="aRecolter">0</span></div>
+      <p>Chaque monument restauré attire des visiteurs : <b>10</b> points par jour pour un petit, <b>25</b> pour un moyen, <b>60</b> pour un grand. Au plus <b>300</b> par jour.</p>
+      <div class="liste-v" id="listeV"></div>
+      <div class="jauge" aria-hidden="true"><i id="jaugeJour" style="width:0"></i></div>
+      <p style="font-size:12.5px;color:var(--brume)" id="ligneJour"></p>
+      <button type="button" class="bouton vert" id="recolter">Récolter</button>
+    </div>
+    <div class="carte">
+      <div class="haut"><h3>Ton équipe</h3><span class="val" id="valEquipe">3</span></div>
+      <p id="txtEquipe"></p>
+      <button type="button" class="bouton" id="embaucher"></button>
+      <button type="button" class="bouton sec" id="outils"></button>
+      <p style="font-size:12.5px;color:var(--brume)">Tu as <b id="solde" style="color:var(--vert)">1 240</b> points Terra. Les améliorations sont le premier usage de tes points.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ LA MERVEILLE -->
+<section aria-labelledby="t-merv">
+  <h2 id="t-merv">La merveille du moment</h2>
+  <p class="note">Une seule merveille à la fois, pour tout le jeu. Chacun peut y envoyer son équipe ; pendant ce temps, son propre chantier s'arrête. Ici, les autres joueurs avancent tout seuls pour l'aperçu.</p>
+  <div class="scene" style="margin-top:12px">
+    <div class="scene-tete"><p class="scene-titre">Notre-Dame de Paris<small id="mervSous"></small></p><div class="boite" style="border-color:#B794F4"><span style="color:#D3B8FF">MERVEILLE</span><b id="mervVal">38 %</b></div></div>
+    <canvas id="cvMerv" width="192" height="108" role="img" aria-label="Le chantier collectif de Notre-Dame de Paris"></canvas>
+    
+    
+    <div class="voile" id="voileMerv" hidden style="border-color:#B794F4">
+      <p class="gros" style="color:#D3B8FF">NOTRE-DAME EST RESTAURÉE !</p>
+      <p style="font-size:14px">Les 10 premiers mécènes sont gravés sur sa carte. Chaque mécène reçoit <b>20 points</b> par jour de visiteurs.</p>
+      <p class="plaque" id="plaqueMerv"></p>
+      <button type="button" class="bouton violet" id="voirMerv">Voir Notre-Dame restaurée</button>
+    </div>
+  </div>
+  <div class="segs" id="segsMerv"></div>
+  <div class="grille">
+    <div class="carte merv">
+      <div class="haut"><h3>Ton équipe</h3><span class="val" style="color:#D3B8FF" id="mesHeures">0 h</span></div>
+      <p id="txtMerv"></p>
+      <button type="button" class="bouton violet" id="envoyer">Envoyer mon équipe</button>
+    </div>
+    <div class="carte merv">
+      <div class="haut"><h3>Les mécènes</h3><span style="font-size:13px;color:var(--brume)" id="nbMecenes"></span></div>
+      <div class="mecenes" id="mecenes"></div>
+      <p style="font-size:12.5px;color:var(--brume)">Mécène = au moins 24 h de travail données. Les 10 premiers sont gravés pour toujours.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ L'ALBUM -->
+<section aria-labelledby="t-album">
+  <h2 id="t-album">Dans l'album</h2>
+  <p class="note">Le monument passe en or. Le nom du premier joueur qui l'a restauré est gravé, et tout le monde le voit, sur la carte du monument comme sur celle de sa commune. Les suivants le restaurent aussi chez eux, mais la plaque garde le premier nom.</p>
+  <div class="album">
+    <div class="carte-album" id="albumMoi">
+      <canvas id="cvAlbum1" width="192" height="108"></canvas>
+      <b id="albumNom"></b>
+      <small id="albumLieu"></small>
+      <p id="albumPlaque"></p>
+    </div>
+    <div class="carte-album or">
+      <canvas id="cvAlbum2" width="192" height="108"></canvas>
+      <b>Pont du Gard</b>
+      <small>Vers-Pont-du-Gard (30) · merveille</small>
+      <p><span class="plaque">Restauré par 10 mécènes<br><small>Bâtisseuse, PierreDeTaille, Gargouille… · 18 oct.</small></span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ EN BREF -->
+<section aria-labelledby="t-bref">
+  <h2 id="t-bref">En bref</h2>
+  <ul class="regles">
+    <li>Il faut avoir la commune du monument <b>dans sa collection Terra</b>. Un chantier à la fois.</li>
+    <li>Durées avec 3 ouvriers : <b>petit 6 h, moyen 1 jour, grand 3 jours</b>. Embaucher et mieux s'outiller se paie en points Terra.</li>
+    <li><b>Visiteurs</b> : 10, 25 ou 60 points par jour selon la taille, à récolter, <b>300 au plus par jour</b>.</li>
+    <li><b>Nom gravé</b> : le premier qui restaure un monument y laisse son nom, pour toujours.</li>
+    <li><b>Merveilles</b> : une à la fois pour tout le jeu, environ 20 000 heures de travail. Envoyer son équipe arrête son propre chantier. Les 10 premiers mécènes sont gravés, chaque mécène gagne 20 points par jour.</li>
+    <li>Environ <b>100 monuments</b> à restaurer en V1 : châteaux, cathédrales, abbayes, palais, monuments antiques… Les sites naturels, les stades et les lieux de mémoire restent dans l'album sans chantier.</li>
+    <li>Rien ne change au Front.</li>
+  </ul>
+</section>
+
+</main>
+<script src="moteur.js"></script>
+<script src="dessins.js"></script>
+<script>
+(function () {
+  const nb = function (v) { return Math.round(v).toLocaleString('fr-FR'); };
+  const lent = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // --------------------------------------------------------------- les dessins
+  const INFOS = {
+    chateau: 'Blois, Azay-le-Rideau, Amboise, Chaumont… 17 monuments',
+    fort: 'Vincennes, Pierrefonds, Haut-Kœnigsbourg, Chinon… 14 monuments',
+    palais: 'Élysée, Vaux-le-Vicomte, saline royale… 7 monuments',
+    cathedrale: 'Chartres, Reims, Amiens, Strasbourg, Bourges… 22 monuments',
+    abbaye: 'Cluny, Vézelay, Fontenay, Fontevraud… 15 monuments',
+    antique: 'Maison carrée, théâtre d\'Orange, arènes d\'Arles… 7 monuments',
+    dome: 'Panthéon, Notre-Dame-de-la-Garde… 4 monuments',
+    edifice: 'Arts et Métiers, manufacture de Sèvres… 4 monuments',
+    phare: 'Le Verdon-sur-Mer (33) · son propre dessin',
+    ronchamp: 'Ronchamp (70) · son propre dessin'
+  };
+  const LIEUX = {
+    eiffel: 'Paris 7e', notredame: 'Paris 4e', versailles: 'Versailles (78)', arc: 'Paris 17e', mont: 'Le Mont-Saint-Michel (50)',
+    gard: 'Vers-Pont-du-Gard (30)', chambord: 'Chambord (41)', carcassonne: 'Carcassonne (11)', millau: 'Millau (12)', chenonceau: 'Chenonceaux (37)'
+  };
+  let vueDessin = 'chateau', vuePct = 100;
+  const vueScene = creerScene();
+  const vignettes = [];
+  function dessinerStatique(cv, nom, pct) {
+    const ctx = cv.getContext('2d');
+    ctx.imageSmoothingEnabled = false;
+    creerScene()(ctx, DESSINS[nom], { pct: pct, fini: pct >= 1, ouvriers: pct >= 1 ? 0 : 4, visiteurs: 0 }, 1300);
+  }
+  function remplir(id, liste, merv) {
+    const zone = document.getElementById(id);
+    liste.forEach(function (nom) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'vig' + (merv ? ' merv' : '');
+      b.setAttribute('aria-pressed', String(nom === vueDessin));
+      const cv = document.createElement('canvas'); cv.width = PW; cv.height = PH;
+      b.appendChild(cv);
+      const t = document.createElement('b'); t.textContent = DESSINS[nom].nom; b.appendChild(t);
+      const s = document.createElement('small'); s.textContent = merv ? 'Merveille · ' + LIEUX[nom] : INFOS[nom]; b.appendChild(s);
+      b.addEventListener('click', function () {
+        vueDessin = nom;
+        vignettes.forEach(function (v) { v.b.setAttribute('aria-pressed', String(v.nom === nom)); });
+        majVue();
+        document.getElementById('cvVue').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      zone.appendChild(b);
+      dessinerStatique(cv, nom, 1);
+      vignettes.push({ nom: nom, b: b, cv: cv });
+    });
+  }
+  remplir('vigTypes', ORDRE_TYPES, false);
+  remplir('vigMerv', ORDRE_MERVEILLES, true);
+  function majVue() {
+    const d = DESSINS[vueDessin];
+    document.getElementById('vueTitre').innerHTML = d.nom + '<small>' + (d.merveille ? 'Merveille · ' + LIEUX[vueDessin] : INFOS[vueDessin]) + '</small>';
+    document.getElementById('vuePct').textContent = vuePct + ' %';
+    document.getElementById('vueLib').textContent = vuePct >= 100 ? 'RESTAURÉ' : 'CHANTIER';
+    document.getElementById('vueVal').textContent = vuePct + ' %';
+  }
+  document.getElementById('vueCurseur').addEventListener('input', function (e) { vuePct = Number(e.target.value); majVue(); });
+  majVue();
+
+  // --------------------------------------------------------------- ton chantier
+  const CHOIX = [
+    { id: 'carree', nom: 'Maison carrée', lieu: 'Nîmes (30)', dessin: 'antique', taille: 'Petit', travail: 18, pts: 10 },
+    { id: 'azay', nom: 'Château d\'Azay-le-Rideau', lieu: 'Azay-le-Rideau (37)', dessin: 'chateau', taille: 'Moyen', travail: 72, pts: 25 },
+    { id: 'chartres', nom: 'Cathédrale de Chartres', lieu: 'Chartres (28)', dessin: 'cathedrale', taille: 'Grand', travail: 216, pts: 60 }
+  ];
+  const E = {
+    solde: 1240, ouvriers: 3, outils: 1, courant: 0, fait: 0, inaugure: false, faits: [],
+    restaures: [{ nom: 'Abbaye de Fontenay', pts: 10 }, { nom: 'Château de Blois', pts: 25 }],
+    aRecolter: 12, jour: 0, heure: 0,
+    merv: { fait: 7600, total: 20000, moi: 0, envoye: false, finie: false }
+  };
+  const rythme = function () { return E.ouvriers * (1 + 0.15 * (E.outils - 1)); };
+  const coutOuvrier = function () { return E.ouvriers >= 8 ? 0 : Math.round(150 * Math.pow(1.5, E.ouvriers - 3) / 5) * 5; };
+  const coutOutils = function () { return E.outils >= 5 ? 0 : 200 * Math.pow(2, E.outils - 1); };
+  function duree(h) {
+    if (h <= 0) return '0 h';
+    const j = Math.floor(h / 24), hh = Math.round(h % 24);
+    return j ? j + ' j ' + hh + ' h' : Math.max(1, Math.round(h)) + ' h';
+  }
+  const choixZone = document.getElementById('choix');
+  CHOIX.forEach(function (c, i) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'puce';
+    b.textContent = c.nom + ' · ' + c.taille.toLowerCase();
+    b.addEventListener('click', function () { if (E.courant === i) return; E.courant = i; E.fait = 0; E.inaugure = E.faits.indexOf(i) >= 0; if (E.inaugure) E.fait = c.travail; maj(); });
+    choixZone.appendChild(b);
+    c.bouton = b;
+  });
+  const segs = document.getElementById('segs'), segsMerv = document.getElementById('segsMerv');
+  for (let k = 0; k < 24; k++) { segs.appendChild(document.createElement('span')); segsMerv.appendChild(document.createElement('span')); }
+  document.getElementById('inaugurer').addEventListener('click', function () {
+    const c = CHOIX[E.courant];
+    E.inaugure = true; E.faits.push(E.courant);
+    E.restaures.push({ nom: c.nom, pts: c.pts, neuf: true });
+    maj();
+  });
+  document.getElementById('recolter').addEventListener('click', function () {
+    const n = Math.floor(E.aRecolter);
+    if (n <= 0) return;
+    E.solde += n; E.jour += n; E.aRecolter -= n;
+    maj();
+  });
+  document.getElementById('embaucher').addEventListener('click', function () { const c = coutOuvrier(); if (!c || E.solde < c) return; E.solde -= c; E.ouvriers++; maj(); });
+  document.getElementById('outils').addEventListener('click', function () { const c = coutOutils(); if (!c || E.solde < c) return; E.solde -= c; E.outils++; maj(); });
+  document.getElementById('envoyer').addEventListener('click', function () { if (E.merv.finie) return; E.merv.envoye = !E.merv.envoye; maj(); });
+  let mervVue = false;
+  document.getElementById('voirMerv').addEventListener('click', function () { mervVue = true; maj(); });
+
+  // les autres mécènes (pseudos inventés pour l'aperçu)
+  const AUTRES = [['Bâtisseuse', 690], ['PierreDeTaille', 640], ['Gargouille', 585], ['Compagnon_du_Tour', 540], ['Mortier', 470],
+    ['Voûte_Bleue', 430], ['Clé_de_voûte', 380], ['Ogive', 330], ['Truelle', 290], ['Rosace', 250], ['Échafaud', 175], ['Pinacle', 120], ['Tailleur', 64], ['Corniche', 31]];
+
+  function maj() {
+    const c = CHOIX[E.courant];
+    const fini = E.fait >= c.travail;
+    CHOIX.forEach(function (x, i) {
+      x.bouton.setAttribute('aria-pressed', String(i === E.courant));
+      x.bouton.textContent = x.nom + ' · ' + (E.faits.indexOf(i) >= 0 ? 'restauré' : x.taille.toLowerCase());
+    });
+    document.getElementById('jeuTitre').innerHTML = c.nom + '<small>' + c.lieu + ' · ' + c.taille.toLowerCase() + '</small>';
+    const pct = Math.min(1, E.fait / c.travail);
+    document.getElementById('jeuLib').textContent = E.inaugure ? 'VISITEURS' : 'CHANTIER';
+    document.getElementById('jeuVal').textContent = E.inaugure ? '+' + c.pts + '/j' : Math.floor(pct * 100) + ' %';
+    Array.prototype.forEach.call(segs.children, function (s, k) { s.className = 'seg' + (k < Math.floor(pct * 24 + 1e-9) ? (fini ? ' vert' : ' on') : ''); });
+    const voile = document.getElementById('voileJeu');
+    voile.hidden = !(fini && !E.inaugure);
+    if (fini && !E.inaugure) {
+      document.getElementById('voileTexte').innerHTML = 'Tu es le premier à le restaurer : ton nom est gravé pour toujours. Il rapportera <b>' + c.pts + ' points</b> par jour.';
+      document.getElementById('voilePlaque').innerHTML = 'Restauré en premier par Toi<br><small>' + c.nom + ' · aujourd\'hui</small>';
+    }
+    document.getElementById('ligneFin').textContent = E.merv.envoye && !fini ? 'Chantier en pause : ton équipe est sur Notre-Dame' : (fini ? 'Chantier terminé' : 'Fin estimée dans ' + duree((c.travail - E.fait) / rythme()));
+    document.getElementById('ligneRythme').textContent = 'Travail : ' + nb(Math.min(E.fait, c.travail)) + ' / ' + nb(c.travail) + ' h · ' + rythme().toFixed(2).replace('.', ',') + ' h par heure';
+    // visiteurs
+    const total = E.restaures.reduce(function (s, r) { return s + r.pts; }, 0) + (E.merv.finie && E.merv.moi >= 24 ? 20 : 0);
+    document.getElementById('aRecolter').textContent = '+' + Math.floor(E.aRecolter);
+    document.getElementById('listeV').innerHTML = E.restaures.map(function (r) { return '<div><span>' + r.nom + (r.neuf ? ' ✨' : '') + '</span><b>+' + r.pts + ' / jour</b></div>'; }).join('')
+      + (E.merv.finie && E.merv.moi >= 24 ? '<div><span>Notre-Dame de Paris (mécène)</span><b>+20 / jour</b></div>' : '');
+    document.getElementById('jaugeJour').style.width = Math.min(100, (E.jour + E.aRecolter) / 3) + '%';
+    document.getElementById('ligneJour').textContent = 'Aujourd\'hui : ' + nb(E.jour + Math.floor(E.aRecolter)) + ' / 300 points · tes monuments rapportent ' + total + ' points par jour';
+    document.getElementById('recolter').disabled = Math.floor(E.aRecolter) <= 0;
+    document.getElementById('recolter').textContent = Math.floor(E.aRecolter) > 0 ? 'Récolter ' + Math.floor(E.aRecolter) + ' points' : 'Rien à récolter pour l\'instant';
+    // équipe
+    document.getElementById('valEquipe').textContent = E.ouvriers + ' ouvriers';
+    document.getElementById('txtEquipe').textContent = 'Outils niveau ' + E.outils + ' : ton équipe fait ' + rythme().toFixed(2).replace('.', ',') + ' heures de travail par heure.';
+    const co = coutOuvrier(), ct = coutOutils();
+    const be = document.getElementById('embaucher'), bo = document.getElementById('outils');
+    be.textContent = co ? 'Embaucher un ouvrier · ' + nb(co) + ' points' : 'Équipe complète';
+    be.disabled = !co || E.solde < co;
+    bo.textContent = ct ? 'Outils niveau ' + (E.outils + 1) + ' (+15 %) · ' + nb(ct) + ' points' : 'Meilleurs outils';
+    bo.disabled = !ct || E.solde < ct;
+    document.getElementById('solde').textContent = nb(E.solde);
+    // album
+    const fait = E.faits.indexOf(E.courant) >= 0;
+    document.getElementById('albumMoi').className = 'carte-album' + (fait ? ' or' : '');
+    document.getElementById('albumNom').textContent = c.nom;
+    document.getElementById('albumLieu').textContent = c.lieu + ' · ' + c.taille.toLowerCase();
+    document.getElementById('albumPlaque').innerHTML = fait ? '<span class="plaque">Restauré en premier par Toi<br><small>aujourd\'hui</small></span>' : '<span style="font-size:13px;color:var(--brume)">Pas encore restauré : sois le premier à y graver ton nom.</span>';
+    dessinerStatique(document.getElementById('cvAlbum1'), c.dessin, 1);
+    // merveille
+    const M = E.merv, pm = Math.min(1, M.fait / M.total);
+    document.getElementById('mervVal').textContent = Math.floor(pm * 100) + ' %';
+    document.getElementById('mervSous').textContent = nb(Math.min(M.fait, M.total)) + ' h sur ' + nb(M.total) + ' h · ' + (AUTRES.length + (M.moi > 0 ? 1 : 0)) + ' équipes';
+    Array.prototype.forEach.call(segsMerv.children, function (s, k) { s.className = 'seg' + (k < Math.floor(pm * 24 + 1e-9) ? (M.finie ? ' vert' : ' on') : ''); });
+    document.getElementById('mesHeures').textContent = nb(M.moi) + ' h';
+    const tous = AUTRES.map(function (a) { return { nom: a[0], h: a[1] }; });
+    if (M.moi > 0) tous.push({ nom: 'Toi', h: M.moi, moi: true });
+    tous.sort(function (a, b) { return b.h - a.h; });
+    const rang = tous.findIndex(function (x) { return x.moi; });
+    document.getElementById('nbMecenes').textContent = tous.filter(function (x) { return x.h >= 24; }).length + ' mécènes';
+    const top = tous.slice(0, 10);
+    if (rang >= 10) top.push(tous[rang]);
+    document.getElementById('mecenes').innerHTML = top.map(function (x) {
+      const r = tous.indexOf(x) + 1;
+      return '<div class="' + (x.moi ? 'moi' : '') + '"><span>' + r + '</span><span>' + x.nom + (r <= 10 ? ' ✦' : '') + '</span><span>' + nb(x.h) + ' h</span></div>';
+    }).join('');
+    const be2 = document.getElementById('envoyer');
+    be2.disabled = M.finie;
+    be2.textContent = M.finie ? 'Merveille restaurée' : (M.envoye ? 'Reprendre mon chantier' : 'Envoyer mon équipe');
+    document.getElementById('txtMerv').innerHTML = M.finie
+      ? (M.moi >= 24 ? 'Tu es mécène de Notre-Dame : <b>+20 points</b> par jour, pour toujours.' + (rang < 10 ? ' Ton nom est gravé parmi les 10 premiers.' : '') : 'Il fallait au moins 24 h de travail pour être mécène.')
+      : (M.envoye ? 'Ton équipe (' + E.ouvriers + ' ouvriers, casques blancs) travaille sur Notre-Dame. <b>Ton chantier est en pause.</b>' + (M.moi < 24 ? ' Encore ' + Math.ceil(24 - M.moi) + ' h pour devenir mécène.' : (rang < 10 ? ' Tu es dans les 10 premiers : ton nom sera gravé.' : ' Tu es mécène.')) : 'Envoie ton équipe aider à restaurer Notre-Dame. Tu reprends ton chantier quand tu veux.');
+    const vm = document.getElementById('voileMerv');
+    vm.hidden = !M.finie || mervVue;
+    if (M.finie) document.getElementById('plaqueMerv').innerHTML = 'Mécènes de Notre-Dame<br><small>' + tous.slice(0, 10).map(function (x) { return x.nom; }).join(', ') + '</small>';
+  }
+
+  // --------------------------------------------------------------- le temps (1 s = 1 h)
+  setInterval(function () {
+    const c = CHOIX[E.courant];
+    if (E.merv.envoye && !E.merv.finie) { E.merv.moi += rythme(); E.merv.fait += rythme(); }
+    else if (E.fait < c.travail) E.fait = Math.min(c.travail, E.fait + rythme());
+    if (!E.merv.finie) { E.merv.fait += 140; if (E.merv.fait >= E.merv.total) { E.merv.fait = E.merv.total; E.merv.finie = true; E.merv.envoye = false; } }
+    const parJour = E.restaures.reduce(function (s, r) { return s + r.pts; }, 0) + (E.merv.finie && E.merv.moi >= 24 ? 20 : 0);
+    E.aRecolter = Math.min(Math.max(0, 300 - E.jour), E.aRecolter + parJour / 24);
+    maj();
+  }, 1000);
+
+  // --------------------------------------------------------------- l'animation
+  const scJeu = creerScene(), scMerv = creerScene();
+  const CASQUES = ['#E07A2E', '#4C9BE8', '#C45BD6', '#2BB673', '#E5484D', '#E8C547', '#1ABC9C', '#E07A2E', '#4C9BE8', '#2BB673', '#C45BD6', '#E8C547'];
+  let derniere = 0;
+  function boucle(t) {
+    requestAnimationFrame(boucle);
+    if (t - derniere < (lent ? 1000 : 83)) return;
+    derniere = t;
+    // la visionneuse
+    const cv = document.getElementById('cvVue').getContext('2d');
+    cv.imageSmoothingEnabled = false;
+    vueScene(cv, DESSINS[vueDessin], { pct: vuePct / 100, fini: vuePct >= 100, ouvriers: vuePct >= 100 ? 0 : 4, visiteurs: vuePct >= 100 ? 7 : 0 }, t);
+    // le chantier
+    const c = CHOIX[E.courant], cj = document.getElementById('cvJeu').getContext('2d');
+    cj.imageSmoothingEnabled = false;
+    const fini = E.fait >= c.travail;
+    scJeu(cj, DESSINS[c.dessin], { pct: E.fait / c.travail, fini: fini, ouvriers: E.inaugure ? 0 : (E.merv.envoye && !fini ? 0 : E.ouvriers), visiteurs: E.inaugure ? 6 : 0 }, t);
+    // la merveille
+    const M = E.merv, cm = document.getElementById('cvMerv').getContext('2d');
+    cm.imageSmoothingEnabled = false;
+    const casques = CASQUES.slice(0, 9);
+    if (M.envoye) for (let k = 0; k < E.ouvriers; k++) casques.push('#FFFFFF');
+    scMerv(cm, DESSINS.notredame, { pct: M.fait / M.total, fini: M.finie, ouvriers: M.finie ? 0 : casques.length, casques: casques, visiteurs: M.finie ? 10 : 0 }, t);
+  }
+  dessinerStatique(document.getElementById('cvAlbum2'), 'gard', 1);
+  maj();
+  requestAnimationFrame(boucle);
+})();
+</script>
+</body>
+</html>

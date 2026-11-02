@@ -452,54 +452,120 @@ DESSINS.ronchamp = {
 // =============================================================== LES MERVEILLES
 
 // ---------------------------------------------------- tour Eiffel
+// Vraies proportions : 1er étage à 57 m, 2e à 115 m, 3e à 276 m sur 330 m.
+// Le pied est un peu élargi pour qu'elle tienne la scène ; illuminée en or, la nuit.
+const EIFFEL_PROFIL = [[90, 28], [86, 23.5], [82, 19.8], [78, 16.8], [75, 14.8], [72, 12.8], [66, 10.4], [60, 8.6], [57, 7.7],
+  [54, 6.6], [46, 5.2], [38, 4.2], [30, 3.4], [22, 2.8], [15, 2.3], [12, 1.9]];
+function eiffelDemi(y) {
+  const P = EIFFEL_PROFIL;
+  for (let k = 0; k + 1 < P.length; k++) if (y <= P[k][0] && y >= P[k + 1][0]) {
+    const a = P[k], b = P[k + 1], u = (a[0] - y) / (a[0] - b[0]);
+    return a[1] + (b[1] - a[1]) * u;
+  }
+  return 1.5;
+}
 DESSINS.eiffel = {
-  nom: 'Tour Eiffel', merveille: true, sol: { type: 'pave' }, promenade: [6, 182],
+  nom: 'Tour Eiffel', merveille: true, sol: { type: 'pave' }, promenade: [4, 186],
   peindre: function (g) {
     const cx = 96;
-    const P = [[90, 38], [80, 30], [70, 24], [60, 19.5], [50, 15], [42, 12], [34, 9], [26, 6.5], [18, 4.6], [10, 3], [4, 2]];
-    const demi = function (y) {
-      for (let k = 0; k + 1 < P.length; k++) if (y <= P[k][0] && y >= P[k + 1][0]) {
-        const a = P[k], b = P[k + 1], t = (a[0] - y) / (a[0] - b[0]);
-        return a[1] + (b[1] - a[1]) * t;
-      }
-      return 1.5;
-    };
-    for (let y = 4; y < 90; y++) {
-      const w = demi(y + 0.5);
+    for (let y = 12; y < 90; y++) {
+      const w = eiffelDemi(y + 0.5);
       for (let x = Math.floor(cx - w); x <= Math.ceil(cx + w); x++) {
         const dx = x + 0.5 - cx, adx = Math.abs(dx);
         if (adx > w) continue;
-        // la grande arche entre les piliers
-        const ax = dx / 20, ay = (y + 0.5 - 90) / 27;
-        const dansArche = y > 60 && ax * ax + ay * ay < 1;
-        const bordArche = y > 58 && ax * ax + ay * ay < 1.16 && !dansArche;
-        if (dansArche) continue;
-        // jambes : vides entre les montants au pied
-        const epaisseur = y > 62 ? 6 : (y > 36 ? 3.5 : 2.2);
-        if (adx > w - epaisseur || bordArche) { g.px(x, y, adx > w - 1.2 ? 'fer.o' : 'fer'); continue; }
-        // treillis
-        const u = (x - cx + 200) % 4, v = (y + 200) % 4;
-        if (u === v || u === (4 - v) % 4 || (y % 8 === 0)) g.px(x, y, 'treillis');
+        // la grande arche entre les piliers, jusque sous le 1er étage
+        const ax = dx / 16, ay = (y + 0.5 - 90) / 14.5, r = ax * ax + ay * ay;
+        if (y > 75 && r < 1) continue;
+        // entre le 1er et le 2e étage, les piliers restent séparés : un vide en pointe
+        if (y > 57 && y < 72 && adx < (y - 57) * 4.6 / 15) continue;
+        const bordArche = y > 74 && r < 1.22;
+        const bordVide = y > 56 && y < 72 && adx < (y - 57) * 4.6 / 15 + 1.3;
+        const epaisseur = y > 75 ? 3.2 : (y > 56 ? 2.2 : (y > 30 ? 1.5 : 1.1));
+        if (adx > w - epaisseur || bordArche || bordVide) { g.px(x, y, adx > w - 0.9 && !bordArche ? 'ferdore.o' : 'ferdore'); continue; }
+        // le treillis : croisillons
+        if ((x - cx + y + 600) % 3 === 0 || (x - cx - y + 600) % 3 === 0) g.px(x, y, 'treillisdore');
       }
     }
-    // plateformes
-    g.rect(cx - 24, 58, 49, 3, 'fer');
-    for (let x = cx - 22; x < cx + 23; x += 3) g.rect(x, 61, 2, 2, 'fer.o');
-    g.rect(cx - 23, 56, 47, 2, 'fer.h');
-    g.rect(cx - 13, 33, 27, 3, 'fer');
-    g.rect(cx - 12, 31, 25, 2, 'fer.h');
-    for (let x = cx - 11; x < cx + 12; x += 3) g.rect(x, 36, 2, 1, 'fer.o');
-    g.rect(cx - 4, 7, 9, 4, 'fer');
-    g.rect(cx - 3, 8, 7, 2, 'vitre');
-    g.rect(cx, 0, 1, 7, 'fer.h');
+    // 1er étage et sa galerie
+    g.rect(cx - 17, 72, 35, 4, 'ferdore');
+    for (let x = cx - 15; x < cx + 16; x += 3) g.rect(x, 73, 2, 2, 'vitre');
+    g.rect(cx - 18, 71, 37, 1, 'ferdore.h');
+    // 2e étage
+    g.rect(cx - 10, 55, 21, 3, 'ferdore');
+    for (let x = cx - 8; x < cx + 9; x += 3) g.rect(x, 56, 2, 1, 'vitre');
+    g.rect(cx - 11, 54, 23, 1, 'ferdore.h');
+    // 3e étage, campanile et antenne
+    g.rect(cx - 4, 12, 9, 2, 'ferdore');
+    g.rect(cx - 2, 7, 5, 5, 'ferdore');
+    g.rect(cx - 1, 8, 3, 3, 'vitre');
+    g.rect(cx - 2, 6, 5, 1, 'ferdore.h');
+    g.rect(cx, 0, 1, 6, 'ferdore.h');
+  },
+  // Paris, au pied de la tour : immeubles haussmanniens, toits d'ardoise, fenêtres allumées
+  fond: function (ctx) {
+    // les toits de Paris, loin à l'horizon
+    let x = 0, k = 0;
+    while (x < PW) {
+      const w = 6 + Math.floor(bruit(k, 1) * 9), h = 4 + Math.floor(bruit(k, 2) * 5);
+      const haut = SOL - h;
+      for (let y = haut; y < SOL; y++) for (let i = x; i < x + w && i < PW; i++) {
+        let c;
+        if (y < haut + 2) c = (i === x || i === x + w - 1) ? '#1B2230' : (((i + y) & 1) ? '#333B4C' : '#2D3444');
+        else {
+          const fen = (i - x) % 2 === 1 && (y - haut) % 2 === 0 && i < x + w - 1 && bruit(i, y) < 0.5;
+          c = fen ? '#FFD86B' : (i === x ? '#323A4A' : '#3D4658');
+        }
+        ctx.fillStyle = c; ctx.fillRect(i, y, 1, 1);
+      }
+      if (bruit(k, 3) < 0.5) { ctx.fillStyle = '#232A38'; ctx.fillRect(x + 2, haut - 1, 1, 1); }
+      x += w; k++;
+    }
+    // le dôme des Invalides, au loin
+    for (let y = 0; y < 9; y++) for (let i = -5; i <= 5; i++) {
+      const r = i * i / 25 + (y - 8) * (y - 8) / 64;
+      if (r > 1) continue;
+      ctx.fillStyle = y < 3 ? '#E8C25A' : (i > 1 ? '#3B4457' : '#4C566A');
+      ctx.fillRect(160 + i, SOL - 14 + y, 1, 1);
+    }
+    ctx.fillStyle = '#4C566A'; ctx.fillRect(155, SOL - 6, 11, 6);
+    ctx.fillStyle = '#E8C25A'; ctx.fillRect(160, SOL - 17, 1, 3);
+    // les arbres du Champ-de-Mars, au pied
+    for (let k2 = 0; k2 < 16; k2++) {
+      const ax = 4 + k2 * 12 + Math.floor(bruit(k2, 2) * 4);
+      if (ax > 62 && ax < 130) continue;
+      for (let dy = 0; dy < 4; dy++) for (let dx = -2; dx <= 2; dx++) {
+        if (dx * dx + (dy - 1.5) * (dy - 1.5) * 1.8 > 5) continue;
+        ctx.fillStyle = dx > 0 ? '#1F4A2A' : (bruit(ax + dx, dy) < 0.4 ? '#3E7A3E' : '#2F6233');
+        ctx.fillRect(ax + dx, SOL - 4 + dy, 1, 1);
+      }
+    }
   },
   deco: function (ctx, t, etat) {
     if (!etat.fini) return;
-    // le scintillement, le soir
-    for (let k = 0; k < 18; k++) {
-      if (bruit(k, Math.floor(t / 140)) > 0.55) continue;
-      const y = 6 + bruit(k, 3) * 80, x = 96 + (bruit(k, 4) - 0.5) * (y > 60 ? 60 : y > 34 ? 30 : 12);
-      ctx.fillStyle = '#FFFFFF'; ctx.fillRect(Math.round(x), Math.round(y), 1, 1);
+    // le phare du sommet balaie le ciel : un pinceau qui s'élargit et s'éteint en s'éloignant
+    const a = (t / 2600) % 2;
+    const sens = a < 1 ? 1 : -1, long = Math.abs(Math.sin(a * Math.PI)) * 92;
+    const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+    for (let k = 0; k < long; k++) {
+      const x = 96 + sens * (3 + k);
+      if (x < 0 || x >= PW) break;
+      const yc = 9.5 - k * 0.06, demi = 0.7 + k * 0.04, f = 1 - Math.pow(k / long, 1.7);
+      for (let y = Math.floor(yc - demi); y <= Math.ceil(yc + demi); y++) {
+        const bord = Math.min(1, Math.abs(y + 0.5 - yc) / demi);
+        const v = f * (1 - bord * 0.7);
+        if (v * 16 <= BAYER[(y & 3) * 4 + (x & 3)]) continue;
+        ctx.fillStyle = v > 0.55 ? '#FFF6D0' : '#FFE29A';
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+    // le scintillement, au début de chaque heure
+    if (Math.floor(t / 6000) % 2 === 0) {
+      for (let k = 0; k < 26; k++) {
+        if (bruit(k, Math.floor(t / 120)) > 0.5) continue;
+        const y = 13 + Math.floor(bruit(k, 3) * 76), w = eiffelDemi(y + 0.5);
+        const x = Math.round(96 + (bruit(k, 4) * 2 - 1) * (w - 1));
+        ctx.fillStyle = '#FFFFFF'; ctx.fillRect(x, y, 1, 1);
+      }
     }
   }
 };

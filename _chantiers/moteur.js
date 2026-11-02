@@ -37,6 +37,8 @@ matiere('cuivre', ['#B8F0DA', '#86D3B6', '#5EB596', '#438F75', '#2F6B56', '#1F4A
 matiere('or', ['#FFF6C2', '#FFE27A', '#F5C33B', '#D49A17', '#A9740C', '#7A5106'], '#4D3203', 'or', { z: 2 });
 matiere('fer', ['#C8A47E', '#A8845E', '#8B6946', '#6E5135', '#543C27', '#3B2A1B'], '#24180E', 'lisse');
 matiere('treillis', ['#C8A47E', '#A8845E', '#8B6946', '#6E5135', '#543C27', '#3B2A1B'], '#24180E', 'plat', { contour: false });
+matiere('ferdore', ['#FFF3C8', '#FFD98A', '#F4B651', '#D78F2C', '#A9691D', '#744612'], '#4A2A08', 'lisse');
+matiere('treillisdore', ['#FFE3A0', '#F6C063', '#E3A23B', '#C27F24', '#94601A', '#664010'], '#5A3A0E', 'plat', { contour: false });
 matiere('acier', ['#FFFFFF', '#EEF2F7', '#D6DEE8', '#B6C2D0', '#93A0B2', '#6C788B'], '#3E4858', 'lisse');
 matiere('cable', ['#E9EEF4', '#D6DEE8', '#C2CCD8', '#A9B5C4', '#8E9AAB', '#6E7A8C'], '#6E7A8C', 'plat', { contour: false });
 matiere('blanc', ['#FFFFFF', '#F4F1EA', '#E2DDD1', '#C8C1B1', '#A69F8D', '#807A6A'], '#3F3C37', 'enduit');
@@ -331,6 +333,7 @@ function creerScene() {
     const sol = d.sol || { type: 'herbe' };
     ctx.clearRect(0, 0, PW, PH);
     vis.fill(null);
+    if (d.fond) d.fond(ctx, t, etat);
     const p = Math.max(0, Math.min(1, etat.pct));
     const bas = SOL + (d.fondation || 0);
     const niveau = bas - p * (bas - prep.haut);

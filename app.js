@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ceb67bfb32d9';
+const VERSION_JEU = 'e9c4991423c0';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10938,7 +10938,7 @@ function blocGarnisonFiche(code){
     <div class="gn-btns">
       <button data-pc="gn-plus" data-n="1" ${g.energie >= 10 ? 'disabled' : ''}>+1 ${ICONE_ENERGIE}</button>
       <button data-pc="gn-plus" data-n="5" ${g.energie >= 10 ? 'disabled' : ''}>+5 ${ICONE_ENERGIE}</button>
-      <button class="sec ${armee ? 'arme' : ''}" data-pc="gn-retirer">${armee ? `Confirmer (+${Math.floor(g.energie / 2)})` : 'Retirer'}</button>
+      <button class="sec ${armee ? 'arme' : ''}" data-pc="gn-retirer">${armee ? `Confirmer (+${Math.floor(g.energie * 3 / 4)})` : 'Retirer'}</button>
     </div></div>`;
 }
 
@@ -24088,7 +24088,7 @@ function mfoAide(){
         <ul class="mfo-aide"><li>Elle se recharge seule : +1 toutes les 10 minutes, jusqu'au maximum.</li>
           <li>Les quêtes du jour : +5 chacune, jusqu'à 50 par jour.</li>
           <li>Tes légendaires tenues depuis 24 h : +2 chacune par jour, à récolter (10 au plus).</li>
-          <li>Retirer une garnison rend la moitié de son énergie.</li></ul>
+          <li>Retirer une garnison rend les trois quarts de son énergie.</li></ul><!-- patch312 -->
       </div>`;
     document.body.appendChild(f);
     f.addEventListener('click', (e) => { if(e.target.closest('[data-mfoa="fermer"]')){ f.hidden = true; document.body.classList.remove('obj-ouverte'); } });

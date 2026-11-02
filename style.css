@@ -8470,3 +8470,13 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .mdb-note{ font-size:.74rem; color:#8EA2BF; line-height:1.45; margin:10px 2px 0; }
 .mdb-note b{ color:#C9D3E3; }
 .mdb-vide{ border:1px dashed rgba(169,188,212,.3); border-radius:14px; padding:16px 14px; color:#A9BCD4; font-size:.86rem; line-height:1.5; }
+
+/* patch305 : annuler un bâtiment en construction */
+.bt-annuler{ display:flex; align-items:center; justify-content:center; gap:6px; width:100%; margin-top:9px; padding:8px 10px; border-radius:9px;
+  font:inherit; font-size:.78rem; font-weight:600; color:#FFD9B8; background:rgba(10,22,40,.35); border:1px dashed rgba(232,131,58,.55); cursor:pointer; }
+.bt-annuler .lingot{ width:13px; height:8px; }
+.bt-annuler.arme{ color:#fff; background:rgba(229,72,77,.22); border:1px solid rgba(229,72,77,.7); }
+.bt-annuler:disabled{ opacity:.5; cursor:default; }
+.bt-annuler-note{ font-size:.7rem; color:#B9A08C; margin:5px 0 0; text-align:center; }
+.btl .gl-r.bt-ann{ padding:6px 10px; font-size:.74rem; border-color:rgba(232,131,58,.55); background:rgba(232,131,58,.14); }
+.btl .gl-r.bt-ann.arme{ background:rgba(229,72,77,.3); border-color:rgba(229,72,77,.8); }

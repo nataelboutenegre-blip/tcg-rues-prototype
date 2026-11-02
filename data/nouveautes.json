@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-11-02",
+    "nouveautes": [
+      "🏗 Bâtiments : 6 h de construction au lieu de 24 h, et tu peux annuler un bâtiment en construction (ses lingots te sont rendus en entier)"
+    ],
+    "correctifs": []
+  },
+  {
     "date": "2026-11-01",
     "nouveautes": [
       "⚔ Front : les combats rapportent des lingots (+2 par conquête, +1 par défense réussie, 10 au plus par jour)"

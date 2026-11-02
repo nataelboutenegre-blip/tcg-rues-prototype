@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'eef7b21b5bf1';
+const VERSION_JEU = '7a5e3175d174';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3920,6 +3920,14 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
     return;
   }
   if(quoi === 'assaut'){ lancerAssaut(code); return; }
+  if(quoi === 'bt-annuler'){   // patch305 : deux temps aussi
+    const t = b.dataset.bt;
+    if(btArme !== code + '|annuler-' + t){ btArme = code + '|annuler-' + t; const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); return; }
+    btArme = null;
+    b.disabled = true;
+    batimentAnnuler(code, t);
+    return;
+  }
   if(quoi === 'bt-construire'){   // patch243 : deux temps, comme le retrait de garnison
     const t = b.dataset.bt;
     if(btArme !== code + '|' + t){ btArme = code + '|' + t; const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); return; }
@@ -9900,6 +9908,12 @@ function initModes(){
     bt.hidden = true;
     g.insertAdjacentElement('beforebegin', bt);
     bt.addEventListener('click', (e) => {
+      const an = e.target.closest('[data-bt-annuler]');   // patch305 : annuler un chantier, en deux temps
+      if(an){
+        const k = an.dataset.btAnnuler + '|annuler-' + an.dataset.btType;
+        if(btArme !== k){ btArme = k; renderBatimentsBloc(); return; }
+        btArme = null; an.disabled = true; batimentAnnuler(an.dataset.btAnnuler, an.dataset.btType); return;
+      }
       const pr = e.target.closest('[data-bt-prep]');   // patch260 : préparer une bombe, en deux temps
       if(pr){
         if(btArme !== 'centre|prep'){ btArme = 'centre|prep'; renderBatimentsBloc(); return; }
@@ -10011,6 +10025,35 @@ function prochainLingotMs(){
 const btPretDans = (b) => Math.max(0, new Date(b.pret_le).getTime() - Date.now());
 const mesForteresses = () => (BATIMENTS && BATIMENTS.forteresses) || [];
 const btReglage = (cle, defaut) => (BATIMENTS && BATIMENTS.reglages && BATIMENTS.reglages[cle] != null) ? BATIMENTS.reglages[cle] : defaut;
+// patch305 : annuler un bâtiment en construction (s2-73), ses lingots sont rendus en entier
+function btRembourse(type, code){
+  if(type === 'forteresse') return Number(btReglage('forteresse_prix', 20)) || 0;
+  if(type === 'centre') return Number(btReglage('centre_prix', 40)) || 0;
+  if(type === 'fonderie') return mesFonderies().findIndex(x => x.code === code) > 0 ? Number(btReglage('fonderie2_prix', 30)) || 0 : 0;   // la 1re est gratuite
+  return 0;
+}
+const btSousAssaut = (code) => typeof serieMienne === 'function' && serieMienne(code) > 0;
+const btNom = (type) => type === 'fonderie' ? 'Fonderie' : type === 'centre' ? 'Centre de recherche' : 'Forteresse';
+function btAnnulerHtml(code, type){
+  if(btSousAssaut(code)) return '<button type="button" class="bt-annuler" disabled>Annulation impossible pendant l’assaut</button>';
+  const r = btRembourse(type, code), a = btArme === code + '|annuler-' + type, le = type === 'centre' ? 'le' : 'la';
+  const attrs = `data-pc="bt-annuler" data-bt="${type}" data-bt-annuler="${echapperTexte(code)}" data-bt-type="${type}"`;
+  return `<button type="button" class="bt-annuler${a ? ' arme' : ''}" ${attrs}>${a
+      ? (r ? `Confirmer : annuler et récupérer ${r} ${ICONE_LINGOT}` : 'Confirmer : annuler la construction')
+      : `Annuler la construction${r ? ` · ${r} ${ICONE_LINGOT} rendus` : ''}`}</button>`
+    + (a ? `<p class="bt-annuler-note">Pour ${le} mettre ailleurs : annule, puis construis-${le} sur une autre commune (${btReglage('construction_h', 6)} h).</p>` : '');
+}
+async function batimentAnnuler(code, type){
+  const nom = btNom(type);
+  const { data, error } = await sb.rpc('batiment_annuler', { p_code: code, p_type: type });
+  if(error) notifier({ type: 'erreur', titre: nom, texte: messageLisible(error.message) });
+  else {
+    const r = Number(data && data.rembourse) || 0;
+    notifier({ type: 'succes', titre: `${nom} annulé${type === 'centre' ? '' : 'e'}`, texte: r ? `${r} lingots rendus.` : 'Tu peux la construire ailleurs.' });
+  }
+  await chargerBatiments();
+  if(panneauCommune === code && collectionMap.get(code)){ const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); }
+}
 
 // sur la fiche : ce qui est construit ici
 function blocBatimentsEtat(code, c){
@@ -10027,6 +10070,7 @@ function blocBatimentsEtat(code, c){
       <div class="bt-barre" style="grid-template-columns:repeat(${max},1fr)">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'p' : ''}"></i>`).join('')}</div>
       <p class="bt-txt">${prete ? `<b>+${B.production} lingots par jour</b>${mesFonderies().length > 1 ? ' (réserve partagée avec ton autre Fonderie)' : ''}, jusqu’à ${max} en réserve${pr ? ` · prochain dans ${formatDuree(pr)}` : ''}.` : `<b>En construction</b> : prête dans ${formatDuree(btPretDans(ici))}.`}
         Visible de tous : si on te prend ${echapperHtml(c.nom)}, la Fonderie est détruite et l’attaquant pille ${Math.round(btReglage('pillage', 50) / Math.max(1, mesFonderies().length))} % de ta réserve.</p>
+      ${prete ? '' : btAnnulerHtml(code, 'fonderie')}
     </div>`;
   }
   const fort = mesForteresses().find(x => x.code === code);
@@ -10035,6 +10079,7 @@ function blocBatimentsEtat(code, c){
     html += `<div class="bt bt-fort">
       <div class="bt-haut">${ICONE_FORTERESSE}Forteresse <b>${prete ? 'active' : 'prête dans ' + formatDuree(btPretDans(fort))}</b></div>
       <p class="bt-txt"><b>−${btReglage('forteresse_defense', 15)} %</b> aux chances des attaquants ici, et <b>+${btReglage('forteresse_appui', 5)} %</b> à tes attaques à moins de ${btReglage('rayon_km', 20)} km.</p>
+      ${prete ? '' : btAnnulerHtml(code, 'forteresse')}
     </div>`;
   }
   const ce = B.centre && B.centre.code === code ? B.centre : null;   // patch260
@@ -10043,6 +10088,7 @@ function blocBatimentsEtat(code, c){
     html += `<div class="bt bt-centre">
       <div class="bt-haut">${ICONE_CENTRE}Centre de recherche <b>${!pret ? 'prêt dans ' + formatDuree(btPretDans(ce)) : P ? (niv ? 'bombe niveau ' + niv : 'bombe en préparation') : 'prêt'}</b></div>
       <p class="bt-txt">${ce.devoile ? '<b>Dévoilé</b> : tout le monde le voit sur la carte.' : 'Secret : les autres ne le voient pas sur la carte.'} Si on te prend ${echapperHtml(c.nom)}, il est détruit${P ? ' et ta bombe est perdue' : ''}. Tout se gère dans Défendre.</p>
+      ${pret ? '' : btAnnulerHtml(code, 'centre')}
     </div>`;
   }
   return html;
@@ -10051,7 +10097,7 @@ function blocBatimentsEtat(code, c){
 function blocBatimentsActions(code, c){
   const B = BATIMENTS;
   if(!B) return '';
-  const h = btReglage('construction_h', 24);
+  const h = btReglage('construction_h', 6);
   const arme = (t) => btArme === code + '|' + t;
   const boutons = [];
   const nF = mesFonderies().length, maxNF = btReglage('fonderies_max', 1);
@@ -10081,7 +10127,7 @@ async function batimentConstruire(code, type){
   const nom = type === 'fonderie' ? 'Fonderie' : type === 'centre' ? 'Centre de recherche' : 'Forteresse';   // patch260
   const { error } = await sb.rpc('batiment_construire', { p_code: code, p_type: type });
   if(error) notifier({ type: 'erreur', titre: nom, texte: messageLisible(error.message) });
-  else notifier({ type: 'succes', titre: nom + ' en construction', texte: `Prête dans ${btReglage('construction_h', 24)} h.` });
+  else notifier({ type: 'succes', titre: nom + ' en construction', texte: `Prête dans ${btReglage('construction_h', 6)} h.` });
   await chargerBatiments();
   if(panneauCommune === code && collectionMap.get(code)){ const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); }
 }
@@ -10098,18 +10144,27 @@ function renderBatimentsBloc(){
   const forts = mesForteresses();
   const maxF = btReglage('forteresse_max', 3), prix = btReglage('forteresse_prix', 20);
   const etat = (b) => btPretDans(b) <= 0 ? '<span class="btl-etat ok">Active</span>' : `<span class="btl-etat cours">prête dans ${formatDuree(btPretDans(b))}</span>`;
-  const ligne = (ic, b, sous) => `<div class="btl"><span class="btl-ic">${ic}</span>
-      <span class="btl-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(b.code)}">${echapperTexte(b.nom)} (${echapperTexte(b.dept)})</button><small>${sous}</small></span>${etat(b)}</div>`;
+  const ligne = (ic, b, sous, type) => {   // patch305 : un chantier se montre avec son temps restant et Annuler
+    let fin = etat(b);
+    if(type && btPretDans(b) > 0){
+      const r = btRembourse(type, b.code), a = btArme === b.code + '|annuler-' + type;
+      sous = `Prête dans ${formatDuree(btPretDans(b))} · ${btSousAssaut(b.code) ? 'assaut en cours : pas d’annulation' : r ? `${r} lingots rendus si tu annules` : 'gratuite, rien à rendre'}`;
+      fin = btSousAssaut(b.code) ? etat(b)
+        : `<button type="button" class="gl-r bt-ann${a ? ' arme' : ''}" data-bt-annuler="${echapperTexte(b.code)}" data-bt-type="${type}">${a ? 'Confirmer ?' : 'Annuler'}</button>`;
+    }
+    return `<div class="btl"><span class="btl-ic">${ic}</span>
+      <span class="btl-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(b.code)}">${echapperTexte(b.nom)} (${echapperTexte(b.dept)})</button><small>${sous}</small></span>${fin}</div>`;
+  };
   el.innerHTML = `<h2>Bâtiments</h2>${alertesBombesHtml()}
     <div class="bt-reserve"><span class="btr-nb">${n}</span>${ICONE_LINGOT}<span class="btr-max">/ ${max} lingots</span>
       <span class="btr-prod">${F ? (btProdTotale() > 0 ? `+${btProdTotale()} par jour<br>${pr ? 'prochain dans ' + formatDuree(pr) : 'réserve pleine'}` : 'Fonderie<br>en construction') : 'Pas encore<br>de Fonderie'}</span></div>
     ${lingotsCombatHtml()}
     <div class="btl-titre">Fonderies <em>${mesFonderies().length} / ${btReglage('fonderies_max', 1)}</em></div>
-    ${F ? mesFonderies().map(x => ligne(ICONE_FONDERIE, x, btPretDans(x) <= 0 ? `Produit ${B.production} lingots par jour` : 'En construction')).join('')
+    ${F ? mesFonderies().map(x => ligne(ICONE_FONDERIE, x, btPretDans(x) <= 0 ? `Produit ${B.production} lingots par jour` : 'En construction', 'fonderie')).join('')
         + (mesFonderies().length < btReglage('fonderies_max', 1) ? `<p class="gl-vide">2e Fonderie : ${btReglage('fonderie2_prix', 30)} lingots. Ouvre une de tes communes sur la carte et choisis « Construire une 2e Fonderie ici ». La réserve monte alors à ${btReglage('fonderie_max2', 45)}.</p>` : '')
         : '<p class="gl-vide">Ouvre une de tes communes sur la carte et choisis « Construire la Fonderie ici ». Elle est gratuite, mais visible de tous : choisis bien l’endroit.</p>'}
     <div class="btl-titre">Forteresses <em>${forts.length} / ${maxF}</em></div>
-    ${forts.map(x => ligne(ICONE_FORTERESSE, x, btPretDans(x) <= 0 ? `−${btReglage('forteresse_defense', 15)} % aux attaquants · +${btReglage('forteresse_appui', 5)} % autour` : 'En construction')).join('')}
+    ${forts.map(x => ligne(ICONE_FORTERESSE, x, btPretDans(x) <= 0 ? `−${btReglage('forteresse_defense', 15)} % aux attaquants · +${btReglage('forteresse_appui', 5)} % autour` : 'En construction', 'forteresse')).join('')}
     ${F && forts.length < maxF ? (n >= prix
         ? `<input type="search" class="bourse-search gn-cherche" id="btCherche" placeholder="Fortifier une de mes communes (${prix} lingots)…" autocomplete="off" value="${echapperTexte(btRecherche)}"><div class="gn-choix" id="btChoix">${btChoixHtml()}</div>`
         : `<p class="gl-vide">Prochaine forteresse : ${prix} lingots (tu en as ${n}).</p>`) : ''}
@@ -10167,7 +10222,7 @@ function centreHtml(){
   if(!ce){
     corps = `<p class="gl-vide">${pc} lingots, il faut ${btReglage('centre_fonderies', 2)} Fonderies. Ouvre une de tes communes sur la carte et choisis « Construire le Centre de recherche ici ». Il est secret : les autres ne le voient pas sur la carte.</p>`;
   } else if(btPretDans(ce) > 0){
-    corps = `<div class="cr">${tete('En construction : prêt dans ' + formatDuree(btPretDans(ce)), badge)}</div>`;
+    corps = `<div class="cr">${tete('En construction : prêt dans ' + formatDuree(btPretDans(ce)), badge)}${btAnnulerHtml(ce.code, 'centre')}</div>`;   // patch305
   } else if(!P){
     const n = lingotsActuels(), a = btArme === 'centre|prep';
     const { H, R } = bombeEtat();

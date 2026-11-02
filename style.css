@@ -8505,3 +8505,26 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .pp-recomp .gift{ font-size:1.1rem; }
 .pp-reclamer{ display:block; width:100%; margin-top:10px; padding:11px 12px; border-radius:10px; border:0; background:#2BD48B; color:#0F1F38; font:inherit; font-weight:800; font-size:.88rem; cursor:pointer; }
 .pp-reclamer:disabled{ opacity:.6; cursor:default; }
+
+/* patch307 : candidatures de clan */
+.cl-nom small.cl-rec{ display:block; font-size:.68rem; font-weight:700; color:#5BE3A6; margin-top:2px; }
+.cl-nom small.cl-rec.ferme{ color:#7B8FAB; }
+.cl-postuler{ padding:10px 12px 12px; border-top:1px solid rgba(169,188,212,.12); background:rgba(10,22,40,.3); }
+.cl-postuler .clan-note{ margin:0; }
+.cl-postuler textarea{ width:100%; box-sizing:border-box; font:inherit; font-size:.82rem; color:#fff; background:rgba(10,22,40,.55); border:1px solid rgba(169,188,212,.25); border-radius:9px; padding:8px 10px; resize:none; height:54px; }
+.cl-postuler textarea::placeholder{ color:#7B8FAB; }
+.cl-postuler-l{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; }
+.cl-postuler-l small{ font-size:.7rem; color:#7B8FAB; }
+.cl-envoyee{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:.78rem; color:#5BE3A6; }
+.cl-envoyee .bq-btn{ font-size:.74rem; padding:6px 12px; }
+.clan-cand{ padding:10px 0; border-top:1px solid rgba(169,188,212,.1); }
+.clan-cand-h{ display:grid; grid-template-columns:34px minmax(0,1fr); gap:10px; align-items:center; }
+.clan-cand-h .av{ width:34px; height:34px; border-radius:50%; display:grid; place-items:center; font-weight:800; color:#fff; background:var(--clan); }
+.clan-cand-h small{ display:block; color:var(--brume,#A9BCD4); font-size:.74rem; margin-top:2px; }
+.clan-cand-msg{ margin:8px 0 0 44px; font-size:.8rem; color:#DCE6F2; background:rgba(10,22,40,.45); border-radius:9px; padding:7px 10px; font-style:italic; overflow-wrap:anywhere; }
+.clan-cand-b{ display:flex; gap:8px; margin:8px 0 0 44px; }
+.clan-cand-b .bq-btn{ font-size:.78rem; padding:7px 14px; }
+.cand-pastille{ display:inline-grid; place-items:center; min-width:18px; height:18px; padding:0 5px; margin-left:6px; border-radius:999px; background:#E5484D; color:#fff; font-size:.68rem; font-weight:800; vertical-align:2px; font-family:inherit; }
+.cl-recrute{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin:10px 0 4px; font-size:.8rem; color:#DCE6F2; }
+.cl-recrute small{ display:block; font-size:.7rem; color:#7B8FAB; }
+.cl-recrute .filter-pill{ white-space:nowrap; }

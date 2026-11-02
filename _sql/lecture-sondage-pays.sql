@@ -21,7 +21,7 @@ select 'réponse' as quoi,
        round(100 * count(*) filter (where actif) / nullif((select na from tot), 0), 1) as pourcent_actifs
   from rep group by choix
 union all
-select 'pays', pays, count(*), round(100 * count(*) / nullif((select count(*) from rep where pays is not null), 0), 1), null
+select 'pays', pays, count(*), round(100 * count(*)::numeric / nullif((select count(*) from rep where pays is not null), 0), 1), null
   from rep where pays is not null group by pays
 union all
 select 'carte', 'réponses', (select count(*) from rep), null, null

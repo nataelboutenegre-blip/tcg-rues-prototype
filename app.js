@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'fd5b1115937a';
+const VERSION_JEU = '7d5a835fb2c2';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -18079,7 +18079,7 @@ function renderClan(){
       ${(c.chef || droits.inviter) && n < 8 ? `<div class="clan-inviter"><input id="clanPseudo" placeholder="Pseudo du joueur à inviter"><button class="bq-btn" id="clanInviter">Inviter</button></div>` : ''}
       ${(c.invites || []).length ? `<p class="clan-note">Invitations en attente : ${c.invites.map(echapperTexte).join(', ')}.</p>` : ''}
       ${blocEchangesClan()}
-      <ul class="clan-regles"><li>Pas d'attaque entre membres : leurs communes n'apparaissent plus dans tes cibles.</li><li>Aucun bonus de combat : le territoire d'un coéquipier ne compte pas dans tes chances.</li><li>Le chef peut nommer 2 bras droits et choisir leurs droits (inviter, exclure, modifier le clan). Si le chef quitte le clan, un bras droit prend sa place.</li><li>Après avoir quitté un clan, il faut attendre 48 h avant d'en rejoindre un autre.</li><li>Pour discuter, demande un salon privé pour ton clan sur le Discord.</li></ul>
+      <ul class="clan-regles"><li>Pas d'attaque entre membres : leurs communes n'apparaissent plus dans tes cibles.</li><li>Aucun bonus de combat : le territoire d'un coéquipier ne compte pas dans tes chances.</li><li>Le chef peut nommer 2 bras droits et choisir leurs droits (inviter, exclure, modifier le clan). Si le chef quitte le clan, un bras droit prend sa place.</li><li>Tu peux changer de clan quand tu veux. Dans un nouveau clan, les échanges s'ouvrent 48 h après ton arrivée.</li><li>Pour discuter, demande un salon privé pour ton clan sur le Discord.</li></ul>
       <button class="bq-btn secondaire" id="clanQuitter" data-prix="0">Quitter le clan</button>
     </div>`;
   }
@@ -18180,7 +18180,7 @@ document.getElementById('panel-clan').addEventListener('click', (e) => {
     return actionClan('clan_exclure', { p_joueur: b.dataset.clanExclure }, 'Joueur exclu');
   }
   if(b.id === 'clanQuitter'){
-    if(!b.classList.contains('confirmer')){ b.classList.add('confirmer'); b.textContent = 'Confirmer : quitter (48 h d\'attente)'; return; }
+    if(!b.classList.contains('confirmer')){ b.classList.add('confirmer'); b.textContent = 'Confirmer : quitter le clan'; return; }   // patch323 : plus d'attente (s2-84)
     return actionClan('clan_quitter', {}, 'Tu as quitté le clan');
   }
 });

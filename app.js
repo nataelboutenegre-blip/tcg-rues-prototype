@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd1718c4ae141';
+const VERSION_JEU = '56f364933793';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4785,6 +4785,8 @@ function composerLot(){
 // defense. Vide si la base ne le connait pas : mieux vaut pas de pastille
 // qu'une pastille vide. Un seul emetteur, pour n'avoir qu'un endroit a
 // changer le jour ou son apparence bouge.
+// patch308 : le département d'une commune, depuis son code INSEE (3 chiffres en outre-mer)
+const depDuCode = (cc) => { cc = String(cc || ''); return cc.startsWith('97') ? cc.slice(0, 3) : cc.slice(0, 2); };
 function badgeDept(dep){
   const d = String(dep || '').trim();
   if(!d) return '';
@@ -20623,7 +20625,7 @@ function ncConstruire(){
       if(nb(m.victoires_consecutives) < 1 || p.sourdine.includes(String(m.commune_code)) || p.sourdine_dep.includes(depM)) continue;
       if(!p.alerte_dep.includes(depM) && sousSeuil(m.commune_code)) continue;
       items.push({ cle: `att|${m.commune_code}|${m.attaquant_id}|${m.victoires_consecutives}`, sec: 'afaire', c: 'danger', i: '⚔️', mode: 'front',
-        t: `<b>${echapperTexte(m.attaquant_pseudo || 'Un joueur')}</b> t'attaque à <button type="button" class="nc-lien" data-nc-voir="${echapperTexte(String(m.commune_code))}" title="Voir sur la carte">${echapperTexte(nomDe(m.commune_code))}<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></button>`,
+        t: `<b>${echapperTexte(m.attaquant_pseudo || 'Un joueur')}</b> t'attaque à <button type="button" class="nc-lien" data-nc-voir="${echapperTexte(String(m.commune_code))}" title="Voir sur la carte">${echapperTexte(nomDe(m.commune_code))}<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></button> ${badgeDept(depDuCode(m.commune_code))}`,   // patch308
         s: `Série ${nb(m.victoires_consecutives)} / 3${m.dernier_round ? ' · ' + ilYA(m.dernier_round) : ''}`,
         a: 'Défendre', rouge: true, sourdine: String(m.commune_code), aller: () => ncAller('front', 'defense') });
     }
@@ -20692,7 +20694,7 @@ function ncConstruire(){
   const limite = Date.now() - 7 * 864e5;
   for(const e of Array.isArray(d.journal) ? d.journal : []){
     if(new Date(e.cree_le).getTime() < limite) continue;
-    const nom = `<b>${echapperTexte(e.commune_nom || '')}</b>`;
+    const nom = `<b>${echapperTexte(e.commune_nom || '')}</b>${e.commune_code ? ' ' + badgeDept(depDuCode(e.commune_code)) : ''}`;   // patch308
     if(e.type === 'conquete' && e.je_suis_cible && p.jeu.perdue)
       items.push({ cle: `j|${e.id}`, sec: 'histo', c: 'histo', i: '🏴', mode: 'front', t: `<b>${echapperTexte(e.acteur_pseudo || 'Un joueur')}</b> t'a pris ${nom}`, s: `${label(e.tier)} · ${ilYA(e.cree_le)}` });
     else if(e.type === 'defense' && e.je_suis_acteur && p.jeu.defense)

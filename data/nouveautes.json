@@ -6,7 +6,9 @@
       "🧭 Nouveaux joueurs : une carte « Premiers pas » (4 étapes, et 1 paquet Terra + 10 lingots à la clé)",
       "🏗 Bâtiments : 6 h de construction au lieu de 24 h, et tu peux annuler un bâtiment en construction (ses lingots te sont rendus en entier)"
     ],
-    "correctifs": []
+    "correctifs": [
+      "Notifications : le numéro du département s’affiche à côté de la commune attaquée (merci Arkhannou)"
+    ]
   },
   {
     "date": "2026-11-01",

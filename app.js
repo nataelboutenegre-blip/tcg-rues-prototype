@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'e9c4991423c0';
+const VERSION_JEU = '8e054dfcfb29';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -891,6 +891,7 @@ async function showGame(session_){
   parrainDeclare.then(parrainageDuJour);
   loadObjectifs();
   chargerPremiersPas();   // patch306
+  chargerSondagePays();   // patch313
   chargerCandidatures(); setInterval(siVisible(chargerCandidatures), 300000);   // patch307
   loadClassement();
   loadJournal();
@@ -24652,3 +24653,63 @@ document.getElementById('premiersPas')?.addEventListener('click', (e) => {
   const b = e.target.closest('[data-pp]');
   if(b) ppAction(b.dataset.pp, b);
 });
+
+// ---------- patch313 : le sondage « d'autres pays ? » (s2-80) ----------
+// Une question, une fois : savoir si ajouter des pays plairait aux joueurs.
+// Pas de récompense, pas de pourcentages montrés (ils influenceraient).
+var SONDAGE_PAYS = null, sdChoix = '', sdPays = '';
+var SD_CHOIX = [['meme', 'Oui, sur la même carte que la France'], ['apart', 'Oui, mais dans un mode à part'],
+                ['non', 'Non, c’est la France qui me plaît'], ['egal', 'Ça m’est égal']];
+var SD_PAYS = [['belgique', '🇧🇪 Belgique'], ['suisse', '🇨🇭 Suisse'], ['luxembourg', '🇱🇺 Luxembourg'], ['italie', '🇮🇹 Italie'],
+               ['espagne', '🇪🇸 Espagne'], ['allemagne', '🇩🇪 Allemagne'], ['royaume-uni', '🇬🇧 Royaume-Uni'], ['quebec', '🇨🇦 Québec'], ['autre', 'Autre']];
+async function chargerSondagePays(){
+  try{
+    const { data, error } = await sb.rpc('sondage_pays_etat');
+    SONDAGE_PAYS = !error && data && data.afficher ? data : null;   // s2-80 pas lancé : rien
+  }catch(e){ SONDAGE_PAYS = null; }
+  renderSondagePays();
+}
+function renderSondagePays(merci){
+  const z = document.getElementById('sondagePays');
+  if(!z) return;
+  if(merci){
+    z.className = 'sd merci'; z.hidden = false;
+    z.innerHTML = `<button type="button" class="sd-x" data-sd="cacher" aria-label="Fermer">✕</button>
+      <div class="sd-t">Merci ! 🙌</div>
+      <p class="sd-q sd-fin">Ta réponse est enregistrée. On partagera les résultats sur le Discord.</p>`;
+    return;
+  }
+  if(!SONDAGE_PAYS){ z.hidden = true; z.innerHTML = ''; return; }
+  const oui = sdChoix === 'meme' || sdChoix === 'apart';
+  z.className = 'sd'; z.hidden = false;
+  z.innerHTML = `<button type="button" class="sd-x" data-sd="fermer" aria-label="Plus tard" title="Plus tard">✕</button>
+    <div class="sd-t">🌍 On a une question pour toi</div>
+    <p class="sd-q">Ajouter d’autres pays à TerraFront, ça te plairait&nbsp;?</p>
+    <p class="sd-sous">Rien n’est décidé : ta réponse nous aide à choisir.</p>
+    <div class="sd-choix">${SD_CHOIX.map(([id, t]) => `<button type="button" data-sd="choix" data-v="${id}" aria-pressed="${sdChoix === id}"><span class="rond"></span>${t}</button>`).join('')}</div>
+    ${oui ? `<div class="sd-pays"><p>Lequel en premier ? (facultatif)</p>
+      <div class="sd-puces">${SD_PAYS.map(([id, t]) => `<button type="button" data-sd="pays" data-v="${id}" aria-pressed="${sdPays === id}">${t}</button>`).join('')}</div></div>` : ''}
+    <button type="button" class="sd-envoyer" data-sd="envoyer"${sdChoix ? '' : ' disabled'}>Envoyer ma réponse</button>
+    <p class="sd-pied">Une seule réponse par compte · anonyme dans les résultats</p>`;
+}
+document.getElementById('sondagePays').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-sd]');
+  if(!b || b.disabled) return;
+  const quoi = b.dataset.sd;
+  if(quoi === 'choix'){ sdChoix = b.dataset.v; if(sdChoix !== 'meme' && sdChoix !== 'apart') sdPays = ''; renderSondagePays(); return; }
+  if(quoi === 'pays'){ sdPays = sdPays === b.dataset.v ? '' : b.dataset.v; renderSondagePays(); return; }
+  if(quoi === 'cacher'){ const z = document.getElementById('sondagePays'); z.hidden = true; z.innerHTML = ''; return; }
+  if(quoi === 'fermer'){
+    SONDAGE_PAYS = null; renderSondagePays();
+    try{ await sb.rpc('sondage_pays_fermer'); }catch(x){}
+    return;
+  }
+  if(quoi === 'envoyer' && sdChoix){
+    b.disabled = true;
+    const { error } = await sb.rpc('sondage_pays_repondre', { p_choix: sdChoix, p_pays: sdPays || null });
+    if(error){ b.disabled = false; notifier({ type: 'erreur', titre: 'Sondage', texte: messageLisible(error.message) }); return; }
+    SONDAGE_PAYS = null;
+    renderSondagePays(true);
+  }
+});
+

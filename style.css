@@ -8653,3 +8653,30 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
   .ch-boite{ padding:2px 7px 4px; }
   .ch-voile{ top:56%; padding:10px 12px; gap:5px; font-size:0.8rem; }
 }
+
+/* patch313 : le sondage « d'autres pays ? » */
+.sd{ position:relative; background:linear-gradient(160deg,rgba(90,169,255,.18),rgba(15,31,56,.6) 55%); border:1px solid rgba(90,169,255,.5);
+  border-radius:14px; padding:14px 14px 12px; color:#fff; margin:0 0 14px; text-align:left; }
+.sd[hidden]{ display:none; }
+.sd-x{ position:absolute; right:6px; top:4px; width:34px; height:34px; border:0; background:none; color:#A9BCD4; font-size:1.05rem; cursor:pointer; }
+.sd-t{ font-family:var(--titre); font-weight:900; font-size:1.1rem; margin-right:30px; }
+.sd-q{ font-size:.92rem; font-weight:600; margin:6px 0 2px; }
+.sd-q.sd-fin{ font-weight:500; }
+.sd-sous{ font-size:.76rem; color:#A9BCD4; margin:0 0 10px; }
+.sd-choix{ display:flex; flex-direction:column; gap:7px; }
+.sd-choix button{ display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:10px 12px; border-radius:10px;
+  border:1px solid rgba(169,188,212,.28); background:rgba(10,22,40,.45); color:#fff; font:inherit; font-size:.86rem; cursor:pointer; }
+.sd-choix .rond{ flex:none; width:18px; height:18px; border-radius:50%; border:2px solid rgba(169,188,212,.5); box-sizing:border-box; }
+.sd-choix button[aria-pressed="true"]{ border-color:#5AA9FF; background:rgba(90,169,255,.16); }
+.sd-choix button[aria-pressed="true"] .rond{ border-color:#5AA9FF; background:radial-gradient(circle,#5AA9FF 45%,transparent 50%); }
+.sd-pays{ margin-top:12px; padding-top:10px; border-top:1px solid rgba(169,188,212,.14); }
+.sd-pays p{ font-size:.8rem; color:#A9BCD4; margin:0 0 7px; }
+.sd-puces{ display:flex; flex-wrap:wrap; gap:6px; }
+.sd-puces button{ padding:6px 11px; border-radius:999px; border:1px solid rgba(169,188,212,.3); background:transparent; color:#fff; font:inherit; font-size:.78rem; cursor:pointer; }
+.sd-puces button[aria-pressed="true"]{ background:#fff; color:#0F1F38; border-color:#fff; }
+.sd-envoyer{ display:block; width:100%; margin-top:12px; padding:11px 12px; border-radius:10px; border:0; background:#5AA9FF; color:#0F1F38;
+  font:inherit; font-weight:800; font-size:.9rem; cursor:pointer; }
+.sd-envoyer:disabled{ opacity:.45; cursor:default; }
+.sd-pied{ font-size:.72rem; color:#A9BCD4; margin:8px 0 0; text-align:center; }
+.sd.merci{ background:linear-gradient(160deg,rgba(43,212,139,.16),rgba(15,31,56,.6) 55%); border-color:rgba(43,212,139,.5); }
+.sd.merci .sd-t{ color:#7EE2B0; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '4ac15c3319dd';
+const VERSION_JEU = 'fd9f281f01b6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3738,7 +3738,7 @@ function rendreAttaque(code, a, siege){
       <button class="pc-fermer" data-pc="retour" aria-label="Retour">&larr;</button>
     </div>
 
-    ${attaqueEnGarnison ? `<div class="gn-badge">${ICONES_PC.bouclier}<span><b>Commune en garnison.</b> Chaque victoire peut être annulée par une défense automatique (1 chance sur 2).</span></div>` : ''}
+    ${attaqueEnGarnison ? `<div class="gn-badge">${ICONES_PC.bouclier}<span><b>Commune en garnison.</b> Une victoire sur deux est annulée par sa défense : la chance affichée en tient déjà compte.</span></div>` : ''}
     ${attaqueEffetBt && attaqueEffetBt.defense > 0 ? `<div class="gn-badge bt-badge">${ICONE_FORTERESSE}<span><b>Forteresse.</b> −${attaqueEffetBt.defense} % à tes chances sur cette commune.</span></div>` : ''}
     ${attaqueEffetBt && attaqueEffetBt.appui > 0 ? `<p class="bt-appui">${ICONE_FORTERESSE}<span>+${attaqueEffetBt.appui} % grâce à ta forteresse${attaqueEffetBt.appui_de ? ' de <b>' + echapperHtml(attaqueEffetBt.appui_de) + '</b>' : ''}</span></p>` : ''}
     ${attaqueEffetBt && attaqueEffetBt.bombe > 0 ? `<p class="bt-appui bt-bombe"><span class="bt-bombe-ic">💥</span><span>+${attaqueEffetBt.bombe} % : zone bombardée${attaqueEffetBt.bombe_sur ? ' (<b>' + echapperHtml(attaqueEffetBt.bombe_sur) + '</b>)' : ''}</span></p>` : ''}

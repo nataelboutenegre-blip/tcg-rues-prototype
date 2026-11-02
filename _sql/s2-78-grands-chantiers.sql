@@ -221,6 +221,21 @@ begin
   return coalesce(t, '[]'::jsonb) ? p_uid::text;
 end; $f$;
 
+-- combien de comptes testeurs (pour le contrôle : il en faut au moins un pour essayer)
+create or replace function public.chantiers_nb_testeurs()
+ returns integer language plpgsql stable security definer set search_path to 'public' as $f$
+declare
+  t jsonb;
+  g jsonb := chantiers_reglages();
+begin
+  begin
+    execute 'select public.euros_reglage(''testeurs'')' into t;
+  exception when others then t := null;
+  end;
+  return coalesce(case when jsonb_typeof(t) = 'array' then jsonb_array_length(t) end, 0)
+       + coalesce(case when jsonb_typeof(g->'testeurs') = 'array' then jsonb_array_length(g->'testeurs') end, 0);
+end; $f$;
+
 -- heures de travail par heure
 create or replace function public.chantiers_rythme(p_ouvriers integer, p_outils integer)
  returns numeric language sql immutable as $f$
@@ -680,6 +695,7 @@ end; $f$;
 -- ---------------------------------------------------------------------------
 revoke all on function public.chantiers_reglages()                  from public, anon, authenticated;
 revoke all on function public.chantiers_permis(uuid)                from public, anon, authenticated;
+revoke all on function public.chantiers_nb_testeurs()               from public, anon, authenticated;
 revoke all on function public.chantiers_rythme(integer, integer)    from public, anon, authenticated;
 revoke all on function public.chantiers_cout_ouvrier(integer)       from public, anon, authenticated;
 revoke all on function public.chantiers_cout_outils(integer)        from public, anon, authenticated;
@@ -722,12 +738,14 @@ select cm.commune_code, coalesce((public.chantiers_reglages()->>'merveille')::nu
 
 commit;
 
--- contrôle : monuments à restaurer (environ 99), dont 10 merveilles, la
--- merveille ouverte (75104 = Notre-Dame), et l'ouverture (0 = testeurs seulement)
+-- contrôle : monuments à restaurer (environ 99), dont 10 merveilles, les
+-- tailles, la merveille ouverte (75104 = Notre-Dame), l'ouverture (0 = testeurs
+-- seulement) et le nombre de comptes testeurs (au moins 1 pour pouvoir essayer)
 select (select count(*) from public.chantiers_monuments)                               as monuments,
        (select count(*) from public.chantiers_monuments where taille = 'merveille')    as merveilles,
        (select count(*) from public.chantiers_monuments where taille = 'grand')        as grands,
        (select count(*) from public.chantiers_monuments where taille = 'moyen')        as moyens,
        (select count(*) from public.chantiers_monuments where taille = 'petit')        as petits,
        (select commune_code from public.chantiers_merveilles where finie_le is null)   as merveille_ouverte,
-       (select (valeur::jsonb->>'ouvert') from public.config_jeu where cle = 'chantiers') as ouvert;
+       (select (valeur::jsonb->>'ouvert') from public.config_jeu where cle = 'chantiers') as ouvert,
+       public.chantiers_nb_testeurs()                                                  as testeurs;

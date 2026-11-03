@@ -1,5 +1,29 @@
 [
   {
+    "date": "2026-11-03",
+    "nouveautes": [
+      "✨ Terra : les cartes brillantes ! Chaque carte d’un paquet Terra a 1 chance sur 800 de sortir brillante, avec son propre numéro, et elle ne quitte jamais ta collection",
+      "💎 Éclat : sur la fiche d’une carte que tu as en 3 exemplaires, la carte + 2 doublons + 500 TP la font briller pour toujours",
+      "🎨 L’atelier des cartes : finitions, halos, styles et bordures pour tes cartes Terra ; beaucoup se gagnent en jouant (quêtes, départements finis), et chaque carte peut avoir les siens depuis sa fiche",
+      "⚔ Front : la course à la commune ! Quand un joueur prend une commune, les sièges des autres attaquants sur cette commune sont effacés, et la cloche les prévient (idée d’Oshannir)",
+      "🤝 Échanges de clan : 3 par jour avec chaque coéquipier, au lieu de 3 en tout (idée d’Oshannir et Maroli)",
+      "🛡 Clans : plus d’attente pour rejoindre un clan après en avoir quitté un (les échanges s’ouvrent toujours 48 h après ton arrivée)",
+      "🏗 Grands chantiers : chaque monument dit combien d’autres joueurs le restaurent, et si tu peux encore y graver ton nom le premier",
+      "🌌 Aurore : les cartes Aurore retravaillées, avec le nom, le numéro et la rareté bien lisibles (merci Maroli)",
+      "🗺 Territoire : sur téléphone, la légende montre aussi les raretés et les bâtiments ; touche Fonderie, Forteresse ou Centre pour savoir à quoi ils servent",
+      "📍 Survole ou touche un numéro de département pour le voir sur la carte de France, et propose un échange à un coéquipier depuis la fiche de sa commune (idées d’Arkhannou)",
+      "🧭 Premiers pas : la 1re étape t’emmène ouvrir ton premier paquet du Front"
+    ],
+    "correctifs": [
+      "La chance affichée (fiche et liste Combat) tient compte de la garnison de la commune visée",
+      "Combat : les communes de tes coéquipiers ne restent plus dans la liste des cibles (merci Arkhannou)",
+      "Garnison : près du plafond de 60, le bouton prévient et la notification dit l’énergie vraiment récupérée (merci H34VEN)",
+      "Carte postale : le tampon ne cache plus le nom de la commune",
+      "Aurore : le reflet n’apparaît plus qu’en inclinant la carte, et sur ordinateur l’aurore de la fiche reste immobile",
+      "Premiers pas : le bouton « Ouvrir » montre ton paquet prêt au lieu de dire qu’il arrive bientôt"
+    ]
+  },
+  {
     "date": "2026-11-02",
     "nouveautes": [
       "🏗 Terra : les grands chantiers ! Restaure les monuments de ta collection (Collection › Monuments), récolte leurs visiteurs en TP, grave ton nom sur ceux que tu finis en premier, et aide tout le monde à restaurer Notre-Dame",

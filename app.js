@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '501f4fbb42d3';
+const VERSION_JEU = '13d2f8f32329';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9089,6 +9089,13 @@ function coutAttaque(tierId){
 }
 
 // Affiche une duree lisible : "7 min", "2h", "2h45"
+// patch334 : une défense revient toutes les 24 h (s2-93)
+function noteDefensesUtilisees(m){
+  const t = m && m.defense_revient ? new Date(m.defense_revient).getTime() : 0;
+  if(!t) return 'deux défenses utilisées';
+  const reste = t - Date.now();
+  return reste > 0 ? `deux défenses utilisées · une revient dans ${formatDuree(reste)}` : 'une défense revient';
+}
 function formatDuree(ms){
   const totalMin = Math.max(1, Math.ceil(ms / 60000));
   if(totalMin < 60) return `${totalMin} min`;
@@ -9246,7 +9253,7 @@ function renderDefenseLisible(liste){
     }
     let action = '';
     if(v > 0 && !g.bouclier){
-      action = m.defense_utilisee ? '<span class="df-note">deux défenses utilisées</span>'
+      action = m.defense_utilisee ? `<span class="df-note">${noteDefensesUtilisees(m)}</span>`   // patch334
         : (m.attaquant_id ? `<button class="menace-defendre" data-commune="${m.commune_code}" data-attaquant="${m.attaquant_id}" data-nom="${echapperTexte(g.nom)}">${ICONE_BOUCLIER}${coutTexte(SAISON2 ? 1 : coutIntensite(g.tier))}</button>` : '');
     }
     return `<div class="df-att"><span class="menace-serie" title="${v} victoire${v > 1 ? 's' : ''} sur 3">${serie}</span>
@@ -9636,8 +9643,9 @@ async function loadCombat(){
 
   const { data: mesSieges } = await sb
     .from('sieges')
-    .select('commune_code, victoires_consecutives, dernier_round, defense_utilisee')
+    .select('commune_code, victoires_consecutives, dernier_round, defense_utilisee, derniere_defense')   // patch334
     .eq('attacker_id', uid)
+    .then(r => r.error ? sb.from('sieges').select('commune_code, victoires_consecutives, dernier_round, defense_utilisee').eq('attacker_id', uid) : r)
     .then(r => r.error
       ? sb.from('sieges').select('commune_code, victoires_consecutives, dernier_round').eq('attacker_id', uid)
       : r);
@@ -9933,7 +9941,8 @@ function renderCombatGrid(){
       disabled = false;
     }
     if(victoires > 0 && siege && siege.defense_utilisee){
-      note = 'Le défenseur a utilisé ses deux défenses';
+      const rev = siege.derniere_defense ? new Date(siege.derniere_defense).getTime() + 86400000 - now : 0;   // patch334
+      note = 'Le défenseur a utilisé ses deux défenses' + (rev > 0 ? ` (une revient dans ${formatDuree(rev)})` : '');
       noteAlerte = true;
     }
     const ronds = [0, 1, 2].map(i => `<i class="${i < victoires ? 'plein' : ''}"></i>`).join('');
@@ -24332,7 +24341,7 @@ function mfoRendre(){
   const ligneDanger = ({ m, bouclier, p }) => {
     const v = m.victoires_consecutives, t = mfoTier(m.tier);
     const quand = bouclier ? 'en pause (bouclier)' : now < p ? `prochain assaut dans ${formatDuree(p - now)}` : 'peut attaquer maintenant';
-    const action = bouclier ? '' : m.defense_utilisee ? '<span class="mfo-note">deux défenses utilisées</span>'
+    const action = bouclier ? '' : m.defense_utilisee ? `<span class="mfo-note">${noteDefensesUtilisees(m)}</span>`   // patch334
       : m.attaquant_id ? `<button type="button" class="menace-defendre mfo-btn mfo-rouge" data-commune="${echapperTexte(m.commune_code)}" data-attaquant="${echapperTexte(m.attaquant_id)}" data-nom="${echapperTexte(m.nom || '')}">Défendre · 1 ${E}</button>` : '';
     return `<div class="mfo-l"><div><b>${echapperTexte(m.nom || m.commune_code)}</b>${t ? ' · ' + t.label.toLowerCase() : ''}<small>${v} round${v > 1 ? 's' : ''} sur 3 perdu${v > 1 ? 's' : ''} · ${quand}</small></div>${action}</div>`;
   };

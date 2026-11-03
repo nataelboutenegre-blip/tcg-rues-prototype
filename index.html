@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=501f4fbb42d3">
+<link rel="stylesheet" href="style.css?v=13d2f8f32329">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -1346,7 +1346,7 @@
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
           </summary>
           <div class="regle-corps">
-            <p><b>Défendre</b> : quand un joueur gagne un round contre toi, tu peux tenter une défense pour <b>1 énergie</b>, deux fois par attaque. Réussie, l'attaquant perd une victoire.</p>
+            <p><b>Défendre</b> : quand un joueur gagne un round contre toi, tu peux tenter une défense pour <b>1 énergie</b>, deux fois par attaque. Une défense utilisée revient <b>24 h</b> plus tard (deux au plus). Réussie, l'attaquant perd une victoire.</p><!-- patch334 -->
             <p><b>Course à la commune</b> : quand un joueur prend une commune, les sièges des autres attaquants sur cette commune sont effacés. Ils repartent de zéro contre le nouveau propriétaire, et la cloche les prévient.</p><!-- patch326 -->
             <p><b>Garnison</b> : jusqu'à <b>3 communes</b>, où tu déposes de l'énergie (10 au maximum par commune). Quand un attaquant gagne un round, la garnison tente seule une défense : <b>1 chance sur 2</b>, 1 énergie par tentative. Réussie, la victoire ne compte pas.</p>
             <p>Retirer une garnison rend les trois quarts de son énergie. Une défense que tu réussis toi-même sur une commune en garnison y remet <b>3 énergie</b>. L'attaquant voit qu'une commune est en garnison, pas combien elle contient.</p><!-- patch312 -->
@@ -1549,7 +1549,7 @@
             <p>Quand un joueur gagne un round contre une de tes communes, une <b>pastille rouge</b> apparaît sur l'onglet Défense, et la commune s'affiche dans <b>Tes communes attaquées</b>.</p>
             <ul>
               <li><b>Défendre</b> retire une victoire à l'attaquant si ça réussit. Comme pour l'attaque, tu choisis ton engagement — et <b>tu défends chez toi</b> : toutes tes communes voisines comptent pour toi.</li>
-              <li>Tu as droit à <b>deux défenses par attaque</b>. Si la série de l'attaquant retombe à zéro, tu les récupères pour sa prochaine attaque.</li>
+              <li>Tu as droit à <b>deux défenses par attaque</b>. Une défense utilisée revient <b>24 h</b> après ta dernière défense, jusqu'à deux : une attaque laissée en plan peut toujours être repoussée. Si la série de l'attaquant retombe à zéro, tu les récupères toutes pour sa prochaine attaque.</li><!-- patch334 -->
               <li>Tu ne peux pas défendre une commune déjà protégée par un bouclier.</li>
             </ul>
             <div class="encart rouge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 7v6M12 17h.01"/><circle cx="12" cy="12" r="9.5"/></svg><span>À 2 victoires, l'attaquant n'a plus qu'un round à gagner. C'est le bon moment pour défendre ou poser un bouclier.</span></div>
@@ -1695,6 +1695,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=501f4fbb42d3"></script>
+<script defer src="app.js?v=13d2f8f32329"></script>
 </body>
 </html>

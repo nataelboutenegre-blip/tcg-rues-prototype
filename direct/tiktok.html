@@ -11,25 +11,25 @@
 <!--
   La carte en direct au format vertical 1080 × 1920 (source « Lien » de TikTok LIVE Studio en mode portrait),
   avec l'overlay TikTok intégré. Même script que direct/ (direct.js, inchangé) ; ?joueur=Pseudo marche pareil.
-  Le haut (≈ 190 px) et le bas gauche sont laissés aux éléments de l'appli TikTok (pseudo, spectateurs, commentaires).
+  Le haut (≈ 380 px, repère affiché par TikTok LIVE Studio) et le bas gauche sont laissés à l'appli TikTok (pseudo, spectateurs, commentaires).
 -->
 <style>
 #scene.vertical{ width:1080px; height:1920px; display:block;
   background:radial-gradient(120% 60% at 50% 42%, #10233F 0%, #0A1628 60%); }
 
 /* en-tête et chiffres */
-.vertical .tete{ position:absolute; left:56px; right:56px; top:196px; gap:20px; }
+.vertical .tete{ position:absolute; left:56px; right:56px; top:392px; gap:20px; }
 .vertical .direct{ font-size:20px; padding:8px 14px; }
 .vertical .direct i{ width:11px; height:11px; }
 .vertical .tete h1{ font-size:72px; }
 .vertical .heure{ font-size:52px; }
-.vertical .chiffres{ position:absolute; left:56px; right:56px; top:300px; gap:14px; }
+.vertical .chiffres{ position:absolute; left:56px; right:56px; top:490px; gap:14px; }
 .vertical .chiffre{ padding:14px 18px 12px; border-radius:16px; }
 .vertical .chiffre b{ font-size:58px; }
 .vertical .chiffre span{ font-size:20px; }
 
 /* la carte : le canvas de 1080 × 1060 réduit à 90 % pour garder de la marge sur les côtés */
-.vertical .carte{ position:absolute; left:54px; top:440px; width:1080px; height:1060px; transform:scale(.9); transform-origin:0 0; }
+.vertical .carte{ position:absolute; left:54px; top:618px; width:1080px; height:1060px; transform:scale(.9); transform-origin:0 0; }
 .vertical .carte canvas, .vertical #eclairs{ left:0; top:0; }
 .vertical .zoom{ display:none; }
 .vertical .legende{ left:24px; bottom:22px; font-size:21px; gap:22px; padding:10px 16px; }
@@ -39,18 +39,19 @@
 .vertical .anneau{ border-width:4px; }
 
 /* le site, juste sous la carte */
-.vertical .pied{ position:absolute; left:56px; right:56px; top:1412px; margin:0; padding:14px 22px; }
+.vertical .pied{ position:absolute; left:56px; right:56px; top:1584px; margin:0; padding:14px 22px; }
 .vertical .pied b{ font-size:46px; }
 .vertical .pied span{ font-size:21px; max-width:560px; }
 
-/* en bas : le fil du Front et les clans, en alternance */
-.bas{ position:absolute; left:56px; right:56px; top:1532px; height:350px; }
+/* en bas (sous les commentaires TikTok) : 3 dernières actions du Front et top 3 des clans, en alternance */
+.bas{ position:absolute; left:56px; right:56px; top:1696px; height:216px; }
 .vue{ position:absolute; inset:0; opacity:0; transition:opacity .6s ease; }
 .vue.on{ opacity:1; }
-.vertical h2{ font-size:34px; margin:0 0 12px; }
-.vertical .fil{ min-height:0; gap:10px; }
-.vertical .fil .ev:nth-child(n+5){ display:none; }
-.vertical .ev{ font-size:26px; padding:12px 16px; border-radius:14px; gap:14px; }
+.vertical h2{ font-size:32px; margin:0 0 10px; }
+.vertical .fil{ min-height:0; gap:8px; }
+.vertical .fil .ev:nth-child(n+4){ display:none; }
+.vertical .clans .cl:nth-child(n+5){ display:none; }
+.vertical .ev{ font-size:26px; padding:10px 16px; border-radius:14px; gap:14px; }
 .vertical .ev .ico{ font-size:26px; width:32px; }
 .vertical .ev .dep{ font-size:17px; }
 .vertical .ev time{ font-size:19px; }
@@ -64,7 +65,7 @@
 .vertical .pause b{ font-size:80px; } .vertical .pause span{ font-size:30px; }
 
 /* ---- overlay : le message qui tourne, dans la Manche (par-dessus l'endroit des boutons de zoom) ---- */
-.cta{ position:absolute; left:56px; top:452px; width:474px; height:124px; border-radius:18px; overflow:hidden; pointer-events:none;
+.cta{ position:absolute; left:56px; top:630px; width:474px; height:124px; border-radius:18px; overflow:hidden; pointer-events:none;
   background:linear-gradient(135deg, rgba(20,42,74,.97), rgba(10,22,40,.97));
   border:1.5px solid rgba(232,131,58,.65); box-shadow:0 12px 32px rgba(0,0,0,.5); z-index:4; }
 .cta .s{ position:absolute; inset:0; display:flex; align-items:center; gap:18px; padding:0 22px;

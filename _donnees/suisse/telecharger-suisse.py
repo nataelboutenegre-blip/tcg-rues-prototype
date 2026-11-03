@@ -22,7 +22,13 @@ POURQUOI IL TOURNE CHEZ TOI
   swisstopo, Wikidata ni Commons. Ton Terminal, si.
 
 USAGE (depuis le dossier du jeu)
-    python3 _donnees/suisse/telecharger-suisse.py
+    python3 _donnees/suisse/telecharger-suisse.py           # tout (1, 2, 3)
+    python3 _donnees/suisse/telecharger-suisse.py --lacs    # seulement les lacs
+
+  --lacs : swissTLMRegio (swisstopo), pour la forme des lacs. Les communes de
+  swissBOUNDARIES3D englobent leur part de lac (Lausanne descend jusqu'au
+  milieu du Léman) : il faut les lacs pour les découper. Conditions :
+  usage commercial autorisé, source à citer (« © swisstopo »).
   Aucune dépendance à installer. Relançable : un fichier déjà téléchargé
   en entier n'est pas retéléchargé.
 """
@@ -30,8 +36,8 @@ USAGE (depuis le dossier du jeu)
 import csv, json, os, re, sys, time, urllib.parse, urllib.request
 
 UA = "TerraFront/1.0 (https://terrafront.fr; contact via Discord) python-urllib"
-STAC = os.environ.get("TF_STAC", "https://data.geo.admin.ch/api/stac/v0.9") + \
-    "/collections/ch.swisstopo.swissboundaries3d/items"
+STAC_RACINE = os.environ.get("TF_STAC", "https://data.geo.admin.ch/api/stac/v0.9")
+STAC = STAC_RACINE + "/collections/ch.swisstopo.swissboundaries3d/items"
 WDQS = os.environ.get("TF_WDQS", "https://query.wikidata.org/sparql")
 COMMONS = os.environ.get("TF_COMMONS", "https://commons.wikimedia.org/w/api.php")
 ICI = os.path.dirname(os.path.abspath(__file__))
@@ -62,9 +68,9 @@ def http_json(url, donnees=None, essais=4):
 # ---------------------------------------------------------------------------
 # 1. swisstopo
 # ---------------------------------------------------------------------------
-def derniere_edition():
+def derniere_edition(collection_items=None, preferences=None):
     """Le jeu de données le plus récent et le fichier à prendre."""
-    items, url = [], STAC + "?limit=100"
+    items, url = [], (collection_items or STAC) + "?limit=100"
     while url:
         page = http_json(url)
         items += page.get("features", [])
@@ -77,7 +83,7 @@ def derniere_edition():
     noms = list(assets)
     # par ordre de préférence : shapefile en coordonnées suisses (LV95),
     # n'importe quel shapefile, puis le GeoPackage
-    for test in (lambda k: "2056" in k and k.endswith(".shp.zip"),
+    for test in preferences or (lambda k: "2056" in k and k.endswith(".shp.zip"),
                  lambda k: k.endswith(".shp.zip"),
                  lambda k: "2056" in k and k.endswith(".gpkg.zip"),
                  lambda k: k.endswith(".gpkg.zip")):
@@ -192,8 +198,39 @@ def metadonnees(fichiers):
     return infos
 
 
+def lacs():
+    """swissTLMRegio : on cherche la collection, puis le fichier le plus utile."""
+    cols, url = [], STAC_RACINE + "/collections?limit=100"
+    while url:
+        page = http_json(url)
+        cols += [c.get("id", "") for c in page.get("collections", [])]
+        url = next((l["href"] for l in page.get("links", []) if l.get("rel") == "next"), None)
+    trouvees = [c for c in cols if "swisstlmregio" in c.lower()]
+    if not trouvees:
+        raise SystemExit("swisstopo : pas de collection swissTLMRegio. Collections proches : "
+                         + ", ".join(c for c in cols if "tlm" in c.lower() or "regio" in c.lower()))
+    col = "ch.swisstopo.swisstlmregio" if "ch.swisstopo.swisstlmregio" in trouvees else sorted(trouvees)[0]
+    print("   collection %s (trouvées : %s)" % (col, ", ".join(trouvees)))
+    prefs = (lambda k: "hydro" in k.lower() and k.endswith(".shp.zip"),
+             lambda k: "hydro" in k.lower() and k.endswith(".gpkg.zip"),
+             lambda k: "2056" in k and k.endswith(".shp.zip"),
+             lambda k: k.endswith(".shp.zip"),
+             lambda k: "2056" in k and k.endswith(".gpkg.zip"),
+             lambda k: k.endswith(".gpkg.zip"),
+             lambda k: k.endswith(".zip"))
+    edition, nom, url = derniere_edition(STAC_RACINE + "/collections/" + col + "/items", prefs)
+    print("   édition %s : %s" % (edition, nom))
+    taille = telecharger(url, os.path.join(BRUT, nom))
+    with open(os.path.join(BRUT, "lacs.json"), "w", encoding="utf-8") as fh:
+        json.dump({"collection": col, "edition": edition, "fichier": nom, "url": url, "octets": taille}, fh, indent=1)
+    print("\nFini : %s (%.1f Mo) dans _donnees/suisse/brut/" % (nom, taille / 1e6))
+
+
 def main():
     os.makedirs(BRUT, exist_ok=True)
+    if "--lacs" in sys.argv:
+        print("Lacs : swissTLMRegio")
+        return lacs()
     resume = {}
 
     print("1/3  swisstopo (swissBOUNDARIES3D)")

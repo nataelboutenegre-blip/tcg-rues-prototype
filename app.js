@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '14e8947f3041';
+const VERSION_JEU = '184f0c9cdf80';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4832,11 +4832,15 @@ function codeDepartement(texte){
   // « haute-savoie » et « hautesavoie » visent la meme chose, et personne ne
   // tape l'apostrophe de Val-d'Oise. On les retire des deux cotes.
   const nu = (s) => sansAccents(s).replace(/[\s'\u2019-]+/g, '');
-  const t = nu(texte || '');
+  let t = nu(texte || '');
+  // patch330 (saison 3) : « canton de Vaud », « canton du Jura » -> seulement les cantons
+  let cantonsSeuls = false;
+  if(SUISSE){ const m = t.match(/^canton(?:des|du|de|d)?(.{3,})$/); if(m){ t = m[1]; cantonsSeuls = true; } }
   if(t.length < 3) return null;
-  const codes = Object.keys(DEPT_NAMES);
+  const codes = Object.keys(DEPT_NAMES).filter(c => !cantonsSeuls || estCanton(c));
   // patch219 : « Réunion » sans l'article trouve La Réunion
   const noms = (c) => { const n = DEPT_NAMES[c], s = n.replace(/^(la|le|les|l['’])\s*/i, ''); return s !== n ? [nu(n), nu(s)] : [nu(n)]; };
+  // « Jura » : le département 39 passe avant le canton (les clés numériques viennent d'abord)
   const exact = codes.find(c => noms(c).includes(t));
   if(exact) return exact;
   const debuts = codes.filter(c => noms(c).some(x => x.startsWith(t)));
@@ -4848,7 +4852,9 @@ function correspondRecherche(nom, dept, recherche){
   if(!recherche) return true;
   return sansAccents(nom).includes(recherche)
       // patch219 : « 74 » ne doit pas trouver La Réunion (974) — un code d'outre-mer se tape par le début
-      || (String(dept).length > 2 ? String(dept).toLowerCase().startsWith(recherche) : String(dept).toLowerCase().includes(recherche))
+      || (String(dept).length > 2 ? String(dept).toLowerCase().startsWith(recherche)
+          : estCanton(dept) ? String(dept).toLowerCase() === recherche   // patch332 : un code de canton se tape en entier
+          : String(dept).toLowerCase().includes(recherche))
       || sansAccents(DEPT_NAMES[dept] || '').includes(recherche);
 }
 
@@ -9835,7 +9841,7 @@ function renderCombatGrid(){
     const deps = [], pseudos = [], noms = [];
     for(const t of searchText.split(/[,;]/).map(s => s.trim()).filter(Boolean)){
       const d = codeDepartement(t) || t;
-      if(/^(\d{2,3}|2a|2b)$/i.test(d)){ deps.push(d.toUpperCase()); continue; }
+      if(/^(\d{2,3}|2a|2b)$/i.test(d) || (SUISSE && estCanton(d.toUpperCase()))){ deps.push(d.toUpperCase()); continue; }   // patch332
       if([...owners].some(x => x.includes(t))) pseudos.push(t); else noms.push(t);
     }
     cibles = cibles.filter(c => {
@@ -17404,8 +17410,11 @@ function renderBoutique(){
   const deps = Object.keys(DEPT_NAMES).sort((x, y) => x.localeCompare(y, 'fr', { numeric: true }));
   paq.innerHTML = b.articles.filter(a => a.type === 'paquet').map(a => {
     const choixDep = a.id === 'paquet-departement'
-      ? `<select class="bq-dep" id="bqDep" aria-label="Département"><option value="">Choisis un département</option>${
-          deps.map(d => `<option value="${d}">${d} · ${echapperTexte(DEPT_NAMES[d])}</option>`).join('')}</select>` : '';
+      ? `<select class="bq-dep" id="bqDep" aria-label="Département"><option value="">Choisis un département${SUISSE ? ' ou un canton' : ''}</option>${
+          (SUISSE   // patch332 : les cantons à part, sous « Suisse »
+            ? '<optgroup label="France">' + deps.filter(d => !estCanton(d)).map(d => `<option value="${d}">${d} · ${echapperTexte(DEPT_NAMES[d])}</option>`).join('')
+              + '</optgroup><optgroup label="Suisse">' + deps.filter(estCanton).map(d => `<option value="${d}">${d} · ${echapperTexte(DEPT_NAMES[d])}</option>`).join('') + '</optgroup>'
+            : deps.map(d => `<option value="${d}">${d} · ${echapperTexte(DEPT_NAMES[d])}</option>`).join(''))}</select>` : '';
     const bouton = restants < 1
       ? `<button class="bq-btn" disabled>Revient demain</button>`
       : `<button class="bq-btn" data-bq-paquet="${a.id}" data-prix="${a.prix}"${b.solde < a.prix ? ' data-court="1"' : ''}>${bqPrix(a.prix)}</button>`;
@@ -21948,7 +21957,7 @@ function ncRendreSourdine(el){
     + `<button type="button"${liste === 'alerte' ? ' class="retirer"' : ''} data-nc-dep="${liste}|${echapperTexte(d)}|0">${liste === 'alerte' ? 'Retirer' : 'Réactiver'}</button></div>`;
   const sec = (liste, titre) => `<div class="nc-s-sec"><p>${titre}</p>${off ? '' : `<button type="button" data-nc-dep-ajout="${liste}">${NC.depListe === liste ? 'Fermer' : '+ Ajouter'}</button>`}</div>`;
   const cherche = (liste) => NC.depListe === liste && !off
-    ? `<div class="nc-s-cherche"><input type="search" id="ncDepQ" placeholder="Nom ou numéro du département" autocomplete="off" value="${echapperTexte(NC.depQ || '')}" aria-label="Chercher un département"></div><div id="ncDepProps">${ncDepProps()}</div>` : '';
+    ? `<div class="nc-s-cherche"><input type="search" id="ncDepQ" placeholder="${SUISSE ? 'Département ou canton' : 'Nom ou numéro du département'}" autocomplete="off" value="${echapperTexte(NC.depQ || '')}" aria-label="Chercher un département"></div><div id="ncDepProps">${ncDepProps()}</div>` : '';
   const liste = (cle, l) => p[cle].length ? p[cle].map(d => ligneDep(d, l)).join('') : (NC.depListe === l ? '' : '<p class="nc-vide">Aucun département.</p>');
   el.innerHTML = `<div class="nc-tete"><button type="button" class="nc-retour" data-nc="reglages" aria-label="Retour">←</button><h2>Par département</h2>
       <button type="button" class="nc-x" data-nc="fermer" aria-label="Fermer">✕</button></div>

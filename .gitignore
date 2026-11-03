@@ -9,3 +9,6 @@ gentiles-rejets.csv
 _discord/clans.json
 _discord/roles-saison-1.json
 _discord/correspondances.json
+
+# saison 3, Suisse : fichiers bruts téléchargés (swisstopo pèse plusieurs centaines de Mo)
+_donnees/suisse/brut/

@@ -4,12 +4,14 @@
 --  patch324 : combien passent chaque étape, sur téléphone et sur ordinateur,
 --  et en combien de minutes après leur arrivée (médiane).
 --  « arrivés » = étape « arrive » (le jeu a commencé à se charger).
---  Les étapes viennent du jeu (une fois par joueur), sauf les 3 dernières
---  lignes, lues dans la base.
+--  Les étapes viennent du jeu (une fois par joueur), sauf les lignes BASE,
+--  lues dans la base. Lignes SOURCE (patch325) : d'où venaient les joueurs
+--  (?src=reddit dans le lien, sinon le site d'origine, sinon « direct ») et
+--  combien d'entre eux sont revenus un autre jour.
 --  Aucun pseudo ni e-mail. Ne modifie rien. Un seul tableau.
 -- ===========================================================================
 with base as (
-  select a.joueur_id, a.le as arrive_le,
+  select a.joueur_id, a.le as arrive_le, coalesce(a.detail, 'inconnue') as source,
          case when j.detail like 'mobile%' then 'mobile' when j.detail like 'ordi%' then 'ordi' else '?' end as appareil
     from public.accueil_etapes a
     left join public.accueil_etapes j on j.joueur_id = a.joueur_id and j.etape = 'jeu'
@@ -59,6 +61,12 @@ etapes as (
   select 93, 'BASE : revenu un autre jour', b.joueur_id, b.appareil, null
     from base b where exists (select 1 from public.jours_joues jj where jj.joueur_id = b.joueur_id
                                and jj.jour > (b.arrive_le at time zone 'Europe/Paris')::date)
+  union all
+  select 95, 'SOURCE : ' || b.source, b.joueur_id, b.appareil, null from base b
+  union all
+  select 96, 'SOURCE : ' || b.source || ' · revenus un autre jour', b.joueur_id, b.appareil, null
+    from base b where exists (select 1 from public.jours_joues jj where jj.joueur_id = b.joueur_id
+                               and jj.jour > (b.arrive_le at time zone 'Europe/Paris')::date)
 ),
 total as (select count(*) as n, count(*) filter (where appareil = 'mobile') as nm, count(*) filter (where appareil = 'ordi') as no from base)
 select e.libelle                                                                              as etape,
@@ -69,4 +77,4 @@ select e.libelle                                                                
        round(percentile_cont(0.5) within group (order by e.minutes)::numeric, 1)              as minutes_mediane
   from etapes e cross join total t
  group by e.ord, e.libelle, t.n, t.nm, t.no
- order by e.ord;
+ order by e.ord, e.libelle;

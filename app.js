@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '7ebb95999be6';
+const VERSION_JEU = '08e5e57564a6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -848,7 +848,7 @@ function showAuth(msg, type = 'erreur'){
 }
 
 async function showGame(session_){
-  onbDemarrer(session_); onbMarque('arrive');   // patch324
+  onbDemarrer(session_); onbMarque('arrive', onbSourceLue());   // patch324, patch325 : la source
   if(cdjInvite) quitterInviteCdj();
   cacherLanding();
   marquerDejaJoue();
@@ -24640,6 +24640,21 @@ function onbDemarrer(session_){
     ONB.faits = new Set(JSON.parse(localStorage.getItem('tf-onb-' + ONB.uid) || '[]'));
   }catch(e){ ONB.faits = new Set(); }
 }
+// patch325 : la source, retenue une fois, au tout premier passage (avant que l'adresse soit nettoyée)
+(function onbSource(){
+  try{
+    if(localStorage.getItem('tf-src')) return;
+    const q = new URLSearchParams(location.search);
+    let src = q.get('src') || q.get('utm_source') || '';
+    if(!src && q.get('ref')) src = 'parrain';
+    if(!src && document.referrer){
+      try{ const h = new URL(document.referrer).hostname.replace(/^www\./, ''); if(h && h !== location.hostname) src = h; }catch(e){}
+    }
+    src = String(src || 'direct').toLowerCase().replace(/[^a-z0-9._-]/g, '').slice(0, 40) || 'direct';
+    localStorage.setItem('tf-src', src);
+  }catch(e){}
+})();
+function onbSourceLue(){ try{ return localStorage.getItem('tf-src') || 'inconnue'; }catch(e){ return 'inconnue'; } }
 function onbAppareil(){
   let a = 'ordi';
   try{ if(window.matchMedia('(pointer: coarse)').matches) a = 'mobile'; }catch(e){}

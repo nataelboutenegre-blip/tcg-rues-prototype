@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '7d5a835fb2c2';
+const VERSION_JEU = '7ebb95999be6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -848,6 +848,7 @@ function showAuth(msg, type = 'erreur'){
 }
 
 async function showGame(session_){
+  onbDemarrer(session_); onbMarque('arrive');   // patch324
   if(cdjInvite) quitterInviteCdj();
   cacherLanding();
   marquerDejaJoue();
@@ -880,6 +881,7 @@ async function showGame(session_){
   await loadPackStatus();
   dmMesure('paquets');
   dmFin(true);   // patch225 : on arrive dans le jeu
+  onbMarque('jeu', onbAppareil());   // patch324
   demarrerPresence(session_.user.id);   // patch127
   chargerAnnonce();   // patch137
   verifierTiragesEnAttente();
@@ -7294,6 +7296,7 @@ function surCarteRetournee(draw){
 
 // Animation coupee : tout le paquet d'un coup, deja retourne.
 function revealCards(draws){
+  if(draws && draws.length) onbMarque('cartes_' + (enTerra() ? 'terra' : 'front'));   // patch324
   const zone = document.getElementById('packZone');
   const tries = trierPourRevelation(draws);
   zone.innerHTML = '';
@@ -7853,6 +7856,7 @@ async function openPack(type){
   }
   // le paquet en cours n'est pas encore ouvert : pas question d'en relancer un avant d'avoir retourne les cartes
   paquetEnCours = true;
+  onbMarque('paquet_' + (enTerra() ? 'terra' : 'front'));   // patch324
   await loadPackStatus();
   afficherPaquetATirer(type, 5);
   if(type === 'gratuit'){ const pk = document.querySelector('#packZone .paquet'); if(pk) pk.dataset.hwGratuit = '1'; }   // patch265
@@ -8172,6 +8176,7 @@ function afficherPaquetPret(type){
       return null;
     }
     delete pack.dataset.pret;
+    onbMarque('paquet_' + (enTerra() ? 'terra' : 'front'));   // patch324
     loadPackStatus();
     return tirerCartesDuPaquet(5);
   });
@@ -9941,6 +9946,7 @@ function initModes(){
     if(paquetEnCours){ notifier({ type: 'info', titre: 'Un paquet est en cours', texte: 'Retourne tes cartes avant de changer de mode.' }); return; }
     modeJeu = b.dataset.mode;
     try { localStorage.setItem('tf-mode', modeJeu); } catch(err){}
+    onbMarque('mode_' + modeJeu);   // patch324
     appliquerMode();
     balayerMode();   // patch188
   });
@@ -14159,6 +14165,7 @@ function placerBulleGuide(cible){
 function afficherEtapeGuide(){
   const etape = ETAPES_GUIDE[guideIndex];
   if(!etape){ fermerGuide(); return; }
+  onbMarque('guide_' + (guideIndex + 1));   // patch324
   const voile = document.getElementById('guideVoile');
   const bulle = document.getElementById('guideBulle');
   if(!voile || !bulle) return;
@@ -14195,6 +14202,7 @@ function fermerGuide(){
   if(guideCibleActuelle){ guideCibleActuelle.classList.remove('guide-cible'); guideCibleActuelle = null; }
   if(voile) voile.hidden = true;
   if(bulle) bulle.hidden = true;
+  if(guideIndex >= 0) onbMarque(guideIndex >= ETAPES_GUIDE.length ? 'guide_fini' : 'guide_passe');   // patch324
   guideIndex = -1;
   marquerGuideVu();
 }
@@ -14241,6 +14249,7 @@ async function peutEtreAfficherAccueil(){
   if(!voile) return;
   if(parrainAccueil) remplirAccueilInvite(parrainAccueil);   // patch152
   voile.hidden = false;
+  onbMarque('accueil_vu');   // patch324
   requestAnimationFrame(() => voile.classList.add('ouvert'));
   const go = document.getElementById('accueilGo');
   if(go) go.focus();
@@ -14248,14 +14257,17 @@ async function peutEtreAfficherAccueil(){
 
 // "Ouvrir mon premier paquet" enchaine sur le guide ; "Passer" et "Voir les regles" non
 document.getElementById('accueilGo').addEventListener('click', () => {
+  onbMarque('accueil_ouvrir');   // patch324
   fermerAccueil(true);
   if(!guideDejaVu()) setTimeout(demarrerGuide, 280);
 });
 document.getElementById('accueilPasser').addEventListener('click', () => {
+  onbMarque('accueil_passer');   // patch324
   fermerAccueil(false);
   marquerGuideVu();
 });
 document.getElementById('accueilRegles').addEventListener('click', () => {
+  onbMarque('accueil_regles');   // patch324
   fermerAccueil(false);
   marquerGuideVu();
   document.getElementById('reglesBtn').click();
@@ -24615,6 +24627,38 @@ function mdbVers(quoi, tier){
   mdbAppliquer();
 })();
 
+// ---------- patch324 : mesure de l'accueil (s2-86) ----------
+// La première fois qu'un nouveau (compte de moins de 14 jours) passe une étape,
+// le serveur la note. Une fois par appareil (mémoire locale), sans rien afficher.
+var ONB = { actif: false, uid: null, faits: new Set(), envoyes: new Set() };
+function onbDemarrer(session_){
+  try{
+    const u = session_ && session_.user;
+    ONB.uid = u ? u.id : null;
+    ONB.envoyes = new Set();
+    ONB.actif = !!(u && u.created_at && Date.now() - Date.parse(u.created_at) < 14 * 864e5);
+    ONB.faits = new Set(JSON.parse(localStorage.getItem('tf-onb-' + ONB.uid) || '[]'));
+  }catch(e){ ONB.faits = new Set(); }
+}
+function onbAppareil(){
+  let a = 'ordi';
+  try{ if(window.matchMedia('(pointer: coarse)').matches) a = 'mobile'; }catch(e){}
+  try{ if(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) a += '-appli'; }catch(e){}
+  return a + '-' + modeJeu;
+}
+function onbMarque(etape, detail){
+  const o = window.ONB;
+  if(!o || !o.actif || o.faits.has(etape) || o.envoyes.has(etape)) return;
+  o.envoyes.add(etape);
+  try{
+    sb.rpc('accueil_etape', { p_etape: etape, p_detail: detail || null }).then(({ error }) => {
+      if(error) return;
+      o.faits.add(etape);
+      try{ localStorage.setItem('tf-onb-' + o.uid, JSON.stringify([...o.faits])); }catch(e){}
+    }, () => {});
+  }catch(e){}
+}
+
 // ---------- patch306 : Premiers pas (s2-74) ----------
 // Les nouveaux qui combattent le 1er jour reviennent ; les autres presque jamais.
 // La carte les mène à leur première attaque. Le serveur coche les étapes.
@@ -24659,9 +24703,10 @@ function renderPremiersPas(){
   const P = PREMIERS_PAS;
   el.hidden = !P;
   if(!P) return;
+  onbMarque('pp_vu');   // patch324
   const cible = P.attaque ? null : ppCible();
   const etapes = [
-    ['paquet', 'Ouvre ton premier paquet', '5 vraies communes, à leur place sur la carte', 'Ouvrir'],
+    ['paquet', 'Ouvre ton premier paquet du Front', '5 communes rien qu’à toi sur la carte partagée', 'Ouvrir'],   // patch324
     ['attaque', 'Gagne ta première attaque', cible ? `Une cible facile près de chez toi : ${echapperHtml(cible.nom)} (${echapperHtml(cible.dept)})` : 'Choisis une commune proche dans l’onglet Combat', 'Attaquer'],
     ['clan', 'Rejoins un clan ou crée le tien', 'Les membres ne s’attaquent pas entre eux, et s’échangent des communes', 'Voir les clans'],
     ['fonderie', 'Construis ta Fonderie', `Gratuite : ${(BATIMENTS && BATIMENTS.production) || 10} lingots par jour pour tes bâtiments`, 'Comment ?'],
@@ -24681,10 +24726,21 @@ function renderPremiersPas(){
       : `<div class="pp-recomp"><span class="gift">🎁</span><span>Les 4 faites : <b>${lots}</b></span></div>`}`;
 }
 async function ppAction(quoi, bouton){
+  onbMarque('pp_' + quoi);   // patch324
   if(quoi === 'paquet'){
-    const b = document.getElementById('openFreeBtn');
-    if(b && !b.disabled) b.click();
-    else { if(b) b.scrollIntoView({ behavior: 'smooth', block: 'center' }); notifier({ type: 'info', titre: 'Paquet', texte: 'Ton prochain paquet gratuit arrive bientôt : le compte à rebours est juste en dessous.' }); }
+    // patch324 : le premier paquet du Front (s2-86 ne coche plus l'étape avec du Terra)
+    if(paquetEnCours){ notifier({ type: 'info', titre: 'Un paquet est en cours', texte: 'Retourne d’abord tes cartes, puis reviens ici.' }); return; }
+    ncAller('front', 'tirage', async () => {
+      try{ await loadPackStatus(); }catch(e){}
+      const pret = document.querySelector('#packZone .paquet[data-pret]');
+      const b = document.getElementById('openFreeBtn');
+      if(pret){
+        pret.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        appelerPaquet(pret);
+        notifier({ type: 'info', titre: 'Ton paquet du Front', texte: 'Touche le paquet pour l’ouvrir : ces 5 communes seront à toi sur la carte.' });
+      } else if(b && !b.disabled) b.click();
+      else { if(b) b.scrollIntoView({ behavior: 'smooth', block: 'center' }); notifier({ type: 'info', titre: 'Paquet du Front', texte: 'Ton prochain paquet gratuit arrive bientôt : le compte à rebours est juste en dessous.' }); }
+    });
     return;
   }
   if(quoi === 'attaque'){

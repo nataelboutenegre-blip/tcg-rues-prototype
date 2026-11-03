@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '08e5e57564a6';
+const VERSION_JEU = 'a6d371836293';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3451,7 +3451,9 @@ function ouvrirPanneau(code, xCss, yCss){
   let echClan = '';   // patch316 : proposer un échange au coéquipier
   if(allie && enFrontClan()){
     const e = clanEch.etat;
+    const mb = e && e.par_membre ? (e.membres || []).find(x => x.id === c.joueurId) : null;   // patch327
     const raison = !e ? '' : e.pret_le ? 'Échanges possibles 48 h après ton arrivée dans le clan'
+      : e.par_membre ? (mb && Number(mb.faits || 0) >= (e.max || 3) ? 'Vous avez fait vos 3 échanges du jour ensemble' : '')
       : Math.max(0, (e.max || 3) - (e.faits || 0)) === 0 ? 'Plus d’échange possible aujourd’hui' : '';
     echClan = `<button class="pc-action pc-ech-clan" data-pc="ech-clan"${raison ? ` disabled title="${echapperHtml(raison)}"` : ''}>🤝 Proposer un échange à ${echapperHtml(c.pseudo || 'ton coéquipier')}</button>${raison ? `<p class="pc-note">${echapperHtml(raison)}.</p>` : ''}`;
   }
@@ -17729,7 +17731,10 @@ function majListesCe(){
 function blocEchangesClan(){
   const e = clanEch.etat;
   if(!enFrontClan() || !e || !e.clan) return '';
-  const restant = Math.max(0, (e.max || 3) - (e.faits || 0));   // patch250
+  const maxEch = e.max || 3, parMembre = !!e.par_membre;   // patch327 : par coéquipier (s2-88)
+  const resteAvec = (m) => Math.max(0, maxEch - Number(m.faits || 0));
+  const restant = parMembre ? ((e.membres || []).some(m => resteAvec(m) > 0) ? maxEch : 0)
+                            : Math.max(0, maxEch - (e.faits || 0));   // patch250
   const prop = (x, recu) => `<div class="ce-prop"><div>
       <div class="ce-qui">${recu ? `<b>${echapperTexte(x.pseudo)}</b> te propose` : `à <b>${echapperTexte(x.pseudo)}</b> · en attente`} · ${ceDans(x.expire_le)}</div>
       <div class="ce-troc">${ceCommune(recu ? x.recoit : x.donne, x.tier)}<span class="ce-fl" aria-hidden="true">⇄</span>${ceCommune(recu ? x.donne : x.recoit, x.tier)}</div>
@@ -17741,19 +17746,20 @@ function blocEchangesClan(){
   const proposer = pret
     ? `<p class="clan-note">Tu pourras échanger avec ton clan à partir du ${pret.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à ${pret.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} (48 h après ton arrivée).</p>`
     : !membres.length ? '<p class="clan-note">Il faut au moins un coéquipier pour échanger.</p>'
-    : restant === 0 ? '<p class="clan-note">Tu as fait tes 3 échanges du jour. Reviens demain.</p>'
+    : restant === 0 ? (parMembre ? '<p class="clan-note">Tu as fait tes 3 échanges du jour avec chaque coéquipier. Reviens demain.</p>'
+                                 : '<p class="clan-note">Tu as fait tes 3 échanges du jour. Reviens demain.</p>')
     : `<div class="ce-etape"><div class="ce-attente">1. Avec qui</div>
-        <div class="ce-membres">${membres.map(m => `<button type="button" class="ce-membre" data-ce-qui="${echapperTexte(m.id)}" aria-pressed="${m.id === clanEch.qui}"><span class="av" style="--clan:${(clanCache && clanCache.moi && clanCache.moi.clan || {}).couleur || '#E07A2E'}">${echapperTexte((m.pseudo || '?')[0].toUpperCase())}</span>${echapperTexte(m.pseudo)}</button>`).join('')}</div></div>
+        <div class="ce-membres">${membres.map(m => `<button type="button" class="ce-membre" data-ce-qui="${echapperTexte(m.id)}" aria-pressed="${m.id === clanEch.qui}"${parMembre && !resteAvec(m) ? ' disabled' : ''}><span class="av" style="--clan:${(clanCache && clanCache.moi && clanCache.moi.clan || {}).couleur || '#E07A2E'}">${echapperTexte((m.pseudo || '?')[0].toUpperCase())}</span>${echapperTexte(m.pseudo)}${parMembre ? `<span class="ce-reste">· ${resteAvec(m) ? 'encore ' + resteAvec(m) : 'demain'}</span>` : ''}</button>`).join('')}</div></div>
       <div class="ce-deux">
         <div><div class="ce-attente">2. Tu donnes</div><input type="search" class="ce-recherche" id="ceR1" placeholder="Une de tes communes…" aria-label="Chercher une de tes communes" value="${echapperTexte(clanEch.r1)}"><div class="ce-liste" id="ceDonne"></div></div>
         <div><div class="ce-attente" id="ceT3">3. Tu reçois · même rareté</div><input type="search" class="ce-recherche" id="ceR2" placeholder="Une commune de ton coéquipier…" aria-label="Chercher une commune du coéquipier" value="${echapperTexte(clanEch.r2)}"><div class="ce-liste" id="ceRecoit"></div></div>
       </div>
       <div class="ce-recap" id="ceRecap"></div>`;
-  return `<div class="ce-bloc"><div class="ce-tete"><h2>Échanges du clan</h2><span class="puce">${restant ? `<b>${restant}</b> échange${restant > 1 ? 's' : ''} possible${restant > 1 ? 's' : ''} aujourd'hui` : 'plus d\'échange aujourd\'hui'}</span></div>
+  return `<div class="ce-bloc"><div class="ce-tete"><h2>Échanges du clan</h2><span class="puce">${parMembre ? `<b>${maxEch}</b> par jour avec chaque coéquipier` : restant ? `<b>${restant}</b> échange${restant > 1 ? 's' : ''} possible${restant > 1 ? 's' : ''} aujourd'hui` : 'plus d\'échange aujourd\'hui'}</span></div>
     ${(e.recus || []).length ? `<h3 class="ce-h3">Reçus</h3>${e.recus.map(x => prop(x, true)).join('')}` : ''}
     <h3 class="ce-h3">Proposer un échange</h3>${proposer}
     ${(e.envoyes || []).length ? `<h3 class="ce-h3">Envoyés</h3>${e.envoyes.map(x => prop(x, false)).join('')}` : ''}
-    <ul class="clan-regles"><li>Seulement entre membres du clan, une commune contre une commune de même rareté.</li><li>3 échanges par jour et par joueur, 3 propositions en attente au plus. Une proposition expire au bout de 24 h.</li><li>Impossible pour une commune prise il y a moins de 24 h, en garnison, ou échangée il y a moins de 48 h.</li><li>Il faut être dans le clan depuis 48 h. Un échange ne rapporte aucun point de combat.</li></ul></div>`;
+    <ul class="clan-regles"><li>Seulement entre membres du clan, une commune contre une commune de même rareté.</li><li>${parMembre ? '<b>3 échanges par jour avec chaque coéquipier</b>, 3 propositions en attente par coéquipier' : '3 échanges par jour et par joueur, 3 propositions en attente au plus'}. Une proposition expire au bout de 24 h.</li><li>Impossible pour une commune prise il y a moins de 24 h, en garnison, ou échangée il y a moins de 48 h.</li><li>Il faut être dans le clan depuis 48 h. Un échange ne rapporte aucun point de combat.</li></ul></div>`;
 }
 // patch304 : par pages (plus de 1 000 communes chez les gros joueurs), de la plus rare à la plus commune
 async function ceCommunesDe(joueur){
@@ -21155,7 +21161,7 @@ function ncDemarrer(){
 
 async function ncCharger(){
   const rpc = async (n, a) => { try{ const { data, error } = await sb.rpc(n, a); return error ? undefined : data; }catch(e){ return undefined; } };
-  const [prefs, journal, sieges, ech, clanE, alertes, quetes, recolte, clan] = await Promise.all([
+  const [prefs, journal, sieges, ech, clanE, alertes, quetes, recolte, clan, effaces] = await Promise.all([
     NC.prefs ? null : rpc('mes_notif_preferences'),
     rpc('journal', { p_mode: 'moi', p_limite: 40 }),
     rpc('sieges_contre_moi'),
@@ -21165,12 +21171,13 @@ async function ncCharger(){
     SAISON2 ? rpc('quetes') : null,
     SAISON2 ? rpc('front_recolte_etat') : null,
     CLANS ? rpc('mon_clan') : null,
+    SAISON2 ? rpc('mes_sieges_effaces') : null,   // patch326
   ]);
   if(!NC.prefs){
     if(prefs === undefined) NC.prefsDispo = false;
     else { NC.prefsDispo = true; NC.prefs = ncPrefsDepuis(prefs); }
   }
-  NC.d = { journal, sieges, ech, clanE, alertes, quetes, recolte: Array.isArray(recolte) ? recolte[0] : recolte, clan };
+  NC.d = { journal, sieges, ech, clanE, alertes, quetes, recolte: Array.isArray(recolte) ? recolte[0] : recolte, clan, effaces };
   NC.charge = Date.now();   // patch262
   ncConstruire();
 }
@@ -21257,6 +21264,15 @@ function ncConstruire(){
 
   // --- Depuis ta dernière visite (7 jours) ---
   const limite = Date.now() - 7 * 864e5;
+  // patch326 : la course à la commune, un autre l'a prise avant moi (s2-87)
+  if(p.jeu.perdue && Array.isArray(d.effaces)){
+    for(const x of d.effaces){
+      if(new Date(x.le).getTime() < limite) continue;
+      items.push({ cle: `se|${x.commune_code}|${x.le}`, sec: 'histo', c: 'histo', i: '💨', mode: 'front',
+        t: `<b>${echapperTexte(x.par_pseudo || 'Un joueur')}</b> a pris <b>${echapperTexte(x.commune_nom || x.commune_code)}</b> ${badgeDept(depDuCode(x.commune_code))} avant toi`,
+        s: `Ton siège est effacé : tu en étais à ${nb(x.victoires)} / 3 · ${ilYA(x.le)}` });
+    }
+  }
   for(const e of Array.isArray(d.journal) ? d.journal : []){
     if(new Date(e.cree_le).getTime() < limite) continue;
     const nom = `<b>${echapperTexte(e.commune_nom || '')}</b>${e.commune_code ? ' ' + badgeDept(depDuCode(e.commune_code)) : ''}`;   // patch308

@@ -8754,3 +8754,7 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .ra.nouveau .ra-t b{ color:#5BE3A6; }
 button.open-btn.ra-pause{ opacity:.5; cursor:not-allowed; }
 body.mode-terra #reserveAccueil{ display:none !important; }
+
+/* patch327 : échanges de clan par coéquipier */
+.ce-reste{ font-size:.72rem; color:var(--brume, #A9BCD4); margin-left:2px; font-weight:600; }
+.ce-membre:disabled{ opacity:.45; cursor:default; }

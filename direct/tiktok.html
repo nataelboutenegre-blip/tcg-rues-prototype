@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TerraFront · En direct (vertical TikTok)</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" href="../favicon.png?v=2">
+<link rel="stylesheet" href="../fonts/polices.css">
+<link rel="stylesheet" href="direct.css?v=3">
+<!--
+  La carte en direct au format vertical 1080 × 1920 (source « Lien » de TikTok LIVE Studio en mode portrait),
+  avec l'overlay TikTok intégré. Même script que direct/ (direct.js, inchangé) ; ?joueur=Pseudo marche pareil.
+  Le haut (≈ 190 px) et le bas gauche sont laissés aux éléments de l'appli TikTok (pseudo, spectateurs, commentaires).
+-->
+<style>
+#scene.vertical{ width:1080px; height:1920px; display:block;
+  background:radial-gradient(120% 60% at 50% 42%, #10233F 0%, #0A1628 60%); }
+
+/* en-tête et chiffres */
+.vertical .tete{ position:absolute; left:56px; right:56px; top:196px; gap:20px; }
+.vertical .direct{ font-size:20px; padding:8px 14px; }
+.vertical .direct i{ width:11px; height:11px; }
+.vertical .tete h1{ font-size:72px; }
+.vertical .heure{ font-size:52px; }
+.vertical .chiffres{ position:absolute; left:56px; right:56px; top:300px; gap:14px; }
+.vertical .chiffre{ padding:14px 18px 12px; border-radius:16px; }
+.vertical .chiffre b{ font-size:58px; }
+.vertical .chiffre span{ font-size:20px; }
+
+/* la carte : le canvas de 1080 × 1060 réduit à 90 % pour garder de la marge sur les côtés */
+.vertical .carte{ position:absolute; left:54px; top:440px; width:1080px; height:1060px; transform:scale(.9); transform-origin:0 0; }
+.vertical .carte canvas, .vertical #eclairs{ left:0; top:0; }
+.vertical .zoom{ display:none; }
+.vertical .legende{ left:24px; bottom:22px; font-size:21px; gap:22px; padding:10px 16px; }
+.vertical .legende i{ width:15px; height:15px; }
+.vertical .etiquette{ font-size:26px; padding:8px 14px; border-radius:12px; }
+.vertical .etiquette small{ font-size:19px; }
+.vertical .anneau{ border-width:4px; }
+
+/* le site, juste sous la carte */
+.vertical .pied{ position:absolute; left:56px; right:56px; top:1412px; margin:0; padding:14px 22px; }
+.vertical .pied b{ font-size:46px; }
+.vertical .pied span{ font-size:21px; max-width:560px; }
+
+/* en bas : le fil du Front et les clans, en alternance */
+.bas{ position:absolute; left:56px; right:56px; top:1532px; height:350px; }
+.vue{ position:absolute; inset:0; opacity:0; transition:opacity .6s ease; }
+.vue.on{ opacity:1; }
+.vertical h2{ font-size:34px; margin:0 0 12px; }
+.vertical .fil{ min-height:0; gap:10px; }
+.vertical .fil .ev:nth-child(n+5){ display:none; }
+.vertical .ev{ font-size:26px; padding:12px 16px; border-radius:14px; gap:14px; }
+.vertical .ev .ico{ font-size:26px; width:32px; }
+.vertical .ev .dep{ font-size:17px; }
+.vertical .ev time{ font-size:19px; }
+.vertical .vide{ font-size:24px; }
+.vertical .clans{ gap:6px; }
+.vertical .cl{ grid-template-columns:40px 1fr 150px 150px; font-size:25px; padding:5px 12px; }
+.vertical .cl .r{ font-size:30px; }
+.vertical .cl .n i{ width:15px; height:15px; }
+.vertical .cl .v small{ font-size:17px; }
+.vertical .cl.ent{ font-size:16px; }
+.vertical .pause b{ font-size:80px; } .vertical .pause span{ font-size:30px; }
+
+/* ---- overlay : le message qui tourne, dans la Manche (par-dessus l'endroit des boutons de zoom) ---- */
+.cta{ position:absolute; left:56px; top:452px; width:474px; height:124px; border-radius:18px; overflow:hidden; pointer-events:none;
+  background:linear-gradient(135deg, rgba(20,42,74,.97), rgba(10,22,40,.97));
+  border:1.5px solid rgba(232,131,58,.65); box-shadow:0 12px 32px rgba(0,0,0,.5); z-index:4; }
+.cta .s{ position:absolute; inset:0; display:flex; align-items:center; gap:18px; padding:0 22px;
+  opacity:0; transform:translateY(14px); transition:opacity .5s ease, transform .5s ease; }
+.cta .s.on{ opacity:1; transform:none; }
+.cta .s.sort{ opacity:0; transform:translateY(-14px); }
+.cta .pic{ flex:none; width:68px; height:68px; border-radius:16px; display:grid; place-items:center;
+  background:linear-gradient(135deg, #F0B429, #E8833A); box-shadow:0 6px 18px rgba(232,131,58,.35); }
+.cta .pic svg{ width:38px; height:38px; fill:none; stroke:#0A1628; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
+.cta .s b{ display:block; font-family:var(--titre); font-weight:900; font-size:48px; line-height:.95; letter-spacing:.01em; text-transform:uppercase; white-space:nowrap; }
+.cta .s b em{ font-style:normal; color:var(--orange); }
+.cta .s span{ display:block; margin-top:6px; font-size:22px; font-weight:600; color:#FFD9B8; white-space:nowrap; }
+.cta .barre{ position:absolute; left:0; right:0; bottom:0; height:5px; background:rgba(232,131,58,.15); }
+.cta .barre i{ display:block; height:100%; width:0; background:linear-gradient(90deg, #F0B429, #E8833A); }
+.cta .barre i.va{ animation:barre var(--duree, 8s) linear forwards; }
+@keyframes barre{ from{ width:0; } to{ width:100%; } }
+</style>
+<script defer src="../lib/supabase-js-2.117.2.umd.js"></script>
+<script defer src="direct.js?v=4"></script>
+</head>
+<body>
+<div id="scene" class="vertical">
+  <div class="tete"><span class="direct"><i></i>EN DIRECT</span><h1>TERRA<span>FRONT</span></h1><span class="heure" id="heure">--:--</span></div>
+  <div class="chiffres">
+    <div class="chiffre"><b id="cConquetes">—</b><span>conquêtes aujourd’hui</span></div>
+    <div class="chiffre or"><b id="cLibres">—</b><span>communes libres</span></div>
+    <div class="chiffre"><b id="cEnLigne">—</b><span>joueurs en ligne</span></div>
+  </div>
+  <div class="carte">
+    <canvas id="carte" width="1080" height="1060"></canvas>
+    <div id="eclairs"></div>
+    <div class="zoom"><button type="button" id="zPlus" aria-label="Zoomer">+</button><button type="button" id="zMoins" aria-label="Dézoomer">−</button><button type="button" id="zFrance">France</button><button type="button" id="zMoi" hidden>Mon territoire</button></div>
+    <div class="bulle" id="bulle" hidden></div>
+    <div class="legende"><span><i class="l-clan"></i>couleur du clan</span><span><i class="l-seul"></i>joueur sans clan</span><span><i class="l-libre"></i>commune libre</span></div>
+    <div class="chargement" id="chargement">Chargement de la carte…</div>
+  </div>
+  <div class="pied"><b>terrafront.fr</b><span>Les 35 000 communes de France, à prendre. Gratuit.</span></div>
+  <div class="bas">
+    <div class="vue on"><h2>Le fil du Front</h2><div class="fil" id="fil"></div></div>
+    <div class="vue"><h2>Les clans</h2><div class="clans" id="clans"></div></div>
+  </div>
+
+  <div class="cta" aria-live="polite">
+    <div class="s">
+      <div class="pic"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg></div>
+      <div><b>Écris <em>ta commune</em></b><span>dans le chat : on te dit qui l’a</span></div>
+    </div>
+    <div class="s">
+      <div class="pic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.6"/><path d="M2.5 20c.6-3.6 3.2-5.6 6.5-5.6s5.9 2 6.5 5.6"/><path d="M19 7v6M16 10h6"/></svg></div>
+      <div><b>Abonne-<em>toi</em></b><span>pour suivre la guerre des clans</span></div>
+    </div>
+    <div class="s">
+      <div class="pic"><svg viewBox="0 0 24 24"><path d="M14.5 3.5 20.5 3.5 20.5 9.5 9 21 3 15z"/><path d="M6 12l6 6M15 9l-3 3"/></svg></div>
+      <div><b>Joue <em>gratuit</em></b><span>sur terrafront.fr, sans rien installer</span></div>
+    </div>
+    <div class="barre"><i id="barre"></i></div>
+  </div>
+
+  <div class="pause" id="pause" hidden><b>Le direct est en pause</b><span>Reviens un peu plus tard.</span></div>
+</div>
+<script>
+'use strict';
+// l'overlay : le message en haut tourne toutes les 8 s, le bas alterne fil du Front / clans toutes les 12 s
+(function(){
+  const DUREE = 8000;
+  const slides = [...document.querySelectorAll('.cta .s')];
+  const barre = document.getElementById('barre');
+  barre.style.setProperty('--duree', DUREE + 'ms');
+  let i = -1;
+  function suivant(){
+    const avant = slides[i];
+    i = (i + 1) % slides.length;
+    if(avant){ avant.classList.remove('on'); avant.classList.add('sort'); setTimeout(() => avant.classList.remove('sort'), 600); }
+    slides[i].classList.add('on');
+    barre.classList.remove('va'); void barre.offsetWidth; barre.classList.add('va');
+  }
+  suivant();
+  setInterval(suivant, DUREE);
+
+  // direct.js met la scène à l'échelle d'un écran 1920 × 1080 : ici on la remet à l'échelle de 1080 × 1920
+  // (écouteurs posés après ceux de direct.js, donc appliqués en dernier)
+  function ajusterVertical(){
+    const k = Math.min(window.innerWidth / 1080, window.innerHeight / 1920);
+    document.getElementById('scene').style.transform =
+      'translate(' + ((window.innerWidth - 1080 * k) / 2) + 'px,' + ((window.innerHeight - 1920 * k) / 2) + 'px) scale(' + k + ')';
+  }
+  window.addEventListener('DOMContentLoaded', () => { ajusterVertical(); window.addEventListener('resize', ajusterVertical); });
+  ajusterVertical();
+
+  const vues = [...document.querySelectorAll('.bas .vue')];
+  let v = 0;
+  setInterval(() => { vues[v].classList.remove('on'); v = (v + 1) % vues.length; vues[v].classList.add('on'); }, 12000);
+})();
+</script>
+</body>
+</html>

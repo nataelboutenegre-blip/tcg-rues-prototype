@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '184f0c9cdf80';
+const VERSION_JEU = '501f4fbb42d3';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -14824,7 +14824,7 @@ function renderCdj(){
     if(ouvert && i.cle === 'departement') valeur = `${DEPT_NAMES[i.valeur] || i.valeur} (${i.valeur})`;
     if(ouvert && i.cle === 'gentile') valeur = 'les ' + i.valeur;
     return `<li class="${ouvert ? '' : 'ferme'}${neuf ? ' neuf' : ''}"><span class="cdj-lab">${CDJ_LIBELLES[i.cle] || i.cle}</span>
-      <span class="cdj-val">${ouvert ? echapperTexte(valeur) : `après ${n + 1} essai${n ? 's' : ''}`}</span></li>`;
+      <span class="cdj-val">${ouvert ? echapperTexte(valeur) : (() => { const k = i.apres != null ? i.apres : n + 1; return `après ${k} essai${k > 1 ? 's' : ''}`; })()}</span></li>`;   // patch333
   }).join('');
   cdjDernierIndice = ouverts - 1;
 

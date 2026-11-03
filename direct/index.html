@@ -7,9 +7,9 @@
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/png" href="../favicon.png?v=2">
 <link rel="stylesheet" href="../fonts/polices.css">
-<link rel="stylesheet" href="direct.css?v=2">
+<link rel="stylesheet" href="direct.css?v=3">
 <script defer src="../lib/supabase-js-2.117.2.umd.js"></script>
-<script defer src="direct.js?v=3"></script>
+<script defer src="direct.js?v=4"></script>
 </head>
 <body>
 <!-- La carte en direct (s2-90) : 1920 × 1080 pour OBS, mise à l'échelle de la fenêtre. -->
@@ -17,9 +17,9 @@
   <div class="carte">
     <canvas id="carte" width="1080" height="1060"></canvas>
     <div id="eclairs"></div>
-    <div class="zoom"><button type="button" id="zPlus" aria-label="Zoomer">+</button><button type="button" id="zMoins" aria-label="Dézoomer">−</button><button type="button" id="zFrance">France</button><button type="button" id="zMoi" hidden>Mon territoire</button><button type="button" id="zAvant" aria-pressed="false" hidden>★ Mes communes</button></div>
+    <div class="zoom"><button type="button" id="zPlus" aria-label="Zoomer">+</button><button type="button" id="zMoins" aria-label="Dézoomer">−</button><button type="button" id="zFrance">France</button><button type="button" id="zMoi" hidden>Mon territoire</button></div>
     <div class="bulle" id="bulle" hidden></div>
-    <div class="legende"><span id="legMoi" hidden><i class="l-moi"></i>mes communes</span><span><i class="l-clan"></i>couleur du clan</span><span><i class="l-seul"></i>joueur sans clan</span><span><i class="l-libre"></i>commune libre</span></div>
+    <div class="legende"><span><i class="l-clan"></i>couleur du clan</span><span><i class="l-seul"></i>joueur sans clan</span><span><i class="l-libre"></i>commune libre</span></div>
     <div class="chargement" id="chargement">Chargement de la carte…</div>
   </div>
   <div class="cote">

@@ -26,7 +26,6 @@ body{ color:#EAF1F8; font-family:var(--texte); }
 @keyframes etiquette{ 0%{ opacity:0; } 2%{ opacity:1; } 90%{ opacity:1; } 100%{ opacity:0; } }
 .legende{ position:absolute; left:30px; bottom:26px; display:flex; gap:18px; font-size:15px; color:var(--brume); background:rgba(10,22,40,.8); padding:8px 14px; border-radius:10px; }
 .legende i{ display:inline-block; width:12px; height:12px; border-radius:3px; margin-right:6px; vertical-align:-1px; }
-.l-moi{ background:#F0B429; box-shadow:0 0 0 1.5px #FFF6D6; }
 .l-clan{ background:linear-gradient(135deg, #E8C547 50%, #4C9BE8 50%); } .l-seul{ background:#3A5378; } .l-libre{ background:#1E3A60; }
 .chargement{ position:absolute; left:50%; top:50%; transform:translate(-50%, -50%); font-family:var(--titre); font-weight:800; font-size:34px; color:var(--brume); }
 .chargement[hidden]{ display:none; }
@@ -75,11 +74,9 @@ h2{ margin:0 0 10px; font-family:var(--titre); font-weight:800; font-size:26px; 
 .zoom button{ font:inherit; font-size:17px; font-weight:600; color:#EAF1F8; background:rgba(16,35,63,.92); border:1px solid rgba(169,188,212,.25);
   border-radius:10px; min-width:42px; height:42px; padding:0 14px; cursor:pointer; }
 .zoom button:hover{ border-color:#E8833A; } .zoom button[hidden]{ display:none; }
-#zMoi, #zAvant{ border-color:rgba(240,180,41,.7); color:#FFD56B; }
-#zAvant[aria-pressed="true"]{ background:#F0B429; color:#0F1F38; }
+
 .bulle{ position:absolute; z-index:3; pointer-events:none; background:rgba(10,22,40,.95); border:1px solid rgba(169,188,212,.3); border-radius:10px;
   padding:7px 11px; font-size:16px; white-space:nowrap; box-shadow:0 6px 18px rgba(0,0,0,.5); }
 .bulle[hidden]{ display:none; } .bulle b{ color:#fff; } .bulle small{ display:block; color:#A9BCD4; font-size:14px; margin-top:2px; }
 .bulle i{ display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:0; }
 .bulle .dep{ display:inline-block; font-size:12px; padding:1px 6px; border-radius:6px; background:rgba(169,188,212,.16); color:#A9BCD4; margin-left:4px; }
-#legMoi[hidden]{ display:none; }

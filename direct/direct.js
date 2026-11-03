@@ -73,14 +73,22 @@ const VU = { k: 1, x: 0, y: 0 };   // écran = base × k + (x, y)
 const K_MAX = 40;
 // mes communes : seulement si le jeu est ouvert et connecté dans ce navigateur
 // (on lit l'identifiant du joueur ; aucun appel n'est fait en son nom)
-// ou ?joueur=Pseudo dans l'adresse (pour OBS, qui n'a pas la session du jeu) ; ?avant=1 : mes communes en avant d'entrée
+// ou ?joueur=Pseudo dans l'adresse (pour OBS, qui n'a pas la session du jeu).
+// Mes communes gardent simplement ma couleur de jeu (celle que les autres voient), sans mise en avant.
 const PARAMS = new URLSearchParams(location.search);
 let MON_ID = (() => {
   try{ const j = JSON.parse(localStorage.getItem('sb-yzcgroprydxhbwaufkdu-auth-token') || 'null'); return j && j.user && j.user.id || null; }catch(e){ return null; }
 })();
 const PSEUDO_VOULU = (PARAMS.get('joueur') || '').trim().toLowerCase();
-const DORE = '#F0B429';
-let enAvant = false;   // « Mes communes » : les autres en retrait
+// la couleur d'un joueur dans le jeu : celle qu'il a choisie, sinon la même couleur automatique que le jeu
+const OPPONENT_COLORS = ['#E5484D','#8E7CF6','#2EC4B6','#F76B15','#E93D82','#3DD68C','#5EB1EF','#FF977D','#9EB1FF','#12A594','#D6409F','#C2A383'];
+function couleurJeu(id){
+  const jo = D.joueurs.get(id);
+  if(jo && jo.couleur) return jo.couleur;
+  let h = 0;
+  for(let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return OPPONENT_COLORS[h % OPPONENT_COLORS.length];
+}
 function chemin(rings, code){
   const p = new Path2D();
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
@@ -106,11 +114,10 @@ async function chargerContours(){
       .catch(() => {})));
   }
 }
-const estAMoi = (code) => !!MON_ID && D.proprio.get(code) === MON_ID;
 function couleurDe(code){
   const j = D.proprio.get(code);
   if(!j) return LIBRE;
-  if(MON_ID && j === MON_ID) return DORE;
+  if(MON_ID && j === MON_ID) return couleurJeu(j);
   const jo = D.joueurs.get(j), cl = jo && jo.clan ? D.clans.get(jo.clan) : null;
   return cl ? cl.couleur : SEUL;
 }
@@ -127,18 +134,10 @@ function peindre(code){
   const c = couleurDe(code);
   ctx.fillStyle = c; ctx.strokeStyle = c; ctx.lineWidth = 0.6 / VU.k;
   ctx.fill(p); ctx.stroke(p);
-  if(enAvant && !estAMoi(code)){ ctx.fillStyle = 'rgba(10,22,40,.62)'; ctx.fill(p); }
-}
-function contourMoi(code){
-  const p = D.chemins.get(code);
-  if(!p || !visible(code)) return;
-  ctx.strokeStyle = '#FFF6D6'; ctx.lineWidth = Math.max(0.7, 1.4 / VU.k);
-  ctx.stroke(p);
 }
 function bords(){
   ctx.strokeStyle = 'rgba(169,188,212,.22)'; ctx.lineWidth = 0.8 / Math.sqrt(VU.k);
   for(const p of D.depBords) ctx.stroke(p);
-  if(MON_ID) for(const [code, j] of D.proprio) if(j === MON_ID) contourMoi(code);
 }
 function toutPeindre(){
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -224,9 +223,7 @@ document.getElementById('zPlus').addEventListener('click', () => zoomer(1.6, W /
 document.getElementById('zMoins').addEventListener('click', () => zoomer(1 / 1.6, W / 2, H / 2));
 document.getElementById('zFrance').addEventListener('click', () => { VU.k = 1; VU.x = 0; VU.y = 0; geste(); });
 const bMoi = document.getElementById('zMoi');
-const bAvant = document.getElementById('zAvant');
 bMoi.addEventListener('click', monTerritoire);
-bAvant.addEventListener('click', () => { enAvant = !enAvant; bAvant.setAttribute('aria-pressed', String(enAvant)); toutPeindre(); });
 let moiPret = false;
 function activerMoi(){
   if(PSEUDO_VOULU && !moiPret){
@@ -234,8 +231,7 @@ function activerMoi(){
   }
   if(!MON_ID || moiPret) return;
   moiPret = true;
-  bMoi.hidden = false; bAvant.hidden = false; document.getElementById('legMoi').hidden = false;
-  if(PARAMS.get('avant') === '1'){ enAvant = true; bAvant.setAttribute('aria-pressed', 'true'); }
+  bMoi.hidden = false;
 }
 
 // la commune sous la souris
@@ -261,7 +257,7 @@ function survol(e){
 }
 
 // ---------- l'état et les changements ----------
-function lireJoueurs(liste){ for(const j of liste || []) D.joueurs.set(j[0], { pseudo: j[1], clan: j[2] || null }); }
+function lireJoueurs(liste){ for(const j of liste || []) D.joueurs.set(j[0], { pseudo: j[1], clan: j[2] || null, couleur: j[3] || null }); }
 async function etatComplet(){
   const { data, error } = await sb.rpc('direct_etat');
   if(error) return false;

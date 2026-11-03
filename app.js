@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'e9f7a44f8b08';
+const VERSION_JEU = '14e8947f3041';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -23,6 +23,22 @@ const TIERS = [
 const EPIQUE_VISIBLE = true;
 const DEPT_NAMES = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","2A":"Corse-du-Sud","2B":"Haute-Corse","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise","971":"Guadeloupe","972":"Martinique","973":"Guyane","974":"La Réunion","975":"Saint-Pierre-et-Miquelon","976":"Mayotte"};
 const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
+// patch330 : la Suisse (saison 3). Éteinte tant que SUISSE_OUVERTE vaut false ;
+// ?suisse=test l'allume dans cet onglet pour essayer. Les cantons tiennent le
+// rôle des départements (code à deux lettres, région « Suisse »).
+const SUISSE_OUVERTE = false;
+const SUISSE = SUISSE_OUVERTE || (() => {
+  try {
+    if(/[?&]suisse=test\b/.test(location.search)) sessionStorage.setItem('tf-suisse-test', '1');
+    return sessionStorage.getItem('tf-suisse-test') === '1';
+  } catch(e){ return /[?&]suisse=test\b/.test(location.search); }
+})();
+const CANTONS = {"AG":"Argovie","AI":"Appenzell Rhodes-Intérieures","AR":"Appenzell Rhodes-Extérieures","BE":"Berne","BL":"Bâle-Campagne","BS":"Bâle-Ville","FR":"Fribourg","GE":"Genève","GL":"Glaris","GR":"Grisons","JU":"Jura","LU":"Lucerne","NE":"Neuchâtel","NW":"Nidwald","OW":"Obwald","SG":"Saint-Gall","SH":"Schaffhouse","SO":"Soleure","SZ":"Schwytz","TG":"Thurgovie","TI":"Tessin","UR":"Uri","VD":"Vaud","VS":"Valais","ZG":"Zoug","ZH":"Zurich"};
+const CANTON_RE = /^(AG|AI|AR|BE|BL|BS|FR|GE|GL|GR|JU|LU|NE|NW|OW|SG|SH|SO|SZ|TG|TI|UR|VD|VS|ZG|ZH)$/;
+const estCanton = (dep) => CANTON_RE.test(String(dep || ''));
+// la zone dessinée sur la carte de France (outre-mer à part, dans son encart)
+const estZoneCarte = (dep) => METRO_DEPT_RE.test(dep) || (SUISSE && estCanton(dep));
+if(SUISSE) Object.assign(DEPT_NAMES, CANTONS);
 // patch219 : l'outre-mer — un set à part (rareté propre, numéros « / 129 »), qui ne se
 // mélange ni aux compteurs ni à la carte de la métropole. 97x = DOM ; 98x = Pacifique (plus tard).
 // Le code INSEE suffit à reconnaître une carte : 97xxx / 98xxx, jamais en métropole.
@@ -1258,9 +1274,37 @@ function loadOutline(){
   return outlineEnCours;
 }
 
+// patch331 : le fond de la saison 3 (Suisse, lacs, frontière, voisins)
+let FOND_S3 = null;
+async function chargerFondSuisse(){
+  try {
+    const lire = (f) => fetch('data/' + f + '?v=1', { cache: 'force-cache' }).then(r => { if(!r.ok) throw new Error(f); return r.json(); });
+    const [terre, frontiere, lacs, voisins] = await Promise.all(
+      ['suisse-terre.json', 'suisse-frontiere.json', 'lacs-suisse.json', 'voisins.json'].map(lire));
+    FOND_S3 = { terre, frontiere, lacs, voisins, chemins: null };
+  } catch(e){ FOND_S3 = null; }
+}
+function cheminsFondS3(){
+  if(!FOND_S3 || !mapBounds) return null;
+  if(FOND_S3.chemins) return FOND_S3.chemins;
+  const ch = (rings) => new Path2D(rings.map(r => 'M' + r.map(([lon, lat]) => {
+    const p = project(lat, lon);
+    return (p.x * MAP_W).toFixed(1) + ',' + (p.y * MAP_H).toFixed(1);
+  }).join('L') + 'Z').join(''));
+  const voisins = new Path2D();
+  const etiquettes = [];
+  for(const v of FOND_S3.voisins){
+    voisins.addPath(ch(v.a));
+    if(v.e){ const p = project(v.e[1], v.e[0]); etiquettes.push({ nom: v.nom, x: p.x * MAP_W, y: p.y * MAP_H }); }
+  }
+  FOND_S3.chemins = { terre: ch(FOND_S3.terre), frontiere: ch(FOND_S3.frontiere), lacs: ch(FOND_S3.lacs), voisins, etiquettes, motif: null };
+  return FOND_S3.chemins;
+}
+
 async function chargerContourFrance(){
   const res = await fetch('data/france-outline.json');
   FRANCE_OUTLINE = await res.json();
+  if(SUISSE) await chargerFondSuisse();   // patch331
   computeMapBounds();
   renderFranceOutline();
   if(MODE_CANVAS){
@@ -1278,7 +1322,7 @@ async function chargerContourFrance(){
 
 function computeMapBounds(){
   let latMin=90, latMax=-90, lonMin=180, lonMax=-180;
-  for(const ring of FRANCE_OUTLINE){
+  for(const ring of FRANCE_OUTLINE.concat(FOND_S3 ? FOND_S3.terre : [])){   // patch331
     for(const [lon, lat] of ring){
       if(lat<latMin) latMin=lat;
       if(lat>latMax) latMax=lat;
@@ -1612,7 +1656,7 @@ function ligneJournal(e){
   const cc = String(e.commune_code || '');
   const nomC = `<b class="jr-commune ${e.tier || ''}">${echapperTexte(e.commune_nom || 'une commune')}</b>`;
   const commune = cc
-    ? `<button type="button" class="df-voir jr-voir" data-voir-carte="${echapperTexte(cc)}" title="Voir sur la carte">${nomC}<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></button> ${badgeDept(cc.startsWith('97') ? cc.slice(0, 3) : cc.slice(0, 2))}`
+    ? `<button type="button" class="df-voir jr-voir" data-voir-carte="${echapperTexte(cc)}" title="Voir sur la carte">${nomC}<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></button> ${badgeDept(depDuCode(cc))}`
     : nomC;
   let texte;
   if(e.type === 'conquete') texte = `${acteur} ${a} conquis ${commune}${e.cible_pseudo ? ` sur ${cible}` : ''}`;
@@ -2124,7 +2168,11 @@ async function chargerDepartements(){
   try{
     const rep = await fetch('contours-departements.json', { cache: 'force-cache' });
     if(!rep.ok) throw new Error('introuvable');
-    CONTOURS_DEPTS = await rep.json();
+    const deps = await rep.json();
+    if(SUISSE){   // patch331
+      try { Object.assign(deps, await (await fetch('data/contours-cantons.json?v=1', { cache: 'force-cache' })).json()); } catch(e){}
+    }
+    CONTOURS_DEPTS = deps;
   } catch(e){
     CONTOURS_DEPTS = 'erreur';
   }
@@ -2464,6 +2512,23 @@ function dessinerCanvas(){
   ctx.lineCap = 'round';
   const trait = (px) => px / k * CV.dpr;   // epaisseur constante a l'ecran
 
+  // patch331 : les voisins, éteints, sous tout le reste
+  const s3 = SUISSE ? cheminsFondS3() : null;
+  if(s3){
+    if(!s3.motif){
+      const t = document.createElement('canvas'); t.width = t.height = 10;
+      const tc = t.getContext('2d');
+      tc.fillStyle = '#1A2331'; tc.fillRect(0, 0, 10, 10);
+      tc.strokeStyle = 'rgba(169,188,212,0.075)'; tc.lineWidth = 1;
+      tc.beginPath(); tc.moveTo(-2, 12); tc.lineTo(12, -2); tc.moveTo(-2, 2); tc.lineTo(2, -2); tc.moveTo(8, 12); tc.lineTo(12, 8); tc.stroke();
+      s3.motif = ctx.createPattern(t, 'repeat');
+    }
+    if(s3.motif.setTransform) s3.motif.setTransform(new DOMMatrix().scale(CV.dpr / k));
+    ctx.fillStyle = s3.motif; ctx.fill(s3.voisins);
+    ctx.strokeStyle = 'rgba(169,188,212,0.30)'; ctx.lineWidth = trait(0.9);
+    ctx.setLineDash([trait(3), trait(3)]); ctx.stroke(s3.voisins); ctx.setLineDash([]);
+  }
+
   // ombre portee, puis la terre
   if(fond.ombre){
     ctx.save(); ctx.translate(0, 7);
@@ -2475,6 +2540,7 @@ function dessinerCanvas(){
   gt.addColorStop(1, '#172F52');
   ctx.fillStyle = gt;
   ctx.fill(fond.terre);
+  if(s3) ctx.fill(s3.terre);   // patch331
 
   if(fond.topo){
     ctx.save(); ctx.clip(fond.terre);
@@ -2487,7 +2553,13 @@ function dessinerCanvas(){
 
   if(fond.cote){
     ctx.strokeStyle = 'rgba(169,188,212,0.45)'; ctx.lineWidth = trait(1.2);
-    ctx.stroke(fond.cote);
+    if(s3){   // patch331 : pas de côte le long de la Suisse, la frontière la remplace
+      ctx.save();
+      const hors = new Path2D(); hors.rect(-MAP_W, -MAP_H, MAP_W * 3, MAP_H * 3); hors.addPath(s3.terre);
+      ctx.clip(hors, 'evenodd');
+      ctx.stroke(fond.cote);
+      ctx.restore();
+    } else ctx.stroke(fond.cote);
   }
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   dessinerNomsRegions(ctx);
@@ -2532,14 +2604,14 @@ function territoiresVisibles(){
   joueurs.set(ID_MOI, { id: ID_MOI, pseudo: 'Toi', couleur: COULEUR_MOI, fonce: couleurFoncee(COULEUR_MOI), moi: true, nb: 0 });
   const liste = [];
   for(const e of collectionMap.values()){
-    if(!METRO_DEPT_RE.test(e.dept) || e.lat == null) continue;
+    if(!estZoneCarte(e.dept) || e.lat == null) continue;   // patch330
     liste.push(entreeCarte(e, ID_MOI));   // patch145
     joueurs.get(ID_MOI).nb++;
   }
   MASQUEES_PAR_ZOOM.commun = 0;
   MASQUEES_PAR_ZOOM.peucommun = 0;
   for(const e of othersMap.values()){
-    if(!METRO_DEPT_RE.test(e.dept) || e.lat == null) continue;
+    if(!estZoneCarte(e.dept) || e.lat == null) continue;   // patch330
     const visible = mapZoom < SEUIL_CONTOURS || mapZoom >= (ZOOM_MINI[e.tier.id] || 1);
     if(showOthers && !visible && MASQUEES_PAR_ZOOM[e.tier.id] !== undefined) MASQUEES_PAR_ZOOM[e.tier.id]++;
     if(!joueurs.has(e.joueurId)){
@@ -2564,7 +2636,19 @@ function dessinerTerritoiresCanvas(ctx, trait, k){
   if(!showOthers && joueurSurligne !== ID_MOI) joueurSurligne = null;
   const mode = dessinerFondsCanvas(ctx, trait, k, liste, joueurs);
   if(mode === 'contours') dessinerArrondissementsParis(ctx, trait, k, liste);   // patch108
+  const s3 = SUISSE ? cheminsFondS3() : null;   // patch331 : les lacs
+  if(s3){
+    ctx.fillStyle = '#0D2240'; ctx.fill(s3.lacs);
+    ctx.strokeStyle = 'rgba(169,188,212,0.25)'; ctx.lineWidth = trait(0.8); ctx.stroke(s3.lacs);
+  }
   dessinerFrontieres(ctx, trait, mode === 'contours');
+  if(s3){   // patch331 : la frontière suisse, comme une limite de région, plus épaisse
+    ctx.strokeStyle = 'rgba(7,17,31,0.6)'; ctx.lineWidth = trait(6.6); ctx.stroke(s3.frontiere);
+    ctx.strokeStyle = 'rgba(214,230,246,0.8)'; ctx.lineWidth = trait(3); ctx.stroke(s3.frontiere);
+    ctx.setLineDash([trait(7), trait(5)]);
+    ctx.strokeStyle = 'rgba(15,31,56,0.85)'; ctx.lineWidth = trait(1.1); ctx.stroke(s3.frontiere);
+    ctx.setLineDash([]);
+  }
   if(CALQUES.raretes) dessinerMarqueursCanvas(ctx, liste, joueurs, k, mode === 'depts');
   if(SAISON2 && BOMBES_ZONES.length) dessinerZonesBombes(ctx, trait);   // patch260 : sous les bâtiments
   if(SAISON2 && CALQUES.batiments && BATIMENTS_CARTE.size) dessinerBatimentsCanvas(ctx, liste);   // patch243-244
@@ -2933,6 +3017,7 @@ const DEP_REGION = {
   '06':"Provence-Alpes-Côte d'Azur",'13':"Provence-Alpes-Côte d'Azur",
   '83':"Provence-Alpes-Côte d'Azur",'84':"Provence-Alpes-Côte d'Azur",
 };
+if(SUISSE) for(const c in CANTONS) DEP_REGION[c] = 'Suisse';   // patch330
 
 const CLE_CALQUES = 'terrafront-calques';
 const CALQUES = (() => {
@@ -3049,6 +3134,15 @@ function dessinerNomsRegions(ctx){
     ctx.fillStyle = 'rgba(224,236,250,0.82)';
     ctx.fillText(e.nom, x, y);
   }
+  const s3 = SUISSE ? cheminsFondS3() : null;   // patch331 : les voisins, éteints
+  if(s3) for(const e of s3.etiquettes){
+    const x = e.x * ech + mapPanX * CV.dpr, y = e.y * ech + mapPanY * CV.dpr;
+    if(x < -80 || y < -20 || x > CV.largeur * CV.dpr + 80 || y > CV.hauteur * CV.dpr + 20) continue;
+    ctx.strokeStyle = 'rgba(7,17,31,0.6)'; ctx.lineWidth = 3.4 * CV.dpr;
+    ctx.strokeText(e.nom, x, y);
+    ctx.fillStyle = 'rgba(169,188,212,0.42)';
+    ctx.fillText(e.nom, x, y);
+  }
   ctx.globalAlpha = 1;
   if('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 }
@@ -3153,6 +3247,9 @@ function ecranVersCarte(x, y){
 // calculent sur le departement entier, communes libres comprises.
 const COMMUNES_PAR_DEPT = Object.fromEntries('01:391,02:797,03:316,04:197,05:161,06:161,07:335,08:447,09:325,10:431,11:433,12:282,13:134,14:526,15:245,16:359,17:462,18:286,19:277,21:698,22:344,23:255,24:503,25:563,26:362,27:585,28:363,29:277,2A:123,2B:234,30:349,31:586,32:458,33:534,34:341,35:332,36:241,37:272,38:512,39:492,40:327,41:267,42:320,43:250,44:207,45:325,46:312,47:319,48:145,49:176,50:444,51:610,52:426,53:240,54:590,55:493,56:249,57:725,58:309,59:647,60:680,61:381,62:887,63:463,64:545,65:469,66:226,67:514,68:366,69:274,70:536,71:563,72:351,73:273,74:279,75:20,76:707,77:507,78:259,79:252,80:771,81:314,82:195,83:152,84:151,85:253,86:265,87:195,88:506,89:423,90:101,91:194,92:36,93:39,94:47,95:183'
   .split(',').map(x => { const [d, n] = x.split(':'); return [d, Number(n)]; }));
+// patch330 : les cantons (swissBOUNDARIES3D 2026)
+if(SUISSE) 'AG:196,AI:5,AR:20,BE:334,BL:86,BS:3,FR:119,GE:45,GL:3,GR:100,JU:51,LU:79,NE:24,NW:11,OW:7,SG:75,SH:26,SO:104,SZ:30,TG:80,TI:100,UR:19,VD:300,VS:122,ZG:11,ZH:160'
+  .split(',').forEach(x => { const [d, n] = x.split(':'); COMMUNES_PAR_DEPT[d] = Number(n); });
 
 function vueDepartements(){
   return mapZoom < SEUIL_CONTOURS && CONTOURS_DEPTS && typeof CONTOURS_DEPTS === 'object';
@@ -4143,14 +4240,14 @@ function dessinerTerritoires(){
   joueurs.set(ID_MOI, { id: ID_MOI, pseudo: 'Toi', couleur: COULEUR_MOI, fonce: couleurFoncee(COULEUR_MOI), moi: true, nb: 0 });
   const liste = [];
   for(const e of collectionMap.values()){
-    if(!METRO_DEPT_RE.test(e.dept) || e.lat == null) continue;
+    if(!estZoneCarte(e.dept) || e.lat == null) continue;   // patch330
     liste.push({ code: e.code, nom: e.nom, dept: e.dept, lat: e.lat, lon: e.lon, tier: e.tier.id, joueur: ID_MOI });
     joueurs.get(ID_MOI).nb++;
   }
   MASQUEES_PAR_ZOOM.commun = 0;
   MASQUEES_PAR_ZOOM.peucommun = 0;
   for(const e of othersMap.values()){
-    if(!METRO_DEPT_RE.test(e.dept) || e.lat == null) continue;
+    if(!estZoneCarte(e.dept) || e.lat == null) continue;   // patch330
     const visibleAuZoom = mapZoom < SEUIL_CONTOURS || mapZoom >= (ZOOM_MINI[e.tier.id] || 1);
     if(showOthers && !visibleAuZoom && MASQUEES_PAR_ZOOM[e.tier.id] !== undefined) MASQUEES_PAR_ZOOM[e.tier.id]++;
     if(!joueurs.has(e.joueurId)){
@@ -4324,7 +4421,7 @@ function appliquerSurlignageCarte(idSvg){
 function departementsDomines(){
   const parDept = new Map();
   const compter = (e, id) => {
-    if(!METRO_DEPT_RE.test(e.dept)) return;
+    if(!estZoneCarte(e.dept)) return;   // patch330
     if(!parDept.has(e.dept)) parDept.set(e.dept, new Map());
     const m = parDept.get(e.dept);
     m.set(id, (m.get(id) || 0) + 1);
@@ -4975,7 +5072,15 @@ function composerLot(){
 // qu'une pastille vide. Un seul emetteur, pour n'avoir qu'un endroit a
 // changer le jour ou son apparence bouge.
 // patch308 : le département d'une commune, depuis son code INSEE (3 chiffres en outre-mer)
-const depDuCode = (cc) => { cc = String(cc || ''); return cc.startsWith('97') ? cc.slice(0, 3) : cc.slice(0, 2); };
+const depDuCode = (cc) => {
+  cc = String(cc || '');
+  if(/^CH\d/.test(cc)){   // patch330 : « CH6621 » -> le canton, lu dans les données
+    const r = CARTE.cat && CARTE.cat.get(cc);
+    const e = collectionMap.get(cc) || othersMap.get(cc);
+    return (r && r[2]) || (e && e.dept) || '';
+  }
+  return cc.startsWith('97') ? cc.slice(0, 3) : cc.slice(0, 2);
+};
 function badgeDept(dep){
   const d = String(dep || '').trim();
   if(!d) return '';
@@ -11042,7 +11147,7 @@ function renderGarnisons(){
   el.innerHTML = `<h2>Mes garnisons · ${liste.length} / 3</h2>
     ${liste.map(([code, g]) => {
       const tier = TIERS.find(t => t.id === g.tier) || TIERS[TIERS.length - 1];
-      const dep = code.startsWith('97') ? code.slice(0, 3) : code.slice(0, 2);   // patch267
+      const dep = depDuCode(code);   // patch267, patch330
       return `<div class="gl"><i class="gl-c ${tier.id}"></i><div class="gl-t">
         <div class="gl-nom"><button type="button" class="df-voir" data-voir-carte="${echapperTexte(code)}" title="Voir sur la carte" aria-label="Voir ${echapperTexte(g.nom)} sur la carte"><b>${echapperTexte(g.nom)}</b><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></button>${badgeDept(dep)}</div>
         <span>${tier.label} · ${g.attaquants > 0 ? 'attaquée' : 'calme'} · ${g.energie} / 10</span>${barre(g.energie)}</div>
@@ -15903,7 +16008,7 @@ const pomNb = (x) => Number(x || 0).toLocaleString('fr-FR');
 const POM_K = Math.cos(46.5 * Math.PI / 180);
 const POM_PARIS = { lon: 2.3522, lat: 48.8566 };
 let pomBornes = null;
-function pomOutreMer(c){ return c.lat == null || c.lon == null || +c.lat < 41 || +c.lat > 51.6 || +c.lon < -5.6 || +c.lon > 10; }
+function pomOutreMer(c){ return c.lat == null || c.lon == null || +c.lat < 41 || +c.lat > 51.6 || +c.lon < -5.6 || +c.lon > 10.6; }   // patch330 : les Grisons
 function pomPx(lon, lat){ return [+lon * POM_K - pomBornes.x0, -lat - pomBornes.y0]; }
 function pomCarteFrance(d){
   const contour = FRANCE_OUTLINE;

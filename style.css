@@ -8758,3 +8758,21 @@ body.mode-terra #reserveAccueil{ display:none !important; }
 /* patch327 : échanges de clan par coéquipier */
 .ce-reste{ font-size:.72rem; color:var(--brume, #A9BCD4); margin-left:2px; font-weight:600; }
 .ce-membre:disabled{ opacity:.45; cursor:default; }
+
+/* patch328 : sous la carte (téléphone), la légende montre aussi les tailles et les bâtiments ; la bulle d'un bâtiment */
+.map-legende.en-dessous .leg-tailles{ display:flex; }
+.map-legende.en-dessous .leg-batiments{ flex-wrap:wrap; }
+.leg-bt-info{ display:flex; align-items:center; gap:6px; padding:3px 6px 3px 3px; margin:0; border:0; border-radius:999px; background:none; color:inherit; font:inherit; cursor:pointer; }
+.leg-bt-info .leg-nom{ text-decoration:underline dotted rgba(169,188,212,.6); text-underline-offset:3px; }
+.leg-bt-info:hover, .leg-bt-info.on{ background:rgba(232,131,58,.16); color:#fff; }
+.leg-bt-info:focus-visible{ outline:2px solid #E8833A; outline-offset:2px; }
+.bt-bulle{ position:fixed; z-index:9000; width:260px; max-width:calc(100vw - 16px); box-sizing:border-box; padding:12px 14px; background:#0B1A33;
+  border:1px solid rgba(232,131,58,.6); border-radius:12px; box-shadow:0 10px 24px rgba(0,0,0,.45); color:#EAF1F8; font-size:.8rem; line-height:1.4; text-align:left; }
+.bt-bulle[hidden]{ display:none; }
+.bt-bulle h4{ display:flex; align-items:center; gap:8px; margin:0 0 4px; font-size:.95rem; color:#FFB27A; }
+.bt-bulle h4 .leg-bt{ margin:0; }
+.bt-bulle .bt-role{ margin:0 0 8px; color:#fff; }
+.bt-bulle ul{ margin:0; padding-left:16px; }
+.bt-bulle li{ margin:3px 0; }
+.bt-bulle li b{ color:#FFD9B8; }
+.bt-bulle .bt-pied{ margin:8px 0 0; color:#A9BCD4; font-size:.72rem; }

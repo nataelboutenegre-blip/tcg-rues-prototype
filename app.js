@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'a6d371836293';
+const VERSION_JEU = 'ea0dc1aea198';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4414,7 +4414,7 @@ function renderLegendeCarte(joueurs, idSvg){
         <div><svg width="26" height="26"><circle cx="13" cy="13" r="10" fill="#A9BCD4"/><polygon points="${etoileSvg(13, 13, 6)}" fill="#FFF6D6" stroke="#0B1830"/></svg>Légend.</div>
         <div><svg width="26" height="26"><defs><linearGradient id="legAu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#9FFFE2"/><stop offset="1" stop-color="#C08CFF"/></linearGradient></defs><circle cx="13" cy="13" r="11" fill="rgba(61,242,192,.25)"/><path d="M13 3 L15.4 10.6 L23 13 L15.4 15.4 L13 23 L10.6 15.4 L3 13 L10.6 10.6 Z" fill="url(#legAu)" stroke="#0B1830"/></svg>Aurore</div>
       </div>${SAISON2 && BATIMENTS ? `
-      <div class="leg-tailles leg-batiments"><div><span class="leg-bt">${ICONE_FONDERIE}</span>Fonderie</div><div><span class="leg-bt">${ICONE_FORTERESSE}</span>Forteresse</div><div><span class="leg-bt leg-centre">${ICONE_CENTRE}</span>Centre dévoilé</div></div>` : ''}
+      <div class="leg-tailles leg-batiments">${['fonderie', 'forteresse', 'centre'].map(k => `<button type="button" class="leg-bt-info${btBulleCle === k ? ' on' : ''}" data-bt-info="${k}" aria-expanded="${btBulleCle === k}"><span class="leg-bt${k === 'centre' ? ' leg-centre' : ''}">${k === 'fonderie' ? ICONE_FONDERIE : k === 'forteresse' ? ICONE_FORTERESSE : ICONE_CENTRE}</span><span class="leg-nom">${BT_INFO[k].titre}</span></button>`).join('')}</div>` : ''}   <!-- patch328 -->
     </div>`;
 }
 
@@ -24642,6 +24642,54 @@ function mdbVers(quoi, tier){
   }, true);
   mdbAppliquer();
 })();
+
+// ---------- patch328 : la bulle d'un bâtiment de la légende ----------
+var BT_INFO = {
+  fonderie: { titre: 'Fonderie', role: 'Elle produit les lingots qui servent à construire tes bâtiments.',
+    li: ['La 1re est <b>gratuite</b> : <b>10 lingots par jour</b>, 30 en réserve.', 'Une 2e coûte <b>30 lingots</b> : 10 de plus par jour, réserve jusqu’à 45.',
+         'Si on prend sa commune, elle disparaît et le joueur pille <b>la moitié</b> de tes lingots (le quart si tu en as deux).'],
+    pied: 'Se construit en 6 h sur une de tes communes.' },
+  forteresse: { titre: 'Forteresse', role: 'Elle rend une de tes communes plus dure à prendre.',
+    li: ['Coûte <b>20 lingots</b>, 3 au plus.', '<b>−15 %</b> aux chances de ceux qui l’attaquent.', '<b>+5 %</b> à tes attaques à moins de 20 km.',
+         'Disparaît si on prend sa commune, ou sous une bombe.'],
+    pied: 'Se construit en 6 h sur une de tes communes.' },
+  centre: { titre: 'Centre dévoilé', role: 'Le centre de recherche d’un joueur qui prépare une bombe.',
+    li: ['Il est secret, mais apparaît sur la carte après <b>48 h</b> de préparation, et reste visible 24 h après l’impact.',
+         '<b>Le prendre fait perdre la bombe</b> à son propriétaire.',
+         'La bombe détruit garnisons et forteresses de tout le monde dans sa zone (jusqu’à 20 km), et tout le monde y attaque à <b>+15 %</b> pendant 24 h.'],
+    pied: 'Pour en construire un : 2 Fonderies et 40 lingots.' },
+};
+var btBulle = null, btBulleCle = null;
+function btBulleCacher(){
+  if(btBulle) btBulle.hidden = true;
+  btBulleCle = null;
+  document.querySelectorAll('.leg-bt-info.on').forEach(x => { x.classList.remove('on'); x.setAttribute('aria-expanded', 'false'); });
+}
+function btBulleMontrer(b){
+  const k = b.dataset.btInfo, I = BT_INFO[k];
+  if(!I) return;
+  if(btBulleCle === k){ btBulleCacher(); return; }
+  if(!btBulle){ btBulle = document.createElement('div'); btBulle.className = 'bt-bulle'; btBulle.setAttribute('role', 'dialog'); btBulle.hidden = true; document.body.appendChild(btBulle); }
+  btBulleCacher();
+  btBulleCle = k; b.classList.add('on'); b.setAttribute('aria-expanded', 'true');
+  const ic = k === 'fonderie' ? ICONE_FONDERIE : k === 'forteresse' ? ICONE_FORTERESSE : ICONE_CENTRE;
+  btBulle.setAttribute('aria-label', I.titre);
+  btBulle.innerHTML = `<h4><span class="leg-bt${k === 'centre' ? ' leg-centre' : ''}">${ic}</span>${I.titre}</h4><p class="bt-role">${I.role}</p>
+    <ul>${I.li.map(x => `<li>${x}</li>`).join('')}</ul><p class="bt-pied">${I.pied}</p>`;
+  btBulle.hidden = false;
+  const rb = b.getBoundingClientRect(), w = btBulle.offsetWidth, h = btBulle.offsetHeight;
+  let x = rb.left, y = rb.bottom + 8;
+  if(y + h > window.innerHeight - 8) y = rb.top - h - 8;
+  x = Math.max(8, Math.min(x, window.innerWidth - w - 8));
+  btBulle.style.left = x + 'px'; btBulle.style.top = Math.max(8, y) + 'px';
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest && e.target.closest('.leg-bt-info[data-bt-info]');
+  if(b){ e.preventDefault(); btBulleMontrer(b); return; }
+  if(btBulleCle && !(btBulle && btBulle.contains(e.target))) btBulleCacher();
+}, true);
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && btBulleCle) btBulleCacher(); });
+window.addEventListener('scroll', () => { if(btBulleCle) btBulleCacher(); }, true);
 
 // ---------- patch324 : mesure de l'accueil (s2-86) ----------
 // La première fois qu'un nouveau (compte de moins de 14 jours) passe une étape,

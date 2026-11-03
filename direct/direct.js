@@ -64,18 +64,36 @@ async function catalogue(version){
   return D.cat;
 }
 
-// ---------- la carte ----------
+// ---------- la carte : zoom et déplacement comme dans Territoire ----------
 const canvas = document.getElementById('carte'), ctx = canvas.getContext('2d');
 const DPR = Math.min(2, window.devicePixelRatio || 1);
-canvas.width = W * DPR; canvas.height = H * DPR; ctx.scale(DPR, DPR);
-function chemin(rings){
+canvas.width = W * DPR; canvas.height = H * DPR;
+const BOITES = new Map();   // code -> [x0, y0, x1, y1] en coordonnées de base
+const VU = { k: 1, x: 0, y: 0 };   // écran = base × k + (x, y)
+const K_MAX = 40;
+// mes communes : seulement si le jeu est ouvert et connecté dans ce navigateur
+// (on lit l'identifiant du joueur ; aucun appel n'est fait en son nom)
+// ou ?joueur=Pseudo dans l'adresse (pour OBS, qui n'a pas la session du jeu) ; ?avant=1 : mes communes en avant d'entrée
+const PARAMS = new URLSearchParams(location.search);
+let MON_ID = (() => {
+  try{ const j = JSON.parse(localStorage.getItem('sb-yzcgroprydxhbwaufkdu-auth-token') || 'null'); return j && j.user && j.user.id || null; }catch(e){ return null; }
+})();
+const PSEUDO_VOULU = (PARAMS.get('joueur') || '').trim().toLowerCase();
+const DORE = '#F0B429';
+let enAvant = false;   // « Mes communes » : les autres en retrait
+function chemin(rings, code){
   const p = new Path2D();
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for(const r of rings){
     if(!r || r.length < 3) continue;
-    p.moveTo(px(r[0][0]), py(r[0][1]));
-    for(let i = 1; i < r.length; i++) p.lineTo(px(r[i][0]), py(r[i][1]));
+    for(let i = 0; i < r.length; i++){
+      const x = px(r[i][0]), y = py(r[i][1]);
+      if(i === 0) p.moveTo(x, y); else p.lineTo(x, y);
+      if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y;
+    }
     p.closePath();
   }
+  if(code) BOITES.set(code, [x0, y0, x1, y1]);
   return p;
 }
 async function chargerContours(){
@@ -84,31 +102,162 @@ async function chargerContours(){
   const liste = Object.keys(deps).filter((d) => d.length === 2);
   for(let i = 0; i < liste.length; i += 12){
     await Promise.all(liste.slice(i, i + 12).map((dep) => fetch('../contours/' + dep + '.json?v=' + CONTOURS_V, { cache: 'force-cache' })
-      .then((r) => r.ok ? r.json() : {}).then((j) => { for(const [code, rings] of Object.entries(j)) D.chemins.set(code, chemin(rings)); })
+      .then((r) => r.ok ? r.json() : {}).then((j) => { for(const [code, rings] of Object.entries(j)) D.chemins.set(code, chemin(rings, code)); })
       .catch(() => {})));
   }
 }
+const estAMoi = (code) => !!MON_ID && D.proprio.get(code) === MON_ID;
 function couleurDe(code){
   const j = D.proprio.get(code);
   if(!j) return LIBRE;
+  if(MON_ID && j === MON_ID) return DORE;
   const jo = D.joueurs.get(j), cl = jo && jo.clan ? D.clans.get(jo.clan) : null;
   return cl ? cl.couleur : SEUL;
 }
+function poserVue(){ ctx.setTransform(DPR * VU.k, 0, 0, DPR * VU.k, DPR * VU.x, DPR * VU.y); }
+function visible(code){
+  const b = BOITES.get(code);
+  if(!b) return true;
+  const x0 = -VU.x / VU.k, y0 = -VU.y / VU.k, x1 = (W - VU.x) / VU.k, y1 = (H - VU.y) / VU.k;
+  return b[2] >= x0 && b[0] <= x1 && b[3] >= y0 && b[1] <= y1;
+}
 function peindre(code){
   const p = D.chemins.get(code);
-  if(!p) return;
+  if(!p || !visible(code)) return;
   const c = couleurDe(code);
-  ctx.fillStyle = c; ctx.strokeStyle = c; ctx.lineWidth = 0.6;
+  ctx.fillStyle = c; ctx.strokeStyle = c; ctx.lineWidth = 0.6 / VU.k;
   ctx.fill(p); ctx.stroke(p);
+  if(enAvant && !estAMoi(code)){ ctx.fillStyle = 'rgba(10,22,40,.62)'; ctx.fill(p); }
+}
+function contourMoi(code){
+  const p = D.chemins.get(code);
+  if(!p || !visible(code)) return;
+  ctx.strokeStyle = '#FFF6D6'; ctx.lineWidth = Math.max(0.7, 1.4 / VU.k);
+  ctx.stroke(p);
 }
 function bords(){
-  ctx.strokeStyle = 'rgba(169,188,212,.22)'; ctx.lineWidth = 0.8;
+  ctx.strokeStyle = 'rgba(169,188,212,.22)'; ctx.lineWidth = 0.8 / Math.sqrt(VU.k);
   for(const p of D.depBords) ctx.stroke(p);
+  if(MON_ID) for(const [code, j] of D.proprio) if(j === MON_ID) contourMoi(code);
 }
 function toutPeindre(){
-  ctx.fillStyle = MER; ctx.fillRect(0, 0, W, H);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = MER; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  poserVue();
   for(const code of D.chemins.keys()) peindre(code);
   bords();
+  placerEclairs();
+}
+// pendant un geste : l'image actuelle étirée (instantané), puis le vrai dessin au repos
+let instantane = null, instVu = null, reposTimer = null;
+function geste(){
+  if(!instantane){
+    instantane = document.createElement('canvas'); instantane.width = canvas.width; instantane.height = canvas.height;
+    instantane.getContext('2d').drawImage(canvas, 0, 0); instVu = { ...VU };
+  }
+  const r = VU.k / instVu.k;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = MER; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.setTransform(r, 0, 0, r, DPR * (VU.x - instVu.x * r), DPR * (VU.y - instVu.y * r));
+  ctx.drawImage(instantane, 0, 0);
+  placerEclairs();
+  clearTimeout(reposTimer);
+  reposTimer = setTimeout(() => { instantane = null; toutPeindre(); }, 140);
+}
+function borner(){
+  VU.k = Math.max(1, Math.min(K_MAX, VU.k));
+  if(VU.k === 1){ VU.x = 0; VU.y = 0; return; }
+  // au moins la moitié de l'écran reste sur la carte
+  VU.x = Math.min(W * 0.5, Math.max(W * 0.5 - W * VU.k, VU.x));
+  VU.y = Math.min(H * 0.5, Math.max(H * 0.5 - H * VU.k, VU.y));
+}
+function zoomer(f, cx, cy){
+  const k = Math.max(1, Math.min(K_MAX, VU.k * f));
+  const bx = (cx - VU.x) / VU.k, by = (cy - VU.y) / VU.k;
+  VU.k = k; VU.x = cx - bx * k; VU.y = cy - by * k;
+  borner(); geste();
+}
+function cadrer(x0, y0, x1, y1){
+  const k = Math.max(1, Math.min(K_MAX, 0.85 * Math.min(W / Math.max(1, x1 - x0), H / Math.max(1, y1 - y0))));
+  VU.k = k; VU.x = W / 2 - (x0 + x1) / 2 * k; VU.y = H / 2 - (y0 + y1) / 2 * k;
+  borner(); geste();
+}
+// « Mon territoire » : le coin où j'ai le plus de communes (grille de 20 × 20, voisinage 3 × 3)
+function monTerritoire(){
+  const T = W / 20, cases = new Map(), pts = [];
+  for(const [code, j] of D.proprio){
+    if(j !== MON_ID || code.startsWith('97')) continue;
+    const b = BOITES.get(code); if(!b) continue;
+    const x = (b[0] + b[2]) / 2, y = (b[1] + b[3]) / 2, k = Math.floor(x / T) + ',' + Math.floor(y / T);
+    pts.push([x, y, b]); cases.set(k, (cases.get(k) || 0) + 1);
+  }
+  if(!pts.length) return;
+  let meilleur = null, n = -1;
+  for(const k of cases.keys()){
+    const [i, j] = k.split(',').map(Number); let t = 0;
+    for(let di = -1; di <= 1; di++) for(let dj = -1; dj <= 1; dj++) t += cases.get((i + di) + ',' + (j + dj)) || 0;
+    if(t > n){ n = t; meilleur = [i, j]; }
+  }
+  const [ci, cj] = meilleur, cx0 = (ci - 1) * T, cy0 = (cj - 1) * T, cx1 = (ci + 2) * T, cy1 = (cj + 2) * T;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for(const [x, y, b] of pts){
+    if(x < cx0 || x > cx1 || y < cy0 || y > cy1) continue;
+    x0 = Math.min(x0, b[0]); y0 = Math.min(y0, b[1]); x1 = Math.max(x1, b[2]); y1 = Math.max(y1, b[3]);
+  }
+  cadrer(x0 - 10, y0 - 10, x1 + 10, y1 + 10);
+}
+const pos = (e) => { const r = canvas.getBoundingClientRect(); return [(e.clientX - r.left) * W / r.width, (e.clientY - r.top) * H / r.height]; };
+canvas.addEventListener('wheel', (e) => { e.preventDefault(); const [x, y] = pos(e); zoomer(Math.pow(1.0018, -e.deltaY), x, y); }, { passive: false });
+canvas.addEventListener('dblclick', (e) => { const [x, y] = pos(e); zoomer(2, x, y); });
+let glisse = null;
+canvas.addEventListener('pointerdown', (e) => { glisse = { id: e.pointerId, p: pos(e), x: VU.x, y: VU.y }; canvas.setPointerCapture(e.pointerId); canvas.classList.add('glisse'); });
+canvas.addEventListener('pointermove', (e) => {
+  if(glisse && glisse.id === e.pointerId){
+    const [x, y] = pos(e); VU.x = glisse.x + x - glisse.p[0]; VU.y = glisse.y + y - glisse.p[1]; borner(); geste(); cacherBulle(); return;
+  }
+  survol(e);
+});
+const fin = () => { glisse = null; canvas.classList.remove('glisse'); };
+canvas.addEventListener('pointerup', fin); canvas.addEventListener('pointercancel', fin);
+canvas.addEventListener('pointerleave', cacherBulle);
+document.getElementById('zPlus').addEventListener('click', () => zoomer(1.6, W / 2, H / 2));
+document.getElementById('zMoins').addEventListener('click', () => zoomer(1 / 1.6, W / 2, H / 2));
+document.getElementById('zFrance').addEventListener('click', () => { VU.k = 1; VU.x = 0; VU.y = 0; geste(); });
+const bMoi = document.getElementById('zMoi');
+const bAvant = document.getElementById('zAvant');
+bMoi.addEventListener('click', monTerritoire);
+bAvant.addEventListener('click', () => { enAvant = !enAvant; bAvant.setAttribute('aria-pressed', String(enAvant)); toutPeindre(); });
+let moiPret = false;
+function activerMoi(){
+  if(PSEUDO_VOULU && !moiPret){
+    for(const [id, j] of D.joueurs) if(String(j.pseudo || '').toLowerCase() === PSEUDO_VOULU){ MON_ID = id; break; }
+  }
+  if(!MON_ID || moiPret) return;
+  moiPret = true;
+  bMoi.hidden = false; bAvant.hidden = false; document.getElementById('legMoi').hidden = false;
+  if(PARAMS.get('avant') === '1'){ enAvant = true; bAvant.setAttribute('aria-pressed', 'true'); }
+}
+
+// la commune sous la souris
+const bulle = document.getElementById('bulle');
+let survolT = 0;
+function cacherBulle(){ bulle.hidden = true; }
+function survol(e){
+  const t = performance.now(); if(t - survolT < 40) return; survolT = t;
+  const [sx, sy] = pos(e), bx = (sx - VU.x) / VU.k, by = (sy - VU.y) / VU.k;
+  let trouve = null;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  for(const [code, b] of BOITES){
+    if(bx < b[0] || bx > b[2] || by < b[1] || by > b[3]) continue;
+    if(ctx.isPointInPath(D.chemins.get(code), bx, by)){ trouve = code; break; }
+  }
+  poserVue();
+  if(!trouve){ cacherBulle(); return; }
+  const r = D.cat && D.cat.get(trouve), j = D.proprio.get(trouve), jo = j ? D.joueurs.get(j) : null, cl = jo && jo.clan ? D.clans.get(jo.clan) : null;
+  bulle.innerHTML = '<b>' + esc(r ? r[1] : trouve) + '</b> <span class="dep">' + esc(r ? r[2] : '') + '</span><small>'
+    + (j ? (cl ? '<i style="background:' + esc(cl.couleur) + '"></i>[' + esc(cl.tag) + '] ' : '') + esc(jo ? jo.pseudo : 'un joueur') + (j === MON_ID ? ' (toi)' : '') : 'commune libre') + '</small>';
+  bulle.hidden = false;
+  bulle.style.left = (sx + 24) + 'px'; bulle.style.top = (sy + 24) + 'px';
 }
 
 // ---------- l'état et les changements ----------
@@ -125,6 +274,7 @@ async function etatComplet(){
   D.proprio = new Map();
   for(const r of data.p || []) D.proprio.set(String(r[0]), ids[r[1]]);
   D.id = Number(data.id) || 0;
+  activerMoi();
   toutPeindre();
   return true;
 }
@@ -144,9 +294,9 @@ async function changements(){
     for(const [code, j] of fin){
       if((D.proprio.get(code) || null) === j) continue;
       if(j) D.proprio.set(code, j); else D.proprio.delete(code);
-      peindre(code); peint = true;
+      peint = true;
     }
-    if(peint) bords();
+    if(peint && !instantane){ poserVue(); for(const [code] of fin) peindre(code); bords(); }
     D.id = Math.max(D.id, Number(data.id) || 0);
   }catch(e){ console.error(e); }
   finally{ D.enCours = false; }
@@ -190,19 +340,29 @@ function eclair(e){
   if(type !== 'conquete' && type !== 'defense') return;
   const r = D.cat && D.cat.get(String(code));
   if(!r || r[4] == null) return;
-  const x = px(r[5]), y = py(r[4]), def = type === 'defense' ? ' def' : '';
+  const bx = px(r[5]), by = py(r[4]), def = type === 'defense' ? ' def' : '';
   const box = document.getElementById('eclairs');
-  const a = document.createElement('div'); a.className = 'anneau' + def; a.style.left = x + 'px'; a.style.top = y + 'px';
-  const p = document.createElement('div'); p.className = 'point' + def; p.style.left = x + 'px'; p.style.top = y + 'px';
-  const g = document.createElement('div'); g.className = 'etiquette' + def + (x > W * 0.62 ? ' gauche' : ''); g.style.left = x + 'px'; g.style.top = y + 'px';
+  const a = document.createElement('div'); a.className = 'anneau' + def;
+  const p = document.createElement('div'); p.className = 'point' + def;
+  const g = document.createElement('div'); g.className = 'etiquette' + def;
+  for(const el of [a, p, g]){ el.dataset.bx = bx; el.dataset.by = by; }
   g.innerHTML = type === 'conquete'
     ? (tag ? '<b>[' + esc(tag) + '] ' : '<b>') + esc(acteur || 'Un joueur') + '</b> prend <b>' + esc(nom) + '</b>' + (cible ? '<small>à ' + esc(cible) + '</small>' : '')
     : '🛡 <b>' + esc(nom) + '</b> tient bon<small>' + (tag ? '[' + esc(tag) + '] ' : '') + esc(acteur || '') + ' repousse ' + esc(cible || '') + '</small>';
   box.append(a, p, g);
+  placerEclairs();
   // au plus 3 étiquettes à la fois
   const tags = box.querySelectorAll('.etiquette');
   if(tags.length > 3) tags[0].remove();
   setTimeout(() => { a.remove(); p.remove(); g.remove(); }, 61000);
+}
+function placerEclairs(){
+  for(const el of document.querySelectorAll('#eclairs [data-bx]')){
+    const x = Number(el.dataset.bx) * VU.k + VU.x, y = Number(el.dataset.by) * VU.k + VU.y;
+    el.style.left = x + 'px'; el.style.top = y + 'px';
+    el.style.visibility = (x < -40 || x > W + 40 || y < -40 || y > H + 40) ? 'hidden' : '';
+    if(el.classList.contains('etiquette')) el.classList.toggle('gauche', x > W * 0.62);
+  }
 }
 async function fil(){
   const { data, error } = await sb.rpc('direct_fil');

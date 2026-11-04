@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=80d0c1f13e24">
+<link rel="stylesheet" href="style.css?v=02cd91f8b656">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -985,7 +985,7 @@
         <button type="button" class="volet actif" data-volet="combat" role="tab" aria-selected="true">Attaquer</button>
         <button type="button" class="volet" data-volet="defense" role="tab" aria-selected="false">Défendre<span class="volet-badge" data-badge-defense hidden></span></button>
       </div>
-      <div class="sub">3 victoires pour conquérir une commune, pas forcément d'affilée : une défaite ne te fait rien perdre. Avant d'attaquer, choisis ton engagement : plus tu paies, plus tu as de chances. Un round toutes les 2 min sur une commune, 5 min sur une peu commune, 10 min sur une rare, 3 h sur une légendaire. Les communes et peu communes s'affichent avec leur filtre ou « Près de mon territoire ».</div>
+      <div class="sub">3 victoires pour conquérir une commune, pas forcément d'affilée : une défaite ne te fait rien perdre. Avant d'attaquer, choisis ton engagement : plus tu paies, plus tu as de chances. Un round toutes les 2 min sur une commune, 5 min sur une peu commune, 10 min sur une rare, 1 h sur une épique, 3 h sur une légendaire. Les communes et peu communes s'affichent avec leur filtre ou « Près de mon territoire ».</div>
       <div class="bourse-filters combat-proximite">
         <span class="puce solde">Solde <b id="soldeValueCombat">—</b></span>
         <button class="filter-pill prox-toggle" id="combatEnCoursToggle" aria-pressed="false"><span class="prox-switch"></span>Combats en cours <span class="en-cours-nb" id="combatEnCoursNb">0</span></button>
@@ -1197,7 +1197,7 @@
         <section class="essentiel" aria-label="L'essentiel">
           <div class="etape"><div class="etape-num">1</div><h3>Deux modes</h3><p>En haut de l'écran : <b>Terra</b>, ta collection à toi, et <b>Front</b>, la conquête de la carte avec tous les joueurs.</p></div>
           <div class="etape"><div class="etape-num">2</div><h3>Collectionne</h3><p>En Terra, chaque paquet complète ta propre France. Les doublons se revendent, s'échangent ou partent en contrat.</p></div>
-          <div class="etape"><div class="etape-num">3</div><h3>Conquiers</h3><p>En Front, chaque commune n'a qu'un propriétaire. Attaque avec ton énergie, défends avec tes garnisons.</p></div>
+          <div class="etape"><div class="etape-num">3</div><h3>Conquiers</h3><p>En Front, chaque commune n'a qu'un propriétaire. Attaque avec ton énergie, défends-toi à la main ou avec tes garnisons.</p><!-- patch340 --></div>
           <div class="etape"><div class="etape-num">4</div><h3>Accomplis</h3><p>Les quêtes du jour et les mini-jeux du QG rapportent des TerraPoints (TP) et de l'énergie.</p></div>
         </section>
 
@@ -1699,6 +1699,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=80d0c1f13e24"></script>
+<script defer src="app.js?v=02cd91f8b656"></script>
 </body>
 </html>

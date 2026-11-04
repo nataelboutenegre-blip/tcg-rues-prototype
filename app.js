@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '7d47e9a415b2';
+const VERSION_JEU = '2d398e463fd5';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8126,7 +8126,14 @@ function renderPackStatus(){
     : packStatusCache.solde < 200 ? 'Solde insuffisant' : null);   // patch156
 
   // un jeton vient de se recharger pendant que le joueur est sur le jeu
-  if(dispoPrecedente !== null && dispo > dispoPrecedente && !paquetEnCours && !raBloque()){   // patch322
+  if(dispoPrecedente !== null && dispo > dispoPrecedente && !paquetEnCours && roueActive() && !roueTourne && ROUE.tours_jour < ROUE.par_jour){   // patch343
+    notifier({
+      type: 'succes',
+      titre: 'Un tour de roue t\'attend',
+      texte: dispo > 1 ? `Tu en as ${dispo} en réserve. Touche ici pour tourner la roue du Front.` : 'Touche ici pour tourner la roue du Front.',
+      aller: () => { ncAller('front', 'tirage'); window.scrollTo({ top: 0 }); }
+    });
+  } else if(dispoPrecedente !== null && dispo > dispoPrecedente && !paquetEnCours && !raBloque() && !roueActive()){   // patch322
     notifier({
       type: 'succes',
       titre: 'Un paquet gratuit t\'attend',
@@ -8152,6 +8159,7 @@ function renderPackStatus(){
   const ps = document.getElementById('packStatus');
   if(ps) ps.hidden = !ps.children.length;
   renderReserveAccueil();   // patch322
+  renderRoue();   // patch343
 }
 function paquetPretAffiche(){
   return !!document.querySelector('#packZone .paquet[data-pret]');
@@ -11377,6 +11385,7 @@ function appliquerMode(){
   });
   majBascule();
   rangerGroupes();   // patch191
+  if(typeof renderRoue === 'function') renderRoue();   // patch343
   // l'onglet ouvert n'existe pas dans ce mode : retour au Tirage
   const actif = document.querySelector('.tab.active[data-tab]');
   const idActif = actif ? actif.dataset.tab : null;
@@ -25555,6 +25564,7 @@ async function chargerReserveAccueil(){
   }catch(e){ RESERVE_ACCUEIL = null; }
   renderReserveAccueil();
   if(typeof renderPackStatus === 'function' && packStatusCache) renderPackStatus();
+  chargerRoue();   // patch343
 }
 function raBloque(){
   return !!(SAISON2 && !enTerra() && RESERVE_ACCUEIL && RESERVE_ACCUEIL.ouvert && RESERVE_ACCUEIL.bloque);
@@ -25586,8 +25596,13 @@ function renderReserveAccueil(){
     if(bloque){
       cas = 'bloque';
       html = `<span class="ra-ic">🛡️</span><span class="ra-t">Réserve d'accueil active</span>
-        <p class="ra-x">Les <b>${fr(Math.min(libres, seuil))}</b> dernières communes libres sont réservées aux joueurs arrivés depuis moins de ${jours} jours. Tes paquets du Front sont gardés. Pour gagner du terrain, attaque !</p>
-        <div class="ra-act"><button type="button" class="ra-go fort" data-ra="attaquer">Attaquer</button><button type="button" class="ra-go" data-ra="terra">Paquets Terra</button></div>`;
+        ${roueActive() ? `<p class="ra-x">Les <b>${fr(Math.min(libres, seuil))}</b> dernières communes libres sont réservées aux joueurs arrivés depuis moins de ${jours} jours. En attendant, <b>la roue du Front remplace tes paquets</b>.</p>`
+        : `<p class="ra-x">Les <b>${fr(Math.min(libres, seuil))}</b> dernières communes libres sont réservées aux joueurs arrivés depuis moins de ${jours} jours. Tes paquets du Front sont gardés. Pour gagner du terrain, attaque !</p>
+        <div class="ra-act"><button type="button" class="ra-go fort" data-ra="attaquer">Attaquer</button><button type="button" class="ra-go" data-ra="terra">Paquets Terra</button></div>`}`;   // patch343
+    } else if(libres === 0 && roueActive()){   // patch343 : pot vide, la roue est pour tout le monde
+      cas = 'bloque';
+      html = `<span class="ra-ic">🛡️</span><span class="ra-t">Plus aucune commune libre</span>
+        <p class="ra-x">Le pot du Front est vide. En attendant, <b>la roue du Front remplace tes paquets</b>. Pour gagner du terrain, attaque !</p>`;
     } else if(libres <= seuil && !ancien){
       cas = 'nouveau';
       const date = new Date(ins + jours * 86400000).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
@@ -25613,6 +25628,257 @@ document.getElementById('reserveAccueil')?.addEventListener('click', (e) => {
   if(b.dataset.ra === 'attaquer') ncAller('front', 'combat');
   else if(b.dataset.ra === 'terra') ncAller('terra', 'tirage');
 });
+
+// ---------- patch343 : la roue du Front (s2-98) ----------
+// Les comptes bloqués par la réserve d'accueil (et tout le monde quand le pot
+// est vide) tournent la roue au lieu d'ouvrir un paquet du Front. Mêmes jetons
+// (1 toutes les 20 min, 3 en réserve), tours du jour plafonnés par le serveur.
+// Le serveur tire la case (roue_front_tourner) : la roue ne fait qu'y atterrir.
+var ROUE = null, roueLu = 0, roueTourne = false, roueRot = -14, roueSig = '', roueEtaitActive = false;
+var roueChancesOuvertes = false, roueGainMinuterie = null;
+const ROUE_STYLE = {
+  petit:   { c1: '#FFD45C', c2: '#C98A12', puce: '#F0B429', ic: 'e' },
+  lingots: { c1: '#4C6A96', c2: '#22385C', puce: '#3B5A86', ic: 'l' },
+  eclair:  { c1: '#FF9A4D', c2: '#D0561A', puce: '#F07A33', ic: 'e' },
+  mixte:   { c1: '#6FA8FF', c2: '#2C5FD0', puce: '#4C86F0', ic: 'el' },
+  gros:    { c1: '#FF7A7E', c2: '#B92D33', puce: '#E5484D', ic: 'e', fort: true },
+  coffre:  { c1: '#C29BFF', c2: '#6E3BD6', puce: '#9A6BF0', ic: 'l', fort: true },
+  terra:   { c1: '#4BE09A', c2: '#178553', puce: '#2FBF78', ic: 't', muet: true, fort: true },
+  jackpot: { c1: '#FF6FA0', c2: '#C2124F', puce: '#E8306F', ic: 's', muet: true, fort: true },
+};
+const ROUE_BOLT = 'M13.2 2.5 5.5 13.2h5.3l-1 8.3 7.7-10.7h-5.3z';
+async function chargerRoue(){
+  if(!SAISON2) return;
+  if(roueTourne) return;   // l'état arrive avec le tour en cours
+  try{
+    const { data, error } = await sb.rpc('roue_front_etat');
+    ROUE = !error && data ? data : null;   // s2-98 pas lancé : rien
+  }catch(e){ ROUE = null; }
+  roueLu = Date.now();
+  renderRoue();
+}
+function roueActive(){
+  return !!(SAISON2 && !enTerra() && ROUE && ROUE.ouverte);
+}
+function roueJetons(){
+  if(!ROUE) return 0;
+  const j = Number(ROUE.jetons) || 0;
+  if(j >= 3) return j;   // un cadeau au-dessus de 3 est gardé
+  return Math.min(3, j + (Date.now() - roueLu) / 1200000);
+}
+function roueCases(){
+  return (ROUE && Array.isArray(ROUE.cases) ? ROUE.cases : []).filter(k => Number(k.poids) > 0);
+}
+function roueStyle(k){
+  const e = Number(k.energie) > 0, l = Number(k.lingots) > 0;
+  return ROUE_STYLE[k.id] || { c1: '#8A9BB4', c2: '#3D4B60', puce: '#8A9BB4', ic: e && l ? 'el' : e ? 'e' : l ? 'l' : Number(k.terra) > 0 ? 't' : 's' };
+}
+function roueAngles(){
+  const L = roueCases(), tot = L.reduce((s, k) => s + Number(k.poids), 0) || 1;
+  let a = 0;
+  return L.map((k, i) => { const d = Number(k.poids) / tot * 360; const r = { k, i, a0: a, a1: a + d, am: a + d / 2, p: Number(k.poids) / tot * 100 }; a += d; return r; });
+}
+function rouePt(ang, r){ return [165 + r * Math.sin(ang * Math.PI / 180), 165 - r * Math.cos(ang * Math.PI / 180)]; }
+function roueIcone(ic, s){
+  const lingot = (x, y, k) => `<g transform="translate(${x} ${y}) scale(${k})"><path d="M-9 4 L-6 -4 H6 L9 4 Z" fill="#FFD35A" stroke="#7A4E0C" stroke-width="1.4"/><path d="M-5 -2.5 H5" stroke="#FFF3C4" stroke-width="1.3"/></g>`;
+  const eclair = (x, y, k) => `<g transform="translate(${x} ${y}) scale(${k}) translate(-12 -12)"><path d="${ROUE_BOLT}" fill="#FFF7D6" stroke="#6b4508" stroke-width="1.2" stroke-linejoin="round"/></g>`;
+  if(ic === 'e') return eclair(0, 0, s);
+  if(ic === 'l') return lingot(0, 0, s);
+  if(ic === 'el') return eclair(-9 * s, 0, s * .85) + lingot(9 * s, 1, s * .85);
+  if(ic === 't') return `<g transform="scale(${s})"><rect x="-6.5" y="-9" width="13" height="18" rx="2.5" fill="#E9FFF3" stroke="#0e5c37" stroke-width="1.4"/><rect x="-4" y="-6.5" width="8" height="7" rx="1" fill="#3DD68C"/></g>`;
+  return `<g transform="scale(${s})"><path d="M0 -10 L2.9 -3.2 10 -3.1 4.3 1.4 6.3 8.4 0 4.3 -6.3 8.4 -4.3 1.4 -10 -3.1 -2.9 -3.2Z" fill="#FFE27A" stroke="#7a4f0e" stroke-width="1.2"/></g>`;
+}
+function roueTexteCase(k){
+  if(roueStyle(k).muet) return '';
+  const e = Number(k.energie) || 0, l = Number(k.lingots) || 0;
+  return e && l ? `+${e} · +${l}` : e ? `+${e}` : l ? `+${l}` : '';
+}
+function roueGainsTexte(k){
+  const e = Number(k.energie) || 0, l = Number(k.lingots) || 0, t = Number(k.terra) || 0;
+  return [e ? `+${e}<span class="rdf-e">${ICONE_ENERGIE}</span>` : '', l ? `+${l} lingot${l > 1 ? 's' : ''}` : '', t ? `${t} paquet${t > 1 ? 's' : ''} Terra` : '']
+    .filter(Boolean).join(' ');
+}
+function roueSvgHtml(){
+  const A = roueAngles(), R = 140;
+  let defs = '<defs>', segs = '', labs = '';
+  for(const s of A){
+    const st = roueStyle(s.k);
+    const [x0, y0] = rouePt(s.a0, R), [x1, y1] = rouePt(s.a1, R);
+    defs += `<radialGradient id="rdf-g${s.i}" cx="165" cy="165" r="${R}" gradientUnits="userSpaceOnUse"><stop offset="0.25" stop-color="${st.c1}"/><stop offset="1" stop-color="${st.c2}"/></radialGradient>`;
+    segs += A.length === 1 ? `<circle class="rdf-seg" data-i="${s.i}" cx="165" cy="165" r="${R}" fill="url(#rdf-g${s.i})"/>`
+      : `<path class="rdf-seg" data-i="${s.i}" d="M165,165 L${x0.toFixed(2)},${y0.toFixed(2)} A${R},${R} 0 ${s.a1 - s.a0 > 180 ? 1 : 0} 1 ${x1.toFixed(2)},${y1.toFixed(2)} Z" fill="url(#rdf-g${s.i})" stroke="#1B1206" stroke-width="1.6"/>`;
+    const grand = s.p >= 15, moyen = s.p >= 5;
+    const [mx, my] = rouePt(s.am, grand ? 96 : moyen ? 108 : 116);
+    const txt = roueTexteCase(s.k);
+    const lab = txt ? `<text y="${grand ? 15 : 12}" font-size="${grand ? 19 : 15}" text-anchor="middle" dominant-baseline="middle">${txt}</text>` : '';
+    labs += `<g class="rdf-lab" data-i="${s.i}" data-x="${mx.toFixed(1)}" data-y="${my.toFixed(1)}"><g transform="translate(0 ${txt ? (grand ? -9 : -8) : 0})">${roueIcone(st.ic, grand ? 1.15 : moyen ? .9 : .78)}</g>${lab}</g>`;
+  }
+  defs += `<filter id="rdf-lueur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="rdf-halo" x="-250%" y="-250%" width="600%" height="600%"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <linearGradient id="rdf-anneau" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE7A0"/><stop offset=".45" stop-color="#C8902A"/><stop offset="1" stop-color="#5E3B08"/></linearGradient></defs>`;
+  let amp = '';
+  for(let i = 0; i < 28; i++){ const [bx, by] = rouePt(i * 360 / 28, R + 11); amp += `<circle class="rdf-amp${i % 2 ? '' : ' b'}" cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="3.6"/>`; }
+  return `<svg viewBox="0 0 330 330" aria-hidden="true">${defs}<circle cx="165" cy="165" r="${R + 18}" fill="#1A1006"/><circle cx="165" cy="165" r="${R + 15}" fill="url(#rdf-anneau)"/><circle cx="165" cy="165" r="${R + 6}" fill="#1A1006"/>${amp}</svg>
+    <svg class="rdf-roue" id="rdfRoue" viewBox="0 0 330 330" aria-hidden="true">${segs}${labs}<circle cx="165" cy="165" r="${R}" fill="none" stroke="rgba(255,240,200,.35)" stroke-width="1.5"/></svg>
+    <svg viewBox="0 0 330 330" aria-hidden="true"><g filter="url(#rdf-lueur)"><path d="M165 40 L151 8 Q165 -2 179 8 Z" fill="url(#rdf-anneau)" stroke="#3a2405" stroke-width="2"/><circle cx="165" cy="12" r="5" fill="#FFF6CF"/></g></svg>`;
+}
+function roueChancesHtml(){
+  const A = roueAngles(); if(!A.length) return '';
+  const fr1 = (n, d) => n.toLocaleString('fr-FR', { maximumFractionDigits: d });
+  const moyE = A.reduce((s, x) => s + x.p / 100 * (Number(x.k.energie) || 0), 0), moyL = A.reduce((s, x) => s + x.p / 100 * (Number(x.k.lingots) || 0), 0);
+  return `<h4>Chances de chaque case</h4>${A.map(x => `<div class="rdf-ch"><i style="background:${roueStyle(x.k).puce}"></i><span>${echapperTexte(x.k.nom || x.k.id)}</span><b>${roueGainsTexte(x.k)}</b><span>${fr1(x.p, 1)} %</span></div>`).join('')}
+    <p class="rdf-ch-pied">En moyenne : ${fr1(moyE, 1)} énergie et ${fr1(moyL, 2)} lingot par tour. ${ROUE.par_jour} tours au plus par jour.</p>`;
+}
+function setRoueRot(r){
+  roueRot = r;
+  const svg = document.getElementById('rdfRoue'); if(!svg) return;
+  svg.style.transform = `rotate(${r}deg)`;
+  // les étiquettes restent droites, comme les nacelles d'une grande roue
+  for(const g of svg.querySelectorAll('.rdf-lab')) g.setAttribute('transform', `translate(${g.dataset.x} ${g.dataset.y}) rotate(${-r})`);
+}
+function renderRoue(){
+  const el = document.getElementById('roueFront'), panel = document.getElementById('panel-tirage');
+  const actif = roueActive();
+  if(panel) panel.classList.toggle('roue-active', actif);
+  if(actif !== roueEtaitActive){ roueEtaitActive = actif; if(typeof renderReserveAccueil === 'function') renderReserveAccueil(); }
+  if(!el) return;
+  el.hidden = !actif;
+  if(!actif) return;
+  const sig = JSON.stringify(ROUE.cases || []);
+  if(sig !== roueSig && !roueTourne){
+    roueSig = sig;
+    el.innerHTML = `<div class="rdf-titre">La roue du Front</div><div class="rdf-sous">Énergie et lingots à gagner</div>
+      <div class="rdf-cadre">${roueSvgHtml()}<button type="button" class="rdf-centre" id="rdfCentre">Tourner</button><div class="rdf-gain" id="rdfGain" hidden></div></div>
+      <div class="rdf-jetons"><span class="rdf-slots" id="rdfSlots"></span><span class="rdf-dispo"><b id="rdfDispo"></b><span id="rdfProchain"></span></span></div>
+      <div class="rdf-jour" id="rdfJour"></div>
+      <button type="button" class="rdf-lien" id="rdfLien"></button>
+      <div class="rdf-chances" id="rdfChances" hidden></div>`;
+    setRoueRot(roueRot);
+  }
+  const ch = document.getElementById('rdfChances');
+  if(ch){ ch.hidden = !roueChancesOuvertes; if(roueChancesOuvertes) ch.innerHTML = roueChancesHtml(); }
+  const li = document.getElementById('rdfLien');
+  if(li) li.textContent = roueChancesOuvertes ? 'Masquer les chances' : 'Voir les chances de chaque case';
+  renderRoueInfos();
+}
+function roueMmss(s){ s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function roueEcrire(id, html){
+  const e = document.getElementById(id); if(!e) return null;
+  if(e._rdf !== html){ e.innerHTML = html; e._rdf = html; }
+  return e;
+}
+function renderRoueInfos(){
+  const el = document.getElementById('roueFront');
+  if(!el || el.hidden || !ROUE || !el.offsetParent) return;   // onglet caché : rien à écrire
+  const live = roueJetons(), dispo = Math.floor(live);
+  const par = Number(ROUE.par_jour) || 15, faits = Number(ROUE.tours_jour) || 0, fini = faits >= par, reste = Math.max(0, par - faits);
+  const prochain = live >= 3 ? 0 : (1 - (live % 1)) * 1200;
+  const slot = (plein) => `<span class="rdf-slot${plein ? '' : ' vide'}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="${ROUE_BOLT}"/></svg></span>`;
+  roueEcrire('rdfSlots', [0, 1, 2].map(i => slot(i < dispo)).join(''));
+  roueEcrire('rdfDispo', fini ? 'Fini pour aujourd’hui' : `${dispo} tour${dispo > 1 ? 's' : ''} dispo`);
+  roueEcrire('rdfProchain', fini ? 'La roue revient demain, tes tours restent en réserve'
+    : dispo >= 3 ? 'Réserve pleine : tourne avant d’en perdre !'
+    : dispo === 0 ? 'Un tour revient toutes les <em>20 min</em>'
+    : `Prochain tour dans <em>${roueMmss(prochain)}</em>`);
+  roueEcrire('rdfJour', fini ? `${par} tours faits aujourd’hui` : `${reste} tour${reste > 1 ? 's' : ''} restant${reste > 1 ? 's' : ''} aujourd’hui`);
+  const b = document.getElementById('rdfCentre');
+  if(b){
+    const peut = !roueTourne && !fini && dispo >= 1;
+    roueEcrire('rdfCentre', roueTourne ? 'Tourner' : fini ? 'Demain<small>plus de tour</small>' : dispo < 1 ? `${roueMmss(prochain)}<small>prochain tour</small>` : 'Tourner');
+    b.disabled = !peut;
+    b.classList.toggle('attente', !peut && !roueTourne);
+    b.setAttribute('aria-label', peut ? 'Tourner la roue du Front' : fini ? 'Plus de tour aujourd’hui' : roueTourne ? 'La roue tourne' : `Prochain tour dans ${roueMmss(prochain)}`);
+  }
+}
+function roueAnimer(cible){
+  return new Promise((fini) => {
+    const A = roueAngles(), seg = A.find(s => s.k.id === cible) || A[0];
+    if(!seg){ fini(); return; }
+    const vise = -(seg.am + (Math.random() - .5) * (seg.a1 - seg.a0) * 0.6);   // pas toujours pile au milieu
+    const depart = roueRot, delta = ((vise - depart) % 360 + 360) % 360;
+    const arrivee = depart + (ouvAnim ? 5 * 360 : 0) + delta;
+    if(!ouvAnim){ setRoueRot(arrivee % 360); fini(); return; }
+    const duree = 4200, t0 = performance.now();
+    let dernier = null, dernierTic = 0;
+    const pas = (t) => {
+      const p = Math.min(1, (t - t0) / duree), e = 1 - Math.pow(1 - p, 4);
+      const r = depart + (arrivee - depart) * e;
+      setRoueRot(r);
+      const sous = ((-r % 360) + 360) % 360, i = A.findIndex(s => sous >= s.a0 && sous < s.a1);
+      if(i !== dernier){ if(dernier !== null && t - dernierTic > 45){ sonsOuverture.assautTic(); dernierTic = t; } dernier = i; }
+      if(p < 1) requestAnimationFrame(pas);
+      else { setRoueRot(arrivee % 360); fini(); }
+    };
+    requestAnimationFrame(pas);
+  });
+}
+function roueGainCacher(){
+  clearTimeout(roueGainMinuterie);
+  const g = document.getElementById('rdfGain'); if(g) g.hidden = true;
+  const el = document.getElementById('roueFront'); if(el) el.classList.remove('gagne');
+  document.querySelectorAll('#roueFront .gagnant').forEach(x => x.classList.remove('gagnant'));
+}
+function roueGainMontrer(d){
+  const A = roueAngles(), seg = A.find(s => s.k.id === d.case);
+  const k = seg ? seg.k : { nom: 'Gagné', energie: d.energie_prevue, lingots: d.lingots_prevus, terra: d.terra };
+  const e = Number(d.energie) || 0, ep = Number(d.energie_prevue) || 0, l = Number(d.lingots) || 0, lp = Number(d.lingots_prevus) || 0, t = Number(d.terra) || 0;
+  const parts = [];
+  if(ep) parts.push(`+${ep}<span class="rdf-e">${ICONE_ENERGIE}</span>`);
+  if(lp) parts.push(`+${lp}${ICONE_LINGOT}`);
+  if(t) parts.push(`+${t} paquet${t > 1 ? 's' : ''} Terra`);
+  let note;
+  if(ep && e < ep) note = e ? `Énergie au maximum : +${e} seulement` : 'Ton énergie était déjà au maximum';
+  else if(lp && l < lp) note = l ? `Réserve de lingots pleine : +${l} seulement` : 'Ta réserve de lingots était déjà pleine';
+  else if(ep && lp) note = `Énergie : ${d.energie_totale} · lingots : ${d.lingots_total}`;
+  else if(ep) note = `Ton énergie : ${d.energie_totale}`;
+  else if(lp) note = `Tes lingots : ${d.lingots_total}`;
+  else note = 'À ouvrir dans Terra';
+  const g = document.getElementById('rdfGain'), el = document.getElementById('roueFront');
+  if(!g || !el) return;
+  g.className = 'rdf-gain' + (parts.length > 1 || t ? ' long' : '');
+  g.style.setProperty('--rdf-c', seg ? roueStyle(k).puce : '#F0B429');
+  g.innerHTML = `<div class="k">${echapperTexte(k.nom || '')} !</div><div class="v">${parts.join(' ')}</div><div class="n">${note}</div>${t ? '<button type="button" class="rdf-gain-go" data-rdf="terra">Aller dans Terra</button>' : ''}`;
+  g.hidden = false;
+  if(seg){
+    el.classList.add('gagne');
+    el.querySelectorAll(`[data-i="${seg.i}"]`).forEach(x => x.classList.add('gagnant'));
+  }
+  if(roueStyle(k).fort) sonsOuverture.assautConquete(); else sonsOuverture.assautGagne();
+  clearTimeout(roueGainMinuterie);
+  roueGainMinuterie = setTimeout(roueGainCacher, t ? 9000 : 5000);
+}
+async function roueTourner(){
+  if(roueTourne || !roueActive()) return;
+  if(Math.floor(roueJetons()) < 1 || Number(ROUE.tours_jour) >= Number(ROUE.par_jour)) return;
+  const el = document.getElementById('roueFront');
+  roueTourne = true; roueGainCacher(); renderRoueInfos();
+  if(el) el.classList.add('tourne');
+  let data = null, error = null;
+  try{ ({ data, error } = await sb.rpc('roue_front_tourner')); }catch(e){ error = e; }
+  if(error || !data){
+    roueTourne = false; if(el) el.classList.remove('tourne');
+    notifier({ type: 'erreur', titre: 'La roue n’a pas tourné', texte: messageLisible((error && error.message) || 'Réessaie dans un instant.') });
+    chargerRoue();
+    return;
+  }
+  ROUE.jetons = Number(data.jetons); roueLu = Date.now();
+  ROUE.tours_jour = Number(data.tours_jour); if(data.par_jour) ROUE.par_jour = Number(data.par_jour);
+  if(packStatusCache){ packStatusCache.jetons_actuels = Number(data.jetons); packStatusFetchedAt = Date.now(); dispoPrecedente = Math.floor(Number(data.jetons)); }
+  renderRoueInfos();
+  await roueAnimer(data.case);
+  if(el) el.classList.remove('tourne');
+  roueTourne = false;
+  roueGainMontrer(data);
+  renderRoueInfos();
+  if(Number(data.energie) > 0 && typeof majEnergie === 'function') majEnergie();
+}
+document.getElementById('roueFront')?.addEventListener('click', (e) => {
+  if(e.target.closest('#rdfCentre')){ roueTourner(); return; }
+  if(e.target.closest('#rdfLien')){ roueChancesOuvertes = !roueChancesOuvertes; renderRoue(); return; }
+  if(e.target.closest('[data-rdf="terra"]')){ roueGainCacher(); ncAller('terra', 'tirage'); return; }
+  if(e.target.closest('#rdfGain')) roueGainCacher();
+});
+setInterval(siVisible(() => { if(roueActive()) renderRoueInfos(); }), 1000);
 
 // ---------- patch313 : le sondage « d'autres pays ? » (s2-80) ----------
 // Une question, une fois : savoir si ajouter des pays plairait aux joueurs.

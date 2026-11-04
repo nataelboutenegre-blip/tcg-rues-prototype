@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd042613528bd';
+const VERSION_JEU = '4a7c80ef5ac6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -25992,7 +25992,11 @@ function dgMsgHtml(m, groupe){
   const txt = cache ? '<i>Message masqué en attendant la modération</i>' : dgTexteHtml(m.texte);
   const modo = DG.moi && DG.moi.moderateur;
   const sig = modo && Number(m.signale) > 0 ? `<small class="dg-sig">Signalé ${m.signale} fois${m.masque ? ' · masqué' : ''}</small>` : '';
-  if(m.moi) return `<div class="dg-m moi${m.masque ? ' masque' : ''}" data-dg-id="${m.id}"><div class="dg-b">${txt}${m.masque ? '<small class="dg-avert">Masqué pour les autres en attendant la modération</small>' : ''}</div></div>`;
+  if(m.moi){   // patch347 : mon avatar et mon blason, en miroir
+    const cm = colorForPlayer(m.auteur || '');
+    const hm = groupe ? '' : `<div class="dg-h"><span class="dg-t">${dgHeure(m.le)}</span>${dgClanHtml(m)}<b style="color:${cm}">${echapperTexte(m.pseudo || 'Moi')}</b></div>`;
+    return `<div class="dg-m moi${m.masque ? ' masque' : ''}" data-dg-id="${m.id}"><div class="dg-b">${hm}${txt}${m.masque ? '<small class="dg-avert">Masqué pour les autres en attendant la modération</small>' : ''}</div>${dgAvatar(m, groupe)}</div>`;
+  }
   const c = colorForPlayer(m.auteur || '');
   const av = dgAvatar(m, groupe);   // patch346
   const h = groupe ? '' : `<div class="dg-h"><b style="color:${c}">${echapperTexte(m.pseudo || 'Joueur')}</b>${dgClanHtml(m)}${m.modo ? '<span class="dg-badge">Modération</span>' : ''}<span class="dg-t">${dgHeure(m.le)}</span></div>`;
@@ -26005,7 +26009,7 @@ function dgFilHtml(){
     const j = dgJour(m.le);
     if(j !== jour){ html += `<div class="dg-jour">${j}</div>`; jour = j; }
     const p = DG.msgs[i - 1];
-    const groupe = !!(p && !m.moi && !m.retire && !p.retire && p.auteur === m.auteur && dgJour(p.le) === j && new Date(m.le) - new Date(p.le) < 5 * 60000);
+    const groupe = !!(p && !m.retire && !p.retire && p.auteur === m.auteur && dgJour(p.le) === j && new Date(m.le) - new Date(p.le) < 5 * 60000);
     html += dgMsgHtml(m, groupe);
   });
   return html;

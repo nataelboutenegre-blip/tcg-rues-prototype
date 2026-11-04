@@ -9072,3 +9072,7 @@ body.mode-terra #roueFront{ display:none !important; }
 .dg-etat-s b{ color:#fff; }
 .dg-ligne3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
 .dg-ligne3 .dg-act{ justify-content:center; padding:13px 6px; }
+
+/* patch347 : mes messages, avec avatar et blason en miroir */
+.dg-m.moi .dg-h{ justify-content:flex-end; }
+.dg-m.moi .dg-h .dg-t{ margin-left:0; padding-left:0; padding-right:4px; }

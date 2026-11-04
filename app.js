@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '960a0a6d52e0';
+const VERSION_JEU = 'dc841a208124';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1428,6 +1428,10 @@ function zoomMaxCarte(){
 function clampMapPan(){
   const wrap = document.getElementById('mapWrap');
   if(!wrap) return;
+  // patch349 : une position invalide (NaN) bloquait la carte jusqu'au rechargement
+  if(!Number.isFinite(mapZoom) || !Number.isFinite(mapPanX) || !Number.isFinite(mapPanY)){
+    mapZoom = MAP_ZOOM_MIN; mapPanX = 0; mapPanY = 0;
+  }
   const w = wrap.clientWidth, h = wrap.clientHeight;
   // patch117 : carte cachee (0 x 0) -> on ne touche a rien, sinon le
   // deplacement retombait a (0, 0) avec le zoom garde : en pleine mer
@@ -9599,6 +9603,7 @@ document.getElementById('reglesBtn').addEventListener('click', () => {
   const tab = document.querySelector('.tab[data-tab="regles"]');
   if(tab){ tab.click(); return; }
   loadTauxTirage();
+  quitterPleinEcran();   // patch349 : avant de cacher la carte
   // l'onglet Regles n'est plus dans la barre : on l'ouvre a la main
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-regles'));
@@ -12523,6 +12528,8 @@ async function loadReveil(){
 // ---------- Navigation par onglets ----------
 document.querySelectorAll('.tab[data-tab]').forEach(tab => {
   tab.addEventListener('click', () => {
+    // patch349 : avant de cacher la carte (cachée, elle se recadrait sur 0 px)
+    if(tab.dataset.tab !== 'territoire') quitterPleinEcran();
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     document.getElementById('reglesBtn').classList.remove('actif');
@@ -12540,8 +12547,11 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     // le panneau vient de devenir visible : on rattrape ce qu'on avait
     // repousse, avant que le joueur ne voie un onglet vide
     faireLesRendusEnAttente(tab.dataset.tab);
-    if(tab.dataset.tab !== 'territoire') quitterPleinEcran();   // patch117
-    if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
+    if(tab.dataset.tab === 'territoire'){
+      sizeMapWrap(window.__mapAspectRatio);
+      // patch349 : laissée zoomée en plein écran, la carte y revient au même endroit
+      if(!carteEnPleinEcran() && mapZoom > PLEIN_ECRAN_SEUIL && pleinEcranPossible()) entrerPleinEcran();
+    }
     if(tab.dataset.tab === 'communaute'){ loadClassement(); loadJournal(); loadAmis(); dgDemarrer(); }   // patch344
     if(tab.dataset.tab === 'bourse') loadBourse();
     if(tab.dataset.tab === 'boutique') loadBoutique();
@@ -19127,6 +19137,12 @@ const carteEnPleinEcran = () => {
 function recadrerCarte(changer){
   const wrap = document.getElementById('mapWrap');
   if(!wrap) return;
+  // patch349 : carte cachée (0 px) : rien à mesurer, on repart de toute la France
+  if(!wrap.clientWidth || !wrap.clientHeight){
+    changer(wrap);
+    mapZoom = MAP_ZOOM_MIN; mapPanX = 0; mapPanY = 0;
+    return;
+  }
   const ech = echelleCarte() * mapZoom;
   const cx = (wrap.clientWidth / 2 - mapPanX) / ech, cy = (wrap.clientHeight / 2 - mapPanY) / ech;
   changer(wrap);

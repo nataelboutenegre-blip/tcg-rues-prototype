@@ -1,5 +1,11 @@
 [
   {
+    "date": "2026-11-05",
+    "nouveautes": [
+      "🗺 Carte : passer à un autre onglet pendant que la carte était en plein écran la cassait (zoomée, décalée, communes une par une) jusqu’au rechargement. Corrigé : en revenant sur Territoire, tu la retrouves en plein écran, là où tu l’avais laissée (défaut signalé par Oshannir)"
+    ]
+  },
+  {
     "date": "2026-11-04",
     "nouveautes": [
       "💬 Discussion : un salon ouvert à tous les joueurs, en haut de Communauté. Touche un message pour le signaler ou masquer son auteur. Chacun y a son avatar et le blason de son clan. Un point bleu sur la cloche quand il y a du neuf, et le compteur quand on te cite avec @pseudo. Tape @ et les premières lettres d’un pseudo : le jeu te le propose",

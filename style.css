@@ -9020,3 +9020,15 @@ body.mode-terra #roueFront{ display:none !important; }
 .dg-nc .nc-action{ flex:none; }
 .tab-badge.dg-badge{ background:#4C9BFF; box-shadow:0 0 6px rgba(76,155,255,.8); }
 .fp-badge.dg-point{ min-width:10px; width:10px; height:10px; padding:0; background:#4C9BFF; box-shadow:0 0 0 2px #1B2D4A, 0 0 8px rgba(76,155,255,.8); }
+
+/* patch345 : les pseudos proposés après @ */
+.dg-saisie{ position:relative; }
+.dg-sugg{ position:absolute; left:0; right:52px; bottom:calc(100% + 6px); z-index:5; background:#0F1D33; border:1px solid rgba(169,188,212,.25); border-radius:12px; padding:4px; box-shadow:0 12px 30px rgba(0,0,0,.55); }
+.dg-sugg-t{ font-size:.62rem; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:#6F84A3; padding:4px 8px 2px; margin:0; }
+.dg-sugg-l{ display:flex; align-items:center; gap:9px; width:100%; box-sizing:border-box; padding:7px 8px; border:0; border-radius:9px; background:none; color:#E6EDF6; font:inherit; font-size:.9rem; text-align:left; cursor:pointer; }
+.dg-sugg-l.on{ background:rgba(240,180,41,.14); }
+@media (hover: hover){ .dg-sugg-l:hover{ background:rgba(240,180,41,.08); } }
+.dg-sugg-l .dg-av{ width:24px; height:24px; font-size:.7rem; }
+.dg-sugg-p{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dg-sugg-l b{ color:#FFD35A; font-weight:800; }
+.dg-sugg-l em{ margin-left:auto; padding-left:6px; font-style:normal; font-size:.68rem; color:#7F92AA; white-space:nowrap; }

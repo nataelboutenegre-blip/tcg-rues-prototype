@@ -9076,3 +9076,34 @@ body.mode-terra #roueFront{ display:none !important; }
 /* patch347 : mes messages, avec avatar et blason en miroir */
 .dg-m.moi .dg-h{ justify-content:flex-end; }
 .dg-m.moi .dg-h .dg-t{ margin-left:0; padding-left:0; padding-right:4px; }
+
+/* patch348 : la zone de départ (saison 3) */
+body.mode-terra #zoneDepart{ display:none !important; }
+.zd{ max-width:620px; margin:0 0 14px; }
+.zd-ligne{ display:flex; align-items:center; gap:12px; width:100%; box-sizing:border-box; text-align:left; font:inherit; color:#fff;
+  background:rgba(240,180,41,.08); border:1px solid rgba(240,180,41,.45); border-radius:14px; padding:10px 14px; }
+button.zd-ligne{ cursor:pointer; }
+.zd-pin{ font-size:1.35rem; line-height:1; flex:none; }
+.zd-txt{ flex:1; min-width:0; }
+.zd-txt b{ display:block; font-size:.98rem; }
+.zd-txt small{ display:block; font-size:.78rem; color:var(--brume); margin-top:2px; }
+.zd-points{ display:flex; gap:5px; flex:none; }
+.zd-points i{ width:10px; height:10px; border-radius:50%; background:rgba(169,188,212,.3); }
+.zd-points i.on{ background:var(--c-legendaire); }
+.zd-fleche{ font-size:1.5rem; line-height:1; color:var(--c-legendaire); flex:none; }
+.zd-choisir .zd-ligne{ background:rgba(240,180,41,.14); }
+.zd-pleine .zd-ligne{ background:rgba(10,22,40,.4); border-color:rgba(169,188,212,.25); }
+.zd-pleine .zd-pin{ opacity:.55; }
+.zd-boite{ width:min(560px,100%); }
+.zd-grille{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin:0 0 14px; }
+.zd-zone{ position:relative; font:inherit; color:#fff; text-align:left; cursor:pointer; background:rgba(10,22,40,.45);
+  border:1.5px solid rgba(169,188,212,.2); border-radius:12px; padding:10px 11px; min-height:64px; }
+.zd-zone b{ display:block; font-size:.9rem; line-height:1.2; }
+.zd-zone small{ display:block; font-size:.72rem; color:var(--brume); margin-top:3px; line-height:1.35; }
+.zd-zone small.zd-clan{ color:#7CC4FF; margin-top:2px; }
+.zd-zone.on{ border-color:var(--c-legendaire); background:rgba(240,180,41,.12); box-shadow:0 0 0 1px var(--c-legendaire) inset; }
+.zd-zone.fermee{ opacity:.45; cursor:default; }
+.zd-neuf{ position:absolute; top:-8px; right:8px; font-size:.6rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+  background:#E5484D; color:#fff; border-radius:99px; padding:2px 7px; }
+.zd-note{ font-size:.72rem; color:#8FA2BC; line-height:1.45; margin:12px 0 0; }
+@media (hover:hover){ .zd-zone:not(.fermee):hover{ border-color:rgba(240,180,41,.6); } }

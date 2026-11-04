@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '4a7c80ef5ac6';
+const VERSION_JEU = '960a0a6d52e0';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7659,6 +7659,7 @@ function surCarteRetournee(draw){
       // les cartes restent affichees : c'est le joueur qui decide de passer au suivant
       loadPackStatus().then(proposerPaquetSuivant);
       if(!enTerra()) pcApresPaquet();   // patch336
+      if(!enTerra()) zdCharger();   // patch348 : un paquet de zone en moins
     }
   };
 }
@@ -8162,6 +8163,7 @@ function renderPackStatus(){
   if(ps) ps.hidden = !ps.children.length;
   renderReserveAccueil();   // patch322
   renderRoue();   // patch343
+  renderZoneDepart();   // patch348
 }
 function paquetPretAffiche(){
   return !!document.querySelector('#packZone .paquet[data-pret]');
@@ -8217,6 +8219,7 @@ async function tirerUneCarte(){
 }
 
 async function openPack(type){
+  if(type === 'gratuit' && zdDoitChoisir()){ zdOuvrir(() => openPack(type)); return; }   // patch348
   if(type === 'gratuit' && raBloque()){   // patch322
     notifier({ type: 'info', titre: 'Réserve d\'accueil', texte: 'Les dernières communes du pot sont réservées aux nouveaux joueurs : ton paquet est gardé. Pour gagner du terrain, attaque !' });
     return;
@@ -8543,6 +8546,7 @@ function afficherPaquetPret(type){
   // patch87 : le premier toucher (ou le debut de la coupe) paie, puis tire
   armerPaquet(pack, async () => {
     if(paquetEnCours) return null;
+    if(type === 'gratuit' && zdDoitChoisir()){ zdOuvrir(); return null; }   // patch348
     paquetEnCours = true;
     renderPackStatus();
     const err = await payerPaquet(type);
@@ -11388,6 +11392,7 @@ function appliquerMode(){
   majBascule();
   rangerGroupes();   // patch191
   if(typeof renderRoue === 'function') renderRoue();   // patch343
+  if(typeof renderZoneDepart === 'function') renderZoneDepart();   // patch348
   // l'onglet ouvert n'existe pas dans ce mode : retour au Tirage
   const actif = document.querySelector('.tab.active[data-tab]');
   const idActif = actif ? actif.dataset.tab : null;
@@ -25578,6 +25583,7 @@ async function chargerReserveAccueil(){
   renderReserveAccueil();
   if(typeof renderPackStatus === 'function' && packStatusCache) renderPackStatus();
   chargerRoue();   // patch343
+  zdCharger();   // patch348
 }
 function raBloque(){
   return !!(SAISON2 && !enTerra() && RESERVE_ACCUEIL && RESERVE_ACCUEIL.ouvert && RESERVE_ACCUEIL.bloque);
@@ -26563,3 +26569,141 @@ document.addEventListener('click', (e) => {
 }, true);
 window.addEventListener('scroll', () => { if(depBulleCible) depBulleCacher(); }, true);
 
+// ---------- patch348 : la zone de départ (s3-6) ----------
+// Une fois par saison, le joueur choisit une région (ou la Suisse) : ses 3
+// premiers paquets du Front y tombent. Le serveur décide de tout (ouvert, zones,
+// cartes restantes) ; sans s3-6 ou éteint, rien ne s'affiche.
+var ZD = null, zdSel = null, zdApres = null, zdEnvoi = false;
+const ZD_NOUVEAU = new Set(['Suisse']);
+const ZD_DANS = { 'Grand Est': 'dans le', 'Centre-Val de Loire': 'dans le', 'Hauts-de-France': 'dans les', 'Pays de la Loire': 'dans les' };
+function zdDans(z){ return (ZD_DANS[z] || 'en') + ' ' + z; }
+async function zdCharger(){
+  try{
+    const { data, error } = await sb.rpc('zone_depart_etat');
+    ZD = !error && data ? data : null;   // s3-6 pas lancé : rien
+  }catch(e){ ZD = null; }
+  renderZoneDepart();
+  if(zdVoileEl() && !zdVoileEl().hidden) zdRendre();
+}
+function zdOuverte(){ return !!(ZD && ZD.ouvert && !enTerra()); }
+function zdZonesLibres(){ return ZD && Array.isArray(ZD.zones) ? ZD.zones.filter(z => !z.fermee) : []; }
+// le joueur doit choisir avant d'ouvrir un paquet du Front
+function zdDoitChoisir(){
+  return zdOuverte() && !ZD.choisi && zdZonesLibres().length > 0 && !(typeof roueActive === 'function' && roueActive());
+}
+function renderZoneDepart(){
+  const el = document.getElementById('zoneDepart');
+  if(!el) return;
+  const rien = () => { el.hidden = true; el.innerHTML = ''; el.className = 'zd'; };
+  if(!zdOuverte() || (typeof roueActive === 'function' && roueActive())) return rien();
+  const n = Math.max(1, Number(ZD.paquets) || 3);
+  let html;
+  if(!ZD.choisi){
+    if(!zdZonesLibres().length) return rien();
+    el.className = 'zd zd-choisir';
+    html = `<button type="button" class="zd-ligne" data-zd="ouvrir"><span class="zd-pin" aria-hidden="true">📍</span>`
+      + `<span class="zd-txt"><b>Choisis ta zone de départ</b><small>Tes ${n} premiers paquets du Front y tomberont</small></span>`
+      + `<span class="zd-fleche" aria-hidden="true">›</span></button>`;
+  } else {
+    const reste = Math.max(0, Number(ZD.paquets_restants) || 0);
+    if(reste <= 0) return rien();
+    const z = echapperTexte(ZD.choisi);
+    if(ZD.actif){
+      el.className = 'zd';
+      const points = Array.from({ length: n }, (_, i) => `<i class="${i >= n - reste ? 'on' : ''}"></i>`).join('');
+      html = `<div class="zd-ligne"><span class="zd-pin" aria-hidden="true">📍</span>`
+        + `<span class="zd-txt"><b>Départ : ${z}</b><small>Encore ${reste} paquet${reste > 1 ? 's' : ''} du Front dans ta zone</small></span>`
+        + `<span class="zd-points" aria-label="${reste} paquet${reste > 1 ? 's' : ''} sur ${n}">${points}</span></div>`;
+    } else {
+      el.className = 'zd zd-pleine';
+      html = `<div class="zd-ligne"><span class="zd-pin" aria-hidden="true">📍</span>`
+        + `<span class="zd-txt"><b>Départ : ${z}</b><small>Plus de commune libre dans ta zone : tes paquets tirent partout</small></span></div>`;
+    }
+  }
+  if(el.innerHTML !== html) el.innerHTML = html;
+  el.hidden = false;
+}
+
+// la feuille « Où commences-tu ? »
+function zdVoileEl(){ return document.getElementById('zdVoile'); }
+function zdOuvrir(apres){
+  zdApres = typeof apres === 'function' ? apres : null;
+  let v = zdVoileEl();
+  if(!v){
+    v = document.createElement('div');
+    v.className = 'pc-voile zd-voile'; v.id = 'zdVoile'; v.hidden = true;
+    v.innerHTML = '<div class="pc-boite zd-boite" id="zdBoite" role="dialog" aria-modal="true" aria-label="Choisis ta zone de départ"></div>';
+    document.body.appendChild(v);
+  }
+  zdRendre();
+  v.hidden = false;
+  requestAnimationFrame(() => v.classList.add('ouvert'));
+  zdCharger();   // chiffres frais
+}
+function zdFermer(){
+  const v = zdVoileEl();
+  if(!v || v.hidden) return;
+  v.classList.remove('ouvert');
+  setTimeout(() => { v.hidden = true; }, 180);
+}
+function zdRendre(){
+  const b = document.getElementById('zdBoite');
+  if(!b) return;
+  const n = Math.max(1, Number(ZD && ZD.paquets) || 3);
+  const zones = (ZD && Array.isArray(ZD.zones) ? ZD.zones.slice() : [])
+    .sort((a, c) => (a.zone === 'Suisse') - (c.zone === 'Suisse') || a.zone.localeCompare(c.zone, 'fr'));
+  if(zdSel && !zones.some(z => z.zone === zdSel && !z.fermee)) zdSel = null;
+  const nb = (x) => Number(x || 0).toLocaleString('fr-FR');
+  const cases = zones.map(z => {
+    const nom = echapperTexte(z.zone);
+    const j = Number(z.joueurs) || 0;
+    const joueurs = j ? `${j} joueur${j > 1 ? 's' : ''}` : 'aucun joueur';
+    const neuf = ZD_NOUVEAU.has(z.zone) ? '<span class="zd-neuf">Nouveau</span>' : '';
+    if(z.fermee) return `<button type="button" class="zd-zone fermee" disabled>${neuf}<b>${nom}</b><small>Complète · ${joueurs}</small></button>`;
+    const clan = Number(z.clan) > 0 ? `<small class="zd-clan">dont ${z.clan} de ton clan</small>` : '';
+    return `<button type="button" class="zd-zone${zdSel === z.zone ? ' on' : ''}" data-zd-zone="${nom}" aria-pressed="${zdSel === z.zone}">${neuf}`
+      + `<b>${nom}</b><small>${nb(z.libres)} communes libres · ${joueurs}</small>${clan}</button>`;
+  }).join('');
+  const seuil = Number(ZD && ZD.seuil) || 0.75;
+  const seuilTxt = Math.abs(seuil - 0.75) < 0.001 ? 'les trois quarts' : Math.round(seuil * 100) + ' %';
+  const saison = echapperTexte((ZD && ZD.saison_nom) || 'Nouvelle saison');
+  b.innerHTML = `<div class="pc-poignee"></div>
+    <div class="pc-kicker">${saison} · ton départ</div>
+    <div class="pc-titre">Où commences-tu ?</div>
+    <p class="pc-txt">Tes <b>${n} premiers paquets du Front</b> tombent dans la zone choisie, puis le tirage reprend partout. <b>Choix définitif</b> pour la saison.</p>
+    <div class="zd-grille">${cases || '<p class="pc-txt">Chargement…</p>'}</div>
+    <button type="button" class="pc-go" data-zd="valider"${zdSel && !zdEnvoi ? '' : ' disabled'}>${zdEnvoi ? 'Un instant…' : zdSel ? 'Commencer ' + echapperTexte(zdDans(zdSel)) : 'Choisis ta zone'}</button>
+    <p class="zd-note">Une zone se ferme quand ${seuilTxt} de ses communes sont prises. Tes communes gardées de la saison passée restent où elles sont.</p>
+    <div class="pc-sec"><button type="button" data-zd="fermer">Plus tard</button></div>`;
+}
+async function zdValider(){
+  if(!zdSel || zdEnvoi) return;
+  zdEnvoi = true; zdRendre();
+  const zone = zdSel;
+  const { data, error } = await sb.rpc('zone_depart_choisir', { p_zone: zone });
+  zdEnvoi = false;
+  if(error){
+    notifier({ type: 'erreur', titre: 'Zone non enregistrée', texte: messageLisible(error.message) });
+    zdSel = null;
+    await zdCharger();
+    return;
+  }
+  ZD = data || ZD;
+  zdSel = null;
+  renderZoneDepart();
+  zdFermer();
+  notifier({ type: 'succes', titre: 'Départ : ' + zone, texte: 'Tes prochains paquets du Front tombent ' + zdDans(zone) + '.' });
+  const apres = zdApres; zdApres = null;
+  if(apres) setTimeout(apres, 220);
+}
+document.addEventListener('click', (e) => {
+  const z = e.target.closest('[data-zd-zone]');
+  if(z){ zdSel = z.dataset.zdZone; zdRendre(); return; }
+  const b = e.target.closest('[data-zd]');
+  if(!b) return;
+  const a = b.dataset.zd;
+  if(a === 'ouvrir') return zdOuvrir();
+  if(a === 'valider') return zdValider();
+  if(a === 'fermer'){ zdApres = null; return zdFermer(); }
+});
+document.addEventListener('click', (e) => { const v = zdVoileEl(); if(v && e.target === v){ zdApres = null; zdFermer(); } });

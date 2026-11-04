@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '2d398e463fd5';
+const VERSION_JEU = '34dd066ec895';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -910,6 +910,7 @@ async function showGame(session_){
   loadObjectifs();
   chargerPremiersPas();   // patch306
   chargerReserveAccueil(); setInterval(siVisible(chargerReserveAccueil), 300000);   // patch322
+  dgDemarrerFond(); setInterval(siVisible(dgChargerEtat), 120000);   // patch344
   chargerSondagePays();   // patch313
   chargerCandidatures(); setInterval(siVisible(chargerCandidatures), 300000);   // patch307
   loadClassement();
@@ -12326,7 +12327,7 @@ function construireMenuPlus(){
     const icone = tab.querySelector('.icon').innerHTML;
     const nom = tab.childNodes[2] ? tab.childNodes[2].textContent.trim() : id;
     const badge = tab.querySelector('.tab-badge');
-    const nb = badge && !badge.hidden ? `<span class="fp-badge">${badge.textContent}</span>` : '';
+    const nb = badge && !badge.hidden ? (badge.classList.contains('dg-badge') ? '<span class="fp-badge dg-point"></span>' : `<span class="fp-badge">${badge.textContent}</span>`) : '';   // patch344
     return `<button class="fp-item fp-tuile" data-aller="${id}">${icone}<span>${nom}</span>${nb}</button>`;
   };
   let entrees;
@@ -12385,9 +12386,10 @@ function majBadgePlus(){
     // patch205 : une nouveauté en boutique, quand la Boutique est dans le menu
     const bq = document.querySelector('.tab[data-tab="boutique"] .bq-nouveau');
     const bqMenu = surTelephone() && ONGLETS_MENU.includes('boutique') && bq && !bq.hidden;
-    cible.hidden = !(cdjAJouer || bqMenu);
+    const dgMenu = surTelephone() && ONGLETS_MENU.includes('communaute') && typeof dgNonLus === 'function' && dgNonLus() > 0;   // patch344
+    cible.hidden = !(cdjAJouer || bqMenu || dgMenu);
     cible.textContent = cdjAJouer ? '1' : '';
-    cible.classList.toggle('point', !cdjAJouer && !!bqMenu);
+    cible.classList.toggle('point', !cdjAJouer && !!(bqMenu || dgMenu));
   }
 }
 
@@ -12534,7 +12536,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     faireLesRendusEnAttente(tab.dataset.tab);
     if(tab.dataset.tab !== 'territoire') quitterPleinEcran();   // patch117
     if(tab.dataset.tab === 'territoire') sizeMapWrap(window.__mapAspectRatio);
-    if(tab.dataset.tab === 'communaute'){ loadClassement(); loadJournal(); loadAmis(); }
+    if(tab.dataset.tab === 'communaute'){ loadClassement(); loadJournal(); loadAmis(); dgDemarrer(); }   // patch344
     if(tab.dataset.tab === 'bourse') loadBourse();
     if(tab.dataset.tab === 'boutique') loadBoutique();
     if(tab.dataset.tab === 'boutiqueeuros') loadBoutiqueEuros();   // patch175
@@ -21689,6 +21691,11 @@ function ncConstruire(){
       items.push({ cle: `j|${e.id}`, sec: 'histo', c: 'histo', i: '🤝', t: `Échange conclu avec <b>${echapperTexte((e.je_suis_acteur ? e.cible_pseudo : e.acteur_pseudo) || 'un joueur')}</b> · ${nom}`, s: ilYA(e.cree_le) });
   }
 
+  // patch344 : on me cite dans la discussion
+  if(typeof DG !== 'undefined' && DG && DG.etat && Array.isArray(DG.etat.citations))
+    for(const m of DG.etat.citations.slice(0, 5))
+      items.push({ cle: `dg|${m.id}`, sec: 'disc', c: 'disc', i: '💬', t: `<b>${echapperTexte(m.pseudo || 'Un joueur')}</b> t’a cité dans la discussion`,
+        s: `« ${echapperTexte(String(m.texte || '').slice(0, 90))} » · ${ilYA(m.le)}`, a: 'Répondre', aller: () => dgOuvrir(m.pseudo) });
   const vus = ncVus();
   for(const it of items) it.neuf = !vus.has(it.cle);
   NC.items = items;
@@ -21697,6 +21704,7 @@ function ncConstruire(){
     const pa = b.querySelector('.nc-pastille');
     pa.hidden = n === 0; pa.textContent = n > 9 ? '9+' : String(n);
     b.setAttribute('aria-label', n ? `Notifications : ${n} nouvelle${n > 1 ? 's' : ''}` : 'Notifications');
+    b.classList.toggle('dg-non-lu', n === 0 && typeof dgNonLus === 'function' && dgNonLus() > 0);   // patch344
   });
   if(NC.ouvert && NC.vue === 'liste') ncRendre();
 }
@@ -21774,9 +21782,10 @@ function majBadgePlusTout(){
   }
   const bq = document.querySelector('.tab[data-tab="boutique"] .bq-nouveau');
   const bqMenu = surTelephone() && ONGLETS_MENU.includes('boutique') && bq && !bq.hidden;
-  cible.hidden = !bqMenu;
+  const dgMenu = surTelephone() && ONGLETS_MENU.includes('communaute') && typeof dgNonLus === 'function' && dgNonLus() > 0;   // patch344
+  cible.hidden = !(bqMenu || dgMenu);
   cible.textContent = '';
-  cible.classList.toggle('point', !!bqMenu);
+  cible.classList.toggle('point', !!(bqMenu || dgMenu));
 }
 
 // La pastille de l'onglet Clan compte les messages non lus ET les échanges de
@@ -22033,11 +22042,13 @@ function ncRendre(){
     + (it.sourdine && NC.muet === it.sourdine ? ncMuetChoix(it.sourdine) : '');
   const af = NC.items.map((x, k) => [x, k]).filter(([x]) => x.sec === 'afaire');
   const hi = NC.items.map((x, k) => [x, k]).filter(([x]) => x.sec === 'histo');
+  const di = NC.items.map((x, k) => [x, k]).filter(([x]) => x.sec === 'disc');   // patch344
+  const dgN = typeof dgNonLus === 'function' ? dgNonLus() : 0;
   el.innerHTML = `<div class="nc-tete"><h2>Notifications</h2>
       ${NC.items.some(x => x.neuf) ? '<button type="button" data-nc="lu">Tout marquer comme lu</button>' : ''}
       <button type="button" class="nc-reglage" data-nc="reglages" aria-label="Choisir mes notifications">${NC_REGLER}</button>
       <button type="button" class="nc-x" data-nc="fermer" aria-label="Fermer">✕</button></div>
-    <div class="nc-corps">${ncMajHtml()}
+    <div class="nc-corps">${di.length || dgN ? `<p class="nc-titre">Discussion</p>${di.map(([x, k]) => ligne(x, k)).join('')}${dgN ? dgLigneCloche() : ''}` : ''}${ncMajHtml()}
       <p class="nc-titre">À faire</p>${af.length ? af.map(([x, k]) => ligne(x, k)).join('') : '<p class="nc-vide">Rien à faire pour l’instant.</p>'}
       <p class="nc-titre">Depuis ta dernière visite</p>${hi.length ? hi.map(([x, k]) => ligne(x, k)).join('') : '<p class="nc-vide">Rien de neuf ces 7 derniers jours.</p>'}
       <p class="nc-pied">Les 7 derniers jours · tout le reste est dans le Journal</p></div>`;
@@ -22140,6 +22151,7 @@ async function ncRegler(fn, args){
 async function ncClic(e){
   const b = e.target.closest('button');
   if(!b) return;
+  if(b.dataset.ncDg){ dgOuvrir(); return; }   // patch344
   if(b.hasAttribute('data-nc-maj')){ NC.majOuvert = !NC.majOuvert; if(NC.majOuvert) ncMajVu(); return ncRendre(); }   // patch283
   if(b.dataset.ncVoir){   // patch227 : la commune attaquée, sur la carte du Front
     const code = b.dataset.ncVoir, entree = collectionMap.get(code) || { code };
@@ -25879,6 +25891,348 @@ document.getElementById('roueFront')?.addEventListener('click', (e) => {
   if(e.target.closest('#rdfGain')) roueGainCacher();
 });
 setInterval(siVisible(() => { if(roueActive()) renderRoueInfos(); }), 1000);
+
+// ---------- patch344 : la discussion générale (s2-99) ----------
+// Un salon ouvert à tous les joueurs, en haut de Communauté. Le serveur décide
+// de tout (qui peut écrire, filtre, masquage à 3 signalements, modération) ;
+// le jeu affiche. Temps réel comme le tchat de clan (patch258), plus une
+// relecture toutes les 20 s quand le salon est ouvert. Lu = sur le compte.
+var DG = { msgs: [], moi: null, etat: null, canal: null, charge: false, envoi: false, lu: 0, minuteries: {}, sigTete: '', sigSaisie: '', confirmer: null };
+const DG_ENV = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6.5z"/></svg>';
+function dgNonLus(){ return DG.etat ? Number(DG.etat.non_lus) || 0 : 0; }
+function dgPanneauVisible(){ const p = document.getElementById('panel-communaute'); return !!(p && p.classList.contains('active') && !document.hidden); }
+function dgPlanifier(f, ms){ clearTimeout(DG.minuteries[f.name]); DG.minuteries[f.name] = setTimeout(f, ms); }
+function dgDemarrerFond(){
+  dgChargerEtat();
+  if(DG.canal || typeof sb.channel !== 'function') return;
+  try{
+    DG.canal = sb.channel('discussion')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'discussion_messages' }, dgEvenement)
+      .subscribe();
+  }catch(e){ console.error('Discussion :', e); }
+}
+async function dgChargerEtat(){
+  try{
+    const { data, error } = await sb.rpc('discussion_etat');
+    DG.etat = !error && data ? data : null;   // s2-99 pas lancé : rien
+  }catch(e){ DG.etat = null; }
+  dgMajIndicateurs();
+}
+function dgMajIndicateurs(){
+  const b = document.getElementById('dgBadge');
+  if(b) b.hidden = !(dgNonLus() > 0);
+  if(typeof NC !== 'undefined' && NC.demarre && typeof ncConstruire === 'function') ncConstruire();
+  if(typeof majBadgePlus === 'function') majBadgePlus();
+}
+function dgEvenement(ev){
+  if(ev.eventType === 'INSERT'){
+    if(dgPanneauVisible() && DG.charge) dgPlanifier(dgSuite, 200);
+    else if(!document.hidden) dgPlanifier(dgChargerEtat, 4000);
+    return;
+  }
+  const r = ev.new || {}, id = r.id || (ev.old || {}).id;
+  const m = DG.msgs.find(x => x.id === id);
+  if(ev.eventType === 'DELETE'){ DG.msgs = DG.msgs.filter(x => x.id !== id); dgRendreFil(); return; }
+  if(m){
+    m.retire = !!r.retire; m.masque = !!r.masque;
+    if(m.retire) m.texte = '';
+    else if(m.masque && !m.moi && !(DG.moi && DG.moi.moderateur)) m.texte = '';
+    else if(!m.masque && r.texte) m.texte = r.texte;
+    dgRendreFil();
+  }
+  if(!dgPanneauVisible() && !document.hidden) dgPlanifier(dgChargerEtat, 4000);
+}
+async function dgDemarrer(){
+  const z = document.getElementById('discussion');
+  if(!z) return;
+  if(!DG.charge){
+    try{
+      const { data, error } = await sb.rpc('discussion_lire', { p_apres: null });
+      if(error || !data){ z.hidden = true; return; }   // s2-99 pas lancé : pas de salon
+      DG.msgs = data.messages || []; DG.moi = data.moi || null; DG.charge = true;
+    }catch(e){ z.hidden = true; return; }
+    z.hidden = false;
+    dgRendre(true);
+    if(!DG.releve) DG.releve = setInterval(() => { if(dgPanneauVisible()){ dgSuite(); dgRendreTete(); } }, 20000);
+    if(!DG.canal) dgDemarrerFond();
+  } else {
+    z.hidden = false;
+    dgSuite();
+  }
+}
+async function dgSuite(){
+  if(!DG.charge) return;
+  const der = DG.msgs.length ? DG.msgs[DG.msgs.length - 1].id : null;
+  try{
+    const { data, error } = await sb.rpc('discussion_lire', { p_apres: der });
+    if(error || !data) return;
+    if(data.moi) DG.moi = data.moi;
+    for(const m of data.messages || []) dgRecevoir(m, true);
+  }catch(e){ return; }
+  dgRendre(false);
+}
+function dgRecevoir(m, sansRendu){
+  if(!m || !m.id) return;
+  const i = DG.msgs.findIndex(x => x.id === m.id);
+  if(i >= 0) DG.msgs[i] = m; else { DG.msgs.push(m); DG.msgs.sort((a, b) => a.id - b.id); if(DG.msgs.length > 150) DG.msgs.shift(); }
+  if(!sansRendu) dgRendre(false);
+}
+function dgHeure(le){ return new Date(le).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); }
+function dgJour(le){
+  const d = new Date(le), a = new Date(), h = new Date(Date.now() - 86400000);
+  if(d.toDateString() === a.toDateString()) return 'Aujourd’hui';
+  if(d.toDateString() === h.toDateString()) return 'Hier';
+  return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+function dgTexteHtml(t){ return echapperTexte(t || '').replace(/(^|\s)(@[^\s@]{2,20})/g, '$1<span class="dg-at">$2</span>'); }
+function dgMsgHtml(m, groupe){
+  if(m.retire) return `<div class="dg-m retire" data-dg-id="${m.id}"><span class="dg-av vide"></span><div class="dg-b">Message retiré par la modération</div></div>`;
+  const cache = m.masque && !m.texte;
+  const txt = cache ? '<i>Message masqué en attendant la modération</i>' : dgTexteHtml(m.texte);
+  const modo = DG.moi && DG.moi.moderateur;
+  const sig = modo && Number(m.signale) > 0 ? `<small class="dg-sig">Signalé ${m.signale} fois${m.masque ? ' · masqué' : ''}</small>` : '';
+  if(m.moi) return `<div class="dg-m moi${m.masque ? ' masque' : ''}" data-dg-id="${m.id}"><div class="dg-b">${txt}${m.masque ? '<small class="dg-avert">Masqué pour les autres en attendant la modération</small>' : ''}</div></div>`;
+  const c = colorForPlayer(m.auteur || '');
+  const av = groupe ? '<span class="dg-av vide"></span>' : `<span class="dg-av" style="background:${c}">${echapperTexte((m.pseudo || '?').slice(0, 1).toUpperCase())}</span>`;
+  const h = groupe ? '' : `<div class="dg-h"><b style="color:${c}">${echapperTexte(m.pseudo || 'Joueur')}</b>${m.clan ? `<span class="dg-tag">${echapperTexte(m.clan)}</span>` : ''}${m.modo ? '<span class="dg-badge">Modération</span>' : ''}<span class="dg-t">${dgHeure(m.le)}</span></div>`;
+  return `<div class="dg-m${m.cite ? ' mention' : ''}${cache ? ' masque' : ''}" data-dg-id="${m.id}">${av}<div class="dg-b">${h}${txt}${sig}</div></div>`;
+}
+function dgFilHtml(){
+  if(!DG.msgs.length) return '<p class="dg-vide">Personne n’a encore écrit. Lance la discussion !</p>';
+  let html = '', jour = '';
+  DG.msgs.forEach((m, i) => {
+    const j = dgJour(m.le);
+    if(j !== jour){ html += `<div class="dg-jour">${j}</div>`; jour = j; }
+    const p = DG.msgs[i - 1];
+    const groupe = !!(p && !m.moi && !m.retire && !p.retire && p.auteur === m.auteur && dgJour(p.le) === j && new Date(m.le) - new Date(p.le) < 5 * 60000);
+    html += dgMsgHtml(m, groupe);
+  });
+  return html;
+}
+function dgAuBas(f){ return !f || f.scrollHeight - f.scrollTop - f.clientHeight < 60; }
+function dgRendreFil(forcerBas){
+  const f = document.getElementById('dgFil');
+  if(!f) return;
+  const bas = forcerBas || dgAuBas(f), avant = f.scrollHeight;
+  f.innerHTML = dgFilHtml();
+  if(bas){ f.scrollTop = f.scrollHeight; dgMarquerLu(); }
+  else if(f.scrollHeight > avant){ const n = document.getElementById('dgNouveaux'); if(n) n.hidden = false; }
+}
+function dgRendreTete(){
+  const e = document.getElementById('dgEnLigne');
+  if(e){ const n = typeof enLigne !== 'undefined' ? enLigne.size : 0; e.innerHTML = n > 0 ? `<i></i>${n} en ligne` : ''; }
+  const mo = document.getElementById('dgModo');
+  if(mo){
+    const n = DG.moi && DG.moi.moderateur ? Number(DG.moi.signalements) || 0 : 0;
+    const html = n ? `<button type="button" class="dg-modo" data-dg="signales">🛡️ <b>${n} message${n > 1 ? 's' : ''} signalé${n > 1 ? 's' : ''}</b> à regarder<span>Voir</span></button>` : '';
+    if(DG.sigTete !== html){ mo.innerHTML = html; DG.sigTete = html; }
+  }
+}
+function dgSaisieHtml(){
+  const M = DG.moi || {};
+  if(M.peut_ecrire === false){
+    const hm = (x) => new Date(x).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const t = M.sanction === 'exclu' ? '⛔ Tu as été exclu de la discussion par la modération. Tu peux toujours lire et jouer.'
+      : M.sanction === 'muet' ? `🔇 Tu ne peux plus écrire dans la discussion jusqu’à <b>${hm(M.jusqua)}</b> (modération). Tu peux toujours lire.`
+      : M.ouvre_le ? `⏳ La discussion s’ouvre 24 h après ton inscription : tu pourras écrire le <b>${new Date(M.ouvre_le).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à ${hm(M.ouvre_le)}</b>. En attendant, tu peux lire.`
+      : 'La discussion est fermée pour le moment.';
+    return `<div class="dg-muet">${t}</div>`;
+  }
+  return `<form class="dg-saisie" id="dgForm"><input id="dgTexte" class="dg-champ" maxlength="300" autocomplete="off" enterkeyhint="send" placeholder="Écris à tout le monde…" aria-label="Message à tous les joueurs"><button type="submit" class="dg-envoyer" id="dgEnvoyer" aria-label="Envoyer" disabled>${DG_ENV}</button></form>
+    <div class="dg-pied"><span>Pas d’insultes, pas de liens, pas de pub</span><b id="dgCompte">0 / 300</b></div>`;
+}
+function dgRendre(premier){
+  const z = document.getElementById('discussion');
+  if(!z || !DG.charge) return;
+  if(!z.querySelector('#dgFil')){
+    z.innerHTML = `<div class="dg-tete"><h2>Discussion</h2><span class="dg-enligne" id="dgEnLigne"></span><button type="button" class="dg-regles" data-dg="regles">Règles</button></div>
+      <p class="dg-sous">Visible par tous les joueurs. Touche un message pour le signaler ou masquer son auteur.</p>
+      <div id="dgModo"></div>
+      <div class="dg-cadre"><div class="dg-fil" id="dgFil" role="log" aria-live="polite"></div>
+      <button type="button" class="dg-nouveaux" id="dgNouveaux" data-dg="bas" hidden>↓ Nouveaux messages</button></div>
+      <div id="dgSaisie"></div>`;
+    DG.sigTete = ''; DG.sigSaisie = '';
+    document.getElementById('dgFil').addEventListener('scroll', () => {
+      const f = document.getElementById('dgFil');
+      if(dgAuBas(f)){ const n = document.getElementById('dgNouveaux'); if(n) n.hidden = true; dgPlanifier(dgMarquerLu, 400); }
+    }, { passive: true });
+  }
+  dgRendreTete();
+  const sg = JSON.stringify([DG.moi && DG.moi.peut_ecrire, DG.moi && DG.moi.sanction, DG.moi && DG.moi.jusqua, DG.moi && DG.moi.ouvre_le]);
+  if(sg !== DG.sigSaisie){ document.getElementById('dgSaisie').innerHTML = dgSaisieHtml(); DG.sigSaisie = sg; }
+  dgRendreFil(premier);
+}
+async function dgMarquerLu(){
+  if(!dgPanneauVisible() || !DG.msgs.length) return;
+  const f = document.getElementById('dgFil');
+  if(!dgAuBas(f)) return;
+  const der = DG.msgs[DG.msgs.length - 1].id;
+  if(der <= DG.lu && !dgNonLus()) return;
+  DG.lu = Math.max(DG.lu, der);
+  if(DG.etat){ DG.etat.non_lus = 0; DG.etat.citations = []; DG.etat.dernier = null; }
+  dgMajIndicateurs();
+  try{ await sb.rpc('discussion_marquer_lu', { p_id: der }); }catch(e){}
+}
+function dgOuvrir(pseudo){
+  const aller = () => {
+    dgDemarrer().then(() => {
+      const z = document.getElementById('discussion');
+      if(z) z.scrollIntoView({ block: 'start' });
+      const f = document.getElementById('dgFil'); if(f) f.scrollTop = f.scrollHeight;
+      dgMarquerLu();
+      const c = document.getElementById('dgTexte');
+      if(c && pseudo){ c.value = '@' + pseudo + ' '; c.dispatchEvent(new Event('input', { bubbles: true })); c.focus(); }
+    });
+  };
+  if(typeof ncAller === 'function') ncAller(null, 'communaute', aller);
+  else aller();
+}
+function dgLigneCloche(){
+  const n = dgNonLus(), d = DG.etat && DG.etat.dernier;
+  const t = n >= 99 ? '99+ nouveaux messages' : `${n} nouveau${n > 1 ? 'x' : ''} message${n > 1 ? 's' : ''}`;
+  return `<div class="dg-nc"><span class="nc-ico disc" aria-hidden="true">💬</span><div class="nc-txt"><b>${t}</b>${d ? `<small>Dernier : ${echapperTexte(d.pseudo || '')} · « ${echapperTexte(d.texte || '')} »</small>` : ''}</div><button type="button" class="nc-action" data-nc-dg="lire">Lire</button></div>`;
+}
+// --- les feuilles (toucher un message, modération, règles) ---
+function dgFermerFeuille(){ document.querySelectorAll('.dg-voile, .dg-feuille').forEach(x => x.remove()); document.querySelectorAll('#dgFil .choisi').forEach(x => x.classList.remove('choisi')); DG.confirmer = null; }
+function dgFeuille(html){
+  dgFermerFeuille();
+  document.body.insertAdjacentHTML('beforeend', `<div class="dg-voile" data-dg="fermer"></div><div class="dg-feuille" role="dialog" aria-modal="true"><div class="poignee"></div>${html}</div>`);
+}
+function dgCiteHtml(m){
+  const c = colorForPlayer(m.auteur || '');
+  return `<div class="dg-cite"><b style="color:${c}">${echapperTexte(m.pseudo || 'Joueur')} · ${dgHeure(m.le)}</b>${m.texte ? dgTexteHtml(m.texte) : '<i>Message masqué</i>'}${Number(m.signale) > 0 ? `<small>Signalé ${m.signale} fois</small>` : ''}</div>`;
+}
+function dgFeuilleMessage(m){
+  if(!m || m.retire) return;
+  const modo = DG.moi && DG.moi.moderateur;
+  if(modo) return dgFeuilleModo(m);
+  if(m.moi) return;
+  const p = echapperTexte(m.pseudo || 'ce joueur');
+  dgFeuille(`${dgCiteHtml(m)}
+    <button type="button" class="dg-act" data-dg-act="signaler" data-id="${m.id}"><span class="ic">🚩</span><span>Signaler ce message<small>Nataël le verra. Ton nom n’est pas montré à ${p}.</small></span></button>
+    <button type="button" class="dg-act" data-dg-act="masquer" data-id="${m.id}"><span class="ic">🙈</span><span>Masquer les messages de ${p}<small>Pour toi seulement. Tu pourras le rétablir dans Amis › Bloqués.</small></span></button>
+    <button type="button" class="dg-act" data-dg-act="profil" data-id="${m.id}"><span class="ic">👤</span><span>Voir son profil</span></button>
+    <button type="button" class="dg-act neutre" data-dg="fermer">Annuler</button>`);
+}
+function dgFeuilleModo(m){
+  const autre = !m.moi;
+  const p = echapperTexte(m.pseudo || 'ce joueur');
+  dgFeuille(`<p class="dg-titre-f">Modération</p>${dgCiteHtml(m)}
+    <button type="button" class="dg-act rouge" data-dg-act="retirer" data-id="${m.id}"><span class="ic">🗑️</span><span>Retirer le message<small>Remplacé par « Message retiré par la modération »</small></span></button>
+    ${autre ? `<div class="dg-ligne2"><button type="button" class="dg-act" data-dg-act="muet1h" data-id="${m.id}">🔇 Muet 1 h</button><button type="button" class="dg-act" data-dg-act="muet24h" data-id="${m.id}">🔇 Muet 24 h</button></div>
+    <button type="button" class="dg-act rouge" data-dg-act="exclure" data-id="${m.id}"><span class="ic">⛔</span><span>Exclure de la discussion<small>${p} ne pourra plus écrire ; il peut toujours jouer</small></span></button>` : ''}
+    ${Number(m.signale) > 0 || m.masque ? `<button type="button" class="dg-act" data-dg-act="classer" data-id="${m.id}"><span class="ic">✅</span><span>Rien à redire<small>Le signalement est classé${m.masque ? ', le message réapparaît' : ''}</small></span></button>` : ''}
+    ${autre ? `<button type="button" class="dg-act" data-dg-act="profil" data-id="${m.id}"><span class="ic">👤</span><span>Voir son profil</span></button>` : ''}
+    <button type="button" class="dg-act neutre" data-dg="fermer">Annuler</button>`);
+}
+async function dgFeuilleSignales(){
+  let liste = [];
+  try{ const { data, error } = await sb.rpc('discussion_signales'); if(error) throw error; liste = data || []; }
+  catch(e){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible((e && e.message) || '') }); return; }
+  DG.signales = liste;
+  dgFeuille(`<p class="dg-titre-f">Messages signalés</p>${liste.length ? liste.map(m => `<button type="button" class="dg-sig-ligne" data-dg-sig="${m.id}">${dgCiteHtml(m)}</button>`).join('')
+    : '<p class="dg-vide">Plus rien à regarder.</p>'}<button type="button" class="dg-act neutre" data-dg="fermer">Fermer</button>`);
+}
+function dgFeuilleRegles(){
+  dgFeuille(`<p class="dg-titre-f">Règles de la discussion</p>
+    <ul class="dg-regles-l">
+      <li>Respecte les autres : pas d’insultes, de harcèlement, ni de propos racistes, sexistes ou homophobes.</li>
+      <li>Pas de liens ni de pub. Pas d’informations personnelles (adresse, téléphone…), ni les tiennes ni celles des autres.</li>
+      <li>300 caractères par message, un message toutes les 5 secondes. Il faut un compte de plus de 24 h pour écrire.</li>
+      <li>Un message signalé par 3 joueurs est masqué en attendant la modération, qui peut le retirer, rendre son auteur muet ou l’exclure de la discussion.</li>
+      <li>Les messages sont gardés 30 jours.</li>
+    </ul>
+    <p class="dg-sous">Un problème grave ? Écris à <a href="mailto:contact@terrafront.fr">contact@terrafront.fr</a>.</p>
+    <button type="button" class="dg-act neutre" data-dg="fermer">Fermer</button>`);
+}
+function dgTrouver(id){ id = Number(id); return DG.msgs.find(x => x.id === id) || (DG.signales || []).find(x => x.id === id); }
+async function dgAction(act, id, bouton){
+  const m = dgTrouver(id);
+  if(!m) return dgFermerFeuille();
+  if(act === 'profil'){ dgFermerFeuille(); if(typeof ouvrirProfil === 'function') ouvrirProfil(m.auteur); return; }
+  if((act === 'retirer' || act === 'exclure') && DG.confirmer !== act + id){
+    DG.confirmer = act + id;
+    const s = bouton.querySelector('span:not(.ic)') || bouton;
+    s.innerHTML = act === 'retirer' ? 'Confirmer : retirer le message' : 'Confirmer : exclure de la discussion';
+    return;
+  }
+  if(act === 'signaler'){
+    const { data, error } = await sb.rpc('discussion_signaler', { p_id: m.id });
+    dgFermerFeuille();
+    if(error){ notifier({ type: 'erreur', titre: 'Signalement impossible', texte: messageLisible(error.message) }); return; }
+    notifier({ type: 'succes', titre: 'Message signalé', texte: data && data.masque ? 'Merci. Il est masqué en attendant la modération.' : 'Merci, Nataël le verra.' });
+    if(data && data.masque) dgSuite();
+    return;
+  }
+  if(act === 'masquer'){
+    const { error } = await sb.rpc('bloquer_joueur', { p_ami: m.auteur });
+    dgFermerFeuille();
+    if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); return; }
+    DG.msgs = DG.msgs.filter(x => x.auteur !== m.auteur);
+    dgRendreFil();
+    if(typeof loadAmis === 'function') loadAmis();
+    notifier({ type: 'info', titre: 'Messages masqués', texte: `Tu ne vois plus les messages de ${m.pseudo || 'ce joueur'}. Ça se rétablit dans Amis › Bloqués.` });
+    dgChargerEtat();
+    return;
+  }
+  // modération
+  const { data, error } = await sb.rpc('discussion_moderer', { p_id: m.id, p_action: act });
+  dgFermerFeuille();
+  if(error){ notifier({ type: 'erreur', titre: 'Modération impossible', texte: messageLisible(error.message) }); return; }
+  if(data) dgRecevoir(data);
+  const quoi = { retirer: 'Message retiré', muet1h: `${m.pseudo} est muet 1 h`, muet24h: `${m.pseudo} est muet 24 h`, exclure: `${m.pseudo} est exclu de la discussion`, classer: 'Signalement classé' }[act];
+  notifier({ type: 'succes', titre: quoi || 'Fait', texte: '' });
+  dgSuite();
+}
+document.addEventListener('click', (e) => {
+  const z = e.target.closest('#discussion, .dg-feuille, .dg-voile');
+  if(!z) return;
+  const a = e.target.closest('[data-dg-act]');
+  if(a){ dgAction(a.dataset.dgAct, a.dataset.id, a); return; }
+  const sg = e.target.closest('[data-dg-sig]');
+  if(sg){ const m = dgTrouver(sg.dataset.dgSig); if(m) dgFeuilleModo(m); return; }
+  const d = e.target.closest('[data-dg]');
+  if(d){
+    const q = d.dataset.dg;
+    if(q === 'fermer') return dgFermerFeuille();
+    if(q === 'regles') return dgFeuilleRegles();
+    if(q === 'signales') return dgFeuilleSignales();
+    if(q === 'bas'){ const f = document.getElementById('dgFil'); if(f) f.scrollTop = f.scrollHeight; d.hidden = true; dgMarquerLu(); return; }
+  }
+  const msg = e.target.closest('#dgFil .dg-m');
+  if(msg){
+    const m = dgTrouver(msg.dataset.dgId);
+    if(m && !m.retire && (!m.moi || (DG.moi && DG.moi.moderateur))){ msg.classList.add('choisi'); dgFeuilleMessage(m); }
+  }
+});
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape' && document.querySelector('.dg-feuille')) dgFermerFeuille(); });
+document.addEventListener('input', (e) => {
+  if(e.target.id !== 'dgTexte') return;
+  const n = e.target.value.length, c = document.getElementById('dgCompte'), b = document.getElementById('dgEnvoyer');
+  if(c) c.textContent = `${n} / 300`;
+  if(b) b.disabled = !e.target.value.trim();
+});
+document.addEventListener('submit', async (e) => {
+  if(!e.target.closest('#dgForm')) return;
+  e.preventDefault();
+  const champ = document.getElementById('dgTexte');
+  const t = (champ && champ.value || '').trim();
+  if(!t || DG.envoi) return;
+  DG.envoi = true;
+  const b = document.getElementById('dgEnvoyer'); if(b) b.disabled = true;
+  const { data, error } = await sb.rpc('discussion_envoyer', { p_texte: t });
+  DG.envoi = false;
+  if(error){
+    if(b) b.disabled = false;
+    notifier({ type: 'erreur', titre: 'Message non envoyé', texte: messageLisible(error.message) });
+    dgSuite();
+    return;
+  }
+  champ.value = ''; champ.dispatchEvent(new Event('input', { bubbles: true }));
+  dgRecevoir(data, true);
+  dgRendreFil(true);
+  champ.focus();
+});
 
 // ---------- patch313 : le sondage « d'autres pays ? » (s2-80) ----------
 // Une question, une fois : savoir si ajouter des pays plairait aux joueurs.

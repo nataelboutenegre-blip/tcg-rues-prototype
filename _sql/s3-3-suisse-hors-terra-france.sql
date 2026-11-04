@@ -38,56 +38,55 @@ begin
 end;
 $f$;
 
-create temporary table s33(ordre int, sig text, avant text, apres text, nb int) on commit drop;
-insert into s33 values
-  (1, 'public.terra_ouvrir_paquet(boolean)',
+-- (pas de table temporaire : l'éditeur de Supabase la perd entre deux instructions)
+do $$
+declare
+  rep jsonb := jsonb_build_array(
+    jsonb_build_array(1, 'public.terra_ouvrir_paquet(boolean)',
       'where c.code <> all((select halloween_codes_actifs())::text[]) order by random() limit 5',
       'where c.code <> all((select halloween_codes_actifs())::text[]) and not est_canton(c.departement) /* s3-3 */ order by random() limit 5', 1),
-  (2, 'public.boutique_ouvrir_paquet(text, text)',
+    jsonb_build_array(2, 'public.boutique_ouvrir_paquet(text, text)',
       'or not exists(select 1 from communes c where c.departement = p_departement) then',
       'or not exists(select 1 from communes c where c.departement = p_departement)
        or est_canton(p_departement) then   -- s3-3 : pas encore de paquet de canton', 1),
-  (3, 'public.boutique_ouvrir_paquet(text, text)',
+    jsonb_build_array(3, 'public.boutique_ouvrir_paquet(text, text)',
       'where a.id = ''paquet-garanti'' and c2.tier in (''rare'', ''epique'', ''legendaire'')',
       'where a.id = ''paquet-garanti'' and c2.tier in (''rare'', ''epique'', ''legendaire'') and not est_canton(c2.departement)', 1),
-  (4, 'public.boutique_ouvrir_paquet(text, text)',
+    jsonb_build_array(4, 'public.boutique_ouvrir_paquet(text, text)',
       '(select c.code from (select c3.code from communes c3
                             where a.id = ''paquet-garanti''',
       '(select c.code from (select c3.code from communes c3
                             where a.id = ''paquet-garanti'' and not est_canton(c3.departement)', 1),
-  (5, 'public.bt_tirer(uuid, text)',
+    jsonb_build_array(5, 'public.bt_tirer(uuid, text)',
       '       where c.tier = v_t
 ',
       '       where c.tier = v_t and not est_canton(c.departement)   -- s3-3
 ', 1),
-  (6, 'public.pom_generer()',
+    jsonb_build_array(6, 'public.pom_generer()',
       'c.photo is not null',
       'c.photo is not null and not est_canton(c.departement)', 3),
-  (7, 'public.pom_generer()',
+    jsonb_build_array(7, 'public.pom_generer()',
       'where x.photo is not null and y.photo is not null',
       'where x.photo is not null and y.photo is not null and not est_canton(x.departement) and not est_canton(y.departement) /* s3-3 */', 1),
-  (8, 'public.contrat_defile(text, integer)',
+    jsonb_build_array(8, 'public.contrat_defile(text, integer)',
       '   where c.tier = p_tier
 ',
       '   where c.tier = p_tier and not est_canton(c.departement)   -- s3-3
 ', 1),
-  (9, 'public.signer_contrat(text[], text)',
+    jsonb_build_array(9, 'public.signer_contrat(text[], text)',
       '     where c.tier = p_vers and p.commune_code is null
 ',
       '     where c.tier = p_vers and p.commune_code is null and not est_canton(c.departement)   -- s3-3
-', 1);
-
-do $$
-declare
+', 1));
   s text;
   r record;
   d text;
 begin
-  for s in select distinct sig from s33 loop
+  for s in select distinct e ->> 1 from jsonb_array_elements(rep) e loop
     d := pg_get_functiondef(s::regprocedure);
     if position('s3-3' in d) > 0 then raise notice '% : déjà à jour', s; continue; end if;
-    for r in select * from s33 where sig = s order by ordre loop
-      d := pg_temp.remp(d, r.avant, r.apres, r.nb, s);
+    for r in select e from jsonb_array_elements(rep) e where e ->> 1 = s order by (e ->> 0)::int loop
+      d := pg_temp.remp(d, r.e ->> 2, r.e ->> 3, (r.e ->> 4)::int, s);
     end loop;
     execute d;
   end loop;

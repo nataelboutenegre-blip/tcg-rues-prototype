@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=272e7c8d408b">
+<link rel="stylesheet" href="style.css?v=7b1ed147e85e">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -1652,11 +1652,11 @@
     <div class="acc-eclat" aria-hidden="true"></div>
     <p class="acc-marque" id="accueilTitre">Terra<span>Front</span></p>
     <p class="acc-invite" id="accueilInvite" hidden></p>
-    <p class="acc-accroche">Les 35 000 communes de France sont des cartes à collectionner.<br>Une commune n'appartient qu'à un seul joueur à la fois.</p>
+    <p class="acc-accroche">Les 35 000 communes de France, une seule carte pour tous les joueurs. Chaque commune n'appartient qu'à un seul joueur.</p>
     <div class="acc-etapes">
-      <div class="acc-etape"><span class="acc-num">1</span><div><b>Ouvre des paquets</b><span>5 vraies communes à chaque fois. Plus une ville est peuplée, plus elle est rare.</span></div></div>
-      <div class="acc-etape"><span class="acc-num">2</span><div><b>Construis ton territoire</b><span>Tes communes s'affichent sur la carte de France et se rejoignent quand elles sont voisines.</span></div></div>
-      <div class="acc-etape"><span class="acc-num">3</span><div><b>Attaque et défends</b><span>Prends les communes des autres joueurs — d'autant plus facilement qu'elles sont près de chez toi — et protège les tiennes.</span></div></div>
+      <div class="acc-etape"><span class="acc-num">1</span><div><b>Ouvre ton premier paquet</b><span>5 vraies communes, à toi sur la carte.</span></div></div>
+      <div class="acc-etape"><span class="acc-num">2</span><div><b>Prends ta première commune</b><span>3 victoires et elle est à toi. Plus elle est près des tiennes, plus c'est facile.</span></div></div>
+      <div class="acc-etape"><span class="acc-num">3</span><div><b>Rejoins un clan</b><span>À plusieurs, on ne s'attaque pas et on s'échange des communes.</span></div></div>
     </div>
     <div class="acc-invite-cadeaux" id="accueilInviteCadeaux" hidden>
       <div class="acc-ic"><b>+1</b><span>paquet Terra</span><small>en plus des 3 gratuits</small></div>
@@ -1665,15 +1665,19 @@
     <p class="acc-invite-note" id="accueilInviteNote" hidden></p>
     <div class="acc-cadeau">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" aria-hidden="true"><path d="M3 10h18v10H3zM3 6h18v4H3zM12 6v14"/><path d="M12 6S9.5 2.5 7.5 4s1 2 4.5 2 6.5 0 4.5-2S12 6 12 6z"/></svg>
-      <span>Tu commences avec <b>100 TerraPoints</b> et <b>3 paquets gratuits</b>. Un nouveau paquet arrive toutes les 20 minutes.</span>
+      <span>Tes paquets du Front sont <b>gratuits</b> : un nouveau toutes les <b>20 minutes</b>.</span>
     </div>
     <button class="acc-go" id="accueilGo">Ouvrir mon premier paquet</button>
     <div class="acc-liens">
       <button id="accueilRegles">Voir les règles</button>
       <button id="accueilPasser">Passer</button>
     </div>
+    <p class="acc-terra">Ta collection Terra t'attend aussi, en haut de l'écran.</p>
   </div>
 </div>
+<!-- patch336 : la première conquête guidée -->
+<div class="pc-voile" id="pcVoile" hidden><div class="pc-boite" id="pcBoite" role="dialog" aria-modal="true" aria-label="Ta première conquête"></div></div>
+<div class="pc-suivi" id="pcSuivi" hidden></div>
 
 <div class="voile-menu" id="voileMenu" hidden></div>
 <nav class="feuille-plus" id="feuillePlus" hidden aria-label="Plus d'options">
@@ -1695,6 +1699,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=272e7c8d408b"></script>
+<script defer src="app.js?v=7b1ed147e85e"></script>
 </body>
 </html>

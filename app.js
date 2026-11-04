@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '272e7c8d408b';
+const VERSION_JEU = '7b1ed147e85e';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4039,6 +4039,7 @@ async function lancerAssaut(code){
     const r = data[0];
     // patch86 : l'assaut mis en scene remplace les notifications
     mettreEnSceneAssaut(cibleVue, r);
+    pcApresAssaut(code, r);   // patch336
     if((r.gagne || r.conquise) && PREMIERS_PAS && !PREMIERS_PAS.attaque) ppRelire(800);   // patch306
     if(r.conquise){
       // patch145 : la commune change de couleur tout de suite ; le
@@ -7655,6 +7656,7 @@ function surCarteRetournee(draw){
       loadObjectifs();
       // les cartes restent affichees : c'est le joueur qui decide de passer au suivant
       loadPackStatus().then(proposerPaquetSuivant);
+      if(!enTerra()) pcApresPaquet();   // patch336
     }
   };
 }
@@ -9091,6 +9093,7 @@ document.addEventListener('click', async (e) => {
         const cible = combatCibles.find(x => x.commune_code === code);
         // patch86 : l'assaut mis en scene remplace les notifications
         mettreEnSceneAssaut(cibleVueCombat, result);
+        pcApresAssaut(code, result);   // patch336
         // patch135 : la carte se met a jour sur place, le reste plus tard
         combatApresAssaut(code, result);
       } catch(err){
@@ -14622,6 +14625,11 @@ async function peutEtreAfficherAccueil(){
   const voile = document.getElementById('voileAccueil');
   if(!voile) return;
   if(parrainAccueil) remplirAccueilInvite(parrainAccueil);   // patch152
+  // patch336 : un compte neuf commence au Front
+  if(!force && SAISON2 && modeJeu !== 'front'){
+    const b = document.querySelector('#modeBascule [data-mode="front"]');
+    if(b) b.click();
+  }
   voile.hidden = false;
   onbMarque('accueil_vu');   // patch324
   requestAnimationFrame(() => voile.classList.add('ouvert'));
@@ -14632,6 +14640,13 @@ async function peutEtreAfficherAccueil(){
 // "Ouvrir mon premier paquet" enchaine sur le guide ; "Passer" et "Voir les regles" non
 document.getElementById('accueilGo').addEventListener('click', () => {
   onbMarque('accueil_ouvrir');   // patch324
+  if(SAISON2){   // patch336 : droit au paquet du Front ; le guide reste dans les règles
+    fermerAccueil(false);
+    marquerGuideVu();
+    onbMarque('pc_accueil');
+    ppOuvrirPaquetFront();
+    return;
+  }
   fermerAccueil(true);
   if(!guideDejaVu()) setTimeout(demarrerGuide, 280);
 });
@@ -25132,7 +25147,7 @@ function ppRelire(delai){
   ppMinuteur = setTimeout(chargerPremiersPas, delai || 1500);
 }
 // une cible facile : la commune d'un autre joueur la plus proche des miennes, plutôt commune
-function ppCible(){
+function ppCible(exclues){   // patch336 : exclues = codes déjà proposés
   const maintenant = Date.now();
   const miennes = [...collectionMap.values()].filter(m => m.lat != null && m.lon != null && !estOutremerCode(m.code));
   const rangT = (t) => ({ commun: 0, peucommun: 1, rare: 2, epique: 3, legendaire: 4 })[t && t.id] ?? 2;
@@ -25140,6 +25155,7 @@ function ppCible(){
   for(const c of othersMap.values()){
     if(c.lat == null || c.lon == null || estOutremerCode(c.code)) continue;
     if(clanMembres.has(c.joueurId) || c.bouclierJusqua > maintenant) continue;
+    if(exclues && exclues.has(c.code)) continue;
     let d = 300;
     for(const m of miennes){
       if(Math.abs(m.lat - c.lat) > 1.5) continue;
@@ -25181,22 +25197,7 @@ function renderPremiersPas(){
 }
 async function ppAction(quoi, bouton){
   onbMarque('pp_' + quoi);   // patch324
-  if(quoi === 'paquet'){
-    // patch324 : le premier paquet du Front (s2-86 ne coche plus l'étape avec du Terra)
-    if(paquetEnCours){ notifier({ type: 'info', titre: 'Un paquet est en cours', texte: 'Retourne d’abord tes cartes, puis reviens ici.' }); return; }
-    ncAller('front', 'tirage', async () => {
-      try{ await loadPackStatus(); }catch(e){}
-      const pret = document.querySelector('#packZone .paquet[data-pret]');
-      const b = document.getElementById('openFreeBtn');
-      if(pret){
-        pret.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        appelerPaquet(pret);
-        notifier({ type: 'info', titre: 'Ton paquet du Front', texte: 'Touche le paquet pour l’ouvrir : ces 5 communes seront à toi sur la carte.' });
-      } else if(b && !b.disabled) b.click();
-      else { if(b) b.scrollIntoView({ behavior: 'smooth', block: 'center' }); notifier({ type: 'info', titre: 'Paquet du Front', texte: 'Ton prochain paquet gratuit arrive bientôt : le compte à rebours est juste en dessous.' }); }
-    });
-    return;
-  }
+  if(quoi === 'paquet'){ ppOuvrirPaquetFront(); return; }   // patch336 : partagé avec l'accueil
   if(quoi === 'attaque'){
     ncAller('front', 'territoire', () => {
       const c = ppCible();
@@ -25218,10 +25219,255 @@ async function ppAction(quoi, bouton){
     if(typeof chargerBatiments === 'function') chargerBatiments();
   }
 }
+// patch324 / patch336 : le premier paquet du Front (s2-86 ne coche plus l'étape avec du Terra)
+function ppOuvrirPaquetFront(){
+  {
+    if(paquetEnCours){ notifier({ type: 'info', titre: 'Un paquet est en cours', texte: 'Retourne d’abord tes cartes, puis reviens ici.' }); return; }
+    ncAller('front', 'tirage', async () => {
+      try{ await loadPackStatus(); }catch(e){}
+      const pret = document.querySelector('#packZone .paquet[data-pret]');
+      const b = document.getElementById('openFreeBtn');
+      if(pret){
+        pret.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        appelerPaquet(pret);
+        notifier({ type: 'info', titre: 'Ton paquet du Front', texte: 'Touche le paquet pour l’ouvrir : ces 5 communes seront à toi sur la carte.' });
+      } else if(b && !b.disabled) b.click();
+      else { if(b) b.scrollIntoView({ behavior: 'smooth', block: 'center' }); notifier({ type: 'info', titre: 'Paquet du Front', texte: 'Ton prochain paquet gratuit arrive bientôt : le compte à rebours est juste en dessous.' }); }
+    });
+  }
+}
 document.getElementById('premiersPas')?.addEventListener('click', (e) => {
   const b = e.target.closest('[data-pp]');
   if(b) ppAction(b.dataset.pp, b);
 });
+
+// ---------- patch336 : la première conquête guidée ----------
+// Les nouveaux qui conquièrent une commune dans leurs 24 premières heures
+// reviennent à 86 % le lendemain, les autres à 16 % (lecture du 4/11). Après
+// son paquet du Front, un compte neuf (Premiers pas) se voit proposer la
+// cible la plus facile ; un encart suit sa série jusqu'à la conquête, qu'on
+// fête avant de lui proposer un clan qui recrute.
+var PC = { exclues: new Set(), info: null, siege: null, siegeCode: null, siegeLu: 0, cle: '' };
+const PC_CIBLE = 'tf-pc-cible', PC_FETE = 'tf-pc-fete', PC_PLUSTARD = 'tf-pc-plustard';
+const PC_TP = { commun: 5, peucommun: 10, rare: 25, epique: 50, legendaire: 100 };
+const PC_COULEUR = { commun: '#7E8BA0', peucommun: '#22A06B', rare: '#2F7CF6', epique: '#9B5CF6', legendaire: '#F0B429' };
+function pcLire(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function pcEcrire(k, v){ try{ if(v == null) localStorage.removeItem(k); else localStorage.setItem(k, String(v)); }catch(e){} }
+function pcMinSec(ms){ const t = Math.max(0, Math.ceil(ms / 1000)); return t >= 3600 ? formatDuree(ms) : Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0'); }
+function pcVoile(){ return document.getElementById('pcVoile'); }
+function pcOuvrir(html, fete){
+  const v = pcVoile(), b = document.getElementById('pcBoite');
+  if(!v || !b) return;
+  b.className = 'pc-boite' + (fete ? ' fete' : '');
+  b.innerHTML = html;
+  v.hidden = false;
+  requestAnimationFrame(() => v.classList.add('ouvert'));
+  pcMajSuivi();
+}
+function pcFermer(){
+  const v = pcVoile();
+  if(!v || v.hidden) return;
+  v.classList.remove('ouvert');
+  setTimeout(() => { v.hidden = true; pcMajSuivi(); }, 180);
+}
+// après un paquet du Front : la fiche, une fois, tant qu'aucune attaque n'est gagnée
+async function pcApresPaquet(){
+  if(!SAISON2 || pcLire(PC_FETE) || pcLire(PC_CIBLE)) return;
+  if(Date.now() - (Number(pcLire(PC_PLUSTARD)) || 0) < 6 * 3600 * 1000) return;
+  await chargerPremiersPas();
+  if(!PREMIERS_PAS || PREMIERS_PAS.attaque) return;
+  if(othersMap.size < 50){ try{ await loadOthersPossessions(); }catch(e){} }
+  setTimeout(pcProposer, 600);
+}
+async function pcProposer(){
+  if(paquetEnCours || NC.ouvert) return;
+  const c = ppCible(PC.exclues);
+  if(!c) return;
+  PC.info = c;
+  onbMarque('pc_vu');
+  pcOuvrir(pcFicheHtml(c, null));
+  try{
+    const { data, error } = await sb.rpc('apercu_attaque', { p_commune_code: c.code, p_intensite: intensiteChoisie });
+    if(!error && data && data[0] && PC.info === c && !pcVoile().hidden) document.getElementById('pcBoite').innerHTML = pcFicheHtml(c, data[0]);
+  }catch(e){}
+}
+function pcFicheHtml(c, a){
+  const t = c.tier && c.tier.id ? c.tier.id : 'commun';
+  const proche = maCommuneLaPlusProche(c.lat, c.lon);
+  const km = proche ? Math.max(1, Math.round(proche.km)) : null;
+  const ch = a ? Number(a.chances) : null;
+  const cl = ch == null ? '' : ch >= 50 ? 'ok' : ch >= 35 ? 'moyen' : 'dur';
+  const delai = DELAI_ATTAQUE_MS[t] || 0;
+  return `<div class="pc-poignee"></div>
+    <div class="pc-kicker">Premiers pas · étape 2 sur 4</div>
+    <div class="pc-titre">Prends ta première commune</div>
+    <div class="pc-cible"><div class="pc-vign" style="--c:${PC_COULEUR[t] || '#7E8BA0'}">${echapperHtml(String(c.nom || '?')[0].toUpperCase())}</div><div>
+      <b>${echapperHtml(c.nom)} (${echapperHtml(c.dept || '')})</b>
+      <small><span class="pc-chip">${echapperHtml(c.tier && c.tier.label ? c.tier.label : LIBELLE_TIER[t] || '')}</span>tenue par ${echapperHtml(c.pseudo || 'un joueur')}</small>
+      ${proche ? `<small>${km <= 20 ? `À ${km} km de ${echapperHtml(proche.entry.nom)}, ta commune` : `À ${km} km de ta commune la plus proche : une attaque à distance`}</small>` : ''}</div></div>
+    <div class="pc-chiffres">
+      <div><b class="${cl}">${ch == null ? '…' : ch + ' %'}</b><span>de chances par assaut</span></div>
+      <div><b>${ENERGIE_INTENSITE[intensiteChoisie] || 2} ⚡</b><span>par assaut (${echapperHtml(intensite().label.toLowerCase())})</span></div>
+      <div><b>3</b><span>victoires pour la prendre</span></div>
+    </div>
+    <p class="pc-txt">Une défaite ne te fait <b>rien perdre</b> : ta série reste où elle en est.${delai ? ` Entre deux assauts sur cette commune : <b>${formatDuree(delai)}</b>.` : ''}</p>
+    <button type="button" class="pc-go" data-pc-act="lancer" data-pc-code="${echapperTexte(c.code)}">Lancer l'assaut</button>
+    <div class="pc-sec"><button type="button" data-pc-act="autre">Une autre cible</button><button type="button" data-pc-act="plustard">Plus tard</button></div>`;
+}
+function pcLancer(code){
+  pcEcrire(PC_CIBLE, code);
+  PC.siegeLu = 0;
+  onbMarque('pc_lancer');
+  pcFermer();
+  ncAller('front', 'territoire', () => {
+    const c = othersMap.get(code);
+    if(c) voirCommuneSurCarte(c);
+    setTimeout(() => { try{ ouvrirAttaque(code); }catch(e){} }, 450);
+  });
+}
+// l'encart qui suit la série, sur Territoire et Combat
+async function pcLireSiege(code){
+  PC.siegeLu = Date.now(); PC.siegeCode = code;
+  try{
+    if(!window.__monId){ const { data: u } = await sb.auth.getUser(); window.__monId = u && u.user ? u.user.id : null; }
+    const { data } = await sb.from('sieges').select('victoires_consecutives, dernier_round')
+      .eq('attacker_id', window.__monId).eq('commune_code', code).maybeSingle();
+    PC.siege = data || null;
+  }catch(e){ PC.siege = null; }
+  PC.cle = '';
+  pcMajSuivi();
+}
+function pcMajSuivi(){
+  const el = document.getElementById('pcSuivi');
+  if(!el) return;
+  const code = pcLire(PC_CIBLE);
+  const cacher = () => { if(!el.hidden){ el.hidden = true; PC.cle = ''; } };
+  if(!SAISON2 || !code || pcLire(PC_FETE) || modeJeu !== 'front') return cacher();
+  const t = document.querySelector('.tab.active[data-tab]');
+  if(!t || !['territoire', 'combat'].includes(t.dataset.tab)) return cacher();
+  const pan = document.getElementById('mapPanneau'), fen = document.getElementById('fenetre'), v = pcVoile();
+  if((t.dataset.tab === 'territoire' && pan && !pan.hidden) || (fen && !fen.hidden) || (v && !v.hidden) || NC.ouvert) return cacher();
+  const c = othersMap.get(code);
+  if(!c){
+    if(collectionMap.has(code)) return cacher();   // prise : la fête arrive par pcApresAssaut
+    if(othersMap.size > 50){ pcEcrire(PC_CIBLE, null); return cacher(); }   // redevenue libre
+    return cacher();
+  }
+  if(PC.siegeCode !== code || Date.now() - PC.siegeLu > 30000){ if(Date.now() - PC.siegeLu > 3000) pcLireSiege(code); }
+  const v3 = Math.min(2, Number(PC.siege && PC.siege.victoires_consecutives) || 0);
+  const dernier = PC.siege && PC.siege.dernier_round ? new Date(PC.siege.dernier_round).getTime() : 0;
+  const attente = Math.max(0, dernier + (DELAI_ATTAQUE_MS[c.tier && c.tier.id] || 0) - Date.now());
+  const cle = code + '|' + v3 + '|' + (attente > 0);
+  if(cle !== PC.cle){
+    PC.cle = cle;
+    const reste = 3 - v3;
+    el.innerHTML = `<div class="pc-s-h"><span class="pc-kicker">Ta première conquête</span><span style="font-size:.75rem;color:var(--brume)">${v3} / 3 <button type="button" class="pc-s-x" data-pc-act="abandon" aria-label="Ne plus suivre cette cible">✕</button></span></div>
+      <div class="pc-s-nom">${echapperHtml(c.nom)} (${echapperHtml(c.dept || '')})</div>
+      <div class="pc-s-pts">${[0, 1, 2].map(i => `<i class="${i < v3 ? 'on' : ''}"></i>`).join('')}</div>
+      <div class="pc-s-l"><span>${v3 ? `Encore <b>${reste} victoire${reste > 1 ? 's' : ''}</b> et elle est à toi.` : '<b>3 victoires</b> et elle est à toi.'}</span>
+        <button type="button" class="pc-assaut" data-pc-act="assaut" ${attente > 0 ? 'disabled' : ''}>${attente > 0 ? 'Assaut dans <span data-pc-compte>' + pcMinSec(attente) + '</span>' : 'Assaut'}</button></div>
+      <p class="pc-s-note">${echapperHtml(c.pseudo || 'Son propriétaire')} peut tenter de se défendre : s'il réussit, tu perds une victoire, rien de plus.</p>`;
+  } else if(attente > 0){
+    const cpt = el.querySelector('[data-pc-compte]');
+    if(cpt) cpt.textContent = pcMinSec(attente);
+  }
+  el.hidden = false;
+}
+setInterval(() => { try{ pcMajSuivi(); }catch(e){} }, 1000);
+// après chaque assaut : la série change, et la première conquête se fête
+function pcApresAssaut(code, r){
+  if(!SAISON2 || !r || pcLire(PC_FETE) || !pcLire(PC_CIBLE)) return;
+  const c = othersMap.get(code) || {};
+  const info = { code, nom: c.nom || code, dept: c.dept || '', tier: c.tier && c.tier.id ? c.tier.id : 'commun' };
+  if(r.conquise){
+    pcEcrire(PC_FETE, '1');
+    pcEcrire(PC_CIBLE, null);
+    // on attend que la fenêtre de l'assaut soit refermée
+    const debut = Date.now();
+    const attendre = () => {
+      const fen = document.getElementById('fenetre');
+      if((fen && !fen.hidden) || paquetEnCours){ if(Date.now() - debut < 180000) setTimeout(attendre, 400); return; }
+      setTimeout(() => pcFeter(info), 250);
+    };
+    setTimeout(attendre, 600);
+  } else if(code === pcLire(PC_CIBLE)){
+    PC.siege = { victoires_consecutives: Number(r.victoires_consecutives) || 0, dernier_round: new Date().toISOString() };
+    PC.siegeCode = code; PC.siegeLu = Date.now(); PC.cle = '';
+  }
+}
+async function pcFeter(info){
+  onbMarque('pc_fete', info.tier);
+  const enClan = clanMembres.size > 0 || !!(clanCache && clanCache.moi && clanCache.moi.clan);
+  const entete = (P) => {
+    const faites = P ? ['paquet', 'attaque', 'clan', 'fonderie'].filter(k => P[k]).length : null;
+    return `<div class="pc-eclat"></div>
+    <div class="pc-poignee"></div>
+    <div class="pc-bravo">Première conquête !</div>
+    <p class="pc-sous"><b>${echapperHtml(info.nom)}${info.dept ? ' (' + echapperHtml(info.dept) + ')' : ''}</b> est à toi.</p>
+    <div class="pc-gains"><span>+${PC_TP[info.tier] || 5} TP</span><span>+10 au classement</span></div>
+    ${faites == null ? '' : `<div class="pc-pp"><span>Premiers pas</span><div class="seg">${[0, 1, 2, 3].map(i => `<i class="${i < faites ? 'on' : ''}"></i>`).join('')}</div><b>${faites} / 4</b></div>`}
+    <div class="pc-sep"></div>`;
+  };
+  const pied = (gauche) => `<div class="pc-sec">${gauche}<button type="button" data-pc-act="fermer">Plus tard</button></div>`;
+  if(enClan){
+    await chargerPremiersPas();
+    pcOuvrir(entete(PREMIERS_PAS) + `<p class="pc-st">Et maintenant, ta Fonderie ?</p>
+      <p class="pc-ss">Gratuite, elle produit ${(BATIMENTS && BATIMENTS.production) || 10} lingots par jour pour construire des Forteresses.</p>
+      <button type="button" class="pc-go" data-pc-act="fonderie">Construire ma Fonderie</button>` + pied('<span></span>'), true);
+    return;
+  }
+  pcOuvrir(entete(null) + `<p class="pc-st">Et maintenant, un clan ?</p><p class="pc-ss">Chargement des clans qui recrutent…</p>`, true);
+  const [, cl, cf] = await Promise.all([
+    chargerPremiersPas(),
+    sb.rpc('clans_classement').then(r => r, () => ({ error: true })),
+    sb.rpc('clans_en_formation').then(r => r, () => ({ error: true })),
+    typeof chargerCandidatures === 'function' ? chargerCandidatures() : null,
+    clansCarte.size ? null : loadClansCarte(),
+  ]);
+  const tous = [].concat(cl && !cl.error ? cl.data || [] : [], cf && !cf.error ? cf.data || [] : [])
+    .filter(x => x && x.clan_id && (Number(x.membres) || 0) < 8 && !candFerme(x.clan_id));
+  // les clans qui ont des communes près des miennes passent devant
+  const miennes = [...collectionMap.values()].filter(m => m.lat != null && m.lon != null);
+  const pres = new Map();
+  for(const o of othersMap.values()){
+    const k = clansCarte.get(o.joueurId);
+    if(!k || o.lat == null) continue;
+    for(const m of miennes){
+      if(Math.abs(m.lat - o.lat) > 0.5) continue;
+      if(distanceKm(o.lat, o.lon, m.lat, m.lon) <= 30){ pres.set(k.tag, (pres.get(k.tag) || 0) + 1); break; }
+    }
+  }
+  tous.sort((a, b) => (pres.get(b.tag) || 0) - (pres.get(a.tag) || 0) || (Number(b.membres) || 0) - (Number(a.membres) || 0));
+  const trois = tous.slice(0, 3);
+  const lignes = trois.map(x => `<div class="pc-clan">${blasonHtml(x.tag, x.couleur, true)}<div class="qui"><b>${echapperHtml(x.nom)}</b>
+      <small><span class="rec">Recrute</span> · ${Number(x.membres) || 0} membre${(Number(x.membres) || 0) > 1 ? 's' : ''}${pres.get(x.tag) ? ' · près de tes communes' : ''}</small></div>
+      <button type="button" class="pc-postuler" data-pc-act="clan" data-pc-clan="${echapperTexte(x.clan_id)}">Postuler</button></div>`).join('');
+  if(pcVoile().hidden) return;   // fermée pendant le chargement
+  document.getElementById('pcBoite').innerHTML = entete(PREMIERS_PAS) + `<p class="pc-st">Et maintenant, un clan ?</p>
+    <p class="pc-ss">Entre membres, on ne s'attaque pas et on s'échange des communes.${lignes ? ' Ces clans recrutent :' : ''}</p>
+    ${lignes || '<p class="pc-vide">Aucun clan ne recrute en ce moment : tu peux créer le tien dans l’onglet Clan.</p>'}
+    ` + pied('<button type="button" data-pc-act="clans">Voir tous les clans</button>');
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pc-act]');
+  if(!b) return;
+  const a = b.dataset.pcAct;
+  if(a === 'lancer') return pcLancer(b.dataset.pcCode);
+  if(a === 'autre'){ if(PC.info) PC.exclues.add(PC.info.code); onbMarque('pc_autre'); return pcProposer(); }
+  if(a === 'plustard'){ pcEcrire(PC_PLUSTARD, Date.now()); onbMarque('pc_plustard'); return pcFermer(); }
+  if(a === 'fermer') return pcFermer();
+  if(a === 'abandon'){ pcEcrire(PC_CIBLE, null); onbMarque('pc_abandon'); PC.cle = ''; return pcMajSuivi(); }
+  if(a === 'assaut'){
+    const code = pcLire(PC_CIBLE), c = code ? othersMap.get(code) : null;
+    if(!c) return;
+    ncAller('front', 'territoire', () => { voirCommuneSurCarte(c); setTimeout(() => { try{ ouvrirAttaque(code); }catch(err){} }, 450); });
+    return;
+  }
+  if(a === 'clan'){ onbMarque('pc_clan'); pcFermer(); clanAOuvrir = b.dataset.pcClan; ncAller(null, 'clan'); return; }
+  if(a === 'clans'){ onbMarque('pc_clan'); pcFermer(); ncAller(null, 'clan'); return; }
+  if(a === 'fonderie'){ pcFermer(); ncAller('front', 'defense'); return; }
+});
+pcVoile()?.addEventListener('click', (e) => { if(e.target === pcVoile()) pcFermer(); });
 
 // ---------- patch322 : le bandeau de la réserve d'accueil (s2-76) ----------
 // Les dernières communes libres du Front vont aux comptes de moins de 7 jours.

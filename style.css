@@ -8849,3 +8849,25 @@ body.mode-terra #reserveAccueil{ display:none !important; }
   .pc-poignee{ display:none; }
   .pc-suivi{ left:auto; right:22px; bottom:22px; width:360px; }
 }
+
+/* patch338 : défendre en choisissant son engagement */
+.pd-sous{ font-size:.8rem; color:var(--brume); margin:-6px 0 12px; }
+.pd-etat{ display:flex; gap:8px; margin-bottom:12px; }
+.pd-etat > div{ flex:1; background:rgba(10,22,40,.45); border-radius:12px; padding:9px 10px; }
+.pd-etat b{ display:block; font:900 1.25rem/1 var(--titre); }
+.pd-etat span{ display:block; font-size:.7rem; color:var(--brume); margin-top:4px; line-height:1.35; }
+.pd-etat .menace-serie{ display:flex; margin:0 0 6px; }
+.pd-gn{ font-size:.75rem; background:rgba(43,212,139,.1); border:1px solid rgba(43,212,139,.35); border-radius:10px; padding:8px 10px; margin-bottom:12px; color:#BFF3DC; }
+.pd-lab{ font-size:.76rem; color:var(--brume); margin:0 0 7px; }
+.pd-lab b{ color:#fff; }
+.pd-ints{ display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin-bottom:12px; }
+.pd-int{ font:inherit; color:#fff; cursor:pointer; border-radius:12px; border:1.5px solid rgba(169,188,212,.25); background:rgba(10,22,40,.4); padding:10px 6px; text-align:center; }
+.pd-int span{ display:block; font-size:.8rem; font-weight:600; }
+.pd-int b{ display:block; font:900 1.5rem/1.1 var(--titre); margin:4px 0 2px; }
+.pd-int small{ display:block; font-size:.7rem; color:var(--brume); }
+.pd-int.on{ border-color:var(--c-legendaire); background:rgba(240,180,41,.12); }
+.pd-int.on span{ color:var(--c-legendaire); }
+.pd-int:disabled{ opacity:.4; cursor:default; }
+.pc-go:disabled{ background:var(--nuit-3); color:#9FB0C8; box-shadow:none; cursor:default; }
+.pd-note{ font-size:.72rem; color:#8FA2BC; line-height:1.45; margin:12px 0 0; }
+.pd-note b{ color:#C9D3E0; }

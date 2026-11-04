@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '7f6ef871d09e';
+const VERSION_JEU = 'a09debc1bef5';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9185,6 +9185,12 @@ try{
   if(v && INTENSITES.some(i => i.id === v)) intensiteChoisie = v;
 } catch(e){}
 const intensite = (id) => INTENSITES.find(i => i.id === (id || intensiteChoisie)) || INTENSITES[1];
+// patch338 : l'engagement de défense, retenu à part de celui d'attaque
+let intensiteDefense = 'normale';
+try{
+  const v = localStorage.getItem('tf-intensite-def');
+  if(v && INTENSITES.some(i => i.id === v)) intensiteDefense = v;
+} catch(e){}
 
 // Ce que l'intensité fait vraiment : décaler les chances, pas les fixer.
 // Le decalage se lit depuis le tableau lui-meme, pour qu'un changement de
@@ -9374,7 +9380,7 @@ function renderDefenseLisible(liste){
     let action = '';
     if(v > 0 && !g.bouclier){
       action = m.defense_utilisee ? `<span class="df-note">${noteDefensesUtilisees(m)}</span>`   // patch334
-        : (m.attaquant_id ? `<button class="menace-defendre" data-commune="${m.commune_code}" data-attaquant="${m.attaquant_id}" data-nom="${echapperTexte(g.nom)}">${ICONE_BOUCLIER}${coutTexte(SAISON2 ? 1 : coutIntensite(g.tier))}</button>` : '');
+        : (m.attaquant_id ? `<button class="menace-defendre" data-commune="${m.commune_code}" data-attaquant="${m.attaquant_id}" data-nom="${echapperTexte(g.nom)}">${ICONE_BOUCLIER}${SAISON2 ? 'Défendre' : coutTexte(coutIntensite(g.tier))}</button>` : '');
     }
     return `<div class="df-att"><span class="menace-serie" title="${v} victoire${v > 1 ? 's' : ''} sur 3">${serie}</span>
       <span class="df-qui"><b>${echapperTexte(m.attaquant_pseudo || 'Un joueur')}</b><small>${quand}</small></span>${action}</div>`;
@@ -9591,15 +9597,15 @@ document.getElementById('reglesBtn').addEventListener('click', () => {
 document.getElementById('combatMenacesListe').addEventListener('click', (e) => {
   const btn = e.target.closest('.menace-defendre');
   if(!btn || btn.disabled) return;
-  defendreDepuis(btn);
+  if(SAISON2) pdOuvrir(btn); else defendreDepuis(btn);   // patch338
 });
 // patch288 : la défense, depuis Défendre ou depuis Mon front
-async function defendreDepuis(btn){
+async function defendreDepuis(btn, choix){   // patch338 : choix = engagement de défense
   btn.disabled = true;
   const gn = SAISON2 ? garnisonsMoi.get(btn.dataset.commune) : null;
   const recharge = gn ? Math.min(3, 10 - gn.energie) : 0;
   try{
-    let { data, error } = await sb.rpc('defendre', { p_commune_code: btn.dataset.commune, p_attaquant: btn.dataset.attaquant, p_intensite: intensiteChoisie });
+    let { data, error } = await sb.rpc('defendre', { p_commune_code: btn.dataset.commune, p_attaquant: btn.dataset.attaquant, p_intensite: choix || intensiteChoisie });
     if(error && /p_intensite|does not exist|could not find/i.test(error.message || '')){
       ({ data, error } = await sb.rpc('defendre', { p_commune_code: btn.dataset.commune, p_attaquant: btn.dataset.attaquant }));
     }
@@ -10341,7 +10347,7 @@ function initModes(){
   const defense = document.getElementById('panel-defense');
   if(defense && !document.getElementById('garnisonsBloc')){
     const sub = defense.querySelector('.sub');
-    if(sub) sub.textContent = 'Quand un joueur gagne un round contre toi, tente une défense (1 énergie). Tes garnisons, elles, se défendent toutes seules.';
+    if(sub) sub.textContent = 'Quand un joueur gagne un round contre toi, tente une défense : tu choisis ton engagement, 1 à 3 énergie. Tes garnisons, elles, se défendent toutes seules.';   // patch338
     const g = document.createElement('div');
     g.id = 'garnisonsBloc';
     g.className = 'garnisons-bloc';
@@ -24474,7 +24480,7 @@ function mfoRendre(){
     const v = m.victoires_consecutives, t = mfoTier(m.tier);
     const quand = bouclier ? 'en pause (bouclier)' : now < p ? `prochain assaut dans ${formatDuree(p - now)}` : 'peut attaquer maintenant';
     const action = bouclier ? '' : m.defense_utilisee ? `<span class="mfo-note">${noteDefensesUtilisees(m)}</span>`   // patch334
-      : m.attaquant_id ? `<button type="button" class="menace-defendre mfo-btn mfo-rouge" data-commune="${echapperTexte(m.commune_code)}" data-attaquant="${echapperTexte(m.attaquant_id)}" data-nom="${echapperTexte(m.nom || '')}">Défendre · 1 ${E}</button>` : '';
+      : m.attaquant_id ? `<button type="button" class="menace-defendre mfo-btn mfo-rouge" data-commune="${echapperTexte(m.commune_code)}" data-attaquant="${echapperTexte(m.attaquant_id)}" data-nom="${echapperTexte(m.nom || '')}">Défendre</button>` : '';
     return `<div class="mfo-l"><div><b>${echapperTexte(m.nom || m.commune_code)}</b>${t ? ' · ' + t.label.toLowerCase() : ''}<small>${v} round${v > 1 ? 's' : ''} sur 3 perdu${v > 1 ? 's' : ''} · ${quand}</small></div>${action}</div>`;
   };
   const blocDanger = danger.length
@@ -24595,7 +24601,7 @@ document.addEventListener('click', (e) => {
 }, true);
 document.getElementById('monFront')?.addEventListener('click', (e) => {
   const def = e.target.closest('.menace-defendre');
-  if(def){ if(!def.disabled) defendreDepuis(def); return; }
+  if(def){ if(!def.disabled){ if(SAISON2) pdOuvrir(def); else defendreDepuis(def); } return; }   // patch338
   if(e.target.closest('[data-recolter]')) return;   // le bouton Récolter a déjà son écouteur
   const p = e.target.closest('[data-mfo-tier]');
   if(p) return mfoVers('collection', p.dataset.mfoTier);
@@ -25239,6 +25245,68 @@ function ppOuvrirPaquetFront(){
 document.getElementById('premiersPas')?.addEventListener('click', (e) => {
   const b = e.target.closest('[data-pp]');
   if(b) ppAction(b.dataset.pp, b);
+});
+
+// ---------- patch338 : défendre en choisissant son engagement (s2-95) ----------
+// Avant, la défense prenait en silence l'engagement choisi pour attaquer et
+// coûtait toujours 1 énergie. Maintenant on choisit à chaque défense, au même
+// prix que l'attaque (1, 2 ou 3 énergie pour 35, 50 ou 65 %).
+var PD = { btn: null, m: null, code: null };
+function pdOuvrir(btn){
+  const code = btn.dataset.commune, att = btn.dataset.attaquant;
+  PD.m = (menaces || []).find(x => x.commune_code === code && String(x.attaquant_id) === String(att)) || null;
+  PD.code = code;
+  PD.btn = { dataset: { commune: code, attaquant: att, nom: btn.dataset.nom || (PD.m && PD.m.nom) || code }, disabled: false };
+  pcOuvrir(pdHtml());
+}
+function pdHtml(){
+  const m = PD.m, nom = PD.btn.dataset.nom;
+  const v = m ? Number(m.victoires_consecutives) || 0 : 0;
+  const faites = m && m.defenses_faites != null ? Math.min(2, Number(m.defenses_faites) || 0) : (m && m.defense_utilisee ? 2 : null);
+  const dispo = faites == null ? null : 2 - faites;
+  const revient = m && m.defense_revient ? new Date(m.defense_revient).getTime() - Date.now() : 0;
+  const en = energieEtat ? Math.floor(Number(energieEtat.energie) || 0) : null;
+  const gn = typeof garnisonsMoi !== 'undefined' ? garnisonsMoi.get(PD.code) : null;
+  const dept = m && typeof deptDe === 'function' ? deptDe(m) : '';
+  const cout = ENERGIE_INTENSITE[intensiteDefense] || 2;
+  const ch = (INTENSITES.find(i => i.id === intensiteDefense) || INTENSITES[1]).chances;
+  const tropCher = en != null && cout > en;
+  const serie = [0, 1, 2].map(i => `<i class="${i < v ? 'pris' : ''}"></i>`).join('');
+  const dispoTxt = dispo == null ? '<b>2</b><span>défenses par attaque</span>'
+    : `<b>${dispo} sur 2</b><span>${dispo === 2 ? 'défenses disponibles' : dispo === 1
+        ? `défense disponible${revient > 0 ? ` · la 2e revient dans ${formatDuree(revient)}` : ''}`
+        : `aucune disponible${revient > 0 ? ` · une revient dans ${formatDuree(revient)}` : ''}`}</span>`;
+  const ints = INTENSITES.map(i => {
+    const c = ENERGIE_INTENSITE[i.id];
+    return `<button type="button" class="pd-int${i.id === intensiteDefense ? ' on' : ''}" data-pd-int="${i.id}" ${en != null && c > en ? 'disabled' : ''}>
+      <span>${i.label}</span><b>${i.chances} %</b><small>${c} énergie</small></button>`;
+  }).join('');
+  return `<div class="pc-poignee"></div>
+    <div class="pc-kicker">Défense · ${echapperHtml(nom)}${dept ? ' (' + echapperHtml(dept) + ')' : ''}</div>
+    <div class="pc-titre">Repousser ${echapperHtml((m && m.attaquant_pseudo) || 'l’attaquant')}</div>
+    <p class="pd-sous">Réussie, il perd une victoire. Ratée, tu ne perds que l'énergie.</p>
+    <div class="pd-etat">
+      <div><span class="menace-serie">${serie}</span><span>${v} victoire${v > 1 ? 's' : ''} sur 3${v === 2 ? ' : encore une et il la prend' : ''}</span></div>
+      <div>${dispoTxt}</div>
+    </div>
+    ${gn ? '<div class="pd-gn">🛡 Ta garnison défend aussi seule, une chance sur deux à chaque round gagné.</div>' : ''}
+    <p class="pd-lab">Ton engagement${en != null ? ` <span>· ton énergie : <b>${en}</b></span>` : ''}</p>
+    <div class="pd-ints">${ints}</div>
+    <button type="button" class="pc-go" data-pd-go ${dispo === 0 || tropCher ? 'disabled' : ''}>${dispo === 0 ? 'Plus de défense disponible' : tropCher ? 'Pas assez d’énergie' : `Défendre · ${cout} ⚡ · ${ch} %`}</button>
+    <p class="pd-note">Pas de bonus pour tes communes voisines en défense. <b>Ton choix est retenu</b> pour tes prochaines défenses.</p>
+    <div class="pc-sec"><span></span><button type="button" data-pd-fermer>Annuler</button></div>`;
+}
+document.addEventListener('click', (e) => {
+  const i = e.target.closest('[data-pd-int]');
+  if(i && !i.disabled){
+    intensiteDefense = i.dataset.pdInt;
+    try{ localStorage.setItem('tf-intensite-def', intensiteDefense); }catch(err){}
+    const b = document.getElementById('pcBoite'); if(b) b.innerHTML = pdHtml();
+    return;
+  }
+  const g = e.target.closest('[data-pd-go]');
+  if(g && !g.disabled){ g.disabled = true; pcFermer(); defendreDepuis(PD.btn, intensiteDefense); return; }
+  if(e.target.closest('[data-pd-fermer]')) pcFermer();
 });
 
 // ---------- patch336 : la première conquête guidée ----------

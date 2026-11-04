@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=7f6ef871d09e">
+<link rel="stylesheet" href="style.css?v=a09debc1bef5">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -1346,7 +1346,7 @@
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
           </summary>
           <div class="regle-corps">
-            <p><b>Défendre</b> : quand un joueur gagne un round contre toi, tu peux tenter une défense pour <b>1 énergie</b>, deux fois par attaque. Une défense utilisée revient <b>24 h</b> plus tard (deux au plus). Réussie, l'attaquant perd une victoire.</p><!-- patch334 -->
+            <p><b>Défendre</b> : quand un joueur gagne un round contre toi, tu peux tenter une défense, deux fois par attaque. Tu choisis ton engagement à chaque défense : prudente <b>1 énergie</b> (35 %), normale <b>2</b> (50 %), offensive <b>3</b> (65 %). Tes communes voisines ne comptent pas en défense. Une défense utilisée revient <b>24 h</b> plus tard (deux au plus). Réussie, l'attaquant perd une victoire.</p><!-- patch334, patch338 -->
             <p><b>Course à la commune</b> : quand un joueur prend une commune, les sièges des autres attaquants sur cette commune sont effacés. Ils repartent de zéro contre le nouveau propriétaire, et la cloche les prévient.</p><!-- patch326 -->
             <p><b>Garnison</b> : jusqu'à <b>3 communes</b>, où tu déposes de l'énergie (10 au maximum par commune). Quand un attaquant gagne un round, la garnison tente seule une défense : <b>1 chance sur 2</b>, 1 énergie par tentative. Réussie, la victoire ne compte pas.</p>
             <p>Retirer une garnison rend les trois quarts de son énergie. Une défense que tu réussis toi-même sur une commune en garnison y remet <b>3 énergie</b>. L'attaquant voit qu'une commune est en garnison, pas combien elle contient.</p><!-- patch312 -->
@@ -1518,7 +1518,7 @@
               </table>
             </div>
             <p>Aligner trois victoires demande en moyenne <b>14 rounds à 50 %</b>, <b>7 à 65 %</b> et <b>5 à 80 %</b> — mais une centaine si tu tombes sous 25 %. Ce sont tes chances réelles qui comptent, proximité comprise, pas le nom de ton engagement.</p>
-            <p>Le même choix s'applique à la défense, et <b>le défenseur ne voit pas</b> avec quel engagement on l'a attaqué.</p>
+            <p>La défense se choisit à part, au moment de défendre, et <b>le défenseur ne voit pas</b> avec quel engagement on l'a attaqué.</p>
             <div class="tableau-defile">
               <table class="tableau">
                 <thead><tr><th>Cible</th><th>Coût d'un round<br><small>prudente / normale / offensive</small></th><th>Délai entre deux rounds</th><th>Bonus de conquête</th></tr></thead>
@@ -1548,7 +1548,7 @@
           <div class="regle-corps">
             <p>Quand un joueur gagne un round contre une de tes communes, une <b>pastille rouge</b> apparaît sur l'onglet Défense, et la commune s'affiche dans <b>Tes communes attaquées</b>.</p>
             <ul>
-              <li><b>Défendre</b> retire une victoire à l'attaquant si ça réussit. Comme pour l'attaque, tu choisis ton engagement — et <b>tu défends chez toi</b> : toutes tes communes voisines comptent pour toi.</li>
+              <li><b>Défendre</b> retire une victoire à l'attaquant si ça réussit. Comme pour l'attaque, tu choisis ton engagement à chaque défense : <b>35, 50 ou 65 %</b> de chances pour 1, 2 ou 3 énergie. Tes communes voisines ne comptent pas en défense.</li>
               <li>Tu as droit à <b>deux défenses par attaque</b>. Une défense utilisée revient <b>24 h</b> après ta dernière défense, jusqu'à deux : une attaque laissée en plan peut toujours être repoussée. Faire retomber la série de l'attaquant à zéro ne rend pas tes défenses.</li><!-- patch334, patch337 -->
               <li>Tu ne peux pas défendre une commune déjà protégée par un bouclier.</li>
             </ul>
@@ -1699,6 +1699,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=7f6ef871d09e"></script>
+<script defer src="app.js?v=a09debc1bef5"></script>
 </body>
 </html>

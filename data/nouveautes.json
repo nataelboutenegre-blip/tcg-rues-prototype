@@ -4,7 +4,9 @@
     "nouveautes": [
       "🎡 Roue du Front : 30 tours par jour au lieu de 15, et trois cases nouvelles : TerraPoints (+10 TP), Cagnotte (+50 TP) et Relance (ton tour est rendu). Les cases d'énergie et de lingots sont un peu plus rares, pour qu'une journée de roue rapporte à peu près autant au Front. Les chances sont sous la roue",
       "⚡ Le classement, les profils et les quêtes s’ouvrent plus vite (ils ramaient en soirée). Le classement se met à jour chaque minute : après une conquête, ton score peut mettre jusqu’à une minute à y apparaître",
-      "🗺 Carte : passer à un autre onglet pendant que la carte était en plein écran la cassait (zoomée, décalée, communes une par une) jusqu’au rechargement. Corrigé : en revenant sur Territoire, tu la retrouves en plein écran, là où tu l’avais laissée (défaut signalé par Oshannir)"
+      "🗺 Carte : passer à un autre onglet pendant que la carte était en plein écran la cassait (zoomée, décalée, communes une par une) jusqu’au rechargement. Corrigé : en revenant sur Territoire, tu la retrouves en plein écran, là où tu l’avais laissée (défaut signalé par Oshannir)",
+      "🎡 Roue du Front : les chances sous la roue sont rangées de la plus fréquente à la plus rare (idée d’Arkhannou)",
+      "🃏 Collection Terra : le filtre « Doublons » range les cartes par nombre d’exemplaires, du plus petit au plus grand. Touche-le une deuxième fois pour inverser l’ordre (idée de Maroli)"
     ],
     "correctifs": [
       "Sur iPhone, la barre du bas pouvait rester au milieu de l’écran après avoir fermé le clavier (un défaut de Safari depuis iOS 26, revenu avec iOS 27). Le jeu la remet en place tout seul (signalé par Oshannir)"

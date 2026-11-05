@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '3ead11a09244';
+const VERSION_JEU = '112b6503c657';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10280,6 +10280,8 @@ let terraPaquet = null;            // reponse de terra_ouvrir_paquet, en attente
 let terraCollection = new Map();   // code -> carte de la collection Terra
 let terraCharge = false;
 let terraFiltre = 'tous';
+// patch353 : ordre du filtre « Doublons » (croissant par défaut ; toucher à nouveau le bouton inverse)
+let terraDblCroissant = (() => { try{ return localStorage.getItem('tf-terra-dbl') !== 'desc'; }catch(e){ return true; } })();
 let terraRecherche = '';
 let terraLimite = 120;
 let terraDernier = null;           // le dernier paquet ouvert, pour le bilan
@@ -11570,7 +11572,7 @@ function renderCollectionTerra(){
     ${nbDbl ? `<div class="tc-vente"><span aria-hidden="true">🔁</span><span><b>${fmtNombre(nbDbl)} doublon${nbDbl > 1 ? 's' : ''}</b> · jusqu'à ${fmtNombre(gainMax)} TP</span><button data-tc="vendre">Vendre…</button>${CONTRATS.some(c => (dbl[c.de] || 0) >= c.n) ? '<button class="tc-ct" data-tc="contrat">Contrat</button>' : ''}</div>` : ''}
     <div class="coll-filtres">
       <button class="coll-filtre ${terraFiltre === 'tous' ? 'actif' : ''}" data-tcf="tous">Toutes <span class="nb">${fmtNombre(terraCollection.size)}</span></button>
-      <button class="coll-filtre ${terraFiltre === 'doublons' ? 'actif' : ''}" data-tcf="doublons">Doublons <span class="nb">${fmtNombre(nbDbl)}</span></button>
+      <button class="coll-filtre ${terraFiltre === 'doublons' ? 'actif' : ''}" data-tcf="doublons">Doublons${terraFiltre === 'doublons' ? (terraDblCroissant ? ' ↑' : ' ↓') : ''} <span class="nb">${fmtNombre(nbDbl)}</span></button>
       ${nbAur ? `<button class="coll-filtre ${terraFiltre === 'aurore' ? 'actif' : ''}" data-tcf="aurore"><i class="au-pt" aria-hidden="true"></i>Aurore <span class="nb">${fmtNombre(nbAur)}</span></button>` : ''}
       ${nbBri ? `<button class="coll-filtre ${terraFiltre === 'brillante' ? 'actif' : ''}" data-tcf="brillante"><i class="bri-pt" aria-hidden="true"></i>Brillantes et éclats <span class="nb">${fmtNombre(nbBri)}</span></button>` : ''}
       ${evtVisible ? `<button class="coll-filtre ${terraFiltre === 'evenement' ? 'actif' : ''}" data-tcf="evenement"><i class="evt-pt" aria-hidden="true"></i>Événements <span class="nb">${fmtNombre(nbEvt)}</span></button>` : ''}
@@ -12144,7 +12146,8 @@ function renderGrilleTerra(){
   const liste = [...terraCollection.values()]
     .filter(e => terraFiltre === 'tous' || (terraFiltre === 'doublons' ? libresTerra(e) > 0 : terraFiltre === 'aurore' ? e.aurore > 0 : terraFiltre === 'brillante' ? (e.brillantes > 0 || e.eclat) : terraFiltre === 'evenement' ? estCarteEvenement(e) : e.tier.id === terraFiltre))   // patch282 : + evenement
     .filter(e => correspondRecherche(e.nom, e.dept, sansAccents(terraRecherche.trim())))
-    .sort((a, b) => RANG_TIER[b.tier.id] - RANG_TIER[a.tier.id] || (b.pop || 0) - (a.pop || 0));
+    .sort((a, b) => (terraFiltre === 'doublons' ? (terraDblCroissant ? 1 : -1) * ((a.exemplaires || 0) - (b.exemplaires || 0)) : 0)   // patch353
+      || RANG_TIER[b.tier.id] - RANG_TIER[a.tier.id] || (b.pop || 0) - (a.pop || 0));
   if(terraFiltre === 'evenement'){   // patch282
     grille.innerHTML = evtGrilleTerra(liste);
     const p2 = document.getElementById('tcPlus'); if(p2) p2.innerHTML = '';
@@ -12174,7 +12177,13 @@ function clicCollectionTerra(e){
     return;
   }
   const f = e.target.closest('[data-tcf]');
-  if(f){ terraFiltre = f.dataset.tcf; terraLimite = 120; renderCollectionTerra(); return; }
+  if(f){
+    if(f.dataset.tcf === 'doublons' && terraFiltre === 'doublons'){   // patch353 : deuxième appui = ordre inversé
+      terraDblCroissant = !terraDblCroissant;
+      try{ localStorage.setItem('tf-terra-dbl', terraDblCroissant ? 'asc' : 'desc'); }catch(err){}
+    }
+    terraFiltre = f.dataset.tcf; terraLimite = 120; renderCollectionTerra(); return;
+  }
   const b = e.target.closest('[data-tc]');
   if(!b) return;
   if(b.dataset.tc === 'plus'){ terraLimite += 240; renderGrilleTerra(); }
@@ -25770,7 +25779,7 @@ function roueChancesHtml(){
   const fr1 = (n, d) => n.toLocaleString('fr-FR', { maximumFractionDigits: d });
   const moyE = A.reduce((s, x) => s + x.p / 100 * (Number(x.k.energie) || 0), 0), moyL = A.reduce((s, x) => s + x.p / 100 * (Number(x.k.lingots) || 0), 0);
   const moyTP = A.reduce((s, x) => s + x.p / 100 * (Number(x.k.tp) || 0), 0), offert = A.some(x => Number(x.k.relance));   // patch351
-  return `<h4>Chances de chaque case</h4>${A.map(x => `<div class="rdf-ch"><i style="background:${roueStyle(x.k).puce}"></i><span>${echapperTexte(x.k.nom || x.k.id)}</span><b>${roueGainsTexte(x.k)}</b><span>${fr1(x.p, 1)} %</span></div>`).join('')}
+  return `<h4>Chances de chaque case</h4>${[...A].sort((a, b) => b.p - a.p).map(x => `<div class="rdf-ch"><i style="background:${roueStyle(x.k).puce}"></i><span>${echapperTexte(x.k.nom || x.k.id)}</span><b>${roueGainsTexte(x.k)}</b><span>${fr1(x.p, 1)} %</span></div>`).join('')}
     <p class="rdf-ch-pied">En moyenne : ${fr1(moyE, 1)} énergie, ${fr1(moyL, 2)} lingot${moyTP ? ` et ${fr1(moyTP, 1)} TP` : ''} par tour. ${ROUE.par_jour} tours au plus par jour${offert ? ', sans compter les tours offerts' : ''}.</p>`;
 }
 function setRoueRot(r){

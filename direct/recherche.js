@@ -104,6 +104,32 @@
     pas();
   }
 
+  // le zoom vers la commune, en 1,4 s (le retour à la France, lui, reste immédiat).
+  // Pendant le vol : l'image étirée (geste), redessinée nette de temps en temps une fois assez zoomé.
+  let vol = 0;
+  function voler(x0, y0, x1, y1){
+    cancelAnimationFrame(vol);
+    const dep = { ...VU };
+    // la vue d'arrivée, calculée comme cadrer() mais sans dessiner
+    const kf = Math.max(1, Math.min(K_MAX, 0.85 * Math.min(W / Math.max(1, x1 - x0), H / Math.max(1, y1 - y0))));
+    VU.k = kf; VU.x = W / 2 - (x0 + x1) / 2 * kf; VU.y = H / 2 - (y0 + y1) / 2 * kf; borner();
+    const fin = { ...VU };
+    Object.assign(VU, dep);
+    const c0 = [(W / 2 - dep.x) / dep.k, (H / 2 - dep.y) / dep.k], c1 = [(W / 2 - fin.x) / fin.k, (H / 2 - fin.y) / fin.k];
+    const DUREE = 1400, t0 = performance.now(), paliers = [2.5, 5, 10].filter((k) => k > dep.k * 1.2 && k < fin.k * 0.85);
+    const doux = (t) => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const pas = (now) => {
+      const t = Math.min(1, (now - t0) / DUREE), e = doux(t);
+      const k = dep.k * Math.pow(fin.k / dep.k, e), cx = c0[0] + (c1[0] - c0[0]) * e, cy = c0[1] + (c1[1] - c0[1]) * e;
+      VU.k = k; VU.x = W / 2 - cx * k; VU.y = H / 2 - cy * k;
+      if(t >= 1){ Object.assign(VU, fin); instantane = null; toutPeindre(); return; }
+      if(paliers.length && k >= paliers[0]){ paliers.shift(); instantane = null; toutPeindre(); }
+      else geste();
+      vol = requestAnimationFrame(pas);
+    };
+    vol = requestAnimationFrame(pas);
+  }
+
   function montrer(code, html, reste, src){
     if(!D.cat || !D.cat.get(code)) return false;
     codeAffiche = code; source = src;
@@ -119,7 +145,7 @@
       const cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2, R = Math.max(55, (b[2] - b[0]) * 1.3, (b[3] - b[1]) * 1.3);
       const m = document.createElement('div'); m.className = 'repere';
       m.dataset.bx = px(r[5]); m.dataset.by = py(r[4]); box.append(m);
-      cadrer(cx - R, cy - R, cx + R, cy + R);
+      voler(cx - R, cy - R, cx + R, cy + R);
     }else{
       // outre-mer : pas de contour sur cette carte, la fiche seule
       VU.k = 1; VU.x = 0; VU.y = 0; geste();
@@ -131,6 +157,7 @@
   function fermer(){
     if(!codeAffiche) return;
     if(source === 'attaque') pauseJusqua = Date.now() + PAUSE;
+    cancelAnimationFrame(vol);
     codeAffiche = null; source = null; cancelAnimationFrame(raf);
     fiche.hidden = true; scene.classList.remove('recherche');
     document.querySelectorAll('#eclairs .repere').forEach((e) => e.remove());

@@ -147,6 +147,15 @@
 .fiche.attaque .qui svg{ stroke:#FF6B70; }
 .fiche.attaque .temps{ background:rgba(229,72,77,.18); }
 .fiche.attaque .temps i{ background:linear-gradient(90deg, #FF6B70, #E5484D); }
+/* ---- les compteurs du haut en rouleaux de vieux compteur (compteurs.js) ---- */
+.odo-source{ display:none !important; }
+.chiffre b.odo{ display:flex; align-items:flex-start; line-height:1; height:1em; margin:2px 0 4px; }
+.vertical .chiffre .odo span{ font-size:inherit; color:inherit; font-weight:inherit; }
+.odo .rou{ display:inline-block; height:1em; overflow:hidden;
+  -webkit-mask-image:linear-gradient(transparent 0, #000 12%, #000 88%, transparent 100%); mask-image:linear-gradient(transparent 0, #000 12%, #000 88%, transparent 100%); }
+.odo .ban{ display:flex; flex-direction:column; transition:transform 1.4s cubic-bezier(.3,.85,.35,1.04); will-change:transform; }
+.odo .ban i{ display:block; height:1em; line-height:1; font-style:normal; text-align:center; }
+.odo .sep{ display:inline-block; width:.18em; }
 #scene.recherche .cta, #scene.recherche .bas{ visibility:hidden; }
 #scene.recherche #eclairs > :not(.repere){ display:none; }
 .repere{ position:absolute; width:0; height:0; }
@@ -158,6 +167,7 @@
 <script defer src="../lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="direct.js?v=4"></script>
 <script defer src="recherche.js?v=3"></script>
+<script defer src="compteurs.js?v=1"></script>
 </head>
 <body>
 <div id="scene" class="vertical">

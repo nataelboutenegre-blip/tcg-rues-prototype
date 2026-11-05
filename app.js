@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b3612535f9ea';
+const VERSION_JEU = '3ead11a09244';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -26742,3 +26742,40 @@ document.addEventListener('click', (e) => {
   if(a === 'fermer'){ zdApres = null; return zdFermer(); }
 });
 document.addEventListener('click', (e) => { const v = zdVoileEl(); if(v && e.target === v){ zdApres = null; zdFermer(); } });
+
+// ---------- patch352 : la barre du bas décalée après le clavier (Safari iOS 26 et 27) ----------
+// Safari ne remet pas sa zone d'affichage en place quand le clavier se ferme :
+// la barre d'onglets, fixée en bas, reste au milieu de l'écran (capture
+// d'un joueur sous iOS 27). On fait défiler la page d'un pixel puis on la remet en
+// place, ce qui oblige Safari à recalculer la position des éléments fixés.
+(function barreApresClavier(){
+  const ua = navigator.userAgent || '';
+  const ios = /iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && (navigator.maxTouchPoints || 0) > 1);
+  if(!ios) return;
+  const CHAMP = 'input, textarea, select, [contenteditable="true"]';
+  const vv = window.visualViewport;
+  let minuteur = null;
+  function recaler(){
+    clearTimeout(minuteur);
+    minuteur = setTimeout(() => {
+      const a = document.activeElement;
+      if(a && a.matches && a.matches(CHAMP)) return;   // le clavier est encore ouvert
+      if(vv && vv.scale > 1.01) return;               // zoom à deux doigts : rien à corriger
+      const x = window.scrollX, y = window.scrollY;
+      window.scrollTo(x, y > 0 ? y - 1 : y + 1);
+      requestAnimationFrame(() => window.scrollTo(x, y));
+    }, 300);
+  }
+  document.addEventListener('focusout', (e) => {
+    if(e.target && e.target.matches && e.target.matches(CHAMP)) recaler();
+  }, true);
+  if(vv){
+    let avant = vv.height;
+    vv.addEventListener('resize', () => {
+      if(vv.height > avant + 80) recaler();   // la zone visible s'agrandit : le clavier vient de se fermer
+      avant = vv.height;
+    });
+  }
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) recaler(); });
+  window.addEventListener('pageshow', recaler);
+})();

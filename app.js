@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'dc841a208124';
+const VERSION_JEU = 'b3612535f9ea';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -25680,6 +25680,9 @@ const ROUE_STYLE = {
   coffre:  { c1: '#C29BFF', c2: '#6E3BD6', puce: '#9A6BF0', ic: 'l', fort: true },
   terra:   { c1: '#4BE09A', c2: '#178553', puce: '#2FBF78', ic: 't', muet: true, fort: true },
   jackpot: { c1: '#FF6FA0', c2: '#C2124F', puce: '#E8306F', ic: 's', muet: true, fort: true },
+  tp:       { c1: '#62E3F0', c2: '#147C8C', puce: '#2FB9CC', ic: 'tp' },                           // patch351
+  cagnotte: { c1: '#FFF0A8', c2: '#B78A10', puce: '#E6BE2E', ic: 'tp', fort: true },
+  relance:  { c1: '#EEF2F8', c2: '#7C889C', puce: '#B7C2D4', ic: 'r', muet: true },
 };
 const ROUE_BOLT = 'M13.2 2.5 5.5 13.2h5.3l-1 8.3 7.7-10.7h-5.3z';
 async function chargerRoue(){
@@ -25706,7 +25709,8 @@ function roueCases(){
 }
 function roueStyle(k){
   const e = Number(k.energie) > 0, l = Number(k.lingots) > 0;
-  return ROUE_STYLE[k.id] || { c1: '#8A9BB4', c2: '#3D4B60', puce: '#8A9BB4', ic: e && l ? 'el' : e ? 'e' : l ? 'l' : Number(k.terra) > 0 ? 't' : 's' };
+  return ROUE_STYLE[k.id] || { c1: '#8A9BB4', c2: '#3D4B60', puce: '#8A9BB4',
+    ic: e && l ? 'el' : e ? 'e' : l ? 'l' : Number(k.terra) > 0 ? 't' : Number(k.tp) > 0 ? 'tp' : Number(k.relance) ? 'r' : 's' };   // patch351
 }
 function roueAngles(){
   const L = roueCases(), tot = L.reduce((s, k) => s + Number(k.poids), 0) || 1;
@@ -25720,17 +25724,21 @@ function roueIcone(ic, s){
   if(ic === 'e') return eclair(0, 0, s);
   if(ic === 'l') return lingot(0, 0, s);
   if(ic === 'el') return eclair(-9 * s, 0, s * .85) + lingot(9 * s, 1, s * .85);
+  if(ic === 'tp') return `<g transform="scale(${s})"><circle r="10" fill="#E9FBFF" stroke="#0d5560" stroke-width="1.5"/><circle r="7.4" fill="none" stroke="#2FB9CC" stroke-width="1"/><text y="0.5" font-size="8.6" font-weight="900" text-anchor="middle" dominant-baseline="middle" fill="#0d5560">TP</text></g>`;   // patch351
+  if(ic === 'r') return `<g transform="scale(${s})"><path d="M7.5 -3.2 A8 8 0 1 0 8.2 3" fill="none" stroke="#2F3A4C" stroke-width="2.6" stroke-linecap="round"/><path d="M9.8 -8.6 L8.4 -1.6 L1.8 -4.4 Z" fill="#2F3A4C"/></g>`;
   if(ic === 't') return `<g transform="scale(${s})"><rect x="-6.5" y="-9" width="13" height="18" rx="2.5" fill="#E9FFF3" stroke="#0e5c37" stroke-width="1.4"/><rect x="-4" y="-6.5" width="8" height="7" rx="1" fill="#3DD68C"/></g>`;
   return `<g transform="scale(${s})"><path d="M0 -10 L2.9 -3.2 10 -3.1 4.3 1.4 6.3 8.4 0 4.3 -6.3 8.4 -4.3 1.4 -10 -3.1 -2.9 -3.2Z" fill="#FFE27A" stroke="#7a4f0e" stroke-width="1.2"/></g>`;
 }
 function roueTexteCase(k){
   if(roueStyle(k).muet) return '';
-  const e = Number(k.energie) || 0, l = Number(k.lingots) || 0;
-  return e && l ? `+${e} · +${l}` : e ? `+${e}` : l ? `+${l}` : '';
+  const e = Number(k.energie) || 0, l = Number(k.lingots) || 0, tp = Number(k.tp) || 0;
+  return e && l ? `+${e} · +${l}` : e ? `+${e}` : l ? `+${l}` : tp ? `+${tp}` : '';   // patch351
 }
 function roueGainsTexte(k){
-  const e = Number(k.energie) || 0, l = Number(k.lingots) || 0, t = Number(k.terra) || 0;
-  return [e ? `+${e}<span class="rdf-e">${ICONE_ENERGIE}</span>` : '', l ? `+${l} lingot${l > 1 ? 's' : ''}` : '', t ? `${t} paquet${t > 1 ? 's' : ''} Terra` : '']
+  const e = Number(k.energie) || 0, l = Number(k.lingots) || 0, t = Number(k.terra) || 0, tp = Number(k.tp) || 0;
+  if(Number(k.relance)) return 'Un tour offert';   // patch351
+  return [e ? `+${e}<span class="rdf-e">${ICONE_ENERGIE}</span>` : '', l ? `+${l} lingot${l > 1 ? 's' : ''}` : '', t ? `${t} paquet${t > 1 ? 's' : ''} Terra` : '',
+          tp ? `+${tp} TP` : '']
     .filter(Boolean).join(' ');
 }
 function roueSvgHtml(){
@@ -25761,8 +25769,9 @@ function roueChancesHtml(){
   const A = roueAngles(); if(!A.length) return '';
   const fr1 = (n, d) => n.toLocaleString('fr-FR', { maximumFractionDigits: d });
   const moyE = A.reduce((s, x) => s + x.p / 100 * (Number(x.k.energie) || 0), 0), moyL = A.reduce((s, x) => s + x.p / 100 * (Number(x.k.lingots) || 0), 0);
+  const moyTP = A.reduce((s, x) => s + x.p / 100 * (Number(x.k.tp) || 0), 0), offert = A.some(x => Number(x.k.relance));   // patch351
   return `<h4>Chances de chaque case</h4>${A.map(x => `<div class="rdf-ch"><i style="background:${roueStyle(x.k).puce}"></i><span>${echapperTexte(x.k.nom || x.k.id)}</span><b>${roueGainsTexte(x.k)}</b><span>${fr1(x.p, 1)} %</span></div>`).join('')}
-    <p class="rdf-ch-pied">En moyenne : ${fr1(moyE, 1)} énergie et ${fr1(moyL, 2)} lingot par tour. ${ROUE.par_jour} tours au plus par jour.</p>`;
+    <p class="rdf-ch-pied">En moyenne : ${fr1(moyE, 1)} énergie, ${fr1(moyL, 2)} lingot${moyTP ? ` et ${fr1(moyTP, 1)} TP` : ''} par tour. ${ROUE.par_jour} tours au plus par jour${offert ? ', sans compter les tours offerts' : ''}.</p>`;
 }
 function setRoueRot(r){
   roueRot = r;
@@ -25782,7 +25791,7 @@ function renderRoue(){
   const sig = JSON.stringify(ROUE.cases || []);
   if(sig !== roueSig && !roueTourne){
     roueSig = sig;
-    el.innerHTML = `<div class="rdf-titre">La roue du Front</div><div class="rdf-sous">Énergie et lingots à gagner</div>
+    el.innerHTML = `<div class="rdf-titre">La roue du Front</div><div class="rdf-sous">${roueCases().some(k => Number(k.tp) > 0) ? 'Énergie, lingots et TerraPoints à gagner' : 'Énergie et lingots à gagner'}</div>
       <div class="rdf-cadre">${roueSvgHtml()}<button type="button" class="rdf-centre" id="rdfCentre">Tourner</button><div class="rdf-gain" id="rdfGain" hidden></div></div>
       <div class="rdf-jetons"><span class="rdf-slots" id="rdfSlots"></span><span class="rdf-dispo"><b id="rdfDispo"></b><span id="rdfProchain"></span></span></div>
       <div class="rdf-jour" id="rdfJour"></div>
@@ -25855,9 +25864,12 @@ function roueGainCacher(){
 }
 function roueGainMontrer(d){
   const A = roueAngles(), seg = A.find(s => s.k.id === d.case);
-  const k = seg ? seg.k : { nom: 'Gagné', energie: d.energie_prevue, lingots: d.lingots_prevus, terra: d.terra };
+  const k = seg ? seg.k : { nom: 'Gagné', energie: d.energie_prevue, lingots: d.lingots_prevus, terra: d.terra, tp: d.tp };
   const e = Number(d.energie) || 0, ep = Number(d.energie_prevue) || 0, l = Number(d.lingots) || 0, lp = Number(d.lingots_prevus) || 0, t = Number(d.terra) || 0;
+  const tp = Number(d.tp) || 0, offert = d.relance === true;   // patch351
   const parts = [];
+  if(offert) parts.push('Tour offert');
+  if(tp) parts.push(`+${tp} TP`);
   if(ep) parts.push(`+${ep}<span class="rdf-e">${ICONE_ENERGIE}</span>`);
   if(lp) parts.push(`+${lp}${ICONE_LINGOT}`);
   if(t) parts.push(`+${t} paquet${t > 1 ? 's' : ''} Terra`);
@@ -25867,6 +25879,8 @@ function roueGainMontrer(d){
   else if(ep && lp) note = `Énergie : ${d.energie_totale} · lingots : ${d.lingots_total}`;
   else if(ep) note = `Ton énergie : ${d.energie_totale}`;
   else if(lp) note = `Tes lingots : ${d.lingots_total}`;
+  else if(offert) note = 'Ton tour est rendu : il ne compte pas dans la journée';   // patch351
+  else if(tp) note = d.solde != null ? `Tes TerraPoints : ${Number(d.solde).toLocaleString('fr-FR')}` : 'Ajoutés à tes TerraPoints';
   else note = 'À ouvrir dans Terra';
   const g = document.getElementById('rdfGain'), el = document.getElementById('roueFront');
   if(!g || !el) return;
@@ -25906,6 +25920,11 @@ async function roueTourner(){
   roueGainMontrer(data);
   renderRoueInfos();
   if(Number(data.energie) > 0 && typeof majEnergie === 'function') majEnergie();
+  if(Number(data.tp) > 0 && data.solde != null){   // patch351 : le solde de TP suit
+    if(packStatusCache) packStatusCache.solde = Number(data.solde);
+    if(typeof majSoldeGlobal === 'function') majSoldeGlobal(Number(data.solde));
+    majBascule();
+  }
 }
 document.getElementById('roueFront')?.addEventListener('click', (e) => {
   if(e.target.closest('#rdfCentre')){ roueTourner(); return; }

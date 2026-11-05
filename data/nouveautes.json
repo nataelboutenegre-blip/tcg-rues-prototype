@@ -2,6 +2,7 @@
   {
     "date": "2026-11-05",
     "nouveautes": [
+      "⚡ Le classement, les profils et les quêtes s’ouvrent plus vite (ils ramaient en soirée). Le classement se met à jour chaque minute : après une conquête, ton score peut mettre jusqu’à une minute à y apparaître",
       "🗺 Carte : passer à un autre onglet pendant que la carte était en plein écran la cassait (zoomée, décalée, communes une par une) jusqu’au rechargement. Corrigé : en revenant sur Territoire, tu la retrouves en plein écran, là où tu l’avais laissée (défaut signalé par Oshannir)"
     ]
   },

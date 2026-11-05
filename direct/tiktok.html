@@ -140,17 +140,24 @@
 .fiche .appel b{ color:#fff; }
 .fiche .temps{ position:absolute; left:0; right:0; bottom:0; height:6px; background:rgba(232,131,58,.15); }
 .fiche .temps i{ display:block; height:100%; width:100%; background:linear-gradient(90deg, #F0B429, #E8833A); }
+.fiche .zone.suite{ font-size:21px; color:#EAF1F8; }
+.fiche .zone.suite b{ display:inline; font:inherit; font-weight:700; color:#fff; margin:0; }
+.fiche.attaque{ border-color:rgba(229,72,77,.85); }
+.fiche.attaque .qui{ color:#FFB3B5; }
+.fiche.attaque .qui svg{ stroke:#FF6B70; }
+.fiche.attaque .temps{ background:rgba(229,72,77,.18); }
+.fiche.attaque .temps i{ background:linear-gradient(90deg, #FF6B70, #E5484D); }
 #scene.recherche .cta, #scene.recherche .bas{ visibility:hidden; }
 #scene.recherche #eclairs > :not(.repere){ display:none; }
 .repere{ position:absolute; width:0; height:0; }
-.repere::before, .repere::after{ content:''; position:absolute; left:-46px; top:-46px; width:92px; height:92px; border-radius:50%; border:6px solid #F0B429;
-  box-shadow:0 0 0 3px rgba(10,22,40,.6), inset 0 0 0 3px rgba(10,22,40,.6); }
+.repere::before, .repere::after{ content:''; position:absolute; left:-60px; top:-60px; width:120px; height:120px; border-radius:50%; border:7px solid #FFFFFF;
+  box-shadow:0 0 0 4px rgba(10,22,40,.75), inset 0 0 0 4px rgba(10,22,40,.75); }
 .repere::after{ animation:repere 1.6s ease-out infinite; }
 @keyframes repere{ from{ transform:scale(1); opacity:.6; } to{ transform:scale(2); opacity:0; } }
 </style>
 <script defer src="../lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="direct.js?v=4"></script>
-<script defer src="recherche.js?v=1"></script>
+<script defer src="recherche.js?v=2"></script>
 </head>
 <body>
 <div id="scene" class="vertical">

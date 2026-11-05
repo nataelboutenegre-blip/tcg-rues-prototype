@@ -82,6 +82,36 @@
 .cta .barre i{ display:block; height:100%; width:0; background:linear-gradient(90deg, #F0B429, #E8833A); }
 .cta .barre i.va{ animation:barre var(--duree, 8s) linear forwards; }
 @keyframes barre{ from{ width:0; } to{ width:100%; } }
+
+/* ---- tout ce qui se lit tient entre le haut de TikTok (≈ 380 px) et ses commentaires (≈ 1 290 px),
+   et à plus de 96 px des bords, que les téléphones coupent (capture d'un live, 5/11) ----
+   carte à gauche, colonne à droite : message qui tourne, fil du Front / clans, site */
+.vertical .tete{ top:396px; left:100px; right:100px; }
+.vertical .tete h1{ font-size:62px; }
+.vertical .heure{ font-size:46px; }
+.vertical .chiffres{ top:476px; left:100px; right:100px; gap:12px; }
+.vertical .chiffre{ padding:10px 16px 9px; }
+.vertical .chiffre b{ font-size:46px; }
+.vertical .chiffre span{ font-size:18px; }
+.vertical .carte{ left:96px; top:584px; transform:scale(.52); }
+.vertical .legende{ display:none; }
+.cta{ left:672px; top:584px; width:312px; height:118px; }
+.cta .s{ gap:12px; padding:0 14px; }
+.cta .pic{ width:50px; height:50px; border-radius:13px; } .cta .pic svg{ width:28px; height:28px; }
+.cta .s b{ font-size:30px; } .cta .s span{ font-size:16px; white-space:normal; line-height:1.15; }
+.bas{ left:672px; right:auto; width:312px; top:718px; height:440px; }
+.vertical h2{ font-size:24px; margin:0 0 8px; }
+.vertical .ev{ font-size:19px; padding:8px 10px; gap:10px; align-items:flex-start; }
+.vertical .ev .txt{ white-space:normal; overflow:visible; text-overflow:clip; }
+.vertical .ev .ico{ font-size:20px; width:24px; }
+.vertical .ev time{ font-size:15px; }
+.vertical .ev .dep{ font-size:14px; }
+.vertical .cl{ grid-template-columns:24px 1fr 70px; gap:8px; font-size:19px; padding:4px 6px; }
+.vertical .cl.ent{ font-size:13px; }
+.vertical .cl > :nth-child(4){ display:none; }
+.vertical .cl .r{ font-size:24px; }
+.vertical .pied{ top:1176px; left:672px; right:auto; width:312px; padding:10px 16px; }
+.vertical .pied b{ font-size:32px; } .vertical .pied span{ display:none; }
 </style>
 <script defer src="../lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="direct.js?v=4"></script>

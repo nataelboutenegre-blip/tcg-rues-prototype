@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://yzcgroprydxhbwaufkdu.supabase.co wss://yzcgroprydxhbwaufkdu.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'">
+<title>TerraFront · Régie du direct</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0A1628">
+<link rel="icon" type="image/png" href="../favicon.png?v=2">
+<link rel="stylesheet" href="../fonts/polices.css">
+<!--
+  La régie du live (s2-103) : on cherche une commune, on la touche, la scène portrait (tiktok.html)
+  zoome dessus 15 s avec sa fiche. Réservée à la modération : il faut être connecté au jeu dans ce navigateur.
+-->
+<style>
+:root{ --titre:'Big Shoulders Display', Impact, sans-serif; --texte:'Instrument Sans', system-ui, sans-serif;
+  --nuit:#0A1628; --bloc:#132A4A; --bloc2:#1A3559; --trait:#284268; --brume:#A9BCD4; --or:#F0B429; --orange:#E8833A; --rouge:#E5484D; --vert:#5FD39D; }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body{ margin:0; background:var(--nuit); color:#EAF1F8; font-family:var(--texte); font-size:15px; }
+.haut{ position:sticky; top:0; z-index:2; background:var(--nuit); padding:calc(env(safe-area-inset-top) + 14px) 18px 12px; border-bottom:2px solid var(--rouge);
+  display:flex; align-items:center; gap:10px; }
+.haut h1{ margin:0; font-family:var(--titre); font-weight:900; font-size:28px; letter-spacing:.01em; flex:1; }
+.haut h1 span{ color:var(--orange); }
+.lien{ font-size:12px; font-weight:700; display:flex; align-items:center; gap:6px; padding:5px 9px; border-radius:999px; color:var(--brume); background:rgba(169,188,212,.1); }
+.lien i{ width:8px; height:8px; border-radius:50%; background:var(--brume); }
+.lien.ok{ color:var(--vert); background:rgba(95,211,157,.12); } .lien.ok i{ background:var(--vert); }
+.lien.ko{ color:#FF9A9D; background:rgba(229,72,77,.14); } .lien.ko i{ background:var(--rouge); }
+main{ padding:16px 18px calc(env(safe-area-inset-bottom) + 30px); display:flex; flex-direction:column; gap:16px; max-width:520px; margin:0 auto; }
+main[hidden], .ecran[hidden], .res[hidden], .msg[hidden]{ display:none; }
+.ecran{ background:linear-gradient(160deg, #1A3559, #132A4A); border:1.5px solid rgba(232,131,58,.6); border-radius:14px; padding:12px 14px; }
+.ecran .t{ font-size:11px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#FFD9B8; display:flex; justify-content:space-between; }
+.ecran .n{ font-family:var(--titre); font-weight:800; font-size:26px; margin-top:4px; overflow-wrap:anywhere; }
+.ecran .n small{ display:block; font-family:var(--texte); font-weight:500; font-size:13px; color:var(--brume); margin-top:2px; }
+.ecran .barre{ height:5px; border-radius:3px; background:rgba(232,131,58,.18); margin-top:10px; overflow:hidden; }
+.ecran .barre i{ display:block; height:100%; width:0; background:linear-gradient(90deg, var(--or), var(--orange)); }
+.ecran .act{ display:flex; gap:8px; margin-top:10px; }
+.btn{ flex:1; border-radius:10px; padding:11px 8px; font:600 15px var(--texte); color:#EAF1F8; background:var(--bloc2); border:1px solid var(--trait); cursor:pointer; }
+.btn.fort{ background:var(--rouge); border-color:var(--rouge); color:#fff; }
+.btn:disabled{ opacity:.5; }
+label{ font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--brume); display:block; margin-bottom:6px; }
+.champ{ display:flex; align-items:center; gap:10px; background:var(--bloc); border:1.5px solid var(--trait); border-radius:12px; padding:0 14px; }
+.champ:focus-within{ border-color:var(--or); }
+.champ svg{ width:20px; height:20px; fill:none; stroke:var(--brume); stroke-width:2.2; stroke-linecap:round; flex:none; }
+.champ input{ flex:1; min-width:0; background:none; border:0; outline:0; color:#EAF1F8; font:500 18px var(--texte); padding:13px 0; }
+.champ input::placeholder{ color:#6F86A6; }
+.champ.petit input{ font-size:16px; padding:11px 0; }
+.vider{ border:0; background:none; color:var(--brume); font-size:22px; padding:4px 0 4px 8px; cursor:pointer; }
+.res{ background:var(--bloc); border:1px solid var(--trait); border-radius:12px; overflow:hidden; }
+.r{ display:flex; align-items:center; gap:10px; padding:11px 14px; border-top:1px solid var(--trait); width:100%; text-align:left; background:none; color:inherit; font:inherit; border-left:0; border-right:0; border-bottom:0; cursor:pointer; }
+.r:first-child{ border-top:0; }
+.r:active{ background:var(--bloc2); }
+.r .nom{ flex:1; min-width:0; }
+.r .nom b{ font-size:16px; } .r .nom b u{ text-decoration:none; color:var(--or); }
+.r .nom small{ display:block; color:var(--brume); font-size:12.5px; margin-top:2px; }
+.dep{ font-size:12px; font-weight:700; background:var(--bloc2); border:1px solid var(--trait); border-radius:6px; padding:2px 6px; color:#EAF1F8; flex:none; }
+.etat{ font-size:12.5px; font-weight:600; text-align:right; white-space:nowrap; max-width:42%; overflow:hidden; text-overflow:ellipsis; }
+.etat i{ display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+.etat.libre{ color:var(--vert); }
+.vide{ padding:14px; color:var(--brume); font-size:14px; }
+.deja{ display:flex; flex-wrap:wrap; gap:6px; }
+.deja button{ font:500 13px var(--texte); background:var(--bloc); border:1px solid var(--trait); border-radius:999px; padding:6px 11px; color:var(--brume); cursor:pointer; }
+.note{ font-size:12.5px; color:var(--brume); line-height:1.45; margin:0; }
+.msg{ margin:40px 18px; padding:18px; border-radius:14px; background:var(--bloc); border:1px solid var(--trait); line-height:1.5; }
+.msg a{ color:var(--or); font-weight:700; }
+.erreur{ color:#FF9A9D; font-size:13px; }
+</style>
+<script defer src="../lib/supabase-js-2.117.2.umd.js"></script>
+<script defer src="regie.js?v=1"></script>
+</head>
+<body>
+<div class="haut"><h1>RÉGIE <span>DIRECT</span></h1><span class="lien" id="lien"><i></i><span id="lienTxt">Chargement…</span></span></div>
+<div class="msg" id="msg" hidden></div>
+<main id="main" hidden>
+  <div class="ecran" id="ecran" hidden>
+    <div class="t"><span>À l’écran du live</span><span id="reste">—</span></div>
+    <div class="n" id="ecranNom">—</div>
+    <div class="barre"><i id="ecranBarre"></i></div>
+    <div class="act"><button type="button" class="btn" id="plus">+15 s</button><button type="button" class="btn fort" id="france">Retour à la France</button></div>
+  </div>
+  <div>
+    <label for="q">Chercher une commune</label>
+    <div class="champ"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg>
+      <input id="q" type="text" placeholder="Nom de la commune" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+      <button type="button" class="vider" id="vider" aria-label="Effacer" hidden>×</button></div>
+  </div>
+  <div class="res" id="res" hidden></div>
+  <div>
+    <label for="qui">Demandée par (facultatif)</label>
+    <div class="champ petit"><input id="qui" type="text" placeholder="pseudo TikTok" maxlength="30" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></div>
+  </div>
+  <div id="dejaBloc" hidden>
+    <label>Déjà montrées</label>
+    <div class="deja" id="deja"></div>
+  </div>
+  <p class="erreur" id="erreur" hidden></p>
+  <p class="note">Touche une commune : la carte du live zoome dessus 15 s, puis revient à la France. Les plus peuplées d’abord ; le numéro, c’est le département.</p>
+</main>
+</body>
+</html>

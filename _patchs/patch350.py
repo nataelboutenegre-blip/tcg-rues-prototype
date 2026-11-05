@@ -242,7 +242,8 @@ if N.exists():
              "et 10 ⚡ en arrivant, puis 1 paquet de plus après 3 jours de jeu. Toi, +10 ⚡ par ami et des paliers chaque saison : "
              "1, 3 et 5 amis actifs pour 1, 2 et 3 paquets Terra. Tu peux inviter dès ton premier jour")
     if 'Invite un ami : ton lien' not in t:
-        jour = datetime.date.today().isoformat()
+        import os
+        jour = os.environ.get('JOUR_LOT') or datetime.date.today().isoformat()
         L = json.loads(t)
         ancre = f'"date": "{jour}",\n    "nouveautes": [\n'
         if L and L[0].get('date') == jour and t.count(ancre) == 1:

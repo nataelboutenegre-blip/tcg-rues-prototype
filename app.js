@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '2ae0f4117472';
+const VERSION_JEU = '16acc4867fda';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7109,6 +7109,52 @@ function blocBadges(p, fiche){
                : `<div class="pf-bloc"><h3>Distinctions</h3><div class="bg-liste">${items}</div></div>`;
 }
 
+// patch359 : « Tes dés au Front » (s2-106), seulement dans son propre Profil
+async function chargerMesDes(){
+  if(!SAISON2) return null;
+  try{ const { data, error } = await sb.rpc('mes_stats_combat'); return error ? null : (data || null); }
+  catch(e){ return null; }
+}
+function desVerdict(x){
+  const n = Number(x.mesures || 0);
+  if(n < 10) return { cls: 'neutre', txt: 'Pas encore assez de lancers pour juger' };
+  const ecart = Number(x.des_gagnes || 0) - Number(x.attendu || 0);
+  const z = ecart / Math.sqrt(Math.max(Number(x.variance || 0), 0.25));
+  if(Math.abs(z) < 1) return { cls: 'neutre', txt: 'Pile dans la moyenne' };
+  if(z >= 2) return { cls: 'chance', txt: 'Beaucoup de chance' };
+  if(z > 0) return { cls: 'chance', txt: 'Un peu de chance' };
+  if(z <= -2) return { cls: 'malchance', txt: 'Vraiment pas de chance' };
+  return { cls: 'malchance', txt: 'Un peu de malchance' };
+}
+function blocDes(st){
+  if(!st || !st.attaque) return '';
+  const a = st.attaque, d = st.defense || {}, g = st.garnison || {};
+  if(!Number(a.total) && !Number(d.total) && !Number(g.total)) return '';
+  const nb = (x) => Number(x || 0).toLocaleString('fr-FR');
+  const pc = (x, n) => Number(n) > 0 ? Math.round(100 * Number(x) / Number(n)) : 0;
+  const ligne = (titre, x, unite, gagnesTxt, perdusTxt, gagnes, total) => {
+    if(!Number(total)) return '';
+    const v = desVerdict(x);
+    const reel = pc(x.des_gagnes, x.mesures), attendu = pc(x.attendu, x.mesures);
+    return `<div class="des-l">
+      <div class="des-h"><b>${titre}</b><span>${nb(total)} ${unite}${Number(total) > 1 ? 's' : ''} · <i class="ok">${nb(gagnes)} ${gagnesTxt}</i> · <i class="ko">${nb(Number(total) - Number(gagnes))} ${perdusTxt}</i></span></div>
+      ${Number(x.mesures) > 0 ? `<div class="des-barre" title="Réussi aux dés : ${reel} % · attendu : ${attendu} %">
+        <i style="width:${reel}%"></i><u style="left:${attendu}%"></u>
+      </div>
+      <div class="des-c"><span>Aux dés : <b>${reel} %</b> réussis, <b>${attendu} %</b> attendus</span><em class="${v.cls}">${v.txt}</em></div>` : ''}
+    </div>`;
+  };
+  const garn = Number(a.garnison) > 0 ? `<p class="des-n">Dont ${nb(a.garnison)} perdu${Number(a.garnison) > 1 ? 's' : ''} à cause d’une garnison alors que tu avais gagné aux dés.</p>` : '';
+  return `<div class="pf-bloc pf-des">
+    <h3>Tes dés au Front</h3>
+    <p class="des-sous">Cette saison. Le trait blanc marque ce que tes chances affichées promettaient.</p>
+    ${ligne('Attaque', a, 'assaut', 'gagnés', 'perdus', a.gagnes, a.total)}
+    ${garn}
+    ${ligne('Défense', d, 'tentative', 'réussies', 'ratées', d.reussies, d.total)}
+    ${Number(g.total) ? `<div class="des-l"><div class="des-h"><b>Garnisons</b><span>${nb(g.total)} assaut${Number(g.total) > 1 ? 's' : ''} · <i class="ok">${nb(g.reussies)} repoussé${Number(g.reussies) > 1 ? 's' : ''}</i> (1 chance sur 2)</span></div></div>` : ''}
+  </div>`;
+}
+
 function blocsProfil(p){
   const nb = (x) => Number(x || 0).toLocaleString('fr-FR');
   const pct = (a, b) => (a + b) > 0 ? Math.round(100 * a / (a + b)) : null;
@@ -7193,8 +7239,8 @@ async function loadProfilPanneau(){
       return;
     }
     profilPanneau = data;
-    [profilPanneau.vitrine, profilPanneau.badges, profilPanneau.echanges, profilPanneau.titres, profilPanneau.parrainage] =
-      await Promise.all([chargerVitrine(id), chargerBadges(id), chargerStatEchanges(id), chargerMesTitres(), chargerParrainage()]);
+    [profilPanneau.vitrine, profilPanneau.badges, profilPanneau.echanges, profilPanneau.titres, profilPanneau.parrainage, profilPanneau.des] =
+      await Promise.all([chargerVitrine(id), chargerBadges(id), chargerStatEchanges(id), chargerMesTitres(), chargerParrainage(), chargerMesDes()]);   // patch359
   }
   if(vide) vide.hidden = true;
   rendreProfilPanneau();
@@ -7236,6 +7282,7 @@ function rendreProfilPanneau(){
     ${blocParrainage(p.parrainage)}
     ${blocCouleur()}
     ${blocsProfil(p)}
+    ${blocDes(p.des)}
     <div class="pf-boutons">
       <button class="pr-btn" data-pf="editer">Changer d'avatar ou de pseudo</button>
     </div>

@@ -9223,3 +9223,24 @@ button.zd-ligne{ cursor:pointer; }
 /* patch358 : le bandeau de la Commune du jour s'aligne sur les autres bandeaux du Tirage ; le département dans le réveil */
 #panel-tirage .cdj-carte{ max-width:620px; }
 .reveil-dep{ color: var(--brume); font-weight:500; }
+
+/* patch359 : Tes dés au Front (Profil) */
+.pf-des{ margin-top:14px; }
+.pf-des .des-sous{ margin:-4px 0 10px; font-size:.82rem; color: var(--brume); }
+.des-l{ padding:10px 0; border-top:1px solid rgba(169,188,212,.14); }
+.des-l:first-of-type{ border-top:0; }
+.des-h{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; }
+.des-h b{ font-size:.98rem; }
+.des-h span{ font-size:.84rem; color: var(--brume); }
+.des-h i{ font-style:normal; font-weight:600; }
+.des-h i.ok{ color:#7FE3B4; } .des-h i.ko{ color:#FF9A94; }
+.des-barre{ position:relative; height:10px; margin:9px 0 6px; border-radius:6px; background:rgba(169,188,212,.16); overflow:visible; }
+.des-barre i{ display:block; height:100%; border-radius:6px; background:linear-gradient(90deg,#F0B429,#FFD36B); }
+.des-barre u{ position:absolute; top:-4px; bottom:-4px; width:3px; margin-left:-1.5px; border-radius:2px; background:#fff; box-shadow:0 0 0 2px rgba(15,31,56,.85); }
+.des-c{ display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; font-size:.84rem; color: var(--brume); }
+.des-c b{ color:#fff; }
+.des-c em{ font-style:normal; font-weight:700; font-size:.8rem; padding:3px 9px; border-radius:20px; }
+.des-c em.neutre{ background:rgba(169,188,212,.14); color:#DCE6F2; }
+.des-c em.chance{ background:rgba(127,227,180,.16); color:#7FE3B4; }
+.des-c em.malchance{ background:rgba(255,154,148,.15); color:#FF9A94; }
+.des-n{ margin:-4px 0 4px; font-size:.8rem; color: var(--brume); }

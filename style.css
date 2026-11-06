@@ -9214,3 +9214,8 @@ button.zd-ligne{ cursor:pointer; }
 .bt-split{ display:flex; flex-direction:column; gap:4px; margin:8px 2px 0; font-size:.76rem; color:#D6C2B2; }
 .bt-split .pt{ display:inline-block; width:9px; height:9px; border-radius:3px; margin-right:6px; vertical-align:-1px; }
 .bt-split .pt.f{ background:#F0B429; } .bt-split .pt.b{ background:#3FBF85; }
+
+/* patch356 : sur ordinateur, les bâtiments de la légende l'un sous l'autre */
+@media (min-width: 721px){
+  .leg-tailles.leg-batiments{ flex-direction:column; align-items:flex-start; gap:2px; }
+}

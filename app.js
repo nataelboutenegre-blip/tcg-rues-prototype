@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'bf92d133ee87';
+const VERSION_JEU = 'e69f295a9736';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4646,7 +4646,7 @@ function renderLegendeCarte(joueurs, idSvg){
         <div><svg width="26" height="26"><circle cx="13" cy="13" r="10" fill="#A9BCD4"/><polygon points="${etoileSvg(13, 13, 6)}" fill="#FFF6D6" stroke="#0B1830"/></svg>Légend.</div>
         <div><svg width="26" height="26"><defs><linearGradient id="legAu" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#9FFFE2"/><stop offset="1" stop-color="#C08CFF"/></linearGradient></defs><circle cx="13" cy="13" r="11" fill="rgba(61,242,192,.25)"/><path d="M13 3 L15.4 10.6 L23 13 L15.4 15.4 L13 23 L10.6 15.4 L3 13 L10.6 10.6 Z" fill="url(#legAu)" stroke="#0B1830"/></svg>Aurore</div>
       </div>${SAISON2 && BATIMENTS ? `
-      <div class="leg-tailles leg-batiments">${['fonderie', 'forteresse', 'centre'].map(k => `<button type="button" class="leg-bt-info${btBulleCle === k ? ' on' : ''}" data-bt-info="${k}" aria-expanded="${btBulleCle === k}"><span class="leg-bt${k === 'centre' ? ' leg-centre' : ''}">${k === 'fonderie' ? ICONE_FONDERIE : k === 'forteresse' ? ICONE_FORTERESSE : ICONE_CENTRE}</span><span class="leg-nom">${BT_INFO[k].titre}</span></button>`).join('')}</div>` : ''}   <!-- patch328 -->
+      <div class="leg-tailles leg-batiments">${['fonderie', 'forteresse', 'centre', 'banque'].map(k => `<button type="button" class="leg-bt-info${btBulleCle === k ? ' on' : ''}" data-bt-info="${k}" aria-expanded="${btBulleCle === k}"><span class="leg-bt${k === 'centre' ? ' leg-centre' : ''}">${k === 'fonderie' ? ICONE_FONDERIE : k === 'forteresse' ? ICONE_FORTERESSE : k === 'banque' ? ICONE_BANQUE : ICONE_CENTRE}</span><span class="leg-nom">${BT_INFO[k].titre}</span></button>`).join('')}</div>` : ''}   <!-- patch328 -->
     </div>`;
 }
 
@@ -25329,6 +25329,10 @@ var BT_INFO = {
          '<b>Le prendre fait perdre la bombe</b> à son propriétaire.',
          'La bombe détruit garnisons et forteresses de tout le monde dans sa zone (jusqu’à 20 km), et tout le monde y attaque à <b>+15 %</b> pendant 24 h.'],
     pied: 'Pour en construire un : 2 Fonderies et 40 lingots.' },
+  banque: { titre: 'Banque', role: 'Elle met tes lingots à l’abri, en plus de la réserve de tes Fonderies.',   // patch356
+    li: ['Coûte <b>20 lingots</b>, une seule par joueur, il faut une Fonderie.', '<b>+60 lingots</b> de réserve, à l’abri du pillage des Fonderies.',
+         '<b>Secrète</b> : toi seul la vois sur la carte.', 'Si on prend sa commune, elle disparaît et le joueur pille <b>la moitié</b> de son contenu. Une bombe lui en fait perdre 20 à 40 %.'],
+    pied: 'Se construit en 6 h sur une de tes communes.' },
 };
 var btBulle = null, btBulleCle = null;
 function btBulleCacher(){
@@ -25343,7 +25347,7 @@ function btBulleMontrer(b){
   if(!btBulle){ btBulle = document.createElement('div'); btBulle.className = 'bt-bulle'; btBulle.setAttribute('role', 'dialog'); btBulle.hidden = true; document.body.appendChild(btBulle); }
   btBulleCacher();
   btBulleCle = k; b.classList.add('on'); b.setAttribute('aria-expanded', 'true');
-  const ic = k === 'fonderie' ? ICONE_FONDERIE : k === 'forteresse' ? ICONE_FORTERESSE : ICONE_CENTRE;
+  const ic = k === 'fonderie' ? ICONE_FONDERIE : k === 'forteresse' ? ICONE_FORTERESSE : k === 'banque' ? ICONE_BANQUE : ICONE_CENTRE;   // patch356
   btBulle.setAttribute('aria-label', I.titre);
   btBulle.innerHTML = `<h4><span class="leg-bt${k === 'centre' ? ' leg-centre' : ''}">${ic}</span>${I.titre}</h4><p class="bt-role">${I.role}</p>
     <ul>${I.li.map(x => `<li>${x}</li>`).join('')}</ul><p class="bt-pied">${I.pied}</p>`;

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '16acc4867fda';
+const VERSION_JEU = '85953bbeb340';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -13999,6 +13999,22 @@ function renderEchangeMien(){
   majResumeEchange();
 }
 
+// patch360 : parmi mes doublons, ceux qui manquent au joueur dont j'ai choisi la carte
+let echLuiManque = { autre: null, cle: '', set: null, enVol: false };
+async function majLuiManque(codes){
+  const autre = echangeCible && echangeCible.proprietaire;
+  if(!autre){ echLuiManque = { autre: null, cle: '', set: null, enVol: false }; return; }
+  const cle = autre + '|' + codes.slice().sort().join(',');
+  if(echLuiManque.cle === cle && (echLuiManque.set || echLuiManque.enVol || echLuiManque.echec)) return;
+  echLuiManque = { autre, cle, set: null, enVol: true };
+  try{
+    const { data, error } = await sb.rpc('terra_lui_manque', { p_autre: autre, p_codes: codes.slice(0, 400) });
+    if(echLuiManque.cle !== cle) return;   // un autre choix entre-temps
+    echLuiManque = { autre, cle, set: error ? null : new Set(data || []), enVol: false, echec: !!error };
+  }catch(e){ echLuiManque.enVol = false; echLuiManque.echec = true; return; }
+  if(echLuiManque.set) renderEchangeMien();
+}
+
 // Terra : mes doublons du palier, moins ceux deja promis dans mes
 // propositions envoyees (le serveur applique la meme regle)
 function renderEchangeMienTerra(zone, rechercheM){
@@ -14022,9 +14038,17 @@ function renderEchangeMienTerra(zone, rechercheM){
     return;
   }
   if(echangeMien && !miennes.some(c => c.code === echangeMien)) echangeMien = null;
-  zone.innerHTML = miennes.map(c => `
-    <button class="ech-item ${c.tier.id} ${echangeMien === c.code ? 'choisi' : ''}" data-mien="${echapperTexte(c.code)}">
-      <b>${echapperTexte(c.nom)}</b>
+  // patch360 : « lui manque » d'abord, dès qu'une carte d'un joueur est choisie
+  const autreLM = echangeCible && echangeCible.proprietaire;
+  if(autreLM) majLuiManque(miennes.map(c => c.code));
+  const lm = (autreLM && echLuiManque.autre === autreLM && echLuiManque.set) ? echLuiManque.set : null;
+  if(lm) miennes.sort((a, b) => (lm.has(b.code) ? 1 : 0) - (lm.has(a.code) ? 1 : 0));
+  const pseudoLM = autreLM ? (echangeCible.pseudo || 'ce joueur') : '';
+  const nbLM = lm ? miennes.filter(c => lm.has(c.code)).length : 0;
+  zone.innerHTML = (lm ? `<p class="ech-lm-note">${nbLM ? `<b>${nbLM}</b> de tes doublons manque${nbLM > 1 ? 'nt' : ''} à <b>${echapperTexte(pseudoLM)}</b> : ils sont en premier.` : `<b>${echapperTexte(pseudoLM)}</b> a déjà tous tes doublons de cette rareté.`}</p>` : '')
+    + miennes.map(c => `
+    <button class="ech-item ${c.tier.id} ${echangeMien === c.code ? 'choisi' : ''}${lm && !lm.has(c.code) ? ' ech-deja' : ''}" data-mien="${echapperTexte(c.code)}">
+      <b>${echapperTexte(c.nom)}</b>${lm ? (lm.has(c.code) ? '<span class="ech-lm">lui manque</span>' : '<span class="ech-lm-deja">il l’a déjà</span>') : ''}
       <small>${echRarHtml(c.tier.id)}${echapperTexte(c.dept)} · ${c.libres} doublon${c.libres > 1 ? 's' : ''} échangeable${c.libres > 1 ? 's' : ''}</small>
     </button>`).join('');
   { const n = echNoteRarete('mien'); if(n) zone.insertAdjacentHTML('afterbegin', n); }   // patch275
@@ -14340,7 +14364,7 @@ document.getElementById('echCibles').addEventListener('click', (e) => {
   const c = echangeCibles.find(x => cleCible(x) === b.dataset.cible);
   echangeCible = (echangeCible && cleCible(echangeCible) === b.dataset.cible) ? null : c;
   renderEchangeCibles();
-  if(echToutes()) renderEchangeMien();   // patch275
+  if(echToutes() || marcheTerra()) renderEchangeMien();   // patch275, patch360
 });
 
 document.getElementById('echEnvoyer').addEventListener('click', async (e) => {

@@ -9244,3 +9244,12 @@ button.zd-ligne{ cursor:pointer; }
 .des-c em.chance{ background:rgba(127,227,180,.16); color:#7FE3B4; }
 .des-c em.malchance{ background:rgba(255,154,148,.15); color:#FF9A94; }
 .des-n{ margin:-4px 0 4px; font-size:.8rem; color: var(--brume); }
+
+/* patch360 : échange Terra, « lui manque » */
+.ech-lm-note{ margin:0 0 8px; padding:7px 10px; border-radius:9px; font-size:.84rem; color:#DCE6F2;
+  background:rgba(127,227,180,.08); border:1px solid rgba(127,227,180,.28); }
+.ech-lm, .ech-lm-deja{ display:inline-block; margin-left:6px; padding:1px 7px; border-radius:20px; font-size:.7rem; font-weight:700; vertical-align:2px; }
+.ech-lm{ background:rgba(127,227,180,.18); color:#7FE3B4; }
+.ech-lm-deja{ background:rgba(169,188,212,.14); color: var(--brume); font-weight:600; }
+.ech-item.ech-deja{ opacity:.55; }
+.ech-item.ech-deja.choisi{ opacity:1; }

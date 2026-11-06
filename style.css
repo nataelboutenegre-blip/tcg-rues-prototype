@@ -4625,7 +4625,7 @@ body.mode-front #panel-defense .bourse-section{ display:none !important; }
 .je-haut b{ font-family:var(--titre); font-weight:900; font-size:2rem; line-height:1; }
 .je-haut b small{ font-size:1rem; color:var(--brume); font-weight:700; }
 .je-haut span{ color:var(--brume); font-size:.8rem; text-align:right; }
-.je-barre{ display:grid; grid-template-columns:repeat(40,1fr); gap:2px; margin-top:10px; }
+.je-barre{ display:grid; grid-template-columns:repeat(var(--n, 40),1fr); gap:1px; margin-top:10px; }   /* lot 8/11 : une seule ligne, quel que soit le maximum */
 .je-barre i{ height:10px; border-radius:2px; background:rgba(169,188,212,.16); }
 .je-barre i.p{ background:linear-gradient(180deg,#FF9A7A,#E5484D); }
 .je-note{ margin:8px 0 0; font-size:.74rem; color:var(--brume); }
@@ -4744,6 +4744,7 @@ body.mode-front #panel-defense .bourse-section{ display:none !important; }
 .df-ligne.urgente .df-qui small{ color:#FFB3B5; }
 .df-att .menace-defendre{ margin-top:0; font-size:.85rem; padding:5px 10px 6px; }
 .df-note{ font-size:.72rem; color: var(--brume); font-style: italic; }
+.df-att .df-note{ flex:0 1 45%; min-width:0; text-align:right; line-height:1.3; }   /* lot 8/11 */
 .df-epingle{ font-size:.85rem; }
 .df-nb{ margin-left:4px; font-weight:800; color: var(--c-legendaire); }
 
@@ -8340,7 +8341,7 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .mfo-e b{ font-family:var(--titre); font-weight:900; font-size:1.9rem; line-height:1; }
 .mfo-e b small{ font-size:1rem; color:var(--brume); }
 .mfo-e em{ font-style:normal; font-size:.78rem; color:#C9D3E3; }
-.mfo-jauge{ display:flex; gap:2px; margin:8px 0 2px; }
+.mfo-jauge{ display:flex; gap:1px; margin:8px 0 2px; }   /* lot 8/11 : 90 cases sur une ligne */
 .mfo-jauge i{ flex:1; height:6px; border-radius:2px; background:rgba(169,188,212,.16); }
 .mfo-jauge i.p{ background:#FF8A8E; }
 .mfo-rc{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid rgba(169,188,212,.12); font-size:.82rem; color:#E7EDF6; }
@@ -8352,6 +8353,7 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .mfo-sec{ background:rgba(169,188,212,.14); color:#fff; }
 .mfo-ok{ color:#7FE3B4; font-weight:700; font-size:.8rem; white-space:nowrap; }
 .mfo-note{ font-size:.74rem; color:#AFC0D6; white-space:nowrap; }
+.mfo-l > .mfo-note{ white-space:normal; flex:0 1 48%; min-width:0; text-align:right; line-height:1.3; }   /* lot 8/11 : la note s'allonge */
 .mfo-alerte{ border-color:rgba(229,72,77,.6); background:linear-gradient(100deg, rgba(229,72,77,.16), rgba(229,72,77,.04)); }
 .mfo-alerte .mfo-h > span{ color:#FF6B70; }
 .mfo-calme{ display:flex; align-items:center; gap:10px; border-color:rgba(127,227,180,.25); background:rgba(127,227,180,.05); font-size:.85rem; color:#D8F5E8; }
@@ -9107,3 +9109,108 @@ button.zd-ligne{ cursor:pointer; }
   background:#E5484D; color:#fff; border-radius:99px; padding:2px 7px; }
 .zd-note{ font-size:.72rem; color:#8FA2BC; line-height:1.45; margin:12px 0 0; }
 @media (hover:hover){ .zd-zone:not(.fermee):hover{ border-color:rgba(240,180,41,.6); } }
+
+/* ---------- lot 8/11 : la rébellion ---------- */
+.rb-ic{ font-size:1rem; line-height:1; }
+.pc-actions.rb-actions{ margin-top:6px; grid-template-columns:1fr; }
+.pc-action.rb-ouvrir{ border-color:rgba(180,120,255,.45); background:rgba(180,120,255,.1); color:#E2CCFF; white-space:normal; overflow:visible; }
+.pc-action.rb-ouvrir:hover{ background:rgba(180,120,255,.2); }
+.pc-action.rb-ouvrir small{ display:block; font-size:.68rem; color:#BFA9DA; font-weight:400; margin-top:1px; }
+.rb{ margin-top:8px; padding:10px 11px; border-radius:11px; background:linear-gradient(160deg,rgba(180,120,255,.16),rgba(180,120,255,.05)); border:1px solid rgba(180,120,255,.4); }
+.rb-tete{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-weight:700; color:#fff; font-size:.86rem; }
+.rb-x{ background:none; border:0; color:#BFA9DA; font-size:1rem; cursor:pointer; padding:2px 4px; }
+.rb-ligne{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-top:8px; font-size:.8rem; color:var(--brume, #A9BCD4); }
+.rb-ligne b{ color:#fff; font-size:1rem; }
+.rb-pct{ color:#E2CCFF !important; }
+.rb-effet b{ font-size:.86rem; }
+.rb-apres{ color:#7FE0A6; }
+.rb-curseur, .rb-curseur-def{ width:100%; margin:8px 0 2px; accent-color:#B478FF; }
+.rb-note{ margin:6px 0 0; font-size:.72rem; line-height:1.4; color:#BFA9DA; }
+.rb .pc-action.rb-go{ width:100%; margin-top:9px; justify-content:center; border-color:#B478FF; background:rgba(180,120,255,.28); color:#fff; white-space:normal; }
+.rb .pc-action.rb-go:hover{ background:rgba(180,120,255,.4); }
+.rb-solde{ display:block; margin-top:5px; font-size:.7rem; color:#BFA9DA; text-align:center; }
+.rb-btns{ display:grid; grid-template-columns:2fr 1fr; gap:6px; }
+.rb-btns .pc-action{ margin-top:9px; justify-content:center; }
+.bt-appui.rb-appui{ color:#E2CCFF; }
+.rebellions-bloc:empty{ display:none; }
+.rbl-intro{ margin:2px 0 8px; font-size:.76rem; color:var(--brume, #A9BCD4); }
+.gl.rbl .rbl-ic{ font-size:1.1rem; width:22px; text-align:center; flex:none; }
+.rb.rb-def{ margin:0 0 10px; }
+
+/* ---------- lot 8/11 : légende à plusieurs joueurs, échange depuis la carte ---------- */
+.leg-selection{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 0 6px; padding:6px 8px; border-radius:8px; background:rgba(127,227,180,.1); border:1px solid rgba(127,227,180,.3); font-size:.74rem; color:#BFF2D9; }
+.leg-effacer{ background:none; border:0; color:#fff; font:inherit; font-weight:700; text-decoration:underline; cursor:pointer; padding:0; }
+.ecc-bandeau{ position:absolute; top:10px; left:10px; right:10px; z-index:30; display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px;
+  background:rgba(14,31,54,.94); border:1px solid rgba(76,155,232,.55); box-shadow:0 10px 24px rgba(0,0,0,.4); color:#DCE8F6; font-size:.8rem; line-height:1.35; }
+.ecc-ic{ font-size:1.3rem; flex:none; }
+.ecc-txt{ flex:1; min-width:0; }
+.ecc-txt span{ color:#A9BCD4; }
+.ecc-txt .rarete{ background:none; padding:0; }
+.ecc-btns{ display:flex; flex-direction:column; gap:5px; flex:none; }
+.ecc-btns button{ font:inherit; font-size:.72rem; padding:5px 9px; border-radius:8px; border:1px solid rgba(169,188,212,.3); background:rgba(169,188,212,.08); color:#fff; cursor:pointer; }
+.ecc-fiche{ margin:8px 0; padding:10px 11px; border-radius:11px; background:rgba(76,155,232,.12); border:1px solid rgba(76,155,232,.45); }
+.ecc-fiche p{ margin:0; font-size:.82rem; line-height:1.4; color:#DCE8F6; }
+.ecc-fiche .pc-action.ecc-go{ width:100%; margin-top:9px; justify-content:center; border-color:#4C9BE8; background:rgba(76,155,232,.28); color:#fff; }
+.pc-note.ecc-non{ margin:8px 0; }
+.map-wrap.panneau-ouvert .ecc-bandeau{ display:none; }   /* la fiche reprend l'échange */
+
+/* lot 8/11 : surcoût des grosses communes, sous le choix de l'engagement */
+.int-aide.int-surcout{ color:#FFD98A; margin-top:-4px; }
+
+/* patch350 : « Invite un ami », dans les quêtes */
+.obj-groupe.inv{ display:grid; gap:10px; margin:14px 0 4px; }
+.obj-groupe.inv[hidden]{ display:none; }
+.inv-carte{ background:linear-gradient(180deg, rgba(240,180,41,.09), rgba(240,180,41,.02)); border:1px solid rgba(240,180,41,.38); border-radius:14px; padding:13px 14px 14px; }
+.inv-accueil{ background:linear-gradient(180deg, rgba(61,214,140,.11), rgba(61,214,140,.02)); border-color:rgba(61,214,140,.42); }
+.inv-tete{ display:flex; align-items:center; gap:10px; }
+.inv-tete b{ flex:1; min-width:0; font-family:var(--titre); font-weight:800; font-size:1.1rem; color:#fff; }
+.inv-ico{ width:32px; height:32px; flex:none; display:grid; place-items:center; border-radius:10px; background:rgba(240,180,41,.16); color:var(--c-legendaire); }
+.inv-ico svg{ width:19px; height:19px; }
+.inv-accueil .inv-ico{ background:rgba(61,214,140,.16); color:#3DD68C; }
+.inv-n{ font-size:.76rem; font-weight:700; color:var(--c-legendaire); white-space:nowrap; }
+.inv-texte{ font-size:.8rem; line-height:1.45; color:var(--brume); margin:8px 0 11px; }
+.inv-texte b{ color:#fff; font-weight:600; }
+.inv-paliers{ list-style:none; margin:0 0 12px; padding:0; display:grid; gap:6px; }
+.inv-paliers li{ display:flex; align-items:center; gap:10px; min-height:40px; padding:6px 10px; border-radius:10px; background:rgba(169,188,212,.06); font-size:.82rem; }
+.inv-pn{ min-width:50px; font-weight:700; color:#fff; }
+.inv-pg{ flex:1; min-width:0; color:var(--brume); }
+.inv-paliers li.ok{ background:rgba(240,180,41,.13); }
+.inv-paliers li.ok .inv-pg{ color:#fff; }
+.inv-paliers li.fait{ background:rgba(169,188,212,.06); opacity:.6; }
+.inv-reste{ font-size:.72rem; color:#7F91AB; white-space:nowrap; }
+.inv-route{ list-style:none; margin:12px 0 0; padding:11px 0 0; border-top:1px solid rgba(169,188,212,.1); display:grid; gap:8px; }
+.inv-route li{ display:flex; align-items:center; gap:10px; font-size:.82rem; }
+.inv-ps{ flex:1; min-width:0; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.inv-seg{ display:flex; gap:3px; width:54px; flex:none; }
+.inv-seg i{ flex:1; height:5px; border-radius:3px; background:rgba(169,188,212,.18); }
+.inv-seg i.on{ background:#3DD68C; }
+.inv-jt{ font-size:.72rem; color:var(--brume); white-space:nowrap; }
+.inv-jours{ display:flex; gap:7px; margin:0 0 11px; }
+.inv-jours i{ flex:1; height:32px; display:grid; place-items:center; border-radius:9px; font-style:normal; font-size:.78rem; font-weight:700; color:#7F91AB; background:rgba(169,188,212,.07); border:1px dashed rgba(169,188,212,.28); }
+.inv-jours i.on{ color:#0B1830; background:#3DD68C; border:1px solid #3DD68C; }
+.inv-pied{ display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:34px; font-size:.78rem; color:var(--brume); }
+.inv-lien code{ display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; background:var(--nuit); border:1px solid rgba(169,188,212,.16); border-radius:10px; padding:11px 12px; font:500 .85rem var(--texte); color:var(--papier); }
+.inv-boutons{ display:flex; gap:8px; margin-top:8px; }
+.inv-boutons .pp-btn{ flex:1; }
+.inv-bandeau{ display:grid; grid-template-columns:1fr auto; align-items:center; gap:3px 8px; width:100%; max-width:620px; box-sizing:border-box; margin:-4px 0 12px; padding:10px 14px 11px;
+  border-radius:14px; border:1px solid rgba(240,180,41,.3); background:rgba(240,180,41,.06); color:#fff; font:inherit; text-align:left; cursor:pointer; }
+.inv-bandeau[hidden]{ display:none; }
+.inv-bandeau:hover{ border-color:rgba(240,180,41,.6); }
+.inv-bandeau:focus-visible{ outline:2px solid #F0B429; outline-offset:2px; }
+.inv-bandeau.pret{ border-color:#F0B429; background:rgba(240,180,41,.13); }
+.inv-b-t{ display:flex; align-items:center; gap:7px; min-width:0; font-size:.9rem; font-weight:700; }
+.inv-b-t svg{ width:16px; height:16px; flex:none; color:#F0B429; }
+.inv-b-n{ font-size:.82rem; font-weight:700; color:#F0B429; white-space:nowrap; }
+.inv-b-sous{ grid-column:1 / -1; font-size:.74rem; color:#C9D3E3; }
+.inv-bandeau.pret .inv-b-sous{ color:#F0B429; font-weight:700; }
+
+/* patch354 : la Banque (vert) et la part « bâtiments » du classement (orange) */
+.sc-pt.b, .sc-barre .b{ background:#E8833A; }
+.bt.bt-banque{ background:linear-gradient(160deg,rgba(63,191,133,.16),rgba(63,191,133,.04)); border-color:rgba(63,191,133,.45); }
+.bt.bt-banque .bt-haut{ color:#7FE0B0; }
+.bt-barre i.b{ background:linear-gradient(180deg,#B8F0D2,#3FBF85); }
+.btl.banque .btl-ic{ background:rgba(63,191,133,.16); color:#7FE0B0; }
+.pc-action.bt-action small .bt-plus{ color:#FFE08A; font-weight:600; }
+.bt-split{ display:flex; flex-direction:column; gap:4px; margin:8px 2px 0; font-size:.76rem; color:#D6C2B2; }
+.bt-split .pt{ display:inline-block; width:9px; height:9px; border-radius:3px; margin-right:6px; vertical-align:-1px; }
+.bt-split .pt.f{ background:#F0B429; } .bt-split .pt.b{ background:#3FBF85; }

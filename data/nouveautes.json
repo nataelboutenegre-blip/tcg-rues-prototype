@@ -1,5 +1,24 @@
 [
   {
+    "date": "2026-11-06",
+    "nouveautes": [
+      "👥 Invite un ami : ton lien est maintenant dans les quêtes (et un bandeau au Tirage). Ton ami reçoit 1 paquet Terra et 10 ⚡ en arrivant, puis 1 paquet de plus après 3 jours de jeu. Toi, +10 ⚡ par ami et des paliers chaque saison : 1, 3 et 5 amis actifs pour 1, 2 et 3 paquets Terra. Tu peux inviter dès ton premier jour",
+      "✊ Rébellion : sous la fiche d’attaque, paie des lingots pour baisser la défense d’une ville face à toi (3 lingots par point, jusqu’à −15 %, 24 h). Le propriétaire est prévenu et peut l’étouffer à l’aveugle, dans Défendre (idée de Bonjean)",
+      "⚔ Proximité : sans commune à moins de 20 km de ta cible, −12 % ; avec une, rien ne change ; avec deux ou plus, +5 %. Deux communes groupées suffisent pour être au niveau d’un grand territoire (idée d’Oshannir)",
+      "⏳ Sièges : sans assaut pendant 24 h, un siège tombe ; la série repart de zéro et le défenseur retrouve ses deux défenses (idée d’Oshannir)",
+      "🛡 Défense à parité : 40, 55 ou 70 % (5 points de plus qu’en attaque), et une fois tes deux défenses utilisées, tu peux retenter après chaque round que l’attaquant gagne (idée d’Oshannir)",
+      "⚡ Énergie pour la fin de saison : 90 au maximum au lieu de 50 (toujours +1 toutes les 10 minutes) : une nuit ne fait plus rien perdre (idée d’Oshannir et Stonirr)",
+      "💎 Grosses communes : attaquer une épique coûte 1 énergie de plus par assaut, une légendaire 2 de plus (3, 4 ou 5 selon l’engagement). Les chances ne changent pas, et défendre coûte toujours 1, 2 ou 3",
+      "🏰 Garnisons et Forteresses : 5 au plus au lieu de 3 (demande de Maroli et Bonjean)",
+      "🎯 Quêtes Front : trois quêtes plus dures à +10 énergie : une partie de Radar sous 400 km, 6 communes en Rafale, 7 sur 10 au Plus ou moins du jour (idée de Stonirr)",
+      "💤 Absence : après 10 jours sans ouvrir le jeu, tes communes du Front retournent peu à peu au pot (10 % par jour) ; une notification prévient 2 jours avant. Ta collection Terra n’est jamais touchée",
+      "🗺 Carte : mets plusieurs joueurs en évidence à la fois, dans la légende (idée de Maroli)",
+      "🤝 Échange de clan depuis la carte : touche la commune d’un coéquipier, puis une des tiennes de même rareté, sans passer par l’onglet Clan (idée de Bonjean)",
+      "🏦 Nouveau bâtiment : la Banque (20 lingots, une Fonderie demandée). +60 lingots de réserve, à l’abri du pillage des Fonderies, et secrète. Mais si on prend sa commune, l’attaquant pille la moitié de son contenu, et une bombe peut en détruire une partie",
+      "🏆 Classement du Front : tes bâtiments comptent maintenant (Fonderie +50, Forteresse +80, Centre +150, Banque +80, acquis même s’ils sont détruits, jusqu’au maximum de chaque type), ainsi que tes bombes lancées (+300) et tes rébellions, financées ou étouffées (+2 par lingot, 60 par jour au plus). Détail dans « Comment c’est calculé ? »"
+    ]
+  },
+  {
     "date": "2026-11-05",
     "nouveautes": [
       "🎡 Roue du Front : 30 tours par jour au lieu de 15, et trois cases nouvelles : TerraPoints (+10 TP), Cagnotte (+50 TP) et Relance (ton tour est rendu). Les cases d'énergie et de lingots sont un peu plus rares, pour qu'une journée de roue rapporte à peu près autant au Front. Les chances sont sous la roue",

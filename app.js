@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '85953bbeb340';
+const VERSION_JEU = '8bd30b5de494';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9744,8 +9744,10 @@ const COMBAT_TIERS_BAS = ['commun', 'peucommun'];
 let combatBasCharges = new Set();
 let combatBasChargement = false;
 const tiersCombat = () => ['rare', 'epique', 'legendaire'].concat([...combatBasCharges]);
+// patch361 : plusieurs raretés à la fois, « legendaire,epique » ; 'tous' = aucune restriction
+const combatTiersChoisis = () => combatFilterTier === 'tous' ? null : new Set(combatFilterTier.split(','));
 function combatBasVoulus(){
-  if(COMBAT_TIERS_BAS.indexOf(combatFilterTier) >= 0) return [combatFilterTier];
+  { const ch = combatTiersChoisis(); if(ch) return COMBAT_TIERS_BAS.filter(t => ch.has(t)); }   // patch361
   if(combatProximite && combatFilterTier === 'tous') return COMBAT_TIERS_BAS.slice();
   // patch125 : une recherche reduit la liste, on peut tout charger
   // (patch149 : des exclusions seules ne reduisent rien, comme un champ vide)
@@ -10052,7 +10054,8 @@ function renderCombatGrid(){
   let cibles = combatCibles;
   if(clanMembres.size) cibles = cibles.filter(c => !clanMembres.has(c.joueur_id));   // patch110
   if(combatFilterTier !== 'tous'){
-    cibles = cibles.filter(c => c.communes.tier === combatFilterTier);
+    const ch = combatTiersChoisis();   // patch361
+    cibles = cibles.filter(c => ch.has(c.communes.tier));
   }
   if(searchText){
     // patch218 : comme l'Echange — pseudo ET departement ET nom (ET entre categories,
@@ -10272,9 +10275,17 @@ if(EPIQUE_VISIBLE) document.querySelectorAll('[data-epique]').forEach(b => { b.h
 document.getElementById('combatFilters').addEventListener('click', (e) => {
   const pill = e.target.closest('.filter-pill');
   if(!pill) return;
-  document.querySelectorAll('#combatFilters .filter-pill').forEach(p => p.classList.remove('active'));
-  pill.classList.add('active');
-  combatFilterTier = pill.dataset.tier;
+  // patch361 : un clic ajoute ou retire une rareté ; « Toutes » remet à zéro
+  const t = pill.dataset.tier;
+  let ch = combatTiersChoisis() || new Set();
+  if(t === 'tous') ch = new Set();
+  else if(ch.has(t)) ch.delete(t); else ch.add(t);
+  const ordre = ['legendaire', 'epique', 'rare', 'peucommun', 'commun'];
+  combatFilterTier = ch.size ? ordre.filter(x => ch.has(x)).join(',') : 'tous';
+  document.querySelectorAll('#combatFilters .filter-pill').forEach(p => {
+    const on = combatFilterTier === 'tous' ? p.dataset.tier === 'tous' : ch.has(p.dataset.tier);
+    p.classList.toggle('active', on); p.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
   renderCombatGrid();
   assurerCiblesBas();
 });
@@ -15774,10 +15785,10 @@ function choixQG(){
     const ico = c.querySelector('.qg-ico') ? c.querySelector('.qg-ico').innerHTML : '';
     const et = document.getElementById(j.etat);
     const etat = et ? et.textContent.trim() : '';
-    const n = defis(j.id);
+    const n = defis(j.id) + (qgRaisons || []).filter(r => r.jeu === j.carte && !r.defi).reduce((a, r) => a + (r.n || 0), 0);   // patch361
     return `<button type="button" class="qg-choix-jeu" data-qgjeu="${j.id}" aria-pressed="${j.id === qgJeuChoisi}">
       <span class="qg-ico" aria-hidden="true">${ico}</span><span><b>${j.nom}</b>${etat ? `<small>${echapperTexte(etat)}</small>` : ''}</span>
-      ${n ? `<i class="qg-choix-pastille" aria-label="${n} défi${n > 1 ? 's' : ''}">${n}</i>` : ''}</button>`;
+      ${n ? `<i class="qg-choix-pastille" aria-label="${n} à voir">${n}</i>` : ''}</button>`;
   }).join('');
   for(const j of QG_JEUX){ const c = document.getElementById(j.carte); if(c) c.classList.toggle('qg-pas-choisi', j.id !== qgJeuChoisi); }
   const solo = qgJeuChoisi === 'cdj';
@@ -16386,9 +16397,48 @@ async function chargerRadar(){
   if(qg && qg.classList.contains('active')) renderQG();
 }
 
+// patch361 : les raisons de la pastille du QG, notées avant que les résultats passent « vus »
+let qgRaisons = null;
+function qgRaisonsCalculer(){
+  const l = [];
+  const cdj = document.getElementById('cdjBadge');
+  if(cdj && !cdj.hidden) l.push({ jeu: 'qgCdj', n: 1, txt: 'La <b>Commune du jour</b> n’est pas encore jouée' });
+  const pl = (n, un, plus) => `${n} ${n > 1 ? plus : un}`;
+  const rv = radarEtat ? Number(radarEtat.non_vus || 0) : 0;
+  const rd = radarEtat && Array.isArray(radarEtat.defis_recus) ? radarEtat.defis_recus.length : 0;
+  const fv = rafaleEtat ? Number(rafaleEtat.non_vus || 0) : 0;
+  const fd = rafaleEtat && Array.isArray(rafaleEtat.defis_recus) ? rafaleEtat.defis_recus.length : 0;
+  if(rv) l.push({ jeu: 'qgRadar', n: rv, txt: `<b>Radar</b> : ${pl(rv, 'nouveau résultat de duel', 'nouveaux résultats de duels')} (dans « Derniers duels »)` });
+  if(rd) l.push({ jeu: 'qgRadar', n: rd, defi: true, txt: `<b>Radar</b> : ${pl(rd, 'défi reçu', 'défis reçus')}` });
+  if(fv) l.push({ jeu: 'qgRafale', n: fv, txt: `<b>Rafale</b> : ${pl(fv, 'nouveau résultat de duel', 'nouveaux résultats de duels')} (dans « Derniers duels »)` });
+  if(fd) l.push({ jeu: 'qgRafale', n: fd, defi: true, txt: `<b>Rafale</b> : ${pl(fd, 'défi reçu', 'défis reçus')}` });
+  return l;
+}
+function qgRaisonsAfficher(){
+  let bloc = document.getElementById('qgRaisons');
+  const panel = document.getElementById('panel-qg');
+  if(!bloc && panel){
+    bloc = document.createElement('div');
+    bloc.id = 'qgRaisons'; bloc.className = 'qg-raisons';
+    const sub = panel.querySelector('.sub');
+    if(sub) sub.after(bloc); else panel.prepend(bloc);
+  }
+  document.querySelectorAll('.qg-carte .qg-pastille').forEach(x => x.remove());
+  if(!bloc) return;
+  const l = qgRaisons || [];
+  bloc.hidden = !l.length;
+  if(!l.length){ bloc.innerHTML = ''; return; }
+  bloc.innerHTML = `<b class="qg-raisons-t">Pourquoi la pastille</b><ul>${l.map(r => `<li>${r.txt}</li>`).join('')}</ul>`;
+  for(const id of new Set(l.map(r => r.jeu))){
+    const h = document.querySelector(`#${id} .qg-titre h2`);
+    if(h) h.insertAdjacentHTML('beforeend', '<i class="qg-pastille" aria-hidden="true"></i>');
+  }
+}
+
 async function ouvrirQG(){
   if(radarModeEntr) clearInterval(radarChrono);
   majBoutonEntr();
+  qgRaisons = qgRaisonsCalculer(); qgRaisonsAfficher();   // patch361 : ce qu'on sait déjà
   renderQG();
   if(!cdjEtat) chargerCdj();
   chargerPom();   // patch160
@@ -16396,6 +16446,7 @@ async function ouvrirQG(){
   chargerPomDuelEtat();   // patch168
   await Promise.all([chargerRadar(), chargerRafale()]);
   renderQG();
+  { const n = qgRaisonsCalculer(); if(n.length) qgRaisons = n; qgRaisonsAfficher(); renderQG(); }   // patch361 : avec les états à jour, avant « vus »
   // les resultats affiches sont vus : la pastille s'eteint
   if(radarEtat && radarEtat.non_vus > 0){
     sb.rpc('radar_vu').then(() => { radarEtat.non_vus = 0; majBadgeQG(); });

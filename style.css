@@ -9253,3 +9253,14 @@ button.zd-ligne{ cursor:pointer; }
 .ech-lm-deja{ background:rgba(169,188,212,.14); color: var(--brume); font-weight:600; }
 .ech-item.ech-deja{ opacity:.55; }
 .ech-item.ech-deja.choisi{ opacity:1; }
+
+/* patch361 : QG, pourquoi la pastille */
+.qg-raisons{ max-width:860px; margin:0 0 14px; padding:10px 14px; border-radius:12px; font-size:.88rem; color:#DCE6F2;
+  background:rgba(229,72,77,.08); border:1px solid rgba(229,72,77,.35); }
+.qg-raisons[hidden]{ display:none; }
+.qg-raisons-t{ display:flex; align-items:center; gap:8px; font-size:.9rem; color:#fff; }
+.qg-raisons-t::before{ content:''; width:9px; height:9px; border-radius:50%; background:#E5484D; flex:none; }
+.qg-raisons ul{ margin:6px 0 0; padding-left:18px; }
+.qg-raisons li{ margin:2px 0; }
+.qg-pastille{ display:inline-block; width:9px; height:9px; margin-left:8px; border-radius:50%; background:#E5484D; vertical-align:3px;
+  box-shadow:0 0 0 3px rgba(229,72,77,.2); }

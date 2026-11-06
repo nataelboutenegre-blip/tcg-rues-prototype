@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'e3dff1c8b3cf';
+const VERSION_JEU = 'bf92d133ee87';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8594,12 +8594,14 @@ function majPaquetPret(dispo){
 // Paquet paye mais pas encore ouvert (page fermee ou rechargee) : on le represente
 async function verifierTiragesEnAttente(){
   if(paquetEnCours) return;
+  if(typeof roueActive === 'function' && roueActive()) return;   // patch355 : la roue cache les paquets, les tirages restent gardés
   const { data: u } = await sb.auth.getUser();
   if(!u || !u.user) return;
   const data = await monEtat();
   if(!data || !(data.tirages_restants > 0)) return;
   // patch134 : un paquet a pu etre ouvert pendant qu'on interrogeait le serveur
   if(paquetEnCours || tirageEnVol) return;
+  if(typeof roueActive === 'function' && roueActive()) return;   // patch355
   paquetEnCours = true;
   renderPackStatus();
   afficherPaquetATirer('gratuit', Math.min(5, data.tirages_restants));
@@ -8609,6 +8611,7 @@ async function verifierTiragesEnAttente(){
 // Un paquet attend encore : on propose un bouton sous les cartes, sans les effacer.
 async function proposerPaquetSuivant(){
   if(paquetEnCours) return;
+  if(typeof roueActive === 'function' && roueActive()) return;   // patch355
   const zone = document.getElementById('packZone');
   if(!zone || zone.querySelector('.suivant-ligne')) return;
   const { data: u } = await sb.auth.getUser();
@@ -10368,6 +10371,12 @@ function initModes(){
   el.addEventListener('click', (e) => {
     const b = e.target.closest('[data-mode]');
     if(!b || b.dataset.mode === modeJeu) return;
+    // patch355 : un paquet caché par la roue (pot vide) ne bloque plus : on le range
+    if(paquetEnCours && modeJeu === 'front' && typeof roueActive === 'function' && roueActive()
+       && !document.querySelector('#packZone .card, #packZone .ouv-pile')){
+      paquetEnCours = false;
+      const z = document.getElementById('packZone'); if(z) z.innerHTML = '';
+    }
     if(paquetEnCours){ notifier({ type: 'info', titre: 'Un paquet est en cours', texte: 'Retourne tes cartes avant de changer de mode.' }); return; }
     modeJeu = b.dataset.mode;
     try { localStorage.setItem('tf-mode', modeJeu); } catch(err){}
@@ -26012,6 +26021,10 @@ function renderRoue(){
   const el = document.getElementById('roueFront'), panel = document.getElementById('panel-tirage');
   const actif = roueActive();
   if(panel) panel.classList.toggle('roue-active', actif);
+  if(actif && paquetEnCours && !document.querySelector('#packZone .card, #packZone .ouv-pile')){   // patch355
+    paquetEnCours = false;
+    const z = document.getElementById('packZone'); if(z) z.innerHTML = '';
+  }
   if(actif !== roueEtaitActive){ roueEtaitActive = actif; if(typeof renderReserveAccueil === 'function') renderReserveAccueil(); }
   if(!el) return;
   el.hidden = !actif;

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'c55a64b37746';
+const VERSION_JEU = '1b614c967718';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2277,6 +2277,38 @@ if(BT_TRACES) BT_TRACES.centre = [new Path2D('M9.5 3h5M10.5 3v6.5L5 19.2c-.5 1 .
 const ICONE_BANQUE = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="11.5" r="3.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 8.1v1.4M12 13.5v1.4M8.6 11.5H10M14 11.5h1.4M6.5 18.5v1.5M17.5 18.5v1.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
 if(BT_TRACES) BT_TRACES.banque = [new Path2D('M5.5 4.5h13a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-10a2 2 0 0 1 2-2zM15.4 11.5a3.4 3.4 0 1 1-6.8 0a3.4 3.4 0 1 1 6.8 0M6.5 18.5v1.5M17.5 18.5v1.5')];
 const bqReglage = (cle, defaut) => (BATIMENTS && BATIMENTS.banque_reglages && BATIMENTS.banque_reglages[cle] != null) ? BATIMENTS.banque_reglages[cle] : defaut;
+// patch364 : la Banque épargne (s2-110)
+const bqEpargne = () => !!bqReglage('epargne', false);
+const bqInteretNuit = (contenu) => { const res = Number(bqReglage('reserve', 60)) || 60, c = Number(contenu) || 0; return Math.max(0, Math.floor(Math.min(res, c * (1 + (Number(bqReglage('interet', 10)) || 10) / 100))) - Math.floor(c)); };
+let bqEnVol = false;
+async function banqueMouvement(sens, n){
+  if(bqEnVol || !(n > 0)) return;
+  bqEnVol = true;
+  try{
+    const { data, error } = await sb.rpc(sens === 'depot' ? 'banque_deposer' : 'banque_retirer', { p_lingots: n });
+    if(error) notifier({ type: 'erreur', titre: 'Banque', texte: messageLisible(error.message) });
+    else notifier({ type: 'succes', titre: sens === 'depot' ? `${n} lingot${n > 1 ? 's' : ''} déposé${n > 1 ? 's' : ''}` : `${n} lingot${n > 1 ? 's' : ''} retiré${n > 1 ? 's' : ''}`,
+                    texte: `Banque : ${Number(data && data.contenu) || 0} / ${bqReglage('reserve', 60)}. En poche : ${Number(data && data.lingots) || 0}.` });
+  } finally { bqEnVol = false; }
+  await chargerBatiments();
+}
+function banqueGestionHtml(){
+  const B = BATIMENTS; if(!B || !B.banque || !bqEpargne()) return '';
+  const bq = B.banque, pret = btPretDans(bq) <= 0;
+  const res = Number(bqReglage('reserve', 60)) || 60, dedans = Math.min(res, Number(bq.contenu) || 0);
+  const poche = Math.floor(lingotsActuels()), place = Math.max(0, res - dedans);
+  const nuit = bqInteretNuit(dedans);
+  const bouton = (sens, n, txt) => `<button type="button" class="bq-b ${sens}" data-bq="${sens}" data-bq-n="${n}" ${n > 0 && !bqEnVol ? '' : 'disabled'}>${txt}</button>`;
+  return `<div class="bq-bloc">
+    <div class="bq-haut"><span class="btl-ic">${ICONE_BANQUE}</span>
+      <span class="bq-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(bq.code)}">${echapperTexte(bq.nom)} (${echapperTexte(bq.dept)})</button><small>Secrète · ${pret ? `${bqReglage('interet', 10)} % par nuit` : 'prête dans ' + formatDuree(btPretDans(bq))}</small></span>
+      <span class="bq-nb"><b>${dedans}</b> / ${res} ${ICONE_LINGOT}</span></div>
+    ${pret ? `<div class="bq-barre"><i style="width:${Math.round(100 * dedans / res)}%"></i></div>
+    <p class="bq-nuit">${dedans ? (nuit ? `<b>+${nuit}</b> cette nuit` : 'Moins de 10 lingots : l’intérêt s’accumule, il apparaîtra en lingots entiers.') : 'Dépose des lingots : ils rapportent ' + bqReglage('interet', 10) + ' % chaque nuit.'}</p>
+    <div class="bq-ligne"><span>Déposer</span>${bouton('depot', Math.min(5, poche, place), '5')}${bouton('depot', Math.min(10, poche, place), '10')}${bouton('depot', Math.min(poche, place), `Tout (${Math.min(poche, place)})`)}</div>
+    <div class="bq-ligne"><span>Retirer</span>${bouton('retrait', Math.min(5, dedans), '5')}${bouton('retrait', Math.min(10, dedans), '10')}${bouton('retrait', dedans, `Tout (${dedans})`)}</div>` : ''}
+  </div>`;
+}
 let BOMBES_ZONES = [];             // bombes_actives() : les zones bombardées en cours
 let BOMBES_ALERTES = [];           // bombes_alertes(2) : préparations et impacts récents
 const ID_MOI = '__moi__';
@@ -10486,6 +10518,8 @@ function initModes(){
         btArme = null; pr.disabled = true; bombePreparer(); return;
       }
       if(e.target.closest('[data-bt-mallette]')){ ouvrirMallette(); return; }
+      const bqb = e.target.closest('[data-bq]');   // patch364 : déposer, retirer
+      if(bqb){ bqb.disabled = true; banqueMouvement(bqb.dataset.bq, Number(bqb.dataset.bqN) || 0); return; }
       const fo = e.target.closest('[data-bt-fortifier]');
       if(!fo) return;
       const code = fo.dataset.btFortifier;
@@ -10665,7 +10699,7 @@ function blocBatimentsEtat(code, c){
     html += `<div class="bt bt-banque">
       <div class="bt-haut">${ICONE_BANQUE}Banque <b>${pret ? `${dedans} / ${res} ${ICONE_LINGOT}` : 'prête dans ' + formatDuree(btPretDans(bq))}</b></div>
       ${pret ? `<div class="bt-barre" style="grid-template-columns:repeat(${res},1fr)">${Array.from({ length: res }, (_, i) => `<i class="${i < dedans ? 'b' : ''}"></i>`).join('')}</div>` : ''}
-      <p class="bt-txt">Ce qui dépasse la réserve de tes Fonderies (${Number(B.max_fonderies) || 30}) est rangé ici : <b>tu peux garder jusqu’à ${(Number(B.max_fonderies) || 30) + res} lingots</b>. Secrète : les autres ne la voient pas sur la carte.
+      <p class="bt-txt">${bqEpargne() ? `Ton épargne : dépose des lingots dans Défendre, ils rapportent <b>${bqReglage('interet', 10)} % par nuit</b> (jusqu’à ${res}). Pour les dépenser, retire-les. Secrète : les autres ne la voient pas sur la carte.` : `Ce qui dépasse la réserve de tes Fonderies (${Number(B.max_fonderies) || 30}) est rangé ici : <b>tu peux garder jusqu’à ${(Number(B.max_fonderies) || 30) + res} lingots</b>. Secrète : les autres ne la voient pas sur la carte.`}
         Si on te prend ${echapperHtml(c.nom)}, elle est détruite et l’attaquant pille <b>la moitié de son contenu</b>. Une bombe qui tombe sur la zone en détruit ${(bqReglage('bombe', [20, 30, 40]) || [20])[0]} à ${(bqReglage('bombe', [20, 30, 40]) || [40]).slice(-1)[0]} %.</p>
       ${pret ? '' : btAnnulerHtml(code, 'banque')}
     </div>`;
@@ -10703,7 +10737,7 @@ function blocBatimentsActions(code, c){
   if(B.banques_ouvertes && !B.banque){   // patch354 : la Banque
     const pb = bqReglage('prix', 20), nl = lingotsActuels();
     const bloque = !nF ? 'Il te faut d’abord une Fonderie' : nl < pb ? `Il te faut ${pb} lingots (tu en as ${nl})` : '';
-    boutons.push(`<button class="pc-action bt-action${arme('banque') ? ' arme' : ''}" data-pc="bt-construire" data-bt="banque" ${bloque ? 'disabled' : ''}>${ICONE_BANQUE}<span>${arme('banque') ? `Confirmer : ${pb} lingots` : 'Construire la Banque ici'}<small>${bloque || `Prête dans ${h} h · une seule · <b class="bt-plus">+${bqReglage('reserve', 60)} lingots de réserve</b> · secrète : les autres ne la voient pas sur la carte`}</small></span><span class="prix">${pb} ${ICONE_LINGOT}</span></button>`);
+    boutons.push(`<button class="pc-action bt-action${arme('banque') ? ' arme' : ''}" data-pc="bt-construire" data-bt="banque" ${bloque ? 'disabled' : ''}>${ICONE_BANQUE}<span>${arme('banque') ? `Confirmer : ${pb} lingots` : 'Construire la Banque ici'}<small>${bloque || `Prête dans ${h} h · une seule · <b class="bt-plus">${bqEpargne() ? `épargne jusqu’à ${bqReglage('reserve', 60)}, +${bqReglage('interet', 10)} % par nuit` : `+${bqReglage('reserve', 60)} lingots de réserve`}</b> · secrète : les autres ne la voient pas sur la carte`}</small></span><span class="prix">${pb} ${ICONE_LINGOT}</span></button>`);
   }
   return boutons.length ? `<p class="pc-titre-bt">Bâtiments</p><div class="pc-actions pc-actions-bt">${boutons.join('')}</div>` : '';
 }
@@ -10742,7 +10776,7 @@ function renderBatimentsBloc(){
   el.innerHTML = `<h2>Bâtiments</h2>${alertesBombesHtml()}
     <div class="bt-reserve"><span class="btr-nb">${n}</span>${ICONE_LINGOT}<span class="btr-max">/ ${max} lingots</span>
       <span class="btr-prod">${F ? (btProdTotale() > 0 ? `+${btProdTotale()} par jour<br>${pr ? 'prochain dans ' + formatDuree(pr) : 'réserve pleine'}` : 'Fonderie<br>en construction') : 'Pas encore<br>de Fonderie'}</span></div>
-    ${B.banque && btPretDans(B.banque) <= 0 ? `<div class="bt-split"><span><i class="pt f"></i>${Math.min(n, Number(B.max_fonderies) || 30)} / ${Number(B.max_fonderies) || 30} dans tes Fonderies</span><span><i class="pt b"></i>${Math.max(0, n - (Number(B.max_fonderies) || 30))} / ${bqReglage('reserve', 60)} à l’abri dans la Banque</span></div>` : ''}
+    ${B.banque && btPretDans(B.banque) <= 0 && !bqEpargne() ? `<div class="bt-split"><span><i class="pt f"></i>${Math.min(n, Number(B.max_fonderies) || 30)} / ${Number(B.max_fonderies) || 30} dans tes Fonderies</span><span><i class="pt b"></i>${Math.max(0, n - (Number(B.max_fonderies) || 30))} / ${bqReglage('reserve', 60)} à l’abri dans la Banque</span></div>` : ''}
     ${lingotsCombatHtml()}
     <div class="btl-titre">Fonderies <em>${mesFonderies().length} / ${btReglage('fonderies_max', 1)}</em></div>
     ${F ? mesFonderies().map(x => ligne(ICONE_FONDERIE, x, btPretDans(x) <= 0 ? `Produit ${B.production} lingots par jour` : 'En construction', 'fonderie')).join('')
@@ -10754,10 +10788,10 @@ function renderBatimentsBloc(){
         ? `<input type="search" class="bourse-search gn-cherche" id="btCherche" placeholder="Fortifier une de mes communes (${prix} lingots)…" autocomplete="off" value="${echapperTexte(btRecherche)}"><div class="gn-choix" id="btChoix">${btChoixHtml()}</div>`
         : `<p class="gl-vide">Prochaine forteresse : ${prix} lingots (tu en as ${n}).</p>`) : ''}
     ${centreHtml()}
-    ${B.banques_ouvertes ? `<div class="btl-titre">Banque <em>${B.banque ? 1 : 0} / 1</em></div>${B.banque
+    ${B.banques_ouvertes ? `<div class="btl-titre">Banque <em>${B.banque ? 1 : 0} / 1</em></div>${B.banque && bqEpargne() ? banqueGestionHtml() : B.banque   /* patch364 */
       ? `<div class="btl banque"><span class="btl-ic">${ICONE_BANQUE}</span><span class="btl-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(B.banque.code)}">${echapperTexte(B.banque.nom)} (${echapperTexte(B.banque.dept)})</button><small>${btPretDans(B.banque) <= 0 ? `${Math.min(Number(bqReglage('reserve', 60)), Number(B.banque.contenu) || 0)} / ${bqReglage('reserve', 60)} lingots à l’abri · secrète` : 'En construction · secrète'}</small></span>${btPretDans(B.banque) <= 0 ? '<span class="btl-etat ok">Active</span>' : `<span class="btl-etat cours">prête dans ${formatDuree(btPretDans(B.banque))}</span>`}</div>`
-      : `<p class="gl-vide">${bqReglage('prix', 20)} lingots, une Fonderie demandée : +${bqReglage('reserve', 60)} lingots de réserve, à l’abri du pillage des Fonderies. Ouvre une de tes communes sur la carte et choisis « Construire la Banque ici ». Elle est secrète.</p>`}` : ''}
-    <p class="btl-regle">${LINGOTS_COMBAT ? 'Les lingots viennent des Fonderies et des combats. Ils ne servent qu’aux bâtiments : ils' : 'Les lingots ne servent qu’aux bâtiments : ils'} ne s’échangent pas, ne s’achètent pas et repartent à zéro à chaque saison. Un bâtiment est perdu si on prend sa commune.${B.banque ? ' Une Fonderie prise ne pille que les lingots des Fonderies : ceux de la Banque sont à l’abri, sauf si on prend sa commune ou qu’une bombe tombe dessus.' : ''}</p>`;
+      : `<p class="gl-vide">${bqReglage('prix', 20)} lingots, une Fonderie demandée : ${bqEpargne() ? `une épargne jusqu’à ${bqReglage('reserve', 60)} lingots, +${bqReglage('interet', 10)} % par nuit, à l’abri du pillage des Fonderies` : `+${bqReglage('reserve', 60)} lingots de réserve, à l’abri du pillage des Fonderies`}. Ouvre une de tes communes sur la carte et choisis « Construire la Banque ici ». Elle est secrète.</p>`}` : ''}
+    <p class="btl-regle">${LINGOTS_COMBAT ? 'Les lingots viennent des Fonderies et des combats. Ils ne servent qu’aux bâtiments : ils' : 'Les lingots ne servent qu’aux bâtiments : ils'} ne s’échangent pas, ne s’achètent pas et repartent à zéro à chaque saison. Un bâtiment est perdu si on prend sa commune.${B.banque ? (bqEpargne() ? ' Les lingots déposés dans la Banque ne se dépensent pas : retire-les d’abord. Ils sont à l’abri du pillage des Fonderies, sauf si on prend la commune de la Banque (l’attaquant en pille la moitié) ou qu’une bombe tombe dessus.' : ' Une Fonderie prise ne pille que les lingots des Fonderies : ceux de la Banque sont à l’abri, sauf si on prend sa commune ou qu’une bombe tombe dessus.') : ''}</p>`;
   const champ = document.getElementById('btCherche');
   if(champ) champ.addEventListener('input', (e) => {
     btRecherche = e.target.value;
@@ -25457,8 +25491,8 @@ var BT_INFO = {
          '<b>Le prendre fait perdre la bombe</b> à son propriétaire.',
          'La bombe détruit garnisons et forteresses de tout le monde dans sa zone (jusqu’à 20 km), et tout le monde y attaque à <b>+15 %</b> pendant 24 h.'],
     pied: 'Pour en construire un : 2 Fonderies et 40 lingots.' },
-  banque: { titre: 'Banque', role: 'Elle met tes lingots à l’abri, en plus de la réserve de tes Fonderies.',   // patch356
-    li: ['Coûte <b>20 lingots</b>, une seule par joueur, il faut une Fonderie.', '<b>+60 lingots</b> de réserve, à l’abri du pillage des Fonderies.',
+  banque: { titre: 'Banque', role: 'Ton épargne : tu y déposes des lingots, ils rapportent chaque nuit.',   // patch356, patch364
+    li: ['Coûte <b>20 lingots</b>, une seule par joueur, il faut une Fonderie.', 'Dépose jusqu’à <b>60 lingots</b> : <b>+10 % par nuit</b>, à l’abri du pillage des Fonderies. Retire-les pour les dépenser.',
          '<b>Secrète</b> : toi seul la vois sur la carte.', 'Si on prend sa commune, elle disparaît et le joueur pille <b>la moitié</b> de son contenu. Une bombe lui en fait perdre 20 à 40 %.'],
     pied: 'Se construit en 6 h sur une de tes communes.' },
 };

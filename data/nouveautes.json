@@ -14,7 +14,7 @@
       "💤 Absence : après 10 jours sans ouvrir le jeu, tes communes du Front retournent peu à peu au pot (10 % par jour) ; une notification prévient 2 jours avant. Ta collection Terra n’est jamais touchée",
       "🗺 Carte : mets plusieurs joueurs en évidence à la fois, dans la légende (idée de Maroli)",
       "🤝 Échange de clan depuis la carte : touche la commune d’un coéquipier, puis une des tiennes de même rareté, sans passer par l’onglet Clan (idée de Bonjean)",
-      "🏦 Nouveau bâtiment : la Banque (20 lingots, une Fonderie demandée). +60 lingots de réserve, à l’abri du pillage des Fonderies, et secrète. Mais si on prend sa commune, l’attaquant pille la moitié de son contenu, et une bombe peut en détruire une partie",
+      "🏦 La Banque devient une épargne : dépose tes lingots (jusqu'à 60), ils rapportent 10 % chaque nuit, à l'abri du pillage des Fonderies. Retire-les pour les dépenser (Défendre › Bâtiments). Elle se construit sur une de tes communes (20 lingots, une Fonderie demandée) et reste secrète",
       "🏆 Classement du Front : tes bâtiments comptent maintenant (Fonderie +50, Forteresse +80, Centre +150, Banque +80, acquis même s’ils sont détruits, jusqu’au maximum de chaque type), ainsi que tes bombes lancées (+300) et tes rébellions, financées ou étouffées (+2 par lingot, 60 par jour au plus). Détail dans « Comment c’est calculé ? »"
     ]
   },

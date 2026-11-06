@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '8bd30b5de494';
+const VERSION_JEU = '8fbb2522d23b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -12956,7 +12956,7 @@ function renderObjectifs(){
   const ej = SAISON2 && modeJeu === 'front' && objectifsListe.length ? Number(objectifsListe[0].energie_jour) || 0 : null;
   document.getElementById('objJour').innerHTML =
     // patch272 : plafond de l'énergie des quêtes 50 / jour (s2-66)
-    `<h3>Aujourd'hui${ej !== null ? `<span class="obj-plafond">⚡ ${ej} / 50 d'énergie de quêtes</span>` : ''}</h3>` + jour.map(carteObjectif).join('');
+    `<h3>Aujourd'hui${ej !== null ? `<span class="obj-plafond">⚡ ${ej} / 80 d'énergie de quêtes</span>` : ''}</h3>` + jour.map(carteObjectif).join('');
   const blocUnique = document.getElementById('objUnique');
   blocUnique.hidden = uniques.length === 0;
   blocUnique.innerHTML = uniques.length
@@ -24793,7 +24793,7 @@ function majBandeauObjectifs(){
   const cases = jour.map(o => o.reclamable ? 'pr' : ((o.reclame || Number(o.avancement) >= Number(o.cible)) ? 'on' : ''))
     .sort((x, y) => ['on', 'pr', ''].indexOf(x) - ['on', 'pr', ''].indexOf(y))
     .map(c => `<i class="${c}"></i>`).join('');
-  const sous = (front ? `${ej} / 50 d’énergie gagnée`
+  const sous = (front ? `${ej} / 80 d’énergie gagnée`
       : (tpReste ? `encore ${tpReste.toLocaleString('fr-FR')} TP à gagner` : (faites === jour.length ? 'tout est fait pour aujourd’hui' : 'de nouvelles quêtes chaque jour')))
     + (prets ? ` · <b class="obj-b-pret">${prets} à récupérer</b>` : '');
   b.hidden = false;
@@ -24973,7 +24973,7 @@ function mfoAide(){
         <button type="button" class="obj-fermer" data-mfoa="fermer" aria-label="Fermer">✕</button>
         <h2 class="mfo-aide-titre">Gagner de l'énergie</h2>
         <ul class="mfo-aide"><li>Elle se recharge seule : +1 toutes les ${energieRechargeMin()} minutes, jusqu'au maximum.</li>
-          <li>Les quêtes du jour : +5 chacune, jusqu'à 50 par jour.</li>
+          <li>Les quêtes du jour : +5 chacune (+10 pour les plus dures), jusqu'à 80 par jour.</li>
           <li>Tes légendaires tenues depuis 24 h : +2 chacune par jour, à récolter (10 au plus).</li>
           <li>Retirer une garnison rend les trois quarts de son énergie.</li></ul><!-- patch312 -->
       </div>`;

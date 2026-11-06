@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'f53601e88529';
+const VERSION_JEU = '2ae0f4117472';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -12595,6 +12595,12 @@ async function loadReveil(){
     : (maintenant - vu < 60000 ? 'à l’instant' : `il y a ${formatDuree(maintenant - vu)}`);
   const nb = (n, un, plusieurs) => `<b>${n}</b><span>${n > 1 ? plusieurs : un}</span>`;
   const noms = (liste, f) => liste.slice(0, 3).map(f).join(', ') + (liste.length > 3 ? ` et ${liste.length - 3} autre${liste.length > 4 ? 's' : ''}` : '');
+  // patch358 : le numéro du département à côté du nom (idée d'Arkhannou)
+  const dep = (code) => {
+    const c = code && (collectionMap.get(code) || othersMap.get(code));
+    const d = (c && c.dept) || (code ? (String(code).startsWith('97') ? String(code).slice(0, 3) : String(code).slice(0, 2)) : '');
+    return d ? ` <span class="reveil-dep">(${echapperTexte(d)})</span>` : '';
+  };
 
   if(pertes.length === 0 && repoussees.length === 0 && enCours.length === 0){
     bloc.className = 'reveil calme';
@@ -12610,8 +12616,8 @@ async function loadReveil(){
       <div class="rc ok${repoussees.length ? '' : ' zero'}">${nb(repoussees.length, 'attaque repoussée', 'attaques repoussées')}</div>
       <div class="rc encours${enCours.length ? '' : ' zero'}">${nb(enCours.length, 'siège en cours', 'sièges en cours')}</div>
     </div>
-    ${urgentes.length ? `<p class="reveil-ligne urgent">À une victoire d'être prise : ${noms(urgentes, m => '<b>' + echapperTexte(m.nom) + '</b>')}. ${SAISON2 ? 'Défends-la ou mets-la en garnison.' : 'Pose un bouclier ou défends-la.'}</p>` : ''}
-    ${pertes.length ? `<p class="reveil-ligne">Perdue${pertes.length > 1 ? 's' : ''} : ${noms(pertes, e => '<b>' + echapperTexte(e.commune_nom || 'une commune') + '</b> (prise par ' + echapperTexte(e.acteur_pseudo || 'un joueur') + ')')}.</p>` : ''}`;
+    ${urgentes.length ? `<p class="reveil-ligne urgent">À une victoire d'être prise : ${noms(urgentes, m => '<b>' + echapperTexte(m.nom) + '</b>' + dep(m.commune_code))}. ${SAISON2 ? 'Défends-la ou mets-la en garnison.' : 'Pose un bouclier ou défends-la.'}</p>` : ''}
+    ${pertes.length ? `<p class="reveil-ligne">Perdue${pertes.length > 1 ? 's' : ''} : ${noms(pertes, e => '<b>' + echapperTexte(e.commune_nom || 'une commune') + '</b>' + dep(e.commune_code) + ' (prise par ' + echapperTexte(e.acteur_pseudo || 'un joueur') + ')')}.</p>` : ''}`;
   bloc.hidden = false;
 }
 
@@ -25869,7 +25875,11 @@ function renderReserveAccueil(){
     const seuil = Number(R.communes) || 3000, jours = Number(R.jours) || 7;
     const ins = raInscription();
     const ancien = ins == null || ins < Date.now() - jours * 86400000;
-    if(bloque){
+    if(libres === 0 && roueActive()){   // patch358 : pot vide, avant la réserve (plus de « Les 0 dernières communes »)
+      cas = 'bloque';
+      html = `<span class="ra-ic">🛡️</span><span class="ra-t">Plus aucune commune libre</span>
+        <p class="ra-x">Le pot du Front est vide. En attendant, <b>la roue du Front remplace tes paquets</b>. Pour gagner du terrain, attaque !</p>`;
+    } else if(bloque){
       cas = 'bloque';
       html = `<span class="ra-ic">🛡️</span><span class="ra-t">Réserve d'accueil active</span>
         ${roueActive() ? `<p class="ra-x">Les <b>${fr(Math.min(libres, seuil))}</b> dernières communes libres sont réservées aux joueurs arrivés depuis moins de ${jours} jours. En attendant, <b>la roue du Front remplace tes paquets</b>.</p>`

@@ -9219,3 +9219,7 @@ button.zd-ligne{ cursor:pointer; }
 @media (min-width: 721px){
   .leg-tailles.leg-batiments{ flex-direction:column; align-items:flex-start; gap:2px; }
 }
+
+/* patch358 : le bandeau de la Commune du jour s'aligne sur les autres bandeaux du Tirage ; le département dans le réveil */
+#panel-tirage .cdj-carte{ max-width:620px; }
+.reveil-dep{ color: var(--brume); font-weight:500; }

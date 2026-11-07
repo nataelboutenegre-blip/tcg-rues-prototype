@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ceace723249c';
+const VERSION_JEU = '1425e92d298c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4259,6 +4259,7 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
   }
   if(quoi === 'bt-construire'){   // patch243 : deux temps, comme le retrait de garnison
     const t = b.dataset.bt;
+    if(BATIMENTS && BATIMENTS.styles && btStyles(t).length > 1){ btArme = null; btStyleOuvrir(code, t); return; }   // patch366 : le style d'abord
     if(btArme !== code + '|' + t){ btArme = code + '|' + t; const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); return; }
     btArme = null;
     b.disabled = true;
@@ -10600,6 +10601,8 @@ async function chargerBatiments(){
     }
     BATIMENTS_CARTE = carte;
     renderBatimentsBloc();
+    if(typeof mfoRendre === 'function') mfoRendre();   // patch366
+    if(btEcranOuvert() && BTE.vue === 'miens') btEcranRendre();
     if(!document.querySelector('#mapCalques [data-calque="batiments"]') && typeof rendreCalques === 'function') rendreCalques();   // patch244
     legendeSignature = '';
     if(typeof demanderDessin === 'function' && canvasActif()){ CV.donneesSignature = null; demanderDessin(); }
@@ -10751,9 +10754,11 @@ function blocBatimentsActions(code, c){
   }
   return boutons.length ? `<p class="pc-titre-bt">Bâtiments</p><div class="pc-actions pc-actions-bt">${boutons.join('')}</div>` : '';
 }
-async function batimentConstruire(code, type){
+async function batimentConstruire(code, type, style){
   const nom = btNom(type);   // patch260, patch354
-  const { error } = await sb.rpc('batiment_construire', { p_code: code, p_type: type });
+  const { error } = style   // patch366 : avec son style (s2-112)
+    ? await sb.rpc('batiment_construire_style', { p_code: code, p_type: type, p_style: style })
+    : await sb.rpc('batiment_construire', { p_code: code, p_type: type });
   if(error) notifier({ type: 'erreur', titre: nom, texte: messageLisible(error.message) });
   else { notifier({ type: 'succes', titre: nom + ' en construction', texte: `Prête dans ${btReglage('construction_h', 6)} h.` }); ppRelire(800); }   // patch306
   await chargerBatiments();
@@ -24848,6 +24853,274 @@ function majBandeauObjectifs(){
 }
 document.getElementById('objBandeau')?.addEventListener('click', objOuvrirFeuille);
 
+// ---------- patch366 : les bâtiments en pixel art (s2-112) ----------
+// Une case dans Mon front, un écran Bâtiments (les miens / ceux des autres),
+// la fiche d'un bâtiment et le choix du style à la construction. Les Banques
+// n'apparaissent jamais chez les autres ; un Centre seulement une fois dévoilé.
+var BT_STYLES_DEFAUT = { fonderie: ['brique', 'acier'], forteresse: ['chateau', 'bastion', 'tour'], banque: ['classique', 'coffre'], centre: ['labo', 'bunker'] };
+var BT_STYLE_NOMS = { brique: 'Brique', acier: 'Acier', chateau: 'Château fort', bastion: 'Bastion', tour: 'Tour de guet', classique: 'Classique', coffre: 'Coffre-fort', labo: 'Laboratoire', bunker: 'Bunker' };
+var BTE = { vue: 'miens', type: '', region: '', tri: 'recents', q: '', lignes: [], total: null, totalSansFiltre: null, decalage: 0, charge: false, erreur: '', req: 0, minuteur: 0 };
+var BTS = { code: null, type: null, style: null };
+function btStyles(type){
+  const S = BATIMENTS && BATIMENTS.styles;
+  return (S && Array.isArray(S[type]) && S[type].length ? S[type] : BT_STYLES_DEFAUT[type]) || [];
+}
+function btStyleDe(type, style){ const l = btStyles(type); return style && l.includes(style) ? style : (l[0] || ''); }
+function btStyleNom(s){ return BT_STYLE_NOMS[s] || (s ? s[0].toUpperCase() + s.slice(1) : ''); }
+function btImg(type, style, taille, cls){
+  return `<img class="bt-px${cls ? ' ' + cls : ''}" src="batiments/${type}-${btStyleDe(type, style)}.svg" width="${taille}" height="${taille}" alt="" decoding="async">`;
+}
+const btFem = (type) => type !== 'centre';   // la Fonderie, la Forteresse, la Banque ; le Centre
+function btMiens(){
+  if(!BATIMENTS) return [];
+  const l = [];
+  mesFonderies().forEach(b => l.push(Object.assign({}, b, { type: 'fonderie' })));
+  mesForteresses().forEach(b => l.push(Object.assign({}, b, { type: 'forteresse' })));
+  if(BATIMENTS.banque) l.push(Object.assign({}, BATIMENTS.banque, { type: 'banque' }));
+  if(BATIMENTS.centre) l.push(Object.assign({}, BATIMENTS.centre, { type: 'centre' }));
+  return l;
+}
+function btEffetTexte(type, moi){
+  if(type === 'fonderie') return `${(BATIMENTS && BATIMENTS.production) || 10} lingots par jour pour ${moi ? 'toi' : 'son propriétaire'}`;
+  if(type === 'forteresse') return `−${btReglage('forteresse_defense', 15)} % aux chances de ceux qui l’attaquent, +${btReglage('forteresse_appui', 5)} % aux attaques autour`;
+  if(type === 'banque') return `Une épargne : jusqu’à ${bqReglage('reserve', 60)} lingots, +${bqReglage('interet', 10)} % par nuit. Secrète`;
+  return 'Il prépare une bombe. Le prendre fait perdre la bombe à son propriétaire';
+}
+function btEtatMien(b){
+  if(btPretDans(b) > 0) return { t: `${btFem(b.type) ? 'Prête' : 'Prêt'} dans ${formatDuree(btPretDans(b))}`, c: 'cours' };
+  if(b.type === 'fonderie') return { t: `+${(BATIMENTS && BATIMENTS.production) || 10} lingots par jour`, c: 'ok' };
+  if(b.type === 'forteresse') return { t: `−${btReglage('forteresse_defense', 15)} % aux attaquants`, c: 'ok' };
+  if(b.type === 'banque') return { t: `Secrète · ${Math.floor(Number(b.contenu) || 0)} lingots`, c: 'or' };
+  return b.devoile ? { t: 'Dévoilé : bombe en préparation', c: 'rouge' } : { t: 'Secret', c: 'or' };
+}
+const CADENAS = '<svg class="bte-cad" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+// la case de Mon front
+function mfoBatimentsHtml(){
+  if(!BATIMENTS || !BATIMENTS.ouverts) return '';
+  const l = btMiens(), enCours = l.filter(b => btPretDans(b) > 0).length;
+  let neuf = false;
+  try{ neuf = !localStorage.getItem('tf-bt-vu'); }catch(e){}
+  const vign = l.slice(0, 6).map(b => `<span class="mfo-btv${btPretDans(b) > 0 ? ' cours' : ''}" title="${echapperTexte(btNom(b.type) + ', ' + (b.nom || ''))}">${btImg(b.type, b.style, 44)}</span>`).join('')
+    + (l.length > 6 ? `<span class="mfo-btv plus">+${l.length - 6}</span>` : '');
+  return `<div class="mfo-t mfo-clic mfo-bt${neuf ? ' neuf' : ''}" data-mfo="batiments" role="button" tabindex="0" aria-label="Voir mes bâtiments">
+    <div class="mfo-h"><span>Mes bâtiments${neuf ? ' <em class="mfo-neuf">Nouveau</em>' : ''}</span><span class="mfo-lien">Tout voir ›</span></div>
+    ${l.length ? `<div class="mfo-btl">${vign}</div><p class="mfo-p"><b>${l.length}</b> bâtiment${l.length > 1 ? 's' : ''}${enCours ? ` · ${enCours} en construction` : ''} · <b>${Math.floor(lingotsActuels() || 0)}</b> lingots</p>`
+      : '<p class="mfo-p">Aucun bâtiment pour l’instant : ta première Fonderie est gratuite. Touche une de tes communes sur la carte pour la construire.</p>'}</div>`;
+}
+// l'écran Bâtiments
+function btEcranEl(){
+  let e = document.getElementById('btEcran');
+  if(e) return e;
+  e = document.createElement('div');
+  e.id = 'btEcran'; e.className = 'bte'; e.hidden = true;
+  e.setAttribute('role', 'dialog'); e.setAttribute('aria-modal', 'true'); e.setAttribute('aria-label', 'Bâtiments');
+  e.innerHTML = `<div class="bte-boite">
+    <div class="bte-haut"><button type="button" class="bte-retour" data-bte="fermer" aria-label="Retour">←</button><h2 class="bte-titre">Bâtiments</h2><span class="bte-lingots">${ICONE_LINGOT}<b data-bte-lingots></b></span></div>
+    <div class="bte-seg" role="tablist" aria-label="Bâtiments"><button type="button" role="tab" data-bte-vue="miens"></button><button type="button" role="tab" data-bte-vue="autres"></button></div>
+    <div class="bte-corps" data-bte-corps></div></div>`;
+  document.body.appendChild(e);
+  e.addEventListener('click', btEcranClic);
+  e.addEventListener('input', btEcranSaisie);
+  e.addEventListener('change', btEcranChoix);
+  return e;
+}
+function btEcranOuvrir(vue){
+  const e = btEcranEl();
+  if(vue) BTE.vue = vue;
+  try{ localStorage.setItem('tf-bt-vu', '1'); }catch(err){}
+  e.hidden = false;
+  document.documentElement.classList.add('bte-ouvert');
+  requestAnimationFrame(() => e.classList.add('visible'));
+  btEcranRendre();
+  if(BTE.total == null && !BTE.charge) btAutresCharger(true);   // le compteur « Les autres »
+}
+function btEcranFermer(){
+  const e = document.getElementById('btEcran');
+  if(!e || e.hidden) return;
+  e.classList.remove('visible'); e.hidden = true;
+  document.documentElement.classList.remove('bte-ouvert');
+  if(typeof mfoRendre === 'function') mfoRendre();
+}
+function btEcranOuvert(){ const e = document.getElementById('btEcran'); return !!(e && !e.hidden); }
+function btEcranMajSeg(){
+  const e = document.getElementById('btEcran');
+  if(!e) return;
+  const n = btMiens().length;
+  const lg = e.querySelector('[data-bte-lingots]'); if(lg) lg.textContent = String(Math.floor(lingotsActuels() || 0));
+  e.querySelectorAll('[data-bte-vue]').forEach(b => {
+    const on = b.dataset.bteVue === BTE.vue;
+    b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on));
+    b.textContent = b.dataset.bteVue === 'miens' ? `Les miens · ${n}` : `Les autres${BTE.totalSansFiltre != null ? ' · ' + BTE.totalSansFiltre : ''}`;
+  });
+}
+function btEcranRendre(){
+  const e = btEcranEl();
+  btEcranMajSeg();
+  const corps = e.querySelector('[data-bte-corps]');
+  corps.innerHTML = BTE.vue === 'miens' ? btMiensHtml() : btAutresHtml();
+  if(BTE.vue === 'autres') btAutresListeRendre();
+}
+function btMiensHtml(){
+  const l = btMiens();
+  if(!l.length) return '<p class="bte-vide">Aucun bâtiment pour l’instant. Ta première Fonderie est gratuite : touche une de tes communes sur la carte, puis « Construire la Fonderie ici ».</p>';
+  return `<div class="bte-grille">${l.map((b, i) => {
+    const e = btEtatMien(b);
+    return `<button type="button" class="bte-tuile${btPretDans(b) > 0 ? ' cours' : ''}" data-bte-mien="${i}">
+      <span class="bte-socle">${btImg(b.type, b.style, 72)}</span>
+      <b>${btNom(b.type)}${b.type === 'banque' ? CADENAS : ''}</b>
+      <small>${echapperHtml(btStyleNom(btStyleDe(b.type, b.style)))} · ${echapperHtml(b.nom || b.code)}${b.dept ? ' (' + echapperHtml(b.dept) + ')' : ''}</small>
+      <small class="bte-e ${e.c}">${e.t}</small></button>`;
+  }).join('')}</div>
+  <p class="bte-note">Le style se choisit à la construction : 2 ou 3 au choix, gratuits. Changer de style : bientôt.</p>`;
+}
+function btAutresHtml(){
+  const regions = [...new Set(Object.values(DEP_REGION))].sort((a, b) => a.localeCompare(b, 'fr'));
+  const types = [['', 'Tous'], ['fonderie', 'Fonderies'], ['forteresse', 'Forteresses'], ['centre', 'Centres']];
+  return `<div class="bte-outils">
+    <div class="bte-recherche"><label class="bte-sr" for="bteRecherche">Rechercher un joueur ou une commune</label>
+      <svg class="bte-loupe" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <input id="bteRecherche" type="search" placeholder="Joueur ou commune" autocomplete="off" value="${echapperTexte(BTE.q)}"></div>
+    <div class="bte-selects">
+      <label class="bte-sel"><span>Région</span><select data-bte-region><option value="">Toutes</option>${regions.map(r => `<option value="${echapperTexte(r)}"${r === BTE.region ? ' selected' : ''}>${echapperHtml(r)}</option>`).join('')}</select></label>
+      <label class="bte-sel"><span>Trier</span><select data-bte-tri>${[['recents', 'Les plus récents'], ['nom', 'Commune (A → Z)'], ['joueur', 'Joueur (A → Z)']].map(([k, n]) => `<option value="${k}"${k === BTE.tri ? ' selected' : ''}>${n}</option>`).join('')}</select></label>
+    </div>
+    <div class="bte-types" role="group" aria-label="Type de bâtiment">${types.map(([k, n]) => `<button type="button" class="bte-chip${BTE.type === k ? ' on' : ''}" aria-pressed="${BTE.type === k}" data-bte-type="${k}">${n}</button>`).join('')}</div>
+    <p class="bte-secret">${CADENAS}<span>Les Banques sont secrètes : elles n’apparaissent jamais ici. Un Centre n’y apparaît qu’une fois dévoilé.</span></p>
+  </div>
+  <div class="bte-liste" data-bte-liste aria-live="polite"></div>`;
+}
+function btAutresListeRendre(){
+  const el = document.querySelector('#btEcran [data-bte-liste]');
+  if(!el) return;
+  if(BTE.erreur){ el.innerHTML = `<p class="bte-vide">Impossible de charger la liste : ${echapperHtml(BTE.erreur)}</p>`; return; }
+  if(!BTE.lignes.length){ el.innerHTML = `<p class="bte-vide">${BTE.charge ? 'Chargement…' : 'Aucun bâtiment ne correspond.'}</p>`; return; }
+  const reste = Math.max(0, (Number(BTE.total) || 0) - BTE.lignes.length);
+  el.innerHTML = `<div class="bte-l-boite">${BTE.lignes.map((x, i) => `<button type="button" class="bte-l" data-bte-fiche="${i}">
+      <span class="bte-v${x.type === 'centre' ? ' rouge' : ''}">${btImg(x.type, x.style, 48)}</span>
+      <span class="bte-t"><b>${x.type === 'centre' ? 'Centre dévoilé' : btNom(x.type)} · ${echapperHtml(btStyleNom(btStyleDe(x.type, x.style)))}</b>
+        <small>${echapperHtml(x.pseudo || 'un joueur')} · ${echapperHtml(x.nom || x.code)}${x.dept ? ' (' + echapperHtml(x.dept) + ')' : ''}${x.type === 'centre' ? ` · <span class="bte-rouge">${x.centre === 'preparation' ? 'bombe en préparation' : 'a lancé sa bombe'}</span>` : ''}${x.pret === false ? ' · en construction' : ''}</small></span>
+      <span class="bte-chev" aria-hidden="true">›</span></button>`).join('')}</div>
+    ${reste ? `<button type="button" class="bte-plus" data-bte="plus"${BTE.charge ? ' disabled' : ''}>${BTE.charge ? 'Chargement…' : `Voir plus (${reste})`}</button>` : ''}`;
+}
+async function btAutresCharger(depuisDebut){
+  const req = ++BTE.req;
+  if(depuisDebut){ BTE.decalage = 0; BTE.lignes = []; }
+  BTE.charge = true; BTE.erreur = '';
+  btAutresListeRendre();
+  const depts = BTE.region ? Object.keys(DEP_REGION).filter(d => DEP_REGION[d] === BTE.region) : null;
+  let data = null, error = null;
+  try{
+    ({ data, error } = await sb.rpc('batiments_autres', { p_type: BTE.type || null, p_depts: depts, p_recherche: BTE.q || null,
+      p_tri: BTE.tri, p_limite: 30, p_decalage: BTE.decalage }));
+  }catch(e){ error = e; }
+  if(req !== BTE.req) return;   // une recherche plus récente est partie
+  BTE.charge = false;
+  if(error || !data){ BTE.erreur = messageLisible((error && error.message) || 'réessaie dans un instant'); btAutresListeRendre(); return; }
+  BTE.total = Number(data.total) || 0;
+  if(!BTE.type && !BTE.region && !BTE.q) BTE.totalSansFiltre = BTE.total;
+  BTE.lignes = BTE.lignes.concat(Array.isArray(data.lignes) ? data.lignes : []);
+  BTE.decalage = BTE.lignes.length;
+  btAutresListeRendre();
+  btEcranMajSeg();
+}
+function btEcranClic(ev){
+  const t = ev.target;
+  if(t.closest('[data-bte="fermer"]')) return btEcranFermer();
+  const v = t.closest('[data-bte-vue]');
+  if(v){
+    BTE.vue = v.dataset.bteVue; btEcranRendre();
+    if(BTE.vue === 'autres' && !BTE.lignes.length && !BTE.charge) btAutresCharger(true);
+    return;
+  }
+  const ty = t.closest('[data-bte-type]');
+  if(ty){
+    BTE.type = ty.dataset.bteType;
+    document.querySelectorAll('#btEcran [data-bte-type]').forEach(b => { const on = b.dataset.bteType === BTE.type; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    btAutresCharger(true);
+    return;
+  }
+  if(t.closest('[data-bte="plus"]')) return btAutresCharger(false);
+  const m = t.closest('[data-bte-mien]');
+  if(m){ const b = btMiens()[Number(m.dataset.bteMien)]; if(b) btFicheOuvrir(Object.assign({}, b, { moi: true })); return; }
+  const f = t.closest('[data-bte-fiche]');
+  if(f){ const x = BTE.lignes[Number(f.dataset.bteFiche)]; if(x) btFicheOuvrir(x); }
+}
+function btEcranSaisie(ev){
+  if(ev.target.id !== 'bteRecherche') return;
+  clearTimeout(BTE.minuteur);
+  BTE.minuteur = setTimeout(() => { BTE.q = ev.target.value.trim(); btAutresCharger(true); }, 350);
+}
+function btEcranChoix(ev){
+  if(ev.target.matches('[data-bte-region]')){ BTE.region = ev.target.value; btAutresCharger(true); }
+  else if(ev.target.matches('[data-bte-tri]')){ BTE.tri = ev.target.value; btAutresCharger(true); }
+}
+document.addEventListener('keydown', (e) => {
+  if(e.key !== 'Escape' || !btEcranOuvert()) return;
+  const v = document.getElementById('pcVoile');
+  if(v && !v.hidden) return;   // la fiche se ferme d'abord
+  btEcranFermer();
+});
+// la fiche d'un bâtiment
+function btFicheOuvrir(x){
+  const moi = !!x.moi, type = x.type, style = btStyleDe(type, x.style);
+  const commune = othersMap.get(x.code) || collectionMap.get(x.code);
+  const peutAttaquer = !moi && othersMap.has(x.code) && !(commune && commune.joueurId && clanMembres.has(commune.joueurId));
+  const date = x.cree_le ? new Date(x.cree_le).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) : '';
+  const etat = moi ? btEtatMien(x) : null;
+  pcOuvrir(`<div class="pc-poignee"></div>
+    <div class="btf-socle">${btImg(type, style, 192, 'grand')}</div>
+    <div class="btf-titre"><h3>${type === 'centre' && !moi ? 'Centre dévoilé' : btNom(type)}</h3><span class="btf-chip">Style ${echapperHtml(btStyleNom(style))}</span></div>
+    <p class="btf-de">${moi ? 'à toi' : 'de <b>' + echapperHtml(x.pseudo || 'un joueur') + '</b>'}</p>
+    <div class="btf-l"><span>Où</span><b>${echapperHtml(x.nom || x.code)}${x.dept ? ' (' + echapperHtml(x.dept) + ')' : ''}</b></div>
+    <div class="btf-l"><span>Effet</span><span>${btEffetTexte(type, moi)}</span></div>
+    ${etat ? `<div class="btf-l"><span>État</span><span class="bte-e ${etat.c}">${etat.t}</span></div>` : ''}
+    ${!moi && x.pret === false ? '<div class="btf-l"><span>État</span><span>En construction</span></div>' : ''}
+    ${date ? `<div class="btf-l"><span>${btFem(type) ? 'Construite' : 'Construit'}</span><span>le ${date}</span></div>` : ''}
+    <div class="btf-act"><button type="button" class="pc-go" data-btf="carte" data-code="${echapperTexte(x.code)}">Voir sur la carte</button>${peutAttaquer ? `<button type="button" class="btf-att" data-btf="attaquer" data-code="${echapperTexte(x.code)}">Attaquer</button>` : ''}</div>
+    <div class="pc-sec"><span></span><button type="button" data-pc-act="fermer">Fermer</button></div>`);
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-btf]');
+  if(!b) return;
+  const code = b.dataset.code, c = othersMap.get(code) || collectionMap.get(code);
+  pcFermer(); btEcranFermer();
+  if(!c) return;
+  if(b.dataset.btf === 'carte'){ ncAller('front', 'territoire', () => voirCommuneSurCarte(c)); return; }
+  if(b.dataset.btf === 'attaquer') ncAller('front', 'territoire', () => { voirCommuneSurCarte(c); setTimeout(() => { try{ ouvrirAttaque(code); }catch(err){} }, 450); });
+});
+// construire : le style d'abord
+function btPrixTexte(type){
+  const p = type === 'fonderie' ? (mesFonderies().length ? btReglage('fonderie2_prix', 30) : 0)
+          : type === 'forteresse' ? btReglage('forteresse_prix', 20)
+          : type === 'centre' ? btReglage('centre_prix', 40) : bqReglage('prix', 20);
+  return Number(p) > 0 ? `${p} lingots` : 'gratuit';
+}
+function btStyleOuvrir(code, type){
+  BTS.code = code; BTS.type = type; BTS.style = btStyles(type)[0];
+  pcOuvrir(btStyleHtml());
+}
+function btStyleHtml(){
+  const code = BTS.code, type = BTS.type, c = collectionMap.get(code) || {};
+  const opts = btStyles(type).map(st => `<button type="button" class="bts-o${st === BTS.style ? ' on' : ''}" aria-pressed="${st === BTS.style}" data-bts="${echapperTexte(st)}">
+      <span class="bts-v">${btImg(type, st, 72)}</span><b>${echapperHtml(btStyleNom(st))}</b><small>gratuit</small></button>`).join('');
+  return `<div class="pc-poignee"></div>
+    <div class="pc-kicker">${echapperHtml(c.nom || code)}${c.dept ? ' (' + echapperHtml(c.dept) + ')' : ''}</div>
+    <div class="pc-titre">Construire ${btFem(type) ? 'une' : 'un'} ${btNom(type)}</div>
+    <p class="bts-lab">Choisis son style</p>
+    <div class="bts-g" role="group" aria-label="Style">${opts}</div>
+    <div class="btf-l"><span>${btFem(type) ? 'Prête' : 'Prêt'} dans</span><b>${btReglage('construction_h', 6)} h</b></div>
+    <div class="btf-l"><span>Effet</span><span>${btEffetTexte(type, true)}</span></div>
+    <p class="bts-note">Le style ne change rien en jeu. D’autres styles arriveront plus tard, certains payants.</p>
+    <button type="button" class="pc-go" data-bts-go>Construire · ${btPrixTexte(type)}</button>
+    <div class="pc-sec"><span></span><button type="button" data-pc-act="fermer">Annuler</button></div>`;
+}
+document.addEventListener('click', (e) => {
+  const o = e.target.closest('[data-bts]');
+  if(o){ BTS.style = o.dataset.bts; const bx = document.getElementById('pcBoite'); if(bx) bx.innerHTML = btStyleHtml(); return; }
+  const g = e.target.closest('[data-bts-go]');
+  if(g && !g.disabled){ g.disabled = true; pcFermer(); batimentConstruire(BTS.code, BTS.type, BTS.style); }
+});
+
 // ---------- patch288 : « Mon front », le premier volet de Combat ----------
 const MFO = { vue: 'front', lu: 0, attaques: [], attaquesLu: false };
 (function mfoInit(){
@@ -24984,11 +25257,12 @@ function mfoRendre(){
   // 5. les quêtes du jour : le même bandeau que dans le Tirage
   const ob = document.getElementById('objBandeau');
   const blocQ = ob && !ob.hidden && ob.innerHTML ? `<button type="button" class="${ob.className} mfo-quetes" data-mfo="quetes" aria-label="${echapperTexte(ob.getAttribute('aria-label') || 'Quêtes du jour')}">${ob.innerHTML}</button>` : '';
-  z.innerHTML = blocDanger + blocEnergie + blocAtt + blocCom + blocQ;
+  z.innerHTML = blocDanger + blocEnergie + blocAtt + mfoBatimentsHtml() + blocCom + blocQ;   // patch366
 }
 // ouvrir un autre écran depuis Mon front
 function mfoVers(quoi, tier){
   const tab = (id) => { const t = document.querySelector(`.tab[data-tab="${id}"]`); if(t) t.click(); };
+  if(quoi === 'batiments') return btEcranOuvrir('miens');   // patch366
   if(quoi === 'defendre') return tab('defense');
   if(quoi === 'attaquer' || quoi === 'encours'){
     MFO.vue = 'attaquer'; mfoAppliquer();

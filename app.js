@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1b614c967718';
+const VERSION_JEU = 'ceace723249c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -909,6 +909,7 @@ async function showGame(session_){
   parrainDeclare.then(parrainageDuJour);
   loadObjectifs();
   chargerPremiersPas();   // patch306
+  chargerDebutant();   // patch365
   chargerReserveAccueil(); setInterval(siVisible(chargerReserveAccueil), 300000);   // patch322
   dgDemarrerFond(); setInterval(siVisible(dgChargerEtat), 120000);   // patch344
   chargerSondagePays();   // patch313
@@ -4005,17 +4006,20 @@ function rendreAttaque(code, a, siege){
     </div>
 
     ${attaqueEnGarnison ? `<div class="gn-badge">${ICONES_PC.bouclier}<span><b>Commune en garnison.</b> Une victoire sur deux est annulée par sa défense : la chance affichée en tient déjà compte.</span></div>` : ''}
+    ${debutantActif() ? (attaqueEnGarnison
+      ? `<div class="db-badge non">${ICONE_DEBUTANT}<span><b>Pas de bonus de débutant ici :</b> il ne joue jamais contre une commune en garnison.</span></div>`
+      : `<div class="db-badge">${ICONE_DEBUTANT}<span><b>Bonus de débutant</b> · ${debutantReste()} : ${a.chances}\u00a0% ici, même en prudent et même loin de chez toi. Il s’arrête à ta première conquête.</span></div>`) : ''}
     ${attaqueEffetBt && attaqueEffetBt.defense > 0 ? `<div class="gn-badge bt-badge">${ICONE_FORTERESSE}<span><b>Forteresse.</b> −${attaqueEffetBt.defense} % à tes chances sur cette commune.</span></div>` : ''}
     ${attaqueEffetBt && attaqueEffetBt.appui > 0 ? `<p class="bt-appui">${ICONE_FORTERESSE}<span>+${attaqueEffetBt.appui} % grâce à ta forteresse${attaqueEffetBt.appui_de ? ' de <b>' + echapperHtml(attaqueEffetBt.appui_de) + '</b>' : ''}</span></p>` : ''}
     ${attaqueEffetBt && attaqueEffetBt.bombe > 0 ? `<p class="bt-appui bt-bombe"><span class="bt-bombe-ic">💥</span><span>+${attaqueEffetBt.bombe} % : zone bombardée${attaqueEffetBt.bombe_sur ? ' (<b>' + echapperHtml(attaqueEffetBt.bombe_sur) + '</b>)' : ''}</span></p>` : ''}
     ${rbBadgeHtml()}
-    <div class="pc-prox ${a.a_distance ? 'loin' : ''}">
+    <div class="pc-prox ${a.a_distance && !(debutantActif() && !attaqueEnGarnison) ? 'loin' : ''}">
       ${estOutremerCode(code)   // patch246 : en outre-mer, tout le territoire compte (s2-49)
         ? (a.a_distance
           ? 'Aucune de tes communes dans ce territoire : <b>attaque à distance</b>, tes chances baissent.'
           : `<b>${a.proches}</b> de tes communes dans ce territoire`)
         : a.a_distance
-        ? 'Aucune de tes communes à moins de 20 km : <b>attaque à distance</b>, tes chances baissent.'
+        ? (debutantActif() && !attaqueEnGarnison ? 'Aucune de tes communes à moins de 20 km : <b>attaque à distance</b>, sans effet avec ton bonus de débutant.' : 'Aucune de tes communes à moins de 20 km : <b>attaque à distance</b>, tes chances baissent.')   // patch365
         : `<b>${a.proches}</b> de tes communes à moins de 20 km`}
     </div>
 
@@ -4082,11 +4086,17 @@ async function lancerAssaut(code){
   try{
     const cibleVue = cibleAssaut(code);
     cibleVue.skin = await skinCibleFront(code);   // patch230
+    if(debutantActif() && pcSansCommune() && !pcLire(PC_CIBLE) && !pcLire(PC_FETE)) pcEcrire(PC_CIBLE, code);   // patch365 : la cible choisie sur la carte est suivie et fêtée
     const { data, error } = await sb.rpc('attaquer', { p_commune_code: code, p_intensite: intensiteChoisie });
     if(error) throw error;
     const r = data[0];
     // patch86 : l'assaut mis en scene remplace les notifications
     mettreEnSceneAssaut(cibleVue, r);
+    if(r.conquise && debutantActif()){   // patch365 : le bonus de débutant s'arrête
+      const guidee = pcLire(PC_CIBLE) === code && !pcLire(PC_FETE);
+      DEBUTANT_FINI = true; DEBUTANT = null; debutantAfficher();
+      if(!guidee) setTimeout(() => notifier({ type: 'succes', titre: 'Première conquête : bonus terminé', texte: 'Bravo ! Désormais tes chances dépendent de ton engagement (35, 50 ou 65 %) et de tes communes autour.' }), 2500);
+    }
     pcApresAssaut(code, r);   // patch336
     if((r.gagne || r.conquise) && PREMIERS_PAS && !PREMIERS_PAS.attaque) ppRelire(800);   // patch306
     if(r.conquise){
@@ -12750,6 +12760,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'defense'){ loadMenaces().then(loadReveil); loadCombat(); renderIntensite('defense'); if(SAISON2) chargerGarnisons(); }
     if(tab.dataset.tab === 'combat' && SAISON2) majEnergie();
     if(tab.dataset.tab === 'combat') mfoEntrer();   // patch288
+    if(SAISON2 && (tab.dataset.tab === 'territoire' || tab.dataset.tab === 'combat')) setTimeout(pcSansPaquet, 900);   // patch365
     if(tab.dataset.tab === 'combat'){
       // patch135 : la liste connue s'affiche tout de suite ; rechargee si elle a plus d'une minute
       if(combatCibles.length) renderCombatGrid();
@@ -25575,6 +25586,49 @@ function onbMarque(etape, detail){
   }catch(e){}
 }
 
+// ---------- patch365 : le bonus de débutant (s2-111) ----------
+// Compte de moins de 7 jours sans conquête : au moins 85 % par assaut, même
+// à distance ; jamais contre une garnison. Le serveur décide, le jeu explique.
+var DEBUTANT = null, DEBUTANT_FINI = false, PP_GARNIS = new Set(), ppVerifLu = 0;
+const ICONE_DEBUTANT = '<svg class="db-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 16.6l-5.4 2.9 1.1-6.1-4.5-4.2 6.1-.8z" fill="currentColor"/></svg>';
+async function chargerDebutant(){
+  if(!SAISON2) return;
+  try{
+    const { data: ss } = await sb.auth.getSession();
+    const cree = ss && ss.session && ss.session.user ? Date.parse(ss.session.user.created_at) : 0;
+    if(!cree || Date.now() - cree > 8 * 864e5){ DEBUTANT = null; return; }   // les anciens : aucun appel
+    const { data, error } = await sb.rpc('debutant_etat');
+    DEBUTANT = !error && data && data.actif ? { fin: Date.parse(data.fin_le) || 0, chances: Number(data.chances) || 85 } : null;
+  }catch(e){ DEBUTANT = null; }
+  debutantAfficher();
+  setTimeout(pcSansPaquet, 1500);
+}
+function debutantActif(){ return !!(DEBUTANT && DEBUTANT.fin > Date.now()); }
+function debutantReste(){
+  if(!debutantActif()) return '';
+  const ms = DEBUTANT.fin - Date.now();
+  if(ms < 864e5) return 'encore ' + formatDuree(ms);
+  const j = Math.ceil(ms / 864e5);
+  return `encore ${j} jour${j > 1 ? 's' : ''}`;
+}
+function debutantAfficher(){
+  const pan = document.getElementById('panel-combat');
+  if(pan){
+    let b = document.getElementById('debutantCombat');
+    if(!b && debutantActif()){
+      b = document.createElement('div');
+      b.id = 'debutantCombat'; b.className = 'db-bandeau'; b.setAttribute('role', 'status');
+      const sub = pan.querySelector(':scope > .sub') || pan.querySelector('.volets');
+      if(sub) sub.insertAdjacentElement(sub.classList.contains('sub') ? 'beforebegin' : 'afterend', b);
+    }
+    if(b){
+      b.hidden = !debutantActif();
+      if(debutantActif()) b.innerHTML = `${ICONE_DEBUTANT}<span><b>Bonus de débutant</b> · ${debutantReste()}<br>Au moins <b>${DEBUTANT.chances}\u00a0%</b> par assaut, même en prudent et même loin de chez toi. Pas contre une commune en garnison. Il s’arrête à ta première conquête : ensuite, tes chances redeviennent normales.</span>`;
+    }
+  }
+  renderPremiersPas();
+}
+
 // ---------- patch306 : Premiers pas (s2-74) ----------
 // Les nouveaux qui combattent le 1er jour reviennent ; les autres presque jamais.
 // La carte les mène à leur première attaque. Le serveur coche les étapes.
@@ -25594,15 +25648,17 @@ function ppRelire(delai){
   ppMinuteur = setTimeout(chargerPremiersPas, delai || 1500);
 }
 // une cible facile : la commune d'un autre joueur la plus proche des miennes, plutôt commune
-function ppCible(exclues){   // patch336 : exclues = codes déjà proposés
+function ppCibles(exclues, n){   // patch336 : exclues = codes déjà proposés ; patch365 : les n meilleures
   const maintenant = Date.now();
   const miennes = [...collectionMap.values()].filter(m => m.lat != null && m.lon != null && !estOutremerCode(m.code));
   const rangT = (t) => ({ commun: 0, peucommun: 1, rare: 2, epique: 3, legendaire: 4 })[t && t.id] ?? 2;
-  let meilleure = null, score = Infinity;
+  const tous = [];
   for(const c of othersMap.values()){
     if(c.lat == null || c.lon == null || estOutremerCode(c.code)) continue;
     if(clanMembres.has(c.joueurId) || c.bouclierJusqua > maintenant) continue;
     if(exclues && exclues.has(c.code)) continue;
+    if(PP_GARNIS.has(String(c.code))) continue;   // patch365 : jamais une garnison
+    if(typeof BATIMENTS_CARTE !== 'undefined' && BATIMENTS_CARTE && BATIMENTS_CARTE.get && (BATIMENTS_CARTE.get(String(c.code)) || {}).forteresse) continue;   // ni une Forteresse
     let d = 300;
     for(const m of miennes){
       if(Math.abs(m.lat - c.lat) > 1.5) continue;
@@ -25610,9 +25666,25 @@ function ppCible(exclues){   // patch336 : exclues = codes déjà proposés
       if(x < d) d = x;
     }
     const sc = d + rangT(c.tier) * 15;
-    if(sc < score){ score = sc; meilleure = c; }
+    tous.push([sc, c]);
   }
-  return meilleure;
+  return tous.sort((a, b) => a[0] - b[0]).slice(0, n || 1).map(x => x[1]);
+}
+function ppCible(exclues){ return ppCibles(exclues, 1)[0] || null; }
+// patch365 : on demande au serveur lesquelles des meilleures cibles sont en garnison
+async function ppGarnisVerifier(exclues){
+  const liste = ppCibles(exclues, 15);
+  if(!liste.length) return liste;
+  try{
+    const { data, error } = await sb.rpc('garnisons_visibles', { p_codes: liste.map(c => String(c.code)) });
+    if(!error && Array.isArray(data)) data.forEach(g => PP_GARNIS.add(String(g.commune_code)));
+  }catch(e){}
+  ppVerifLu = Date.now();
+  return liste;
+}
+async function ppCibleSure(exclues){
+  const liste = await ppGarnisVerifier(exclues);
+  return liste.find(c => !PP_GARNIS.has(String(c.code))) || null;
 }
 function renderPremiersPas(){
   const el = document.getElementById('premiersPas');
@@ -25622,9 +25694,13 @@ function renderPremiersPas(){
   if(!P) return;
   onbMarque('pp_vu');   // patch324
   const cible = P.attaque ? null : ppCible();
+  if(cible && Date.now() - ppVerifLu > 60000){ ppVerifLu = Date.now(); ppGarnisVerifier().then(() => { if(PP_GARNIS.has(String(cible.code))) renderPremiersPas(); }); }   // patch365
+  const parRoue = !P.paquet && typeof roueActive === 'function' && roueActive();   // patch365 : pot vide
+  const deb = debutantActif();
   const etapes = [
-    ['paquet', 'Ouvre ton premier paquet du Front', '5 communes rien qu’à toi sur la carte partagée', 'Ouvrir'],   // patch324
-    ['attaque', 'Gagne ta première attaque', cible ? `Une cible facile près de chez toi : ${echapperHtml(cible.nom)} (${echapperHtml(cible.dept)})` : 'Choisis une commune proche dans l’onglet Combat', 'Attaquer'],
+    parRoue ? ['paquet', 'Tourne la roue du Front', 'Plus aucune commune libre en ce moment : la roue te donne de l’énergie pour attaquer', 'Tourner']
+            : ['paquet', 'Ouvre ton premier paquet du Front', '5 communes rien qu’à toi sur la carte partagée', 'Ouvrir'],   // patch324
+    ['attaque', 'Gagne ta première attaque', deb && pcSansCommune() ? `Choisis une commune près de chez toi : ${DEBUTANT.chances}\u00a0% avec ton bonus` : cible ? `Une cible facile${deb ? '' : ' près de chez toi'} : ${echapperHtml(cible.nom)} (${echapperHtml(cible.dept)})${deb ? ` · ${DEBUTANT.chances}\u00a0% avec ton bonus` : ''}` : 'Choisis une commune proche dans l’onglet Combat', 'Attaquer'],
     ['clan', 'Rejoins un clan ou crée le tien', 'Les membres ne s’attaquent pas entre eux, et s’échangent des communes', 'Voir les clans'],
     ['fonderie', 'Construis ta Fonderie', `Gratuite : ${(BATIMENTS && BATIMENTS.production) || 10} lingots par jour pour tes bâtiments`, 'Comment ?'],
   ];
@@ -25634,6 +25710,7 @@ function renderPremiersPas(){
   const lots = `${R.paquets} paquet Terra en plus et ${R.lingots} lingots`;
   el.innerHTML = `<div class="pp-haut"><span class="pp-t">Premiers pas</span><span class="pp-n">${faites} / 4</span></div>
     <p class="pp-sous">${faites === 4 ? 'Bravo, tout est fait : ta récompense t’attend.' : 'Fais ces 4 choses pour bien démarrer ta conquête.'}</p>
+    ${deb ? `<div class="db-pp">${ICONE_DEBUTANT}<span><b>Bonus de débutant</b> · ${debutantReste()} : au moins ${DEBUTANT.chances}\u00a0% par assaut, même loin de chez toi (sauf contre une garnison), jusqu’à ta première conquête. Ensuite, retour à la normale.</span></div>` : ''}
     <div class="pp-seg">${etapes.map(e => `<i class="${P[e[0]] ? 'on' : ''}"></i>`).join('')}</div>
     ${etapes.map((e, i) => `<div class="pp-e${P[e[0]] ? ' fait' : i === premiere ? ' cours' : ''}"><span class="pp-c">${P[e[0]] ? '✓' : i + 1}</span>
       <span class="pp-l"><b>${e[1]}</b><small>${e[2]}</small></span>
@@ -25644,10 +25721,15 @@ function renderPremiersPas(){
 }
 async function ppAction(quoi, bouton){
   onbMarque('pp_' + quoi);   // patch324
+  if(quoi === 'paquet' && typeof roueActive === 'function' && roueActive()){   // patch365 : pot vide, la roue
+    ncAller('front', 'tirage', () => { const r = document.getElementById('roueFront'); if(r) r.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
+    return;
+  }
   if(quoi === 'paquet'){ ppOuvrirPaquetFront(); return; }   // patch336 : partagé avec l'accueil
+  if(quoi === 'attaque' && debutantActif() && pcSansCommune()){ ncAller('front', 'territoire', () => setTimeout(pcProposer, 300)); return; }   // patch365 : la fiche avec « Choisir sur la carte »
   if(quoi === 'attaque'){
-    ncAller('front', 'territoire', () => {
-      const c = ppCible();
+    ncAller('front', 'territoire', async () => {
+      const c = await ppCibleSure();   // patch365
       if(!c){ ncAller('front', 'combat'); return; }
       voirCommuneSurCarte(c);
       setTimeout(() => { try{ ouvrirAttaque(c.code); }catch(e){} }, 450);
@@ -25795,15 +25877,25 @@ async function pcApresPaquet(){
 }
 async function pcProposer(){
   if(paquetEnCours || NC.ouvert) return;
-  const c = ppCible(PC.exclues);
-  if(!c) return;
+  const c = await ppCibleSure(PC.exclues);   // patch365 : ni garnison ni Forteresse
+  if(!c || paquetEnCours || NC.ouvert) return;
   PC.info = c;
   onbMarque('pc_vu');
+  try{ sessionStorage.setItem('tf-pc-sp', '1'); }catch(e){}   // patch365
   pcOuvrir(pcFicheHtml(c, null));
   try{
     const { data, error } = await sb.rpc('apercu_attaque', { p_commune_code: c.code, p_intensite: intensiteChoisie });
     if(!error && data && data[0] && PC.info === c && !pcVoile().hidden) document.getElementById('pcBoite').innerHTML = pcFicheHtml(c, data[0]);
   }catch(e){}
+}
+// patch365 : la fiche guidée s'ouvre aussi sans paquet du Front (pot vide), une fois par session
+function pcSansCommune(){ return ![...collectionMap.values()].some(m => !m.perdue); }
+function pcSansPaquet(){
+  if(!SAISON2 || !debutantActif() || modeJeu !== 'front') return;
+  try{ if(sessionStorage.getItem('tf-pc-sp')) return; }catch(e){}
+  const t = document.querySelector('.tab.active[data-tab]');
+  if(!t || !['territoire', 'combat'].includes(t.dataset.tab)) return;
+  pcApresPaquet();
 }
 function pcFicheHtml(c, a){
   const t = c.tier && c.tier.id ? c.tier.id : 'commun';
@@ -25818,14 +25910,17 @@ function pcFicheHtml(c, a){
     <div class="pc-cible"><div class="pc-vign" style="--c:${PC_COULEUR[t] || '#7E8BA0'}">${echapperHtml(String(c.nom || '?')[0].toUpperCase())}</div><div>
       <b>${echapperHtml(c.nom)} (${echapperHtml(c.dept || '')})</b>
       <small><span class="pc-chip">${echapperHtml(c.tier && c.tier.label ? c.tier.label : LIBELLE_TIER[t] || '')}</span>tenue par ${echapperHtml(c.pseudo || 'un joueur')}</small>
-      ${proche ? `<small>${km <= 20 ? `À ${km} km de ${echapperHtml(proche.entry.nom)}, ta commune` : `À ${km} km de ta commune la plus proche : une attaque à distance`}</small>` : ''}</div></div>
+      ${proche ? `<small>${km <= 20 ? `À ${km} km de ${echapperHtml(proche.entry.nom)}, ta commune` : `À ${km} km de ta commune la plus proche : une attaque à distance${debutantActif() ? ', sans effet avec ton bonus' : ''}`}</small>` : ''}</div></div>
     <div class="pc-chiffres">
       <div><b class="${cl}">${ch == null ? '…' : ch + ' %'}</b><span>de chances par assaut</span></div>
       <div><b>${(ENERGIE_INTENSITE[intensiteChoisie] || 2) + surcoutRarete(t)} ⚡</b><span>par assaut (${echapperHtml(intensite().label.toLowerCase())})</span></div>
       <div><b>3</b><span>victoires pour la prendre</span></div>
     </div>
+    ${debutantActif() ? `<div class="db-pp">${ICONE_DEBUTANT}<span><b>Bonus de débutant</b> · ${debutantReste()} : au moins ${DEBUTANT.chances}\u00a0% par assaut, même en prudent. Il s’arrête à ta première conquête, puis tout redevient normal.</span></div>` : ''}
     <p class="pc-txt">Une défaite ne te fait <b>rien perdre</b> : ta série reste où elle en est.${delai ? ` Entre deux assauts sur cette commune : <b>${formatDuree(delai)}</b>.` : ''}</p>
-    <button type="button" class="pc-go" data-pc-act="lancer" data-pc-code="${echapperTexte(c.code)}">Lancer l'assaut</button>
+    ${pcSansCommune() ? '<div class="pc-base"><b>Tu n’as pas encore de commune.</b> Choisis ta première cible près de chez toi : ce sera ta base pour la suite.</div>' : ''}
+    <button type="button" class="pc-go" data-pc-act="lancer" data-pc-code="${echapperTexte(c.code)}">${pcSansCommune() ? 'Attaquer ' + echapperHtml(c.nom) : 'Lancer l\'assaut'}</button>
+    ${pcSansCommune() ? '<button type="button" class="pc-carte" data-pc-act="carte">Choisir sur la carte, près de chez moi</button>' : ''}
     <div class="pc-sec"><button type="button" data-pc-act="autre">Une autre cible</button><button type="button" data-pc-act="plustard">Plus tard</button></div>`;
 }
 function pcLancer(code){
@@ -25919,6 +26014,7 @@ async function pcFeter(info){
     <div class="pc-bravo">Première conquête !</div>
     <p class="pc-sous"><b>${echapperHtml(info.nom)}${info.dept ? ' (' + echapperHtml(info.dept) + ')' : ''}</b> est à toi.</p>
     <div class="pc-gains"><span>+${PC_TP[info.tier] || 5} TP</span><span>+10 au classement</span></div>
+    ${DEBUTANT_FINI ? '<p class="pc-db">Ton bonus de débutant s’arrête ici : désormais, tes chances dépendent de ton engagement (35, 50 ou 65 %) et de tes communes autour.</p>' : ''}
     ${faites == null ? '' : `<div class="pc-pp"><span>Premiers pas</span><div class="seg">${[0, 1, 2, 3].map(i => `<i class="${i < faites ? 'on' : ''}"></i>`).join('')}</div><b>${faites} / 4</b></div>`}
     <div class="pc-sep"></div>`;
   };
@@ -25968,6 +26064,11 @@ document.addEventListener('click', (e) => {
   const a = b.dataset.pcAct;
   if(a === 'lancer') return pcLancer(b.dataset.pcCode);
   if(a === 'autre'){ if(PC.info) PC.exclues.add(PC.info.code); onbMarque('pc_autre'); return pcProposer(); }
+  if(a === 'carte'){   // patch365 : sans commune, il choisit sa cible près de chez lui
+    onbMarque('pc_carte'); pcFermer();
+    ncAller('front', 'territoire', () => { const m = document.getElementById('mapWrap'); if(m) m.scrollIntoView({ behavior: 'smooth', block: 'center' }); notifier({ type: 'info', titre: 'Choisis ta première cible', texte: `Touche la commune d’un autre joueur près de chez toi, puis « Attaquer »${debutantActif() ? ` : ${DEBUTANT.chances}\u00a0% avec ton bonus de débutant` : ''}.` }); });
+    return;
+  }
   if(a === 'plustard'){ pcEcrire(PC_PLUSTARD, Date.now()); onbMarque('pc_plustard'); return pcFermer(); }
   if(a === 'fermer') return pcFermer();
   if(a === 'abandon'){ pcEcrire(PC_CIBLE, null); onbMarque('pc_abandon'); PC.cle = ''; return pcMajSuivi(); }
@@ -26101,6 +26202,7 @@ async function chargerRoue(){
   }catch(e){ ROUE = null; }
   roueLu = Date.now();
   renderRoue();
+  if(PREMIERS_PAS) renderPremiersPas();   // patch365
 }
 function roueActive(){
   return !!(SAISON2 && !enTerra() && ROUE && ROUE.ouverte);
@@ -26330,6 +26432,7 @@ async function roueTourner(){
   roueTourne = false;
   roueGainMontrer(data);
   renderRoueInfos();
+  if(PREMIERS_PAS && !PREMIERS_PAS.paquet) ppRelire(1500);   // patch365 : étape 1 par la roue
   if(Number(data.energie) > 0 && typeof majEnergie === 'function') majEnergie();
   if(Number(data.tp) > 0 && data.solde != null){   // patch351 : le solde de TP suit
     if(packStatusCache) packStatusCache.solde = Number(data.solde);

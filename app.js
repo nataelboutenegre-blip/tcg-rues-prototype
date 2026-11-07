@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd16d9abf14b3';
+const VERSION_JEU = '2425f3995d90';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -5042,7 +5042,18 @@ function codeDepartement(texte){
   const exact = codes.find(c => noms(c).includes(t));
   if(exact) return exact;
   const debuts = codes.filter(c => noms(c).some(x => x.startsWith(t)));
+  // patch368 : « corse » commence Corse-du-Sud mais se lit aussi dans Haute-Corse : pas un seul département
+  const dedans = codes.filter(c => noms(c).some(x => x.includes(t)));
+  if(debuts.length === 1 && dedans.length > 1){ codeDepartement.plusieurs = dedans; return null; }
   return debuts.length === 1 ? debuts[0] : null;
+}
+// patch368 : tous les départements visés par un mot (« corse » -> 2A et 2B), [] si aucun
+function codesDepartements(texte){
+  codeDepartement.plusieurs = null;
+  const un = codeDepartement(texte);
+  const plusieurs = codeDepartement.plusieurs || [];
+  codeDepartement.plusieurs = null;
+  return un ? [un] : plusieurs;
 }
 
 // Une recherche peut viser un nom de commune, un numero de departement ou son nom
@@ -5076,8 +5087,8 @@ function estExclu(nom, dept, pseudo, exclus){
   const p = sansAccents(pseudo || ''), n = sansAccents(nom || ''), d = String(dept || '').toUpperCase();
   return exclus.some(t => {
     const brut = /^\d$/.test(t) ? '0' + t : t.toUpperCase();
-    const code = DEPT_NAMES[brut] ? brut : codeDepartement(t);
-    if(code) return d === code || p === t;
+    const codes = DEPT_NAMES[brut] ? [brut] : codesDepartements(t);   // patch368
+    if(codes.length) return codes.includes(d) || p === t;
     return (p && p.includes(t)) || n.includes(t);
   });
 }
@@ -5429,10 +5440,12 @@ async function inclureAuContrat(args){
   await loadContrat();
 }
 
-document.getElementById('ctExclAjouter').addEventListener('click', () => {
+document.getElementById('ctExclAjouter').addEventListener('click', async () => {
   const champ = document.getElementById('ctExclDept');
   const saisi = (champ.value || '').trim();
   if(!saisi) return;
+  { const ks = codesDepartements(saisi);   // patch368 : « corse » = 2A et 2B
+    if(ks.length > 1){ champ.value = ''; for(const k of ks) await exclureDuContrat({ p_departement: k }); return; } }
   // « charente » devient « 16 » : le meme utilitaire que les recherches.
   // A defaut, la saisie est prise pour un numero — en majuscules, la Corse
   // etant le seul departement dont le numero contient une lettre.
@@ -10124,7 +10137,9 @@ function renderCombatGrid(){
     const owners = new Set(combatCibles.map(c => c.joueurs && c.joueurs.pseudo).filter(Boolean).map(x => sansAccents(x)));
     const deps = [], pseudos = [], noms = [];
     for(const t of searchText.split(/[,;]/).map(s => s.trim()).filter(Boolean)){
-      const d = codeDepartement(t) || t;
+      const ds = codesDepartements(t);   // patch368 : « corse » = 2A et 2B
+      if(ds.length > 1){ deps.push(...ds); continue; }
+      const d = ds[0] || t;
       if(/^(\d{2,3}|2a|2b)$/i.test(d) || (SUISSE && estCanton(d.toUpperCase()))){ deps.push(d.toUpperCase()); continue; }   // patch332
       if([...owners].some(x => x.includes(t))) pseudos.push(t); else noms.push(t);
     }
@@ -19280,7 +19295,7 @@ async function reclamerCollection(id){
 // departement devient son numero, le serveur reconnait les pseudos.
 function criteresEchange(texte){
   return String(texte || '').split(/[,;]/).map(t => t.trim()).filter(Boolean)
-    .map(t => codeDepartement(t) || t).join(', ');
+    .flatMap(t => { const ds = codesDepartements(t); return ds.length ? ds : [t]; }).join(', ');   // patch368
 }
 
 

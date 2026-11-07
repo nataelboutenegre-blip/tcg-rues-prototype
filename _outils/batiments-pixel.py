@@ -363,6 +363,95 @@ def centre_bunker():
     return G
 
 
+def radar_parabole():
+    G = Grille()
+    # local technique en béton
+    G.rect(4, 15, 16, 6, 'S')
+    for y in range(15, 21):
+        G.px(4, y, 'l'); G.px(19, y, 's')
+    for x in range(3, 21):
+        G.px(x, 14, 'l')
+    G.rect(7, 17, 3, 4, 'k'); G.rect(8, 18, 1, 3, 't')
+    G.rect(13, 16, 4, 2, 'k'); G.rect(14, 16, 2, 1, 'c')
+    G.px(17, 19, 'o')
+    # mât
+    for y in range(9, 14):
+        G.px(11, y, 's'); G.px(12, y, 'S')
+    # la parabole, penchée vers le ciel à droite
+    bol = {2: (13, 17), 3: (11, 19), 4: (9, 20), 5: (8, 20), 6: (7, 20), 7: (7, 19), 8: (7, 17), 9: (8, 14)}
+    for y, (g, d) in bol.items():
+        for x in range(g, d + 1):
+            G.px(x, y, 'g' if (x - g) < 2 else 'M')
+    for y, (g, d) in bol.items():
+        G.px(d, y, 'n')
+    # bras et source
+    G.ligne(12, 6, 17, 1, 'T')
+    G.px(18, 0, 'o'); G.px(17, 0, 'o'); G.px(18, 1, 'y')
+    G.herbe()
+    G.contour()
+    return G
+
+
+def radar_dome():
+    G = Grille()
+    # tour
+    G.rect(8, 13, 8, 8, 'S')
+    for y in range(13, 21):
+        G.px(8, y, 'l'); G.px(15, y, 's')
+    for y in (15, 18):
+        for x in range(9, 15):
+            G.px(x, y, 's')
+    G.rect(10, 19, 4, 2, 'k'); G.rect(11, 19, 2, 2, 't')
+    G.rect(6, 12, 12, 1, 'T')
+    # le radôme : une boule blanche, des joints de panneaux, l'ombre à droite
+    cx, cy, r = 12, 6.6, 6.3
+    for y in range(0, 13):
+        for x in range(4, 21):
+            dx, dy = x + .5 - cx, y + .5 - cy
+            if dx * dx + dy * dy <= r * r:
+                ombre = dx * .7 + dy * .7 > 2.6
+                horiz = y in (3, 7, 10)
+                joint = horiz or abs(dx - dy * .25) < .5 or abs(dx + 3.6 - dy * .15) < .5 or abs(dx - 3.8 + dy * .15) < .5
+                G.px(x, y, ('G' if horiz else 'n') if ombre else ('n' if joint else 'M'))
+    G.px(8, 2, 'x'); G.px(9, 2, 'x'); G.px(8, 3, 'x')
+    G.px(12, 0, 'o')
+    G.herbe()
+    G.contour()
+    return G
+
+
+def radar_pylone():
+    G = Grille()
+    # le pylône en treillis : deux montants qui s'écartent, des croisillons
+    for y in range(8, 21):
+        demi = 2 + (y - 8) * 5 // 12
+        G.px(12 - demi, y, 'S'); G.px(11 + demi, y, 's')
+    for y0 in (9, 13, 17):
+        d0 = 2 + (y0 - 8) * 5 // 12
+        d1 = 2 + (y0 + 3 - 8) * 5 // 12
+        G.ligne(12 - d0 + 1, y0, 11 + d1 - 1, y0 + 3, 'T')
+        G.ligne(11 + d0 - 1, y0, 12 - d1 + 1, y0 + 3, 'T')
+    for x in range(5, 19):
+        G.px(x, 20, 'T')
+    # plateforme et antenne tournante
+    G.rect(8, 7, 8, 1, 'T')
+    G.rect(10, 5, 4, 2, 'S')
+    G.rect(2, 3, 20, 2, 'l')
+    for x in range(2, 22):
+        G.px(x, 4, 'S')
+    for x in range(3, 21, 3):
+        G.px(x, 3, 'g')
+    # les ondes
+    for x, y in ((0, 1), (1, 0), (1, 2)):
+        G.px(x, y, 'c')
+    for x, y in ((23, 1), (22, 0), (22, 2)):
+        G.px(x, y, 'c')
+    G.px(12, 2, 'o')
+    G.herbe()
+    G.contour()
+    return G
+
+
 SPRITES = {
     'forteresse_chateau': forteresse_chateau,
     'forteresse_bastion': forteresse_bastion,
@@ -373,6 +462,9 @@ SPRITES = {
     'banque_coffre': banque_coffre,
     'centre_labo': centre_labo,
     'centre_bunker': centre_bunker,
+    'radar_parabole': radar_parabole,
+    'radar_dome': radar_dome,
+    'radar_pylone': radar_pylone,
 }
 
 

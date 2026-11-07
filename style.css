@@ -9392,3 +9392,24 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .as-sn{ display:flex; align-items:flex-start; gap:7px; margin:12px auto 0; max-width:300px; padding:8px 10px; border-radius:10px; text-align:left;
   background:rgba(127,227,180,.1); border:1px solid rgba(127,227,180,.4); font-size:.82rem; line-height:1.4; }
 .as-sn b{ color:#A6F0CC; }
+
+/* patch371 : le Radar et le déménagement du Centre */
+.leg-bt.leg-radar{ border-color:#6EC3F0; color:#9ED8F6; background:#0E2233; }
+.bt-radar .bt-haut svg{ color:#6EC3F0; }
+.rd-ic{ color:#6EC3F0; }
+.rd-liste{ display:grid; gap:6px; margin:8px 0 4px; }
+.rd-l{ display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:10px; background:rgba(110,195,240,.07); border:1px solid rgba(110,195,240,.28); }
+.rd-km{ flex:none; min-width:52px; font-weight:700; font-size:.78rem; color:#9ED8F6; font-variant-numeric:tabular-nums; }
+.rd-t{ min-width:0; } .rd-t small{ display:block; font-size:.72rem; color:#A9BCD4; margin-top:2px; }
+.rd-rouge{ color:#FF8A82; font-weight:600; }
+.rd-alerte{ display:flex; align-items:flex-start; gap:8px; }
+.rd-alerte svg{ flex:none; width:18px; height:18px; color:#FF8A82; margin-top:1px; }
+.cr-dem-b{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:10px; padding:10px 12px; border-radius:10px;
+  background:rgba(156,194,255,.1); border:1px solid rgba(156,194,255,.45); color:#D6E5FF; font:inherit; font-weight:600; font-size:.84rem; cursor:pointer; }
+.cr-dem-b svg{ width:17px; height:17px; }
+.cr-dem-b:disabled{ opacity:.5; cursor:default; }
+.cr-dem{ margin-top:10px; padding:10px; border-radius:12px; background:rgba(156,194,255,.06); border:1px solid rgba(156,194,255,.3); }
+.cr-dem .cr-txt{ margin-top:0; }
+.cr-dem .gn-cherche{ margin-top:10px; }
+.cr-dem-x{ display:block; margin:8px auto 0; background:none; border:0; color:#A9BCD4; font:inherit; font-size:.8rem; text-decoration:underline; cursor:pointer; }
+.rd-ok{ font-style:normal; color:#7FE3B4; } .rd-vu{ font-style:normal; color:#FF8A82; }

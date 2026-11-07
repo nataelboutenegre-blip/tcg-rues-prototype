@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '2425f3995d90';
+const VERSION_JEU = '9447bfe0f47b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -5048,12 +5048,31 @@ function codeDepartement(texte){
   return debuts.length === 1 ? debuts[0] : null;
 }
 // patch368 : tous les départements visés par un mot (« corse » -> 2A et 2B), [] si aucun
+// patch369 : à défaut d'un département, ceux d'une région (« bretagne » -> 22, 29, 35, 56)
 function codesDepartements(texte){
   codeDepartement.plusieurs = null;
   const un = codeDepartement(texte);
   const plusieurs = codeDepartement.plusieurs || [];
   codeDepartement.plusieurs = null;
-  return un ? [un] : plusieurs;
+  return un ? [un] : plusieurs.length ? plusieurs : departementsRegion(texte);
+}
+// patch369 : les départements d'une région tapée en entier, par un alias ou par
+// un début d'au moins 5 lettres sans ambiguïté ; [] sinon
+const REGIONS_ALIAS = { paca: "Provence-Alpes-Côte d'Azur", idf: 'Île-de-France' };
+const REGIONS_CACHE = new Map();
+function departementsRegion(texte){
+  const nu = (x) => sansAccents(x).replace(/[\s'\u2019-]+/g, '');
+  const t = nu(texte || '');
+  if(REGIONS_CACHE.has(t)) return REGIONS_CACHE.get(t);
+  let r = [];
+  if(t.length >= 3){
+    const noms = [...new Set(Object.values(DEP_REGION))];
+    let nom = REGIONS_ALIAS[t] || noms.find(n => nu(n) === t);
+    if(!nom && t.length >= 5){ const d = noms.filter(n => nu(n).startsWith(t)); if(d.length === 1) nom = d[0]; }
+    if(nom) r = Object.keys(DEP_REGION).filter(c => DEP_REGION[c] === nom);
+  }
+  REGIONS_CACHE.set(t, r);
+  return r;
 }
 
 // Une recherche peut viser un nom de commune, un numero de departement ou son nom
@@ -5064,7 +5083,8 @@ function correspondRecherche(nom, dept, recherche){
       || (String(dept).length > 2 ? String(dept).toLowerCase().startsWith(recherche)
           : estCanton(dept) ? String(dept).toLowerCase() === recherche   // patch332 : un code de canton se tape en entier
           : String(dept).toLowerCase().includes(recherche))
-      || sansAccents(DEPT_NAMES[dept] || '').includes(recherche);
+      || sansAccents(DEPT_NAMES[dept] || '').includes(recherche)
+      || departementsRegion(recherche).includes(String(dept).toUpperCase());   // patch369 : une région
 }
 
 // patch142 : « Bordeaux, Angouleme, 16 » -> la commune correspond a l'un des termes
@@ -5444,8 +5464,16 @@ document.getElementById('ctExclAjouter').addEventListener('click', async () => {
   const champ = document.getElementById('ctExclDept');
   const saisi = (champ.value || '').trim();
   if(!saisi) return;
-  { const ks = codesDepartements(saisi);   // patch368 : « corse » = 2A et 2B
-    if(ks.length > 1){ champ.value = ''; for(const k of ks) await exclureDuContrat({ p_departement: k }); return; } }
+  { const ks = codesDepartements(saisi);   // patch368 : « corse » = 2A et 2B ; patch369 : une région
+    if(ks.length > 1){
+      champ.value = ''; direErreurExclusion('');
+      for(const k of ks){
+        const { error } = await sb.rpc('exclure_du_contrat', { p_departement: k });
+        if(error){ direErreurExclusion(messageLisible(error.message)); break; }
+      }
+      await chargerExclusions(); renderExclusions(); await loadContrat();
+      return;
+    } }
   // « charente » devient « 16 » : le meme utilitaire que les recherches.
   // A defaut, la saisie est prise pour un numero — en majuscules, la Corse
   // etant le seul departement dont le numero contient une lettre.
@@ -10137,7 +10165,7 @@ function renderCombatGrid(){
     const owners = new Set(combatCibles.map(c => c.joueurs && c.joueurs.pseudo).filter(Boolean).map(x => sansAccents(x)));
     const deps = [], pseudos = [], noms = [];
     for(const t of searchText.split(/[,;]/).map(s => s.trim()).filter(Boolean)){
-      const ds = codesDepartements(t);   // patch368 : « corse » = 2A et 2B
+      const ds = codesDepartements(t);   // patch368 : « corse » = 2A et 2B ; patch369 : une région
       if(ds.length > 1){ deps.push(...ds); continue; }
       const d = ds[0] || t;
       if(/^(\d{2,3}|2a|2b)$/i.test(d) || (SUISSE && estCanton(d.toUpperCase()))){ deps.push(d.toUpperCase()); continue; }   // patch332

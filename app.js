@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '9447bfe0f47b';
+const VERSION_JEU = 'fb91dc58f25b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10892,12 +10892,12 @@ function btChoixHtml(){
 }
 
 // ---------- patch260 : le Centre de recherche et la bombe (s2-59) ----------
-// Le centre est secret (dévoilé à partir de 48 h de préparation et 24 h après
+// Le centre est secret (dévoilé à partir de 36 h de préparation et 24 h après
 // le lâcher). « Préparer une bombe » coûte 45 lingots ; la bombe grossit avec
-// le temps (10, 15, 20 km). On la lâche depuis la mallette de frappe.
+// le temps (15, 20, 25 km à 24, 36, 48 h, patch370). On la lâche depuis la mallette de frappe.
 function bombeEtat(){
   const B = BATIMENTS, P = B && B.preparation;
-  const H = btReglage('bombe_heures', [24, 48, 72]), R = btReglage('bombe_rayons', [10, 15, 20]);
+  const H = btReglage('bombe_heures', [24, 36, 48]), R = btReglage('bombe_rayons', [15, 20, 25]);   // patch370
   if(!P) return { niv: 0, rayon: 0, ec: 0, H, R };
   const ec = (Number(P.ecoule) || 0) + (Date.now() - batimentsLu) / 1000;
   const niv = ec >= H[2] * 3600 ? 3 : ec >= H[1] * 3600 ? 2 : ec >= H[0] * 3600 ? 1 : 0;
@@ -10912,7 +10912,7 @@ function centreHtml(){
   const B = BATIMENTS;
   if(!B || !B.bombes_ouvertes) return '';
   const ce = B.centre, P = B.preparation;
-  const pc = btReglage('centre_prix', 40), pb = btReglage('bombe_prix', 45), dv = btReglage('bombe_devoile_h', 48);
+  const pc = btReglage('centre_prix', 40), pb = btReglage('bombe_prix', 45), dv = btReglage('bombe_devoile_h', 36);   // patch370
   const tete = (sous, badge) => `<div class="cr-haut"><span class="cr-ic">${ICONE_CENTRE}</span>
       <span class="cr-nom"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(ce.code)}">${echapperTexte(ce.nom)} (${echapperTexte(ce.dept)})</button><small>${sous}</small></span>${badge}</div>`;
   const badge = ce && ce.devoile ? '<span class="cr-secret cr-devoile">Dévoilé</span>' : '<span class="cr-secret">Secret</span>';
@@ -11345,7 +11345,7 @@ function mlRendre(t){
     const [X, Y] = P(z.x, z.y);
     ctx.beginPath(); ctx.arc(X, Y, z.r * s, 0, 6.2832); ctx.fillStyle = 'rgba(229,72,77,.12)'; ctx.fill();
     ctx.setLineDash([3, 3]); ctx.strokeStyle = 'rgba(255,90,82,.6)'; ctx.lineWidth = 1; ctx.stroke();
-    ctx.beginPath(); ctx.arc(X, Y, (z.r + btReglage('bombe_ecart_km', 20)) * s, 0, 6.2832); ctx.strokeStyle = 'rgba(255,90,82,.22)'; ctx.stroke(); ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(X, Y, (z.r + btReglage('bombe_ecart_km', 30)) * s, 0, 6.2832); ctx.strokeStyle = 'rgba(255,90,82,.22)'; ctx.stroke(); ctx.setLineDash([]);
   }
   // communes : les tiennes en or, les autres à leur couleur
   const r = Math.max(1, Math.min(2.3, s * .42));
@@ -25833,9 +25833,9 @@ var BT_INFO = {
          'Disparaît si on prend sa commune, ou sous une bombe.'],
     pied: 'Se construit en 6 h sur une de tes communes.' },
   centre: { titre: 'Centre dévoilé', role: 'Le centre de recherche d’un joueur qui prépare une bombe.',
-    li: ['Il est secret, mais apparaît sur la carte après <b>48 h</b> de préparation, et reste visible 24 h après l’impact.',
+    li: ['Il est secret, mais apparaît sur la carte après <b>36 h</b> de préparation, et reste visible 24 h après l’impact.',   // patch370
          '<b>Le prendre fait perdre la bombe</b> à son propriétaire.',
-         'La bombe détruit garnisons et forteresses de tout le monde dans sa zone (jusqu’à 20 km), et tout le monde y attaque à <b>+15 %</b> pendant 24 h.'],
+         'La bombe détruit garnisons et forteresses de tout le monde dans sa zone (jusqu’à 25 km), et tout le monde y attaque à <b>+15 %</b> pendant 24 h.'],
     pied: 'Pour en construire un : 2 Fonderies et 40 lingots.' },
   banque: { titre: 'Banque', role: 'Ton épargne : tu y déposes des lingots, ils rapportent chaque nuit.',   // patch356, patch364
     li: ['Coûte <b>20 lingots</b>, une seule par joueur, il faut une Fonderie.', 'Dépose jusqu’à <b>60 lingots</b> : <b>+10 % par nuit</b>, à l’abri du pillage des Fonderies. Retire-les pour les dépenser.',

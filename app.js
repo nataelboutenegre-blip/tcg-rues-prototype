@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1425e92d298c';
+const VERSION_JEU = 'd16d9abf14b3';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -565,6 +565,9 @@ function mettreEnSceneAssaut(cible, r){
             + (3 - Number(r.victoires_consecutives) <= 1 ? 'Encore une victoire pour la prendre.' : `Encore ${3 - Number(r.victoires_consecutives)} victoires pour la prendre.`)
             + ` <span class="as-petit">Prochain assaut dans ${Math.round((DELAI_ATTAQUE_MS[tierId] || 0) / 60000) >= 60 ? Math.round(DELAI_ATTAQUE_MS[tierId] / 3600000) + ' h' : Math.round((DELAI_ATTAQUE_MS[tierId] || 0) / 60000) + ' min'}.</span>`
           : `${nomCible} tient bon. Retente ta chance : une défaite ne te fait rien perdre.`;
+      if(!parGarnison && r.sn_pertes >= SN_PERTES) d.innerHTML += `<span class="as-sn">${ICONE_TREFLE}<span><b>Série noire</b> : ${r.sn_pertes === SN_PERTES
+        ? `2 assauts perdus d’affilée ici, tes prochains auront <b>+${SN_BONUS}\u00a0%</b>`
+        : `tes prochains assauts ici gardent <b>+${SN_BONUS}\u00a0%</b>`}, jusqu’à ta prochaine victoire.</span></span>`;   // patch367
       if(!passe) sonsOuverture.assautPerdu();
     } else {
       v.className = 'as-verdict conq'; v.textContent = `${cible.nom} est à toi !`;
@@ -3937,6 +3940,10 @@ installerZoneFront();
 // locale se mene sur la carte, la ou le joueur voit son front.
 let attaqueEnCours = false;
 let attaqueEnGarnison = false;   // patch91 : la cible ouverte est-elle en garnison
+// patch367 : la série noire (s2-113) ; le réglage vit côté serveur (config_jeu 'serie_noire')
+const SN_PERTES = 2, SN_BONUS = 15;
+let attaquePertes = 0, attaquePertesCode = null;
+const ICONE_TREFLE = '<svg class="sn-ic" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="8.5" cy="8.5" r="4"/><circle cx="15.5" cy="8.5" r="4"/><circle cx="8.5" cy="15.5" r="4"/><circle cx="15.5" cy="15.5" r="4"/></g><path d="M12 12l5 9" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
 
 async function ouvrirAttaque(code){
   const el = document.getElementById('mapPanneau');
@@ -3961,7 +3968,7 @@ async function ouvrirAttaque(code){
   const uid = userData.user.id;
   const [apercu, siege, gnv, bte, rbe] = await Promise.all([
     sb.rpc('apercu_attaque', { p_commune_code: code, p_intensite: intensiteChoisie }),
-    sb.from('sieges').select('victoires_consecutives, dernier_round')
+    sb.from('sieges').select('victoires_consecutives, dernier_round, pertes_suite')   // patch367
       .eq('attacker_id', uid).eq('commune_code', code).maybeSingle(),
     SAISON2 ? sb.rpc('garnisons_visibles', { p_codes: [code] }) : Promise.resolve({ data: [] }),
     SAISON2 && BATIMENTS ? sb.rpc('batiments_effet', { p_code: code }) : Promise.resolve({ data: [] }),   // patch243
@@ -3988,6 +3995,9 @@ function rendreAttaque(code, a, siege){
 
   const serie = siege ? siege.victoires_consecutives : 0;
   const dernier = siege && siege.dernier_round ? new Date(siege.dernier_round).getTime() : 0;
+  // patch367 : la série noire (le siège expire après 24 h sans assaut)
+  attaquePertes = siege && dernier > Date.now() - 24 * 3600e3 ? Number(siege.pertes_suite) || 0 : 0;
+  attaquePertesCode = code;
   const prochain = dernier + (DELAI_ATTAQUE_MS[c.tier.id] || 0);
   const attente = Math.max(0, prochain - Date.now());
 
@@ -4009,6 +4019,9 @@ function rendreAttaque(code, a, siege){
     ${debutantActif() ? (attaqueEnGarnison
       ? `<div class="db-badge non">${ICONE_DEBUTANT}<span><b>Pas de bonus de débutant ici :</b> il ne joue jamais contre une commune en garnison.</span></div>`
       : `<div class="db-badge">${ICONE_DEBUTANT}<span><b>Bonus de débutant</b> · ${debutantReste()} : ${a.chances}\u00a0% ici, même en prudent et même loin de chez toi. Il s’arrête à ta première conquête.</span></div>`) : ''}
+    ${SAISON2 && attaquePertes >= SN_PERTES ? (attaqueEnGarnison
+      ? `<div class="sn-badge non">${ICONE_TREFLE}<span><b>Série noire</b> : ${attaquePertes} assauts perdus d’affilée ici, mais pas de coup de pouce contre une commune en garnison.</span></div>`
+      : `<div class="sn-badge">${ICONE_TREFLE}<span><b>Série noire</b> : ${attaquePertes} assauts perdus d’affilée ici. Celui-ci a <b>+${SN_BONUS}\u00a0%</b>, jusqu’à ta prochaine victoire sur cette commune.</span></div>`) : ''}
     ${attaqueEffetBt && attaqueEffetBt.defense > 0 ? `<div class="gn-badge bt-badge">${ICONE_FORTERESSE}<span><b>Forteresse.</b> −${attaqueEffetBt.defense} % à tes chances sur cette commune.</span></div>` : ''}
     ${attaqueEffetBt && attaqueEffetBt.appui > 0 ? `<p class="bt-appui">${ICONE_FORTERESSE}<span>+${attaqueEffetBt.appui} % grâce à ta forteresse${attaqueEffetBt.appui_de ? ' de <b>' + echapperHtml(attaqueEffetBt.appui_de) + '</b>' : ''}</span></p>` : ''}
     ${attaqueEffetBt && attaqueEffetBt.bombe > 0 ? `<p class="bt-appui bt-bombe"><span class="bt-bombe-ic">💥</span><span>+${attaqueEffetBt.bombe} % : zone bombardée${attaqueEffetBt.bombe_sur ? ' (<b>' + echapperHtml(attaqueEffetBt.bombe_sur) + '</b>)' : ''}</span></p>` : ''}
@@ -4090,6 +4103,11 @@ async function lancerAssaut(code){
     const { data, error } = await sb.rpc('attaquer', { p_commune_code: code, p_intensite: intensiteChoisie });
     if(error) throw error;
     const r = data[0];
+    // patch367 : série noire, compter les assauts perdus aux dés (le serveur fait foi, la fiche le relit ensuite)
+    if(SAISON2 && !r.conquise && attaquePertesCode === code && !attaqueEnGarnison){
+      attaquePertes = (r.gagne || r.par_garnison) ? 0 : attaquePertes + 1;
+      if(!r.gagne && !r.par_garnison) r.sn_pertes = attaquePertes;
+    }
     // patch86 : l'assaut mis en scene remplace les notifications
     mettreEnSceneAssaut(cibleVue, r);
     if(r.conquise && debutantActif()){   // patch365 : le bonus de débutant s'arrête

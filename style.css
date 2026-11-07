@@ -9380,3 +9380,15 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .bts-o b{ font-size:.85rem; } .bts-o small{ font-size:.74rem; color:#A9BCD4; }
 .bts-v{ height:88px; border-radius:10px; background:#1F3860; display:flex; align-items:center; justify-content:center; }
 .bts-note{ margin:10px 0 12px; font-size:.8rem; color:#A9BCD4; line-height:1.4; }
+
+/* patch367 : la série noire */
+.sn-ic{ width:18px; height:18px; flex:none; color:#7FE3B4; }
+.sn-badge{ display:flex; align-items:flex-start; gap:8px; margin-top:10px; padding:9px 10px; border-radius:10px;
+  background:rgba(127,227,180,.09); border:1px solid rgba(127,227,180,.4); font-size:.8rem; line-height:1.4; }
+.sn-badge b{ color:#A6F0CC; }
+.sn-badge.non{ background:rgba(169,188,212,.08); border-color:rgba(169,188,212,.3); }
+.sn-badge.non .sn-ic{ color:#A9BCD4; }
+.sn-badge.non b{ color:#fff; }
+.as-sn{ display:flex; align-items:flex-start; gap:7px; margin:12px auto 0; max-width:300px; padding:8px 10px; border-radius:10px; text-align:left;
+  background:rgba(127,227,180,.1); border:1px solid rgba(127,227,180,.4); font-size:.82rem; line-height:1.4; }
+.as-sn b{ color:#A6F0CC; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '8ce08b9f4c5b';
+const VERSION_JEU = 'c6c9532438cf';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1456,6 +1456,7 @@ let mapTransformPlanifie = false;
 let mapFinMouvementTimer = null;
 function applyMapTransform(){
   clampMapPan();
+  idfVisibilite();   // patch373
   // en canvas le deplacement est un simple changement de repere : pas de couche
   // promue par le navigateur, donc pas de flou et aucun redessin differe
   if(canvasActif()){ signalerGesteCanvas(); demanderDessin(); return; }   // patch145
@@ -1565,7 +1566,7 @@ function setupMapInteraction(){
 
   // --- Tactile : un doigt = deplacer, deux doigts = pincer pour zoomer ---
   // patch302 : un geste commencé sur la fiche ou la légende leur appartient (elles défilent)
-  const gesteHorsCarte = (e) => !!(e.target && e.target.closest && e.target.closest('#mapPanneau, #mapLegende'));
+  const gesteHorsCarte = (e) => !!(e.target && e.target.closest && e.target.closest('#mapPanneau, #mapLegende, #mapIdf'));   // patch373 : le cartouche
   wrap.addEventListener('touchstart', (e) => {
     if(gesteHorsCarte(e)){ mapDragging = false; touchPinch = null; return; }   // patch302
     const rect = wrap.getBoundingClientRect();
@@ -2752,6 +2753,7 @@ function territoiresVisiblesCache(){
   // sa couleur et le territoire du clan est cerclé de la couleur du clan
   if(CLANS && CALQUES.clans) peindreClans(CV.donnees.joueurs);   // patch110
   majReperage(CV.donnees.liste, CV.donnees.joueurs);
+  idfPlanifier();   // patch373 : les couleurs du cartouche
   return CV.donnees;
 }
 
@@ -3355,6 +3357,7 @@ function placerLegende(){
   const wrap = document.getElementById('mapWrap');
   const bas = document.getElementById('mapLegendeBas');
   if(!leg || !wrap || !bas) return;
+  idfPlanifier();   // patch373 : le cartouche change de coin avec la légende
   if(placerScene()) return;   // patch119 : grand ecran, legende a gauche
   const dessous = surTelephone();
   const parentVoulu = dessous ? bas : wrap;
@@ -3422,6 +3425,121 @@ if(SUISSE) 'AG:196,AI:5,AR:20,BE:334,BL:86,BS:3,FR:119,GE:45,GL:3,GR:100,JU:51,L
 
 function vueDepartements(){
   return mapZoom < SEUIL_CONTOURS && CONTOURS_DEPTS && typeof CONTOURS_DEPTS === 'object';
+}
+
+// ---------- patch373 : cartouche « Paris et petite couronne » (idée d'Arkhannou) ----------
+const IDF_PC = ['75', '92', '93', '94'];
+const IDF_FOND = ['77', '78', '91', '95'];
+// où écrire le numéro : un point bien à l'intérieur (les Hauts-de-Seine sont un croissant)
+const IDF_ETIQ = { '75': [48.858, 2.345], '92': [48.885, 2.205], '93': [48.915, 2.47], '94': [48.78, 2.47] };
+let idfTimer = null, idfSignature = '', idfGeo = null;
+function idfPlanifier(){ clearTimeout(idfTimer); idfTimer = setTimeout(idfMaj, 150); }
+function idfGeometrie(){
+  if(idfGeo) return idfGeo;
+  if(!CONTOURS_DEPTS || typeof CONTOURS_DEPTS !== 'object' || !IDF_PC.every(d => CONTOURS_DEPTS[d])) return null;
+  const pt = (lat, lon) => { const p = project(lat, lon); return [p.x * MAP_W, p.y * MAP_H]; };
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  const chemins = {};
+  for(const dep of IDF_PC.concat(IDF_FOND)){
+    const polys = CONTOURS_DEPTS[dep];
+    if(!polys) continue;
+    let d = '';
+    for(const poly of polys){
+      const anneau = typeof poly[0][0] === 'number' ? poly : poly[0];
+      d += 'M' + anneau.map(([lon, lat]) => {
+        const [x, y] = pt(lat, lon);
+        if(IDF_PC.includes(dep)){ x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+        return x.toFixed(2) + ',' + y.toFixed(2);
+      }).join('L') + 'Z';
+    }
+    chemins[dep] = d;
+  }
+  const m = Math.max(x1 - x0, y1 - y0) * 0.06;
+  const vb = { x: x0 - m, y: y0 - m, w: x1 - x0 + 2 * m, h: y1 - y0 + 2 * m };
+  const etiq = {};
+  for(const dep of IDF_PC) etiq[dep] = pt(IDF_ETIQ[dep][0], IDF_ETIQ[dep][1]);
+  idfGeo = { vb, chemins, etiq };
+  return idfGeo;
+}
+// la même couleur que la carte : le joueur en tête du département
+function idfCouleurs(){
+  const r = CV.reperage;
+  const res = {};
+  if(!r) return res;
+  const compte = {};
+  for(const c of r.liste){
+    if(!IDF_ETIQ[c.dept]) continue;
+    const m = compte[c.dept] || (compte[c.dept] = new Map());
+    m.set(c.joueur, (m.get(c.joueur) || 0) + 1);
+  }
+  for(const dep in compte){
+    let meilleur = null, n = 0, total = 0;
+    for(const [j, v] of compte[dep]){ total += v; if(v > n){ n = v; meilleur = j; } }
+    const jo = r.joueurs.get(meilleur);
+    if(!jo) continue;
+    const force = (0.3 + 0.55 * (n / total)) * (jo.moi ? 1 : 0.8);
+    res[dep] = { couleur: jo.couleur, alpha: opaciteJoueur(meilleur, force) };
+  }
+  return res;
+}
+function idfElement(){
+  let el = document.getElementById('mapIdf');
+  if(el) return el;
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap) return null;
+  el = document.createElement('div');
+  el.className = 'map-idf'; el.id = 'mapIdf'; el.hidden = true;
+  el.setAttribute('role', 'group'); el.setAttribute('aria-label', 'Paris et petite couronne');
+  wrap.appendChild(el);
+  // un geste commencé ici n'est pas un déplacement de la carte
+  el.addEventListener('mousedown', (e) => e.stopPropagation());
+  el.addEventListener('pointerup', (e) => {
+    const g = e.target.closest('[data-idf]');
+    if(!g) return;
+    const r = wrap.getBoundingClientRect();
+    ouvrirPanneauDept(g.dataset.idf, e.clientX - r.left, e.clientY - r.top);
+    if(e.pointerType !== 'mouse') panneauOuvertAuDoigt = performance.now();
+    idfSurligner();
+  });
+  return el;
+}
+function idfSurligner(){
+  const el = document.getElementById('mapIdf');
+  if(!el) return;
+  el.querySelectorAll('[data-idf]').forEach(g => g.classList.toggle('on', g.dataset.idf === panneauDept));
+}
+function idfVisibilite(){
+  const el = document.getElementById('mapIdf');
+  if(!el) return;
+  const voir = !!(el.dataset.pret && vueDepartements());
+  if(el.hidden === voir) el.hidden = !voir;
+}
+function idfMaj(){
+  const geo = idfGeometrie();
+  const el = geo && idfElement();
+  if(!el) return;
+  const wrap = document.getElementById('mapWrap'), leg = document.getElementById('mapLegende');
+  el.classList.toggle('droite', !!(leg && leg.parentElement === wrap && leg.innerHTML));
+  const coul = idfCouleurs();
+  const sig = JSON.stringify(coul);
+  if(sig !== idfSignature || !el.dataset.pret){
+    idfSignature = sig;
+    const { vb, chemins, etiq } = geo;
+    const fs = vb.w * 0.085;
+    const fond = IDF_FOND.filter(d => chemins[d]).map(d => `<path class="idf-ctx" d="${chemins[d]}"/>`).join('');
+    const deps = IDF_PC.map(d => {
+      const c = coul[d];
+      return `<g class="idf-dep${d === panneauDept ? ' on' : ''}" data-idf="${d}"><title>${echapperHtml(DEPT_NAMES[d] || d)}</title>`
+        + `<path class="idf-fond" d="${chemins[d]}"/>`
+        + (c ? `<path d="${chemins[d]}" fill="${c.couleur}" fill-opacity="${c.alpha.toFixed(3)}"/>` : '')
+        + `<path class="idf-trait" d="${chemins[d]}"/></g>`;
+    }).join('');
+    const nums = IDF_PC.map(d => `<text x="${etiq[d][0].toFixed(2)}" y="${etiq[d][1].toFixed(2)}" font-size="${(d === '75' ? fs * 0.82 : fs).toFixed(2)}" stroke-width="${(fs * 0.2).toFixed(2)}">${d}</text>`).join('');
+    el.innerHTML = `<span class="idf-titre"><span class="idf-l">Paris et petite couronne</span><span class="idf-c">Petite couronne</span></span>`
+      + `<svg viewBox="${vb.x.toFixed(2)} ${vb.y.toFixed(2)} ${vb.w.toFixed(2)} ${vb.h.toFixed(2)}" aria-hidden="true">${fond}${deps}${nums}</svg>`;
+    el.dataset.pret = '1';
+  }
+  idfVisibilite();
 }
 let ctxTestDept = null;
 function departementSousLePoint(xCss, yCss){
@@ -3534,6 +3652,7 @@ function fermerPanneau(){
   panneauDept = null;
   panneauAncre = null;
   panneauDeplace = null;
+  idfSurligner();   // patch373
 }
 
 // La proposition en attente qui concerne cette commune, s'il y en a une.
@@ -4419,6 +4538,7 @@ function renderMapOverlay(){
   // patch85 : onglet ferme, on redessinera a l'ouverture (une seule fois)
   if(rendreALOuverture('territoire', renderMapOverlay)) return;
   omfRafraichir();   // patch220
+  idfPlanifier();   // patch373
   if(canvasActif()){
     CV.cellulesSignature = ''; CV.donneesSignature = '';
     // la commune affichee a pu changer de main entre-temps
@@ -12056,6 +12176,7 @@ function mfZoomer(f, px, py){
   const avant = MF.k;
   const k = Math.max(1, Math.min(60, avant * f));
   if(k === avant) return;
+  MF.dernierZoom = performance.now();   // patch372
   // le point sous le doigt reste sous le doigt
   const [bx, by] = mfVersBase(px, py);
   MF.k = k;
@@ -12063,6 +12184,12 @@ function mfZoomer(f, px, py){
   MF.ox = px - bx * S - MF.baseX * MF.k;
   MF.oy = py - by * S - MF.baseY * MF.k;
   mfLimiter();
+}
+
+// patch372 : redessin groupé (arrivées de contours, fin de zoom)
+function mfPlanifierPlusTard(delai){
+  if(MF.plusTard) return;
+  MF.plusTard = setTimeout(() => { MF.plusTard = null; mfPlanifier(); }, delai);
 }
 
 function mfPlanifier(){
@@ -12126,8 +12253,13 @@ function mfDessiner(){
       (e ? parTier[e.tier.id] : vide).addPath(p);
     }
   }
-  // les contours arrivent par departement : on redessine a chaque arrivee
-  for(const dep of attente) chargerContours(dep).then(() => { if(terraVue === 'france') mfPlanifier(); });
+  // les contours arrivent par departement. patch372 : seulement une fois le
+  // zoom posé, et un seul redessin pour plusieurs arrivées rapprochées
+  if(attente.length){
+    const reste = 300 - (performance.now() - (MF.dernierZoom || 0));
+    if(reste > 0) mfPlanifierPlusTard(reste + 20);
+    else for(const dep of attente) chargerContours(dep).then(() => { if(terraVue === 'france') mfPlanifierPlusTard(120); });
+  }
   ctx.fillStyle = '#1A3256';
   ctx.fill(vide);
   for(const t of TIERS){
@@ -12255,6 +12387,7 @@ function mfArmer(cv){
     if(!MF.pointeurs.has(ev.pointerId)) return;
     const avant = MF.pointeurs.get(ev.pointerId), apres = pos(ev);
     if(MF.pointeurs.size === 1){
+      MF.dernierZoom = performance.now();   // patch372
       MF.ox += apres[0] - avant[0];
       MF.oy += apres[1] - avant[1];
       MF.bouge += Math.abs(apres[0] - avant[0]) + Math.abs(apres[1] - avant[1]);
@@ -17529,11 +17662,22 @@ function radarVueCourante(){
 function radarZoomRaz(){ radarZoom = { k: 1, cx: null, cy: null }; }
 
 // ----- fond de la carte Radar en canvas (patch78) -----
-const RADAR_SEUIL_COMMUNES = 2.5;          // zoom à partir duquel on dessine les communes
+const RADAR_SEUIL_COMMUNES = 4;            // zoom à partir duquel on dessine les communes (patch372 : 2,5 avant)
+// patch372 : enchaîner « + » passait par des zooms intermédiaires qui lançaient
+// chacun le chargement de dizaines de départements. On attend que le zoom soit
+// posé, et les arrivées ne déclenchent qu'un redessin groupé.
+let radarDernierZoom = 0, radarRedessinTimer = null;
+const RADAR_ZOOM_POSE_MS = 300;
 let radarFrance = null;                     // contour du pays (Path2D, unités de carte)
 let radarDeps = null, radarDepsTrait = null, radarDepsEnCours = false;   // { code: [x0, y0, x1, y1] }
 const radarCommunes = new Map(), radarCommunesEnCours = new Set();       // dep -> Path2D
-function radarRedessiner(){ if(!document.getElementById('rdManche').hidden) radarDessiner(radarDessinCourant); }
+function radarRedessiner(delai = 120){   // patch372 : groupé
+  if(radarRedessinTimer) return;
+  radarRedessinTimer = setTimeout(() => {
+    radarRedessinTimer = null;
+    if(!document.getElementById('rdManche').hidden) radarDessiner(radarDessinCourant);
+  }, delai);
+}
 function radarCheminAnneaux(anneaux, p){
   for(const a of anneaux){ a.forEach(([lo, la], i) => { const [X, Y] = cdjPx(lo, la).map(Number); i ? p.lineTo(X, Y) : p.moveTo(X, Y); }); p.closePath(); }
   return p;
@@ -17604,11 +17748,14 @@ function radarDessinerFond(v, region){
     // les communes des départements visibles, à fort zoom
     if(k >= RADAR_SEUIL_COMMUNES){
       x.lineWidth = 0.7 * px; x.strokeStyle = `rgba(169,188,212,${Math.min(0.3, 0.12 + (k - RADAR_SEUIL_COMMUNES) * 0.12).toFixed(3)})`;
+      const pose = performance.now() - radarDernierZoom >= RADAR_ZOOM_POSE_MS;   // patch372
+      let attente = false;
       for(const [dep, b] of Object.entries(radarDeps)){
         if(b[2] < v.x || b[0] > v.x + v.w || b[3] < v.y || b[1] > v.y + v.h) continue;
         const p = radarCommunes.get(dep);
-        if(p) x.stroke(p); else radarChargerCommunes(dep);
+        if(p) x.stroke(p); else if(pose) radarChargerCommunes(dep); else attente = true;
       }
+      if(attente) radarRedessiner(RADAR_ZOOM_POSE_MS + 20);
     }
     x.lineWidth = 1.1 * px; x.strokeStyle = `rgba(169,188,212,${region ? 0.55 : Math.min(0.55, (k - 1) * 0.5).toFixed(3)})`;
     x.stroke(radarDepsTrait);
@@ -17622,6 +17769,7 @@ function radarZoomer(f, px, py){
   const b = radarVueBase(), v0 = radarVueCourante();
   const k = Math.min(RADAR_ZOOM_MAX, Math.max(1, radarZoom.k * f));
   if(k === radarZoom.k) return;
+  radarDernierZoom = performance.now();   // patch372
   if(px == null){ px = v0.x + v0.w / 2; py = v0.y + v0.h / 2; }
   const rx = (px - v0.x) / v0.w, ry = (py - v0.y) / v0.h;
   const w = b.w / k, h = b.h / k;
@@ -17670,6 +17818,7 @@ function radarPointCarte(e){
     if(!g.bouge && Math.hypot(dx, dy) < 6) return;
     if(!g.bouge){ g.bouge = true; try { svg.setPointerCapture(e.pointerId); } catch(err){} }
     const m = svg.getScreenCTM();
+    radarDernierZoom = performance.now();   // patch372 : glisser aussi
     radarZoom.cx = g.cx - dx / m.a; radarZoom.cy = g.cy - dy / m.d;
     radarDessiner(radarDessinCourant);
   });

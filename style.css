@@ -9413,3 +9413,30 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .cr-dem .gn-cherche{ margin-top:10px; }
 .cr-dem-x{ display:block; margin:8px auto 0; background:none; border:0; color:#A9BCD4; font:inherit; font-size:.8rem; text-decoration:underline; cursor:pointer; }
 .rd-ok{ font-style:normal; color:#7FE3B4; } .rd-vu{ font-style:normal; color:#FF8A82; }
+
+/* patch373 : cartouche Paris et petite couronne */
+.map-idf{ position:absolute; z-index:3; left:12px; top:12px; width:150px; padding:7px 7px 5px;
+  background:rgba(10,22,40,.92); border:1px solid rgba(169,188,212,.22); border-radius:12px;
+  box-shadow:0 6px 16px rgba(0,0,0,.35); touch-action:none; }
+.map-idf.droite{ left:auto; right:12px; }
+.map-idf[hidden]{ display:none; }
+.map-idf .idf-titre{ display:block; margin:0 2px 4px; font-size:.64rem; font-weight:600; line-height:1.2; color:#A9BCD4; white-space:nowrap; }
+.map-idf .idf-c{ display:none; }
+.map-idf svg{ display:block; width:100%; height:auto; overflow:hidden; border-radius:7px; background:#0E2140; }
+.map-idf .idf-ctx{ fill:#172F52; stroke:rgba(169,188,212,.22); stroke-width:.8; vector-effect:non-scaling-stroke; }
+.map-idf .idf-dep{ cursor:pointer; }
+.map-idf .idf-fond{ fill:#20406A; }
+.map-idf .idf-trait{ fill:none; stroke:rgba(214,230,246,.55); stroke-width:1; vector-effect:non-scaling-stroke; pointer-events:none; }
+.map-idf .idf-dep:hover .idf-trait{ stroke:rgba(255,255,255,.85); stroke-width:1.5; }
+.map-idf .idf-dep.on .idf-trait{ stroke:#fff; stroke-width:2.2; }
+.map-idf text{ font-family:var(--titre); font-weight:800; fill:#fff; text-anchor:middle; dominant-baseline:central;
+  paint-order:stroke; stroke:rgba(5,12,24,.85); stroke-linejoin:round; pointer-events:none; }
+.map-wrap.outremer .map-idf{ display:none !important; }
+@media (max-width: 720px){
+  .map-idf{ left:8px; top:8px; width:92px; padding:5px 5px 4px; border-radius:10px; }
+  .map-idf.droite{ right:8px; }
+  .map-idf .idf-titre{ font-size:.56rem; margin-bottom:3px; }
+  .map-idf .idf-l{ display:none; }
+  .map-idf .idf-c{ display:inline; }
+  .map-wrap.plein-ecran .map-idf{ top:calc(8px + env(safe-area-inset-top, 0px)); }
+}

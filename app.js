@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '0dc993676d32';
+const VERSION_JEU = '7111269c3501';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4191,6 +4191,11 @@ function rendreAttaque(code, a, siege){
       <span>${i.label}</span><small>${SAISON2 ? coutIntensiteTexte(i, c.tier) : (i.facteur === 1 ? 'prix normal' : (i.facteur < 1 ? '⅓ du prix' : 'prix doublé'))}</small>
     </button>`).join('');
 
+  // patch380 : la fiche allégée. Les effets en puces, les explications sur « Pourquoi ? »,
+  // la rébellion dans « Plus d'options ».
+  const puces = atkPuces(code, a);
+  const rbHtml = rbBlocHtml(code, a);
+  const optOuvert = atkOptions === code || rbOuvert === code;
   el.innerHTML = `
     <div class="pc-tete">
       <div class="pc-titre">
@@ -4200,6 +4205,55 @@ function rendreAttaque(code, a, siege){
       <button class="pc-fermer" data-pc="retour" aria-label="Retour">&larr;</button>
     </div>
 
+    <div class="atk-chance">
+      <div class="atk-chance-g"><b>${a.chances}\u00a0%</b><span>de chances<br>par round</span></div>
+      <div class="atk-serie"><span class="pc-points">${[0,1,2].map(i => `<i class="${i < serie ? 'pris' : ''}"></i>`).join('')}</span><small>Série ${serie} / 3</small></div>
+    </div>
+    <div class="pc-jauge-barre"><i style="width:${a.chances}%"></i></div>
+    ${ligneConquete(a.chances, serie)}
+
+    ${puces.length ? `<div class="atk-puces">${puces.map(([k, ic, t]) => `<span class="atk-puce ${k}">${ic}<span>${t}</span></span>`).join('')}<button type="button" class="atk-pourquoi" data-pc="atk-detail" aria-expanded="${atkDetail}">${atkDetail ? 'Masquer' : 'Pourquoi\u00a0?'}</button></div>` : ''}
+    ${atkDetail ? `<div class="atk-detail">${atkDetailHtml(code, a)}</div>` : ''}
+
+    <div class="pc-ints">${pastilles}</div>
+
+    <div class="pc-actions">
+      <button class="pc-action attaque" data-pc="assaut" ${attente > 0 || attaqueEnCours ? 'disabled' : ''}>
+        ${attente > 0 ? 'Encore ' + formatDuree(attente) + ' à attendre' : `Lancer l’assaut — ${coutTexte(a.cout)}`}
+      </button>
+    </div>
+    ${rbHtml ? (optOuvert ? rbHtml : `<button type="button" class="atk-plus" data-pc="atk-options">Plus d’options</button>`) : ''}`;
+  // recadrer, pas replacer : relire sa position pour la recalculer ajoutait
+  // 16 px a chaque assaut et a chaque changement d'intensite
+  recadrerPanneau(el);
+  montrerPanneau(el);
+}
+
+// patch380 : la fiche d'attaque allégée
+let atkDetail = false, atkOptions = null;
+try{ atkDetail = localStorage.getItem('tf-atk-detail') === '1'; } catch(e){}
+const ICONE_REPERE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><circle cx="12" cy="9.8" r="2.3" fill="currentColor"/></svg>';
+// [genre, icône, texte] ; genre : plus (bonus), moins (malus), neutre
+function atkPuces(code, a){
+  const p = [];
+  const deb = debutantActif();
+  if(attaqueEnGarnison) p.push(['moins', ICONES_PC.bouclier, 'Garnison']);
+  if(deb) p.push(attaqueEnGarnison ? ['neutre', ICONE_DEBUTANT, 'Sans bonus de débutant'] : ['plus', ICONE_DEBUTANT, 'Bonus de débutant']);
+  if(SAISON2 && attaquePertes >= SN_PERTES && !attaqueEnGarnison) p.push(['plus', ICONE_TREFLE, `Série noire +${SN_BONUS}\u00a0%`]);
+  const B = attaqueEffetBt;
+  if(B && B.defense > 0) p.push(['moins', ICONE_FORTERESSE, `Forteresse −${B.defense}\u00a0%`]);
+  if(B && B.appui > 0) p.push(['plus', ICONE_FORTERESSE, `Ta forteresse +${B.appui}\u00a0%`]);
+  if(B && B.bombe > 0) p.push(['plus', '<i class="atk-emo">💥</i>', `Bombe +${B.bombe}\u00a0%`]);
+  const R = attaqueRebellion;
+  if(R && R.mienne) p.push(['plus', '<i class="atk-emo">✊</i>', `Rébellion +${rbFmt(Number(R.mienne.pct) || 0)}\u00a0%`]);
+  if(a.a_distance) p.push([deb && !attaqueEnGarnison ? 'neutre' : 'moins', ICONE_REPERE, 'À distance']);
+  else if(Number(a.proches) >= 2) p.push(['plus', ICONE_REPERE, `${a.proches} voisines`]);
+  else p.push(['neutre', ICONE_REPERE, '1 voisine']);
+  return p;
+}
+// les explications complètes, celles d'avant patch380
+function atkDetailHtml(code, a){
+  return `
     ${attaqueEnGarnison ? `<div class="gn-badge">${ICONES_PC.bouclier}<span><b>Commune en garnison.</b> Une victoire sur deux est annulée par sa défense : la chance affichée en tient déjà compte.</span></div>` : ''}
     ${debutantActif() ? (attaqueEnGarnison
       ? `<div class="db-badge non">${ICONE_DEBUTANT}<span><b>Pas de bonus de débutant ici :</b> il ne joue jamais contre une commune en garnison.</span></div>`
@@ -4220,30 +4274,7 @@ function rendreAttaque(code, a, siege){
         ? (debutantActif() && !attaqueEnGarnison ? 'Aucune de tes communes à moins de 20 km : <b>attaque à distance</b>, sans effet avec ton bonus de débutant.' : 'Aucune de tes communes à moins de 20 km : <b>attaque à distance</b>, tes chances baissent.')   // patch365
         : `<b>${a.proches}</b> de tes communes à moins de 20 km`}
     </div>
-
-    <div class="pc-serie">
-      <span>Série en cours</span>
-      <span class="pc-points">${[0,1,2].map(i => `<i class="${i < serie ? 'pris' : ''}"></i>`).join('')}</span>
-      <b>${serie} / 3</b>
-    </div>
-
-    <div class="pc-ints">${pastilles}</div>
-
-    <div class="pc-jauge">
-      <div class="pc-jauge-tete"><span>Chances de victoire (par round)</span><b>${a.chances} %</b></div>
-      <div class="pc-jauge-barre"><i style="width:${a.chances}%"></i></div>
-      ${ligneConquete(a.chances, serie)}
-    </div>
-
-    <div class="pc-actions">
-      <button class="pc-action attaque" data-pc="assaut" ${attente > 0 || attaqueEnCours ? 'disabled' : ''}>
-        ${attente > 0 ? 'Encore ' + formatDuree(attente) + ' à attendre' : `Lancer l’assaut — ${coutTexte(a.cout)}`}
-      </button>
-    </div>${rbBlocHtml(code, a)}`;
-  // recadrer, pas replacer : relire sa position pour la recalculer ajoutait
-  // 16 px a chaque assaut et a chaque changement d'intensite
-  recadrerPanneau(el);
-  montrerPanneau(el);
+    `;
 }
 
 // patch140 : la chance de PRENDRE la commune, pas seulement de gagner le round
@@ -4504,6 +4535,13 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
     ouvrirAttaque(code);
     return;
   }
+  if(quoi === 'atk-detail'){   // patch380
+    atkDetail = !atkDetail;
+    try{ localStorage.setItem('tf-atk-detail', atkDetail ? '1' : '0'); } catch(err){}
+    if(rbDerniers) rendreAttaque(...rbDerniers);
+    return;
+  }
+  if(quoi === 'atk-options'){ atkOptions = code; if(rbDerniers) rendreAttaque(...rbDerniers); return; }   // patch380
   if(rbClicPanneau(quoi, code)) return;   // lot 8/11 : rébellion
   if(quoi === 'attaque'){ ouvrirAttaque(code); return; }
   if(quoi === 'favori'){   // patch133

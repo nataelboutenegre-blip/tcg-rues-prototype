@@ -9462,3 +9462,26 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 @media (max-width: 380px){
   #panel-combat .volet, #panel-defense .volet, #panel-batiments .volet{ padding-left:5px; padding-right:5px; font-size:.86rem; }
 }
+
+/* patch380 : la fiche d'attaque allégée */
+.atk-chance{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin-top:12px; }
+.atk-chance-g{ display:flex; align-items:flex-end; gap:8px; }
+.atk-chance-g b{ font-family: var(--f-titre, inherit); font-size:2.1rem; line-height:.9; color:#fff; font-weight:700; letter-spacing:-.01em; }
+.atk-chance-g span{ font-size:.7rem; line-height:1.15; color:#8FA4BF; padding-bottom:2px; }
+.atk-serie{ display:flex; flex-direction:column; align-items:flex-end; gap:5px; padding-bottom:2px; }
+.atk-serie small{ font-size:.7rem; color:#A9BCD4; }
+.atk-chance + .pc-jauge-barre{ margin-top:9px; }
+.atk-puces{ display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:10px; }
+.atk-puce{ display:inline-flex; align-items:center; gap:5px; padding:4px 9px 4px 7px; border-radius:99px; font-size:.72rem; font-weight:600; line-height:1.2;
+  background:rgba(169,188,212,.1); color:#C3D1E3; border:1px solid rgba(169,188,212,.16); }
+.atk-puce svg{ width:13px; height:13px; flex:none; }
+.atk-puce .atk-emo{ font-style:normal; font-size:.78rem; line-height:1; }
+.atk-puce.plus{ background:rgba(61,214,140,.1); color:#8FE3B5; border-color:rgba(61,214,140,.28); }
+.atk-puce.moins{ background:rgba(229,72,77,.1); color:#FF9DA0; border-color:rgba(229,72,77,.3); }
+.atk-pourquoi{ font:inherit; font-size:.72rem; font-weight:600; color:#A9BCD4; background:none; border:0; padding:4px 2px; cursor:pointer; text-decoration:underline; text-underline-offset:3px; }
+.atk-pourquoi:hover{ color:#fff; }
+.atk-detail{ margin-top:4px; }
+.atk-detail .pc-prox{ margin-top:10px; }
+.atk-plus{ display:block; margin:10px auto 0; font:inherit; font-size:.76rem; font-weight:600; color:#A9BCD4; background:none; border:0; padding:4px 8px; cursor:pointer; }
+.atk-plus::after{ content:' ▾'; font-size:.7rem; }
+.atk-plus:hover{ color:#fff; }

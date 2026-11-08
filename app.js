@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '384a0fa2f3bb';
+const VERSION_JEU = 'fae1dad547e0';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -27428,7 +27428,7 @@ function roueTexteCase(k){
 }
 function roueGainsTexte(k){
   const e = Number(k.energie) || 0, l = Number(k.lingots) || 0, t = Number(k.terra) || 0, tp = Number(k.tp) || 0;
-  if(Number(k.relance)) return 'Un tour offert';   // patch351
+  if(Number(k.relance)) return Number(k.relance) > 1 ? `${Number(k.relance)} tours offerts` : 'Un tour offert';   // patch351, patch385
   return [e ? `+${e}<span class="rdf-e">${ICONE_ENERGIE}</span>` : '', l ? `+${l} lingot${l > 1 ? 's' : ''}` : '', t ? `${t} paquet${t > 1 ? 's' : ''} Terra` : '',
           tp ? `+${tp} TP` : '']
     .filter(Boolean).join(' ');
@@ -27564,7 +27564,8 @@ function roueGainMontrer(d){
   const e = Number(d.energie) || 0, ep = Number(d.energie_prevue) || 0, l = Number(d.lingots) || 0, lp = Number(d.lingots_prevus) || 0, t = Number(d.terra) || 0;
   const tp = Number(d.tp) || 0, offert = d.relance === true;   // patch351
   const parts = [];
-  if(offert) parts.push('Tour offert');
+  const nOff = Number(d.tours_offerts) || 1;   // patch385 : la Relance peut offrir plusieurs tours
+  if(offert) parts.push(nOff > 1 ? `${nOff} tours offerts` : 'Tour offert');
   if(tp) parts.push(`+${tp} TP`);
   if(ep) parts.push(`+${ep}<span class="rdf-e">${ICONE_ENERGIE}</span>`);
   if(lp) parts.push(`+${lp}${ICONE_LINGOT}`);
@@ -27575,7 +27576,7 @@ function roueGainMontrer(d){
   else if(ep && lp) note = `Énergie : ${d.energie_totale} · lingots : ${d.lingots_total}`;
   else if(ep) note = `Ton énergie : ${d.energie_totale}`;
   else if(lp) note = `Tes lingots : ${d.lingots_total}`;
-  else if(offert) note = 'Ton tour est rendu : il ne compte pas dans la journée';   // patch351
+  else if(offert) note = nOff > 1 ? `Ton tour est rendu et tu en gagnes ${nOff - 1 > 1 ? nOff - 1 : 'un'} de plus : relance la roue !` : 'Ton tour est rendu : il ne compte pas dans la journée';   // patch351, patch385
   else if(tp) note = d.solde != null ? `Tes TerraPoints : ${Number(d.solde).toLocaleString('fr-FR')}` : 'Ajoutés à tes TerraPoints';
   else note = 'À ouvrir dans Terra';
   const g = document.getElementById('rdfGain'), el = document.getElementById('roueFront');

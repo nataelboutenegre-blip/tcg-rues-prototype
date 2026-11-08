@@ -7030,8 +7030,8 @@ body.ml-ouverte{ overflow:hidden; }
   background:linear-gradient(180deg,#4a505a 0%,#30353d 58%,#2a2e35 100%); box-shadow:0 3px 0 #121418, 0 4px 6px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.16), inset 0 -2px 3px rgba(0,0,0,.25);
   transition:transform .06s, box-shadow .06s; touch-action:manipulation; }
 .ml-k.ml-enf{ transform:translateY(2px); box-shadow:0 1px 0 #121418, 0 2px 3px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.1); }
-.ml-k.ml-eff{ grid-column:span 3; font-size:15px; }
-.ml-k.ml-ok{ grid-column:span 5; color:#2A1A06; font-size:11px; letter-spacing:.12em; font-weight:600;
+.ml-k.ml-eff{ grid-column:span 2; font-size:15px; }   /* patch376 : 3 avant, place pour le tiret */
+.ml-k.ml-ok{ grid-column:span 4; color:#2A1A06; font-size:10.5px; letter-spacing:.04em; font-weight:600;   /* patch376 : 5 avant */
   background:linear-gradient(180deg,#F8DE92,#E2AE3E 58%,#C8962A); box-shadow:0 3px 0 #6e4c0f, 0 4px 6px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.5); }
 .ml-k.ml-ok.ml-enf{ box-shadow:0 1px 0 #6e4c0f, 0 2px 3px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.4); }
 .ml-k.ml-ok[disabled]{ filter:saturate(.25) brightness(.65); cursor:default; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'da4e6f5d9d5c';
+const VERSION_JEU = '36d12e2693ee';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11492,7 +11492,7 @@ function ouvrirMallette(){
          niv, rayon, portee, requete: '', res: [], sel: -1, apercu: null, cible: null, stats: null, souffle: false, tImpact: 0, raf: 0, tSugg: 0, code: [0, Number(dep.slice(-2, -1)) || 0, Number(dep.slice(-1)) || 0] };
   mlRoues('serG', [7, 3, 1]); mlRoues('serD', [4, 9, 6]);
   // les touches
-  const R = ['AZERTYUIOP', 'QSDFGHJKLM', 'WXCVBN'];
+  const R = ['AZERTYUIOP', 'QSDFGHJKLM', 'WXCVBN-'];   // patch376 : le tiret
   $m('clavier').innerHTML = R.map(r => [...r].map(l => `<button type="button" class="ml-k" data-k="${l}">${l}</button>`).join('')).join('')
     + '<button type="button" class="ml-k ml-eff" data-k="⌫" aria-label="Effacer">⌫</button><button type="button" class="ml-k ml-ok" data-k="OK" id="ml-kOk" disabled>VALIDER</button>';
   $m('clavier').addEventListener('pointerdown', (e) => { const b = e.target.closest('.ml-k'); if(b && !b.disabled){ e.preventDefault(); mlAppuyer(b.dataset.k); } });
@@ -11568,6 +11568,7 @@ function mlTouche(e){
   if(e.key === 'Backspace'){ e.preventDefault(); mlAppuyer('⌫'); }
   else if(e.key === 'Enter'){ e.preventDefault(); mlAppuyer('OK'); }
   else if(/^[a-zà-ÿ]$/i.test(e.key)){ const l = mlNorm(e.key).toUpperCase(); if(l){ e.preventDefault(); mlAppuyer(l); } }
+  else if(e.key === '-' || e.key === ' ' || e.key === "'" || e.key === '’'){ e.preventDefault(); mlAppuyer('-'); }   // patch376
 }
 function mlAppuyer(k){
   if(!ML || ML.etat !== 'cible') return;
@@ -11575,7 +11576,8 @@ function mlAppuyer(k){
   if(b){ b.classList.add('ml-enf'); setTimeout(() => b.classList.remove('ml-enf'), 120); }
   if(k === '⌫') ML.requete = ML.requete.slice(0, -1);
   else if(k === 'OK'){ if(ML.sel >= 0) mlVerrouiller(ML.res[ML.sel]); return; }
-  else if(ML.requete.length < 24) ML.requete += k;
+  else if(k === '-' && (!ML.requete || ML.requete.endsWith('-'))) return;   // patch376 : pas de tiret en tête ni doublé
+  else if(ML.requete.length < 28) ML.requete += k;
   mlLcd(); mlMajSugg();
 }
 function mlLcd(){ if(!ML) return; const l = ML.$m('lcd'); l.textContent = ML.requete || 'TAPE UNE COMMUNE'; l.classList.toggle('ml-vide', !ML.requete); }

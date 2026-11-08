@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '7111269c3501';
+const VERSION_JEU = 'd2cdbcdea974';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -16865,6 +16865,7 @@ async function rafaleOuvrirResume(id){
 let rafaleGrandes = null;
 const rafaleGainVu = new Set();
 function rafaleAfficherFin(p, fin){
+  const rejouerDuel = !!fin && !p.entr && !p.amical && !p.cible;   // patch381 : un duel classé qui vient de finir
   clearInterval(rafaleChrono);
   rafaleMontrer('rfFin');
   rafalePartie = null;
@@ -16918,7 +16919,9 @@ terrafront.fr/?onglet=qg`
       ${partage ? `<pre class="cdj-partage" id="rfPartage">${echapperTexte(partage)}</pre>` : ''}
       <div class="qg-actions">${p.entr
         ? '<button type="button" class="qg-btn plein" id="rfRejouer">Rejouer</button><button type="button" class="qg-btn" id="rfRetourBas">QG</button>'
-        : `<button type="button" class="qg-btn plein" id="rfRetourBas">Retour au QG</button>${partage ? '<button type="button" class="qg-btn" id="rfCopier">Copier pour Discord</button>' : ''}`}</div></div>`;
+        : `${rejouerDuel ? '<button type="button" class="qg-btn plein" id="rfRejouerDuel">Rejouer</button>' : ''}<button type="button" class="qg-btn${rejouerDuel ? '' : ' plein'}" id="rfRetourBas">${rejouerDuel ? 'QG' : 'Retour au QG'}</button>${partage ? '<button type="button" class="qg-btn" id="rfCopier">Copier pour Discord</button>' : ''}`}</div></div>`;
+  const rfRej = document.getElementById('rfRejouerDuel');   // patch381
+  if(rfRej) rfRej.onclick = () => { const b = document.getElementById('rfLancer'); if(b) b.click(); };
   document.getElementById('rfRetourHaut').onclick = rafaleAuQG;
   document.getElementById('rfRetourBas').onclick = rafaleAuQG;
   const rej = document.getElementById('rfRejouer');
@@ -18326,6 +18329,7 @@ function radarKm(c){
 
 function radarAfficherResume(p, fin){
   radarMontrer('rdFin');
+  const rejouerDuel = !!fin && !p.entr && !p.amical && !p.cible;   // patch381 : un duel classé qui vient de finir
   radarRes = p; radarResSel = -1;
   const fmt = (n) => Number(n).toLocaleString('fr-FR');
   const adv = p.adversaire && p.resultat ? p.adversaire : null;
@@ -18384,8 +18388,10 @@ function radarAfficherResume(p, fin){
         ${partage ? `<pre class="cdj-partage" id="rdPartage">${echapperTexte(partage)}</pre>` : ''}
         <div class="qg-actions">${p.entr
           ? '<button type="button" class="qg-btn plein" id="rdRejouer">Rejouer</button><button type="button" class="qg-btn" id="rdReglages">Réglages</button><button type="button" class="qg-btn" id="rdRetour">QG</button>'
-          : `<button type="button" class="qg-btn plein" id="rdRetour">Retour au QG</button>${partage ? '<button type="button" class="qg-btn" id="rdCopier">Copier pour Discord</button>' : ''}`}</div></div>
+          : `${rejouerDuel ? '<button type="button" class="qg-btn plein" id="rdRejouerDuel">Rejouer</button>' : ''}<button type="button" class="qg-btn${rejouerDuel ? '' : ' plein'}" id="rdRetour">${rejouerDuel ? 'QG' : 'Retour au QG'}</button>${partage ? '<button type="button" class="qg-btn" id="rdCopier">Copier pour Discord</button>' : ''}`}</div></div>
     </div>`;
+  const rdRej = document.getElementById('rdRejouerDuel');   // patch381
+  if(rdRej) rdRej.onclick = () => { const b = document.getElementById('qgLancer'); if(b && !b.disabled) b.click(); else { const t = document.querySelector('.tab[data-tab="qg"]'); if(t) t.click(); } };
   if(p.entr){
     document.getElementById('rdRejouer').onclick = () => entrCommencer();
     document.getElementById('rdReglages').onclick = () => entrAfficherReglages();

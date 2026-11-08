@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=63122d76e846">
+<link rel="stylesheet" href="style.css?v=0dc993676d32">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -376,6 +376,15 @@
           </svg>
         </div>
         Défense
+      </div>
+
+      <div class="tab onglet-fusionne" data-tab="batiments" aria-hidden="true"><!-- patch379 -->
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
+            <path d="M4 20V10l5-3v13M9 20V5l7-2v17M16 20V9l4 2v9M3 20h18"/>
+          </svg>
+        </div>
+        Bâtiments
       </div>
 
       <div class="tab" data-tab="contrat"><!-- patch298 : l'onglet Contrat devient le Marché -->
@@ -988,6 +997,7 @@
         <button type="button" class="volet" data-volet="monfront" role="tab" aria-selected="false">Mon front</button><!-- patch288 -->
         <button type="button" class="volet actif" data-volet="combat" role="tab" aria-selected="true">Attaquer</button>
         <button type="button" class="volet" data-volet="defense" role="tab" aria-selected="false">Défendre<span class="volet-badge" data-badge-defense hidden></span></button>
+        <button type="button" class="volet" data-volet="batiments" role="tab" aria-selected="false">Bâtiments</button><!-- patch379 -->
       </div>
       <div class="sub">3 victoires pour conquérir une commune, pas forcément d'affilée : une défaite ne te fait rien perdre. Avant d'attaquer, choisis ton engagement : plus tu paies, plus tu as de chances. Un round toutes les 2 min sur une commune, 5 min sur une peu commune, 10 min sur une rare, 1 h sur une épique, 3 h sur une légendaire. Les communes et peu communes s'affichent avec leur filtre ou « Près de mon territoire ».</div>
       <div class="bourse-filters combat-proximite">
@@ -1022,12 +1032,25 @@
       <div id="combatGrid" class="cibles-grille"><p class="collection-empty">Aucune cible disponible pour le moment.</p></div>
     </section>
 
+    <section class="tab-panel" id="panel-batiments"><!-- patch379 : idée de Maroli et ASMFCB -->
+      <h1>Combat</h1>
+      <div class="volets" role="tablist" aria-label="Combat">
+        <button type="button" class="volet" data-volet="monfront" role="tab" aria-selected="false">Mon front</button>
+        <button type="button" class="volet" data-volet="combat" role="tab" aria-selected="false">Attaquer</button>
+        <button type="button" class="volet" data-volet="defense" role="tab" aria-selected="false">Défendre<span class="volet-badge" data-badge-defense hidden></span></button>
+        <button type="button" class="volet actif" data-volet="batiments" role="tab" aria-selected="true">Bâtiments</button>
+      </div>
+      <div class="sub">Tes lingots et tes bâtiments. Pour construire, touche une de tes communes sur la carte ; ici, tu les gères, tu les déplaces, et tu prépares ta bombe.</div>
+      <div class="btv-galerie"><button type="button" class="filter-pill" data-btv="miens">Mes bâtiments en images ›</button><button type="button" class="filter-pill" data-btv="autres">Les bâtiments des autres ›</button></div>
+    </section>
+
     <section class="tab-panel" id="panel-defense">
       <h1>Combat</h1>
       <div class="volets" role="tablist" aria-label="Combat">
         <button type="button" class="volet" data-volet="monfront" role="tab" aria-selected="false">Mon front</button><!-- patch288 -->
         <button type="button" class="volet" data-volet="combat" role="tab" aria-selected="false">Attaquer</button>
         <button type="button" class="volet actif" data-volet="defense" role="tab" aria-selected="true">Défendre<span class="volet-badge" data-badge-defense hidden></span></button>
+        <button type="button" class="volet" data-volet="batiments" role="tab" aria-selected="false">Bâtiments</button><!-- patch379 -->
       </div>
       <div class="reveil" id="reveilDefense" hidden></div>
       <div class="sub">Quand un joueur gagne un round contre toi, tente une défense ou pose un bouclier. Une seule défense par attaque, et un bouclier bloque toute attaque pendant sa durée.</div>
@@ -1344,10 +1367,10 @@
               </table>
             </div>
             <p>Par département, seul le palier le plus haut compte (métropole). Points des communes, de commune à légendaire. Une victoire ne compte qu'une fois par commune et par type, et reste acquise même si tu reperds la commune.</p>
-            <p><b>Bâtiments</b> : sur une de tes communes, construis ta <b>Fonderie</b> (gratuite) : elle produit <b>10 lingots par jour</b>, 30 en réserve. Une <b>2e Fonderie</b> coûte 30 lingots : 10 lingots de plus par jour, réserve jusqu'à 45. Les <b>combats</b> en rapportent aussi : <b>+2</b> par commune conquise, <b>+1</b> par défense réussie, <b>10 au plus par jour</b> (seules les victoires qui comptent pour le score).<!-- patch300 --> Avec <b>20 lingots</b>, fais d'une commune une <b>Forteresse</b> (5 au plus) : <b>−15 %</b> aux chances des attaquants sur elle, et <b>+5 %</b> à tes attaques à moins de 20 km. Une Forteresse active se <b>déplace</b> sur une autre de tes communes pour <b>10 lingots</b> (Défendre › Bâtiments, ou la fiche de la commune) : 6 h de chantier sans effet, pas pendant un assaut, et ça ne s'annule pas.<!-- patch374 --> Un bâtiment met <b>6 h</b> à se construire (on peut l'annuler pendant ce temps : ses lingots sont rendus, sauf pendant un assaut sur sa commune)<!-- patch305 -->, se voit sur la carte et disparaît si on prend sa commune ; prendre une Fonderie pille la moitié des lingots de son propriétaire (le quart s'il en a deux). Les lingots ne servent qu'aux bâtiments et repartent à zéro à chaque saison.</p>
-            <p><b>Banque</b> : avec une Fonderie, construis ta <b>Banque</b> (20 lingots, une seule). C'est ton <b>épargne</b> : tu y déposes jusqu'à <b>60 lingots</b>, qui rapportent <b>10 % par nuit</b> et sont à l'abri du pillage des Fonderies. Pour les dépenser, retire-les (Défendre › Bâtiments). Elle est <b>secrète</b>, sauf pour les Radars des autres joueurs à moins de 50 km. Tu peux la <b>déplacer</b> sur une autre de tes communes pour 10 lingots (Défendre › Bâtiments, ou la fiche de la commune) : son contenu la suit ; 6 h de chantier sans dépôt ni intérêts, pas pendant un assaut, et ça ne s'annule pas.<!-- patch375 --> Si on prend sa commune, elle est détruite et l'attaquant pille la moitié de son contenu ; une bombe qui tombe sur sa zone en détruit 20, 30 ou 40 % selon son niveau.</p><!-- patch354 -->
-            <p><b>Centre de recherche et bombe</b> : avec 2 Fonderies, construis un <b>Centre de recherche</b> (40 lingots, un seul). Il est <b>secret</b> : les autres ne le voient pas sur la carte. <b>Préparer une bombe</b> coûte 45 lingots et l'annonce à tous, sans ton nom, avec ton département. La bombe est prête en 24 h (rayon 15 km), puis grossit : 20 km à 36 h, 25 km à 48 h. À partir de 36 h de préparation, ton centre apparaît sur la carte ; s'il est pris, la bombe est perdue. Tu la lâches depuis la mallette, sur une commune à moins de 50 km des tiennes : elle détruit garnisons et forteresses de tout le monde dans la zone (les tiennes aussi), et pendant 24 h tout le monde y attaque à +15 %. Ton nom est donné à l'impact et ton centre reste visible 24 h. Pas de bombe à moins de 30 km d'une zone encore active. Tu peux <b>déménager ton centre</b> sur une autre de tes communes (Défendre › Bâtiments) : l'ancien te rend 20 lingots, le nouveau en coûte 40, 6 h de chantier ; ta bombe suit, en pause pendant le chantier, et un centre dévoilé le reste.</p><!-- patch370, patch371 -->
-            <p><b>Radar</b> : avec une Fonderie, construis un <b>Radar</b> (30 lingots, un seul). Il voit les <b>Centres de recherche</b> et les <b>Banques</b> des autres joueurs à moins de <b>50 km</b>, même secrets (pas ceux de ton clan) : ils apparaissent sur ta carte et dans Défendre, et leur propriétaire est prévenu.<!-- patch375 --> Le Radar est visible de tous ; si on prend sa commune, il est détruit.</p><!-- patch371 -->
+            <p><b>Bâtiments</b> : sur une de tes communes, construis ta <b>Fonderie</b> (gratuite) : elle produit <b>10 lingots par jour</b>, 30 en réserve. Une <b>2e Fonderie</b> coûte 30 lingots : 10 lingots de plus par jour, réserve jusqu'à 45. Les <b>combats</b> en rapportent aussi : <b>+2</b> par commune conquise, <b>+1</b> par défense réussie, <b>10 au plus par jour</b> (seules les victoires qui comptent pour le score).<!-- patch300 --> Avec <b>20 lingots</b>, fais d'une commune une <b>Forteresse</b> (5 au plus) : <b>−15 %</b> aux chances des attaquants sur elle, et <b>+5 %</b> à tes attaques à moins de 20 km. Une Forteresse active se <b>déplace</b> sur une autre de tes communes pour <b>10 lingots</b> (Combat › Bâtiments, ou la fiche de la commune) : 6 h de chantier sans effet, pas pendant un assaut, et ça ne s'annule pas.<!-- patch374 --> Un bâtiment met <b>6 h</b> à se construire (on peut l'annuler pendant ce temps : ses lingots sont rendus, sauf pendant un assaut sur sa commune)<!-- patch305 -->, se voit sur la carte et disparaît si on prend sa commune ; prendre une Fonderie pille la moitié des lingots de son propriétaire (le quart s'il en a deux). Les lingots ne servent qu'aux bâtiments et repartent à zéro à chaque saison.</p>
+            <p><b>Banque</b> : avec une Fonderie, construis ta <b>Banque</b> (20 lingots, une seule). C'est ton <b>épargne</b> : tu y déposes jusqu'à <b>60 lingots</b>, qui rapportent <b>10 % par nuit</b> et sont à l'abri du pillage des Fonderies. Pour les dépenser, retire-les (Combat › Bâtiments). Elle est <b>secrète</b>, sauf pour les Radars des autres joueurs à moins de 50 km. Tu peux la <b>déplacer</b> sur une autre de tes communes pour 10 lingots (Combat › Bâtiments, ou la fiche de la commune) : son contenu la suit ; 6 h de chantier sans dépôt ni intérêts, pas pendant un assaut, et ça ne s'annule pas.<!-- patch375 --> Si on prend sa commune, elle est détruite et l'attaquant pille la moitié de son contenu ; une bombe qui tombe sur sa zone en détruit 20, 30 ou 40 % selon son niveau.</p><!-- patch354 -->
+            <p><b>Centre de recherche et bombe</b> : avec 2 Fonderies, construis un <b>Centre de recherche</b> (40 lingots, un seul). Il est <b>secret</b> : les autres ne le voient pas sur la carte. <b>Préparer une bombe</b> coûte 45 lingots et l'annonce à tous, sans ton nom, avec ton département. La bombe est prête en 24 h (rayon 15 km), puis grossit : 20 km à 36 h, 25 km à 48 h. À partir de 36 h de préparation, ton centre apparaît sur la carte ; s'il est pris, la bombe est perdue. Tu la lâches depuis la mallette, sur une commune à moins de 50 km des tiennes : elle détruit garnisons et forteresses de tout le monde dans la zone (les tiennes aussi), et pendant 24 h tout le monde y attaque à +15 %. Ton nom est donné à l'impact et ton centre reste visible 24 h. Pas de bombe à moins de 30 km d'une zone encore active. Tu peux <b>déménager ton centre</b> sur une autre de tes communes (Combat › Bâtiments) : l'ancien te rend 20 lingots, le nouveau en coûte 40, 6 h de chantier ; ta bombe suit, en pause pendant le chantier, et un centre dévoilé le reste.</p><!-- patch370, patch371 -->
+            <p><b>Radar</b> : avec une Fonderie, construis un <b>Radar</b> (30 lingots, un seul). Il voit les <b>Centres de recherche</b> et les <b>Banques</b> des autres joueurs à moins de <b>50 km</b>, même secrets (pas ceux de ton clan) : ils apparaissent sur ta carte et dans Combat › Bâtiments, et leur propriétaire est prévenu.<!-- patch375 --> Le Radar est visible de tous ; si on prend sa commune, il est détruit.</p><!-- patch371 -->
             <p><b>Rébellion</b> : sous la fiche d'attaque d'une ville, finance une rébellion avec tes lingots : <b>3 lingots par point</b>, de −1 % à <b>−15 %</b> de défense, pendant <b>24 h</b>, pour toi seul. Le propriétaire est prévenu, sans savoir qui finance ni combien. Il peut l'étouffer à l'aveugle avec ses lingots, dans Défendre : ce qu'il paie est retiré de la caisse de la rébellion, et une caisse vide est étouffée. Une rébellion par ville et par joueur ; elle s'arrête si la ville change de main.</p><!-- lot 8/11 -->
             <p><b>Aurore et skins</b> : une commune Aurore reste Aurore quand elle change de main ; dans un paquet Front, une commune de la liste Aurore sort en Aurore une fois sur trois. Un skin, lui, appartient à celui qui l'a acheté : prendre une commune habillée ne te donne pas son skin, elle prend ton apparence.</p>
             <p>Astuce : dans Combat comme dans Échange, sépare tes critères par une virgule. « Arkhannou, 63 » montre les communes d'Arkhannou dans le Puy-de-Dôme.</p>
@@ -1715,6 +1738,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=63122d76e846"></script>
+<script defer src="app.js?v=0dc993676d32"></script>
 </body>
 </html>

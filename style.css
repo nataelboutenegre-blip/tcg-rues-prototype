@@ -9451,3 +9451,14 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .gc-voir{ flex:none; margin-left:auto; border:0; border-radius:999px; padding:8px 14px; cursor:pointer;
   font:600 .85rem/1 'Instrument Sans', sans-serif; color:#2A0E10; background:#FF9C95; box-shadow:0 2px 8px rgba(0,0,0,.35); }
 .gc-voir:active{ transform:translateY(1px); }
+
+/* patch379 : le volet Bâtiments */
+.btv-galerie{ display:flex; flex-wrap:wrap; gap:8px; margin:4px 0 14px; }
+#panel-batiments .batiments-bloc{ margin-top:0; }
+#panel-batiments .volet{ white-space:nowrap; }
+@media (max-width: 720px){
+  #panel-combat .volet, #panel-defense .volet, #panel-batiments .volet{ padding-left:8px; padding-right:8px; }
+}
+@media (max-width: 380px){
+  #panel-combat .volet, #panel-defense .volet, #panel-batiments .volet{ padding-left:5px; padding-right:5px; font-size:.86rem; }
+}

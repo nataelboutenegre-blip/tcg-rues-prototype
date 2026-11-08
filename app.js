@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '63122d76e846';
+const VERSION_JEU = '0dc993676d32';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10602,9 +10602,9 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // revient a Collection. L'onglet Defense reste dans la page, cache, et
 // n'apparait ni dans la barre ni dans le menu.
 let ONGLETS_BARRE = ['tirage', 'territoire', 'qg', 'combat'];
-const ONGLETS_FUSIONNES = ['defense', 'succes', 'cdj', 'radar', 'rafale', 'boutiqueeuros', 'personnaliser', 'monuments', 'pass', 'bourse', 'echange'];   // patch298 : bourse, echange   // patch254 : pass   // patch191 : monuments
+const ONGLETS_FUSIONNES = ['defense', 'batiments', 'succes', 'cdj', 'radar', 'rafale', 'boutiqueeuros', 'personnaliser', 'monuments', 'pass', 'bourse', 'echange'];   // patch298 : bourse, echange   // patch254 : pass   // patch191 : monuments
 // l'onglet qui s'allume quand on ouvre un volet fusionne
-const ONGLET_PARENT = { defense: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg', boutiqueeuros: 'boutique', personnaliser: 'profil', monuments: 'collection', pass: 'qg', bourse: 'contrat', echange: 'contrat' };   // patch298
+const ONGLET_PARENT = { defense: 'combat', batiments: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg', boutiqueeuros: 'boutique', personnaliser: 'profil', monuments: 'collection', pass: 'qg', bourse: 'contrat', echange: 'contrat' };   // patch298
 
 // ---------- patch89 : saison 2, deux modes ----------
 // SAISON2 = false : la saison 1 tourne comme avant, rien de ce bloc ne
@@ -10771,12 +10771,13 @@ function initModes(){
     bt.id = 'batimentsBloc';
     bt.className = 'garnisons-bloc batiments-bloc';
     bt.hidden = true;
-    g.insertAdjacentElement('beforebegin', bt);
+    const pBat = document.getElementById('panel-batiments');   // patch379 : son propre volet
+    if(pBat) pBat.appendChild(bt); else g.insertAdjacentElement('beforebegin', bt);
     // lot 8/11 : les rébellions qui couvent dans mes villes
     const rbb = document.createElement('div');
     rbb.id = 'rebellionsBloc';
     rbb.className = 'garnisons-bloc rebellions-bloc';
-    bt.insertAdjacentElement('beforebegin', rbb);
+    g.insertAdjacentElement('beforebegin', rbb);
     bt.addEventListener('click', (e) => {
       const an = e.target.closest('[data-bt-annuler]');   // patch305 : annuler un chantier, en deux temps
       if(an){
@@ -10979,7 +10980,7 @@ function blocBatimentsEtat(code, c){
     const prete = btPretDans(fort) <= 0, route = fort.deplacee && !prete;   // patch374
     html += `<div class="bt bt-fort">
       <div class="bt-haut">${ICONE_FORTERESSE}Forteresse <b>${prete ? 'active' : (route ? 'en route · ' : '') + 'prête dans ' + formatDuree(btPretDans(fort))}</b></div>
-      <p class="bt-txt">${route ? '<b>Déplacement en cours</b> : elle ne protège rien avant la fin du chantier. ' : ''}<b>−${btReglage('forteresse_defense', 15)} %</b> aux chances des attaquants ici, et <b>+${btReglage('forteresse_appui', 5)} %</b> à tes attaques à moins de ${btReglage('rayon_km', 20)} km.${prete ? ` Tu peux la déplacer pour ${ftDepPrix()} lingots : Défendre › Bâtiments, ou « Déplacer une forteresse ici » sur une autre de tes communes.` : ''}</p>
+      <p class="bt-txt">${route ? '<b>Déplacement en cours</b> : elle ne protège rien avant la fin du chantier. ' : ''}<b>−${btReglage('forteresse_defense', 15)} %</b> aux chances des attaquants ici, et <b>+${btReglage('forteresse_appui', 5)} %</b> à tes attaques à moins de ${btReglage('rayon_km', 20)} km.${prete ? ` Tu peux la déplacer pour ${ftDepPrix()} lingots : Combat › Bâtiments, ou « Déplacer une forteresse ici » sur une autre de tes communes.` : ''}</p>
       ${prete || route ? '' : btAnnulerHtml(code, 'forteresse')}
     </div>`;
   }
@@ -10988,7 +10989,7 @@ function blocBatimentsEtat(code, c){
     const pret = btPretDans(rd) <= 0, nv = (rd.voit || []).length + (rd.voit_banques || []).length, po = rdReglage('portee_km', 50);   // patch375
     html += `<div class="bt bt-radar">
       <div class="bt-haut">${ICONE_RADAR}Radar <b>${pret ? (nv ? nv + ' bâtiment' + (nv > 1 ? 's' : '') + ' en vue' : 'rien en vue') : 'prêt dans ' + formatDuree(btPretDans(rd))}</b></div>
-      <p class="bt-txt">Il voit les Centres de recherche et les Banques à moins de <b>${po} km</b>, même secrets : ils apparaissent sur ta carte, et leur propriétaire est prévenu. Visible de tous : si on te prend ${echapperHtml(c.nom)}, il est détruit. Le détail est dans Défendre.</p>
+      <p class="bt-txt">Il voit les Centres de recherche et les Banques à moins de <b>${po} km</b>, même secrets : ils apparaissent sur ta carte, et leur propriétaire est prévenu. Visible de tous : si on te prend ${echapperHtml(c.nom)}, il est détruit. Le détail est dans Combat › Bâtiments.</p>
       ${pret ? '' : btAnnulerHtml(code, 'radar')}
     </div>`;
   }
@@ -10997,7 +10998,7 @@ function blocBatimentsEtat(code, c){
     const P = B.preparation, pret = btPretDans(ce) <= 0, niv = bombeEtat().niv;
     html += `<div class="bt bt-centre">
       <div class="bt-haut">${ICONE_CENTRE}Centre de recherche <b>${!pret ? 'prêt dans ' + formatDuree(btPretDans(ce)) : P ? (niv ? 'bombe niveau ' + niv : 'bombe en préparation') : 'prêt'}</b></div>
-      <p class="bt-txt">${!pret && P ? '<b>Déménagement en cours</b> : ta bombe est en pause jusqu’à la fin du chantier. ' : ''}${ce.devoile ? '<b>Dévoilé</b> : tout le monde le voit sur la carte.' : (B.repere_par || []).length ? `<b>Repéré</b> par ${(B.repere_par || []).length === 1 ? 'un Radar' : (B.repere_par || []).length + ' Radars'} : son propriétaire le voit sur sa carte.` : 'Secret : les autres ne le voient pas sur la carte.'} Si on te prend ${echapperHtml(c.nom)}, il est détruit${P ? ' et ta bombe est perdue' : ''}. Tout se gère dans Défendre.</p>
+      <p class="bt-txt">${!pret && P ? '<b>Déménagement en cours</b> : ta bombe est en pause jusqu’à la fin du chantier. ' : ''}${ce.devoile ? '<b>Dévoilé</b> : tout le monde le voit sur la carte.' : (B.repere_par || []).length ? `<b>Repéré</b> par ${(B.repere_par || []).length === 1 ? 'un Radar' : (B.repere_par || []).length + ' Radars'} : son propriétaire le voit sur sa carte.` : 'Secret : les autres ne le voient pas sur la carte.'} Si on te prend ${echapperHtml(c.nom)}, il est détruit${P ? ' et ta bombe est perdue' : ''}. Tout se gère dans Combat › Bâtiments.</p>
       ${pret || P ? '' : btAnnulerHtml(code, 'centre')}
     </div>`;
   }
@@ -11008,7 +11009,7 @@ function blocBatimentsEtat(code, c){
     html += `<div class="bt bt-banque">
       <div class="bt-haut">${ICONE_BANQUE}Banque <b>${pret ? `${dedans} / ${res} ${ICONE_LINGOT}` : (route ? `en route · ${dedans} ${ICONE_LINGOT} · ` : '') + 'prête dans ' + formatDuree(btPretDans(bq))}</b></div>
       ${pret ? `<div class="bt-barre" style="grid-template-columns:repeat(${res},1fr)">${Array.from({ length: res }, (_, i) => `<i class="${i < dedans ? 'b' : ''}"></i>`).join('')}</div>` : ''}
-      <p class="bt-txt">${bqEpargne() ? `Ton épargne : dépose des lingots dans Défendre, ils rapportent <b>${bqReglage('interet', 10)} % par nuit</b> (jusqu’à ${res}). Pour les dépenser, retire-les. ${route ? '<b>Déplacement en cours</b> : ni dépôt ni intérêts avant la fin du chantier. ' : ''}${bqSecretTexte()}` : `Ce qui dépasse la réserve de tes Fonderies (${Number(B.max_fonderies) || 30}) est rangé ici : <b>tu peux garder jusqu’à ${(Number(B.max_fonderies) || 30) + res} lingots</b>. Secrète : les autres ne la voient pas sur la carte.`}
+      <p class="bt-txt">${bqEpargne() ? `Ton épargne : dépose des lingots dans Combat › Bâtiments, ils rapportent <b>${bqReglage('interet', 10)} % par nuit</b> (jusqu’à ${res}). Pour les dépenser, retire-les. ${route ? '<b>Déplacement en cours</b> : ni dépôt ni intérêts avant la fin du chantier. ' : ''}${bqSecretTexte()}` : `Ce qui dépasse la réserve de tes Fonderies (${Number(B.max_fonderies) || 30}) est rangé ici : <b>tu peux garder jusqu’à ${(Number(B.max_fonderies) || 30) + res} lingots</b>. Secrète : les autres ne la voient pas sur la carte.`}
         Si on te prend ${echapperHtml(c.nom)}, elle est détruite et l’attaquant pille <b>la moitié de son contenu</b>. Une bombe qui tombe sur la zone en détruit ${(bqReglage('bombe', [20, 30, 40]) || [20])[0]} à ${(bqReglage('bombe', [20, 30, 40]) || [40]).slice(-1)[0]} %.</p>
       ${pret || route ? '' : btAnnulerHtml(code, 'banque')}
     </div>`;
@@ -11140,7 +11141,7 @@ function renderBatimentsBloc(){
     return `<div class="btl"><span class="btl-ic">${ic}</span>
       <span class="btl-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(b.code)}">${echapperTexte(b.nom)} (${echapperTexte(b.dept)})</button><small>${sous}</small></span>${fin}</div>`;
   };
-  el.innerHTML = `<h2>Bâtiments</h2>${alertesBombesHtml()}
+  el.innerHTML = `${document.getElementById('panel-batiments') ? '' : '<h2>Bâtiments</h2>'}${alertesBombesHtml()}
     <div class="bt-reserve"><span class="btr-nb">${n}</span>${ICONE_LINGOT}<span class="btr-max">/ ${max} lingots</span>
       <span class="btr-prod">${F ? (btProdTotale() > 0 ? `+${btProdTotale()} par jour<br>${pr ? 'prochain dans ' + formatDuree(pr) : 'réserve pleine'}` : 'Fonderie<br>en construction') : 'Pas encore<br>de Fonderie'}</span></div>
     ${B.banque && btPretDans(B.banque) <= 0 && !bqEpargne() ? `<div class="bt-split"><span><i class="pt f"></i>${Math.min(n, Number(B.max_fonderies) || 30)} / ${Number(B.max_fonderies) || 30} dans tes Fonderies</span><span><i class="pt b"></i>${Math.max(0, n - (Number(B.max_fonderies) || 30))} / ${bqReglage('reserve', 60)} à l’abri dans la Banque</span></div>` : ''}
@@ -13469,6 +13470,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'clan'){ loadClan(); setTimeout(tchatMajBadge, 0); }
     if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); ppRelire(300); }   // patch306
     if(tab.dataset.tab === 'defense'){ loadMenaces().then(loadReveil); loadCombat(); renderIntensite('defense'); if(SAISON2) chargerGarnisons(); }
+    if(tab.dataset.tab === 'batiments' && SAISON2){ chargerBatiments(); window.scrollTo({ top: 0 }); }   // patch379
     if(tab.dataset.tab === 'combat' && SAISON2) majEnergie();
     if(tab.dataset.tab === 'combat') mfoEntrer();   // patch288
     if(SAISON2 && (tab.dataset.tab === 'territoire' || tab.dataset.tab === 'combat')) setTimeout(pcSansPaquet, 900);   // patch365
@@ -15791,7 +15793,7 @@ if('serviceWorker' in navigator){
   });
 }
 
-const ONGLETS_CONNUS = ['tirage', 'collection', 'territoire', 'bourse', 'combat', 'defense', 'regles', 'cdj', 'qg', 'radar'];
+const ONGLETS_CONNUS = ['tirage', 'collection', 'territoire', 'bourse', 'combat', 'defense', 'batiments', 'regles', 'cdj', 'qg', 'radar'];
 function ouvrirOngletDepuisUrl(url){
   try{
     const onglet = new URL(url, location.href).searchParams.get('onglet');
@@ -22768,7 +22770,7 @@ function ncConstruire(){
       items.push({ cle: `radarbq|${x.id}|${BATIMENTS.banque ? BATIMENTS.banque.code : ''}`, sec: 'afaire', c: 'danger', i: '📡', mode: 'front',
         t: `Le <b>Radar de ${echapperTexte(x.pseudo || 'un joueur')}</b> voit ta Banque`,
         s: `Son Radar est à ${echapperTexte(x.nom || '')} (${echapperTexte(x.dept || '')}), à ${String(x.km).replace('.', ',')} km de ta Banque`,
-        a: 'Déplacer', aller: () => ncAller('front', 'defense') });
+        a: 'Déplacer', aller: () => ncAller('front', 'batiments') });
     }
   }
   if(SAISON2 && BATIMENTS && Array.isArray(BATIMENTS.repere_par)){   // patch371 : un Radar voit mon Centre
@@ -22776,7 +22778,7 @@ function ncConstruire(){
       items.push({ cle: `radar|${x.id}|${BATIMENTS.centre ? BATIMENTS.centre.code : ''}`, sec: 'afaire', c: 'danger', i: '📡', mode: 'front',
         t: `Le <b>Radar de ${echapperTexte(x.pseudo || 'un joueur')}</b> voit ton Centre de recherche`,
         s: `Son Radar est à ${echapperTexte(x.nom || '')} (${echapperTexte(x.dept || '')}), à ${String(x.km).replace('.', ',')} km de ton centre`,
-        a: 'Déménager', aller: () => ncAller('front', 'defense') });
+        a: 'Déménager', aller: () => ncAller('front', 'batiments') });
     }
   }
   if(p.jeu.echange && Array.isArray(d.ech)){
@@ -25086,7 +25088,7 @@ function libEntree(){
     el = document.createElement('div');
     el.id = 'libEntree';
     el.className = 'garnisons-bloc lib-entree';
-    const g = document.getElementById('batimentsBloc') || document.getElementById('garnisonsBloc') || defense.querySelector('.bourse-section');
+    const g = document.getElementById('rebellionsBloc') || document.getElementById('garnisonsBloc') || defense.querySelector('.bourse-section');   // patch379 : les bâtiments ont leur volet
     if(g) g.insertAdjacentElement('beforebegin', el); else defense.appendChild(el);
     el.addEventListener('click', (e) => { if(e.target.closest('[data-lib-ouvrir]')) libOuvrir(); });
   }
@@ -26004,10 +26006,15 @@ function mfoRendre(){
   const blocQ = ob && !ob.hidden && ob.innerHTML ? `<button type="button" class="${ob.className} mfo-quetes" data-mfo="quetes" aria-label="${echapperTexte(ob.getAttribute('aria-label') || 'Quêtes du jour')}">${ob.innerHTML}</button>` : '';
   z.innerHTML = blocDanger + blocEnergie + blocAtt + mfoBatimentsHtml() + blocCom + blocQ;   // patch366
 }
+// patch379 : la galerie depuis le volet Bâtiments
+document.getElementById('panel-batiments')?.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-btv]');
+  if(b) btEcranOuvrir(b.dataset.btv);
+});
 // ouvrir un autre écran depuis Mon front
 function mfoVers(quoi, tier){
   const tab = (id) => { const t = document.querySelector(`.tab[data-tab="${id}"]`); if(t) t.click(); };
-  if(quoi === 'batiments') return btEcranOuvrir('miens');   // patch366
+  if(quoi === 'batiments') return tab('batiments');   // patch379 : le volet (la galerie est en haut)
   if(quoi === 'defendre') return tab('defense');
   if(quoi === 'attaquer' || quoi === 'encours'){
     MFO.vue = 'attaquer'; mfoAppliquer();
@@ -26760,7 +26767,7 @@ async function ppAction(quoi, bouton){
     return;
   }
   if(quoi === 'clan'){ ncAller(null, 'clan'); return; }
-  if(quoi === 'fonderie'){ ncAller('front', 'defense'); return; }
+  if(quoi === 'fonderie'){ ncAller('front', 'batiments'); return; }   // patch379
   if(quoi === 'reclamer'){
     bouton.disabled = true;
     const { data, error } = await sb.rpc('premiers_pas_reclamer');
@@ -27103,7 +27110,7 @@ document.addEventListener('click', (e) => {
   }
   if(a === 'clan'){ onbMarque('pc_clan'); pcFermer(); clanAOuvrir = b.dataset.pcClan; ncAller(null, 'clan'); return; }
   if(a === 'clans'){ onbMarque('pc_clan'); pcFermer(); ncAller(null, 'clan'); return; }
-  if(a === 'fonderie'){ pcFermer(); ncAller('front', 'defense'); return; }
+  if(a === 'fonderie'){ pcFermer(); ncAller('front', 'batiments'); return; }   // patch379
 });
 pcVoile()?.addEventListener('click', (e) => { if(e.target === pcVoile()) pcFermer(); });
 

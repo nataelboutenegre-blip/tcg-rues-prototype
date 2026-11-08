@@ -166,7 +166,7 @@
 
   let enCours = false;
   async function lire(){
-    if(enCours || !D.cat || !D.chemins.size) return;
+    if(enCours || !D.cat || !D.chemins.size || window.BOMBE_EN_COURS) return;   // patch378 : la demande attend la fin de la bombe
     enCours = true;
     try{
       const { data, error } = await sb.rpc('direct_affiche');
@@ -185,7 +185,7 @@
   const eclairOrigine = window.eclair;
   window.eclair = function(e){
     eclairOrigine(e);
-    if(!ATTAQUES || !e || !['conquete', 'defense', 'bombe'].includes(e[1])) return;
+    if(!ATTAQUES || !e || !['conquete', 'defense'].includes(e[1])) return;   // patch378 : les bombes ont leur animation (bombe.js)
     if(!BOITES.has(String(e[6]))) return;
     file.push(e);
     while(file.length > 4) file.shift();   // en cas de rafale : les 4 plus récentes
@@ -194,7 +194,7 @@
   setInterval(() => {
     const maintenant = Date.now();
     if(codeAffiche && maintenant > finLocale + (source === 'demande' ? 3000 : 0)) fermer();
-    if(codeAffiche || maintenant < pauseJusqua) return;
+    if(codeAffiche || maintenant < pauseJusqua || window.BOMBE_EN_COURS) return;   // patch378
     while(file.length){
       const e = file.shift();
       if(maintenant / 1000 - e[2] > TROP_VIEUX) continue;

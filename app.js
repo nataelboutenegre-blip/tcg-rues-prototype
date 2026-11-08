@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '2f6f0752f886';
+const VERSION_JEU = '8dd7cdfe48b1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4572,6 +4572,16 @@ document.addEventListener('keydown', (e) => {
   if(e.key === 'Escape' && panneauCommune) fermerPanneau();
 });
 
+// patch383 : la bulle d'un département, avec le nombre de communes à côté du pourcentage
+function bulleDeptHtml(dep){
+  const s = statsDepartement(dep);
+  const n = (x) => `<small>· ${nbFr(x)}</small>`;
+  return `<b class="ib-titre">${echapperHtml(DEPT_NAMES[dep] || dep)} (${echapperHtml(dep)})<small>${nbFr(s.total)} communes</small></b>`
+    + lignesDept(s).map(j => `<span class="ib-j${j.moi ? ' moi' : ''}"><i style="background:${j.couleur}"></i>${echapperHtml(j.pseudo)}<em>${partDept(j.n, s.total)} ${n(j.n)}</em></span>`).join('')
+    + `<span class="ib-libre">Libres<em>${partDept(s.total - s.pris, s.total)} ${n(s.total - s.pris)}</em></span>`
+    + (CALQUES.couleur === 'raretes' ? `<span class="ib-rar">${rarDeptTexte(dep)}</span>` : '');   // patch294
+}
+
 function brancherSurvolCanvas(){
   const cv = document.getElementById('mapCanvas');
   const bulle = document.getElementById('mapInfobulle');
@@ -4587,13 +4597,9 @@ function brancherSurvolCanvas(){
       const dep = departementSousLePoint(e.clientX - rect.left, e.clientY - rect.top);
       if(!dep){ bulle.hidden = true; bulle.dataset.dep = ''; return; }
       if(bulle.dataset.dep !== dep){
-        const s = statsDepartement(dep);
         bulle.dataset.dep = dep;
         bulle.classList.add('dept');
-        bulle.innerHTML = `<b class="ib-titre">${echapperHtml(DEPT_NAMES[dep] || dep)} (${echapperHtml(dep)})</b>`
-          + lignesDept(s).map(j => `<span class="ib-j${j.moi ? ' moi' : ''}"><i style="background:${j.couleur}"></i>${echapperHtml(j.pseudo)}<em>${partDept(j.n, s.total)}</em></span>`).join('')
-          + `<span class="ib-libre">Libres<em>${partDept(s.total - s.pris, s.total)}</em></span>`
-          + (CALQUES.couleur === 'raretes' ? `<span class="ib-rar">${rarDeptTexte(dep)}</span>` : '');   // patch294
+        bulle.innerHTML = bulleDeptHtml(dep);   // patch383
       }
       bulle.hidden = false;
     } else {

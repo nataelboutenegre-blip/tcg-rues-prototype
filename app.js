@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '3d0ab5f70a48';
+const VERSION_JEU = '1381a7d4d1f1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -27489,6 +27489,7 @@ function renderRoue(){
     roueSig = sig;
     el.innerHTML = `<div class="rdf-titre">La roue du Front</div><div class="rdf-sous">${roueCases().some(k => Number(k.tp) > 0) ? 'Énergie, lingots et TerraPoints à gagner' : 'Énergie et lingots à gagner'}</div>
       <div class="rdf-cadre">${roueSvgHtml()}<button type="button" class="rdf-centre" id="rdfCentre">Tourner</button><div class="rdf-gain" id="rdfGain" hidden></div></div>
+      <div class="rdf-soir" id="rdfSoir" hidden></div>
       <div class="rdf-jetons"><span class="rdf-slots" id="rdfSlots"></span><span class="rdf-dispo"><b id="rdfDispo"></b><span id="rdfProchain"></span></span></div>
       <div class="rdf-jour" id="rdfJour"></div>
       <button type="button" class="rdf-lien" id="rdfLien"></button>
@@ -27507,11 +27508,38 @@ function roueEcrire(id, html){
   if(e._rdf !== html){ e.innerHTML = html; e._rdf = html; }
   return e;
 }
+// patch388 : la soirée de la roue (s2-125)
+let roueSoirRelu = 0;
+function roueSoirFenetre(){
+  const d = ROUE && ROUE.soir_debut ? new Date(ROUE.soir_debut).getTime() : 0, f = ROUE && ROUE.soir_fin ? new Date(ROUE.soir_fin).getTime() : 0;
+  return { d, f, n: Number(ROUE && ROUE.soir_tours) || 0 };
+}
+function roueSoirReste(){
+  if(!ROUE || !ROUE.soir) return 0;
+  const { f } = roueSoirFenetre();
+  if(f && Date.now() >= f) return 0;
+  return Math.max(0, Number(ROUE.soir_restants) || 0);
+}
+function roueSoirHtml(){
+  const { d, f, n } = roueSoirFenetre();
+  if(!n || !d || !f) return '';
+  const h = (t) => new Date(t).toLocaleTimeString('fr-FR', { hour: 'numeric', timeZone: 'Europe/Paris' }).replace(/\s+/g, '\u00a0');
+  const now = Date.now(), r = roueSoirReste();
+  if(now < d) return `<span class="rdf-lune">🌙</span><span>Ce soir de ${h(d)} à ${h(f)} : <b>${n} tours offerts</b></span>`;
+  if(now >= f) return '';
+  if(r > 0) return `<span class="rdf-lune">🌙</span><span><b>Soirée de la roue</b> · ${r} tour${r > 1 ? 's' : ''} offert${r > 1 ? 's' : ''} jusqu’à ${h(f)}</span>`;
+  return ROUE.soir ? `<span class="rdf-lune">🌙</span><span>Tes ${n} tours du soir sont joués : rendez-vous demain à ${h(d)}</span>` : '';
+}
+
 function renderRoueInfos(){
   const el = document.getElementById('roueFront');
   if(!el || el.hidden || !ROUE || !el.offsetParent) return;   // onglet caché : rien à écrire
   const live = roueJetons(), dispo = Math.floor(live);
-  const par = Number(ROUE.par_jour) || 15, faits = Number(ROUE.tours_jour) || 0, fini = faits >= par, reste = Math.max(0, par - faits);
+  const fen = roueSoirFenetre(), soir = roueSoirReste();   // patch388
+  if(fen.n && fen.d && !ROUE.soir && Date.now() >= fen.d && Date.now() < fen.f && Date.now() - roueSoirRelu > 60000){ roueSoirRelu = Date.now(); chargerRoue(); }
+  const sh = roueSoirHtml(), sb2 = document.getElementById('rdfSoir');
+  if(sb2){ sb2.hidden = !sh; sb2.classList.toggle('actif', soir > 0); roueEcrire('rdfSoir', sh); }
+  const par = Number(ROUE.par_jour) || 15, faits = Number(ROUE.tours_jour) || 0, fini = faits >= par && soir < 1, reste = Math.max(0, par - faits);
   const prochain = live >= 3 ? 0 : (1 - (live % 1)) * 1200;
   const slot = (plein) => `<span class="rdf-slot${plein ? '' : ' vide'}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="${ROUE_BOLT}"/></svg></span>`;
   roueEcrire('rdfSlots', [0, 1, 2].map(i => slot(i < dispo)).join(''));
@@ -27520,11 +27548,12 @@ function renderRoueInfos(){
     : dispo >= 3 ? 'Réserve pleine : tourne avant d’en perdre !'
     : dispo === 0 ? 'Un tour revient toutes les <em>20 min</em>'
     : `Prochain tour dans <em>${roueMmss(prochain)}</em>`);
-  roueEcrire('rdfJour', fini ? `${par} tours faits aujourd’hui` : `${reste} tour${reste > 1 ? 's' : ''} restant${reste > 1 ? 's' : ''} aujourd’hui`);
+  roueEcrire('rdfJour', soir > 0 ? `Les tours du soir ne comptent pas dans tes ${par} tours du jour`   // patch388
+    : fini ? `${par} tours faits aujourd’hui` : `${reste} tour${reste > 1 ? 's' : ''} restant${reste > 1 ? 's' : ''} aujourd’hui`);
   const b = document.getElementById('rdfCentre');
   if(b){
-    const peut = !roueTourne && !fini && dispo >= 1;
-    roueEcrire('rdfCentre', roueTourne ? 'Tourner' : fini ? 'Demain<small>plus de tour</small>' : dispo < 1 ? `${roueMmss(prochain)}<small>prochain tour</small>` : 'Tourner');
+    const peut = !roueTourne && (soir >= 1 || (!fini && dispo >= 1));   // patch388 : un tour du soir suffit
+    roueEcrire('rdfCentre', roueTourne ? 'Tourner' : soir >= 1 ? 'Tourner<small>offert</small>' : fini ? 'Demain<small>plus de tour</small>' : dispo < 1 ? `${roueMmss(prochain)}<small>prochain tour</small>` : 'Tourner');
     b.disabled = !peut;
     b.classList.toggle('attente', !peut && !roueTourne);
     b.setAttribute('aria-label', peut ? 'Tourner la roue du Front' : fini ? 'Plus de tour aujourd’hui' : roueTourne ? 'La roue tourne' : `Prochain tour dans ${roueMmss(prochain)}`);
@@ -27595,7 +27624,7 @@ function roueGainMontrer(d){
 }
 async function roueTourner(){
   if(roueTourne || !roueActive()) return;
-  if(Math.floor(roueJetons()) < 1 || Number(ROUE.tours_jour) >= Number(ROUE.par_jour)) return;
+  if(roueSoirReste() < 1 && (Math.floor(roueJetons()) < 1 || Number(ROUE.tours_jour) >= Number(ROUE.par_jour))) return;   // patch388
   const el = document.getElementById('roueFront');
   roueTourne = true; roueGainCacher(); renderRoueInfos();
   if(el) el.classList.add('tourne');
@@ -27609,6 +27638,7 @@ async function roueTourner(){
   }
   ROUE.jetons = Number(data.jetons); roueLu = Date.now();
   ROUE.tours_jour = Number(data.tours_jour); if(data.par_jour) ROUE.par_jour = Number(data.par_jour);
+  if(data.soir !== undefined){ ROUE.soir = !!data.soir; ROUE.soir_restants = Number(data.soir_restants) || 0; }   // patch388
   if(packStatusCache){ packStatusCache.jetons_actuels = Number(data.jetons); packStatusFetchedAt = Date.now(); dispoPrecedente = Math.floor(Number(data.jetons)); }
   renderRoueInfos();
   await roueAnimer(data.case);

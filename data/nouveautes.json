@@ -8,11 +8,13 @@
       "🏦 Déplacer la Banque : 10 lingots, 6 h, le contenu suit. Les Radars voient maintenant les Banques à moins de 50 km, et le propriétaire est prévenu",
       "💥 L’impact de la bombe s’anime sur la carte (« Voir › » sur la bannière), et sur la carte en direct",
       "🗺 Encart « Paris et petite couronne » sur la carte en vue par départements (idée d’Arkhannou)",
-      "🔁 « Rejouer » à la fin d’un duel classé du Radar et de Rafale (idée de Cairnan217)"
+      "🔁 « Rejouer » à la fin d’un duel classé du Radar et de Rafale (idée de Cairnan217)",
+      "🛡 Recharger une garnison : choisis combien tu mets (+1, +2, +5 ou plein), dans Défendre et sur la fiche de la commune"
     ],
     "correctifs": [
       "La mallette de la bombe a une touche « - » et trouve les communes à tiret (signalé par Oshannir)",
-      "Moins de chargements quand on zoome vite sur la carte du Radar ou sur Ma France (plantage signalé par Arkhannou sur téléphone)"
+      "Moins de chargements quand on zoome vite sur la carte du Radar ou sur Ma France (plantage signalé par Arkhannou sur téléphone)",
+      "Défendre affiche bien les 5 places de garnison : avec 3 ou 4 garnisons, la liste « En garnison » disparaissait"
     ]
   },
   {

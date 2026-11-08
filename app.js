@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd2cdbcdea974';
+const VERSION_JEU = '2f6f0752f886';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10862,8 +10862,18 @@ function initModes(){
       batimentConstruire(code, 'forteresse');
     });
     g.addEventListener('click', (e) => {
+      // patch382 : « Recharger » ouvre le choix de la quantité
       const b = e.target.closest('[data-gn-recharger]');
-      if(b) garnisonAction(b.dataset.gnRecharger, 5);
+      if(b){ gnDose = gnDose === b.dataset.gnRecharger ? null : b.dataset.gnRecharger; renderGarnisons(); return; }
+      if(e.target.closest('[data-gn-dose-x]')){ gnDose = null; renderGarnisons(); return; }
+      const d = e.target.closest('[data-gn-dose]');
+      if(d){
+        d.disabled = true;
+        const code = d.dataset.gnDose;
+        gnDose = null;
+        garnisonAction(code, Number(d.dataset.n) || 1);
+        return;
+      }
       const p = e.target.closest('[data-gn-poser]');   // patch174
       if(p){
         p.disabled = true;
@@ -12209,9 +12219,9 @@ function renderGarnisons(){
       return `<div class="gl"><i class="gl-c ${tier.id}"></i><div class="gl-t">
         <div class="gl-nom"><button type="button" class="df-voir" data-voir-carte="${echapperTexte(code)}" title="Voir sur la carte" aria-label="Voir ${echapperTexte(g.nom)} sur la carte"><b>${echapperTexte(g.nom)}</b><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></button>${badgeDept(dep)}</div>
         <span>${tier.label} · ${g.attaquants > 0 ? 'attaquée' : 'calme'} · ${g.energie} / 10</span>${barre(g.energie)}</div>
-        <button class="gl-r" data-gn-recharger="${code}" ${g.energie >= 10 ? 'disabled' : ''}>Recharger</button></div>`;
+        <button class="gl-r${gnDose === code ? ' actif' : ''}" data-gn-recharger="${code}" ${g.energie >= 10 ? 'disabled' : ''}>Recharger</button></div>${gnDose === code ? gnDoseHtml(code, g) : ''}`;
     }).join('')}
-    ${liste.length < 3 ? `<p class="gl-vide">${3 - liste.length} place${liste.length < 2 ? 's' : ''} libre${liste.length < 2 ? 's' : ''} : choisis une de tes communes ci-dessous (ou depuis la carte).</p>
+    ${liste.length < garnisonsMax() ? `<p class="gl-vide">${garnisonsMax() - liste.length} place${garnisonsMax() - liste.length > 1 ? 's' : ''} libre${garnisonsMax() - liste.length > 1 ? 's' : ''} : choisis une de tes communes ci-dessous (ou depuis la carte).</p>
       <input type="search" class="bourse-search gn-cherche" id="gnCherche" placeholder="Chercher une de mes communes…" autocomplete="off" value="${echapperTexte(gnRecherche)}">
       <div class="gn-choix" id="gnChoix">${gnChoixHtml()}</div>` : ''}
     ${recits}`;
@@ -12222,6 +12232,16 @@ function renderGarnisons(){
     const z = document.getElementById('gnChoix'); if(z) z.innerHTML = gnChoixHtml();
   });
 }
+// patch382 : la recharge au choix (+1, +2, +5, plein)
+let gnDose = null;
+function gnDoseHtml(code, g){
+  const manque = Math.max(0, 10 - (Number(g.energie) || 0));
+  const dispo = energieEtat ? Math.floor(Number(energieEtat.energie) || 0) : 10;
+  const b = (n, txt, cls) => `<button type="button"${cls ? ` class="${cls}"` : ''} data-gn-dose="${echapperTexte(code)}" data-n="${n}" ${n > dispo ? 'disabled' : ''}>${txt} ${ICONE_ENERGIE}</button>`;
+  return `<div class="gn-btns gn-dose">${[1, 2, 5].filter(n => n < manque).map(n => b(n, '+' + n)).join('')}${b(manque, 'Plein +' + manque, 'gn-plein')}<button type="button" class="sec gn-dose-x" data-gn-dose-x aria-label="Annuler">✕</button></div>
+    ${dispo < manque ? `<p class="gn-txt gn-dose-note">Tu as ${dispo} énergie.</p>` : ''}`;
+}
+
 // patch174 : poser une garnison depuis Defendre
 let gnRecherche = '';
 function gnChoixHtml(){
@@ -12265,6 +12285,7 @@ function blocGarnisonFiche(code){
     <div class="gn-btns">
       <button data-pc="gn-plus" data-n="1" ${g.energie >= 10 ? 'disabled' : ''}>+1 ${ICONE_ENERGIE}</button>
       <button data-pc="gn-plus" data-n="5" ${g.energie >= 10 ? 'disabled' : ''}>+5 ${ICONE_ENERGIE}</button>
+      ${10 - g.energie > 5 ? `<button class="gn-plein" data-pc="gn-plus" data-n="${10 - g.energie}">Plein +${10 - g.energie} ${ICONE_ENERGIE}</button>` : ''}
       <button class="sec ${armee ? 'arme' : ''}" data-pc="gn-retirer">${armee ? `Confirmer (+${recu})` : 'Retirer'}</button>
     </div>${armee && recu < rendu ? `<p class="gn-txt gn-plafond">Tu as déjà ${dispo} d’énergie : tu ne récupérerais que ${recu} sur ${rendu}, l’énergie ne dépasse pas ${energiePlafond()}.</p>` : ''}</div>`;
 }

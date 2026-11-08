@@ -9485,3 +9485,11 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .atk-plus{ display:block; margin:10px auto 0; font:inherit; font-size:.76rem; font-weight:600; color:#A9BCD4; background:none; border:0; padding:4px 8px; cursor:pointer; }
 .atk-plus::after{ content:' ▾'; font-size:.7rem; }
 .atk-plus:hover{ color:#fff; }
+
+/* patch382 : la recharge de garnison au choix */
+.gn-dose{ margin:2px 0 10px; flex-wrap:wrap; }
+.gn-dose button{ min-width:48px; }
+.gn-dose .gn-dose-x{ flex:0 0 40px; min-width:40px; }
+.gn-btns button.gn-plein{ white-space:nowrap; font-size:.76rem; }
+.gn-dose-note{ margin:-4px 0 10px; }
+.gl-r.actif{ border-color:rgba(229,72,77,.6); background:rgba(229,72,77,.2); color:#fff; }

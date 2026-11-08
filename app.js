@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'dbbfe62a00b1';
+const VERSION_JEU = 'da4e6f5d9d5c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -583,6 +583,7 @@ function mettreEnSceneAssaut(cible, r){
         + (SAISON2 && (BATIMENTS_CARTE.get(String(cible.code)) || {}).fonderie ? `<span class="as-mon as-bt">${ICONE_FONDERIE}Fonderie détruite : tu pilles la moitié de ses lingots</span>` : '')   // patch243
         + (SAISON2 && (BATIMENTS_CARTE.get(String(cible.code)) || {}).centre ? `<span class="as-mon as-bt">${ICONE_CENTRE}Centre de recherche détruit : sa bombe est perdue</span>` : '')   // patch260
         + (SAISON2 && (BATIMENTS_CARTE.get(String(cible.code)) || {}).radar ? `<span class="as-mon as-bt">${ICONE_RADAR}Radar détruit</span>` : '')   // patch371
+        + (SAISON2 && (BATIMENTS_CARTE.get(String(cible.code)) || {}).banque ? `<span class="as-mon as-bt">${ICONE_BANQUE}Banque détruite : tu pilles la moitié de son contenu</span>` : '')   // patch375
         + (SAISON2 ? '<span class="as-mon as-lg" hidden></span>' : '');   // patch300
       if(SAISON2) chargerLingotsCombat().then((L) => {   // patch300 : ce que la conquête a rapporté en lingots
         const el = fen.querySelector('.as-lg');
@@ -2302,22 +2303,79 @@ async function banqueMouvement(sens, n){
   } finally { bqEnVol = false; }
   await chargerBatiments();
 }
+// patch375 : la Banque repérée par des Radars, et la déplacer (s2-117)
+const bqReperee = () => (BATIMENTS && BATIMENTS.banque_reperee_par) || [];
+const bqDepPrix = () => Number(bqReglage('deplacer_prix', 10)) || 0;
+var bqDepOuvert = false, bqDepRecherche = '';
+function bqSecretTexte(){
+  const L = bqReperee();
+  return L.length ? `<b>Repérée</b> par ${L.length === 1 ? 'le Radar de ' + echapperHtml(L[0].pseudo || 'un joueur') : L.length + ' Radars'} : ${L.length === 1 ? 'il la voit' : 'ils la voient'} sur ${L.length === 1 ? 'sa' : 'leur'} carte. Déplace-la pour disparaître de ${L.length === 1 ? 'son' : 'leur'} écran.`
+    : `Secrète : seuls les Radars des autres à moins de ${rdReglage('portee_km', 50)} km la voient.`;
+}
+function bqRepereHtml(){
+  const L = bqReperee();
+  if(!L.length) return '';
+  const qui = L.slice(0, 3).map(x => `<b>${echapperHtml(x.pseudo || 'un joueur')}</b> (${String(x.km).replace('.', ',')} km)`).join(', ');
+  return `<p class="cr-alerte rd-alerte">${ICONE_RADAR}<span>${L.length === 1 ? 'Le Radar de ' + qui + ' voit ta Banque. S’il prend sa commune' : L.length + ' Radars voient ta Banque : ' + qui + '. Si l’un d’eux prend sa commune'}, il pille la moitié de son contenu : déplace-la pour disparaître de ${L.length === 1 ? 'son' : 'leur'} écran.</span></p>`;
+}
+function bqDepHtml(bq){
+  if(btPretDans(bq) > 0) return '';
+  const prix = bqDepPrix(), n = lingotsActuels();
+  const bloque = btSousAssaut(bq.code) ? 'Ta Banque est attaquée : pas de déplacement pendant l’assaut.' : n < prix ? `Il te faut ${prix} lingots pour la déplacer (tu en as ${n}).` : '';
+  if(!bqDepOuvert) return `<button type="button" class="cr-dem-b bq-dem-b" data-bq-dep ${bloque ? 'disabled' : ''}>${ICONE_BANQUE}Déplacer la Banque · ${prix} ${ICONE_LINGOT}</button>${bloque ? `<p class="cr-manque">${bloque}</p>` : ''}`;
+  return `<div class="cr-dem">
+    <p class="cr-txt"><b>${prix} lingots</b>, <b>${btReglage('construction_h', 6)} h de chantier</b> : son contenu la suit. Pendant le chantier, ni dépôt ni intérêts (tu peux retirer). Un déplacement ne s’annule pas.${bqReperee().length ? ' Les Radars qui la voient ici la perdent de vue.' : ''}</p>
+    <input type="search" class="bourse-search gn-cherche" id="bqDepCherche" placeholder="Choisis la commune où la cacher…" autocomplete="off" value="${echapperTexte(bqDepRecherche)}">
+    <div class="gn-choix" id="bqDepChoix">${bqDepChoixHtml(bq)}</div>
+    <button type="button" class="cr-dem-x" data-bq-dep>Fermer</button></div>`;
+}
+// les Radars des autres (hors clan) qui verraient une Banque posée ici : même calcul que pour le Centre
+function bqDepChoixHtml(bq){
+  const q = sansAccents(bqDepRecherche.trim().toLowerCase());
+  const ici = collectionMap.get(bq.code);
+  const mes = [...collectionMap.values()].filter(c => c.code !== bq.code
+    && (!q || sansAccents(c.nom.toLowerCase()).includes(q) || c.dept === q.toUpperCase()));
+  if(!mes.length) return `<p class="gl-vide">${collectionMap.size > 1 ? 'Aucune de tes communes ne correspond.' : 'Il te faut une autre commune.'}</p>`;
+  const L = mes.map(c => ({ c, km: ici && ici.lat != null && c.lat != null ? kmEntre(ici.lat, ici.lon, c.lat, c.lon) : null, r: rdRadarsAutour(c.code) }));
+  L.sort((a, b) => a.r - b.r || (a.km == null) - (b.km == null) || (a.km || 0) - (b.km || 0));
+  const prix = bqDepPrix();
+  return L.slice(0, 6).map(({ c, km, r }) => {
+    const a = btArme === c.code + '|bqdep';
+    return `<div class="gl gn-ligne"><i class="gl-c ${c.tier.id}"></i><div class="gl-t"><b>${echapperTexte(c.nom)}</b>
+      <span>${echapperTexte(c.dept)}${km != null ? ' · à ' + Math.round(km) + ' km' : ''} · <em class="${r ? 'rd-vu' : 'rd-ok'}">${r ? r + ' Radar' + (r > 1 ? 's' : '') + ' la verrai' + (r > 1 ? 'ent' : 't') : 'aucun Radar'}</em></span></div>
+      <button class="gl-r bt-fortifier${a ? ' arme' : ''}" data-bq-dep-ici="${echapperTexte(c.code)}">${a ? `Confirmer · ${prix} lingots` : 'Ici'}</button></div>`;
+  }).join('') + (mes.length > 6 ? `<p class="gl-vide">+ ${mes.length - 6} autre${mes.length - 6 > 1 ? 's' : ''} : affine la recherche (les moins exposées aux Radars d’abord).</p>` : '');
+}
+async function banqueDeplacer(code){
+  const { error } = await sb.rpc('banque_deplacer', { p_vers: code });
+  if(error) notifier({ type: 'erreur', titre: 'Déplacer la Banque', texte: messageLisible(error.message) });
+  else {
+    const c = collectionMap.get(code);
+    notifier({ type: 'succes', titre: 'Banque en route', texte: `${c ? c.nom + ' : p' : 'P'}rête dans ${btReglage('construction_h', 6)} h, avec son contenu. D’ici là, ni dépôt ni intérêts.` });
+  }
+  bqDepOuvert = false; bqDepRecherche = '';
+  await chargerBatiments();
+  if(panneauCommune === code && collectionMap.get(code)){ const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); }
+}
+
 function banqueGestionHtml(){
   const B = BATIMENTS; if(!B || !B.banque || !bqEpargne()) return '';
-  const bq = B.banque, pret = btPretDans(bq) <= 0;
+  const bq = B.banque, pret = btPretDans(bq) <= 0, route = !!bq.deplacee && !pret;   // patch375
   const res = Number(bqReglage('reserve', 60)) || 60, dedans = Math.min(res, Number(bq.contenu) || 0);
   const poche = Math.floor(lingotsActuels()), place = Math.max(0, res - dedans);
   const nuit = bqInteretNuit(dedans);
   const bouton = (sens, n, txt) => `<button type="button" class="bq-b ${sens}" data-bq="${sens}" data-bq-n="${n}" ${n > 0 && !bqEnVol ? '' : 'disabled'}>${txt}</button>`;
   return `<div class="bq-bloc">
     <div class="bq-haut"><span class="btl-ic">${ICONE_BANQUE}</span>
-      <span class="bq-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(bq.code)}">${echapperTexte(bq.nom)} (${echapperTexte(bq.dept)})</button><small>Secrète · ${pret ? `${bqReglage('interet', 10)} % par nuit` : 'prête dans ' + formatDuree(btPretDans(bq))}</small></span>
+      <span class="bq-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(bq.code)}">${echapperTexte(bq.nom)} (${echapperTexte(bq.dept)})</button><small>${bqReperee().length ? '<b class="rd-rouge">Repérée</b>' : 'Secrète'} · ${pret ? `${bqReglage('interet', 10)} % par nuit` : (route ? 'en route, prête dans ' : 'prête dans ') + formatDuree(btPretDans(bq))}</small></span>
       <span class="bq-nb"><b>${dedans}</b> / ${res} ${ICONE_LINGOT}</span></div>
     ${pret ? `<div class="bq-barre"><i style="width:${Math.round(100 * dedans / res)}%"></i></div>
     <p class="bq-nuit">${dedans ? (nuit ? `<b>+${nuit}</b> cette nuit` : 'Moins de 10 lingots : l’intérêt s’accumule, il apparaîtra en lingots entiers.') : 'Dépose des lingots : ils rapportent ' + bqReglage('interet', 10) + ' % chaque nuit.'}</p>
     <div class="bq-ligne"><span>Déposer</span>${bouton('depot', Math.min(5, poche, place), '5')}${bouton('depot', Math.min(10, poche, place), '10')}${bouton('depot', Math.min(poche, place), `Tout (${Math.min(poche, place)})`)}</div>
     <div class="bq-ligne"><span>Retirer</span>${bouton('retrait', Math.min(5, dedans), '5')}${bouton('retrait', Math.min(10, dedans), '10')}${bouton('retrait', dedans, `Tout (${dedans})`)}</div>` : ''}
-  </div>`;
+    ${route ? `<p class="bq-nuit">Déplacement en cours : ni dépôt ni intérêts jusqu’à la fin du chantier.</p>
+    <div class="bq-ligne"><span>Retirer</span>${bouton('retrait', Math.min(5, dedans), '5')}${bouton('retrait', Math.min(10, dedans), '10')}${bouton('retrait', dedans, `Tout (${dedans})`)}</div>` : ''}
+  </div>${bqRepereHtml()}${bqDepHtml(bq)}`;   // patch375
 }
 let BOMBES_ZONES = [];             // bombes_actives() : les zones bombardées en cours
 let BOMBES_ALERTES = [];           // bombes_alertes(2) : préparations et impacts récents
@@ -3782,6 +3840,7 @@ function ouvrirPanneau(code, xCss, yCss){
       if(bt.forteresse) t.push(bt.forteresse.pret ? 'Forteresse' : 'Forteresse en construction');
       if(bt.radar) t.push(bt.radar.pret ? 'Radar' : 'Radar en construction');   // patch371
       if(bt.centre) t.push(bt.centre.radar ? 'Centre de recherche (vu par ton Radar)' : 'Centre de recherche dévoilé');
+      if(bt.banque) t.push(bt.banque.pret ? 'Banque (vue par ton Radar)' : 'Banque en chantier (vue par ton Radar)');   // patch375
       if(t.length) lignes.push(['Bâtiment', t.join(' + ')]);
     }
   }
@@ -4400,6 +4459,10 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
     b.disabled = true;
     batimentAnnuler(code, t);
     return;
+  }
+  if(quoi === 'bt-bq-dep'){   // patch375 : en deux temps
+    if(btArme !== code + '|bqdep'){ btArme = code + '|bqdep'; const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); return; }
+    btArme = null; b.disabled = true; banqueDeplacer(code); return;
   }
   if(quoi === 'bt-ft-dep'){ btArme = code + '|ftdep'; const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); return; }   // patch374 : laquelle ?
   if(quoi === 'bt-ft-dep-de'){ btArme = null; b.disabled = true; forteresseDeplacer(b.dataset.depuis, code); return; }
@@ -10728,6 +10791,13 @@ function initModes(){
       if(e.target.closest('[data-bt-mallette]')){ ouvrirMallette(); return; }
       const bqb = e.target.closest('[data-bq]');   // patch364 : déposer, retirer
       if(bqb){ bqb.disabled = true; banqueMouvement(bqb.dataset.bq, Number(bqb.dataset.bqN) || 0); return; }
+      if(e.target.closest('[data-bq-dep]')){ bqDepOuvert = !bqDepOuvert; bqDepRecherche = ''; btArme = null; renderBatimentsBloc(); return; }   // patch375
+      const bqi = e.target.closest('[data-bq-dep-ici]');
+      if(bqi){
+        const k = bqi.dataset.bqDepIci + '|bqdep';
+        if(btArme !== k){ btArme = k; const z = document.getElementById('bqDepChoix'); if(z && BATIMENTS && BATIMENTS.banque) z.innerHTML = bqDepChoixHtml(BATIMENTS.banque); return; }
+        btArme = null; bqi.disabled = true; banqueDeplacer(bqi.dataset.bqDepIci); return;
+      }
       if(e.target.closest('[data-cr-dem]')){ crDemOuvert = !crDemOuvert; crDemRecherche = ''; btArme = null; renderBatimentsBloc(); return; }   // patch371
       const dm = e.target.closest('[data-cr-dem-ici]');
       if(dm){
@@ -10805,11 +10875,11 @@ async function chargerBatiments(){
     BOMBES_ALERTES = al && !al.error && Array.isArray(al.data) ? al.data : [];
     bombesAnnoncer();
     const carte = new Map();
-    const vusRadar = new Set(((BATIMENTS.radar && BATIMENTS.radar.voit) || []).map(x => String(x.code)));   // patch371
+    const vusRadar = new Set(((BATIMENTS.radar && BATIMENTS.radar.voit) || []).concat((BATIMENTS.radar && BATIMENTS.radar.voit_banques) || []).map(x => String(x.code)));   // patch371, patch375 : les Banques aussi
     for(const b of (v.data || [])){
       const k = String(b.commune_code);
       const e = carte.get(k) || {};
-      e[b.type] = { moi: b.joueur_id === window.__monId, pret: !!b.pret, radar: b.type === 'centre' && vusRadar.has(k) };
+      e[b.type] = { moi: b.joueur_id === window.__monId, pret: !!b.pret, radar: (b.type === 'centre' || b.type === 'banque') && vusRadar.has(k) };
       carte.set(k, e);
     }
     BATIMENTS_CARTE = carte;
@@ -10913,10 +10983,10 @@ function blocBatimentsEtat(code, c){
   }
   const rd = B.radar && B.radar.code === code ? B.radar : null;   // patch371 : le Radar
   if(rd){
-    const pret = btPretDans(rd) <= 0, nv = (rd.voit || []).length, po = rdReglage('portee_km', 50);
+    const pret = btPretDans(rd) <= 0, nv = (rd.voit || []).length + (rd.voit_banques || []).length, po = rdReglage('portee_km', 50);   // patch375
     html += `<div class="bt bt-radar">
-      <div class="bt-haut">${ICONE_RADAR}Radar <b>${pret ? (nv ? nv + ' Centre' + (nv > 1 ? 's' : '') + ' en vue' : 'rien en vue') : 'prêt dans ' + formatDuree(btPretDans(rd))}</b></div>
-      <p class="bt-txt">Il voit les Centres de recherche à moins de <b>${po} km</b>, même secrets : ils apparaissent sur ta carte, et leur propriétaire est prévenu. Visible de tous : si on te prend ${echapperHtml(c.nom)}, il est détruit. Le détail est dans Défendre.</p>
+      <div class="bt-haut">${ICONE_RADAR}Radar <b>${pret ? (nv ? nv + ' bâtiment' + (nv > 1 ? 's' : '') + ' en vue' : 'rien en vue') : 'prêt dans ' + formatDuree(btPretDans(rd))}</b></div>
+      <p class="bt-txt">Il voit les Centres de recherche et les Banques à moins de <b>${po} km</b>, même secrets : ils apparaissent sur ta carte, et leur propriétaire est prévenu. Visible de tous : si on te prend ${echapperHtml(c.nom)}, il est détruit. Le détail est dans Défendre.</p>
       ${pret ? '' : btAnnulerHtml(code, 'radar')}
     </div>`;
   }
@@ -10932,12 +11002,13 @@ function blocBatimentsEtat(code, c){
   const bq = B.banque && B.banque.code === code ? B.banque : null;   // patch354 : la Banque
   if(bq){
     const pret = btPretDans(bq) <= 0, res = Number(bqReglage('reserve', 60)) || 60, dedans = Math.min(res, Number(bq.contenu) || 0);
+    const route = !!bq.deplacee && !pret;   // patch375
     html += `<div class="bt bt-banque">
-      <div class="bt-haut">${ICONE_BANQUE}Banque <b>${pret ? `${dedans} / ${res} ${ICONE_LINGOT}` : 'prête dans ' + formatDuree(btPretDans(bq))}</b></div>
+      <div class="bt-haut">${ICONE_BANQUE}Banque <b>${pret ? `${dedans} / ${res} ${ICONE_LINGOT}` : (route ? `en route · ${dedans} ${ICONE_LINGOT} · ` : '') + 'prête dans ' + formatDuree(btPretDans(bq))}</b></div>
       ${pret ? `<div class="bt-barre" style="grid-template-columns:repeat(${res},1fr)">${Array.from({ length: res }, (_, i) => `<i class="${i < dedans ? 'b' : ''}"></i>`).join('')}</div>` : ''}
-      <p class="bt-txt">${bqEpargne() ? `Ton épargne : dépose des lingots dans Défendre, ils rapportent <b>${bqReglage('interet', 10)} % par nuit</b> (jusqu’à ${res}). Pour les dépenser, retire-les. Secrète : les autres ne la voient pas sur la carte.` : `Ce qui dépasse la réserve de tes Fonderies (${Number(B.max_fonderies) || 30}) est rangé ici : <b>tu peux garder jusqu’à ${(Number(B.max_fonderies) || 30) + res} lingots</b>. Secrète : les autres ne la voient pas sur la carte.`}
+      <p class="bt-txt">${bqEpargne() ? `Ton épargne : dépose des lingots dans Défendre, ils rapportent <b>${bqReglage('interet', 10)} % par nuit</b> (jusqu’à ${res}). Pour les dépenser, retire-les. ${route ? '<b>Déplacement en cours</b> : ni dépôt ni intérêts avant la fin du chantier. ' : ''}${bqSecretTexte()}` : `Ce qui dépasse la réserve de tes Fonderies (${Number(B.max_fonderies) || 30}) est rangé ici : <b>tu peux garder jusqu’à ${(Number(B.max_fonderies) || 30) + res} lingots</b>. Secrète : les autres ne la voient pas sur la carte.`}
         Si on te prend ${echapperHtml(c.nom)}, elle est détruite et l’attaquant pille <b>la moitié de son contenu</b>. Une bombe qui tombe sur la zone en détruit ${(bqReglage('bombe', [20, 30, 40]) || [20])[0]} à ${(bqReglage('bombe', [20, 30, 40]) || [40]).slice(-1)[0]} %.</p>
-      ${pret ? '' : btAnnulerHtml(code, 'banque')}
+      ${pret || route ? '' : btAnnulerHtml(code, 'banque')}
     </div>`;
   }
   return html;
@@ -10987,12 +11058,17 @@ function blocBatimentsActions(code, c){
   if(B.banques_ouvertes && !B.banque){   // patch354 : la Banque
     const pb = bqReglage('prix', 20), nl = lingotsActuels();
     const bloque = !nF ? 'Il te faut d’abord une Fonderie' : nl < pb ? `Il te faut ${pb} lingots (tu en as ${nl})` : '';
-    boutons.push(`<button class="pc-action bt-action${arme('banque') ? ' arme' : ''}" data-pc="bt-construire" data-bt="banque" ${bloque ? 'disabled' : ''}>${ICONE_BANQUE}<span>${arme('banque') ? `Confirmer : ${pb} lingots` : 'Construire la Banque ici'}<small>${bloque || `Prête dans ${h} h · une seule · <b class="bt-plus">${bqEpargne() ? `épargne jusqu’à ${bqReglage('reserve', 60)}, +${bqReglage('interet', 10)} % par nuit` : `+${bqReglage('reserve', 60)} lingots de réserve`}</b> · secrète : les autres ne la voient pas sur la carte`}</small></span><span class="prix">${pb} ${ICONE_LINGOT}</span></button>`);
+    boutons.push(`<button class="pc-action bt-action${arme('banque') ? ' arme' : ''}" data-pc="bt-construire" data-bt="banque" ${bloque ? 'disabled' : ''}>${ICONE_BANQUE}<span>${arme('banque') ? `Confirmer : ${pb} lingots` : 'Construire la Banque ici'}<small>${bloque || `Prête dans ${h} h · une seule · <b class="bt-plus">${bqEpargne() ? `épargne jusqu’à ${bqReglage('reserve', 60)}, +${bqReglage('interet', 10)} % par nuit` : `+${bqReglage('reserve', 60)} lingots de réserve`}</b> · secrète, sauf pour les Radars`}</small></span><span class="prix">${pb} ${ICONE_LINGOT}</span></button>`);
+  }
+  if(B.banque && B.banque.code !== code && btPretDans(B.banque) <= 0){   // patch375 : déplacer la Banque ici
+    const pd = bqDepPrix(), nl = lingotsActuels(), n = rdRadarsAutour(code);
+    const bloque = btSousAssaut(B.banque.code) ? 'Ta Banque est attaquée : pas de déplacement pendant l’assaut' : nl < pd ? `Il te faut ${pd} lingots (tu en as ${nl})` : '';
+    boutons.push(`<button class="pc-action bt-action${arme('bqdep') ? ' arme' : ''}" data-pc="bt-bq-dep" ${bloque ? 'disabled' : ''}>${ICONE_BANQUE}<span>${arme('bqdep') ? `Confirmer : la Banque de ${echapperHtml(B.banque.nom)} vient ici` : 'Déplacer la Banque ici'}<small>${bloque || `Prête dans ${h} h · son contenu suit · <b class="bt-plus">${n ? n + ' Radar' + (n > 1 ? 's' : '') + ' la verrai' + (n > 1 ? 'ent' : 't') + ' ici' : 'aucun Radar ne la voit ici'}</b>`}</small></span><span class="prix">${pd} ${ICONE_LINGOT}</span></button>`);
   }
   if(B.radars_ouverts && !B.radar){   // patch371 : le Radar
     const pr = rdReglage('prix', 30), nl = lingotsActuels();
     const bloque = !nF ? 'Il te faut d’abord une Fonderie' : nl < pr ? `Il te faut ${pr} lingots (tu en as ${nl})` : '';
-    boutons.push(`<button class="pc-action bt-action${arme('radar') ? ' arme' : ''}" data-pc="bt-construire" data-bt="radar" ${bloque ? 'disabled' : ''}>${ICONE_RADAR}<span>${arme('radar') ? `Confirmer : ${pr} lingots` : 'Construire le Radar ici'}<small>${bloque || `Prêt dans ${h} h · un seul · <b class="bt-plus">voit les Centres de recherche à moins de ${rdReglage('portee_km', 50)} km, même secrets</b> · visible de tous`}</small></span><span class="prix">${pr} ${ICONE_LINGOT}</span></button>`);
+    boutons.push(`<button class="pc-action bt-action${arme('radar') ? ' arme' : ''}" data-pc="bt-construire" data-bt="radar" ${bloque ? 'disabled' : ''}>${ICONE_RADAR}<span>${arme('radar') ? `Confirmer : ${pr} lingots` : 'Construire le Radar ici'}<small>${bloque || `Prêt dans ${h} h · un seul · <b class="bt-plus">voit les Centres de recherche et les Banques à moins de ${rdReglage('portee_km', 50)} km, même secrets</b> · visible de tous`}</small></span><span class="prix">${pr} ${ICONE_LINGOT}</span></button>`);
   }
   if(B.bombes_ouvertes && B.centre && B.centre.code !== code && btPretDans(B.centre) <= 0){   // patch371 : déménager le Centre ici
     const net = crDemenagerPrix(), nl = lingotsActuels(), n = rdRadarsAutour(code);
@@ -11085,6 +11161,11 @@ function renderBatimentsBloc(){
       ? `<div class="btl banque"><span class="btl-ic">${ICONE_BANQUE}</span><span class="btl-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(B.banque.code)}">${echapperTexte(B.banque.nom)} (${echapperTexte(B.banque.dept)})</button><small>${btPretDans(B.banque) <= 0 ? `${Math.min(Number(bqReglage('reserve', 60)), Number(B.banque.contenu) || 0)} / ${bqReglage('reserve', 60)} lingots à l’abri · secrète` : 'En construction · secrète'}</small></span>${btPretDans(B.banque) <= 0 ? '<span class="btl-etat ok">Active</span>' : `<span class="btl-etat cours">prête dans ${formatDuree(btPretDans(B.banque))}</span>`}</div>`
       : `<p class="gl-vide">${bqReglage('prix', 20)} lingots, une Fonderie demandée : ${bqEpargne() ? `une épargne jusqu’à ${bqReglage('reserve', 60)} lingots, +${bqReglage('interet', 10)} % par nuit, à l’abri du pillage des Fonderies` : `+${bqReglage('reserve', 60)} lingots de réserve, à l’abri du pillage des Fonderies`}. Ouvre une de tes communes sur la carte et choisis « Construire la Banque ici ». Elle est secrète.</p>`}` : ''}
     <p class="btl-regle">${LINGOTS_COMBAT ? 'Les lingots viennent des Fonderies et des combats. Ils ne servent qu’aux bâtiments : ils' : 'Les lingots ne servent qu’aux bâtiments : ils'} ne s’échangent pas, ne s’achètent pas et repartent à zéro à chaque saison. Un bâtiment est perdu si on prend sa commune.${B.banque ? (bqEpargne() ? ' Les lingots déposés dans la Banque ne se dépensent pas : retire-les d’abord. Ils sont à l’abri du pillage des Fonderies, sauf si on prend la commune de la Banque (l’attaquant en pille la moitié) ou qu’une bombe tombe dessus.' : ' Une Fonderie prise ne pille que les lingots des Fonderies : ceux de la Banque sont à l’abri, sauf si on prend sa commune ou qu’une bombe tombe dessus.') : ''}</p>`;
+  const bqc = document.getElementById('bqDepCherche');   // patch375
+  if(bqc) bqc.addEventListener('input', (e) => {
+    bqDepRecherche = e.target.value;
+    const z = document.getElementById('bqDepChoix'); if(z && BATIMENTS && BATIMENTS.banque) z.innerHTML = bqDepChoixHtml(BATIMENTS.banque);
+  });
   const ftc = document.getElementById('ftDepCherche');   // patch374
   if(ftc) ftc.addEventListener('input', (e) => {
     ftDepRecherche = e.target.value;
@@ -11269,17 +11350,17 @@ function radarHtml(){
   const r = B.radar, prix = rdReglage('prix', 30), po = rdReglage('portee_km', 50);
   let corps;
   if(!r){
-    corps = `<p class="gl-vide">${prix} lingots, une Fonderie demandée. Ouvre une de tes communes sur la carte et choisis « Construire le Radar ici ». Il voit les Centres de recherche à moins de ${po} km, même secrets (pas les Banques), et leur propriétaire est prévenu. Il est visible de tous.</p>`;
+    corps = `<p class="gl-vide">${prix} lingots, une Fonderie demandée. Ouvre une de tes communes sur la carte et choisis « Construire le Radar ici ». Il voit les Centres de recherche et les Banques à moins de ${po} km, même secrets, et leur propriétaire est prévenu. Il est visible de tous.</p>`;
   } else {
     const pret = btPretDans(r) <= 0, a = btArme === r.code + '|annuler-radar';
     const fin = pret ? '<span class="btl-etat ok">Actif</span>'
       : btSousAssaut(r.code) ? `<span class="btl-etat cours">prêt dans ${formatDuree(btPretDans(r))}</span>`
       : `<button type="button" class="gl-r bt-ann${a ? ' arme' : ''}" data-bt-annuler="${echapperTexte(r.code)}" data-bt-type="radar">${a ? 'Confirmer ?' : 'Annuler'}</button>`;
     const sous = pret ? `Voit à ${po} km autour` : `Prêt dans ${formatDuree(btPretDans(r))} · ${prix} lingots rendus si tu annules`;
-    const V = r.voit || [];
+    const V = r.voit || [], VB = r.voit_banques || [];   // patch375
     corps = `<div class="btl"><span class="btl-ic rd-ic">${ICONE_RADAR}</span><span class="btl-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(r.code)}">${echapperTexte(r.nom)} (${echapperTexte(r.dept)})</button><small>${sous}</small></span>${fin}</div>`
-      + (!pret ? '' : V.length ? `<div class="rd-liste">${V.map(x => `<div class="rd-l"><span class="rd-km">${String(x.km).replace('.', ',')} km</span><span class="rd-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(x.code)}">Centre de ${echapperTexte(x.nom)} (${echapperTexte(x.dept)})</button><small>${echapperHtml(x.pseudo || 'un joueur')} · ${x.bombe ? '<b class="rd-rouge">bombe en préparation</b>' : 'pas de bombe en préparation'}${x.pret === false ? ' · en construction' : ''}</small></span></div>`).join('')}</div>`
-        : `<p class="gl-vide">Aucun Centre de recherche à moins de ${po} km pour l’instant. Dès qu’un joueur en construit un dans ta zone, il apparaît ici et sur ta carte.</p>`);
+      + (!pret ? '' : (V.length || VB.length) ? `<div class="rd-liste">${V.map(x => `<div class="rd-l"><span class="rd-km">${String(x.km).replace('.', ',')} km</span><span class="rd-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(x.code)}">Centre de ${echapperTexte(x.nom)} (${echapperTexte(x.dept)})</button><small>${echapperHtml(x.pseudo || 'un joueur')} · ${x.bombe ? '<b class="rd-rouge">bombe en préparation</b>' : 'pas de bombe en préparation'}${x.pret === false ? ' · en construction' : ''}</small></span></div>`).join('')}${VB.map(x => `<div class="rd-l"><span class="rd-km">${String(x.km).replace('.', ',')} km</span><span class="rd-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(x.code)}">Banque de ${echapperTexte(x.nom)} (${echapperTexte(x.dept)})</button><small>${echapperHtml(x.pseudo || 'un joueur')} · <b class="rd-or">prends sa commune : tu pilles la moitié de son contenu</b>${x.pret === false ? ' · en chantier' : ''}</small></span></div>`).join('')}</div>`
+        : `<p class="gl-vide">Aucun Centre de recherche ni aucune Banque à moins de ${po} km pour l’instant. Dès qu’un joueur en construit un dans ta zone, il apparaît ici et sur ta carte.</p>`);
   }
   return `<div class="btl-titre">Radar <em>${r ? 1 : 0} / 1</em></div>${corps}`;
 }
@@ -22467,6 +22548,14 @@ function ncConstruire(){
         a: 'Défendre', rouge: true, sourdine: String(m.commune_code), aller: () => ncAller('front', 'defense') });
     }
   }
+  if(SAISON2 && BATIMENTS && Array.isArray(BATIMENTS.banque_reperee_par)){   // patch375 : un Radar voit ma Banque
+    for(const x of BATIMENTS.banque_reperee_par){
+      items.push({ cle: `radarbq|${x.id}|${BATIMENTS.banque ? BATIMENTS.banque.code : ''}`, sec: 'afaire', c: 'danger', i: '📡', mode: 'front',
+        t: `Le <b>Radar de ${echapperTexte(x.pseudo || 'un joueur')}</b> voit ta Banque`,
+        s: `Son Radar est à ${echapperTexte(x.nom || '')} (${echapperTexte(x.dept || '')}), à ${String(x.km).replace('.', ',')} km de ta Banque`,
+        a: 'Déplacer', aller: () => ncAller('front', 'defense') });
+    }
+  }
   if(SAISON2 && BATIMENTS && Array.isArray(BATIMENTS.repere_par)){   // patch371 : un Radar voit mon Centre
     for(const x of BATIMENTS.repere_par){
       items.push({ cle: `radar|${x.id}|${BATIMENTS.centre ? BATIMENTS.centre.code : ''}`, sec: 'afaire', c: 'danger', i: '📡', mode: 'front',
@@ -25318,16 +25407,16 @@ function btMiens(){
 function btEffetTexte(type, moi){
   if(type === 'fonderie') return `${(BATIMENTS && BATIMENTS.production) || 10} lingots par jour pour ${moi ? 'toi' : 'son propriétaire'}`;
   if(type === 'forteresse') return `−${btReglage('forteresse_defense', 15)} % aux chances de ceux qui l’attaquent, +${btReglage('forteresse_appui', 5)} % aux attaques autour`;
-  if(type === 'banque') return `Une épargne : jusqu’à ${bqReglage('reserve', 60)} lingots, +${bqReglage('interet', 10)} % par nuit. Secrète`;
-  if(type === 'radar') return `Voit les Centres de recherche à moins de ${rdReglage('portee_km', 50)} km, même secrets`;   // patch371
+  if(type === 'banque') return moi ? `Une épargne : jusqu’à ${bqReglage('reserve', 60)} lingots, +${bqReglage('interet', 10)} % par nuit. Secrète, sauf pour les Radars` : 'Son épargne. Prendre sa commune pille la moitié de son contenu';   // patch375
+  if(type === 'radar') return `Voit les Centres de recherche et les Banques à moins de ${rdReglage('portee_km', 50)} km, même secrets`;   // patch371, patch375
   return 'Il prépare une bombe. Le prendre fait perdre la bombe à son propriétaire';
 }
 function btEtatMien(b){
   if(btPretDans(b) > 0) return { t: `${btFem(b.type) ? 'Prête' : 'Prêt'} dans ${formatDuree(btPretDans(b))}`, c: 'cours' };
   if(b.type === 'fonderie') return { t: `+${(BATIMENTS && BATIMENTS.production) || 10} lingots par jour`, c: 'ok' };
   if(b.type === 'forteresse') return { t: `−${btReglage('forteresse_defense', 15)} % aux attaquants`, c: 'ok' };
-  if(b.type === 'banque') return { t: `Secrète · ${Math.floor(Number(b.contenu) || 0)} lingots`, c: 'or' };
-  if(b.type === 'radar'){ const n = (b.voit || []).length; return n ? { t: `${n} Centre${n > 1 ? 's' : ''} en vue`, c: 'rouge' } : { t: 'Rien en vue', c: 'ok' }; }   // patch371
+  if(b.type === 'banque') return bqReperee().length ? { t: `Repérée par un Radar · ${Math.floor(Number(b.contenu) || 0)} lingots`, c: 'rouge' } : { t: `Secrète · ${Math.floor(Number(b.contenu) || 0)} lingots`, c: 'or' };   // patch375
+  if(b.type === 'radar'){ const n = (b.voit || []).length + (b.voit_banques || []).length; return n ? { t: `${n} bâtiment${n > 1 ? 's' : ''} en vue`, c: 'rouge' } : { t: 'Rien en vue', c: 'ok' }; }   // patch371, patch375
   return b.devoile ? { t: 'Dévoilé : bombe en préparation', c: 'rouge' }
     : (BATIMENTS && (BATIMENTS.repere_par || []).length) ? { t: 'Repéré par un Radar', c: 'rouge' } : { t: 'Secret', c: 'or' };   // patch371
 }
@@ -25413,7 +25502,7 @@ function btMiensHtml(){
 }
 function btAutresHtml(){
   const regions = [...new Set(Object.values(DEP_REGION))].sort((a, b) => a.localeCompare(b, 'fr'));
-  const types = [['', 'Tous'], ['fonderie', 'Fonderies'], ['forteresse', 'Forteresses'], ['radar', 'Radars'], ['centre', 'Centres']];   // patch371
+  const types = [['', 'Tous'], ['fonderie', 'Fonderies'], ['forteresse', 'Forteresses'], ['radar', 'Radars'], ['centre', 'Centres'], ['banque', 'Banques']];   // patch371, patch375
   return `<div class="bte-outils">
     <div class="bte-recherche"><label class="bte-sr" for="bteRecherche">Rechercher un joueur ou une commune</label>
       <svg class="bte-loupe" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
@@ -25435,7 +25524,7 @@ function btAutresListeRendre(){
   const reste = Math.max(0, (Number(BTE.total) || 0) - BTE.lignes.length);
   el.innerHTML = `<div class="bte-l-boite">${BTE.lignes.map((x, i) => `<button type="button" class="bte-l" data-bte-fiche="${i}">
       <span class="bte-v${x.type === 'centre' ? ' rouge' : ''}">${btImg(x.type, x.style, 48)}</span>
-      <span class="bte-t"><b>${x.type === 'centre' ? (x.radar ? 'Centre repéré' : 'Centre dévoilé') : btNom(x.type)} · ${echapperHtml(btStyleNom(btStyleDe(x.type, x.style)))}</b>
+      <span class="bte-t"><b>${x.type === 'centre' ? (x.radar ? 'Centre repéré' : 'Centre dévoilé') : x.type === 'banque' ? 'Banque repérée' : btNom(x.type)} · ${echapperHtml(btStyleNom(btStyleDe(x.type, x.style)))}</b>
         <small>${echapperHtml(x.pseudo || 'un joueur')} · ${echapperHtml(x.nom || x.code)}${x.dept ? ' (' + echapperHtml(x.dept) + ')' : ''}${x.type === 'centre' ? (x.centre === 'calme' ? ' · pas de bombe' : ` · <span class="bte-rouge">${x.centre === 'preparation' ? 'bombe en préparation' : 'a lancé sa bombe'}</span>`) + (x.radar ? ' · vu par ton Radar' : '') : ''}${x.pret === false ? ' · en construction' : ''}</small></span>
       <span class="bte-chev" aria-hidden="true">›</span></button>`).join('')}</div>
     ${reste ? `<button type="button" class="bte-plus" data-bte="plus"${BTE.charge ? ' disabled' : ''}>${BTE.charge ? 'Chargement…' : `Voir plus (${reste})`}</button>` : ''}`;
@@ -25507,13 +25596,14 @@ function btFicheOuvrir(x){
   const etat = moi ? btEtatMien(x) : null;
   pcOuvrir(`<div class="pc-poignee"></div>
     <div class="btf-socle">${btImg(type, style, 192, 'grand')}</div>
-    <div class="btf-titre"><h3>${type === 'centre' && !moi ? (x.radar ? 'Centre repéré' : 'Centre dévoilé') : btNom(type)}</h3><span class="btf-chip">Style ${echapperHtml(btStyleNom(style))}</span></div>
+    <div class="btf-titre"><h3>${type === 'centre' && !moi ? (x.radar ? 'Centre repéré' : 'Centre dévoilé') : type === 'banque' && !moi ? 'Banque repérée' : btNom(type)}</h3><span class="btf-chip">Style ${echapperHtml(btStyleNom(style))}</span></div>
     <p class="btf-de">${moi ? 'à toi' : 'de <b>' + echapperHtml(x.pseudo || 'un joueur') + '</b>'}</p>
     <div class="btf-l"><span>Où</span><b>${echapperHtml(x.nom || x.code)}${x.dept ? ' (' + echapperHtml(x.dept) + ')' : ''}</b></div>
     <div class="btf-l"><span>Effet</span><span>${btEffetTexte(type, moi)}</span></div>
     ${etat ? `<div class="btf-l"><span>État</span><span class="bte-e ${etat.c}">${etat.t}</span></div>` : ''}
     ${!moi && x.pret === false ? '<div class="btf-l"><span>État</span><span>En construction</span></div>' : ''}
-    ${moi && type === 'radar' && (x.voit || []).length ? `<div class="btf-l"><span>En vue</span><span>${x.voit.map(v => `Centre de ${echapperHtml(v.nom)} (${echapperHtml(v.dept)}) · ${echapperHtml(v.pseudo || 'un joueur')} · ${String(v.km).replace('.', ',')} km`).join('<br>')}</span></div>` : ''}
+    ${moi && type === 'radar' && ((x.voit || []).length || (x.voit_banques || []).length) ? `<div class="btf-l"><span>En vue</span><span>${(x.voit || []).map(v => `Centre de ${echapperHtml(v.nom)} (${echapperHtml(v.dept)}) · ${echapperHtml(v.pseudo || 'un joueur')} · ${String(v.km).replace('.', ',')} km`).concat((x.voit_banques || []).map(v => `Banque de ${echapperHtml(v.nom)} (${echapperHtml(v.dept)}) · ${echapperHtml(v.pseudo || 'un joueur')} · ${String(v.km).replace('.', ',')} km`)).join('<br>')}</span></div>` : ''}
+    ${moi && type === 'banque' && bqReperee().length ? `<div class="btf-l"><span>Repérée</span><span class="bte-e rouge">par ${bqReperee().map(v => 'le Radar de ' + echapperHtml(v.pseudo || 'un joueur')).join(', ')}</span></div>` : ''}
     ${moi && type === 'centre' && (BATIMENTS.repere_par || []).length ? `<div class="btf-l"><span>Repéré</span><span class="bte-e rouge">par ${BATIMENTS.repere_par.map(v => 'le Radar de ' + echapperHtml(v.pseudo || 'un joueur')).join(', ')}</span></div>` : ''}
     ${date ? `<div class="btf-l"><span>${btFem(type) ? 'Construite' : 'Construit'}</span><span>le ${date}</span></div>` : ''}
     <div class="btf-act"><button type="button" class="pc-go" data-btf="carte" data-code="${echapperTexte(x.code)}">Voir sur la carte</button>${peutAttaquer ? `<button type="button" class="btf-att" data-btf="attaquer" data-code="${echapperTexte(x.code)}">Attaquer</button>` : ''}</div>
@@ -26216,13 +26306,13 @@ var BT_INFO = {
          '<b>Le prendre fait perdre la bombe</b> à son propriétaire.',
          'La bombe détruit garnisons et forteresses de tout le monde dans sa zone (jusqu’à 25 km), et tout le monde y attaque à <b>+15 %</b> pendant 24 h.'],
     pied: 'Pour en construire un : 2 Fonderies et 40 lingots. Son propriétaire peut le déménager (20 lingots, 6 h).' },
-  radar: { titre: 'Radar', role: 'Il trouve les Centres de recherche cachés autour de lui.',   // patch371
-    li: ['Coûte <b>30 lingots</b>, un seul par joueur, il faut une Fonderie.', 'Voit les <b>Centres de recherche</b> à moins de <b>50 km</b>, même secrets (pas les Banques).',
-         'Le joueur repéré est <b>prévenu</b> : il peut déménager son Centre.', 'Visible de tous. Disparaît si on prend sa commune.'],
+  radar: { titre: 'Radar', role: 'Il trouve les Centres de recherche et les Banques cachés autour de lui.',   // patch371, patch375
+    li: ['Coûte <b>30 lingots</b>, un seul par joueur, il faut une Fonderie.', 'Voit les <b>Centres de recherche</b> et les <b>Banques</b> à moins de <b>50 km</b>, même secrets.',
+         'Le joueur repéré est <b>prévenu</b> : il peut déménager son Centre ou déplacer sa Banque.', 'Visible de tous. Disparaît si on prend sa commune.'],
     pied: 'Se construit en 6 h sur une de tes communes.' },
   banque: { titre: 'Banque', role: 'Ton épargne : tu y déposes des lingots, ils rapportent chaque nuit.',   // patch356, patch364
     li: ['Coûte <b>20 lingots</b>, une seule par joueur, il faut une Fonderie.', 'Dépose jusqu’à <b>60 lingots</b> : <b>+10 % par nuit</b>, à l’abri du pillage des Fonderies. Retire-les pour les dépenser.',
-         '<b>Secrète</b> : toi seul la vois sur la carte.', 'Si on prend sa commune, elle disparaît et le joueur pille <b>la moitié</b> de son contenu. Une bombe lui en fait perdre 20 à 40 %.'],
+         '<b>Secrète</b>, sauf pour les Radars des autres à moins de 50 km. Elle se déplace pour 10 lingots.', 'Si on prend sa commune, elle disparaît et le joueur pille <b>la moitié</b> de son contenu. Une bombe lui en fait perdre 20 à 40 %.'],
     pied: 'Se construit en 6 h sur une de tes communes.' },
 };
 var btBulle = null, btBulleCle = null;

@@ -9440,3 +9440,7 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
   .map-idf .idf-c{ display:inline; }
   .map-wrap.plein-ecran .map-idf{ top:calc(8px + env(safe-area-inset-top, 0px)); }
 }
+
+/* patch375 : Banque repérée, déplacer la Banque */
+.rd-or{ font-weight:600; color:#F0B429; }
+.bq-dem-b{ margin-top:10px; }

@@ -2,6 +2,7 @@
   {
     "date": "2026-11-08",
     "nouveautes": [
+      "⚡ L’énergie du Front se recharge plus vite : +1 toutes les 7 minutes (au lieu de 10)",
       "🏗 Nouveau volet Combat › Bâtiments (idée de Maroli et ASMFCB) : lingots, Fonderies, Forteresses, Centre, Banque et bombe y sont regroupés. Défendre ne garde que la défense",
       "⚔️ Fiche d’attaque allégée : tes chances en gros, les bonus et malus en pastilles (vert = pour toi, rouge = contre toi), le détail sur « Pourquoi ? ». La rébellion est dans « Plus d’options »",
       "🏰 Déplacer une forteresse : 10 lingots, 6 h de chantier, vers une de tes communes. Dans Combat › Bâtiments, ou « Déplacer une forteresse ici » sur la fiche d’une commune",
@@ -17,7 +18,8 @@
       "La mallette de la bombe a une touche « - » et trouve les communes à tiret (signalé par Oshannir)",
       "Moins de chargements quand on zoome vite sur la carte du Radar ou sur Ma France (plantage signalé par Arkhannou sur téléphone)",
       "Défendre affiche bien les 5 places de garnison : avec 3 ou 4 garnisons, la liste « En garnison » disparaissait",
-      "Sur ordinateur, la bulle d’un département au survol montre aussi le nombre de communes, pas seulement les % (signalé par Oshannir)"
+      "Sur ordinateur, la bulle d’un département au survol montre aussi le nombre de communes, pas seulement les % (signalé par Oshannir)",
+      "Sur téléphone avec le texte agrandi, les onglets de Combat ne font plus déborder la page (signalé par Arkhannou)"
     ]
   },
   {

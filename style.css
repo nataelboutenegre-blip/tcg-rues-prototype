@@ -9497,3 +9497,11 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 /* patch383 : le nombre de communes dans la bulle d'un département */
 .map-infobulle em small{ font-weight:400; color:#8FA4BF; margin-left:2px; }
 .map-infobulle .ib-titre small{ display:block; font-weight:500; font-size:.7rem; color:#8FA4BF; margin-top:1px; }
+
+/* patch386 : les volets de Combat tiennent toujours dans l'écran (texte agrandi sur Android) */
+#panel-combat .volets, #panel-defense .volets, #panel-batiments .volets{ max-width:100%; box-sizing:border-box; overflow-x:auto; scrollbar-width:none; }
+#panel-combat .volets::-webkit-scrollbar, #panel-defense .volets::-webkit-scrollbar, #panel-batiments .volets::-webkit-scrollbar{ display:none; }
+@media (max-width: 720px){
+  #panel-combat .volet, #panel-defense .volet, #panel-batiments .volet{ min-width:0; font-size:min(.92rem, 3.7vw); padding-left:min(8px, 1.6vw); padding-right:min(8px, 1.6vw); gap:4px; }
+  #panel-combat .volet-badge, #panel-defense .volet-badge, #panel-batiments .volet-badge{ min-width:min(16px, 4.4vw); height:min(16px, 4.4vw); padding:0 3px; font-size:min(.62rem, 2.6vw); }
+}

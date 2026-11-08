@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'fae1dad547e0';
+const VERSION_JEU = '3d0ab5f70a48';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10722,7 +10722,7 @@ const ENERGIE_INTENSITE = { prudente: 1, normale: 2, offensive: 3 };
 let garnisonsMoi = new Map();      // code -> { energie, nom, tier, attaquants, repousses, subis }
 let energieEtat = null;            // { energie, prochaine_dans, lu }
 // lot 8/11 : recharge (minutes) et plafond des bonus, tels que le serveur les donne
-function energieRechargeMin(){ const x = energieEtat && Number(energieEtat.recharge_s); return x ? Math.max(1, Math.round(x / 60)) : 10; }
+function energieRechargeMin(){ const x = energieEtat && Number(energieEtat.recharge_s); return x ? Math.max(1, Math.round(x / 60)) : 7; }   // patch387
 function energieMax(){ return (energieEtat && Number(energieEtat.maximum)) || 90; }
 function energiePlafond(){ return (energieEtat && Number(energieEtat.plafond)) || energieMax() + 10; }
 let gnRetraitArme = null;          // code de la garnison dont le retrait attend confirmation
@@ -15751,7 +15751,7 @@ const ETAPES_GUIDE_S2 = [
   { mode: 'terra', cible: '.tab[data-tab="collection"]', titre: 'Ta collection',
     texte: 'Ta France se remplit ici, en cartes ou sur la carte. Tes doublons se revendent, s\'échangent avec les autres joueurs ou partent en contrat.' },
   { mode: 'front', cible: '#modeBascule [data-mode="front"]', titre: 'Le Front',
-    texte: 'Ici, l\'énergie remplace les TerraPoints : 90 au maximum, +1 toutes les 10 minutes. Elle sert à attaquer et à défendre.' },   // patch299, lot 8/11
+    texte: 'Ici, l\'énergie remplace les TerraPoints : 90 au maximum, +1 toutes les 7 minutes. Elle sert à attaquer et à défendre.' },   // patch299, lot 8/11
   { mode: 'front', cible: '.tab[data-tab="combat"]', titre: 'Attaque et défends',
     texte: 'Trois victoires prennent une commune, et une défaite ne te fait rien perdre. Mets tes communes clés en garnison : elles se défendent seules pendant ton absence.' },
   { cible: '.tab[data-tab="qg"]', titre: 'Chaque jour',

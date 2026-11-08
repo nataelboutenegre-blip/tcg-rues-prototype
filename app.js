@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '8dd7cdfe48b1';
+const VERSION_JEU = '384a0fa2f3bb';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4495,6 +4495,8 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
     if(btArme !== code + '|bqdep'){ btArme = code + '|bqdep'; const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); return; }
     btArme = null; b.disabled = true; banqueDeplacer(code); return;
   }
+  if(quoi === 'bt-fd-dep'){ btArme = code + '|fddep'; const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); return; }   // patch384 : laquelle ?
+  if(quoi === 'bt-fd-dep-de'){ btArme = null; b.disabled = true; fonderieDeplacer(b.dataset.depuis, code); return; }
   if(quoi === 'bt-ft-dep'){ btArme = code + '|ftdep'; const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); return; }   // patch374 : laquelle ?
   if(quoi === 'bt-ft-dep-de'){ btArme = null; b.disabled = true; forteresseDeplacer(b.dataset.depuis, code); return; }
   if(quoi === 'bt-demenager'){   // patch371 : en deux temps
@@ -10851,6 +10853,14 @@ function initModes(){
         if(btArme !== k){ btArme = k; const z = document.getElementById('crDemChoix'); if(z && BATIMENTS && BATIMENTS.centre) z.innerHTML = crDemChoixHtml(BATIMENTS.centre); return; }
         btArme = null; dm.disabled = true; centreDemenager(dm.dataset.crDemIci); return;
       }
+      const fdd = e.target.closest('[data-fd-dep]');   // patch384 : déplacer une Fonderie
+      if(fdd){ fdDepOuvert = fdDepOuvert === fdd.dataset.fdDep ? null : fdd.dataset.fdDep; fdDepRecherche = ''; btArme = null; renderBatimentsBloc(); return; }
+      const fdi = e.target.closest('[data-fd-dep-ici]');
+      if(fdi){
+        const k = fdi.dataset.fdDepIci + '|fddep';
+        if(btArme !== k){ btArme = k; const z = document.getElementById('fdDepChoix'); if(z) z.innerHTML = fdDepChoixHtml(); return; }
+        btArme = null; fdi.disabled = true; fonderieDeplacer(fdDepOuvert, fdi.dataset.fdDepIci); return;
+      }
       const fd = e.target.closest('[data-ft-dep]');   // patch374 : déplacer une forteresse
       if(fd){ ftDepOuvert = ftDepOuvert === fd.dataset.ftDep ? null : fd.dataset.ftDep; ftDepRecherche = ''; btArme = null; renderBatimentsBloc(); return; }
       const fi = e.target.closest('[data-ft-dep-ici]');
@@ -11019,14 +11029,14 @@ function blocBatimentsEtat(code, c){
   const ici = mesFonderies().find(x => x.code === code) || null;   // patch259
   if(ici){
     const max = Number(B.max_fonderies || B.max) || 30, n = Math.min(lingotsActuels(), max);   // patch354 : la part des Fonderies
-    const prete = btPretDans(ici) <= 0;
+    const prete = btPretDans(ici) <= 0, route = ici.deplacee && !prete;   // patch384
     const pr = prochainLingotMs();
     html += `<div class="bt">
       <div class="bt-haut">${ICONE_FONDERIE}Fonderie <b>${n} / ${max} ${ICONE_LINGOT}</b></div>
       <div class="bt-barre" style="grid-template-columns:repeat(${max},1fr)">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'p' : ''}"></i>`).join('')}</div>
-      <p class="bt-txt">${prete ? `<b>+${B.production} lingots par jour</b>${mesFonderies().length > 1 ? ' (réserve partagée avec ton autre Fonderie)' : ''}, jusqu’à ${max} en réserve${pr ? ` · prochain dans ${formatDuree(pr)}` : ''}.` : `<b>En construction</b> : prête dans ${formatDuree(btPretDans(ici))}.`}
+      <p class="bt-txt">${prete ? `<b>+${B.production} lingots par jour</b>${mesFonderies().length > 1 ? ' (réserve partagée avec ton autre Fonderie)' : ''}, jusqu’à ${max} en réserve${pr ? ` · prochain dans ${formatDuree(pr)}` : ''}.` : route ? `<b>En déplacement</b> : prête dans ${formatDuree(btPretDans(ici))}, elle ne produit rien d’ici là.` : `<b>En construction</b> : prête dans ${formatDuree(btPretDans(ici))}.`}${prete ? ` Tu peux la déplacer pour ${fdDepPrix()} lingots : Combat › Bâtiments, ou « Déplacer une Fonderie ici » sur une autre de tes communes.` : ''}
         Visible de tous : si on te prend ${echapperHtml(c.nom)}, la Fonderie est détruite et l’attaquant pille ${Math.round(btReglage('pillage', 50) / Math.max(1, mesFonderies().length))} % de ta réserve${B.banque ? ' (pas ce qui est dans ta Banque)' : ''}.</p>
-      ${prete ? '' : btAnnulerHtml(code, 'fonderie')}
+      ${prete || route ? '' : btAnnulerHtml(code, 'fonderie')}
     </div>`;
   }
   const fort = mesForteresses().find(x => x.code === code);
@@ -11084,6 +11094,20 @@ function blocBatimentsActions(code, c){
     const p2 = btReglage('fonderie2_prix', 30), n = lingotsActuels();
     const bloque = n < p2 ? `Il te faut ${p2} lingots (tu en as ${n})` : '';
     boutons.push(`<button class="pc-action bt-action${arme('fonderie') ? ' arme' : ''}" data-pc="bt-construire" data-bt="fonderie" ${bloque ? 'disabled' : ''}>${ICONE_FONDERIE}<span>${arme('fonderie') ? `Confirmer : ${p2} lingots` : 'Construire une 2e Fonderie ici'}<small>${bloque || `Prête dans ${h} h · +${B.production} lingots par jour · réserve jusqu’à ${btReglage('fonderie_max2', 45)}`}</small></span><span class="prix">${p2} ${ICONE_LINGOT}</span></button>`);
+  }
+  const fdPretes = mesFonderies().filter(x => btPretDans(x) <= 0 && x.code !== code);   // patch384 : en déplacer une ici
+  if(fdPretes.length && !mesFonderies().some(x => x.code === code)){
+    const pd = fdDepPrix(), nl = lingotsActuels(), ici = collectionMap.get(code);
+    const bloque = nl < pd ? `Il te faut ${pd} lingots (tu en as ${nl})` : '';
+    if(!arme('fddep') || bloque){
+      boutons.push(`<button class="pc-action bt-action" data-pc="bt-fd-dep" ${bloque ? 'disabled' : ''}>${ICONE_FONDERIE}<span>Déplacer une Fonderie ici<small>${bloque || `Prête dans ${h} h · ne produit rien pendant le chantier · ne s’annule pas`}</small></span><span class="prix">${pd} ${ICONE_LINGOT}</span></button>`);
+    } else {
+      for(const x of fdPretes){
+        const o = collectionMap.get(x.code), kmTxt = o && ici && o.lat != null && ici.lat != null ? kmEntre(ici.lat, ici.lon, o.lat, o.lon) : null;
+        const assaut = btSousAssaut(x.code);
+        boutons.push(`<button class="pc-action bt-action ft-dep-de" data-pc="bt-fd-dep-de" data-depuis="${echapperTexte(x.code)}" ${assaut ? 'disabled' : ''}>${ICONE_FONDERIE}<span>Prendre celle ${/^[aeiouyhâàéèêîïôû]/i.test(x.nom) ? 'd’' : 'de '}${echapperHtml(x.nom)}<small>${assaut ? 'Assaut en cours : elle ne bouge pas' : `${echapperHtml(x.dept)}${kmTxt != null ? ' · à ' + Math.round(kmTxt) + ' km' : ''} · prête ici dans ${h} h`}</small></span><span class="prix">${pd} ${ICONE_LINGOT}</span></button>`);
+      }
+    }
   }
   if(!mesForteresses().some(x => x.code === code)){
     const nb = mesForteresses().length, maxF = btReglage('forteresse_max', 3), prix = btReglage('forteresse_prix', 20);
@@ -11201,7 +11225,10 @@ function renderBatimentsBloc(){
     ${B.banque && btPretDans(B.banque) <= 0 && !bqEpargne() ? `<div class="bt-split"><span><i class="pt f"></i>${Math.min(n, Number(B.max_fonderies) || 30)} / ${Number(B.max_fonderies) || 30} dans tes Fonderies</span><span><i class="pt b"></i>${Math.max(0, n - (Number(B.max_fonderies) || 30))} / ${bqReglage('reserve', 60)} à l’abri dans la Banque</span></div>` : ''}
     ${lingotsCombatHtml()}
     <div class="btl-titre">Fonderies <em>${mesFonderies().length} / ${btReglage('fonderies_max', 1)}</em></div>
-    ${F ? mesFonderies().map(x => ligne(ICONE_FONDERIE, x, btPretDans(x) <= 0 ? `Produit ${B.production} lingots par jour` : 'En construction', 'fonderie')).join('')
+    ${F ? mesFonderies().map(x => x.deplacee && btPretDans(x) > 0   /* patch384 : en route, ne produit rien, ne s'annule pas */
+        ? ligne(ICONE_FONDERIE, x, 'En déplacement · ne produit rien pendant le chantier')
+        : btPretDans(x) <= 0 ? fdLigneActive(x, `Produit ${B.production} lingots par jour`)
+        : ligne(ICONE_FONDERIE, x, 'En construction', 'fonderie')).join('')
         + (mesFonderies().length < btReglage('fonderies_max', 1) ? `<p class="gl-vide">2e Fonderie : ${btReglage('fonderie2_prix', 30)} lingots. Ouvre une de tes communes sur la carte et choisis « Construire une 2e Fonderie ici ». La réserve monte alors à ${btReglage('fonderie_max2', 45)}.</p>` : '')
         : '<p class="gl-vide">Ouvre une de tes communes sur la carte et choisis « Construire la Fonderie ici ». Elle est gratuite, mais visible de tous : choisis bien l’endroit.</p>'}
     <div class="btl-titre">Forteresses <em>${forts.length} / ${maxF}</em></div>
@@ -11223,6 +11250,11 @@ function renderBatimentsBloc(){
     bqDepRecherche = e.target.value;
     const z = document.getElementById('bqDepChoix'); if(z && BATIMENTS && BATIMENTS.banque) z.innerHTML = bqDepChoixHtml(BATIMENTS.banque);
   });
+  const fdc = document.getElementById('fdDepCherche');   // patch384
+  if(fdc) fdc.addEventListener('input', (e) => {
+    fdDepRecherche = e.target.value;
+    const z = document.getElementById('fdDepChoix'); if(z) z.innerHTML = fdDepChoixHtml();
+  });
   const ftc = document.getElementById('ftDepCherche');   // patch374
   if(ftc) ftc.addEventListener('input', (e) => {
     ftDepRecherche = e.target.value;
@@ -11239,6 +11271,56 @@ function renderBatimentsBloc(){
     const z = document.getElementById('btChoix'); if(z) z.innerHTML = btChoixHtml();
   });
 }
+// ---------- patch384 : déplacer une Fonderie (s2-122) ----------
+var fdDepOuvert = null, fdDepRecherche = '';
+const fdDepPrix = () => Number(btReglage('fonderie_deplacer_prix', 10)) || 0;
+function fdLigneActive(x, sousActif){
+  const assaut = btSousAssaut(x.code), ouvert = fdDepOuvert === x.code;
+  const sous = assaut ? 'Assaut en cours : pas de déplacement' : sousActif;
+  return `<div class="btl"><span class="btl-ic">${ICONE_FONDERIE}</span>
+      <span class="btl-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(x.code)}">${echapperTexte(x.nom)} (${echapperTexte(x.dept)})</button><small>${sous}</small></span>
+      <button type="button" class="gl-r bt-fortifier ft-dep-b${ouvert ? ' on' : ''}" data-fd-dep="${echapperTexte(x.code)}" ${assaut ? 'disabled' : ''}>${ouvert ? 'Fermer' : 'Déplacer'}</button></div>`
+    + (ouvert && !assaut ? fdDepHtml() : '');
+}
+function fdDepHtml(){
+  const prix = fdDepPrix(), n = lingotsActuels();
+  if(n < prix) return `<p class="cr-manque">Il te faut ${prix} lingots pour la déplacer (tu en as ${n}).</p>`;
+  return `<div class="cr-dem ft-dem">
+    <p class="cr-txt">Elle part d’ici et se reconstruit là où tu veux : <b>${prix} lingots</b>, <b>${btReglage('construction_h', 6)} h de chantier</b> pendant lesquelles elle ne produit rien. Un déplacement ne s’annule pas.</p>
+    <input type="search" class="bourse-search gn-cherche" id="fdDepCherche" placeholder="Choisis la commune où l’installer…" autocomplete="off" value="${echapperTexte(fdDepRecherche)}">
+    <div class="gn-choix" id="fdDepChoix">${fdDepChoixHtml()}</div></div>`;
+}
+function fdDepChoixHtml(){
+  const q = sansAccents(fdDepRecherche.trim().toLowerCase());
+  const deja = new Set(mesFonderies().map(x => x.code));
+  const ici = collectionMap.get(fdDepOuvert);
+  const rang = (t) => TIERS.findIndex(x => x.id === t.id);
+  const mes = [...collectionMap.values()].filter(c => !deja.has(c.code)
+    && (!q || sansAccents(c.nom.toLowerCase()).includes(q) || c.dept === q.toUpperCase()));
+  if(!mes.length) return `<p class="gl-vide">${collectionMap.size > 1 ? 'Aucune de tes communes ne correspond.' : 'Il te faut une autre commune.'}</p>`;
+  const km = (c) => ici && ici.lat != null && c.lat != null ? kmEntre(ici.lat, ici.lon, c.lat, c.lon) : null;
+  const L = mes.map(c => ({ c, km: km(c) }));
+  L.sort((a, b) => rang(a.c.tier) - rang(b.c.tier) || (a.km == null) - (b.km == null) || (a.km || 0) - (b.km || 0));
+  const prix = fdDepPrix();
+  return L.slice(0, 6).map(({ c, km }) => {
+    const a = btArme === c.code + '|fddep';
+    return `<div class="gl gn-ligne"><i class="gl-c ${c.tier.id}"></i><div class="gl-t"><b>${echapperTexte(c.nom)}</b>
+      <span>${c.tier.label} · ${echapperTexte(c.dept)}${km != null ? ' · à ' + Math.round(km) + ' km' : ''}</span></div>
+      <button class="gl-r bt-fortifier${a ? ' arme' : ''}" data-fd-dep-ici="${echapperTexte(c.code)}">${a ? `Confirmer · ${prix} lingots` : 'Ici'}</button></div>`;
+  }).join('') + (mes.length > 6 ? `<p class="gl-vide">+ ${mes.length - 6} autre${mes.length - 6 > 1 ? 's' : ''} : affine la recherche.</p>` : '');
+}
+async function fonderieDeplacer(depuis, vers){
+  const { error } = await sb.rpc('fonderie_deplacer', { p_depuis: depuis, p_vers: vers });
+  if(error) notifier({ type: 'erreur', titre: 'Déplacer la Fonderie', texte: messageLisible(error.message) });
+  else {
+    const c = collectionMap.get(vers);
+    notifier({ type: 'succes', titre: 'Fonderie en route', texte: `${c ? c.nom + ' : p' : 'P'}rête dans ${btReglage('construction_h', 6)} h. D’ici là, elle ne produit rien.` });
+  }
+  fdDepOuvert = null; fdDepRecherche = '';
+  await chargerBatiments();
+  if(panneauCommune === vers && collectionMap.get(vers)){ const a = panneauAncre; ouvrirPanneau(vers, a ? a.x : 40, a ? a.y : 40); }
+}
+
 // ---------- patch374 : déplacer une forteresse (s2-116) ----------
 var ftDepOuvert = null, ftDepRecherche = '';
 const ftDepPrix = () => Number(btReglage('forteresse_deplacer_prix', 10)) || 0;

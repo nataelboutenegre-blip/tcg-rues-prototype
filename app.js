@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'c6c9532438cf';
+const VERSION_JEU = 'dbbfe62a00b1';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4401,6 +4401,8 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
     batimentAnnuler(code, t);
     return;
   }
+  if(quoi === 'bt-ft-dep'){ btArme = code + '|ftdep'; const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); return; }   // patch374 : laquelle ?
+  if(quoi === 'bt-ft-dep-de'){ btArme = null; b.disabled = true; forteresseDeplacer(b.dataset.depuis, code); return; }
   if(quoi === 'bt-demenager'){   // patch371 : en deux temps
     if(btArme !== code + '|demenager'){ btArme = code + '|demenager'; const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); return; }
     btArme = null;
@@ -10733,6 +10735,14 @@ function initModes(){
         if(btArme !== k){ btArme = k; const z = document.getElementById('crDemChoix'); if(z && BATIMENTS && BATIMENTS.centre) z.innerHTML = crDemChoixHtml(BATIMENTS.centre); return; }
         btArme = null; dm.disabled = true; centreDemenager(dm.dataset.crDemIci); return;
       }
+      const fd = e.target.closest('[data-ft-dep]');   // patch374 : déplacer une forteresse
+      if(fd){ ftDepOuvert = ftDepOuvert === fd.dataset.ftDep ? null : fd.dataset.ftDep; ftDepRecherche = ''; btArme = null; renderBatimentsBloc(); return; }
+      const fi = e.target.closest('[data-ft-dep-ici]');
+      if(fi){
+        const k = fi.dataset.ftDepIci + '|ftdep';
+        if(btArme !== k){ btArme = k; const z = document.getElementById('ftDepChoix'); if(z) z.innerHTML = ftDepChoixHtml(); return; }
+        btArme = null; fi.disabled = true; forteresseDeplacer(ftDepOuvert, fi.dataset.ftDepIci); return;
+      }
       const fo = e.target.closest('[data-bt-fortifier]');
       if(!fo) return;
       const code = fo.dataset.btFortifier;
@@ -10894,11 +10904,11 @@ function blocBatimentsEtat(code, c){
   }
   const fort = mesForteresses().find(x => x.code === code);
   if(fort){
-    const prete = btPretDans(fort) <= 0;
+    const prete = btPretDans(fort) <= 0, route = fort.deplacee && !prete;   // patch374
     html += `<div class="bt bt-fort">
-      <div class="bt-haut">${ICONE_FORTERESSE}Forteresse <b>${prete ? 'active' : 'prête dans ' + formatDuree(btPretDans(fort))}</b></div>
-      <p class="bt-txt"><b>−${btReglage('forteresse_defense', 15)} %</b> aux chances des attaquants ici, et <b>+${btReglage('forteresse_appui', 5)} %</b> à tes attaques à moins de ${btReglage('rayon_km', 20)} km.</p>
-      ${prete ? '' : btAnnulerHtml(code, 'forteresse')}
+      <div class="bt-haut">${ICONE_FORTERESSE}Forteresse <b>${prete ? 'active' : (route ? 'en route · ' : '') + 'prête dans ' + formatDuree(btPretDans(fort))}</b></div>
+      <p class="bt-txt">${route ? '<b>Déplacement en cours</b> : elle ne protège rien avant la fin du chantier. ' : ''}<b>−${btReglage('forteresse_defense', 15)} %</b> aux chances des attaquants ici, et <b>+${btReglage('forteresse_appui', 5)} %</b> à tes attaques à moins de ${btReglage('rayon_km', 20)} km.${prete ? ` Tu peux la déplacer pour ${ftDepPrix()} lingots : Défendre › Bâtiments, ou « Déplacer une forteresse ici » sur une autre de tes communes.` : ''}</p>
+      ${prete || route ? '' : btAnnulerHtml(code, 'forteresse')}
     </div>`;
   }
   const rd = B.radar && B.radar.code === code ? B.radar : null;   // patch371 : le Radar
@@ -10954,6 +10964,20 @@ function blocBatimentsActions(code, c){
       : nb >= maxF ? `Déjà ${maxF} forteresses`
       : n < prix ? `Il te faut ${prix} lingots (tu en as ${n})` : '';
     boutons.push(`<button class="pc-action bt-action${arme('forteresse') ? ' arme' : ''}" data-pc="bt-construire" data-bt="forteresse" ${bloque ? 'disabled' : ''}>${ICONE_FORTERESSE}<span>${arme('forteresse') ? `Confirmer : ${prix} lingots` : `Faire de ${echapperHtml(c.nom)} une Forteresse`}<small>${bloque || `Prête dans ${h} h · ${nb} / ${maxF} · −${btReglage('forteresse_defense', 15)} % en défense, +${btReglage('forteresse_appui', 5)} % autour`}</small></span><span class="prix">${prix} ${ICONE_LINGOT}</span></button>`);
+  }
+  const ftActives = mesForteresses().filter(x => btPretDans(x) <= 0 && x.code !== code);   // patch374 : en déplacer une ici
+  if(ftActives.length && !mesForteresses().some(x => x.code === code)){
+    const pd = ftDepPrix(), nl = lingotsActuels(), ici = collectionMap.get(code);
+    const bloque = nl < pd ? `Il te faut ${pd} lingots (tu en as ${nl})` : '';
+    if(!arme('ftdep') || bloque){
+      boutons.push(`<button class="pc-action bt-action" data-pc="bt-ft-dep" ${bloque ? 'disabled' : ''}>${ICONE_FORTERESSE}<span>Déplacer une forteresse ici<small>${bloque || `Prête dans ${h} h · sans effet pendant le chantier · ne s’annule pas`}</small></span><span class="prix">${pd} ${ICONE_LINGOT}</span></button>`);
+    } else {
+      for(const x of ftActives){
+        const o = collectionMap.get(x.code), kmTxt = o && ici && o.lat != null && ici.lat != null ? kmEntre(ici.lat, ici.lon, o.lat, o.lon) : null;
+        const assaut = btSousAssaut(x.code);
+        boutons.push(`<button class="pc-action bt-action ft-dep-de" data-pc="bt-ft-dep-de" data-depuis="${echapperTexte(x.code)}" ${assaut ? 'disabled' : ''}>${ICONE_FORTERESSE}<span>Prendre celle ${/^[aeiouyhâàéèêîïôû]/i.test(x.nom) ? 'd’' : 'de '}${echapperHtml(x.nom)}<small>${assaut ? 'Assaut en cours : elle ne bouge pas' : `${echapperHtml(x.dept)}${kmTxt != null ? ' · à ' + Math.round(kmTxt) + ' km' : ''} · prête ici dans ${h} h`}</small></span><span class="prix">${pd} ${ICONE_LINGOT}</span></button>`);
+      }
+    }
   }
   if(B.bombes_ouvertes && !B.centre){   // patch260 : le Centre de recherche
     const pc = btReglage('centre_prix', 40), nfMin = btReglage('centre_fonderies', 2), nl = lingotsActuels();
@@ -11048,7 +11072,10 @@ function renderBatimentsBloc(){
         + (mesFonderies().length < btReglage('fonderies_max', 1) ? `<p class="gl-vide">2e Fonderie : ${btReglage('fonderie2_prix', 30)} lingots. Ouvre une de tes communes sur la carte et choisis « Construire une 2e Fonderie ici ». La réserve monte alors à ${btReglage('fonderie_max2', 45)}.</p>` : '')
         : '<p class="gl-vide">Ouvre une de tes communes sur la carte et choisis « Construire la Fonderie ici ». Elle est gratuite, mais visible de tous : choisis bien l’endroit.</p>'}
     <div class="btl-titre">Forteresses <em>${forts.length} / ${maxF}</em></div>
-    ${forts.map(x => ligne(ICONE_FORTERESSE, x, btPretDans(x) <= 0 ? `−${btReglage('forteresse_defense', 15)} % aux attaquants · +${btReglage('forteresse_appui', 5)} % autour` : 'En construction', 'forteresse')).join('')}
+    ${forts.map(x => x.deplacee && btPretDans(x) > 0   /* patch374 : en route, sans effet, ne s'annule pas */
+        ? ligne(ICONE_FORTERESSE, x, `En déplacement · sans effet pendant le chantier`)
+        : btPretDans(x) <= 0 ? ftLigneActive(x)
+        : ligne(ICONE_FORTERESSE, x, 'En construction', 'forteresse')).join('')}
     ${F && forts.length < maxF ? (n >= prix
         ? `<input type="search" class="bourse-search gn-cherche" id="btCherche" placeholder="Fortifier une de mes communes (${prix} lingots)…" autocomplete="off" value="${echapperTexte(btRecherche)}"><div class="gn-choix" id="btChoix">${btChoixHtml()}</div>`
         : `<p class="gl-vide">Prochaine forteresse : ${prix} lingots (tu en as ${n}).</p>`) : ''}
@@ -11058,6 +11085,11 @@ function renderBatimentsBloc(){
       ? `<div class="btl banque"><span class="btl-ic">${ICONE_BANQUE}</span><span class="btl-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(B.banque.code)}">${echapperTexte(B.banque.nom)} (${echapperTexte(B.banque.dept)})</button><small>${btPretDans(B.banque) <= 0 ? `${Math.min(Number(bqReglage('reserve', 60)), Number(B.banque.contenu) || 0)} / ${bqReglage('reserve', 60)} lingots à l’abri · secrète` : 'En construction · secrète'}</small></span>${btPretDans(B.banque) <= 0 ? '<span class="btl-etat ok">Active</span>' : `<span class="btl-etat cours">prête dans ${formatDuree(btPretDans(B.banque))}</span>`}</div>`
       : `<p class="gl-vide">${bqReglage('prix', 20)} lingots, une Fonderie demandée : ${bqEpargne() ? `une épargne jusqu’à ${bqReglage('reserve', 60)} lingots, +${bqReglage('interet', 10)} % par nuit, à l’abri du pillage des Fonderies` : `+${bqReglage('reserve', 60)} lingots de réserve, à l’abri du pillage des Fonderies`}. Ouvre une de tes communes sur la carte et choisis « Construire la Banque ici ». Elle est secrète.</p>`}` : ''}
     <p class="btl-regle">${LINGOTS_COMBAT ? 'Les lingots viennent des Fonderies et des combats. Ils ne servent qu’aux bâtiments : ils' : 'Les lingots ne servent qu’aux bâtiments : ils'} ne s’échangent pas, ne s’achètent pas et repartent à zéro à chaque saison. Un bâtiment est perdu si on prend sa commune.${B.banque ? (bqEpargne() ? ' Les lingots déposés dans la Banque ne se dépensent pas : retire-les d’abord. Ils sont à l’abri du pillage des Fonderies, sauf si on prend la commune de la Banque (l’attaquant en pille la moitié) ou qu’une bombe tombe dessus.' : ' Une Fonderie prise ne pille que les lingots des Fonderies : ceux de la Banque sont à l’abri, sauf si on prend sa commune ou qu’une bombe tombe dessus.') : ''}</p>`;
+  const ftc = document.getElementById('ftDepCherche');   // patch374
+  if(ftc) ftc.addEventListener('input', (e) => {
+    ftDepRecherche = e.target.value;
+    const z = document.getElementById('ftDepChoix'); if(z) z.innerHTML = ftDepChoixHtml();
+  });
   const crc = document.getElementById('crDemCherche');   // patch371
   if(crc) crc.addEventListener('input', (e) => {
     crDemRecherche = e.target.value;
@@ -11069,6 +11101,56 @@ function renderBatimentsBloc(){
     const z = document.getElementById('btChoix'); if(z) z.innerHTML = btChoixHtml();
   });
 }
+// ---------- patch374 : déplacer une forteresse (s2-116) ----------
+var ftDepOuvert = null, ftDepRecherche = '';
+const ftDepPrix = () => Number(btReglage('forteresse_deplacer_prix', 10)) || 0;
+function ftLigneActive(x){
+  const assaut = btSousAssaut(x.code), ouvert = ftDepOuvert === x.code;
+  const sous = assaut ? 'Assaut en cours : pas de déplacement' : `Active · −${btReglage('forteresse_defense', 15)} % aux attaquants · +${btReglage('forteresse_appui', 5)} % autour`;
+  return `<div class="btl"><span class="btl-ic">${ICONE_FORTERESSE}</span>
+      <span class="btl-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(x.code)}">${echapperTexte(x.nom)} (${echapperTexte(x.dept)})</button><small>${sous}</small></span>
+      <button type="button" class="gl-r bt-fortifier ft-dep-b${ouvert ? ' on' : ''}" data-ft-dep="${echapperTexte(x.code)}" ${assaut ? 'disabled' : ''}>${ouvert ? 'Fermer' : 'Déplacer'}</button></div>`
+    + (ouvert && !assaut ? ftDepHtml() : '');
+}
+function ftDepHtml(){
+  const prix = ftDepPrix(), n = lingotsActuels();
+  if(n < prix) return `<p class="cr-manque">Il te faut ${prix} lingots pour la déplacer (tu en as ${n}).</p>`;
+  return `<div class="cr-dem ft-dem">
+    <p class="cr-txt">Elle part d’ici et se reconstruit là où tu veux : <b>${prix} lingots</b>, <b>${btReglage('construction_h', 6)} h de chantier</b> pendant lesquelles elle ne protège rien. Un déplacement ne s’annule pas.</p>
+    <input type="search" class="bourse-search gn-cherche" id="ftDepCherche" placeholder="Choisis la commune où l’installer…" autocomplete="off" value="${echapperTexte(ftDepRecherche)}">
+    <div class="gn-choix" id="ftDepChoix">${ftDepChoixHtml()}</div></div>`;
+}
+function ftDepChoixHtml(){
+  const q = sansAccents(ftDepRecherche.trim().toLowerCase());
+  const deja = new Set(mesForteresses().map(x => x.code));
+  const ici = collectionMap.get(ftDepOuvert);
+  const rang = (t) => TIERS.findIndex(x => x.id === t.id);
+  const mes = [...collectionMap.values()].filter(c => !deja.has(c.code)
+    && (!q || sansAccents(c.nom.toLowerCase()).includes(q) || c.dept === q.toUpperCase()));
+  if(!mes.length) return `<p class="gl-vide">${collectionMap.size > 1 ? 'Aucune de tes communes ne correspond.' : 'Il te faut une autre commune.'}</p>`;
+  const km = (c) => ici && ici.lat != null && c.lat != null ? kmEntre(ici.lat, ici.lon, c.lat, c.lon) : null;
+  const L = mes.map(c => ({ c, km: km(c) }));
+  L.sort((a, b) => rang(a.c.tier) - rang(b.c.tier) || (a.km == null) - (b.km == null) || (a.km || 0) - (b.km || 0));
+  const prix = ftDepPrix();
+  return L.slice(0, 6).map(({ c, km }) => {
+    const a = btArme === c.code + '|ftdep';
+    return `<div class="gl gn-ligne"><i class="gl-c ${c.tier.id}"></i><div class="gl-t"><b>${echapperTexte(c.nom)}</b>
+      <span>${c.tier.label} · ${echapperTexte(c.dept)}${km != null ? ' · à ' + Math.round(km) + ' km' : ''}</span></div>
+      <button class="gl-r bt-fortifier${a ? ' arme' : ''}" data-ft-dep-ici="${echapperTexte(c.code)}">${a ? `Confirmer · ${prix} lingots` : 'Ici'}</button></div>`;
+  }).join('') + (mes.length > 6 ? `<p class="gl-vide">+ ${mes.length - 6} autre${mes.length - 6 > 1 ? 's' : ''} : affine la recherche.</p>` : '');
+}
+async function forteresseDeplacer(depuis, vers){
+  const { error } = await sb.rpc('forteresse_deplacer', { p_depuis: depuis, p_vers: vers });
+  if(error) notifier({ type: 'erreur', titre: 'Déplacer la forteresse', texte: messageLisible(error.message) });
+  else {
+    const c = collectionMap.get(vers);
+    notifier({ type: 'succes', titre: 'Forteresse en route', texte: `${c ? c.nom + ' : p' : 'P'}rête dans ${btReglage('construction_h', 6)} h. D’ici là, elle ne protège rien.` });
+  }
+  ftDepOuvert = null; ftDepRecherche = '';
+  await chargerBatiments();
+  if(panneauCommune === vers && collectionMap.get(vers)){ const a = panneauAncre; ouvrirPanneau(vers, a ? a.x : 40, a ? a.y : 40); }
+}
+
 function btChoixHtml(){
   const q = sansAccents(btRecherche.trim().toLowerCase());
   const deja = new Set(mesForteresses().map(x => x.code));

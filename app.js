@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'a0a82ec17551';
+const VERSION_JEU = 'a80d5a77f217';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1456,8 +1456,35 @@ function clampMapPan(){
 // on calcule tout de suite, mais on n'ecrit dans la page qu'une fois par image.
 let mapTransformPlanifie = false;
 let mapFinMouvementTimer = null;
+// patch394 : l'échelle de distance, en bas à gauche de la carte (zintox, 9/11)
+const ECH_PAS = [1, 2, 5, 10, 20, 25, 50, 100, 200, 250, 500];
+let echelleKm = 0, echellePx = 0;
+function majEchelle(){
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap || !mapBounds || !MAP_H) return;
+  let el = document.getElementById('mapEchelle');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'mapEchelle'; el.className = 'map-echelle'; el.setAttribute('aria-hidden', 'true');
+    el.innerHTML = '<span></span><i></i>';
+    wrap.appendChild(el);
+  }
+  // la carte garde les proportions réelles à la latitude moyenne : 1 degré de latitude = 111,19 km
+  const kmParPx = (mapBounds.latMax - mapBounds.latMin) * 111.19 / (MAP_H * echelleCarte() * mapZoom);
+  if(!isFinite(kmParPx) || kmParPx <= 0){ el.hidden = true; return; }
+  let km = ECH_PAS[0];
+  for(const k of ECH_PAS) if(k / kmParPx <= 90) km = k;
+  const px = Math.max(8, Math.round(km / kmParPx));
+  el.hidden = false;
+  if(km !== echelleKm || px !== echellePx){
+    echelleKm = km; echellePx = px;
+    el.firstChild.textContent = km + '\u00a0km';
+    el.lastChild.style.width = px + 'px';
+  }
+}
 function applyMapTransform(){
   clampMapPan();
+  majEchelle();   // patch394
   idfVisibilite();   // patch373
   // en canvas le deplacement est un simple changement de repere : pas de couche
   // promue par le navigateur, donc pas de flou et aucun redessin differe
@@ -2875,6 +2902,7 @@ function dessinerTerritoiresCanvas(ctx, trait, k){
   if(CALQUES.raretes) dessinerMarqueursCanvas(ctx, liste, joueurs, k, mode === 'depts');
   if(SAISON2 && BOMBES_ZONES.length) dessinerZonesBombes(ctx, trait);   // patch260 : sous les bâtiments
   if(SAISON2 && CALQUES.batiments && BATIMENTS_CARTE.size) dessinerBatimentsCanvas(ctx, liste);   // patch243-244
+  if(SAISON2 && CALQUES.batiments && garnisonsMoi.size) dessinerGarnisonsCanvas(ctx, liste);   // patch395
   majLegendeSiBesoin(joueurs);
 }
 
@@ -12287,6 +12315,38 @@ function dessinerBatimentsCanvas(ctx, liste){
   ctx.globalAlpha = 1;
 }
 
+// patch395 : mes garnisons sur la carte, un bouclier à gauche du point avec son niveau
+// vert : 4 à 10 · ambre : 1 à 3, à recharger · bleu : vide
+const GN_BOUCLIER = new Path2D('M12 1.5 3.5 4.8v6.4c0 5.3 3.6 9.6 8.5 11.3 4.9-1.7 8.5-6 8.5-11.3V4.8z');
+function dessinerGarnisonsCanvas(ctx, liste){
+  const vue = vueCarteUnites(12);
+  for(const c of liste){
+    if(c.joueur !== ID_MOI) continue;
+    const g = garnisonsMoi.get(String(c.code));
+    if(!g) continue;
+    const x = c.x, y = c.y;
+    if(x < vue[0] || x > vue[2] || y < vue[1] || y > vue[3]) continue;
+    const n = Math.max(0, Math.min(10, Number(g.energie) || 0));
+    const coul = n >= 4 ? ['#2BD48B', '#0C3024', '#D8FFEC', 'rgba(43,212,139,.6)']
+               : n >= 1 ? ['#F0B429', '#3A280A', '#FFEBB0', 'rgba(240,180,41,.6)']
+               :          ['#6EA8FF', '#0E1E3A', '#D6E4FF', 'rgba(110,168,255,.6)'];
+    const u = 1 / (echelleCarte() * mapZoom);   // unités de carte par pixel d'écran
+    const h = mapZoom < 3 ? 17 : 23;            // hauteur du bouclier à l'écran, en px
+    const k = h * u / 24;
+    const cx = x - (h * 0.5 + 6) * u, cy = y;   // à gauche du point (les bâtiments sont à droite)
+    ctx.save();
+    ctx.translate(cx - 12 * k, cy - 12 * k); ctx.scale(k, k);
+    ctx.shadowColor = coul[3]; ctx.shadowBlur = 8;
+    ctx.fillStyle = coul[1]; ctx.fill(GN_BOUCLIER);
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = 2.2; ctx.lineJoin = 'round'; ctx.strokeStyle = coul[0]; ctx.stroke(GN_BOUCLIER);
+    ctx.fillStyle = coul[2]; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '800 ' + (n >= 10 ? 10.5 : 12.5) + 'px "Big Shoulders Display", Impact, sans-serif';
+    ctx.fillText(String(n), 12, 12.6);
+    ctx.restore();
+  }
+}
+
 // ---------- patch91 : garnisons ----------
 async function chargerGarnisons(){
   if(!SAISON2) return;
@@ -12296,6 +12356,7 @@ async function chargerGarnisons(){
     energie: Number(g.energie) || 0, nom: g.nom, tier: g.tier, attaquants: g.attaquants,
     repousses: g.repousses_24h, subis: g.subis_24h }]));
   renderGarnisons();
+  if(typeof canvasActif === 'function' && canvasActif()) demanderDessin();   // patch395 : les boucliers de la carte
   if(!LIB.lu) libCharger();   // patch273
 }
 
@@ -27501,9 +27562,11 @@ function renderRoue(){
       <div class="rdf-jetons"><span class="rdf-slots" id="rdfSlots"></span><span class="rdf-dispo"><b id="rdfDispo"></b><span id="rdfProchain"></span></span></div>
       <div class="rdf-jour" id="rdfJour"></div>
       <button type="button" class="rdf-lien" id="rdfLien"></button>
-      <div class="rdf-chances" id="rdfChances" hidden></div>`;
+      <div class="rdf-chances" id="rdfChances" hidden></div>
+      <div class="rdf-journal" id="rdfJournal" hidden></div>`;   // patch396
     setRoueRot(roueRot);
   }
+  roueJournalCharger();   // patch396
   const ch = document.getElementById('rdfChances');
   if(ch){ ch.hidden = !roueChancesOuvertes; if(roueChancesOuvertes) ch.innerHTML = roueChancesHtml(); }
   const li = document.getElementById('rdfLien');
@@ -27539,9 +27602,59 @@ function roueSoirHtml(){
   return ROUE.soir ? `<span class="rdf-lune">🌙</span><span>Tes ${n} tours du soir sont joués : rendez-vous demain à ${h(d)}</span>` : '';
 }
 
+// patch396 : le fil de la roue (s2-132) : gros lots de tout le monde, dernier jackpot, ma journée
+let roueJournal = null, roueJournalLu = 0;
+const ROUE_GROS = ['jackpot', 'gros', 'coffre', 'cagnotte', 'terra'];
+async function roueJournalCharger(force){
+  if(!roueActive()) return;
+  const age = Date.now() - roueJournalLu;
+  if(age < (force ? 8000 : 60000)) return;
+  roueJournalLu = Date.now();
+  try{
+    const { data, error } = await sb.rpc('roue_front_journal');
+    if(error){ if(fonctionAbsente(error)) roueJournalLu = Date.now() + 3600000; return; }
+    roueJournal = data || null;
+  }catch(e){ return; }
+  renderRoueJournal();
+}
+function roueIlya(t){
+  const m = Math.max(0, Math.round((Date.now() - Date.parse(t)) / 60000));
+  return m < 1 ? 'à l’instant' : m < 60 ? `il y a ${m} min` : m < 1440 ? `il y a ${Math.floor(m / 60)} h` : `il y a ${Math.floor(m / 1440)} j`;
+}
+function roueCaseDe(id){ return (ROUE && Array.isArray(ROUE.cases) ? ROUE.cases : []).find(k => k.id === id) || { id, nom: id }; }
+function roueMoiParts(m, brut){
+  const e = Number(m.energie) || 0, l = Number(m.lingots) || 0, tp = Number(m.tp) || 0, t = Number(m.terra) || 0;
+  return [e ? (brut ? `+${e} ⚡` : `+${e}<span class="rdf-e">${ICONE_ENERGIE}</span>`) : '', l ? `+${l} lingot${l > 1 ? 's' : ''}` : '',
+          tp ? `+${tp} TP` : '', t ? `${t} paquet${t > 1 ? 's' : ''} Terra` : ''].filter(Boolean);
+}
+function roueMoiCopie(){
+  const m = roueJournal && roueJournal.moi; if(!m) return '';
+  const n = Number(m.tours) || 0, g = Number(m.gros) || 0, j = Number(m.jackpots) || 0;
+  return `🎡 Ma roue du Front aujourd’hui : ${n} tour${n > 1 ? 's' : ''}${roueMoiParts(m, true).map(x => ', ' + x).join('')}`
+    + (g ? `, ${g} gros lot${g > 1 ? 's' : ''}${j ? ` dont ${j} jackpot${j > 1 ? 's' : ''} 🎰` : ''}` : ', aucun gros lot 😭');
+}
+function renderRoueJournal(){
+  const el = document.getElementById('rdfJournal'); if(!el) return;
+  const J = roueJournal;
+  if(!J){ el.hidden = true; return; }
+  const lots = Array.isArray(J.lots) ? J.lots : [], jp = J.jackpot, m = J.moi || {};
+  const ligne = (x) => {
+    const k = roueCaseDe(x.case_id), g = roueGainsTexte(x) || 'réserve pleine';
+    return `<div class="rdf-lot"><i style="background:${roueStyle(k).puce}"></i><span><b>${echapperTexte(x.pseudo || 'Un joueur')}</b> · ${echapperTexte(k.nom || x.case_id)}<small>${roueIlya(x.le)}</small></span><em>${g}</em></div>`;
+  };
+  const n = Number(m.tours) || 0;
+  const html = `<h4>Le fil de la roue</h4>
+    ${jp ? `<p class="rdf-jp">🎰 Dernier jackpot : <b>${echapperTexte(jp.pseudo || 'un joueur')}</b>, ${roueIlya(jp.le)}${Number(jp.jour) ? ` · ${jp.jour} en 24 h` : ''}</p>` : ''}
+    ${lots.length ? lots.map(ligne).join('') : '<p class="rdf-vide">Aucun gros lot depuis deux jours.</p>'}
+    <div class="rdf-moi"><span>Ta roue aujourd’hui : <b>${n} tour${n > 1 ? 's' : ''}</b>${n ? roueMoiParts(m).map(x => ' · ' + x).join('') : ''}${Number(m.gros) ? ` · <b>${m.gros} gros lot${m.gros > 1 ? 's' : ''}</b>` : ''}</span>
+    ${n ? '<button type="button" class="rdf-copier" id="rdfCopier">Copier pour Discord</button>' : ''}</div>`;
+  el.hidden = false;
+  roueEcrire('rdfJournal', html);
+}
 function renderRoueInfos(){
   const el = document.getElementById('roueFront');
   if(!el || el.hidden || !ROUE || !el.offsetParent) return;   // onglet caché : rien à écrire
+  renderRoueJournal();   // patch396 : les « il y a » avancent
   const live = roueJetons(), dispo = Math.floor(live);
   const fen = roueSoirFenetre(), soir = roueSoirReste();   // patch388
   if(fen.n && fen.d && !ROUE.soir && Date.now() >= fen.d && Date.now() < fen.f && Date.now() - roueSoirRelu > 60000){ roueSoirRelu = Date.now(); chargerRoue(); }
@@ -27657,6 +27770,7 @@ async function roueTourner(){
   roueTourne = false;
   roueGainMontrer(data);
   renderRoueInfos();
+  setTimeout(() => roueJournalCharger(true), 600);   // patch396
   if(PREMIERS_PAS && !PREMIERS_PAS.paquet) ppRelire(1500);   // patch365 : étape 1 par la roue
   if(Number(data.energie) > 0 && typeof majEnergie === 'function') majEnergie();
   if(Number(data.tp) > 0 && data.solde != null){   // patch351 : le solde de TP suit
@@ -27668,6 +27782,11 @@ async function roueTourner(){
 document.getElementById('roueFront')?.addEventListener('click', (e) => {
   if(e.target.closest('#rdfCentre')){ roueTourner(); return; }
   if(e.target.closest('#rdfLien')){ roueChancesOuvertes = !roueChancesOuvertes; renderRoue(); return; }
+  if(e.target.closest('#rdfCopier')){   // patch396
+    const txt = roueMoiCopie();
+    if(txt && navigator.clipboard) navigator.clipboard.writeText(txt).then(() => notifier({ type: 'succes', titre: 'Copié', texte: 'Colle-le sur Discord !' }), () => {});
+    return;
+  }
   if(e.target.closest('[data-rdf="terra"]')){ roueGainCacher(); ncAller('terra', 'tirage'); return; }
   if(e.target.closest('#rdfGain')) roueGainCacher();
 });

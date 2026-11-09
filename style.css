@@ -4454,6 +4454,15 @@ svg.rd-zoom .cdj-fr{ fill:#172D4C; }
 .as-jleg{ display:flex; justify-content:space-between; font-size:.74rem; color: var(--brume); margin-top:8px; }
 .as-jleg b{ color:#2BD48B; } .as-jleg b.blanc{ color:#fff; }
 .as-jgarn{ font-size:.7rem; color: var(--brume); margin:4px 0 0; }   /* patch393 */
+/* patch394 : l'échelle de distance */
+.map-echelle{ position:absolute; z-index:2; left:10px; bottom:10px; pointer-events:none;
+  display:flex; flex-direction:column; align-items:flex-start; gap:3px;
+  color:#E0ECFA; font-size:.68rem; font-weight:700; letter-spacing:.02em; line-height:1;
+  text-shadow:0 1px 2px rgba(7,17,31,.95), 0 0 4px rgba(7,17,31,.9); }
+.map-echelle i{ display:block; height:5px; border:2px solid rgba(224,236,250,.92); border-top:0;
+  box-shadow:0 1px 2px rgba(7,17,31,.7); }
+.map-echelle[hidden], .map-wrap.outremer .map-echelle, .map-wrap.panneau-ouvert .map-echelle{ display:none; }
+.map-wrap.plein-ecran .map-echelle{ bottom:calc(10px + env(safe-area-inset-bottom, 0px)); }
 .fenetre .as-verdict{ position:relative; margin:24px 0 8px; min-height:1.1em; font-family: var(--titre); font-weight:900; font-size:clamp(1.9rem, 8vw, 2.6rem); line-height:1; opacity:0; }
 .as-verdict.ok{ color:#2BD48B; text-shadow:0 0 22px rgba(43,212,139,.5); }
 .as-verdict.ko{ color:#F0566A; text-shadow:0 0 22px rgba(240,86,106,.45); }
@@ -8927,6 +8936,22 @@ body.mode-terra #roueFront{ display:none !important; }
 .rdf-ch b{ color:#fff; font-weight:800; white-space:nowrap; }
 .rdf-ch span:last-child{ text-align:right; color:#A9BCD4; font-variant-numeric:tabular-nums; }
 .rdf-ch-pied{ font-size:.68rem; color:#7F92AA; margin:6px 0 2px; }
+/* patch396 : le fil de la roue */
+.rdf-journal{ margin:10px auto 0; max-width:330px; text-align:left; background:rgba(9,16,30,.7); border:1px solid rgba(169,188,212,.18); border-radius:14px; padding:8px 12px 10px; }
+.rdf-journal[hidden]{ display:none; }
+.rdf-journal h4{ margin:2px 0 6px; font:800 .78rem/1.2 var(--titre); letter-spacing:.06em; text-transform:uppercase; color:#FFE29A; }
+.rdf-jp{ margin:0 0 6px; padding:6px 9px; border-radius:10px; background:rgba(232,48,111,.14); border:1px solid rgba(232,48,111,.35); font-size:.74rem; color:#FFD6E4; }
+.rdf-jp b{ color:#fff; }
+.rdf-lot{ display:grid; grid-template-columns:10px 1fr auto; gap:8px; align-items:center; padding:5px 0; border-top:1px solid rgba(169,188,212,.08); font-size:.76rem; color:#DCE5F0; }
+.rdf-lot i{ width:10px; height:10px; border-radius:3px; }
+.rdf-lot span{ min-width:0; overflow:hidden; text-overflow:ellipsis; }
+.rdf-lot span b{ color:#fff; }
+.rdf-lot small{ display:block; font-size:.64rem; color:#7F92AA; }
+.rdf-lot em{ font-style:normal; font-weight:800; color:#fff; white-space:nowrap; font-size:.74rem; }
+.rdf-vide{ font-size:.72rem; color:#7F92AA; margin:4px 0; }
+.rdf-moi{ margin-top:6px; padding-top:8px; border-top:1px solid rgba(169,188,212,.18); font-size:.74rem; color:#DCE5F0; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
+.rdf-moi b{ color:#fff; }
+.rdf-copier{ padding:5px 10px; border-radius:999px; border:1px solid rgba(169,188,212,.35); background:rgba(169,188,212,.08); color:#DCE5F0; font:inherit; font-size:.72rem; font-weight:700; cursor:pointer; }
 .rdf-e{ display:inline-flex; vertical-align:-2px; color:#FFD35A; }
 .rdf-e svg{ width:1em; height:1em; }
 .rdf-gain{ --rdf-c:#FF6B6F; position:absolute; left:50%; top:40%; transform:translateX(-50%); z-index:3; min-width:60%; max-width:92%; box-sizing:border-box; padding:10px 16px 11px; border-radius:16px; cursor:pointer;

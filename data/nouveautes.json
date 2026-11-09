@@ -2,7 +2,8 @@
   {
     "date": "2026-11-09",
     "nouveautes": [
-      "⚡ La réserve d’énergie du Front passe à 120 (au lieu de 90) : en revenant, tu en retrouves plus"
+      "⚡ La réserve d’énergie du Front passe à 120 (au lieu de 90) : en revenant, tu en retrouves plus",
+      "🎡 Roue du Front : +50 % d’énergie sur les cases éclair (petit +4, éclair +7, gros +15, jackpot +18, mixte +4)"
     ],
     "correctifs": [
       "Roue du Front : le tour en plus de la Relance est un vrai tour offert, hors des 30 tours du jour. Les Relances tirées depuis hier soir sont remboursées en tours offerts (signalé par Maroli)"

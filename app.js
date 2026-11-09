@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '47ba4b50eab4';
+const VERSION_JEU = '24d72892da8c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4234,11 +4234,14 @@ let atkDetail = false, atkOptions = null;
 try{ atkDetail = localStorage.getItem('tf-atk-detail') === '1'; } catch(e){}
 const ICONE_REPERE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/><circle cx="12" cy="9.8" r="2.3" fill="currentColor"/></svg>';
 // [genre, icône, texte] ; genre : plus (bonus), moins (malus), neutre
+// patch392 : le bonus de débutant ne joue ni sur une épique ni sur une légendaire (s2-131)
+function debHautRang(code){ const c = othersMap.get(code); const t = c && c.tier && c.tier.id; return t === 'epique' || t === 'legendaire'; }
+function debutantIci(code){ return debutantActif() && !attaqueEnGarnison && !debHautRang(code); }
 function atkPuces(code, a){
   const p = [];
-  const deb = debutantActif();
+  const deb = debutantActif(), debOk = debutantIci(code);
   if(attaqueEnGarnison) p.push(['moins', ICONES_PC.bouclier, 'Garnison']);
-  if(deb) p.push(attaqueEnGarnison ? ['neutre', ICONE_DEBUTANT, 'Sans bonus de débutant'] : ['plus', ICONE_DEBUTANT, 'Bonus de débutant']);
+  if(deb) p.push(debOk ? ['plus', ICONE_DEBUTANT, 'Bonus de débutant'] : ['neutre', ICONE_DEBUTANT, 'Sans bonus de débutant']);
   if(SAISON2 && attaquePertes >= SN_PERTES && !attaqueEnGarnison) p.push(['plus', ICONE_TREFLE, `Série noire +${SN_BONUS}\u00a0%`]);
   const B = attaqueEffetBt;
   if(B && B.defense > 0) p.push(['moins', ICONE_FORTERESSE, `Forteresse −${B.defense}\u00a0%`]);
@@ -4246,7 +4249,7 @@ function atkPuces(code, a){
   if(B && B.bombe > 0) p.push(['plus', '<i class="atk-emo">💥</i>', `Bombe +${B.bombe}\u00a0%`]);
   const R = attaqueRebellion;
   if(R && R.mienne) p.push(['plus', '<i class="atk-emo">✊</i>', `Rébellion +${rbFmt(Number(R.mienne.pct) || 0)}\u00a0%`]);
-  if(a.a_distance) p.push([deb && !attaqueEnGarnison ? 'neutre' : 'moins', ICONE_REPERE, 'À distance']);
+  if(a.a_distance) p.push([debOk ? 'neutre' : 'moins', ICONE_REPERE, 'À distance']);
   else if(Number(a.proches) >= 2) p.push(['plus', ICONE_REPERE, `${a.proches} voisines`]);
   else p.push(['neutre', ICONE_REPERE, '1 voisine']);
   return p;
@@ -4257,6 +4260,8 @@ function atkDetailHtml(code, a){
     ${attaqueEnGarnison ? `<div class="gn-badge">${ICONES_PC.bouclier}<span><b>Commune en garnison.</b> Une victoire sur deux est annulée par sa défense : la chance affichée en tient déjà compte.</span></div>` : ''}
     ${debutantActif() ? (attaqueEnGarnison
       ? `<div class="db-badge non">${ICONE_DEBUTANT}<span><b>Pas de bonus de débutant ici :</b> il ne joue jamais contre une commune en garnison.</span></div>`
+      : debHautRang(code)
+      ? `<div class="db-badge non">${ICONE_DEBUTANT}<span><b>Pas de bonus de débutant ici :</b> il ne joue pas contre une épique ou une légendaire. Tes chances sont les chances normales.</span></div>`
       : `<div class="db-badge">${ICONE_DEBUTANT}<span><b>Bonus de débutant</b> · ${debutantReste()} : ${a.chances}\u00a0% ici, même en prudent et même loin de chez toi. Il s’arrête à ta première conquête.</span></div>`) : ''}
     ${SAISON2 && attaquePertes >= SN_PERTES ? (attaqueEnGarnison
       ? `<div class="sn-badge non">${ICONE_TREFLE}<span><b>Série noire</b> : ${attaquePertes} assauts perdus d’affilée ici, mais pas de coup de pouce contre une commune en garnison.</span></div>`
@@ -4265,13 +4270,13 @@ function atkDetailHtml(code, a){
     ${attaqueEffetBt && attaqueEffetBt.appui > 0 ? `<p class="bt-appui">${ICONE_FORTERESSE}<span>+${attaqueEffetBt.appui} % grâce à ta forteresse${attaqueEffetBt.appui_de ? ' de <b>' + echapperHtml(attaqueEffetBt.appui_de) + '</b>' : ''}</span></p>` : ''}
     ${attaqueEffetBt && attaqueEffetBt.bombe > 0 ? `<p class="bt-appui bt-bombe"><span class="bt-bombe-ic">💥</span><span>+${attaqueEffetBt.bombe} % : zone bombardée${attaqueEffetBt.bombe_sur ? ' (<b>' + echapperHtml(attaqueEffetBt.bombe_sur) + '</b>)' : ''}</span></p>` : ''}
     ${rbBadgeHtml()}
-    <div class="pc-prox ${a.a_distance && !(debutantActif() && !attaqueEnGarnison) ? 'loin' : ''}">
+    <div class="pc-prox ${a.a_distance && !debutantIci(code) ? 'loin' : ''}">
       ${estOutremerCode(code)   // patch246 : en outre-mer, tout le territoire compte (s2-49)
         ? (a.a_distance
           ? 'Aucune de tes communes dans ce territoire : <b>attaque à distance</b>, tes chances baissent.'
           : `<b>${a.proches}</b> de tes communes dans ce territoire`)
         : a.a_distance
-        ? (debutantActif() && !attaqueEnGarnison ? 'Aucune de tes communes à moins de 20 km : <b>attaque à distance</b>, sans effet avec ton bonus de débutant.' : 'Aucune de tes communes à moins de 20 km : <b>attaque à distance</b>, tes chances baissent.')   // patch365
+        ? (debutantIci(code) ? 'Aucune de tes communes à moins de 20 km : <b>attaque à distance</b>, sans effet avec ton bonus de débutant.' : 'Aucune de tes communes à moins de 20 km : <b>attaque à distance</b>, tes chances baissent.')   // patch365
         : `<b>${a.proches}</b> de tes communes à moins de 20 km`}
     </div>
     `;
@@ -26806,7 +26811,7 @@ function debutantAfficher(){
     }
     if(b){
       b.hidden = !debutantActif();
-      if(debutantActif()) b.innerHTML = `${ICONE_DEBUTANT}<span><b>Bonus de débutant</b> · ${debutantReste()}<br>Au moins <b>${DEBUTANT.chances}\u00a0%</b> par assaut, même en prudent et même loin de chez toi. Pas contre une commune en garnison. Il s’arrête à ta première conquête : ensuite, tes chances redeviennent normales.</span>`;
+      if(debutantActif()) b.innerHTML = `${ICONE_DEBUTANT}<span><b>Bonus de débutant</b> · ${debutantReste()}<br>Au moins <b>${DEBUTANT.chances}\u00a0%</b> par assaut, même en prudent et même loin de chez toi. Pas contre une commune en garnison, ni contre une épique ou une légendaire. Il s’arrête à ta première conquête : ensuite, tes chances redeviennent normales.</span>`;
     }
   }
   renderPremiersPas();
@@ -26841,6 +26846,7 @@ function ppCibles(exclues, n){   // patch336 : exclues = codes déjà proposés 
     if(clanMembres.has(c.joueurId) || c.bouclierJusqua > maintenant) continue;
     if(exclues && exclues.has(c.code)) continue;
     if(PP_GARNIS.has(String(c.code))) continue;   // patch365 : jamais une garnison
+    if(rangT(c.tier) >= 3) continue;   // patch392 : ni une épique ni une légendaire (pas de bonus de débutant)
     if(typeof BATIMENTS_CARTE !== 'undefined' && BATIMENTS_CARTE && BATIMENTS_CARTE.get && (BATIMENTS_CARTE.get(String(c.code)) || {}).forteresse) continue;   // ni une Forteresse
     let d = 300;
     for(const m of miennes){
@@ -26893,7 +26899,7 @@ function renderPremiersPas(){
   const lots = `${R.paquets} paquet Terra en plus et ${R.lingots} lingots`;
   el.innerHTML = `<div class="pp-haut"><span class="pp-t">Premiers pas</span><span class="pp-n">${faites} / 4</span></div>
     <p class="pp-sous">${faites === 4 ? 'Bravo, tout est fait : ta récompense t’attend.' : 'Fais ces 4 choses pour bien démarrer ta conquête.'}</p>
-    ${deb ? `<div class="db-pp">${ICONE_DEBUTANT}<span><b>Bonus de débutant</b> · ${debutantReste()} : au moins ${DEBUTANT.chances}\u00a0% par assaut, même loin de chez toi (sauf contre une garnison), jusqu’à ta première conquête. Ensuite, retour à la normale.</span></div>` : ''}
+    ${deb ? `<div class="db-pp">${ICONE_DEBUTANT}<span><b>Bonus de débutant</b> · ${debutantReste()} : au moins ${DEBUTANT.chances}\u00a0% par assaut, même loin de chez toi (sauf contre une garnison, une épique ou une légendaire), jusqu’à ta première conquête. Ensuite, retour à la normale.</span></div>` : ''}
     <div class="pp-seg">${etapes.map(e => `<i class="${P[e[0]] ? 'on' : ''}"></i>`).join('')}</div>
     ${etapes.map((e, i) => `<div class="pp-e${P[e[0]] ? ' fait' : i === premiere ? ' cours' : ''}"><span class="pp-c">${P[e[0]] ? '✓' : i + 1}</span>
       <span class="pp-l"><b>${e[1]}</b><small>${e[2]}</small></span>
@@ -27099,7 +27105,7 @@ function pcFicheHtml(c, a){
       <div><b>${(ENERGIE_INTENSITE[intensiteChoisie] || 2) + surcoutRarete(t)} ⚡</b><span>par assaut (${echapperHtml(intensite().label.toLowerCase())})</span></div>
       <div><b>3</b><span>victoires pour la prendre</span></div>
     </div>
-    ${debutantActif() ? `<div class="db-pp">${ICONE_DEBUTANT}<span><b>Bonus de débutant</b> · ${debutantReste()} : au moins ${DEBUTANT.chances}\u00a0% par assaut, même en prudent. Il s’arrête à ta première conquête, puis tout redevient normal.</span></div>` : ''}
+    ${debutantActif() ? `<div class="db-pp">${ICONE_DEBUTANT}<span><b>Bonus de débutant</b> · ${debutantReste()} : au moins ${DEBUTANT.chances}\u00a0% par assaut, même en prudent (sauf contre une garnison, une épique ou une légendaire). Il s’arrête à ta première conquête, puis tout redevient normal.</span></div>` : ''}
     <p class="pc-txt">Une défaite ne te fait <b>rien perdre</b> : ta série reste où elle en est.${delai ? ` Entre deux assauts sur cette commune : <b>${formatDuree(delai)}</b>.` : ''}</p>
     ${pcSansCommune() ? '<div class="pc-base"><b>Tu n’as pas encore de commune.</b> Choisis ta première cible près de chez toi : ce sera ta base pour la suite.</div>' : ''}
     <button type="button" class="pc-go" data-pc-act="lancer" data-pc-code="${echapperTexte(c.code)}">${pcSansCommune() ? 'Attaquer ' + echapperHtml(c.nom) : 'Lancer l\'assaut'}</button>

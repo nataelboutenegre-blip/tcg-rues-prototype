@@ -9513,3 +9513,6 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .rdf-soir b{ color:#fff; }
 .rdf-soir.actif{ background:rgba(120,110,220,.24); border-color:rgba(170,160,255,.55); color:#E4E1FF; box-shadow:0 0 18px -6px rgba(150,140,255,.7); }
 .rdf-lune{ font-size:1rem; line-height:1; }
+
+/* patch389 : tours offerts en réserve */
+.rdf-jour .rdf-offerts{ color:#C9C2FF; font-weight:700; }

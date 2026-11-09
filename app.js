@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1381a7d4d1f1';
+const VERSION_JEU = '35f55006cb62';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -27539,7 +27539,8 @@ function renderRoueInfos(){
   if(fen.n && fen.d && !ROUE.soir && Date.now() >= fen.d && Date.now() < fen.f && Date.now() - roueSoirRelu > 60000){ roueSoirRelu = Date.now(); chargerRoue(); }
   const sh = roueSoirHtml(), sb2 = document.getElementById('rdfSoir');
   if(sb2){ sb2.hidden = !sh; sb2.classList.toggle('actif', soir > 0); roueEcrire('rdfSoir', sh); }
-  const par = Number(ROUE.par_jour) || 15, faits = Number(ROUE.tours_jour) || 0, fini = faits >= par && soir < 1, reste = Math.max(0, par - faits);
+  const offr = Math.max(0, Number(ROUE.offerts) || 0);   // patch389 : tours offerts en réserve
+  const par = Number(ROUE.par_jour) || 15, faits = Number(ROUE.tours_jour) || 0, fini = faits >= par && soir < 1 && offr < 1, reste = Math.max(0, par - faits);
   const prochain = live >= 3 ? 0 : (1 - (live % 1)) * 1200;
   const slot = (plein) => `<span class="rdf-slot${plein ? '' : ' vide'}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="${ROUE_BOLT}"/></svg></span>`;
   roueEcrire('rdfSlots', [0, 1, 2].map(i => slot(i < dispo)).join(''));
@@ -27549,11 +27550,12 @@ function renderRoueInfos(){
     : dispo === 0 ? 'Un tour revient toutes les <em>20 min</em>'
     : `Prochain tour dans <em>${roueMmss(prochain)}</em>`);
   roueEcrire('rdfJour', soir > 0 ? `Les tours du soir ne comptent pas dans tes ${par} tours du jour`   // patch388
+    : offr > 0 ? `<b class="rdf-offerts">+ ${offr} tour${offr > 1 ? 's' : ''} offert${offr > 1 ? 's' : ''}</b>, hors des ${par} du jour · ${reste} restant${reste > 1 ? 's' : ''} aujourd’hui`   // patch389
     : fini ? `${par} tours faits aujourd’hui` : `${reste} tour${reste > 1 ? 's' : ''} restant${reste > 1 ? 's' : ''} aujourd’hui`);
   const b = document.getElementById('rdfCentre');
   if(b){
-    const peut = !roueTourne && (soir >= 1 || (!fini && dispo >= 1));   // patch388 : un tour du soir suffit
-    roueEcrire('rdfCentre', roueTourne ? 'Tourner' : soir >= 1 ? 'Tourner<small>offert</small>' : fini ? 'Demain<small>plus de tour</small>' : dispo < 1 ? `${roueMmss(prochain)}<small>prochain tour</small>` : 'Tourner');
+    const peut = !roueTourne && (soir >= 1 || offr >= 1 || (!fini && dispo >= 1));   // patch388, patch389 : un tour du soir ou offert suffit
+    roueEcrire('rdfCentre', roueTourne ? 'Tourner' : soir >= 1 || offr >= 1 ? 'Tourner<small>offert</small>' : fini ? 'Demain<small>plus de tour</small>' : dispo < 1 ? `${roueMmss(prochain)}<small>prochain tour</small>` : 'Tourner');
     b.disabled = !peut;
     b.classList.toggle('attente', !peut && !roueTourne);
     b.setAttribute('aria-label', peut ? 'Tourner la roue du Front' : fini ? 'Plus de tour aujourd’hui' : roueTourne ? 'La roue tourne' : `Prochain tour dans ${roueMmss(prochain)}`);
@@ -27605,7 +27607,7 @@ function roueGainMontrer(d){
   else if(ep && lp) note = `Énergie : ${d.energie_totale} · lingots : ${d.lingots_total}`;
   else if(ep) note = `Ton énergie : ${d.energie_totale}`;
   else if(lp) note = `Tes lingots : ${d.lingots_total}`;
-  else if(offert) note = nOff > 1 ? `Ton tour est rendu et tu en gagnes ${nOff - 1 > 1 ? nOff - 1 : 'un'} de plus : relance la roue !` : 'Ton tour est rendu : il ne compte pas dans la journée';   // patch351, patch385
+  else if(offert) note = nOff > 1 ? `Ton tour est rendu et tu gagnes ${nOff - 1 > 1 ? nOff - 1 + ' tours offerts' : 'un tour offert'}, hors des ${Number(ROUE && ROUE.par_jour) || 30} du jour : relance la roue !`   /* patch389 */ : 'Ton tour est rendu : il ne compte pas dans la journée';   // patch351, patch385
   else if(tp) note = d.solde != null ? `Tes TerraPoints : ${Number(d.solde).toLocaleString('fr-FR')}` : 'Ajoutés à tes TerraPoints';
   else note = 'À ouvrir dans Terra';
   const g = document.getElementById('rdfGain'), el = document.getElementById('roueFront');
@@ -27624,7 +27626,7 @@ function roueGainMontrer(d){
 }
 async function roueTourner(){
   if(roueTourne || !roueActive()) return;
-  if(roueSoirReste() < 1 && (Math.floor(roueJetons()) < 1 || Number(ROUE.tours_jour) >= Number(ROUE.par_jour))) return;   // patch388
+  if(roueSoirReste() < 1 && !(Number(ROUE.offerts) > 0) && (Math.floor(roueJetons()) < 1 || Number(ROUE.tours_jour) >= Number(ROUE.par_jour))) return;   // patch388, patch389
   const el = document.getElementById('roueFront');
   roueTourne = true; roueGainCacher(); renderRoueInfos();
   if(el) el.classList.add('tourne');
@@ -27639,6 +27641,7 @@ async function roueTourner(){
   ROUE.jetons = Number(data.jetons); roueLu = Date.now();
   ROUE.tours_jour = Number(data.tours_jour); if(data.par_jour) ROUE.par_jour = Number(data.par_jour);
   if(data.soir !== undefined){ ROUE.soir = !!data.soir; ROUE.soir_restants = Number(data.soir_restants) || 0; }   // patch388
+  if(data.offerts !== undefined) ROUE.offerts = Number(data.offerts) || 0;   // patch389
   if(packStatusCache){ packStatusCache.jetons_actuels = Number(data.jetons); packStatusFetchedAt = Date.now(); dispoPrecedente = Math.floor(Number(data.jetons)); }
   renderRoueInfos();
   await roueAnimer(data.case);

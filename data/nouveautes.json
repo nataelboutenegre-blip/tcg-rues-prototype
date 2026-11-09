@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-11-09",
+    "nouveautes": [],
+    "correctifs": [
+      "Roue du Front : le tour en plus de la Relance est un vrai tour offert, hors des 30 tours du jour. Les Relances tirées depuis hier soir sont remboursées en tours offerts (signalé par Maroli)"
+    ]
+  },
+  {
     "date": "2026-11-08",
     "nouveautes": [
       "⚡ L’énergie du Front se recharge plus vite : +1 toutes les 7 minutes (au lieu de 10)",

@@ -3,6 +3,7 @@
     "date": "2026-11-09",
     "nouveautes": [
       "⚡ La réserve d’énergie du Front passe à 120 (au lieu de 90) : en revenant, tu en retrouves plus",
+      "🎡 Roue du Front : 50 tours par jour au lieu de 30 (toujours 1 tour toutes les 20 min), pour retrouver de l’énergie l’après-midi",
       "🎡 Roue du Front : +50 % d’énergie sur les cases éclair (petit +4, éclair +7, gros +15, jackpot +18, mixte +4)"
     ],
     "correctifs": [

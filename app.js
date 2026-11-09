@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'a4d7953dfb3a';
+const VERSION_JEU = '47ba4b50eab4';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -27607,7 +27607,7 @@ function roueGainMontrer(d){
   else if(ep && lp) note = `Énergie : ${d.energie_totale} · lingots : ${d.lingots_total}`;
   else if(ep) note = `Ton énergie : ${d.energie_totale}`;
   else if(lp) note = `Tes lingots : ${d.lingots_total}`;
-  else if(offert) note = nOff > 1 ? `Ton tour est rendu et tu gagnes ${nOff - 1 > 1 ? nOff - 1 + ' tours offerts' : 'un tour offert'}, hors des ${Number(ROUE && ROUE.par_jour) || 30} du jour : relance la roue !`   /* patch389 */ : 'Ton tour est rendu : il ne compte pas dans la journée';   // patch351, patch385
+  else if(offert) note = nOff > 1 ? `Ton tour est rendu et tu gagnes ${nOff - 1 > 1 ? nOff - 1 + ' tours offerts' : 'un tour offert'}, hors des ${Number(ROUE && ROUE.par_jour) || 50} du jour : relance la roue !`   /* patch389 */ : 'Ton tour est rendu : il ne compte pas dans la journée';   // patch351, patch385
   else if(tp) note = d.solde != null ? `Tes TerraPoints : ${Number(d.solde).toLocaleString('fr-FR')}` : 'Ajoutés à tes TerraPoints';
   else note = 'À ouvrir dans Terra';
   const g = document.getElementById('rdfGain'), el = document.getElementById('roueFront');

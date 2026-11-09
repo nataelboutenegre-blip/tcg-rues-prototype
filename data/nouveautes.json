@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-11-10",
+    "nouveautes": [],
+    "correctifs": [
+      "Assaut contre une commune en garnison : l’animation affiche la même chance que la fiche (par exemple 43 %, soit 85 % aux dés et une victoire sur deux annulée par la garnison), et l’aiguille s’arrête dans le vert quand la garnison annule ta victoire"
+    ]
+  },
+  {
     "date": "2026-11-09",
     "nouveautes": [
       "⚡ La réserve d’énergie du Front passe à 120 (au lieu de 90) : en revenant, tu en retrouves plus",

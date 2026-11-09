@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '24d72892da8c';
+const VERSION_JEU = 'a0a82ec17551';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -467,12 +467,13 @@ document.addEventListener('click', (e) => {
 
 // cible : { code, nom, dept, tier (id), pseudo, lat, lon } — capturee AVANT
 // le rechargement des possessions. r : la reponse de attaquer().
-function mettreEnSceneAssaut(cible, r){
+function mettreEnSceneAssaut(cible, r, enGarnison){   // patch393 : enGarnison = la fiche divisait la chance par deux
   const tierId = cible.tier && cible.tier.id ? cible.tier.id : cible.tier;
   const grand = tierId === 'rare' || tierId === 'epique' || tierId === 'legendaire';
   const anim = ouvAnim && !REDUCED_MOTION;
   const proche = maCommuneLaPlusProche(cible.lat, cible.lon, cible.code);
   const chances = Math.max(1, Math.min(99, Number(r.chances) || 50));
+  const garn = SAISON2 && (enGarnison || !!r.par_garnison);   // patch393
   const serieAvant = r.conquise ? 2 : (r.gagne ? Math.max(0, Number(r.victoires_consecutives) - 1) : Number(r.victoires_consecutives) || 0);   // patch240
   const res = r.conquise ? 'conq' : (r.gagne ? 'ok' : 'ko');
   // patch91 : une victoire annulee par la garnison revient perdue mais avec une serie intacte
@@ -481,7 +482,7 @@ function mettreEnSceneAssaut(cible, r){
   const lcAvant = LINGOTS_COMBAT ? Object.assign({}, LINGOTS_COMBAT) : null;   // patch300
   if(SAISON2) setTimeout(majEnergie, 300);
   // ou l'aiguille s'arrete : dans le vert si gagne, dans le rouge sinon
-  const arret = res === 'ko' ? chances + (100 - chances) * (0.25 + Math.random() * 0.6)
+  const arret = res === 'ko' && !parGarnison ? chances + (100 - chances) * (0.25 + Math.random() * 0.6)   // patch393
                              : chances * (0.15 + Math.random() * 0.7);
   const nomCible = echapperTexte(cible.nom);
   const bonus = r.conquise ? Math.floor((PRIX_RACHAT[tierId] || 0) * BONUS_CONQUETE_PART) : 0;
@@ -506,7 +507,7 @@ function mettreEnSceneAssaut(cible, r){
         </div>
       </div>
       <div class="as-jauge"><div class="as-cadran"><div class="as-zone" style="width:${chances}%"></div><div class="as-aiguille"></div></div>
-        <div class="as-jleg"><span>Tes chances : <b>${chances} %</b></span>${r.cout ? `<span>Coût : <b class="blanc">${coutTexte(r.cout)}</b></span>` : ''}</div></div>
+        <div class="as-jleg"><span>Tes chances : <b>${garn ? Math.round(chances / 2) : chances} %</b></span>${r.cout ? `<span>Coût : <b class="blanc">${coutTexte(r.cout)}</b></span>` : ''}</div>${garn ? `<p class="as-jgarn">${chances} % aux dés, la garnison en annule une sur deux</p>` : ''}</div>
       <h2 class="as-verdict" id="asVerdict"></h2>
       <p class="as-detail"></p>
       <div class="as-actions"></div>
@@ -4330,7 +4331,7 @@ async function lancerAssaut(code){
       if(!r.gagne && !r.par_garnison) r.sn_pertes = attaquePertes;
     }
     // patch86 : l'assaut mis en scene remplace les notifications
-    mettreEnSceneAssaut(cibleVue, r);
+    mettreEnSceneAssaut(cibleVue, r, attaqueEnGarnison);
     if(r.conquise && debutantActif()){   // patch365 : le bonus de débutant s'arrête
       const guidee = pcLire(PC_CIBLE) === code && !pcLire(PC_FETE);
       DEBUTANT_FINI = true; DEBUTANT = null; debutantAfficher();
@@ -9527,7 +9528,8 @@ document.addEventListener('click', async (e) => {
         const result = data[0];
         const cible = combatCibles.find(x => x.commune_code === code);
         // patch86 : l'assaut mis en scene remplace les notifications
-        mettreEnSceneAssaut(cibleVueCombat, result);
+        const vuGrille = chancesCibles.get(code);   // patch393 : la grille affichait la moitié des dés = garnison
+        mettreEnSceneAssaut(cibleVueCombat, result, !!(vuGrille && Number(vuGrille.chances) > 0 && Number(vuGrille.chances) < Number(result.chances) && Math.abs(Number(vuGrille.chances) * 2 - Number(result.chances)) <= 2));
         pcApresAssaut(code, result);   // patch336
         // patch135 : la carte se met a jour sur place, le reste plus tard
         combatApresAssaut(code, result);

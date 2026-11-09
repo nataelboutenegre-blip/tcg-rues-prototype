@@ -4453,6 +4453,7 @@ svg.rd-zoom .cdj-fr{ fill:#172D4C; }
 .as-aiguille{ position:absolute; top:-7px; left:0; width:3px; height:29px; margin-left:-1.5px; background:#fff; border-radius:2px; box-shadow:0 0 10px rgba(255,255,255,.9); }
 .as-jleg{ display:flex; justify-content:space-between; font-size:.74rem; color: var(--brume); margin-top:8px; }
 .as-jleg b{ color:#2BD48B; } .as-jleg b.blanc{ color:#fff; }
+.as-jgarn{ font-size:.7rem; color: var(--brume); margin:4px 0 0; }   /* patch393 */
 .fenetre .as-verdict{ position:relative; margin:24px 0 8px; min-height:1.1em; font-family: var(--titre); font-weight:900; font-size:clamp(1.9rem, 8vw, 2.6rem); line-height:1; opacity:0; }
 .as-verdict.ok{ color:#2BD48B; text-shadow:0 0 22px rgba(43,212,139,.5); }
 .as-verdict.ko{ color:#F0566A; text-shadow:0 0 22px rgba(240,86,106,.45); }

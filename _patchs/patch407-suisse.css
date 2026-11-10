@@ -1,0 +1,19 @@
+/* ---------- patch407 : le paquet Terra suisse (saison 3) ---------- */
+.tp-pays{ display:flex; gap:4px; margin:2px 0 10px; padding:4px; border-radius:999px; background:rgba(169,188,212,.08); border:1px solid rgba(169,188,212,.16); width:max-content; max-width:100%; }
+.tp-pays button{ display:flex; flex-direction:row; align-items:center; gap:8px; white-space:nowrap; border:0; background:none; color:var(--brume); font:inherit; font-size:.9rem; font-weight:700; padding:9px 16px; border-radius:999px; cursor:pointer; }
+.tp-pays button.on{ background:#1E5A44; color:#E8F6EE; box-shadow:inset 0 0 0 1px rgba(53,185,126,.55); }
+.tp-pays button.tp-b-ch.on{ background:rgba(218,41,28,.22); color:#fff; box-shadow:inset 0 0 0 1px rgba(255,120,110,.65); }
+.tp-pays small{ font-size:.6rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; padding:2px 6px; border-radius:6px; background:rgba(240,180,41,.2); color:#FFD36B; }
+.tp-drap{ width:21px; height:14px; border-radius:3px; flex:none; box-shadow:0 0 0 1px rgba(255,255,255,.22); display:block; }
+.tp-drap.tp-drap-ch{ width:16px; height:16px; }
+.tp-note{ font-size:.8rem; color:var(--brume); margin:0 0 14px; line-height:1.4; }
+.tp-coll-pays{ margin:0 0 10px; }
+.tp-coll-pays button{ padding:7px 14px; font-size:.84rem; }
+.paquet.paquet-ch .paquet-etiquette .tp-drap{ width:26px; height:26px; }
+.paquet.paquet-ch .paquet-bande{ background:#DA291C; color:#fff; }
+.ch-badge{ position:absolute; left:6px; top:6px; z-index:1; display:flex; align-items:center; gap:4px; font-size:.58rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; padding:2px 7px 2px 3px; border-radius:6px; background:#DA291C; color:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+.ch-badge svg{ width:12px; height:12px; display:block; flex:none; }
+.ch-badge.ch-mini{ left:4px; top:4px; padding:2px; }
+.card.suisse .carte-lisere span, .mini.suisse .mini-lisere span{ background:#DA291C; }
+.card.suisse .carte-lisere span:nth-child(2), .mini.suisse .mini-lisere span:nth-child(2){ background:#fff; flex:.3; }
+@media (max-width: 360px){ .tp-pays button{ padding:8px 12px; font-size:.84rem; } }

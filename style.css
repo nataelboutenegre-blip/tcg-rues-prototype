@@ -8952,6 +8952,17 @@ body.mode-terra #roueFront{ display:none !important; }
 .pc-action.pc-ech-inter{ margin-top:6px; color:#9FD8F5; border-color:rgba(110,195,240,.35); }
 .pc-action.pc-ech-inter small{ color:#7F92AA; font-size:.72rem; }
 .pc-action.pc-ech-inter:disabled{ opacity:.55; cursor:default; }
+/* patch401 : le bandeau Discord de l'onglet Clan */
+.cd-bandeau{ display:flex; gap:10px; align-items:flex-start; margin:12px 0 4px; padding:10px 12px; border-radius:12px;
+  background:rgba(88,101,242,.12); border:1px solid rgba(88,101,242,.4); color:#DCE5F0; font-size:.8rem; line-height:1.45; }
+.cd-bandeau > svg{ flex:none; width:22px; height:22px; color:#8E9BFF; margin-top:1px; }
+.cd-bandeau p{ margin:0; }
+.cd-bandeau b{ color:#fff; }
+.cd-bandeau .cd-lien{ display:inline-block; margin-top:7px; padding:5px 11px; border-radius:999px; background:#5865F2; color:#fff; font-weight:700; font-size:.75rem; text-decoration:none; }
+.cd-bandeau.alerte{ background:rgba(240,180,41,.12); border-color:rgba(240,180,41,.5); }
+.cd-bandeau.alerte > svg{ color:#F0B429; }
+.cd-bandeau.ok{ align-items:center; background:rgba(43,212,139,.08); border-color:rgba(43,212,139,.35); font-size:.76rem; }
+.cd-bandeau.ok > svg{ color:#2BD48B; width:18px; height:18px; }
 /* patch400 : la diplomatie */
 .dp-bloc .ce-h3{ margin-top:12px; }
 .dp-item{ border-top:1px solid rgba(169,188,212,.1); padding:8px 0 4px; }

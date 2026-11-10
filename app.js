@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b97ad5492ad5';
+const VERSION_JEU = '2d922f158b0b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -19495,6 +19495,23 @@ function tchatHtml(c){
 // patch194 : les echanges entre membres du clan (Front)
 const clanEch = { etat: null, qui: null, donne: null, recoit: null, mes: null, leurs: null, r1: '', r2: '' };
 const enFrontClan = () => SAISON2 && modeJeu === 'front';
+// patch401 : le bandeau Discord (s2-135) : 'trouve', 'introuvable' ou null (on ne sait pas)
+let discordStatut = null;
+async function chargerDiscordStatut(){
+  try{ const { data, error } = await sb.rpc('discord_moi_statut'); discordStatut = error ? null : (data || null); }
+  catch(e){ discordStatut = null; }
+}
+function bandeauDiscordClan(c){
+  const moi = (c.membres || []).find(m => m.moi);
+  const pseudo = moi && moi.pseudo ? `<b>« ${echapperTexte(moi.pseudo)} »</b>` : 'ton pseudo du jeu';
+  if(discordStatut === 'trouve') return `<div class="cd-bandeau ok">${ICONE_DISCORD}<p>Le bot des clans t’a trouvé sur le Discord : tu vois le salon de ton clan et ses salons de diplomatie.</p></div>`;
+  const perdu = discordStatut === 'introuvable';
+  return `<div class="cd-bandeau${perdu ? ' alerte' : ''}">${ICONE_DISCORD}<div>
+    <p>${perdu ? '<b>Le bot des clans ne te trouve pas sur le Discord</b> : tu ne vois ni le salon de ton clan ni ses salons de diplomatie.'
+                : 'Sur le Discord, le bot des clans t’ouvre le salon de ton clan et ses salons de diplomatie.'}
+    L’idéal : <b>le même pseudo sur le Discord que dans le jeu</b> (${pseudo}). Un pseudo sur le serveur TerraFront suffit ; majuscules et accents ne comptent pas.${perdu ? ' Le bot repasse toutes les 10 minutes.' : ''}</p>
+    <a class="cd-lien" href="${LIEN_DISCORD}" target="_blank" rel="noopener">Rejoindre le Discord</a></div></div>`;
+}
 // patch400 : la diplomatie (s2-134)
 const clanDiplo = { etat: null, choix: '', confirmer: null };
 async function chargerClanDiplo(){
@@ -19800,7 +19817,7 @@ async function loadClan(){
   const [mc, cl, cf, ac] = await Promise.all([sb.rpc('mon_clan'), sb.rpc('clans_classement'), sb.rpc('clans_en_formation'),
     sb.rpc('clan_activite').then(r => r, () => ({ error: true }))]);   // patch184
   if(mc.error){ zone.innerHTML = `<p class="collection-empty">${echapperTexte(messageLisible(mc.error.message))}</p>`; return; }
-  if(SAISON2) await Promise.all([chargerClanEch(), chargerClanDiplo()]);   // patch194, patch400
+  if(SAISON2) await Promise.all([chargerClanEch(), chargerClanDiplo(), chargerDiscordStatut()]);   // patch194, patch400, patch401
   await chargerCandidatures();   // patch307
   clanCache = { moi: mc.data || {}, classement: cl.error ? [] : (cl.data || []), formation: cf.error ? [] : (cf.data || []),
                 activite: ac.error ? null : new Map((ac.data || []).map(a => [a.joueur_id, a])) };
@@ -19991,6 +20008,7 @@ function renderClan(){
     gauche = `<div class="clan-carte">
       <div class="clan-tete">${blasonHtml(c.tag, c.couleur)}<div><div class="clan-nom">${echapperTexte(c.nom)}</div><small>${n} membre${n > 1 ? 's' : ''} sur 8${n < 3 ? ' · classé à partir de 3' : ''}</small></div>${c.chef || (c.droits || {}).modifier ? '<button type="button" class="bq-btn secondaire bl-modifier" data-bl-ouvrir>Modifier le clan</button>' : ''}</div>
       <div class="puces"><span class="puce">Communes en Front <b>${nbClan(total)}</b></span><span class="puce">Moyenne par membre${actifs ? ' actif' : ''} <b>${nbClan(moyenne)}</b></span>${actifs ? `<span class="puce">Actifs <b>${actifs.length}</b> sur ${n}</span>` : ''}${rang >= 0 ? `<span class="puce">Rang <b>${rang + 1}</b> sur ${classement.length}</span>` : ''}</div>
+      ${bandeauDiscordClan(c)}   <!-- patch401 -->
       ${blocJour}
       ${candGererHtml(c)}   <!-- patch307 -->
       ${tchatHtml(c)}   <!-- patch258 -->

@@ -8,9 +8,10 @@
 //    salon privé que seuls ses membres (et le bot) voient ;
 //  - donne le rôle aux membres présents sur le Discord, le retire à ceux qui
 //    ont quitté le clan ;
-//  - le chef reçoit « Gérer les permissions » sur SON salon (il peut y inviter
-//    qui il veut) ; un ancien chef perd ce droit ; les personnes ajoutées par
-//    le chef ne sont jamais touchées ;
+//  - seuls les membres du clan (par leur rôle) et le bot voient le salon :
+//    tout accès à son nom y est retiré (décision du 4/11 : un ancien chef ou
+//    un ancien membre gardait l'accès et pouvait encore écrire ; le chef ne
+//    peut donc plus inviter quelqu'un d'extérieur) ;
 //  - clan dissous : son rôle est vidé (plus personne ne voit le salon), le
 //    salon reste (à supprimer à la main) ;
 //  - diplomatie (s2-134, 10/11) : un salon privé « 🤝│a-b » dans la catégorie
@@ -40,7 +41,6 @@ const PREFIXE_ROLE = "🏰 [";
 const VOIR = 0x400n, ECRIRE = 0x800n, GERER_MSG = 0x2000n, LIENS = 0x4000n, FICHIERS = 0x8000n, HISTORIQUE = 0x10000n, REACTIONS = 0x40n;
 const DROITS_MEMBRE = VOIR | ECRIRE | LIENS | FICHIERS | HISTORIQUE | REACTIONS;
 const DROITS_BOT = VOIR | ECRIRE | GERER_MSG | HISTORIQUE;
-const GERER_PERMS = 0x10000000n;
 const CATEGORIE_DIPLO = "🤝 Diplomatie";
 
 export type Clan = { tag: string; nom: string; couleur?: string | null; chef?: string | null; membres: string[] };
@@ -166,9 +166,6 @@ export async function synchroniser(o: Options): Promise<Rapport> {
     const marque = `[${tag}]`;
     const sujet = `Salon privé du clan ${marque} ${clan.nom} : seuls ses membres le voient.`;
     let salon = salons.find((s) => s.type === 0 && s.parent_id === CAT_ID && String(s.topic ?? "").includes(marque));
-    const idsChef = clan.chef ? trouver(clan.chef) : [];
-    const chefId = idsChef.length === 1 ? idsChef[0] : null;
-    if (clan.chef && !chefId) R.avertissements.push(`[${tag}] chef ${clan.chef} : pas trouvé sur le Discord, il ne pourra pas inviter`);
     const existantes = new Map<string, any>((salon?.permission_overwrites ?? []).map((x: any) => [x.id, x]));
     const base = [
       { id: EVERYONE, type: 0, allow: "0", deny: String(VOIR), quoi: "tout le monde : caché" },
@@ -196,28 +193,16 @@ export async function synchroniser(o: Options): Promise<Rapport> {
         salons.push(salon);
         await appel("POST", `/channels/${sid}/messages`, { allowed_mentions: { parse: [] }, content:
           `🏰 **Salon privé du clan ${marque} ${clan.nom}**\n` +
-          "Seuls les membres du clan le voient. Le bot donne l'accès aux membres du jeu qui sont sur le Discord.\n\n" +
-          "**Chef du clan** : tu peux inviter quelqu'un d'autre ici. Clic droit sur le salon (ou appui long sur téléphone) " +
-          "› Modifier le salon › Permissions › Ajouter des membres ou des rôles › choisis la personne › autorise « Voir le salon ».\n" +
+          "Seuls les membres du clan le voient : le bot donne l'accès aux membres du jeu qui sont sur le Discord, et le retire à ceux qui quittent le clan.\n" +
           "Un membre qui n'est pas encore sur le Discord doit d'abord rejoindre le serveur." }, false);
       }
     }
-    // le chef peut inviter dans son salon
-    if (chefId) {
-      const e = existantes.get(chefId);
-      if (!(e && (big(e.allow) & GERER_PERMS))) {
-        const allow = (e ? big(e.allow) : 0n) | DROITS_MEMBRE | GERER_PERMS;
-        const r = await faire(`[${tag}] ${nomDe(chefId)} (chef) peut inviter dans le salon`, () =>
-          sid ? appel("PUT", `/channels/${sid}/permissions/${chefId}`, { type: 1, allow: String(allow), deny: String(e ? big(e.deny) : 0n) }, false) : Promise.resolve({}));
-        if (!SIM && r === null) R.avertissements.push(`[${tag}] Discord refuse que le bot donne « Gérer les permissions » à ${nomDe(chefId)} : à faire à la main, une fois.`);
-      }
-    }
-    // un ancien chef garde l'accès mais ne peut plus inviter
-    for (const [uid, e] of existantes) {
-      if (Number(e.type) === 1 && uid !== chefId && uid !== moi.id && (big(e.allow) & GERER_PERMS)) {
-        const r = await faire(`[${tag}] ${nomDe(uid)} n'est plus chef : il ne peut plus inviter`, () =>
-          appel("PUT", `/channels/${sid}/permissions/${uid}`, { type: 1, allow: String(big(e.allow) & ~GERER_PERMS), deny: String(e.deny) }, false));
-        if (!SIM && r === null) R.avertissements.push(`[${tag}] retirer « Gérer les permissions » à ${nomDe(uid)} à la main`);
+    // seuls les membres (par le rôle) et le bot : tout accès à son nom est retiré
+    if (sid) {
+      for (const [uid, e] of existantes) {
+        if (Number(e.type) !== 1 || uid === moi.id) continue;
+        await faire(`[${tag}] accès à son nom retiré à ${nomDe(uid)} (le salon est réservé aux membres du clan)`, () =>
+          appel("DELETE", `/channels/${sid}/permissions/${uid}`, undefined, false));
       }
     }
 

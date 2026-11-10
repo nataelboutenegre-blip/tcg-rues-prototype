@@ -1,0 +1,72 @@
+
+/* ---------- patch405 : le siège (saison 3) ---------- */
+.siege-on .intensite-bloc, .siege-on #combatTri, .siege-on #reveilDefense{ display:none; }
+.sg-boite{ border-color:rgba(255,138,142,.45); }
+.sg-k{ display:flex; align-items:center; gap:7px; font-size:.78rem; font-weight:700; color:var(--brume); }
+.sg-rar{ width:9px; height:9px; border-radius:50%; background:var(--c, #7E8BA0); flex:none; display:inline-block; }
+.sg-nom{ font-size:2.4rem; margin:4px 0 4px; }
+.sg-sous{ margin-bottom:12px; }
+.sg-chiffres div{ padding:10px 6px; }
+.sg-chiffres b{ font-size:1.65rem; }
+.sg-chiffres b.sg-eclair{ color:var(--c-legendaire); }
+.sg-chiffres b.sg-long{ color:#8FC1FF; }
+.sg-chiffres span{ line-height:1.3; }
+.sg-jauge{ background:rgba(10,22,40,.5); border:1px solid rgba(169,188,212,.18); border-radius:14px; padding:12px; margin:0 0 12px; }
+.sg-barre{ position:relative; height:14px; border-radius:99px; background:rgba(169,188,212,.16); overflow:hidden; }
+.sg-barre.petit{ height:8px; }
+.sg-rempli{ position:absolute; left:0; top:0; bottom:0; border-radius:99px; background:linear-gradient(90deg, #F0B429, #FFD36B); transition:width .6s cubic-bezier(.2,.8,.3,1); }
+.sg-rempli.chaud{ background:linear-gradient(90deg, #F0B429, #FF8A8E); }
+.sg-jl{ display:flex; justify-content:space-between; gap:10px; margin-top:7px; font-size:.78rem; color:var(--brume); }
+.sg-jl b{ color:#fff; }
+.sg-jl b.sg-long{ color:#8FC1FF; } .sg-jl b.sg-eclair{ color:var(--c-legendaire); }
+.sg-bcl{ display:flex; justify-content:space-between; gap:8px; font-size:.76rem; color:#8FC1FF; margin-bottom:8px; padding:6px 10px; border-radius:10px; background:rgba(47,124,246,.14); border:1px solid rgba(47,124,246,.35); }
+.sg-bcl b{ color:#CFE3FF; }
+.sg-tombe{ margin:8px 0 0; font-size:.74rem; color:#8FA2BC; }
+.sg-retour{ margin:0 0 12px; padding:8px 12px; border-radius:10px; background:rgba(240,180,41,.13); border:1px solid rgba(240,180,41,.35); color:#FFD98A; font-size:.85rem; font-weight:600; }
+.sg-lignes{ background:rgba(10,22,40,.45); border:1px solid rgba(169,188,212,.18); border-radius:14px; padding:2px 14px; margin-bottom:12px; }
+.sg-l{ display:flex; justify-content:space-between; gap:12px; padding:10px 0; font-size:.82rem; border-bottom:1px solid rgba(169,188,212,.12); }
+.sg-l:last-child{ border-bottom:0; }
+.sg-l > span:first-child{ color:var(--brume); flex:none; }
+.sg-l > span:last-child{ text-align:right; }
+.sg-plus{ color:#7FE3B4; } .sg-moins{ color:#FF9A94; }
+.sg-note{ display:flex; gap:10px; align-items:flex-start; font-size:.8rem; color:var(--brume); line-height:1.4; margin:0 0 12px; }
+.sg-note svg{ width:18px; height:18px; flex:none; margin-top:1px; fill:none; stroke:#FF8A8E; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+.sg-course{ font-size:.8rem; color:#FFB27A; margin:0 0 12px; line-height:1.4; }
+.sg-energie{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin:0 0 12px; }
+.sg-el{ font-size:.8rem; color:var(--brume); flex:1 0 100%; }
+.sg-pas{ display:flex; align-items:center; gap:4px; background:rgba(10,22,40,.5); border:1px solid rgba(169,188,212,.25); border-radius:12px; padding:3px; }
+.sg-pas button{ width:40px; height:40px; border:0; border-radius:9px; background:var(--nuit-3, #1F3860); color:#fff; font-size:1.3rem; cursor:pointer; }
+.sg-pas button:disabled{ opacity:.4; cursor:default; }
+.sg-pas b{ min-width:44px; text-align:center; font:900 1.5rem/1 var(--titre); }
+.sg-vite{ display:flex; gap:6px; }
+.sg-vite button{ min-width:44px; height:40px; padding:0 10px; border-radius:10px; border:1px solid rgba(169,188,212,.3); background:none; color:#fff; font:inherit; font-size:.85rem; font-weight:700; cursor:pointer; }
+.sg-vite button.on{ background:rgba(240,180,41,.18); border-color:rgba(240,180,41,.6); color:#FFD98A; }
+.sg-energie small{ font-size:.78rem; color:var(--brume); margin-left:auto; }
+.sg-energie small b{ color:#fff; }
+.sg-places{ text-align:center; font-size:.76rem; color:var(--brume); margin:10px 0 0; }
+.sg-places b{ color:#fff; }
+.sg-err{ color:#FF9A94; font-size:.8rem; margin:8px 0 0; text-align:center; }
+.sg-def{ background:rgba(10,22,40,.45); border:1px solid rgba(169,188,212,.18); border-radius:14px; padding:12px; margin-bottom:10px; }
+.sg-def.chaud{ border-color:rgba(255,138,142,.55); }
+.sg-def.laisse{ opacity:.6; }
+.sg-def-h{ display:flex; align-items:center; flex-wrap:wrap; gap:6px 8px; margin-bottom:9px; }
+.sg-def-nom{ background:none; border:0; padding:0; color:#fff; font:800 1.05rem/1.1 var(--titre); cursor:pointer; text-decoration:underline; text-decoration-color:rgba(169,188,212,.35); }
+.sg-def-qui{ font-size:.78rem; color:var(--brume); flex:1 0 100%; }
+.sg-def-qui b{ color:#fff; }
+.sg-def-a{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.sg-renf{ font:inherit; font-size:.8rem; font-weight:700; padding:9px 12px; border-radius:10px; border:0; background:var(--c-legendaire); color:var(--encre); cursor:pointer; }
+.sg-gn{ font:inherit; font-size:.8rem; font-weight:700; padding:9px 12px; border-radius:10px; border:1px solid rgba(47,124,246,.5); background:rgba(47,124,246,.14); color:#CFE3FF; cursor:pointer; }
+.sg-laisser{ font:inherit; font-size:.78rem; padding:9px 4px; border:0; background:none; color:var(--brume); text-decoration:underline; cursor:pointer; margin-left:auto; }
+.sg-renf:disabled, .sg-gn:disabled{ opacity:.5; cursor:default; }
+.sg-mes{ margin:4px 0 16px; }
+.sg-mes[hidden]{ display:none; }
+.sg-mes h2 small{ font-size:.8rem; font-weight:600; color:var(--brume); margin-left:6px; }
+.sg-mes-l{ display:grid; grid-template-columns:minmax(0, 1fr) 90px 40px; align-items:center; gap:10px; width:100%; text-align:left; font:inherit; color:#fff; background:rgba(10,22,40,.45); border:1px solid rgba(169,188,212,.18); border-radius:12px; padding:10px 12px; margin-bottom:6px; cursor:pointer; }
+.sg-mes-t{ display:flex; flex-wrap:wrap; align-items:center; gap:2px 7px; min-width:0; }
+.sg-mes-t b{ font-size:.92rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70%; }
+.sg-mes-t small{ flex:1 0 100%; font-size:.72rem; color:var(--brume); }
+.sg-mes-p{ font:800 .95rem/1 var(--titre); text-align:right; }
+.sg-renf-l{ font-size:.8rem; color:var(--brume); align-self:center; margin-right:2px; }
+.sg-def-a .sg-renf{ min-width:58px; }
+.sg-def-b{ display:flex; align-items:center; gap:6px; margin-top:8px; }
+.mfo-l .sg-barre{ margin-top:6px; max-width:220px; }

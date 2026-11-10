@@ -9,7 +9,8 @@
       "🤝 Échanges entre clans : sur la carte, touche une commune d’un joueur d’un autre clan, puis « Proposer un échange ». Une contre une, même rareté, un échange par semaine (idée de zintox)"
     ],
     "correctifs": [
-      "Assaut contre une commune en garnison : l’animation affiche la même chance que la fiche (par exemple 43 %, soit 85 % aux dés et une victoire sur deux annulée par la garnison), et l’aiguille s’arrête dans le vert quand la garnison annule ta victoire"
+      "Assaut contre une commune en garnison : l’animation affiche la même chance que la fiche (par exemple 43 %, soit 85 % aux dés et une victoire sur deux annulée par la garnison), et l’aiguille s’arrête dans le vert quand la garnison annule ta victoire",
+      "Clans : si leur chargement échouait au retour sur l’appli, ils restaient invisibles toute la partie (coéquipiers parmi les cibles d’Attaquer, calque Clans vide). Le jeu réessaie maintenant tout seul, et les relit toutes les 10 minutes"
     ]
   },
   {

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b9d37a60d2ae';
+const VERSION_JEU = '8cec79e50ba7';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -19614,13 +19614,26 @@ async function ceAction(nom, args, apres){
 }
 let clanCouleurChoisie = CLAN_COULEURS[0];
 
+// patch399 : un échec (jeton expiré au retour sur l'appli…) n'est plus définitif
+let clansCarteEchecs = 0, clansCarteLu = 0, clansCarteRelance = null;
+function clansCarteReessayer(err){
+  if(clansCarteRelance || clansCarteEchecs >= 6) return;
+  const n = ++clansCarteEchecs;
+  const jeton = /jwt|expired|401|token/i.test(String(err && (err.message || err.code || err.status || err) || ''));
+  clansCarteRelance = setTimeout(async () => {
+    clansCarteRelance = null;
+    if(jeton){ try{ await sb.auth.refreshSession(); }catch(e){} }
+    loadClansCarte();
+  }, Math.min(60000, 3000 * n * n));
+}
 async function loadClansCarte(){
   if(!CLANS) return;
   try{
     if(!monUidClan){ const { data: u } = await sb.auth.getUser(); monUidClan = u && u.user ? u.user.id : null; }
     const [{ data, error }] = await Promise.all([sb.rpc('clans_carte'), chargerBlasons()]);   // patch253
     tchatDemarrer();   // patch258
-    if(error) return;
+    if(error || !monUidClan){ clansCarteReessayer(error || 'sans session'); return; }   // patch399
+    clansCarteEchecs = 0; clansCarteLu = Date.now();
     clansCarte = new Map((data || []).map(r => [r.joueur_id, { tag: r.tag, couleur: r.couleur }]));
     clansCarteVersion++;
     setTimeout(majBlasonsNoms, 0);   // patch275
@@ -19629,7 +19642,7 @@ async function loadClansCarte(){
     clanMembres = new Set(moi ? (data || []).filter(r => r.tag === moi.tag && r.joueur_id !== monUidClan).map(r => r.joueur_id) : []);
     if([...clanMembres].sort().join(',') !== avantClan && combatCibles.length){ try{ renderCombatGrid(); }catch(e){} }   // patch315
     if(typeof demanderDessin === 'function'){ CV.donneesSignature = ''; demanderDessin(); }
-  }catch(e){ /* les clans restent invisibles */ }
+  }catch(e){ clansCarteReessayer(e); }   // patch399 : avant, les clans restaient invisibles
 }
 function peindreClans(joueurs){
   for(const j of joueurs.values()){
@@ -20023,6 +20036,13 @@ document.getElementById('panel-clan').addEventListener('click', (e) => {
   }
 });
 if(CLANS) setTimeout(loadClansCarte, 1500);
+// patch399 : relu au retour sur l'appli (après 5 min) et toutes les 10 min (arrivées et départs des clans)
+if(CLANS){
+  document.addEventListener('visibilitychange', () => {
+    if(!document.hidden && Date.now() - clansCarteLu > 300000){ clansCarteEchecs = 0; loadClansCarte(); }
+  });
+  setInterval(() => { if(!document.hidden && Date.now() - clansCarteLu > 540000) loadClansCarte(); }, 600000);
+}
 if(CLANS) setTimeout(chargerClanEch, 2500);   // patch194 : la pastille des propositions recues
 document.getElementById('panel-clan').addEventListener('input', (e) => {
   if(e.target.id === 'ceR1'){ clanEch.r1 = e.target.value; majListesCe(); }

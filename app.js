@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'c31dcc453e10';
+const VERSION_JEU = '4e08a52fe935';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3954,7 +3954,7 @@ function ouvrirPanneau(code, xCss, yCss){
     }
   }
   if(c.pop != null) lignes.push(['Population', nbFr(c.pop)]);
-  if(mienne && c.rank) lignes.push([estOutremerCode(code) ? 'Rang outre-mer' : 'Rang national', nbFr(c.rank) + '<sup>e</sup>']);   // patch220
+  if(mienne && c.rank) lignes.push([estOutremerCode(code) ? 'Rang outre-mer' : estSuisseCode(code) ? 'Rang en Suisse' : 'Rang national', nbFr(c.rank) + '<sup>e</sup>']);   // patch220
   lignes.push(['Propriétaire', mienne
     ? '<b>Toi</b>'
     : `<button class="pc-proprio" data-profil="${echapperHtml(c.joueurId)}">${echapperHtml(c.pseudo)}</button>`]);
@@ -6869,11 +6869,11 @@ function renderCollection(){
       ? `<span class="mini-siege" title="${s.nb > 1 ? s.nb + ' joueurs attaquent cette commune' : 'Un joueur attaque cette commune'} — meilleure série ${s.max} sur 3">${s.max}/3${s.nb > 1 ? ' ×' + s.nb : ''}</span>`
       : '';
     return `
-    <div class="mini ${entry.tier.id}${auroreFront(entry.code) ? ' aurore' : ''}${entry.perdue ? ' perdue' : ''}${favorisSet.has(entry.code) ? ' favori' : ''}${hntParts(entry.code, 'front').cls}" data-code="${entry.code}" role="button" tabindex="0" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
+    <div class="mini ${entry.tier.id}${auroreFront(entry.code) ? ' aurore' : ''}${estSuisseCode(entry.code) ? ' suisse' : ''}${entry.perdue ? ' perdue' : ''}${favorisSet.has(entry.code) ? ' favori' : ''}${hntParts(entry.code, 'front').cls}" data-code="${entry.code}" role="button" tabindex="0" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
       <div class="mini-int">
         ${auroreFront(entry.code) ? fondAurore(entry.code, entry.tier.id, false) : ''}
         ${entry.perdue ? '<span class="mini-perdue">PERDUE</span>' : ''}${favorisSet.has(entry.code) ? '<span class="mini-fav" title="Gardée à la fin de la saison">★</span>' : ''}
-        <div class="mini-art">${artCommune(entry, entry.tier.id)}${hntParts(entry.code, 'front').art}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}${monumentsNoms.has(entry.code) ? `<span class="mini-monument" title="Monument : ${echapperTexte(monumentsNoms.get(entry.code))}">${ICONE_MONUMENT}</span>` : ''}${entry.etiquette ? `<span class="mini-etiq" title="Ton étiquette">${echapperTexte(entry.etiquette)}</span>` : ''}</div>
+        <div class="mini-art">${estSuisseCode(entry.code) ? chBadge(true) : ''}${artCommune(entry, entry.tier.id)}${hntParts(entry.code, 'front').art}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}${monumentsNoms.has(entry.code) ? `<span class="mini-monument" title="Monument : ${echapperTexte(monumentsNoms.get(entry.code))}">${ICONE_MONUMENT}</span>` : ''}${entry.etiquette ? `<span class="mini-etiq" title="Ton étiquette">${echapperTexte(entry.etiquette)}</span>` : ''}</div>
         <div class="mini-infos">
           <p class="mini-nom ${entry.nom.length > 14 ? 'long' : ''}">${entry.nom}</p>
           ${entry.rank ? `<span class="mini-num">n° ${Number(entry.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(entry.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
@@ -8111,7 +8111,7 @@ function makeCardEl(draw, onFlip){
   const bxg = briParts(draw, true);   // patch269
   const hng = hntParts(draw.code, draw.terraExemplaires != null ? 'terra-tirage' : (enTerra() ? 'terra' : 'front'));   // patch276
   const atg = atlParts(draw.terraExemplaires != null ? { ...draw, atelier: atlPour(draw.code, 2), skin: skinDeMaCarte('terra', draw.code) } : draw, true, !!hng.cls);   // patch270, patch286
-  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '') + (draw.aurore ? ' aurore' : '') + (estOutremerCode(draw.code) ? ' outremer' : '') + bxg.cls + atg.cls + hng.cls;   // patch219, patch269, patch270
+  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '') + (draw.aurore ? ' aurore' : '') + (estOutremerCode(draw.code) ? ' outremer' : '') + (estSuisseCode(draw.code) ? ' suisse' : '') + bxg.cls + atg.cls + hng.cls;   // patch219, patch269, patch270
   wrap.innerHTML = `
     <div class="card-inner">
       <div class="face face-back">
@@ -8127,13 +8127,13 @@ function makeCardEl(draw, onFlip){
               <span class="carte-rarete">${draw.tier.label}</span>
               <span class="carte-num">${draw.rank.toLocaleString('fr-FR')} / ${draw.tierSize.toLocaleString('fr-FR')}</span>
             </div>
-            <div class="carte-art">${estOutremerCode(draw.code) ? OM_BADGE : ''}${carteArtSvg(draw.code, draw.tier.id)}${bxg.art}${atg.art}${hng.art}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
+            <div class="carte-art">${estOutremerCode(draw.code) ? OM_BADGE : estSuisseCode(draw.code) ? chBadge(false) : ''}${carteArtSvg(draw.code, draw.tier.id)}${bxg.art}${atg.art}${hng.art}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
             <div class="carte-infos">
               <p class="carte-nom ${draw.nom.length > 26 ? 'tres-long' : draw.nom.length > 16 ? 'long' : ''}" title="${echapperTexte(draw.nom)}">${draw.nom}</p>
               <p class="carte-departement">${DEPT_NAMES[draw.dept] ? `<span class="dep-nom">${DEPT_NAMES[draw.dept]}</span> <span class="dep-num">(${draw.dept})</span>` : `<span class="dep-num">${draw.dept}</span>`}</p>
               <div class="carte-stats">
                 <div><span>Habitants</span><b>${draw.pop.toLocaleString('fr-FR')}</b></div>
-                <div><span>${estOutremerCode(draw.code) ? 'Rang outre-mer' : 'Rang'}</span><b>${draw.rank.toLocaleString('fr-FR')}</b></div>
+                <div><span>${estOutremerCode(draw.code) ? 'Rang outre-mer' : estSuisseCode(draw.code) ? 'Rang suisse' : 'Rang'}</span><b>${draw.rank.toLocaleString('fr-FR')}</b></div>
               </div>
               ${draw.aurore ? creditAurore(draw.code) : ''}
             </div>
@@ -8708,6 +8708,7 @@ function renderPackStatus(){
   renderReserveAccueil();   // patch322
   renderRoue();   // patch343
   renderZoneDepart();   // patch348
+  tpRendre();   // patch407
 }
 function paquetPretAffiche(){
   return !!document.querySelector('#packZone .paquet[data-pret]');
@@ -8718,6 +8719,7 @@ function fonctionAbsente(error){
   return !!error && (error.code === 'PGRST202' || /could not find the function/i.test(error.message || ''));
 }
 async function payerPaquet(type){
+  tpPaquetPaye = null;   // patch407
   if(boutiqueAchat && boutiqueAchat.collection){
     // patch112 : paquet d'une collection thematique
     const achat = boutiqueAchat;
@@ -8743,7 +8745,7 @@ async function payerPaquet(type){
   }
   if(enTerra()){
     // Terra : le serveur paie et tire les 5 cartes en un seul appel
-    const { data, error } = await briRpcPaquet('terra_ouvrir_paquet', { p_paye: type === 'achete' });   // patch269
+    const { data, error } = await briRpcPaquet('terra_ouvrir_paquet', tpArgs({ p_paye: type === 'achete' }));   // patch269, patch407 : le pays
     terraPaquet = error ? null : (data || []);
     terraPaquetBloque = type === 'achete';
     viderBilanTerra();
@@ -9063,6 +9065,7 @@ function afficherPaquetATirer(type, nbCartes){
   const zone = document.getElementById('packZone');
   zone.innerHTML = '';
   const pack = makePackEl(type);
+  if(enTerra()) tpHabiller(pack, tpPaquetPaye);   // patch407
   sceneOuverture(zone).echelle.appendChild(pack);
   appelerPaquet(pack);   // patch124 : le paquet non ouvert appelle aussi
   armerPaquet(pack, () => tirerCartesDuPaquet(nbCartes));   // patch87
@@ -9083,6 +9086,7 @@ function afficherPaquetPret(type){
   zone.innerHTML = '';
   const pack = makePackEl(type);
   pack.dataset.pret = '1';
+  if(enTerra()) tpHabiller(pack, tpPays());   // patch407
   if(type === 'gratuit') pack.dataset.hwGratuit = '1';   // patch265
   pack.setAttribute('aria-label', 'Ouvrir un paquet gratuit');
   appelerPaquet(pack);
@@ -12638,11 +12642,11 @@ function miniTerra(e){
   const bx = briParts(e, false);   // patch269
   const hn = hntParts(e.code, e.hntNon ? '' : 'terra');   // patch276
   const at = atlParts(e, false, !!hn.cls);   // patch270, patch286
-  return `<div class="mini ${e.tier.id}${au ? ' aurore' : ''}${estOutremerCode(e.code) ? ' outremer' : ''}${bx.cls}${at.cls}${hn.cls}"${e.skin ? ` data-skin="${echapperTexte(e.skin)}"` : ''} title="${nom} (${e.dept}) — ${e.tier.label}${au ? ' — Aurore' + (e.aurore > 1 ? ' ×' + e.aurore : '') : ''}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}${au ? titreCreditAurore(e.code) : ''}">
+  return `<div class="mini ${e.tier.id}${au ? ' aurore' : ''}${estOutremerCode(e.code) ? ' outremer' : ''}${estSuisseCode(e.code) ? ' suisse' : ''}${bx.cls}${at.cls}${hn.cls}"${e.skin ? ` data-skin="${echapperTexte(e.skin)}"` : ''} title="${nom} (${e.dept}) — ${e.tier.label}${au ? ' — Aurore' + (e.aurore > 1 ? ' ×' + e.aurore : '') : ''}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}${au ? titreCreditAurore(e.code) : ''}">
     ${bx.dehors}${at.dehors}<div class="mini-int">${at.fond}
       ${au ? fondAurore(e.code, e.tier.id, false) : ''}
       ${e.exemplaires > 1 ? `<span class="mini-ex">×${e.exemplaires}</span>` : ''}
-      <div class="mini-art">${estOutremerCode(e.code) ? OM_BADGE_MINI : ''}${e.photo ? artCommune(e, e.tier.id, 'mini') : miniArtSvg(e.code, e.tier.id)}${bx.art}${at.art}${hn.art}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
+      <div class="mini-art">${estOutremerCode(e.code) ? OM_BADGE_MINI : estSuisseCode(e.code) ? chBadge(true) : ''}${e.photo ? artCommune(e, e.tier.id, 'mini') : miniArtSvg(e.code, e.tier.id)}${bx.art}${at.art}${hn.art}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
       <div class="mini-infos">
         <p class="mini-nom ${e.nom.length > 14 ? 'long' : ''}">${nom}</p>
         ${e.rank ? `<span class="mini-num">n° ${Number(e.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(e.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
@@ -12736,43 +12740,45 @@ function doublonsTerra(){
 function renderCollectionTerra(){
   const el = document.getElementById('terraColl');
   if(!el) return;
+  const tcVue = tcVueCollection();   // patch407 : les cartes du pays choisi
   const parTier = {};
-  for(const e of terraCollection.values()) parTier[e.tier.id] = (parTier[e.tier.id] || 0) + 1;
+  for(const e of tcVue.values()) parTier[e.tier.id] = (parTier[e.tier.id] || 0) + 1;
   // patch219 : la progression par rareté se compte en métropole (les totaux du serveur aussi)
   const parTierM = {};
-  for(const e of terraCollection.values()) if(!estOutremer(e.dept)) parTierM[e.tier.id] = (parTierM[e.tier.id] || 0) + 1;
+  for(const e of tcVue.values()) if(!estOutremer(e.dept)) parTierM[e.tier.id] = (parTierM[e.tier.id] || 0) + 1;
   const tot = totauxPaliers || {};
+  const totV = SUISSE && tcPays() === 'CH' ? tcTotauxSuisse() : tot;   // patch407
   const totalFrance = Object.values(tot).reduce((s, l) => s + Number(l.total || 0), 0) || 34739;
   const dbl = doublonsTerra();
   const nbDbl = Object.values(dbl).reduce((s, n) => s + n, 0);
-  let nbAur = 0; for(const e of terraCollection.values()) if(e.aurore > 0) nbAur++;   // patch236
+  let nbAur = 0; for(const e of tcVue.values()) if(e.aurore > 0) nbAur++;   // patch236
   if(terraFiltre === 'aurore' && !nbAur) terraFiltre = 'tous';
-  let nbBri = 0; for(const e of terraCollection.values()) if(e.brillantes > 0 || e.eclat) nbBri++;   // patch269
+  let nbBri = 0; for(const e of tcVue.values()) if(e.brillantes > 0 || e.eclat) nbBri++;   // patch269
   if(terraFiltre === 'brillante' && !nbBri) terraFiltre = 'tous';
-  let nbEvt = 0; for(const e of terraCollection.values()) if(estCarteEvenement(e)) nbEvt++;   // patch282
+  let nbEvt = 0; for(const e of tcVue.values()) if(estCarteEvenement(e)) nbEvt++;   // patch282
   const evtVisible = nbEvt > 0 || !!(HNT && HNT.actif);
   if(terraFiltre === 'evenement' && !evtVisible) terraFiltre = 'tous';
   const gainMax = Object.entries(dbl).reduce((s, [t, n]) => s + n * (TERRA_REVENTE[t] || 0), 0);
-  const ordre = TIERS.filter(t => tot[t.id] || parTier[t.id]);
+  const ordre = TIERS.filter(t => totV[t.id] || parTier[t.id]);
   if(terraVue === 'france') return renderMaFranceTerra(el, totalFrance);
   if(terraVue === 'collections') return renderCollectionsTerra(el);   // patch112
   el.innerHTML = `
-    <div class="coll-ligne-titre"><h1>Collection</h1>${compteurCollectionHtml(totalFrance)}</div>
-    ${selecteurVueTerra()}
+    <div class="coll-ligne-titre"><h1>Collection</h1>${SUISSE ? tcCompteurHtml(totalFrance) : compteurCollectionHtml(totalFrance)}</div>
+    ${selecteurVueTerra()}${SUISSE ? tpSelecteurHtml(tcPays(), true) : ''}
     <div class="tc-prog" style="grid-template-columns:repeat(${Math.max(1, ordre.length)},1fr)">${ordre.map(t => {
-      const n = parTierM[t.id] || 0, total = tot[t.id] ? Number(tot[t.id].total) : 0;
+      const n = parTierM[t.id] || 0, total = totV[t.id] ? Number(totV[t.id].total) : 0;
       return `<div style="--c:${COULEURS_FILTRE[t.id]};--p:${total ? (100 * n / total).toFixed(1) : 0}%"><b>${fmtNombre(n)}</b><span>${t.label}${total ? ' · ' + fmtNombre(total) : ''}</span><i></i></div>`;
     }).join('')}</div>
     ${nbDbl ? `<div class="tc-vente"><span aria-hidden="true">🔁</span><span><b>${fmtNombre(nbDbl)} doublon${nbDbl > 1 ? 's' : ''}</b> · jusqu'à ${fmtNombre(gainMax)} TP</span><button data-tc="vendre">Vendre…</button>${CONTRATS.some(c => (dbl[c.de] || 0) >= c.n) ? '<button class="tc-ct" data-tc="contrat">Contrat</button>' : ''}</div>` : ''}
     <div class="coll-filtres">
-      <button class="coll-filtre ${terraFiltre === 'tous' ? 'actif' : ''}" data-tcf="tous">Toutes <span class="nb">${fmtNombre(terraCollection.size)}</span></button>
-      <button class="coll-filtre ${terraFiltre === 'doublons' ? 'actif' : ''}" data-tcf="doublons">Doublons${terraFiltre === 'doublons' ? (terraDblCroissant ? ' ↑' : ' ↓') : ''} <span class="nb">${fmtNombre(nbDbl)}</span></button>
+      <button class="coll-filtre ${terraFiltre === 'tous' ? 'actif' : ''}" data-tcf="tous">Toutes <span class="nb">${fmtNombre(tcVue.size)}</span></button>
+      <button class="coll-filtre ${terraFiltre === 'doublons' ? 'actif' : ''}" data-tcf="doublons">Doublons${terraFiltre === 'doublons' ? (terraDblCroissant ? ' ↑' : ' ↓') : ''} <span class="nb">${fmtNombre(SUISSE ? tcDoublonsVue(tcVue) : nbDbl)}</span></button>
       ${nbAur ? `<button class="coll-filtre ${terraFiltre === 'aurore' ? 'actif' : ''}" data-tcf="aurore"><i class="au-pt" aria-hidden="true"></i>Aurore <span class="nb">${fmtNombre(nbAur)}</span></button>` : ''}
       ${nbBri ? `<button class="coll-filtre ${terraFiltre === 'brillante' ? 'actif' : ''}" data-tcf="brillante"><i class="bri-pt" aria-hidden="true"></i>Brillantes et éclats <span class="nb">${fmtNombre(nbBri)}</span></button>` : ''}
       ${evtVisible ? `<button class="coll-filtre ${terraFiltre === 'evenement' ? 'actif' : ''}" data-tcf="evenement"><i class="evt-pt" aria-hidden="true"></i>Événements <span class="nb">${fmtNombre(nbEvt)}</span></button>` : ''}
       ${ordre.filter(t => parTier[t.id]).map(t => `<button class="coll-filtre ${terraFiltre === t.id ? 'actif' : ''}" data-tcf="${t.id}"><span class="point" style="background:${COULEURS_FILTRE[t.id]}"></span>${t.label} <span class="nb">${fmtNombre(parTier[t.id])}</span></button>`).join('')}
     </div>
-    <input type="text" id="tcRecherche" class="bourse-search coll-recherche" placeholder="Rechercher une commune ou un département…" value="${echapperTexte(terraRecherche)}">
+    <input type="text" id="tcRecherche" class="bourse-search coll-recherche" placeholder="${SUISSE && tcPays() === 'CH' ? 'Rechercher une commune ou un canton…' : 'Rechercher une commune ou un département…'}" value="${echapperTexte(terraRecherche)}">
     <div class="coll-grille" id="tcGrille"></div>
     <div class="tc-plus-zone" id="tcPlus"></div>`;
   renderGrilleTerra();
@@ -12813,9 +12819,9 @@ function renderMaFranceTerra(el, totalFrance){
   if(mfZone === 'outremer') return renderOutremerTerra(el);   // patch219
   MF.parDep = {};
   for(const e of terraCollection.values()) MF.parDep[e.dept] = (MF.parDep[e.dept] || 0) + 1;
-  const touches = Object.keys(MF.parDep).filter(d => COMMUNES_PAR_DEPT[d]).length;
-  const complets = Object.keys(MF.parDep).filter(d => COMMUNES_PAR_DEPT[d] && MF.parDep[d] >= COMMUNES_PAR_DEPT[d]).length;
-  const nbDepts = Object.keys(COMMUNES_PAR_DEPT).length;
+  const touches = Object.keys(MF.parDep).filter(d => COMMUNES_PAR_DEPT[d] && !estCanton(d)).length;   // patch407 : sans les cantons
+  const complets = Object.keys(MF.parDep).filter(d => COMMUNES_PAR_DEPT[d] && !estCanton(d) && MF.parDep[d] >= COMMUNES_PAR_DEPT[d]).length;
+  const nbDepts = Object.keys(COMMUNES_PAR_DEPT).filter(d => !estCanton(d)).length;
   const pct = totalFrance ? 100 * collectionMetro() / totalFrance : 0;   // patch219
   el.innerHTML = `
     <div class="coll-ligne-titre"><h1>Collection</h1>${compteurCollectionHtml(totalFrance)}</div>
@@ -13130,7 +13136,7 @@ function mfArmer(cv){
 // en-tête de la collection : la métropole sur 34 739, l'outre-mer à part sur 129
 function collectionMetro(){
   let n = 0;
-  for(const e of terraCollection.values()) if(!estOutremer(e.dept)) n++;
+  for(const e of terraCollection.values()) if(!estOutremer(e.dept) && !estSuisseCode(e.code)) n++;   // patch407 : sans la Suisse
   return n;
 }
 function compteurCollectionHtml(totalFrance){
@@ -13352,6 +13358,7 @@ function renderGrilleTerra(){
   if(!grille) return;
   const liste = [...terraCollection.values()]
     .filter(e => terraFiltre === 'tous' || (terraFiltre === 'doublons' ? libresTerra(e) > 0 : terraFiltre === 'aurore' ? e.aurore > 0 : terraFiltre === 'brillante' ? (e.brillantes > 0 || e.eclat) : terraFiltre === 'evenement' ? estCarteEvenement(e) : e.tier.id === terraFiltre))   // patch282 : + evenement
+    .filter(e => !SUISSE || estSuisseCode(e.code) === (tcPays() === 'CH'))   // patch407 : le pays choisi
     .filter(e => correspondRecherche(e.nom, e.dept, sansAccents(terraRecherche.trim())))
     .sort((a, b) => (terraFiltre === 'doublons' ? (terraDblCroissant ? 1 : -1) * ((a.exemplaires || 0) - (b.exemplaires || 0)) : 0)   // patch353
       || RANG_TIER[b.tier.id] - RANG_TIER[a.tier.id] || (b.pop || 0) - (a.pop || 0));
@@ -13362,13 +13369,15 @@ function renderGrilleTerra(){
   }
   grille.innerHTML = liste.length
     ? liste.slice(0, terraLimite).map(e => miniTerra(atlMoi(e)).replace('<div class="mini ', '<div data-tcode="' + echapperTexte(e.code) + '" tabindex="0" role="button" class="mini ')).join('')
-    : `<p class="collection-empty">${terraCollection.size ? 'Aucune commune ne correspond.' : 'Ta collection Terra est vide : ouvre un paquet dans l’onglet Tirage.'}</p>`;
+    : `<p class="collection-empty">${SUISSE && tcPays() === 'CH' && ![...terraCollection.keys()].some(estSuisseCode) ? 'Pas encore de commune suisse : choisis le paquet Suisse dans l’onglet Tirage.' : terraCollection.size ? 'Aucune commune ne correspond.' : 'Ta collection Terra est vide : ouvre un paquet dans l’onglet Tirage.'}</p>`;   // patch407
   const plus = document.getElementById('tcPlus');
   if(plus) plus.innerHTML = liste.length > terraLimite
     ? `<button class="open-btn secondary" data-tc="plus">Afficher plus (${fmtNombre(liste.length - terraLimite)} de plus)</button>` : '';
 }
 
 function clicCollectionTerra(e){
+  const pz = e.target.closest('[data-tcp]');   // patch407 : France | Suisse
+  if(pz){ tcChoisirPays(pz.dataset.tcp); return; }
   if(clicCollections(e)) return;   // patch112
   if(clicOutremer(e)) return;   // patch219
   const carteT = e.target.closest('[data-tcode]');   // patch179
@@ -29481,4 +29490,103 @@ function sgCalcHtml(a){
       <li><b>Renfort</b> : chaque énergie du propriétaire fait reculer ta jauge de 12 points en moyenne, et rend le siège long.</li>
       <li><b>24 h sans vague</b> : le siège tombe. L'énergie déjà envoyée est perdue, celle en attente te revient.</li>
     </ul></details>`;
+}
+
+// ---------- patch407 : le paquet Terra suisse (saison 3, s3-8) ----------
+// Éteint tant que SUISSE vaut false (patch330, ?suisse=test pour essayer) : le jeu d'aujourd'hui ne change pas.
+// Fonctions déclarées (et pas des const) : elles servent dans des gabarits plus haut dans le fichier.
+var tpPaquetPaye = null;   // pays du paquet payé, le temps de l'ouvrir
+function estSuisseCode(code){ return /^CH\d/.test(String(code || '')); }
+function chCroix(){ return '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M13 5h6v8h8v6h-8v8h-6v-8H5v-6h8z" fill="#fff"/></svg>'; }
+function chBadge(mini){ return `<span class="ch-badge${mini ? ' ch-mini' : ''}" title="Commune suisse">${chCroix()}${mini ? '' : '<b>Suisse</b>'}</span>`; }
+function tpDrapeau(pays){
+  return pays === 'CH'
+    ? '<svg class="tp-drap tp-drap-ch" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="4" fill="#DA291C"/><path d="M13 6h6v7h7v6h-7v7h-6v-7H6v-6h7z" fill="#fff"/></svg>'
+    : '<svg class="tp-drap" viewBox="0 0 3 2" aria-hidden="true"><rect width="1" height="2" fill="#2B5BD7"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#E5484D"/></svg>';
+}
+function tpLire(cle){ try{ return localStorage.getItem(cle); }catch(e){ return null; } }
+function tpEcrire(cle, v){ try{ localStorage.setItem(cle, v); }catch(e){} }
+function tpPays(){ return SUISSE && tpLire('tf-terra-pays') === 'CH' ? 'CH' : 'FR'; }
+function tcPays(){ return SUISSE && tpLire('tf-coll-pays') === 'CH' ? 'CH' : 'FR'; }
+function tpNouveauVu(){ return tpLire('tf-terra-ch-vu') === '1'; }
+// les arguments de terra_ouvrir_paquet : p_pays seulement pour la Suisse (un serveur sans s3-8 reste servi pour la France)
+function tpArgs(args){
+  const p = enTerra() ? tpPays() : 'FR';
+  tpPaquetPaye = p;
+  if(p !== 'CH') return args;
+  tpEcrire('tf-terra-ch-vu', '1');
+  return Object.assign({}, args, { p_pays: 'CH' });
+}
+function tpHabiller(pack, pays){
+  if(!pack || !SUISSE || pays !== 'CH') return;
+  pack.classList.add('paquet-ch');
+  const et = pack.querySelector('.paquet-etiquette');
+  if(et) et.innerHTML = tpDrapeau('CH') + '<span class="paquet-titre">Paquet Suisse</span>';
+  const bd = pack.querySelector('.paquet-bande');
+  if(bd) bd.textContent = '5 communes de Suisse';
+}
+function tpSelecteurHtml(pays, coll){
+  const at = coll ? 'data-tcp' : 'data-tpp';
+  return `<div class="tp-pays${coll ? ' tp-coll-pays' : ''}" role="group" aria-label="${coll ? 'Quel pays' : 'Quel paquet'}">`
+    + `<button type="button" ${at}="FR" class="${pays === 'FR' ? 'on' : ''}" aria-pressed="${pays === 'FR'}">${tpDrapeau('FR')}France</button>`
+    + `<button type="button" ${at}="CH" class="tp-b-ch${pays === 'CH' ? ' on' : ''}" aria-pressed="${pays === 'CH'}">${tpDrapeau('CH')}Suisse${coll || tpNouveauVu() ? '' : '<small>Nouveau</small>'}</button></div>`;
+}
+// Tirage : le choix au-dessus des boutons (Terra seulement), appelé à chaque renderPackStatus
+function tpRendre(){
+  const panel = document.getElementById('panel-tirage');
+  if(!panel) return;
+  let z = document.getElementById('tpPays');
+  const sub = panel.querySelector('.sub-long'), court = panel.querySelector('.sub-court .que-terra');
+  if(!SUISSE || !enTerra()){
+    if(z) z.remove();
+    if(sub && sub.dataset.tpAvant){ sub.textContent = sub.dataset.tpAvant; delete sub.dataset.tpAvant; }
+    if(court && court.dataset.tpAvant){ court.textContent = court.dataset.tpAvant; delete court.dataset.tpAvant; }
+    return;
+  }
+  if(sub && !sub.dataset.tpAvant){ sub.dataset.tpAvant = sub.textContent; sub.textContent = 'Chaque carte tirée est une vraie commune, de France ou de Suisse, à sa vraie position géographique. Elle n’appartient qu’à toi tant que tu la gardes. Clique sur le paquet pour le déchirer.'; }
+  if(court && !court.dataset.tpAvant){ court.dataset.tpAvant = court.textContent; court.textContent = 'Chaque carte est une vraie commune de France ou de Suisse.'; }
+  const btns = panel.querySelector('.pack-buttons');
+  if(!btns) return;
+  if(!z){ z = document.createElement('div'); z.id = 'tpPays'; btns.parentNode.insertBefore(z, btns); }
+  const p = tpPays(), etat = p + (tpNouveauVu() ? 'v' : '');
+  if(z.dataset.etat === etat) return;
+  z.dataset.etat = etat;
+  z.innerHTML = tpSelecteurHtml(p, false)
+    + `<p class="tp-note">${p === 'CH' ? '5 vraies communes suisses. ' : ''}Mêmes jetons et même prix pour les deux paquets ; les raretés tombent aussi souvent dans les deux.</p>`;
+}
+document.addEventListener('click', (ev) => {
+  const b = ev.target.closest('[data-tpp]');
+  if(!b) return;
+  tpEcrire('tf-terra-pays', b.dataset.tpp === 'CH' ? 'CH' : 'FR');
+  tpRendre();
+  const zone = document.getElementById('packZone');
+  if(zone && !paquetEnCours && zone.querySelector('.paquet[data-pret]')){ afficherPaquetPret('gratuit'); renderPackStatus(); }
+});
+
+// Collection : le pays choisi
+function tcVueCollection(){
+  if(!SUISSE) return terraCollection;
+  const ch = tcPays() === 'CH';
+  return new Map([...terraCollection].filter(([, e]) => estSuisseCode(e.code) === ch));
+}
+function tcChoisirPays(p){
+  tpEcrire('tf-coll-pays', p === 'CH' ? 'CH' : 'FR');
+  terraFiltre = 'tous'; terraLimite = 120;
+  renderCollectionTerra();
+}
+function tcTotauxSuisse(){
+  const t = { legendaire: 27, epique: 218, rare: 652, peucommun: 953, commun: 260 };   // s3-5 : 2 110 communes
+  for(const e of terraCollection.values()) if(estSuisseCode(e.code) && e.tierSize) t[e.tier.id] = Number(e.tierSize);
+  const r = {};
+  for(const k in t) r[k] = { total: t[k] };
+  return r;
+}
+function tcTotalSuisse(){ return Object.values(tcTotauxSuisse()).reduce((s, l) => s + l.total, 0); }
+function tcDoublonsVue(vue){ let n = 0; for(const e of vue.values()) n += Math.max(0, libresTerra(e)); return n; }
+function tcCompteurHtml(totalFrance){
+  let ch = 0;
+  for(const e of terraCollection.values()) if(estSuisseCode(e.code)) ch++;
+  if(tcPays() === 'CH')
+    return `<span class="coll-compteur"><b>${fmtNombre(ch)}</b> / ${fmtNombre(tcTotalSuisse())} communes suisses <span class="om-compteur">· <b>${fmtNombre(collectionMetro() + collectionOutremer().n)}</b> en France</span></span>`;
+  return compteurCollectionHtml(totalFrance).replace(/<\/span>$/, ` <span class="om-compteur">· <b>${fmtNombre(ch)}</b> / ${fmtNombre(tcTotalSuisse())} en Suisse</span></span>`);
 }

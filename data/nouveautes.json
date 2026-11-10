@@ -8,7 +8,8 @@
       "🏰 Onglet Attaquer : les bâtiments et la garnison d’une commune s’affichent sur sa carte, quand tu peux les voir (idée d’Oshannir)",
       "🤝 Échanges entre clans : sur la carte, touche une commune d’un joueur d’un autre clan, puis « Proposer un échange ». Une contre une, même rareté, un échange par semaine (idée de zintox)",
       "🕊️ Diplomatie entre clans : dans l’onglet Clan, le chef propose un salon privé sur le Discord à un autre clan ; si l’autre chef accepte, le salon apparaît dans « 🤝 Diplomatie », visible des deux clans seulement (5 salons au plus par clan)",
-      "💬 Onglet Clan : un bandeau te dit si le bot des clans t’a trouvé sur le Discord. L’idéal : le même pseudo sur le Discord que dans le jeu, pour voir le salon de ton clan et ses salons de diplomatie"
+      "💬 Onglet Clan : un bandeau te dit si le bot des clans t’a trouvé sur le Discord. L’idéal : le même pseudo sur le Discord que dans le jeu, pour voir le salon de ton clan et ses salons de diplomatie",
+      "🗺️ Carte : de loin, un territoire d’un seul tenant n’a plus que son tour ; les limites des communes à l’intérieur apparaissent en zoomant, pour voir où taper (idée d’Oshannir)"
     ],
     "correctifs": [
       "Assaut contre une commune en garnison : l’animation affiche la même chance que la fiche (par exemple 43 %, soit 85 % aux dés et une victoire sur deux annulée par la garnison), et l’aiguille s’arrête dans le vert quand la garnison annule ta victoire",

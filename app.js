@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '41f37e80235b';
+const VERSION_JEU = 'd0888eddf7c2';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3077,6 +3077,8 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
       ctx.fillStyle = 'rgba(22,48,79,0.75)';
       ctx.strokeStyle = '#20406A'; ctx.lineWidth = trait(0.6);
       ctx.fill(libres); ctx.stroke(libres);
+      // patch403 : de loin, un territoire d'un seul tenant sans ses limites intérieures
+      const interieur = Math.max(0, Math.min(1, (mapZoom - 4) / 4));
 
       if(passage){
         ctx.fillStyle = COULEUR_MOI;
@@ -3098,8 +3100,10 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
           const sep = kt.lastIndexOf('|'), id = kt.slice(0, sep), t = kt.slice(sep + 1);
           ctx.globalAlpha = opaciteJoueur(id, 0.9);
           ctx.fillStyle = COULEURS_FILTRE[t] || '#7E8BA0'; ctx.fill(p);
-          ctx.globalAlpha = opaciteJoueur(id, 0.55);
-          ctx.strokeStyle = '#07111F'; ctx.lineWidth = trait(0.7); ctx.stroke(p);
+          if(interieur > 0){   // patch403
+            ctx.globalAlpha = opaciteJoueur(id, 0.55 * interieur);
+            ctx.strokeStyle = '#07111F'; ctx.lineWidth = trait(0.7); ctx.stroke(p);
+          }
         }
         ctx.globalAlpha = 1;
         const bords = bordsTerritoires(deps, possedees);   // patch335 : à l'intérieur, plus sur la voisine
@@ -3127,8 +3131,10 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
           ctx.strokeStyle = '#07111F'; ctx.lineWidth = trait(3.4); ctx.stroke(bord);
           ctx.restore();
         }
-        ctx.globalAlpha = opaciteJoueur(id, 0.55);
-        ctx.strokeStyle = j.fonce; ctx.lineWidth = trait(0.7); ctx.stroke(p);
+        if(interieur > 0){   // patch403
+          ctx.globalAlpha = opaciteJoueur(id, 0.55 * interieur);
+          ctx.strokeStyle = j.fonce; ctx.lineWidth = trait(0.7); ctx.stroke(p);
+        }
         ctx.globalAlpha = 1;
       }
       // patch212 : le tour du territoire de chaque clan, trace seulement a

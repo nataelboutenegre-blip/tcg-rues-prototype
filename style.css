@@ -8952,6 +8952,20 @@ body.mode-terra #roueFront{ display:none !important; }
 .pc-action.pc-ech-inter{ margin-top:6px; color:#9FD8F5; border-color:rgba(110,195,240,.35); }
 .pc-action.pc-ech-inter small{ color:#7F92AA; font-size:.72rem; }
 .pc-action.pc-ech-inter:disabled{ opacity:.55; cursor:default; }
+/* patch400 : la diplomatie */
+.dp-bloc .ce-h3{ margin-top:12px; }
+.dp-item{ border-top:1px solid rgba(169,188,212,.1); padding:8px 0 4px; }
+.dp-ligne{ display:flex; align-items:center; gap:10px; }
+.dp-ligne > svg, .dp-ligne > .blason{ flex:none; }
+.dp-nom{ min-width:0; display:flex; flex-direction:column; gap:2px; }
+.dp-nom b{ color:#fff; font-size:.86rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dp-nom small{ color:#A9BCD4; font-size:.72rem; }
+.dp-ok{ color:#2BD48B; }
+.dp-actions{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 4px; }
+.dp-actions .bq-btn{ padding:6px 12px; font-size:.78rem; }
+.dp-attente{ font-size:.72rem; color:#7F92AA; }
+.dp-proposer{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+.dp-proposer select{ flex:1 1 200px; min-width:0; padding:8px 10px; border-radius:10px; border:1px solid rgba(169,188,212,.3); background:#0E1A2E; color:#fff; font:inherit; font-size:.82rem; }
 /* patch396 : le fil de la roue */
 .rdf-journal{ margin:10px auto 0; max-width:330px; text-align:left; background:rgba(9,16,30,.7); border:1px solid rgba(169,188,212,.18); border-radius:14px; padding:8px 12px 10px; }
 .rdf-journal[hidden]{ display:none; }

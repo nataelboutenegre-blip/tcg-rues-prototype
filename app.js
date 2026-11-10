@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '8cec79e50ba7';
+const VERSION_JEU = 'b97ad5492ad5';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -19495,6 +19495,67 @@ function tchatHtml(c){
 // patch194 : les echanges entre membres du clan (Front)
 const clanEch = { etat: null, qui: null, donne: null, recoit: null, mes: null, leurs: null, r1: '', r2: '' };
 const enFrontClan = () => SAISON2 && modeJeu === 'front';
+// patch400 : la diplomatie (s2-134)
+const clanDiplo = { etat: null, choix: '', confirmer: null };
+async function chargerClanDiplo(){
+  try{
+    const { data, error } = await sb.rpc('clan_diplo_etat');
+    clanDiplo.etat = error ? null : data;
+  }catch(e){ clanDiplo.etat = null; }
+  majBadgeClanTotal();
+  return clanDiplo.etat;
+}
+function dpDans(t){
+  const h = Math.max(0, Math.round((Date.parse(t) - Date.now()) / 3600000));
+  return h >= 24 ? `expire dans ${Math.round(h / 24)} j` : h >= 1 ? `expire dans ${h} h` : 'expire bientôt';
+}
+function blocDiplomatie(){
+  const e = clanDiplo.etat;
+  if(!e || !e.clan) return '';
+  const chef = !!e.chef, salons = e.salons || [], max = Number(e.max) || 5, n = Number(e.utilises) || 0;
+  const clanDe = (x, info) => `${blasonHtml(x.tag, x.couleur, true)}<div class="dp-nom"><b>[${echapperTexte(x.tag)}] ${echapperTexte(x.nom)}</b><small>${info}</small></div>`;
+  const ligne = (x) => {
+    let info, actions = '';
+    if(x.etat === 'ouvert'){
+      info = `salon ouvert${x.ouvert_le ? ' depuis le ' + new Date(x.ouvert_le).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) : ''} · <span class="dp-ok">sur le Discord, dans 🤝 Diplomatie</span>`;
+      if(chef) actions = clanDiplo.confirmer === x.id
+        ? `<button type="button" class="bq-btn confirmer" data-dp-fermer="${Number(x.id)}">Confirmer : supprimer le salon</button><button type="button" class="bq-btn secondaire" data-dp-garder>Garder</button>`
+        : `<button type="button" class="bq-btn secondaire" data-dp-confirmer="${Number(x.id)}">Fermer</button>`;
+    } else if(x.sens === 'recu'){
+      info = `propose un salon à ton clan · ${dpDans(x.expire_le)}`;
+      actions = chef ? `<button type="button" class="bq-btn" data-dp-accepter="${Number(x.id)}">Accepter</button><button type="button" class="bq-btn secondaire" data-dp-refuser="${Number(x.id)}">Refuser</button>`
+                     : '<span class="dp-attente">ton chef décide</span>';
+    } else {
+      info = `proposé par ton clan · en attente de leur chef · ${dpDans(x.expire_le)}`;
+      if(chef) actions = `<button type="button" class="bq-btn secondaire" data-dp-fermer="${Number(x.id)}">Annuler</button>`;
+    }
+    return `<div class="dp-item"><div class="dp-ligne">${clanDe(x, info)}</div>${actions ? `<div class="dp-actions">${actions}</div>` : ''}</div>`;
+  };
+  const recus = salons.filter(x => x.etat === 'en_attente' && x.sens === 'recu');
+  const ouverts = salons.filter(x => x.etat === 'ouvert');
+  const envoyes = salons.filter(x => x.etat === 'en_attente' && x.sens === 'envoye');
+  const libres = (e.clans || []).filter(c => !c.plein);
+  const proposer = !chef ? '<p class="clan-note">Seul le chef du clan peut proposer, accepter ou fermer un salon.</p>'
+    : n >= max ? `<p class="clan-note">Ton clan a déjà ${max} salons (ouverts ou proposés) : ferme-en un pour en proposer un autre.</p>`
+    : !libres.length ? '<p class="clan-note">Aucun autre clan disponible pour l’instant.</p>'
+    : `<div class="dp-proposer"><select id="dpChoix" aria-label="Choisis un clan"><option value="">Choisis un clan…</option>${libres.map(c => `<option value="${echapperTexte(c.id)}"${c.id === clanDiplo.choix ? ' selected' : ''}>[${echapperTexte(c.tag)}] ${echapperTexte(c.nom)} · ${Number(c.membres) || 0} membre${Number(c.membres) > 1 ? 's' : ''}</option>`).join('')}</select>
+       <button type="button" class="bq-btn" data-dp-proposer${clanDiplo.choix ? '' : ' disabled'}>Proposer un salon</button></div>`;
+  return `<div class="ce-bloc dp-bloc"><div class="ce-tete"><h2>Diplomatie</h2><span class="puce"><b>${n}</b> / ${max} salons</span></div>
+    <p class="clan-note">Un <b>salon privé sur le Discord</b> avec un autre clan, pour parler alliances, frontières ou trêves : seuls les membres des deux clans le voient. Il apparaît dans les 10 minutes après l’accord des deux chefs.</p>
+    ${recus.length ? `<h3 class="ce-h3">Propositions reçues</h3>${recus.map(ligne).join('')}` : ''}
+    ${ouverts.length ? `<h3 class="ce-h3">Salons ouverts</h3>${ouverts.map(ligne).join('')}` : ''}
+    ${envoyes.length ? `<h3 class="ce-h3">Propositions envoyées</h3>${envoyes.map(ligne).join('')}` : ''}
+    <h3 class="ce-h3">Proposer un salon</h3>${proposer}
+    <ul class="clan-regles"><li>${max} salons au plus par clan (ouverts ou proposés). Une proposition attend 3 jours.</li><li>Chacun des deux chefs peut fermer le salon : il est alors <b>supprimé du Discord, avec ses messages</b>.</li><li>Il faut être sur le Discord de TerraFront, reconnu par le bot des clans (même pseudo), pour voir le salon. Les modérateurs du Discord voient tous les salons.</li></ul></div>`;
+}
+async function dpAction(nom, args){
+  const { data, error } = await sb.rpc(nom, args);
+  if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); }
+  else notifier({ type: 'succes', titre: String(data || 'C\'est fait') });
+  clanDiplo.confirmer = null; clanDiplo.choix = '';
+  await chargerClanDiplo();
+  renderClan();
+}
 async function chargerClanEch(){
   if(!SAISON2) return null;
   try{
@@ -19602,6 +19663,13 @@ async function ceChargerCommunes(){
   }
   majListesCe();
 }
+document.addEventListener('change', (ev) => {   // patch400 : le clan choisi pour la diplomatie
+  const s = ev.target;
+  if(!s || s.id !== 'dpChoix') return;
+  clanDiplo.choix = s.value || '';
+  const bt = document.querySelector('[data-dp-proposer]');
+  if(bt) bt.disabled = !clanDiplo.choix;
+});
 async function ceAction(nom, args, apres){
   const { data, error } = await sb.rpc(nom, args);
   if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); return; }
@@ -19732,7 +19800,7 @@ async function loadClan(){
   const [mc, cl, cf, ac] = await Promise.all([sb.rpc('mon_clan'), sb.rpc('clans_classement'), sb.rpc('clans_en_formation'),
     sb.rpc('clan_activite').then(r => r, () => ({ error: true }))]);   // patch184
   if(mc.error){ zone.innerHTML = `<p class="collection-empty">${echapperTexte(messageLisible(mc.error.message))}</p>`; return; }
-  if(SAISON2) await chargerClanEch();   // patch194
+  if(SAISON2) await Promise.all([chargerClanEch(), chargerClanDiplo()]);   // patch194, patch400
   await chargerCandidatures();   // patch307
   clanCache = { moi: mc.data || {}, classement: cl.error ? [] : (cl.data || []), formation: cf.error ? [] : (cf.data || []),
                 activite: ac.error ? null : new Map((ac.data || []).map(a => [a.joueur_id, a])) };
@@ -19930,6 +19998,7 @@ function renderClan(){
       ${(c.chef || droits.inviter) && n < 8 ? `<div class="clan-inviter"><input id="clanPseudo" placeholder="Pseudo du joueur à inviter"><button class="bq-btn" id="clanInviter">Inviter</button></div>` : ''}
       ${(c.invites || []).length ? `<p class="clan-note">Invitations en attente : ${c.invites.map(echapperTexte).join(', ')}.</p>` : ''}
       ${blocEchangesClan()}
+      ${blocDiplomatie()}
       <ul class="clan-regles"><li>Pas d'attaque entre membres : leurs communes n'apparaissent plus dans tes cibles.</li><li>Aucun bonus de combat : le territoire d'un coéquipier ne compte pas dans tes chances.</li><li>Le chef peut nommer 2 bras droits et choisir leurs droits (inviter, exclure, modifier le clan). Si le chef quitte le clan, un bras droit prend sa place.</li><li>Tu peux changer de clan quand tu veux. Dans un nouveau clan, les échanges s'ouvrent 48 h après ton arrivée.</li><li>Pour discuter, demande un salon privé pour ton clan sur le Discord.</li></ul>
       <button class="bq-btn secondaire" id="clanQuitter" data-prix="0">Quitter le clan</button>
     </div>`;
@@ -19970,6 +20039,13 @@ document.getElementById('panel-clan').addEventListener('click', (e) => {
   if(b.hasAttribute('data-ce-proposer')){ b.disabled = true;
     return ceAction('clan_ech_proposer', { p_cible: clanEch.qui, p_ma: clanEch.donne, p_sa: clanEch.recoit }, () => { clanEch.donne = null; clanEch.recoit = null; }); }
   if(b.dataset.ceAccepter){ b.disabled = true; return ceAction('clan_ech_repondre', { p_id: Number(b.dataset.ceAccepter), p_accepter: true }); }
+  // patch400 : la diplomatie
+  if(b.hasAttribute('data-dp-proposer')){ if(!clanDiplo.choix) return; b.disabled = true; return dpAction('clan_diplo_proposer', { p_clan: clanDiplo.choix }); }
+  if(b.dataset.dpAccepter){ b.disabled = true; return dpAction('clan_diplo_repondre', { p_id: Number(b.dataset.dpAccepter), p_accepter: true }); }
+  if(b.dataset.dpRefuser){ b.disabled = true; return dpAction('clan_diplo_repondre', { p_id: Number(b.dataset.dpRefuser), p_accepter: false }); }
+  if(b.dataset.dpConfirmer){ clanDiplo.confirmer = Number(b.dataset.dpConfirmer); renderClan(); return; }
+  if(b.hasAttribute('data-dp-garder')){ clanDiplo.confirmer = null; renderClan(); return; }
+  if(b.dataset.dpFermer){ b.disabled = true; return dpAction('clan_diplo_fermer', { p_id: Number(b.dataset.dpFermer) }); }
   if(b.dataset.ceRefuser){ return ceAction('clan_ech_repondre', { p_id: Number(b.dataset.ceRefuser), p_accepter: false }); }
   if(b.dataset.ceAnnuler){ return ceAction('clan_ech_annuler', { p_id: Number(b.dataset.ceAnnuler) }); }
   if(b.dataset.clanProfil){ ouvrirProfil(b.dataset.clanProfil); return; }
@@ -23007,7 +23083,7 @@ function ncDemarrer(){
 
 async function ncCharger(){
   const rpc = async (n, a) => { try{ const { data, error } = await sb.rpc(n, a); return error ? undefined : data; }catch(e){ return undefined; } };
-  const [prefs, journal, sieges, ech, clanE, alertes, quetes, recolte, clan, effaces] = await Promise.all([
+  const [prefs, journal, sieges, ech, clanE, alertes, quetes, recolte, clan, effaces, diplo] = await Promise.all([
     NC.prefs ? null : rpc('mes_notif_preferences'),
     rpc('journal', { p_mode: 'moi', p_limite: 40 }),
     rpc('sieges_contre_moi'),
@@ -23018,12 +23094,14 @@ async function ncCharger(){
     SAISON2 ? rpc('front_recolte_etat') : null,
     CLANS ? rpc('mon_clan') : null,
     SAISON2 ? rpc('mes_sieges_effaces') : null,   // patch326
+    SAISON2 && CLANS ? rpc('clan_diplo_etat') : null,   // patch400
   ]);
   if(!NC.prefs){
     if(prefs === undefined) NC.prefsDispo = false;
     else { NC.prefsDispo = true; NC.prefs = ncPrefsDepuis(prefs); }
   }
-  NC.d = { journal, sieges, ech, clanE, alertes, quetes, recolte: Array.isArray(recolte) ? recolte[0] : recolte, clan, effaces };
+  NC.d = { journal, sieges, ech, clanE, alertes, quetes, recolte: Array.isArray(recolte) ? recolte[0] : recolte, clan, effaces, diplo };
+  if(diplo !== undefined && diplo !== null){ clanDiplo.etat = diplo; majBadgeClanTotal(); }   // patch400
   NC.charge = Date.now();   // patch262
   ncConstruire();
 }
@@ -23079,6 +23157,13 @@ function ncConstruire(){
         t: `<b>${echapperTexte(x.pseudo || 'Un membre')}</b> te propose un échange ${x.inter ? 'entre clans' : 'de clan'}`,   // patch398
         s: `Tu reçois ${echapperTexte((x.donne && x.donne.nom) || '')}, tu donnes ${echapperTexte((x.recoit && x.recoit.nom) || '')}`,
         a: 'Voir', aller: () => ncAller('front', 'clan') });
+    }
+  }
+  if(p.jeu.clan && d.diplo && d.diplo.chef && Array.isArray(d.diplo.salons)){   // patch400
+    for(const x of d.diplo.salons.filter(s => s.etat === 'en_attente' && s.sens === 'recu')){
+      items.push({ cle: `diplo|${x.id}`, sec: 'afaire', c: 'clan', i: '🤝', mode: 'front',
+        t: `Le clan <b>[${echapperTexte(x.tag)}] ${echapperTexte(x.nom)}</b> propose un salon de diplomatie`,
+        s: 'Un salon privé sur le Discord, entre vos deux clans', a: 'Voir', aller: () => ncAller('front', 'clan') });
     }
   }
   if(p.jeu.clan && d.clan && Array.isArray(d.clan.invitations)){
@@ -23251,7 +23336,9 @@ function majBadgeClanTotal(){
   if(!tab) return;
   let b = document.getElementById('clanBadge') || tab.querySelector('.tab-badge');
   const n = (Number(tchat.nonLus) || 0) + (clanEch.etat && Array.isArray(clanEch.etat.recus) ? clanEch.etat.recus.length : 0)
-    + (CAND && Array.isArray(CAND.recues) ? CAND.recues.length : 0);   // patch307
+    + (CAND && Array.isArray(CAND.recues) ? CAND.recues.length : 0)   // patch307
+    + (typeof clanDiplo !== 'undefined' && clanDiplo.etat && clanDiplo.etat.chef && Array.isArray(clanDiplo.etat.salons)
+       ? clanDiplo.etat.salons.filter(x => x.etat === 'en_attente' && x.sens === 'recu').length : 0);   // patch400
   if(!b){ if(!n) return; b = document.createElement('span'); b.className = 'tab-badge'; tab.appendChild(b); }
   b.hidden = !n;
   b.textContent = n > 9 ? '9+' : String(n);

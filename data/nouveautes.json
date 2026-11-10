@@ -6,7 +6,8 @@
       "🛡️ Tes garnisons sur la carte : un bouclier avec son niveau à côté de la commune, vert de 4 à 10, orange de 1 à 3, bleu à 0 (idée d’Arkhannou)",
       "🎡 Le fil de la roue, sous la roue : le dernier jackpot, les derniers gros lots de tout le monde, et ta journée à copier pour Discord (idée d’Oshannir)",
       "🏰 Onglet Attaquer : les bâtiments et la garnison d’une commune s’affichent sur sa carte, quand tu peux les voir (idée d’Oshannir)",
-      "🤝 Échanges entre clans : sur la carte, touche une commune d’un joueur d’un autre clan, puis « Proposer un échange ». Une contre une, même rareté, un échange par semaine (idée de zintox)"
+      "🤝 Échanges entre clans : sur la carte, touche une commune d’un joueur d’un autre clan, puis « Proposer un échange ». Une contre une, même rareté, un échange par semaine (idée de zintox)",
+      "🕊️ Diplomatie entre clans : dans l’onglet Clan, le chef propose un salon privé sur le Discord à un autre clan ; si l’autre chef accepte, le salon apparaît dans « 🤝 Diplomatie », visible des deux clans seulement (5 salons au plus par clan)"
     ],
     "correctifs": [
       "Assaut contre une commune en garnison : l’animation affiche la même chance que la fiche (par exemple 43 %, soit 85 % aux dés et une victoire sur deux annulée par la garnison), et l’aiguille s’arrête dans le vert quand la garnison annule ta victoire",

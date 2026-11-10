@@ -8,12 +8,15 @@
 //    salon privé que seuls ses membres (et le bot) voient ;
 //  - donne le rôle aux membres présents sur le Discord, le retire à ceux qui
 //    ont quitté le clan ;
-//  - seuls les membres du clan (par leur rôle) et le bot voient le salon :
-//    tout accès à son nom y est retiré (décision du 4/11 : un ancien chef ou
-//    un ancien membre gardait l'accès et pouvait encore écrire ; le chef ne
-//    peut donc plus inviter quelqu'un d'extérieur) ;
+//  - le chef reçoit « Gérer les permissions » sur SON salon (il peut y inviter
+//    qui il veut) ; un ancien chef perd ce droit ; les personnes ajoutées par
+//    le chef ne sont jamais touchées ;
 //  - clan dissous : son rôle est vidé (plus personne ne voit le salon), le
-//    salon reste (à supprimer à la main).
+//    salon reste (à supprimer à la main) ;
+//  - diplomatie (s2-134, 10/11) : un salon privé « 🤝│a-b » dans la catégorie
+//    « 🤝 Diplomatie » pour chaque paire de clans ouverte dans le jeu (onglet
+//    Clan › Diplomatie, accord des deux chefs), visible des deux rôles de clan ;
+//    supprimé (avec ses messages) quand un des chefs le ferme dans le jeu.
 // Un pseudo du jeu est reconnu sur le Discord par son nom d'utilisateur, son
 // nom affiché ou son pseudo de serveur (majuscules, accents et ponctuation
 // ignorés), ou par la table discord_correspondances.
@@ -37,13 +40,17 @@ const PREFIXE_ROLE = "🏰 [";
 const VOIR = 0x400n, ECRIRE = 0x800n, GERER_MSG = 0x2000n, LIENS = 0x4000n, FICHIERS = 0x8000n, HISTORIQUE = 0x10000n, REACTIONS = 0x40n;
 const DROITS_MEMBRE = VOIR | ECRIRE | LIENS | FICHIERS | HISTORIQUE | REACTIONS;
 const DROITS_BOT = VOIR | ECRIRE | GERER_MSG | HISTORIQUE;
+const GERER_PERMS = 0x10000000n;
+const CATEGORIE_DIPLO = "🤝 Diplomatie";
 
 export type Clan = { tag: string; nom: string; couleur?: string | null; chef?: string | null; membres: string[] };
+export type Diplo = { id: number | string; a: string; b: string; nom_a: string; nom_b: string };
 type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
 export type Options = {
   jeton: string;
   clans: Clan[];
   correspondances?: Record<string, string>;
+  diplo?: Diplo[];
   simulation: boolean;
   guildId?: string | null;
   fetchFn?: Fetch;
@@ -159,6 +166,9 @@ export async function synchroniser(o: Options): Promise<Rapport> {
     const marque = `[${tag}]`;
     const sujet = `Salon privé du clan ${marque} ${clan.nom} : seuls ses membres le voient.`;
     let salon = salons.find((s) => s.type === 0 && s.parent_id === CAT_ID && String(s.topic ?? "").includes(marque));
+    const idsChef = clan.chef ? trouver(clan.chef) : [];
+    const chefId = idsChef.length === 1 ? idsChef[0] : null;
+    if (clan.chef && !chefId) R.avertissements.push(`[${tag}] chef ${clan.chef} : pas trouvé sur le Discord, il ne pourra pas inviter`);
     const existantes = new Map<string, any>((salon?.permission_overwrites ?? []).map((x: any) => [x.id, x]));
     const base = [
       { id: EVERYONE, type: 0, allow: "0", deny: String(VOIR), quoi: "tout le monde : caché" },
@@ -186,16 +196,28 @@ export async function synchroniser(o: Options): Promise<Rapport> {
         salons.push(salon);
         await appel("POST", `/channels/${sid}/messages`, { allowed_mentions: { parse: [] }, content:
           `🏰 **Salon privé du clan ${marque} ${clan.nom}**\n` +
-          "Seuls les membres du clan le voient : le bot donne l'accès aux membres du jeu qui sont sur le Discord, et le retire à ceux qui quittent le clan.\n" +
+          "Seuls les membres du clan le voient. Le bot donne l'accès aux membres du jeu qui sont sur le Discord.\n\n" +
+          "**Chef du clan** : tu peux inviter quelqu'un d'autre ici. Clic droit sur le salon (ou appui long sur téléphone) " +
+          "› Modifier le salon › Permissions › Ajouter des membres ou des rôles › choisis la personne › autorise « Voir le salon ».\n" +
           "Un membre qui n'est pas encore sur le Discord doit d'abord rejoindre le serveur." }, false);
       }
     }
-    // seuls les membres (par le rôle) et le bot : tout accès à son nom est retiré
-    if (sid) {
-      for (const [uid, e] of existantes) {
-        if (Number(e.type) !== 1 || uid === moi.id) continue;
-        await faire(`[${tag}] accès à son nom retiré à ${nomDe(uid)} (le salon est réservé aux membres du clan)`, () =>
-          appel("DELETE", `/channels/${sid}/permissions/${uid}`, undefined, false));
+    // le chef peut inviter dans son salon
+    if (chefId) {
+      const e = existantes.get(chefId);
+      if (!(e && (big(e.allow) & GERER_PERMS))) {
+        const allow = (e ? big(e.allow) : 0n) | DROITS_MEMBRE | GERER_PERMS;
+        const r = await faire(`[${tag}] ${nomDe(chefId)} (chef) peut inviter dans le salon`, () =>
+          sid ? appel("PUT", `/channels/${sid}/permissions/${chefId}`, { type: 1, allow: String(allow), deny: String(e ? big(e.deny) : 0n) }, false) : Promise.resolve({}));
+        if (!SIM && r === null) R.avertissements.push(`[${tag}] Discord refuse que le bot donne « Gérer les permissions » à ${nomDe(chefId)} : à faire à la main, une fois.`);
+      }
+    }
+    // un ancien chef garde l'accès mais ne peut plus inviter
+    for (const [uid, e] of existantes) {
+      if (Number(e.type) === 1 && uid !== chefId && uid !== moi.id && (big(e.allow) & GERER_PERMS)) {
+        const r = await faire(`[${tag}] ${nomDe(uid)} n'est plus chef : il ne peut plus inviter`, () =>
+          appel("PUT", `/channels/${sid}/permissions/${uid}`, { type: 1, allow: String(big(e.allow) & ~GERER_PERMS), deny: String(e.deny) }, false));
+        if (!SIM && r === null) R.avertissements.push(`[${tag}] retirer « Gérer les permissions » à ${nomDe(uid)} à la main`);
       }
     }
 
@@ -227,6 +249,64 @@ export async function synchroniser(o: Options): Promise<Rapport> {
     }
     if (porteurs.length) R.avertissements.push(`${r.name} : le clan n'existe plus, son salon reste (à supprimer à la main si tu veux).`);
   }
+
+  // ---------------------------------------------------------------- 4. diplomatie (s2-134)
+  // un salon par paire de clans ouverte dans le jeu, retrouvé par « tf-diplo:ID » dans son sujet
+  const diplo = o.diplo ?? [];
+  const voulusD = new Map<string, Diplo>(diplo.map((d) => [String(d.id), d]));
+  const idDe = (s: any): string | null => { const m = /tf-diplo:(\d+)/.exec(String(s.topic ?? "")); return m ? m[1] : null; };
+  let catD = salons.find((s) => s.type === 4 && s.name === CATEGORIE_DIPLO);
+  const salonsD = salons.filter((s) => s.type === 0 && idDe(s) !== null && (!catD || s.parent_id === catD.id));
+  if (!catD && voulusD.size) {
+    catD = await faire(`catégorie ${CATEGORIE_DIPLO}`, () => appel("POST", `/guilds/${G}/channels`, { name: CATEGORIE_DIPLO, type: 4 }));
+  }
+  const CATD_ID: string | null = catD?.id ?? null;
+  const roleDe = (tag: string) => roles.find((r) => String(r.name).startsWith(`${PREFIXE_ROLE}${tag}]`));
+  let nbD = salonsD.length;
+  for (const d of diplo) {
+    const id = String(d.id), qui = `[${d.a}↔${d.b}]`;
+    const ra = roleDe(d.a), rb = roleDe(d.b);
+    if (!ra || !rb) { R.avertissements.push(`${qui} rôle de clan pas encore créé : le salon de diplomatie attend le prochain passage`); continue; }
+    const nom = `🤝│${d.a.toLowerCase()}-${d.b.toLowerCase()}`;
+    const sujet = `Diplomatie entre [${d.a}] ${d.nom_a} et [${d.b}] ${d.nom_b} : seuls leurs membres le voient. Un des deux chefs peut le fermer dans le jeu (Clan › Diplomatie). tf-diplo:${id}`;
+    const base = [
+      { id: EVERYONE, type: 0, allow: "0", deny: String(VOIR), quoi: "tout le monde : caché" },
+      { id: moi.id, type: 1, allow: String(DROITS_BOT), deny: "0", quoi: "le bot" },
+      { id: ra.id, type: 0, allow: String(DROITS_MEMBRE), deny: "0", quoi: `le rôle [${d.a}]` },
+      { id: rb.id, type: 0, allow: String(DROITS_MEMBRE), deny: "0", quoi: `le rôle [${d.b}]` },
+    ];
+    const salon = salonsD.find((s) => idDe(s) === id);
+    if (salon) {
+      const sid = salon.id;
+      if (cle(salon.name) !== cle(nom) || salon.topic !== sujet) {
+        await faire(`${qui} salon de diplomatie renommé : ${nom}`, () => appel("PATCH", `/channels/${sid}`, { name: nom, topic: sujet }));
+      }
+      const existantes = new Map<string, any>((salon.permission_overwrites ?? []).map((x: any) => [x.id, x]));
+      for (const b of base) {
+        const e = existantes.get(b.id);
+        if (!e || big(e.allow) !== big(b.allow) || big(e.deny) !== big(b.deny)) {
+          await faire(`${qui} droits du salon de diplomatie (${b.quoi})`, () => appel("PUT", `/channels/${sid}/permissions/${b.id}`, { type: b.type, allow: b.allow, deny: b.deny }));
+        }
+      }
+    } else {
+      if (nbD >= 48) { R.avertissements.push(`catégorie ${CATEGORIE_DIPLO} presque pleine (Discord : 50 salons) : ${qui} attend`); continue; }
+      const ow = base.map(({ quoi: _q, ...x }) => x);
+      const cree = await faire(`${qui} salon de diplomatie ${nom}`, () => appel("POST", `/guilds/${G}/channels`, { name: nom, type: 0, topic: sujet, parent_id: CATD_ID, permission_overwrites: ow }));
+      nbD++;
+      if (cree?.id) {
+        await appel("POST", `/channels/${cree.id}/messages`, { allowed_mentions: { parse: [] }, content:
+          `🤝 **Salon de diplomatie : [${d.a}] ${d.nom_a} ↔ [${d.b}] ${d.nom_b}**\n` +
+          "Ouvert dans le jeu avec l'accord des deux chefs. Seuls les membres des deux clans le voient : le bot suit les arrivées et les départs.\n" +
+          "Un des deux chefs peut le fermer dans le jeu (onglet Clan › Diplomatie) : le salon est alors **supprimé**, avec tous ses messages." }, false);
+      }
+    }
+  }
+  // fermés dans le jeu : supprimés
+  for (const s of salonsD) {
+    const id = idDe(s)!;
+    if (voulusD.has(id)) continue;
+    await faire(`salon de diplomatie supprimé : ${s.name} (fermé dans le jeu)`, () => appel("DELETE", `/channels/${s.id}`, undefined, false));
+  }
   R.introuvables = [...new Set(R.introuvables)].sort();
   return R;
 }
@@ -255,8 +335,8 @@ if (typeof (globalThis as any).Deno !== "undefined") {
       if (!jeton) throw new Error("Secret DISCORD_BOT_TOKEN manquant (Edge Functions > Secrets).");
       const { data, error } = await base.rpc("discord_clans_donnees");
       if (error) throw new Error("discord_clans_donnees : " + error.message);
-      const R = await synchroniser({ jeton, clans: data?.clans ?? [], correspondances: data?.correspondances ?? {}, simulation: mode !== "actif", guildId: D.env.get("DISCORD_GUILD_ID") });
-      const resume = `${(data?.clans ?? []).length} clan(s) · ${R.actions.length} changement(s)` +
+      const R = await synchroniser({ jeton, clans: data?.clans ?? [], correspondances: data?.correspondances ?? {}, diplo: data?.diplo ?? [], simulation: mode !== "actif", guildId: D.env.get("DISCORD_GUILD_ID") });
+      const resume = `${(data?.clans ?? []).length} clan(s) · ${(data?.diplo ?? []).length} salon(s) de diplomatie · ${R.actions.length} changement(s)` +
         (R.introuvables.length ? ` · ${R.introuvables.length} joueur(s) pas trouvé(s) sur le Discord` : "") +
         (R.erreurs.length ? ` · ${R.erreurs.length} refus de Discord` : "");
       // un passage sans rien à faire n'encombre pas le journal (sauf en simulation)

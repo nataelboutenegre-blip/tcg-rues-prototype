@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'a80d5a77f217';
+const VERSION_JEU = 'b9d37a60d2ae';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2299,6 +2299,28 @@ const BT_TRACES = typeof Path2D === 'function' ? {
 } : null;
 let BATIMENTS = null;              // mes_batiments() ; null = bâtiments fermés ou s2-48 absent
 let BATIMENTS_CARTE = new Map();   // code -> { fonderie: { moi, pret }, forteresse: { moi, pret } }
+// patch397 : bâtiments et garnison sur les cartes ; GN_VUES = communes vues en garnison (Combat)
+const GN_VUES = new Set();
+const MBT_NOM = { forteresse: 'Forteresse', fonderie: 'Fonderie', banque: 'Banque', centre: 'Centre de recherche', radar: 'Radar' };
+function btPucesHtml(code){
+  code = String(code);
+  const bt = BATIMENTS_CARTE.get(code) || {}, out = [];
+  const g = typeof garnisonsMoi !== 'undefined' ? garnisonsMoi.get(code) : null;
+  if(g) out.push(`<span class="mbt mbt-g" title="Ta garnison : ${Number(g.energie) || 0} / 10">${ICONE_BOUCLIER}<b>Garnison ${Number(g.energie) || 0}/10</b></span>`);
+  else if(GN_VUES.has(code)) out.push(`<span class="mbt mbt-g" title="En garnison : une victoire sur deux annulée">${ICONE_BOUCLIER}<b>Garnison</b></span>`);
+  const ico = { forteresse: ICONE_FORTERESSE, fonderie: ICONE_FONDERIE, banque: ICONE_BANQUE, centre: ICONE_CENTRE, radar: ICONE_RADAR };
+  for(const t of ['forteresse', 'fonderie', 'banque', 'centre', 'radar']){
+    if(!bt[t]) continue;
+    out.push(`<span class="mbt${bt[t].moi ? ' moi' : ''}${bt[t].pret ? '' : ' chantier'}" title="${MBT_NOM[t]}${bt[t].moi ? ' (à toi)' : ''}${bt[t].pret ? '' : ', en construction'}">${ico[t]}<b>${t === 'centre' ? 'Centre' : MBT_NOM[t]}</b></span>`);
+  }
+  return out.join('');
+}
+function majMiniBt(){
+  for(const el of document.querySelectorAll('.mini-bt[data-bt]')){
+    const h = btPucesHtml(el.dataset.bt);
+    if(el._h !== h){ el.innerHTML = h; el._h = h; }
+  }
+}
 let batimentsLu = 0;
 let batimentsTimer = null;
 let btArme = null;                 // « code|type » : la construction attend sa confirmation
@@ -3932,6 +3954,17 @@ function ouvrirPanneau(code, xCss, yCss){
       : Math.max(0, (e.max || 3) - (e.faits || 0)) === 0 ? 'Plus d’échange possible aujourd’hui' : '';
     echClan = `<button class="pc-action pc-ech-clan" data-pc="ech-clan"${raison ? ` disabled title="${echapperHtml(raison)}"` : ''}>🤝 Proposer un échange à ${echapperHtml(c.pseudo || 'ton coéquipier')}</button>${raison ? `<p class="pc-note">${echapperHtml(raison)}.</p>` : ''}`;
   }
+  let echInter = '';   // patch398 : échange entre clans (s2-133)
+  if(!allie && !mienne && c.joueurId && enFrontClan() && CLANS){
+    const e = clanEch.etat, sonClan = clansCarte.get(c.joueurId), monClan = clansCarte.get(window.__monId);
+    if(e && e.clan && sonClan && (!monClan || sonClan.tag !== monClan.tag)){
+      const dispo = e.inter_dispo_le ? new Date(e.inter_dispo_le) : null;
+      const raison = e.pret_le ? 'Échanges possibles 48 h après ton arrivée dans ton clan'
+        : dispo && dispo.getTime() > Date.now() ? `Un échange entre clans par semaine : le prochain le ${dispo.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à ${dispo.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : '';
+      echInter = `<button class="pc-action pc-ech-inter" data-pc="ech-inter"${raison ? ` disabled title="${echapperHtml(raison)}"` : ''}><span aria-hidden="true">🤝</span>Proposer un échange <small>· 1 par semaine</small></button>${raison ? `<p class="pc-note">${echapperHtml(raison)}.</p>` : ''}`;
+    }
+  }
+  if(allie && enFrontClan()){}   // la suite des notes, comme avant
   else if(!mienne && protegee) note = 'Protégée par un bouclier : impossible de l’attaquer pour l’instant.';
   else if(immunisee) note = 'Prise il y a moins de 3 heures : encore immunisée.';
 
@@ -3952,7 +3985,7 @@ function ouvrirPanneau(code, xCss, yCss){
     <div class="pc-lignes">${lignes.map(([a, b]) => `<div class="pc-ligne"><span>${a}</span><b>${b}</b></div>`).join('')}</div>
     ${echClan}${note ? `<p class="pc-note">${note}</p>` : ''}
     ${actions.length ? `<div class="pc-actions">${actions.map(([cl, ic, txt, titre]) =>
-      `<button class="pc-action ${cl}" data-pc="${ic}" title="${echapperHtml(titre)}">${ICONES_PC[ic]}${txt}</button>`).join('')}</div>` : ''}${btActions}${libBloc}`;
+      `<button class="pc-action ${cl}" data-pc="${ic}" title="${echapperHtml(titre)}">${ICONES_PC[ic]}${txt}</button>`).join('')}</div>` : ''}${echInter}${btActions}${libBloc}`;
 
   el.classList.toggle('pc-allie', allie && !!clanP);   // patch268 : liseré aux couleurs du clan
   if(allie && clanP) el.style.setProperty('--clan', clanP.couleur || '#4C9BE8'); else el.style.removeProperty('--clan');
@@ -4551,6 +4584,7 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
   }
   if(libClicPanneau(quoi, code)) return;   // patch273
   if(quoi === 'ech-clan'){ const o = othersMap.get(code); if(o && o.joueurId) eccDemarrer(o, code); return; }   // patch316, lot 8/11 : sans quitter la carte
+  if(quoi === 'ech-inter'){ const o = othersMap.get(code); if(o && o.joueurId) eccDemarrer(o, code, true); return; }   // patch398
   if(quoi === 'ecc-proposer'){ eccProposer(code, b); return; }   // lot 8/11
   if(quoi === 'gn-plus'){ gnRetraitArme = null; garnisonAction(code, Number(b.dataset.n) || 1); return; }
   if(quoi === 'gn-poser'){
@@ -10354,6 +10388,11 @@ async function envoyerChances(){
   if(!codes.length) return;
   const voulue = intensiteChoisie;
   chancesEnVol = true;
+  if(SAISON2) sb.rpc('garnisons_visibles', { p_codes: codes }).then(({ data, error }) => {   // patch397
+    if(error || !Array.isArray(data)) return;
+    for(const r of data) GN_VUES.add(String(r.commune_code));
+    majMiniBt();
+  }, () => {});
   try{
     const { data, error } = await sb.rpc('apercu_attaques',
       { p_codes: codes, p_intensite: voulue });
@@ -10554,7 +10593,7 @@ function renderCombatGrid(){
     const sk = !au && FRONT_SKINS ? FRONT_SKINS.get(String(c.commune_code)) : null;
     const carte = miniTerra({ code: c.commune_code, nom: commune.nom, dept: commune.departement, tier,
       exemplaires: 1, photo: commune.photo || '', rank: commune.rang, tierSize: commune.palier_total,
-      aurore: au ? 1 : 0, skin: sk && skinConnu(sk) ? sk : undefined });
+      aurore: au ? 1 : 0, skin: sk && skinConnu(sk) ? sk : undefined, bt: true });   // patch397
     let bouton;
     if(etatClasse === 'pret'){
       bouton = `<button class="cible-attaquer ca-att" data-action="attaquer" data-code="${c.commune_code}">Attaquer <span class="ca-pastille"><b>${coutTexte(cout)}</b> · <i>${vrai ? vrai.chances + ' %' : '…'}</i></span></button>`;
@@ -10985,6 +11024,7 @@ async function chargerBatiments(){
       carte.set(k, e);
     }
     BATIMENTS_CARTE = carte;
+    majMiniBt();   // patch397
     renderBatimentsBloc();
     if(typeof mfoRendre === 'function') mfoRendre();   // patch366
     if(btEcranOuvert() && BTE.vue === 'miens') btEcranRendre();
@@ -12357,6 +12397,7 @@ async function chargerGarnisons(){
     repousses: g.repousses_24h, subis: g.subis_24h }]));
   renderGarnisons();
   if(typeof canvasActif === 'function' && canvasActif()) demanderDessin();   // patch395 : les boucliers de la carte
+  majMiniBt();   // patch397
   if(!LIB.lu) libCharger();   // patch273
 }
 
@@ -12526,6 +12567,7 @@ function miniTerra(e){
       <div class="mini-infos">
         <p class="mini-nom ${e.nom.length > 14 ? 'long' : ''}">${nom}</p>
         ${e.rank ? `<span class="mini-num">n° ${Number(e.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(e.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
+        ${e.bt ? `<div class="mini-bt" data-bt="${echapperTexte(e.code)}">${btPucesHtml(e.code)}</div>` : ''}
         <span class="mini-rarete">${e.tier.label}${e.auroreS1 ? '<span class="mini-origine" title="Aurore gagnée dans le Front, saison 1">Front S1</span>' : ''}</span>
       </div>
       ${bx.surface}<div class="mini-lisere"><span></span><span></span><span></span></div>
@@ -19514,7 +19556,7 @@ function blocEchangesClan(){
   const restant = parMembre ? ((e.membres || []).some(m => resteAvec(m) > 0) ? maxEch : 0)
                             : Math.max(0, maxEch - (e.faits || 0));   // patch250
   const prop = (x, recu) => `<div class="ce-prop"><div>
-      <div class="ce-qui">${recu ? `<b>${echapperTexte(x.pseudo)}</b> te propose` : `à <b>${echapperTexte(x.pseudo)}</b> · en attente`} · ${ceDans(x.expire_le)}</div>
+      <div class="ce-qui">${recu ? `<b>${echapperTexte(x.pseudo)}</b> te propose` : `à <b>${echapperTexte(x.pseudo)}</b> · en attente`}${x.inter ? ' · <span class="ce-inter">entre clans</span>' : ''} · ${ceDans(x.expire_le)}</div>
       <div class="ce-troc">${ceCommune(recu ? x.recoit : x.donne, x.tier)}<span class="ce-fl" aria-hidden="true">⇄</span>${ceCommune(recu ? x.donne : x.recoit, x.tier)}</div>
       ${recu ? `<div class="ce-attente">Tu donnes ${echapperTexte(x.donne.nom)}, tu reçois ${echapperTexte(x.recoit.nom)}.</div>` : ''}</div>
     <div class="ce-actions">${recu ? `<button type="button" class="bq-btn" data-ce-accepter="${Number(x.id)}">Accepter</button><button type="button" class="bq-btn secondaire" data-ce-refuser="${Number(x.id)}">Refuser</button>`
@@ -19537,7 +19579,7 @@ function blocEchangesClan(){
     ${(e.recus || []).length ? `<h3 class="ce-h3">Reçus</h3>${e.recus.map(x => prop(x, true)).join('')}` : ''}
     <h3 class="ce-h3">Proposer un échange</h3>${proposer}
     ${(e.envoyes || []).length ? `<h3 class="ce-h3">Envoyés</h3>${e.envoyes.map(x => prop(x, false)).join('')}` : ''}
-    <ul class="clan-regles"><li>Seulement entre membres du clan, une commune contre une commune de même rareté.</li><li>${parMembre ? '<b>3 échanges par jour avec chaque coéquipier</b>, 3 propositions en attente par coéquipier' : '3 échanges par jour et par joueur, 3 propositions en attente au plus'}. Une proposition expire au bout de 24 h.</li><li>Impossible pour une commune prise il y a moins de 24 h, en garnison, ou échangée il y a moins de 48 h.</li><li>Il faut être dans le clan depuis 48 h. Un échange ne rapporte aucun point de combat.</li></ul></div>`;
+    <ul class="clan-regles"><li>Seulement entre membres du clan, une commune contre une commune de même rareté.</li><li>${parMembre ? '<b>3 échanges par jour avec chaque coéquipier</b>, 3 propositions en attente par coéquipier' : '3 échanges par jour et par joueur, 3 propositions en attente au plus'}. Une proposition expire au bout de 24 h.</li><li>Impossible pour une commune prise il y a moins de 24 h, en garnison, ou échangée il y a moins de 48 h.</li><li>Il faut être dans le clan depuis 48 h. Un échange ne rapporte aucun point de combat.</li><li><b>Entre clans</b> : touche sur la carte une commune d’un joueur d’un autre clan, puis « Proposer un échange ». Mêmes règles, mais <b>un échange par semaine</b>${clanEch.etat && clanEch.etat.inter_dispo_le && new Date(clanEch.etat.inter_dispo_le).getTime() > Date.now() ? ` (ton prochain le ${new Date(clanEch.etat.inter_dispo_le).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })})` : ''}.</li></ul></div>`;   // patch398
 }
 // patch304 : par pages (plus de 1 000 communes chez les gros joueurs), de la plus rare à la plus commune
 async function ceCommunesDe(joueur){
@@ -23014,7 +23056,7 @@ function ncConstruire(){
   if(p.jeu.clan && d.clanE && Array.isArray(d.clanE.recus)){
     for(const x of d.clanE.recus){
       items.push({ cle: `cle|${x.id}`, sec: 'afaire', c: 'clan', i: '🛡️', mode: 'front',
-        t: `<b>${echapperTexte(x.pseudo || 'Un membre')}</b> te propose un échange de clan`,
+        t: `<b>${echapperTexte(x.pseudo || 'Un membre')}</b> te propose un échange ${x.inter ? 'entre clans' : 'de clan'}`,   // patch398
         s: `Tu reçois ${echapperTexte((x.donne && x.donne.nom) || '')}, tu donnes ${echapperTexte((x.recoit && x.recoit.nom) || '')}`,
         a: 'Voir', aller: () => ncAller('front', 'clan') });
     }
@@ -28776,8 +28818,8 @@ document.addEventListener('click', (e) => {
 let echCarte = null;   // { qui, pseudo, recoit, nom, tier, avant }
 const eccTier = (c) => c && c.tier ? (c.tier.id || c.tier) : null;
 const eccLibelle = (t) => ((TIERS.find(x => x.id === t) || {}).label || LIBELLE_TIER[t] || t || '').toLowerCase();
-function eccDemarrer(o, code){
-  echCarte = { qui: o.joueurId, pseudo: o.pseudo || 'ton coéquipier', recoit: code, nom: o.nom, tier: eccTier(o), avant: new Set(joueursSurlignes) };
+function eccDemarrer(o, code, inter){
+  echCarte = { qui: o.joueurId, pseudo: o.pseudo || (inter ? 'ce joueur' : 'ton coéquipier'), recoit: code, nom: o.nom, tier: eccTier(o), inter: !!inter, avant: new Set(joueursSurlignes) };   // patch398 : inter
   joueursSurlignes = new Set([ID_MOI]);   // tes communes ressortent
   try{ fermerPanneau(); }catch(e){}
   eccBandeau();
@@ -28797,8 +28839,8 @@ function eccBandeau(){
   if(!echCarte){ if(el) el.remove(); return; }
   if(!el){ el = document.createElement('div'); el.id = 'eccBandeau'; el.className = 'ecc-bandeau'; wrap.appendChild(el); }
   const t = echCarte.tier;
-  el.innerHTML = `<span class="ecc-ic">🤝</span><div class="ecc-txt">Échange avec <b>${echapperHtml(echCarte.pseudo)}</b> : tu reçois <b>${echapperHtml(echCarte.nom)}</b> (${eccLibelle(t)}).<br><span>Touche une de tes communes <b class="rarete ${t}">${eccLibelle(t)}s</b> pour la proposer.</span></div>
-    <div class="ecc-btns"><button type="button" data-ecc="clan">Onglet Clan</button><button type="button" data-ecc="annuler">Annuler</button></div>`;
+  el.innerHTML = `<span class="ecc-ic">🤝</span><div class="ecc-txt">${echCarte.inter ? 'Échange entre clans' : 'Échange'} avec <b>${echapperHtml(echCarte.pseudo)}</b> : tu reçois <b>${echapperHtml(echCarte.nom)}</b> (${eccLibelle(t)}).<br><span>Touche une de tes communes <b class="rarete ${t}">${eccLibelle(t)}s</b> pour la proposer.${echCarte.inter ? ' Un échange entre clans par semaine.' : ''}</span></div>
+    <div class="ecc-btns">${echCarte.inter ? '' : '<button type="button" data-ecc="clan">Onglet Clan</button>'}<button type="button" data-ecc="annuler">Annuler</button></div>`;   // patch398
 }
 function eccBlocFiche(code, c, mienne){
   if(!echCarte || !mienne) return '';
@@ -28810,7 +28852,7 @@ function eccBlocFiche(code, c, mienne){
 async function eccProposer(code, btn){
   if(!echCarte) return;
   if(btn) btn.disabled = true;
-  const { data, error } = await sb.rpc('clan_ech_proposer', { p_cible: echCarte.qui, p_ma: code, p_sa: echCarte.recoit });
+  const { data, error } = await sb.rpc(echCarte.inter ? 'clan_ech_inter_proposer' : 'clan_ech_proposer', { p_cible: echCarte.qui, p_ma: code, p_sa: echCarte.recoit });   // patch398
   if(error){ notifier({ type: 'erreur', titre: 'Échange impossible', texte: messageLisible(error.message) }); if(btn) btn.disabled = false; return; }
   notifier({ type: 'succes', titre: String(data || 'Proposition envoyée') });
   try{ fermerPanneau(); }catch(e){}

@@ -8936,6 +8936,22 @@ body.mode-terra #roueFront{ display:none !important; }
 .rdf-ch b{ color:#fff; font-weight:800; white-space:nowrap; }
 .rdf-ch span:last-child{ text-align:right; color:#A9BCD4; font-variant-numeric:tabular-nums; }
 .rdf-ch-pied{ font-size:.68rem; color:#7F92AA; margin:6px 0 2px; }
+/* patch397 : bâtiments et garnison sur les cartes */
+.mini-bt{ display:flex; flex-wrap:wrap; align-items:center; gap:3px; margin-top:auto; padding-top:4px; }
+.mini-bt:empty{ display:none; }
+.mini-bt:not(:empty) + .mini-rarete{ margin-top:4px; }
+.mbt{ display:inline-flex; align-items:center; gap:3px; height:19px; margin:0; padding:0 6px 0 4px; box-sizing:border-box; max-width:100%;
+  border-radius:6px; background:#2A1A0C; color:#FFB347; box-shadow:inset 0 0 0 1.2px rgba(255,179,71,.55); }
+.mbt svg{ width:12px; height:12px; flex:none; }
+.mbt b{ font-size:.6rem; font-weight:800; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mbt.moi{ color:#FFD35A; box-shadow:inset 0 0 0 1.5px #F0B429; }
+.mbt.chantier{ opacity:.55; }
+.mbt.mbt-g{ background:#0C3024; color:#2BD48B; box-shadow:inset 0 0 0 1.2px rgba(43,212,139,.65); }
+/* patch398 : échanges entre clans */
+.ce-inter{ display:inline-block; padding:1px 6px; border-radius:999px; background:rgba(110,195,240,.16); color:#9FD8F5; font-size:.66rem; font-weight:700; }
+.pc-action.pc-ech-inter{ margin-top:6px; color:#9FD8F5; border-color:rgba(110,195,240,.35); }
+.pc-action.pc-ech-inter small{ color:#7F92AA; font-size:.72rem; }
+.pc-action.pc-ech-inter:disabled{ opacity:.55; cursor:default; }
 /* patch396 : le fil de la roue */
 .rdf-journal{ margin:10px auto 0; max-width:330px; text-align:left; background:rgba(9,16,30,.7); border:1px solid rgba(169,188,212,.18); border-radius:14px; padding:8px 12px 10px; }
 .rdf-journal[hidden]{ display:none; }

@@ -1,0 +1,33 @@
+/* ---------- patch406 : le siège sur la fiche de la carte, la vague animée ---------- */
+.sg-fiche{ margin:0 0 10px; display:flex; flex-direction:column; gap:8px; }
+.sg-fiche[hidden]{ display:none; }
+.sg-fiche-l{ background:rgba(255,138,142,.08); border:1px solid rgba(255,138,142,.35); border-radius:12px; padding:9px 11px; }
+.sg-fiche-l.chaud{ border-color:rgba(255,138,142,.7); background:rgba(255,138,142,.14); }
+.sg-fiche-l.moi{ background:rgba(240,180,41,.08); border-color:rgba(240,180,41,.4); }
+.sg-fiche-h{ display:flex; justify-content:space-between; gap:8px; font-size:.78rem; color:var(--brume); margin-bottom:6px; }
+.sg-fiche-h b{ color:#fff; }
+.sg-fiche-a{ display:flex; align-items:center; gap:6px; margin-top:8px; font-size:.76rem; color:var(--brume); }
+.sg-fiche-a span{ margin-right:auto; }
+.sg-fiche-a .sg-renf{ padding:7px 10px; min-width:50px; }
+.sg-fiche-course{ margin:0; font-size:.78rem; line-height:1.4; color:#FFB27A; }
+.sg-fiche-course b{ color:#FFD9B8; }
+.sg-rempli{ transition:width .8s cubic-bezier(.2,.8,.3,1); overflow:hidden; }
+.sg-rempli::after{ content:''; position:absolute; inset:0; opacity:0; background:linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent); transform:translateX(-100%); }
+.sg-choc .sg-barre{ animation:sgChoc .45s ease-out; }
+.sg-choc .sg-rempli::after{ animation:sgEclat .8s ease-out .1s; }
+.sg-choc-bcl .sg-bcl{ animation:sgChoc .45s ease-out; }
+@keyframes sgChoc{ 0%{ transform:none; } 20%{ transform:translateX(-4px); } 40%{ transform:translateX(4px); } 60%{ transform:translateX(-2px); } 80%{ transform:translateX(1px); } 100%{ transform:none; } }
+@keyframes sgEclat{ 0%{ opacity:1; transform:translateX(-100%); } 100%{ opacity:1; transform:translateX(100%); } }
+.sg-retour{ animation:sgMonte .35s ease-out; }
+@keyframes sgMonte{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:none; } }
+.sg-calc{ margin:12px 0 0; font-size:.8rem; color:var(--brume); }
+.sg-calc summary{ cursor:pointer; text-align:center; text-decoration:underline; text-decoration-color:rgba(169,188,212,.4); list-style:none; padding:4px 0; }
+.sg-calc summary::-webkit-details-marker{ display:none; }
+.sg-calc ul{ margin:8px 0 0; padding:10px 14px 10px 28px; background:rgba(10,22,40,.45); border:1px solid rgba(169,188,212,.18); border-radius:12px; line-height:1.45; }
+.sg-calc li{ margin:0 0 6px; }
+.sg-calc li:last-child{ margin:0; }
+.sg-calc li b{ color:#fff; }
+@media (prefers-reduced-motion: reduce){
+  .sg-rempli{ transition:none; }
+  .sg-choc .sg-barre, .sg-choc .sg-rempli::after, .sg-choc-bcl .sg-bcl, .sg-retour{ animation:none; }
+}

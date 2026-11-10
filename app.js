@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '4e08a52fe935';
+const VERSION_JEU = '69eceb326888';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4159,6 +4159,7 @@ function omfDessiner(dep){
   tu.chemins = [];
   const maintenant = Date.now();
   const clans = (typeof CALQUES !== 'undefined' && CALQUES.clans && typeof clansCarte !== 'undefined') ? clansCarte : null;
+  const parClan = clans ? new Map() : null;   // patch408 : un contour par clan, pas un par commune
   for(const code in contours){
     const p = new Path2D();
     for(const anneau of contours[code]){
@@ -4174,10 +4175,25 @@ function omfDessiner(dep){
     ctx.lineWidth = grand ? 1.1 : 0.8;
     ctx.stroke(p);
     const clan = clans && c && clans.get(mienne ? window.__monId : autre.joueurId);
-    if(clan){ ctx.strokeStyle = clan.couleur; ctx.lineWidth = grand ? 2.6 : 1.8; ctx.stroke(p); }
+    if(clan){
+      const k = clan.tag || clan.couleur;
+      if(!parClan.has(k)) parClan.set(k, { couleur: clan.couleur, chemin: new Path2D() });
+      parClan.get(k).chemin.addPath(p);
+    }
     if(c && c.bouclierJusqua > maintenant){
       ctx.save(); ctx.setLineDash([3, 3]); ctx.strokeStyle = '#fff'; ctx.lineWidth = grand ? 1.6 : 1.1; ctx.stroke(p); ctx.restore();
     }
+  }
+  // patch408 : le tour du territoire de chaque clan, tracé seulement à l'extérieur (comme patch212)
+  if(parClan) for(const { couleur, chemin } of parClan.values()){
+    const dehors = new Path2D();
+    dehors.rect(-larg, -haut, larg * 3, haut * 3);
+    dehors.addPath(chemin);
+    ctx.save();
+    ctx.clip(dehors, 'evenodd');
+    ctx.strokeStyle = '#07111F'; ctx.lineWidth = grand ? 5 : 3.4; ctx.stroke(chemin);
+    ctx.strokeStyle = couleur; ctx.lineWidth = grand ? 3.2 : 2.2; ctx.stroke(chemin);
+    ctx.restore();
   }
   if(OMF.bulle && OMF.bulle.dep === dep){
     const c = tu.chemins.find(([code]) => code === OMF.bulle.code);

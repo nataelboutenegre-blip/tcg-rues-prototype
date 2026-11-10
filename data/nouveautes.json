@@ -15,7 +15,8 @@
       "Assaut contre une commune en garnison : l’animation affiche la même chance que la fiche (par exemple 43 %, soit 85 % aux dés et une victoire sur deux annulée par la garnison), et l’aiguille s’arrête dans le vert quand la garnison annule ta victoire",
       "Clans : si leur chargement échouait au retour sur l’appli, ils restaient invisibles toute la partie (coéquipiers parmi les cibles d’Attaquer, calque Clans vide). Le jeu réessaie maintenant tout seul, et les relit toutes les 10 minutes",
       "Carte : plus de traits noirs au milieu des territoires. Deux communes voisines dont la limite n’avait pas exactement les mêmes points passaient pour un bord de territoire ; un territoire d’un seul tenant n’a plus que son tour (signalé par Oshannir)",
-      "Carte : de loin, les zones bombardées n’ont plus qu’une pastille 💥 au lieu de grandes étiquettes qui couvraient la carte et se chevauchaient ; l’étiquette complète revient en zoomant (signalé par Arkhannou)"
+      "Carte : de loin, les zones bombardées n’ont plus qu’une pastille 💥 au lieu de grandes étiquettes qui couvraient la carte et se chevauchaient ; l’étiquette complète revient en zoomant (signalé par Arkhannou)",
+      "Front, vue outre-mer : avec le calque Clans, le contour du clan entoure son territoire au lieu de chaque commune, et un cercle de bombe de la carte de France ne reste plus par-dessus les territoires (signalé par Arkhannou)"
     ]
   },
   {

@@ -6401,7 +6401,7 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 #panel-territoire .map-outils .mf-zone{ margin:0; }
 .map-wrap.outremer{ height:auto !important; background:#0C1A31; padding:10px; overflow:visible; }
 .map-wrap.outremer #mapTransform, .map-wrap.outremer #mapCanvas, .map-wrap.outremer #mapInfobulle,
-.map-wrap.outremer .map-reduire, .map-wrap.outremer #mapLegende{ display:none !important; }
+.map-wrap.outremer .map-reduire, .map-wrap.outremer #mapLegende, .map-wrap.outremer #mapBombeFx{ display:none !important; }   /* patch408 : + #mapBombeFx */
 .omf[hidden]{ display:none; }
 .omf .om-grille{ max-width:none; }
 .omf-leg .omf-autres{ background:linear-gradient(90deg,#E5484D 0 33%,#8E7CF6 33% 66%,#2EC4B6 66%); }

@@ -105,6 +105,10 @@ update public.communes c set rang = r.rg, palier_total = r.total
  where r.code = c.code
    and (c.rang is distinct from r.rg or c.palier_total is distinct from r.total);
 
+-- 3. (ajout du 11/11) le catalogue de la carte (jeu et carte en direct) : sans ça, les communes suisses
+--    n'apparaissent sur les cartes qu'après le passage de 4 h 17 (cron carte-catalogue)
+select public.carte_catalogue_refaire();
+
 commit;
 
 -- Contrôle :

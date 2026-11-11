@@ -8,7 +8,8 @@
       "🛡️ Calque Clans : nouveau choix « Contour | Plein » sous « Couleurs ». En « Plein », tout le territoire d’un clan prend la couleur du clan ; un trait sépare ses membres et ton territoire garde un liseré jaune (idée de Cairnan217)"
     ],
     "correctifs": [
-      "Attaquer, « Meilleures chances » : avec plus de 4 000 cibles (« Toutes »), le tri ne se faisait pas du tout. Les 4 000 cibles les plus proches de ton territoire sont maintenant triées par chance, les autres suivent par distance (signalé par Arkhannou)"
+      "Attaquer, « Meilleures chances » : avec plus de 4 000 cibles (« Toutes »), le tri ne se faisait pas du tout. Les 4 000 cibles les plus proches de ton territoire sont maintenant triées par chance, les autres suivent par distance (signalé par Arkhannou)",
+      "🛡️ Calque Clans en « Plein » : le gros contour du clan ne s’affiche plus par-dessus la couleur ; il reste seulement le trait fin entre les membres (merci Cairnan217)"
     ]
   },
   {

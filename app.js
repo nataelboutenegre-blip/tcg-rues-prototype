@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'a036a6b759ee';
+const VERSION_JEU = 'b70eb81ae70d';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3016,7 +3016,7 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
         const cd = cheminDeptCanvas(dep, CONTOURS_DEPTS[dep]);
         ctx.fill(cd);
         ctx.globalAlpha = 1;
-        if(CLANS && CALQUES.clans && j.clan){   // patch212
+        if(CLANS && CALQUES.clans && j.clan && !pleinD){   // patch212 ; patch416 : pas en « Plein »
           ctx.save(); ctx.clip(cd);
           ctx.strokeStyle = j.clanCouleur; ctx.lineWidth = trait(7); ctx.stroke(cd);
           ctx.restore();
@@ -3170,7 +3170,7 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
       }
       // patch212 : le tour du territoire de chaque clan, trace seulement a
       // l'exterieur (decoupe pair-impair) : pas de traits entre deux membres
-      if(parClan) for(const { couleur, chemin } of parClan.values()){
+      if(parClan && !clanPlein()) for(const { couleur, chemin } of parClan.values()){   // patch416 : pas en « Plein »
         const dehors = new Path2D();
         dehors.rect(-MAP_W, -MAP_H, MAP_W * 3, MAP_H * 3);
         dehors.addPath(chemin);
@@ -4223,7 +4223,7 @@ function omfDessiner(dep){
     }
   }
   // patch408 : le tour du territoire de chaque clan, tracé seulement à l'extérieur (comme patch212)
-  if(parClan) for(const { couleur, chemin } of parClan.values()){
+  if(parClan && !clanPlein()) for(const { couleur, chemin } of parClan.values()){   // patch416 : pas en « Plein »
     const dehors = new Path2D();
     dehors.rect(-larg, -haut, larg * 3, haut * 3);
     dehors.addPath(chemin);

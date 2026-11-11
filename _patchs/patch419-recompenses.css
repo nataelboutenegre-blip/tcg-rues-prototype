@@ -1,0 +1,26 @@
+
+/* patch419 : récompenses de fin de saison 2 */
+.rs2-bandeau{ display:flex; align-items:center; gap:10px; width:100%; margin:4px 0 12px; padding:10px 12px; border-radius:12px; cursor:pointer;
+  border:1px solid rgba(240,180,41,.45); background:linear-gradient(90deg, rgba(240,180,41,.16), rgba(240,180,41,.04)); color:#fff; font:inherit; text-align:left; }
+.rs2-ico{ font-size:1.3rem; line-height:1; }
+.rs2-txt{ flex:1; min-width:0; font-size:.82rem; color:var(--brume); }
+.rs2-txt b{ color:#fff; }
+.rs2-voir{ font-size:.76rem; font-weight:700; color:var(--c-legendaire); white-space:nowrap; }
+.fenetre.rs2 h2{ font-size:1.45rem; }
+.rs2-coupe{ font-size:2.6rem; line-height:1; margin-bottom:6px; }
+.rs2-moi{ margin:10px 0 0; font-size:.86rem; }
+.rs2-moi b{ color:var(--c-legendaire); }
+.fenetre.rs2 .pr-corps h3{ margin-top:4px; }
+.rs2-podium{ display:grid; gap:8px; margin-bottom:8px; }
+.rs2-m{ display:grid; grid-template-columns:34px 1fr; column-gap:8px; align-items:center; background:var(--nuit); border-radius:10px; padding:9px 12px; border:1px solid rgba(169,188,212,.14); }
+.rs2-m span{ grid-row:span 2; font-size:1.5rem; text-align:center; }
+.rs2-m b{ font-size:.9rem; }
+.rs2-m small{ font-size:.72rem; color:var(--brume); }
+.rs2-m.or{ border-color:rgba(240,180,41,.55); } .rs2-m.argent{ border-color:rgba(200,210,225,.45); } .rs2-m.bronze{ border-color:rgba(205,127,50,.5); }
+.rs2-p{ font-size:.84rem; line-height:1.45; margin:0 0 16px; }
+.rs2-note{ font-size:.74rem; color:var(--brume); margin:0 0 16px; line-height:1.4; }
+.rs2-dist{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; margin-bottom:18px; }
+.rs2-d{ background:var(--nuit); border-radius:10px; padding:9px 10px; display:grid; grid-template-columns:26px 1fr; column-gap:6px; }
+.rs2-d span{ grid-row:span 2; font-size:1.15rem; }
+.rs2-d b{ font-size:.8rem; }
+.rs2-d small{ font-size:.68rem; color:var(--brume); line-height:1.3; }

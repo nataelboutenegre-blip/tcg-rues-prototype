@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '6450dc21e15c';
+const VERSION_JEU = '59062477d3d7';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -28832,6 +28832,7 @@ async function zdCharger(){
   try{
     const { data, error } = await sb.rpc('zone_depart_etat');
     ZD = !error && data ? data : null;   // s3-6 pas lancé : rien
+    document.body.classList.toggle('zone-on', !!(ZD && ZD.ouvert));   // patch418 : la règle de la zone de départ
   }catch(e){ ZD = null; }
   renderZoneDepart();
   if(zdVoileEl() && !zdVoileEl().hidden) zdRendre();
@@ -30013,4 +30014,13 @@ document.addEventListener('click', (e) => {
   if(!e.target.closest('[data-mp-ouvrir]')) return;
   const moi = classementDonnees.find(l => l.est_moi);
   ouvrirMesPoints(moi && moi.joueur_id);
+});
+
+// ---------- patch418 : la règle de la Suisse s'affiche avec la Suisse ; le lien « Le siège » ouvre sa section ----------
+document.body.classList.toggle('suisse-on', !!SUISSE);
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('#panel-regles .rg-lien');
+  if(!a) return;
+  const d = document.querySelector(a.getAttribute('href'));
+  if(d && d.tagName === 'DETAILS') d.open = true;
 });

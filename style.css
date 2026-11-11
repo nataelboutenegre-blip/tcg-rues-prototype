@@ -9795,3 +9795,10 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .fenetre.mes-points .pr-btn{ width:100%; }
 .sc-legende .cl-calc-btns{ margin-left:auto; display:inline-flex; flex-wrap:wrap; justify-content:flex-end; gap:4px 14px; }
 .sc-legende .cl-calc-btns .cl-calc-btn{ margin-left:0; }
+
+/* patch418 : règles de la saison 3, chacune visible quand sa nouveauté s'allume */
+#panel-regles [data-s3]{ display:none !important; }
+body.siege-on #panel-regles [data-s3="siege"], body.suisse-on #panel-regles [data-s3="suisse"],
+body.zone-on #panel-regles [data-s3="zone"]{ display:revert !important; }
+body.siege-on #panel-regles [data-s2="des"]{ display:none !important; }
+#panel-regles .rg-lien{ color:#FFB27A; font-weight:700; }

@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=5b1c55410a69">
+<link rel="stylesheet" href="style.css?v=866cdaf035a9">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -1344,7 +1344,7 @@
           </summary>
           <div class="regle-corps"><div class="chiffres"><div class="chiffre-bloc"><b>120</b><span>énergie au maximum</span></div><!-- patch390 --><!-- patch299, lot 8/11 --><div class="chiffre-bloc"><b>7 min</b><span>pour recharger 1 énergie</span></div><!-- patch387 --><div class="chiffre-bloc" data-s2="des"><b>3</b><span>victoires pour conquérir</span></div><div class="chiffre-bloc" data-s3="siege"><b>2</b><span>énergie pour poser un siège</span></div></div>
             <p data-s2="des">Avant chaque assaut, choisis ton engagement : <b>prudent</b> (1 énergie, 35 %), <b>normal</b> (2 énergie, 50 %) ou <b>offensif</b> (3 énergie, 65 %). Une <b>épique</b> coûte <b>1 énergie de plus</b> par assaut, une <b>légendaire 2 de plus</b> (3, 4 ou 5) ; les chances ne changent pas, et défendre coûte toujours 1, 2 ou 3. Tes communes autour de la cible comptent : aucune à moins de 20 km, c'est une attaque à distance (<b>−12 %</b>) ; une, rien ne change ; <b>deux ou plus, +5 %</b>.</p><!-- lot 8/11 -->
-            <p data-s2="des"><b>Bonus de débutant</b> : pendant tes 7 premiers jours, et jusqu'à ta première conquête, chaque assaut a <b>au moins 85 %</b> de chances, même en prudent et même à distance. Une Forteresse garde son effet ; <b>aucun bonus contre une commune en garnison, ni contre une épique ou une légendaire</b> (chances normales). Ensuite, tout redevient normal.</p><!-- patch365 -->
+            <p data-s2="des"><b>Bonus de débutant</b> : pendant tes 48 premières heures, et jusqu'à ta première conquête, chaque assaut a <b>au moins 85 %</b> de chances, même en prudent et même à distance. Une Forteresse garde son effet ; <b>aucun bonus contre une commune en garnison, ni contre une épique ou une légendaire</b> (chances normales). Ensuite, tout redevient normal.</p><!-- patch365 -->
             <p data-s2="des"><b>Série noire</b> : après 2 assauts perdus d'affilée aux dés sur une même commune, tes assauts suivants sur elle ont <b>+15 %</b>, jusqu'à ta prochaine victoire (90 % au plus). Pas de coup de pouce contre une commune en garnison.</p><!-- patch367 -->
             <p data-s3="siege">Pour prendre une commune, tu l'<b>assièges</b> : tout est expliqué juste en dessous, dans <a href="#s3-siege" class="rg-lien">Le siège</a>.</p>
             <p data-s2="des">Gagne <b>3 rounds</b> pour prendre la commune, pas forcément d'affilée : <b>une défaite ne te fait rien perdre</b>, ta série reste où elle était. Mais sans assaut de ta part pendant <b>24 h</b>, ton siège tombe : la série repart de zéro. Entre deux assauts sur la même commune : 2 min (commune), 5 min (peu commune), 10 min (rare), 1 h (épique), 3 h (légendaire). Une commune prise est protégée 3 h.</p>
@@ -1418,7 +1418,7 @@
             </div>
             <p><b>Éclair ou long</b> : tant que personne ne se défend, le siège est <b>éclair</b> : ta jauge monte aussi vite que tu envoies (une épique demande quand même <b>1 h</b>). Il devient <b>long</b>, et le reste, dès que le propriétaire renforce, ou si la commune a une garnison ou un bâtiment visible ; une légendaire est toujours un siège long. Un siège long ne peut pas aller plus vite que la durée du tableau (10 % tout de suite) : l'énergie en trop <b>attend</b> et part toute seule, au fil du temps.</p>
             <p><b>Places</b> : tu peux mener <b>8 sièges longs</b> à la fois, plus 1 par type de bâtiment prêt (12 au plus). Les sièges éclair sont illimités. Un siège éclair qui devient long continue, même sans place libre.</p>
-            <p><b>Tes dégâts</b> : <b>× 0,8</b> sans commune à toi à moins de 20 km, <b>× 1,1</b> avec deux ou plus ; <b>× 1,1</b> avec une de tes Forteresses à moins de 20 km ; <b>× 1,15</b> dans la zone d'une bombe (24 h). <b>Bonus de débutant</b> : pendant tes 7 premiers jours, et jusqu'à ta première conquête, <b>× 1,5</b> (pas contre une épique, une légendaire ou une commune en garnison).</p>
+            <p><b>Tes dégâts</b> : <b>× 0,8</b> sans commune à toi à moins de 20 km, <b>× 1,1</b> avec deux ou plus ; <b>× 1,1</b> avec une de tes Forteresses à moins de 20 km ; <b>× 1,15</b> dans la zone d'une bombe (24 h). <b>Bonus de débutant</b> : pendant tes 48 premières heures, et jusqu'à ta première conquête, <b>× 1,5</b> (pas contre une épique, une légendaire ou une commune en garnison).</p>
             <p><b>La résistance</b> : <b>× 1,5</b> sur une Forteresse ; une rébellion que tu finances la baisse jusqu'à <b>−15 %</b> face à toi seul.</p>
             <p><b>Plusieurs assiégeants</b> : c'est une course, le premier qui remplit sa jauge prend la commune ; les autres récupèrent l'énergie qui attendait. Une commune prise est <b>protégée 3 h</b> contre les nouveaux sièges.</p>
             <p><b>Fin du siège</b> : sans vague de ta part pendant <b>24 h</b>, ton siège tombe. Tu peux aussi l'<b>abandonner</b> : l'énergie qui attendait t'est rendue. Une conquête rapporte <b>+10</b> au classement, comme une défense réussie.</p>
@@ -1803,6 +1803,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=5b1c55410a69"></script>
+<script defer src="app.js?v=866cdaf035a9"></script>
 </body>
 </html>

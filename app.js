@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '5b1c55410a69';
+const VERSION_JEU = '866cdaf035a9';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -29868,7 +29868,7 @@ function cpFicheHtml(d){
         <button type="button" class="lp-cta cp-cta" data-cp-viens>${p ? 'Viens la reprendre' : 'Viens la conquérir'}</button>
         <button type="button" class="cp-partager" data-cp-partager>Partager</button>
       </div>
-      <p class="cp-sous">${p ? 'Gratuit, dans le navigateur, sans rien installer. Un bonus de débutant t’aide pendant 7 jours.' : 'Gratuit, dans le navigateur, sans rien installer. Ouvre des paquets du Front : chaque carte est une vraie commune, et elle devient à toi.'}</p>
+      <p class="cp-sous">${p ? 'Gratuit, dans le navigateur, sans rien installer. Un bonus de débutant t’aide pendant 48 h.' : 'Gratuit, dans le navigateur, sans rien installer. Ouvre des paquets du Front : chaque carte est une vraie commune, et elle devient à toi.'}</p>
       ${d.photo_auteur ? `<p class="cp-credit">Photo : ${cpE(d.photo_auteur)}${d.photo_licence ? ' · ' + cpE(d.photo_licence) : ''}</p>` : ''}
     </div>
   </div>`;

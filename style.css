@@ -9711,3 +9711,55 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 /* ---------- patch410 : les points d'une bombe sous chaque niveau ---------- */
 .cr-niv .cr-pts{ display:block; font-style:normal; font-size:.66rem; font-weight:700; color:#FFD36B; margin-top:2px; }
 .cr-niv.cours .cr-pts{ margin-bottom:4px; }
+
+/* ---------- patch412 : « Qui possède ta commune ? » sur la page d'accueil ---------- */
+.lp-cp{ background:linear-gradient(180deg, rgba(240,180,41,.05), transparent 60%); }
+.cp-cherche{ position:relative; max-width:560px; }
+.cp-input{ width:100%; box-sizing:border-box; font:inherit; font-size:1.08rem; padding:15px 18px; border-radius:12px;
+  border:1.5px solid rgba(240,180,41,.55); background:var(--nuit-2, #13243D); color:#fff; outline:none; }
+.cp-input:focus{ border-color:#F0B429; box-shadow:0 0 0 4px rgba(240,180,41,.18); }
+.cp-resultats{ list-style:none; margin:6px 0 0; padding:6px; position:absolute; left:0; right:0; z-index:5;
+  background:#0F2038; border:1px solid rgba(169,188,212,.22); border-radius:12px; box-shadow:0 18px 40px rgba(0,0,0,.45); }
+.cp-resultats[hidden]{ display:none; }
+.cp-resultats button{ display:grid; grid-template-columns:auto auto 1fr; align-items:baseline; gap:8px; width:100%; text-align:left;
+  font:inherit; color:#fff; background:none; border:0; border-radius:8px; padding:10px 12px; cursor:pointer; }
+.cp-resultats button:hover, .cp-resultats button:focus-visible{ background:rgba(240,180,41,.12); outline:none; }
+.cp-resultats small{ justify-self:end; color:var(--brume); font-size:.8rem; }
+.cp-r-dep{ font-size:.78rem; font-weight:700; color:#0B1626; background:#A9BCD4; border-radius:5px; padding:1px 6px; }
+.cp-r-vide{ padding:10px 12px; color:var(--brume); }
+.cp-fiche{ margin-top:22px; max-width:560px; }
+.cp-fiche[hidden]{ display:none; }
+.cp-attente{ color:var(--brume); }
+.cp-carte{ background:var(--nuit-2, #13243D); border:1px solid rgba(169,188,212,.16); border-radius:16px; overflow:hidden; }
+.cp-photo{ position:relative; height:170px; background:linear-gradient(135deg, #1B3456, #0E1D33); }
+.cp-photo img{ width:100%; height:100%; object-fit:cover; display:block; }
+.cp-photo:not(:has(img)){ height:58px; }   /* pas de photo (3 % des communes) ou photo qui ne charge pas : on ne garde que la bande */
+.cp-photo::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg, transparent 45%, rgba(10,23,41,.85)); }
+.cp-rarete{ position:absolute; left:14px; top:14px; z-index:1; font-size:.72rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+  padding:4px 9px; border-radius:7px; background:var(--c); color:#fff; box-shadow:0 2px 8px rgba(0,0,0,.35); }
+.cp-corps{ padding:16px 18px 18px; }
+.cp-nom{ font-family:var(--titre); font-weight:900; font-size:2rem; line-height:1; margin:0 0 6px; color:#fff; }
+.cp-dep{ font-size:1rem; font-weight:700; color:#0B1626; background:#A9BCD4; border-radius:6px; padding:2px 7px; vertical-align:middle; }
+.cp-chiffres{ margin:0 0 12px; color:var(--brume); font-size:.9rem; }
+.cp-qui{ display:flex; align-items:flex-start; gap:10px; margin:0 0 4px; font-size:1.05rem; color:#E8EEF7; line-height:1.35; }
+.cp-qui i{ flex:none; width:14px; height:14px; border-radius:4px; margin-top:4px; box-shadow:0 0 0 2px rgba(255,255,255,.25); }
+.cp-qui.libre i{ background:#2B4E78; }
+.cp-qui b{ color:#fff; }
+.cp-clan{ display:inline-block; font-size:.74rem; font-weight:800; padding:1px 6px; border-radius:5px; color:#fff; background:var(--c); vertical-align:2px; }
+.cp-prises{ margin:0 0 4px 24px; font-size:.86rem; color:#FFB27A; }
+.cp-mini{ display:block; width:100%; border-radius:12px; margin:12px 0 6px; }
+.cp-legende{ display:flex; flex-wrap:wrap; gap:4px 14px; margin:0 0 14px; font-size:.76rem; color:var(--brume); }
+.cp-legende i{ display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+.cp-l-joueur{ background:linear-gradient(135deg, #E5484D, #8E7CF6, #2EC4B6); }
+.cp-l-libre{ background:#1B3A5E; box-shadow:inset 0 0 0 1px rgba(169,188,212,.3); }
+.cp-actions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.cp-cta{ flex:1 1 auto; }
+.cp-partager{ font:inherit; font-weight:700; padding:12px 16px; border-radius:11px; cursor:pointer; color:#E8EEF7;
+  background:rgba(169,188,212,.1); border:1px solid rgba(169,188,212,.25); }
+.cp-sous{ margin:10px 0 0; font-size:.84rem; color:var(--brume); line-height:1.4; }
+.cp-credit{ margin:10px 0 0; font-size:.7rem; color:#6F8299; }
+.lp-cp-invite{ margin-top:8px; }
+@media (max-width: 520px){
+  .cp-nom{ font-size:1.7rem; }
+  .cp-photo{ height:140px; }
+}

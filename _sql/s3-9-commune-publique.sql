@@ -116,6 +116,7 @@ $$;
 revoke all on function public.cp_empreinte(text), public.cp_adresse(text, text), public.cp_trouver(text), public.cp_recherche_maj() from public, anon, authenticated;
 revoke all on function public.commune_publique(text), public.communes_publiques_chercher(text) from public;
 grant execute on function public.commune_publique(text), public.communes_publiques_chercher(text) to anon, authenticated;
+notify pgrst, 'reload schema';
 
 select has_function_privilege('anon', 'public.commune_publique(text)', 'execute') as anon_fiche,
        has_function_privilege('anon', 'public.communes_publiques_chercher(text)', 'execute') as anon_recherche,

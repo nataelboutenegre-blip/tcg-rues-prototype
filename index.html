@@ -27,7 +27,7 @@
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
-<link rel="stylesheet" href="style.css?v=bb604bc942b5">
+<link rel="stylesheet" href="style.css?v=0d073d385f87">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -82,6 +82,10 @@
           <button class="lp-invite-btn" data-cdj-invite>Jouer à la Commune du jour, sans compte</button>
           <span>Trouve une commune mystère en six essais, sans t'inscrire.</span>
         </div>
+        <div class="lp-invite lp-cp-invite"><!-- patch412 -->
+          <button class="lp-invite-btn" data-cp-aller>Qui possède ta commune ?</button>
+          <span>Tape ta ville et regarde qui la tient.</span>
+        </div>
         <div class="lp-chiffres s2-seul">
           <div class="lp-chiffre"><b>35 000</b><small>COMMUNES</small></div>
           <div class="lp-chiffre"><b>2</b><small>MODES DE JEU</small></div>
@@ -97,6 +101,18 @@
         <svg class="lp-carte" id="lpCarte" viewBox="0 0 1000 979" aria-hidden="true"></svg>
         <span class="lp-carte-note">Illustration d'une partie en cours</span>
       </div>
+    </div>
+  </div>
+
+  <div class="lp-sec lp-cp" id="lpCp"><!-- patch412 : « Qui possède ta commune ? » -->
+    <div class="lp-wrap">
+      <h2 class="lp-h2">Qui possède ta commune ?</h2>
+      <p class="lp-sous">Sur TerraFront, chaque commune de France est une carte, et une seule personne peut la tenir. Tape ta ville pour savoir qui, et depuis quand.</p>
+      <div class="cp-cherche">
+        <input type="search" id="cpRecherche" class="cp-input" placeholder="Ta commune : Cognac, Lille, Saint-Denis…" autocomplete="off" enterkeyhint="search" aria-label="Ta commune">
+        <ul class="cp-resultats" id="cpResultats" hidden></ul>
+      </div>
+      <div class="cp-fiche" id="cpFiche" hidden></div>
     </div>
   </div>
 
@@ -1738,6 +1754,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=bb604bc942b5"></script>
+<script defer src="app.js?v=0d073d385f87"></script>
 </body>
 </html>

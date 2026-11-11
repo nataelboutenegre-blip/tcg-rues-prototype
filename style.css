@@ -9707,3 +9707,7 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .card.suisse .carte-lisere span, .mini.suisse .mini-lisere span{ background:#DA291C; }
 .card.suisse .carte-lisere span:nth-child(2), .mini.suisse .mini-lisere span:nth-child(2){ background:#fff; flex:.3; }
 @media (max-width: 360px){ .tp-pays button{ padding:8px 12px; font-size:.84rem; } }
+
+/* ---------- patch410 : les points d'une bombe sous chaque niveau ---------- */
+.cr-niv .cr-pts{ display:block; font-style:normal; font-size:.66rem; font-weight:700; color:#FFD36B; margin-top:2px; }
+.cr-niv.cours .cr-pts{ margin-bottom:4px; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '9fc442faabd8';
+const VERSION_JEU = '17261492d0df';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1985,7 +1985,7 @@ let clCalcOuvert = (() => { try{ return localStorage.getItem('tf-cl-calcul') ===
 const CL_CALC_FRONT = `<div class="cl-calc-l"><i class="sc-pt c"></i><div><b>Cartes</b><span>Chaque commune que tu tiens : commune <b>1</b> · peu commune <b>3</b> · rare <b>12</b> · épique <b>25</b> · légendaire <b>60</b>.</span></div></div>
   <div class="cl-calc-l"><i class="sc-pt co"></i><div><b>Combats</b><span><b>+10</b> par victoire : conquête, défense, garnison qui repousse. 10 par jour au plus, 2 par jour contre un même joueur. Acquis même si tu reperds la commune.</span></div></div>
   <div class="cl-calc-l"><i class="sc-pt t"></i><div><b>Territoires</b><span>Par département, ton meilleur palier : 5 % <b>+100</b> · 10 % <b>+200</b> · 25 % <b>+300</b> (seul en tête) · 50 % <b>+600</b> · 75 % <b>+900</b> · 100 % <b>+1&nbsp;400</b>. Région : <b>+1&nbsp;200</b> si tu es seul en tête avec 10 % ou plus dans plus de la moitié de ses départements.</span></div></div>
-  <div class="cl-calc-l"><i class="sc-pt b"></i><div><b>Bâtiments</b><span>Chaque bâtiment terminé : Fonderie <b>+50</b> · Forteresse <b>+80</b> · Centre de recherche <b>+150</b> · Banque <b>+80</b> · Radar <b>+80</b>. Acquis même s’il est détruit, jusqu’au maximum de chaque type (2 Fonderies, 5 Forteresses, 1 Centre, 1 Banque, 1 Radar : <b>810</b> au plus).<br>Bombe lancée <b>+300</b>. Rébellion financée ou étouffée : <b>+2</b> par lingot, 60 par jour au plus.</span></div></div>
+  <div class="cl-calc-l"><i class="sc-pt b"></i><div><b>Bâtiments</b><span>Chaque bâtiment terminé : Fonderie <b>+50</b> · Forteresse <b>+80</b> · Centre de recherche <b>+150</b> · Banque <b>+80</b> · Radar <b>+80</b>. Acquis même s’il est détruit, jusqu’au maximum de chaque type (2 Fonderies, 5 Forteresses, 1 Centre, 1 Banque, 1 Radar : <b>810</b> au plus).<br>Bombe lancée, selon son niveau : <b>+150</b> · <b>+300</b> · <b>+500</b>. Rébellion financée ou étouffée : <b>+2</b> par lingot, 60 par jour au plus.</span></div></div>
   <p class="cl-calc-pied">Cartes et territoires se comptent en direct : perdre une commune fait baisser ton score. Les combats et les bâtiments restent acquis.</p>`;   // patch354
 const CL_CALC_CLANS = `<p class="cl-calc-txt">Le nombre de communes du Front de chaque membre <b>actif</b> (jeu ouvert dans les 7 derniers jours), divisé par le nombre de membres actifs. Jamais le total : un gros clan n’a pas d’avantage, et un membre absent ne fait pas baisser son clan. Un clan est classé à partir de <b>3 membres</b>.</p>`;
 // quoi : 'front', 'clans' ou null (rien à expliquer : palmarès, classement replié…)
@@ -11602,7 +11602,7 @@ function centreHtml(){
     const n = lingotsActuels(), a = btArme === 'centre|prep';
     const { H, R } = bombeEtat();
     corps = `<div class="cr">${tete('Prêt · aucune bombe en préparation', badge)}
-      <p class="cr-txt">Une bombe est prête en <b>${H[0]} h</b> (rayon ${R[0]} km), puis grossit : <b>${R[1]} km</b> à ${H[1]} h, <b>${R[2]} km</b> à ${H[2]} h. Dès le départ, tout le monde apprend qu’une bombe se prépare ${echapperHtml(dansDept(ce.dept))}. À partir de ${dv} h, ton centre apparaît sur la carte.</p>
+      <p class="cr-txt">Une bombe est prête en <b>${H[0]} h</b> (rayon ${R[0]} km), puis grossit : <b>${R[1]} km</b> à ${H[1]} h, <b>${R[2]} km</b> à ${H[2]} h. Au classement : <b>+${bombePoints(1)}</b>, <b>+${bombePoints(2)}</b> ou <b>+${bombePoints(3)}</b> selon son niveau. Dès le départ, tout le monde apprend qu’une bombe se prépare ${echapperHtml(dansDept(ce.dept))}. À partir de ${dv} h, ton centre apparaît sur la carte.</p>
       <button class="btn-mallette btn-prep${a ? ' arme' : ''}" data-bt-prep ${n < pb ? 'disabled' : ''}>${ICONE_CENTRE}${a ? `Confirmer : ${pb} lingots` : `Préparer une bombe · ${pb}`} ${a ? '' : ICONE_LINGOT}</button>
       ${n < pb ? `<p class="cr-manque">Il te faut ${pb} lingots (tu en as ${n}).</p>` : ''}</div>`;
   } else {
@@ -11610,7 +11610,7 @@ function centreHtml(){
     const tuiles = [0, 1, 2].map(i => {
       const avant = i ? H[i - 1] * 3600 : 0, fait = niv > i, cours = niv === i;
       const k = cours ? Math.max(0, Math.min(1, (ec - avant) / (H[i] * 3600 - avant))) : 0;
-      return `<div class="cr-niv${fait ? ' fait' : ''}${cours ? ' cours' : ''}"><b>${R[i]} km</b><span>${cours ? 'dans ' + formatDuree((H[i] * 3600 - ec) * 1000) : `Niveau ${i + 1} · ${H[i]} h`}</span>${cours ? `<span class="cr-jauge"><i style="width:${Math.round(k * 100)}%"></i></span>` : ''}</div>`;
+      return `<div class="cr-niv${fait ? ' fait' : ''}${cours ? ' cours' : ''}"><b>${R[i]} km</b><span>${cours ? 'dans ' + formatDuree((H[i] * 3600 - ec) * 1000) : `Niveau ${i + 1} · ${H[i]} h`}</span><em class="cr-pts">+${bombePoints(i + 1)} pts</em>${cours ? `<span class="cr-jauge"><i style="width:${Math.round(k * 100)}%"></i></span>` : ''}</div>`;
     }).join('');
     const txt = niv
       ? `Bombe prête au <b>niveau ${niv}</b> : rayon <b>${R[niv - 1]} km</b>. ${niv < 3 ? `Attends ${formatDuree((H[niv] * 3600 - ec) * 1000)} pour ${R[niv]} km, ou lâche-la maintenant.` : 'Elle ne grossira plus.'} Cible : une commune à moins de ${btReglage('bombe_portee_km', 50)} km d’une des tiennes.`
@@ -29617,3 +29617,6 @@ function tcCompteurHtml(totalFrance){
     return `<span class="coll-compteur"><b>${fmtNombre(ch)}</b> / ${fmtNombre(tcTotalSuisse())} communes suisses <span class="om-compteur">· <b>${fmtNombre(collectionMetro() + collectionOutremer().n)}</b> en France</span></span>`;
   return compteurCollectionHtml(totalFrance).replace(/<\/span>$/, ` <span class="om-compteur">· <b>${fmtNombre(ch)}</b> / ${fmtNombre(tcTotalSuisse())} en Suisse</span></span>`);
 }
+
+// ---------- patch410 : les points d'une bombe selon son niveau (s2-136 : score_s2 bombe_1..3) ----------
+function bombePoints(n){ return [150, 300, 500][n - 1] || 300; }

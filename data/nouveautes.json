@@ -1,7 +1,9 @@
 [
   {
     "date": "2026-11-11",
-    "nouveautes": [],
+    "nouveautes": [
+      "💣 Bombes : les points au classement suivent maintenant le niveau, +150 au niveau 1, +300 au niveau 2, +500 au niveau 3. Les bombes déjà lancées gardent au moins leurs 300 points, celles de niveau 3 passent à 500 (idée d’Oshannir)"
+    ],
     "correctifs": [
       "Attaquer, « Meilleures chances » : avec plus de 4 000 cibles (« Toutes »), le tri ne se faisait pas du tout. Les 4 000 cibles les plus proches de ton territoire sont maintenant triées par chance, les autres suivent par distance (signalé par Arkhannou)"
     ]

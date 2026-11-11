@@ -9828,3 +9828,45 @@ body.siege-on #panel-regles [data-s2="des"]{ display:none !important; }
 .rs2-d span{ grid-row:span 2; font-size:1.15rem; }
 .rs2-d b{ font-size:.8rem; }
 .rs2-d small{ font-size:.68rem; color:var(--brume); line-height:1.3; }
+
+/* ---------- patch420 : les dos du podium de la saison 2 (lauriers ; or, argent, bronze) ---------- */
+/* sans WebGL : le fond nuit, le liseré et le chiffre restent */
+body[data-dos^="podium-s2-"], .bq-dos-apercu[data-dos^="podium-s2-"]{
+  --dos-fond: radial-gradient(circle at 50% 45%, #15244A 0%, #0A1428 60%, #040814 100%);
+  --dos-anneau: rgba(4,8,20,.92); --dos-embleme: #070D1C;
+}
+body[data-dos="podium-s2-or"], .bq-dos-apercu[data-dos="podium-s2-or"]{
+  --dos-or: #F2C35A; --dos-liseret: rgba(242,195,90,.78); --dos-halo: rgba(255,200,90,.45); --pd-num: "1";
+  --pd-chiffre: linear-gradient(180deg, #FFF6D2 0%, #F7CD66 46%, #B57C1C 100%);
+}
+body[data-dos="podium-s2-argent"], .bq-dos-apercu[data-dos="podium-s2-argent"]{
+  --dos-or: #DCE4EE; --dos-liseret: rgba(220,228,238,.75); --dos-halo: rgba(205,222,255,.35); --pd-num: "2";
+  --pd-chiffre: linear-gradient(180deg, #FFFFFF 0%, #D5DEE8 48%, #7D8998 100%);
+}
+body[data-dos="podium-s2-bronze"], .bq-dos-apercu[data-dos="podium-s2-bronze"]{
+  --dos-or: #E39A5E; --dos-liseret: rgba(227,154,94,.75); --dos-halo: rgba(240,150,90,.38); --pd-num: "3";
+  --pd-chiffre: linear-gradient(180deg, #FFE3C6 0%, #E59C60 48%, #8A4A1D 100%);
+}
+body[data-dos^="podium-s2-"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme,
+.bq-dos-apercu[data-dos^="podium-s2-"] .face-back .dos-embleme{
+  background: radial-gradient(circle at 50% 30%, #1A2C56 0%, #0A1430 55%, #050A1A 100%);
+  box-shadow: 0 0 0 2px var(--dos-or), 0 0 0 6px var(--dos-anneau), 0 0 0 7.5px var(--dos-liseret), 0 0 24px var(--dos-halo);
+}
+body[data-dos^="podium-s2-"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme svg,
+.bq-dos-apercu[data-dos^="podium-s2-"] .face-back .dos-embleme svg{ display: none; }
+body[data-dos^="podium-s2-"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme::after,
+.bq-dos-apercu[data-dos^="podium-s2-"] .face-back .dos-embleme::after{
+  content: var(--pd-num); position: relative; font-family: var(--titre); font-weight: 900; font-size: 48px; line-height: 1; margin-top: -10px;
+  background: var(--pd-chiffre); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 1.5px 0 rgba(0,0,0,.55));
+}
+body[data-dos^="podium-s2-"] .face-back:not(.bq-dos-apercu .face-back) .dos-embleme::before,
+.bq-dos-apercu[data-dos^="podium-s2-"] .face-back .dos-embleme::before{
+  content: "SAISON 2"; position: absolute; left: 0; right: 0; bottom: 11px; text-align: center;
+  font-family: var(--texte); font-weight: 700; font-size: 6.4px; letter-spacing: .22em; color: var(--dos-or); opacity: .92;
+}
+/* la fiche des récompenses : les trois dos */
+.rs2-dos{ display: flex; justify-content: center; gap: 14px; margin: 14px 0 10px; }
+.rs2-dos > div{ display: grid; justify-items: center; gap: 2px; }
+.rs2-dos .bq-dos-apercu{ margin: 0; }
+.rs2-dos small{ font-size: .74rem; font-weight: 700; color: var(--brume); }

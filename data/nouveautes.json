@@ -7,7 +7,8 @@
       "🔎 « Qui possède ta commune ? » : sur la page d’accueil, n’importe qui (même sans compte) tape une ville et voit qui la tient, depuis quand, et les communes autour. Chaque commune a son lien à partager, par exemple terrafront.fr/?c=cognac-16",
       "🛡️ Calque Clans : nouveau choix « Contour | Plein » sous « Couleurs ». En « Plein », tout le territoire d’un clan prend la couleur du clan ; un trait sépare ses membres et ton territoire garde un liseré jaune (idée de Cairnan217)",
       "🧮 « Mes points » : dans le classement du Front, touche ta ligne (ou « Mes points ») pour voir le détail de ton score : cartes par rareté, victoires, chaque département avec son palier, régions, bâtiments, bombes et rébellions (idée d’Oshannir)",
-      "🏆 Les récompenses de la saison 2 sont annoncées : podium et top 10, clan champion, 13 distinctions, seigneurs de territoire, et un cadeau pour tous. Fin de la saison dimanche 22/11 à 10 h ; tout est dans le bandeau sous le titre du classement"
+      "🏆 Les récompenses de la saison 2 sont annoncées : podium et top 10, clan champion, 13 distinctions, seigneurs de territoire, et un cadeau pour tous. Fin de la saison dimanche 22/11 à 10 h ; tout est dans le bandeau sous le titre du classement",
+      "🥇 Les dos de carte du podium sont dévoilés : une couronne de lauriers en or pour le 1er, en argent pour le 2e, en bronze pour le 3e, un seul exemplaire de chaque. Ils sont dans la fiche des récompenses (bandeau sous le titre du classement)"
     ],
     "correctifs": [
       "Attaquer, « Meilleures chances » : avec plus de 4 000 cibles (« Toutes »), le tri ne se faisait pas du tout. Les 4 000 cibles les plus proches de ton territoire sont maintenant triées par chance, les autres suivent par distance (signalé par Arkhannou)",

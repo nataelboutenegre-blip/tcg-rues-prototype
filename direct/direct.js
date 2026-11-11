@@ -11,13 +11,18 @@ const CONTOURS_V = '4';
 const DEPT_NAMES = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","2A":"Corse-du-Sud","2B":"Haute-Corse","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise","971":"Guadeloupe","972":"Martinique","973":"Guyane","974":"La Réunion","975":"Saint-Pierre-et-Miquelon","976":"Mayotte"};
 const TIERS = ['commun', 'peucommun', 'rare', 'epique', 'legendaire'];
 const MER = '#0A1628', LIBRE = '#1E3A60', SEUL = '#3A5378';
-const VUE = { lon0: -5.25, lon1: 9.65, lat0: 41.3, lat1: 51.15 }, W = 1080, H = 1060;
+// patch414 : la Suisse (saison 3), même interrupteur que le jeu : SUISSE_OUVERTE le jour J, ?suisse=test pour essayer
+const SUISSE_OUVERTE = false;
+const SUISSE = SUISSE_OUVERTE || /[?&]suisse=test\b/.test(location.search);
+const CANTONS = {"AG":"Argovie","AI":"Appenzell Rhodes-Intérieures","AR":"Appenzell Rhodes-Extérieures","BE":"Berne","BL":"Bâle-Campagne","BS":"Bâle-Ville","FR":"Fribourg","GE":"Genève","GL":"Glaris","GR":"Grisons","JU":"Jura","LU":"Lucerne","NE":"Neuchâtel","NW":"Nidwald","OW":"Obwald","SG":"Saint-Gall","SH":"Schaffhouse","SO":"Soleure","SZ":"Schwytz","TG":"Thurgovie","TI":"Tessin","UR":"Uri","VD":"Vaud","VS":"Valais","ZG":"Zoug","ZH":"Zurich"};
+if(SUISSE) Object.assign(DEPT_NAMES, CANTONS);
+const VUE = { lon0: -5.25, lon1: SUISSE ? 10.8 : 9.65, lat0: 41.3, lat1: 51.15 }, W = 1080, H = 1060;
 const KX = Math.cos((VUE.lat0 + VUE.lat1) / 2 * Math.PI / 180);
 const ECH = Math.min(W / ((VUE.lon1 - VUE.lon0) * KX), H / (VUE.lat1 - VUE.lat0));
 const OX = (W - (VUE.lon1 - VUE.lon0) * KX * ECH) / 2, OY = (H - (VUE.lat1 - VUE.lat0) * ECH) / 2;
 const px = (lon) => OX + (lon - VUE.lon0) * KX * ECH, py = (lat) => OY + (VUE.lat1 - lat) * ECH;
 
-const D = { id: null, cat: null, chemins: new Map(), depBords: [], clans: new Map(), joueurs: new Map(), proprio: new Map(),
+const D = { id: null, cat: null, chemins: new Map(), depBords: [], lacs: null, frontiere: null, clans: new Map(), joueurs: new Map(), proprio: new Map(),
   vus: new Set(), fil: [], premierFil: true, premierAppel: true, enCours: false };
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const nb = (n) => Number(n || 0).toLocaleString('fr-FR');
@@ -108,6 +113,13 @@ async function chargerContours(){
   const deps = await fetch('../contours-departements.json', { cache: 'force-cache' }).then((r) => r.json());
   for(const [dep, rings] of Object.entries(deps)){ if(dep.length === 2) D.depBords.push(chemin(rings)); }
   const liste = Object.keys(deps).filter((d) => d.length === 2);
+  if(SUISSE){   // patch414 : les cantons, les lacs et la frontière
+    const lire = (f) => fetch('../data/' + f + '?v=1', { cache: 'force-cache' }).then((r) => r.ok ? r.json() : null).catch(() => null);
+    const [cantons, lacs, frontiere] = await Promise.all([lire('contours-cantons.json'), lire('lacs-suisse.json'), lire('suisse-frontiere.json')]);
+    for(const [c, rings] of Object.entries(cantons || {})){ D.depBords.push(chemin(rings)); liste.push(c); }
+    if(lacs) D.lacs = chemin(lacs);
+    if(frontiere) D.frontiere = chemin(frontiere);
+  }
   for(let i = 0; i < liste.length; i += 12){
     await Promise.all(liste.slice(i, i + 12).map((dep) => fetch('../contours/' + dep + '.json?v=' + CONTOURS_V, { cache: 'force-cache' })
       .then((r) => r.ok ? r.json() : {}).then((j) => { for(const [code, rings] of Object.entries(j)) D.chemins.set(code, chemin(rings, code)); })
@@ -136,8 +148,10 @@ function peindre(code){
   ctx.fill(p); ctx.stroke(p);
 }
 function bords(){
+  if(D.lacs){ ctx.fillStyle = MER; ctx.fill(D.lacs); }   // patch414 : les lacs par-dessus les communes du bord (Léman)
   ctx.strokeStyle = 'rgba(169,188,212,.22)'; ctx.lineWidth = 0.8 / Math.sqrt(VU.k);
   for(const p of D.depBords) ctx.stroke(p);
+  if(D.frontiere){ ctx.strokeStyle = 'rgba(169,188,212,.55)'; ctx.lineWidth = 1.6 / Math.sqrt(VU.k); ctx.stroke(D.frontiere); }
 }
 function toutPeindre(){
   ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -400,6 +414,10 @@ function heure(){
 // ---------- départ ----------
 (async function demarrer(){
   ajuster(); heure();
+  if(SUISSE){   // patch414
+    const z = document.getElementById('zFrance'); if(z) z.textContent = 'Tout';
+    const p = document.querySelector('.pied span'); if(p) p.textContent = 'Les 37 000 communes de France et de Suisse, à prendre. Gratuit.';
+  }
   setInterval(heure, 10000);
   setInterval(rendreFil, 5000);
   chiffres(); setInterval(chiffres, 60000);

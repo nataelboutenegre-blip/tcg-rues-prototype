@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '0199bebe33ed';
+const VERSION_JEU = 'a036a6b759ee';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -5470,8 +5470,10 @@ function codeDepartement(texte){
   // patch219 : « Réunion » sans l'article trouve La Réunion
   const noms = (c) => { const n = DEPT_NAMES[c], s = n.replace(/^(la|le|les|l['’])\s*/i, ''); return s !== n ? [nu(n), nu(s)] : [nu(n)]; };
   // « Jura » : le département 39 passe avant le canton (les clés numériques viennent d'abord)
-  const exact = codes.find(c => noms(c).includes(t));
-  if(exact) return exact;
+  // patch414 : et les recherches prennent les deux (codesDepartements)
+  const exacts = codes.filter(c => noms(c).includes(t));
+  if(exacts.length > 1) codeDepartement.plusieurs = exacts;
+  if(exacts.length) return exacts[0];
   const debuts = codes.filter(c => noms(c).some(x => x.startsWith(t)));
   // patch368 : « corse » commence Corse-du-Sud mais se lit aussi dans Haute-Corse : pas un seul département
   const dedans = codes.filter(c => noms(c).some(x => x.includes(t)));
@@ -5485,7 +5487,7 @@ function codesDepartements(texte){
   const un = codeDepartement(texte);
   const plusieurs = codeDepartement.plusieurs || [];
   codeDepartement.plusieurs = null;
-  return un ? [un] : plusieurs.length ? plusieurs : departementsRegion(texte);
+  return plusieurs.length > 1 ? plusieurs : un ? [un] : plusieurs.length ? plusieurs : departementsRegion(texte);   // patch414 : « jura » = 39 et JU
 }
 // patch369 : les départements d'une région tapée en entier, par un alias ou par
 // un début d'au moins 5 lettres sans ambiguïté ; [] sinon
@@ -5895,7 +5897,7 @@ document.getElementById('ctExclAjouter').addEventListener('click', async () => {
   const champ = document.getElementById('ctExclDept');
   const saisi = (champ.value || '').trim();
   if(!saisi) return;
-  { const ks = codesDepartements(saisi);   // patch368 : « corse » = 2A et 2B ; patch369 : une région
+  { const ks = codesDepartements(saisi).filter(k => !estCanton(k));   // patch368 : « corse » = 2A et 2B ; patch369 : une région ; patch414 : pas de canton (contrats français)
     if(ks.length > 1){
       champ.value = ''; direErreurExclusion('');
       for(const k of ks){
@@ -11617,7 +11619,12 @@ function bombeEtat(){
 }
 const nomDept = (d) => (DEPT_NAMES && DEPT_NAMES[d]) || d || '';
 // « dans le 25 (Doubs) » : marche pour tous les départements, sans souci d'article
-const dansDept = (d) => `dans le ${d}${DEPT_NAMES && DEPT_NAMES[d] ? ' (' + DEPT_NAMES[d] + ')' : ''}`;
+// patch414 : un canton : « dans le canton de Vaud (VD) », « du Valais », « des Grisons », « d’Argovie »
+const CANTON_DE = { VS: 'du Valais', TI: 'du Tessin', JU: 'du Jura', GR: 'des Grisons' };
+const cantonDe = (d) => CANTON_DE[d] || (/^[AEIOUÉ]/i.test(CANTONS[d] || '') ? 'd’' : 'de ') + (CANTONS[d] || d);
+const motDep = (d) => estCanton(d) ? 'canton' : 'département';
+const dansDept = (d) => estCanton(d) ? `dans le canton ${cantonDe(d)} (${d})`
+  : `dans le ${d}${DEPT_NAMES && DEPT_NAMES[d] ? ' (' + DEPT_NAMES[d] + ')' : ''}`;
 
 // Défendre : le bloc du centre
 function centreHtml(){
@@ -11734,7 +11741,7 @@ function alertesBombesHtml(){
 async function bombePreparer(){
   const { error } = await sb.rpc('bombe_preparer');
   if(error) notifier({ type: 'erreur', titre: 'Préparer une bombe', texte: messageLisible(error.message) });
-  else notifier({ type: 'succes', titre: 'Bombe en préparation', texte: `Prête dans ${bombeEtat().H[0]} h. Tout le monde sait qu’une bombe se prépare dans ton département.` });
+  else notifier({ type: 'succes', titre: 'Bombe en préparation', texte: `Prête dans ${bombeEtat().H[0]} h. Tout le monde sait qu’une bombe se prépare dans ton ${motDep(BATIMENTS && BATIMENTS.centre && BATIMENTS.centre.dept)}.` });   // patch414
   await chargerBatiments();
 }
 // les annonces en bandeau, comme les grandes conquêtes
@@ -23808,7 +23815,7 @@ function ncMuetChoix(code){
   const e = collectionMap.get(code) || othersMap.get(code), d = ncDepDe(code);
   return `<div class="nc-muet-choix"><p>Ne plus être prévenu des attaques…</p>
     <button type="button" data-nc-muet-ok="${echapperTexte(code)}"><b>à ${echapperTexte(e ? e.nom : code)}</b><small>Seulement cette commune</small></button>
-    ${d ? `<button type="button" data-nc-muet-dep="${echapperTexte(d)}"><b>dans tout le département</b><small>${echapperTexte(ncDepNom(d))} : toutes mes communes</small></button>` : ''}</div>`;
+    ${d ? `<button type="button" data-nc-muet-dep="${echapperTexte(d)}"><b>dans tout le ${motDep(d)}</b><small>${echapperTexte(ncDepNom(d))} : toutes mes communes</small></button>` : ''}</div>`;
 }
 function ncDepProps(){
   const p = ncPrefs();
@@ -23883,7 +23890,7 @@ async function ncClic(e){
     const d = b.dataset.ncMuetDep;
     NC.muet = null;
     if(await ncRegler('notif_departement', { p_liste: 'sourdine', p_dep: d, p_on: true }))
-      notifier({ type: 'info', titre: `${DEPT_NAMES[d] || d} en sourdine`, texte: 'Tu ne seras plus prévenu des attaques dans ce département. Ça se réactive dans les réglages de la cloche.' });
+      notifier({ type: 'info', titre: `${DEPT_NAMES[d] || d} en sourdine`, texte: `Tu ne seras plus prévenu des attaques dans ce ${motDep(d)}. Ça se réactive dans les réglages de la cloche.` });   // patch414
     return ncRendre();
   }
   if(b.dataset.ncDepAjout){
@@ -28739,19 +28746,30 @@ function ouvrirEchangeClan(qui, code, nom){
 
 // La France au survol (ou au toucher) du numéro d'un département.
 var depChemins = null, depCheminsP = null, depBulle = null, depBulleCible = null;
-function depCheminsCharger(){
+var depCheminsCH = null, depCheminsCHP = null, depCheminsCHHaut = 200;   // patch414 : les cantons, sur la carte de la Suisse
+// carre : la France tient dans 200 × 200 ; sinon (la Suisse, plus large que haute) 200 de large et la hauteur qu'il faut
+function depCheminsTracer(C, carre){
+  const k = Math.cos(46.5 * Math.PI / 180);
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+  Object.values(C).forEach(rs => rs.forEach(r => r.forEach(p => { const x = p[0] * k, y = -p[1]; if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y; })));
+  const e = 190 / Math.max(x1 - x0, y1 - y0), ox = (200 - (x1 - x0) * e) / 2, oy = carre ? (200 - (y1 - y0) * e) / 2 : 5;
+  if(!carre) depCheminsCHHaut = Math.ceil((y1 - y0) * e + 10);
+  const out = {};
+  Object.keys(C).forEach(d => {
+    out[d] = C[d].map(r => 'M' + r.map(p => ((p[0] * k - x0) * e + ox).toFixed(1) + ' ' + ((-p[1] - y0) * e + oy).toFixed(1)).join('L') + 'Z').join('');
+  });
+  return out;
+}
+function depCheminsCharger(suisse){
+  if(suisse){
+    if(depCheminsCH) return Promise.resolve(depCheminsCH);
+    if(!depCheminsCHP) depCheminsCHP = fetch('data/contours-cantons.json?v=1', { cache: 'force-cache' }).then(r => r.json())
+      .then(C => (depCheminsCH = depCheminsTracer(C, false))).catch(() => { depCheminsCHP = null; return null; });
+    return depCheminsCHP;
+  }
   if(depChemins) return Promise.resolve(depChemins);
-  if(!depCheminsP) depCheminsP = fetch('contours-departements.json', { cache: 'force-cache' }).then(r => r.json()).then(C => {
-    const k = Math.cos(46.5 * Math.PI / 180);
-    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
-    Object.values(C).forEach(rs => rs.forEach(r => r.forEach(p => { const x = p[0] * k, y = -p[1]; if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y; })));
-    const e = 190 / Math.max(x1 - x0, y1 - y0), ox = (200 - (x1 - x0) * e) / 2, oy = (200 - (y1 - y0) * e) / 2;
-    depChemins = {};
-    Object.keys(C).forEach(d => {
-      depChemins[d] = C[d].map(r => 'M' + r.map(p => ((p[0] * k - x0) * e + ox).toFixed(1) + ' ' + ((-p[1] - y0) * e + oy).toFixed(1)).join('L') + 'Z').join('');
-    });
-    return depChemins;
-  }).catch(() => { depCheminsP = null; return null; });
+  if(!depCheminsP) depCheminsP = fetch('contours-departements.json', { cache: 'force-cache' }).then(r => r.json())
+    .then(C => (depChemins = depCheminsTracer(C, true))).catch(() => { depCheminsP = null; return null; });
   return depCheminsP;
 }
 function depBulleCacher(){
@@ -28766,9 +28784,9 @@ async function depBulleMontrer(b){
   if(depBulleCible) depBulleCible.classList.remove('dep-on');
   depBulleCible = b; b.classList.add('dep-on');
   const nom = DEPT_NAMES[d] || '', region = (typeof DEP_REGION !== 'undefined' && DEP_REGION[d]) || '';
-  const C = await depCheminsCharger();
+  const ch = estCanton(d), C = await depCheminsCharger(ch);   // patch414
   if(depBulleCible !== b) return;
-  const carte = C && C[d] ? `<svg viewBox="0 0 200 200" aria-hidden="true">${Object.keys(C).map(x => x === d ? '' : `<path d="${C[x]}" fill="#2A4468" stroke="#0B1A33" stroke-width=".5"/>`).join('')}<path class="dep-bulle-or" d="${C[d]}" fill="#F0B429" stroke="#FFE7A0" stroke-width="1"/></svg>` : '';
+  const carte = C && C[d] ? `<svg viewBox="0 0 200 ${ch ? depCheminsCHHaut : 200}" aria-hidden="true">${Object.keys(C).map(x => x === d ? '' : `<path d="${C[x]}" fill="#2A4468" stroke="#0B1A33" stroke-width=".5"/>`).join('')}<path class="dep-bulle-or" d="${C[d]}" fill="#F0B429" stroke="#FFE7A0" stroke-width="1"/></svg>` : '';
   depBulle.innerHTML = `${carte}<p><b>${echapperTexte(nom || d)}</b> (${echapperTexte(d)})${region ? `<small>${echapperTexte(region)}</small>` : ''}</p>`;
   depBulle.hidden = false;
   const or = depBulle.querySelector('.dep-bulle-or');

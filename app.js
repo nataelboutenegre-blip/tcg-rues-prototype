@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '0d073d385f87';
+const VERSION_JEU = '0199bebe33ed';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3010,8 +3010,9 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
         if(!CONTOURS_DEPTS[dep]) continue;
         const j = joueurs.get(info.joueur);
         if(!j) continue;
-        ctx.globalAlpha = opaciteJoueur(info.joueur, info.force);
-        ctx.fillStyle = j.couleur;
+        const pleinD = j.clan && clanPlein();   // patch413 : de loin, la couleur du clan, assez franche pour se lire
+        ctx.globalAlpha = opaciteJoueur(info.joueur, pleinD ? Math.max(info.force, 0.72) : info.force);
+        ctx.fillStyle = pleinD ? j.clanCouleur : j.couleur;
         const cd = cheminDeptCanvas(dep, CONTOURS_DEPTS[dep]);
         ctx.fill(cd);
         ctx.globalAlpha = 1;
@@ -3137,6 +3138,26 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
         if(interieur > 0){   // patch403
           ctx.globalAlpha = opaciteJoueur(id, 0.55 * interieur);
           ctx.strokeStyle = j.fonce; ctx.lineWidth = trait(0.7); ctx.stroke(p);
+        }
+        ctx.globalAlpha = 1;
+      }
+      // patch413 : calque Clans « Plein »
+      if(parClan && clanPlein()){
+        const bordsP = bordsTerritoires(deps, possedees);
+        for(const id of ordre([...parJoueur.keys()])){
+          const j = joueurs.get(id), p = parJoueur.get(id);
+          if(!j || !j.clan) continue;
+          ctx.globalAlpha = opaciteJoueur(id, 0.92);
+          ctx.fillStyle = j.clanCouleur; ctx.fill(p);
+          if(interieur > 0){ ctx.globalAlpha = opaciteJoueur(id, 0.45 * interieur); ctx.strokeStyle = '#07111F'; ctx.lineWidth = trait(0.7); ctx.stroke(p); }
+          const bord = bordsP.get(id);
+          if(bord){
+            ctx.save(); ctx.clip(p);
+            ctx.globalAlpha = opaciteJoueur(id, 1);
+            ctx.strokeStyle = '#07111F'; ctx.lineWidth = trait(j.moi ? 5.4 : 2.6); ctx.stroke(bord);
+            if(j.moi){ ctx.strokeStyle = COULEUR_MOI; ctx.lineWidth = trait(3); ctx.stroke(bord); }
+            ctx.restore();
+          }
         }
         ctx.globalAlpha = 1;
       }
@@ -3368,13 +3389,17 @@ const CALQUES = (() => {
   // « passage » est eteint au depart : il demande un chargement de plus et
   // n'a de sens que pour un joueur qui a deja perdu des communes
   const defaut = { regions: true, depts: true, communes: true, noms: true,
-                   raretes: true, passage: false, clans: false, batiments: true, couleur: 'joueurs' };   // patch294 : couleur
+                   raretes: true, passage: false, clans: false, batiments: true, couleur: 'joueurs', clanVue: 'contour' };   // patch294 : couleur ; patch413 : clanVue
   try {
     const v = JSON.parse(localStorage.getItem(CLE_CALQUES) || '{}');
     return Object.assign(defaut, v);
   } catch(e){ return defaut; }
 })();
 
+// patch413 : calque Clans en « Plein » (pas avec les couleurs de rareté)
+function clanPlein(){
+  return CLANS && CALQUES.clans && CALQUES.clanVue === 'plein' && CALQUES.couleur !== 'raretes';
+}
 function enregistrerCalques(){
   try { localStorage.setItem(CLE_CALQUES, JSON.stringify(CALQUES)); } catch(e){}
 }
@@ -3553,6 +3578,7 @@ function brancherCalques(){
     b.classList.toggle('actif', CALQUES[id]);
     b.setAttribute('aria-pressed', String(CALQUES[id]));
     enregistrerCalques();
+    if(id === 'clans') couleursRendre();   // patch413 : « Clans : Contour | Plein » apparaît avec le calque
     if(id === 'passage' && CALQUES.passage){
       // les communes perdues ne sont pas chargees au demarrage
       loadMaFrance().then(() => {
@@ -4179,12 +4205,14 @@ function omfDessiner(dep){
     tu.chemins.push([code, p]);
     const mienne = collectionMap.get(code), autre = mienne ? null : othersMap.get(code);
     const c = mienne || autre;
-    ctx.fillStyle = mienne ? COULEUR_MOI : autre ? colorForPlayer(autre.joueurId) : '#14454E';
+    const clan = clans && c && clans.get(mienne ? window.__monId : autre.joueurId);   // patch413 : avant le fond, pour « Plein »
+    const plein = clan && clanPlein();
+    ctx.fillStyle = plein ? clan.couleur : mienne ? COULEUR_MOI : autre ? colorForPlayer(autre.joueurId) : '#14454E';
     ctx.fill(p);
     ctx.strokeStyle = c ? 'rgba(4,20,30,.9)' : 'rgba(44,198,201,.38)';
     ctx.lineWidth = grand ? 1.1 : 0.8;
     ctx.stroke(p);
-    const clan = clans && c && clans.get(mienne ? window.__monId : autre.joueurId);
+    if(plein && mienne){ ctx.save(); ctx.clip(p); ctx.strokeStyle = COULEUR_MOI; ctx.lineWidth = grand ? 3.4 : 2.4; ctx.stroke(p); ctx.restore(); }
     if(clan){
       const k = clan.tag || clan.couleur;
       if(!parClan.has(k)) parClan.set(k, { couleur: clan.couleur, chemin: new Path2D() });
@@ -26797,6 +26825,17 @@ function couleursRendre(){
     z.id = 'mapCouleurs'; z.className = 'map-couleurs';
     outils.appendChild(z);
     z.addEventListener('click', (e) => {
+      const v = e.target.closest('[data-clanvue]');   // patch413
+      if(v){
+        if(v.dataset.clanvue === CALQUES.clanVue) return;
+        CALQUES.clanVue = v.dataset.clanvue;
+        enregistrerCalques();
+        couleursRendre();
+        CV.donneesSignature = '';
+        demanderDessin();
+        if(typeof frontZone !== 'undefined' && frontZone === 'outremer' && typeof OMF !== 'undefined') for(const d of OMF.tuiles.keys()) omfDessiner(d);
+        return;
+      }
       const b = e.target.closest('[data-couleur]');
       if(!b || b.dataset.couleur === CALQUES.couleur) return;
       CALQUES.couleur = b.dataset.couleur;
@@ -26813,7 +26852,10 @@ function couleursRendre(){
   z.innerHTML = `<span class="mc-lib">Couleurs :</span><span class="mc-seg" role="group" aria-label="Couleurs de la carte">
       <button type="button" data-couleur="joueurs" aria-pressed="${!r}" class="${r ? '' : 'on'}">Joueurs</button>
       <button type="button" data-couleur="raretes" aria-pressed="${r}" class="${r ? 'on' : ''}">Raretés</button></span>
-    ${r ? `<span class="mc-leg">${['commun', 'peucommun', 'rare', 'epique', 'legendaire'].map(t => `<span><i style="background:${COULEURS_FILTRE[t]}"></i>${LIB[t]}</span>`).join('')}</span>` : ''}`;
+    ${r ? `<span class="mc-leg">${['commun', 'peucommun', 'rare', 'epique', 'legendaire'].map(t => `<span><i style="background:${COULEURS_FILTRE[t]}"></i>${LIB[t]}</span>`).join('')}</span>` : ''}
+    ${CLANS && CALQUES.clans && !r ? `<span class="mc-clans"><span class="mc-lib">Clans :</span><span class="mc-seg" role="group" aria-label="Territoire des clans">
+      <button type="button" data-clanvue="contour" aria-pressed="${CALQUES.clanVue !== 'plein'}" class="${CALQUES.clanVue !== 'plein' ? 'on' : ''}">Contour</button>
+      <button type="button" data-clanvue="plein" aria-pressed="${CALQUES.clanVue === 'plein'}" class="${CALQUES.clanVue === 'plein' ? 'on' : ''}">Plein</button></span></span>` : ''}`;   // patch413
 }
 function rarDeptTexte(dep){
   const n = { legendaire: 0, epique: 0, rare: 0 };

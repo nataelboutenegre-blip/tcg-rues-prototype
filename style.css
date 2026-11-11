@@ -9763,3 +9763,6 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
   .cp-nom{ font-size:1.7rem; }
   .cp-photo{ height:140px; }
 }
+
+/* patch413 : « Clans : Contour | Plein » */
+.mc-clans{ display:inline-flex; align-items:center; gap:10px; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '866cdaf035a9';
+const VERSION_JEU = '3f17d468eb66';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11852,7 +11852,7 @@ function bfxArreter(){
   if(!BFX) return;
   cancelAnimationFrame(BFX.raf);
   const c = document.getElementById('mapBombeFx');
-  if(c) c.getContext('2d').clearRect(0, 0, c.width, c.height);
+  if(c){ const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height); }   // patch421 : tout le calque
   const m = document.getElementById('mapCanvas'); if(m) m.style.transform = '';
   BFX = null;
   demanderDessin();

@@ -13,7 +13,8 @@
     ],
     "correctifs": [
       "Attaquer, « Meilleures chances » : avec plus de 4 000 cibles (« Toutes »), le tri ne se faisait pas du tout. Les 4 000 cibles les plus proches de ton territoire sont maintenant triées par chance, les autres suivent par distance (signalé par Arkhannou)",
-      "🛡️ Calque Clans en « Plein » : le gros contour du clan ne s’affiche plus par-dessus la couleur ; il reste seulement le trait fin entre les membres (merci Cairnan217)"
+      "🛡️ Calque Clans en « Plein » : le gros contour du clan ne s’affiche plus par-dessus la couleur ; il reste seulement le trait fin entre les membres (merci Cairnan217)",
+      "🛸 Carte : l’animation d’une bombe ne laisse plus d’image figée (garnisons, viseur, ondes) quand on touche la carte pendant l’animation (merci Arkhannou et ASMFCB)"
     ]
   },
   {

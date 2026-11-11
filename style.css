@@ -9766,3 +9766,32 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 
 /* patch413 : « Clans : Contour | Plein » */
 .mc-clans{ display:inline-flex; align-items:center; gap:10px; }
+
+/* patch417 : « Mes points » */
+.fenetre.mes-points h2{ font-size:1.5rem; }
+.mp-total{ font-family:var(--titre); font-weight:900; font-size:2.6rem; line-height:1; margin:8px 0 6px; color:var(--joueur); }
+.mp-total small{ font-size:.9rem; margin-left:5px; color:var(--brume); font-weight:700; }
+.mp-barre{ display:flex; height:8px; border-radius:4px; overflow:hidden; gap:2px; margin:12px auto 0; max-width:260px; background:rgba(169,188,212,.12); }
+.mp-barre i{ display:block; min-width:3px; }
+.mp-barre .c{ background:var(--c-rare); } .mp-barre .co{ background:var(--c-rouge); }
+.mp-barre .t{ background:var(--c-peucommun); } .mp-barre .b{ background:#E8833A; }
+.mp-bloc{ margin-bottom:18px; }
+.fenetre.mes-points .mp-bloc h3{ display:flex; align-items:center; gap:7px; margin-bottom:6px; }
+.mp-bloc h3 .sc-pt{ margin:0; }
+.mp-bloc h3 b{ margin-left:auto; color:#fff; font-size:.82rem; letter-spacing:.02em; }
+.mp-l{ display:flex; align-items:baseline; gap:10px; padding:7px 0; border-bottom:1px solid rgba(169,188,212,.08); }
+.mp-l:last-of-type{ border-bottom:0; }
+.mp-l.cache{ display:none; }
+.mp-g{ flex:1; min-width:0; font-size:.88rem; }
+.mp-g small{ display:block; font-size:.7rem; color:var(--brume); margin-top:2px; line-height:1.35; }
+.mp-d{ font-family:var(--titre); font-weight:900; font-size:1rem; white-space:nowrap; }
+.mp-x{ color:var(--brume); font-size:.8rem; }
+.mp-code{ font-size:.68rem; color:var(--brume); border:1px solid rgba(169,188,212,.25); border-radius:4px; padding:0 4px; margin-left:3px; }
+.mp-autres{ display:block; margin:6px 0 4px; border:0; background:none; padding:2px 0; font:inherit; font-size:.76rem; font-weight:700; color:#FFB27A; text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.mp-note{ font-size:.74rem; color:var(--brume); margin:8px 0 0; line-height:1.4; }
+.mp-note b{ color:#fff; }
+.mp-vide{ font-size:.8rem; color:var(--brume); margin:4px 0; }
+.mp-pied{ font-size:.7rem; color:var(--brume); margin:4px 0 12px; line-height:1.4; }
+.fenetre.mes-points .pr-btn{ width:100%; }
+.sc-legende .cl-calc-btns{ margin-left:auto; display:inline-flex; flex-wrap:wrap; justify-content:flex-end; gap:4px 14px; }
+.sc-legende .cl-calc-btns .cl-calc-btn{ margin-left:0; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '17261492d0df';
+const VERSION_JEU = 'bb604bc942b5';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3050,6 +3050,7 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
       const parClan = CLANS && CALQUES.clans ? new Map() : null;   // patch212
       const rar = SAISON2 && CALQUES.couleur === 'raretes';   // patch294
       const parJT = rar ? new Map() : null;                  // 'joueur|rareté' -> chemin
+      const eccHors = echCarte ? new Path2D() : null, eccOk = echCarte ? new Path2D() : null;   // patch411 : échange en cours
       for(const dep of deps){
         const contours = CONTOURS.get(dep);
         if(!contours || contours === 'erreur') continue;
@@ -3067,6 +3068,7 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
           if(!parJoueur.has(c.joueur)) parJoueur.set(c.joueur, new Path2D());
           parJoueur.get(c.joueur).addPath(p);
           if(parJT){ const kt = c.joueur + '|' + c.tier; if(!parJT.has(kt)) parJT.set(kt, new Path2D()); parJT.get(kt).addPath(p); }   // patch294
+          if(eccHors && c.joueur === ID_MOI) (c.tier === echCarte.tier ? eccOk : eccHors).addPath(p);   // patch411
           const jc = parClan && joueurs.get(c.joueur);   // patch212
           if(jc && jc.clan){
             if(!parClan.has(jc.clan)) parClan.set(jc.clan, { couleur: jc.clanCouleur, chemin: new Path2D() });
@@ -3136,6 +3138,13 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
           ctx.strokeStyle = j.fonce; ctx.lineWidth = trait(0.7); ctx.stroke(p);
         }
         ctx.globalAlpha = 1;
+      }
+      // patch411 : échange en cours, mes communes d'une autre rareté voilées, les bonnes entourées
+      if(eccHors){
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = 'rgba(7,17,31,.74)'; ctx.fill(eccHors);
+        ctx.strokeStyle = '#07111F'; ctx.lineWidth = trait(3.6); ctx.stroke(eccOk);
+        ctx.strokeStyle = '#FFD36B'; ctx.lineWidth = trait(2); ctx.stroke(eccOk);
       }
       // patch212 : le tour du territoire de chaque clan, trace seulement a
       // l'exterieur (decoupe pair-impair) : pas de traits entre deux membres
@@ -29082,7 +29091,7 @@ function eccBandeau(){
   if(!echCarte){ if(el) el.remove(); return; }
   if(!el){ el = document.createElement('div'); el.id = 'eccBandeau'; el.className = 'ecc-bandeau'; wrap.appendChild(el); }
   const t = echCarte.tier;
-  el.innerHTML = `<span class="ecc-ic">🤝</span><div class="ecc-txt">${echCarte.inter ? 'Échange entre clans' : 'Échange'} avec <b>${echapperHtml(echCarte.pseudo)}</b> : tu reçois <b>${echapperHtml(echCarte.nom)}</b> (${eccLibelle(t)}).<br><span>Touche une de tes communes <b class="rarete ${t}">${eccLibelle(t)}s</b> pour la proposer.${echCarte.inter ? ' Un échange entre clans par semaine.' : ''}</span></div>
+  el.innerHTML = `<span class="ecc-ic">🤝</span><div class="ecc-txt">${echCarte.inter ? 'Échange entre clans' : 'Échange'} avec <b>${echapperHtml(echCarte.pseudo)}</b> : tu reçois <b>${echapperHtml(echCarte.nom)}</b> (${eccLibelle(t)}).<br><span>Seules tes communes <b class="rarete ${t}">${eccLibelle(t)}s</b> ressortent, entourées de jaune : touches-en une pour la proposer.${echCarte.inter ? ' Un échange entre clans par semaine.' : ''}</span></div>
     <div class="ecc-btns">${echCarte.inter ? '' : '<button type="button" data-ecc="clan">Onglet Clan</button>'}<button type="button" data-ecc="annuler">Annuler</button></div>`;   // patch398
 }
 function eccBlocFiche(code, c, mienne){

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '69eceb326888';
+const VERSION_JEU = '9fc442faabd8';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10706,7 +10706,16 @@ function renderCombatGrid(){
   // patch293 : les meilleures chances d'abord (tri choisi, ou « Près de mon territoire »)
   triMajBoutons(false);
   if(!combatEnCours && (triChances || combatProximite) && cibles.length){
-    const codes = cibles.map(c => c.commune_code);
+    let codes = cibles.map(c => c.commune_code);
+    let reste = [];   // patch409 : trop de cibles, on trie les plus proches, le reste suit par distance
+    if(codes.length > TRI_MAX && triChances){
+      const dk = (c) => (c._distKm == null ? 1e9 : c._distKm);
+      const parDist = cibles.slice().sort((a, b) => dk(a) - dk(b));
+      reste = parDist.slice(TRI_MAX);
+      cibles = parDist.slice(0, TRI_MAX);
+      codes = cibles.map(c => c.commune_code);
+      triMajBoutons(true, codes.length + reste.length);
+    }
     if(codes.length > TRI_MAX){
       if(triChances) triMajBoutons(true);
     } else {
@@ -10722,6 +10731,7 @@ function renderCombatGrid(){
       cibles = cibles.slice().sort((a, b) => ch(b) - ch(a)
         || (combatProximite ? dist(a) - dist(b) : 0)
         || rang(a) - rang(b) || String(a.communes.nom).localeCompare(String(b.communes.nom), 'fr'));
+      if(reste.length) cibles = cibles.concat(reste);   // patch409
     }
   }
 
@@ -26719,13 +26729,14 @@ const TRI_MAX = 4000;
 let triChances = (() => { try{ return localStorage.getItem('tf-tri-chances') === '1'; }catch(e){ return false; } })();
 let chancesInconnues = new Set();   // des codes que le serveur n'a pas renvoyés (on ne les redemande pas)
 let triJeton = null;
-function triMajBoutons(trop){
+function triMajBoutons(trop, total){
   document.querySelectorAll('#combatTri [data-tri]').forEach(b => {
     const on = (b.dataset.tri === 'chances') === triChances;
     b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on));
   });
   const n = document.getElementById('combatTriNote');
-  if(n){ n.hidden = !trop; n.textContent = trop ? 'Trop de cibles pour les trier toutes : choisis une rareté, un département ou « Près de mon territoire ».' : ''; }
+  // patch409 : on trie quand même les plus proches
+  if(n){ n.hidden = !trop; n.textContent = trop ? `Trié parmi les ${TRI_MAX.toLocaleString('fr-FR')} cibles les plus proches de ton territoire (sur ${(total || 0).toLocaleString('fr-FR')}). Pour tout trier, choisis une rareté, un département ou « Près de mon territoire ».` : ''; }
 }
 async function chargerChancesListe(codes){
   const jeton = {}; triJeton = jeton;

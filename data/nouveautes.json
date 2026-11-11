@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-11-11",
+    "nouveautes": [],
+    "correctifs": [
+      "Attaquer, « Meilleures chances » : avec plus de 4 000 cibles (« Toutes »), le tri ne se faisait pas du tout. Les 4 000 cibles les plus proches de ton territoire sont maintenant triées par chance, les autres suivent par distance (signalé par Arkhannou)"
+    ]
+  },
+  {
     "date": "2026-11-10",
     "nouveautes": [
       "📏 Carte du Front : une échelle de distance en bas à gauche, qui suit le zoom (idée de zintox)",

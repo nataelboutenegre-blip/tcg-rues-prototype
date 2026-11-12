@@ -4,7 +4,8 @@
     "nouveautes": [
       "🛡️ Clans : le clan d’un joueur s’affiche sur son profil ; touche-le pour ouvrir la fiche du clan, ses membres et « Voir son territoire ». Dans le tchat du clan, touche un pseudo pour voir son profil, et tape @ pour citer un joueur (idée d’Oshannir)",
       "💬 Discussion générale : touche un @pseudo cité ou le pseudo de l’auteur d’un message pour voir son profil (merci Oshannir)",
-      "🤝 Échanges entre clans : un par jour au lieu d’un par semaine. Touche sur la carte une commune d’un joueur d’un autre clan, puis « Proposer un échange » (même rareté, chacun dans son clan depuis 48 h)"
+      "🤝 Échanges entre clans : un par jour au lieu d’un par semaine. Touche sur la carte une commune d’un joueur d’un autre clan, puis « Proposer un échange » (même rareté, chacun dans son clan depuis 48 h)",
+      "🎡 Roue du Front : moins de « 10 TerraPoints » (12 % au lieu de 22 %), plus de Lingots (15 %) et de Paquets Terra (10 %). Le peuple a parlé (merci Stonirr)"
     ],
     "correctifs": [
       "⏱️ Sur la carte, la fiche d’attaque décompte maintenant toute seule le délai avant le prochain assaut, et le bouton revient à zéro sans avoir à quitter la commune (merci Oshannir)"

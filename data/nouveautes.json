@@ -4,6 +4,9 @@
     "nouveautes": [
       "🛡️ Clans : le clan d’un joueur s’affiche sur son profil ; touche-le pour ouvrir la fiche du clan, ses membres et « Voir son territoire ». Dans le tchat du clan, touche un pseudo pour voir son profil, et tape @ pour citer un joueur (idée d’Oshannir)",
       "💬 Discussion générale : touche un @pseudo cité ou le pseudo de l’auteur d’un message pour voir son profil (merci Oshannir)"
+    ],
+    "correctifs": [
+      "⏱️ Sur la carte, la fiche d’attaque décompte maintenant toute seule le délai avant le prochain assaut, et le bouton revient à zéro sans avoir à quitter la commune (merci Oshannir)"
     ]
   },
   {

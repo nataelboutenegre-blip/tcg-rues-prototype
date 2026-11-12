@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '0d45b42ae14f';
+const VERSION_JEU = '4234d987b63b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4402,7 +4402,7 @@ function rendreAttaque(code, a, siege){
     <div class="pc-ints">${pastilles}</div>
 
     <div class="pc-actions">
-      <button class="pc-action attaque" data-pc="assaut" ${attente > 0 || attaqueEnCours ? 'disabled' : ''}>
+      <button class="pc-action attaque" data-pc="assaut" data-pc-fin="${attente > 0 ? prochain : ''}" ${attente > 0 || attaqueEnCours ? 'disabled' : ''}>
         ${attente > 0 ? 'Encore ' + formatDuree(attente) + ' à attendre' : `Lancer l’assaut — ${coutTexte(a.cout)}`}
       </button>
     </div>
@@ -30443,3 +30443,20 @@ function dgIndex(){
   dgIdx = { cle, map, liste: [...map.entries()].sort((a, b) => b[0].length - a[0].length) };
   return dgIdx;
 }
+
+// ---------- patch424 : sur la carte, le délai avant le prochain assaut se décompte tout seul (Oshannir) ----------
+setInterval(() => {
+  if(document.hidden) return;
+  const b = document.querySelector('#mapPanneau .pc-action.attaque[data-pc-fin]');
+  if(!b || !b.dataset.pcFin) return;
+  const reste = Number(b.dataset.pcFin) - Date.now();
+  if(reste > 0){
+    const t = 'Encore ' + formatDuree(reste) + ' à attendre';
+    if(b.textContent.trim() !== t) b.textContent = t;
+    return;
+  }
+  b.dataset.pcFin = '';
+  const code = rbDerniers && rbDerniers[0];
+  if(attaqueEnCours || !code || code !== panneauCommune) return;
+  ouvrirAttaque(code);   // à zéro : chances et série relues, le bouton revient
+}, 1000);

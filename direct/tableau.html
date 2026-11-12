@@ -76,6 +76,16 @@ td .muet{ color:var(--muet); }
 .cadre{ position:relative; height:calc(100vh - 118px); height:calc(100dvh - 118px); }
 .cadre iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; background:var(--nuit); }
 .pied{ color:var(--muet); font-size:12px; text-align:center; }
+.note{ color:var(--muet); font-size:12px; line-height:1.45; margin:10px 0 0; }
+.note b{ color:var(--brume); }
+.taux{ display:flex; align-items:center; gap:8px; justify-content:flex-end; }
+.taux .jauge{ width:64px; height:6px; border-radius:3px; background:var(--bloc2); overflow:hidden; flex:none; }
+.taux .jauge i{ display:block; height:100%; background:var(--or); border-radius:3px; }
+.taux b{ min-width:38px; text-align:right; }
+.taux small{ color:var(--muet); white-space:nowrap; }
+.ok-obj{ color:var(--vert); font-size:11.5px; font-weight:700; white-space:nowrap; }
+.ko-obj{ color:#FFB27A; font-size:11.5px; font-weight:700; white-space:nowrap; }
+@media (max-width:760px){ .taux .jauge{ display:none; } .taux small{ display:block; } .taux{ flex-direction:column; align-items:flex-end; gap:0; } }
 @media (max-width:760px){
   .haut h1{ font-size:22px; }
   .tuiles{ grid-template-columns:repeat(2, minmax(0,1fr)); }
@@ -85,7 +95,7 @@ td .muet{ color:var(--muet); }
 }
 </style>
 <script defer src="../lib/supabase-js-2.117.2.umd.js"></script>
-<script defer src="tableau.js?v=1"></script>
+<script defer src="tableau.js?v=2"></script>
 </head>
 <body>
 <div class="haut">
@@ -111,6 +121,8 @@ td .muet{ color:var(--muet); }
     <div class="bloc"><h2>Nouveaux inscrits <small>14 jours</small></h2><div id="gInscrits"></div></div>
     <div class="bloc"><h2>Conquêtes <small>14 jours</small></h2><div id="gConquetes"></div></div>
   </section>
+  <section class="bloc"><h2>Les nouveaux restent-ils ? <small>par semaine d’inscription</small></h2><div id="cohortes"></div>
+    <p class="note">« Revenu le lendemain » : a joué le jour qui suit son inscription. « Encore là après 7 jours » : a joué au moins une fois 7 jours ou plus après son inscription (comptés seulement pour ceux inscrits depuis 7 jours). Objectif de la saison 3 : <b>20 %</b> encore là après 7 jours. Jours joués suivis depuis le 23/10.</p></section>
   <section class="deux">
     <div class="bloc"><h2>Les plus actifs aujourd’hui</h2><div id="top"></div></div>
     <div class="bloc"><h2>Derniers inscrits</h2><div id="derniers"></div></div>

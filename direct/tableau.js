@@ -102,6 +102,18 @@ function rendre(){
   graphique($('gActifs'), jours, 2, 'joueurs actifs');
   graphique($('gInscrits'), jours, 1, 'inscrits');
   graphique($('gConquetes'), jours, 4, 'conquêtes');
+  // les nouveaux restent-ils ? [lundi, inscrits, éligibles J1, revenus J1, éligibles J7, encore là J7, joué ces 7 jours]
+  const co = D.cohortes || [];
+  const taux = (n, e, objectif) => {
+    if(!e) return '<span class="muet">trop tôt</span>';
+    const p = Math.round(n / e * 100);
+    const obj = objectif ? (p >= objectif ? ' <span class="ok-obj">✓ objectif</span>' : ' <span class="ko-obj">sous l’objectif</span>') : '';
+    return `<div class="taux"><span class="jauge"><i style="width:${Math.min(100, p)}%"></i></span><b>${p} %</b><small>${nb(n)} / ${nb(e)}</small></div>${obj}`;
+  };
+  const semaine = (d) => { const x = new Date(d + 'T12:00:00'); return 'du ' + x.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }); };
+  $('cohortes').innerHTML = co.length ? `<table><thead><tr><th>Semaine</th><th class="n">Inscrits</th><th class="n">Revenus le lendemain</th><th class="n">Encore là après 7 jours</th><th class="n">Ont joué ces 7 jours</th></tr></thead><tbody>${
+    co.slice().reverse().map(c => `<tr><td>${semaine(c[0])}</td><td class="n">${nb(c[1])}</td><td class="n">${taux(c[3], c[2])}</td><td class="n">${taux(c[5], c[4], 20)}</td><td class="n">${nb(c[6])}</td></tr>`).join('')}</tbody></table>`
+    : '<span class="vide">Pas encore de données.</span>';
   const top = D.top_jour || [];
   $('top').innerHTML = top.length ? `<table><thead><tr><th>Joueur</th><th class="n">Rounds</th><th class="n">Conquêtes</th></tr></thead><tbody>${
     top.map(t => `<tr><td>${esc(t[1])}</td><td class="n">${nb(t[2])}</td><td class="n">${nb(t[3])}</td></tr>`).join('')}</tbody></table>`

@@ -1,4 +1,4 @@
--- s2-139 (12/11/2026) : le tableau de bord de Nataël (direct/tableau.html), demande du 12/11.
+-- s2-139 (12/11/2026, complété le même jour : « les nouveaux restent-ils ? ») : le tableau de bord de Nataël (direct/tableau.html), demande du 12/11.
 -- Chiffres du jeu en une lecture : joueurs (total, nouveaux, actifs), activité par jour sur 14 jours, activité du jour,
 -- derniers inscrits, les plus actifs du jour ; jours = [jour, inscrits, actifs, rounds, conquêtes, défenses, messages], et la liste id -> pseudo pour nommer les joueurs en ligne (présence du jeu).
 -- Réservé à la modération (même règle que la régie du direct : discussion_est_moderateur). Lecture seule.
@@ -58,6 +58,20 @@ begin
                                 (select count(*) from front_prises p where p.attaquant = j.id and p.le >= v_minuit) prises
                            from front_rounds r join joueurs j on j.id = r.attaquant_id
                           where r.le >= v_minuit group by j.id, j.pseudo order by count(r.*) desc limit 8) x),
+    -- cohortes par semaine d'inscription (lundi, heure de Paris), depuis le début du suivi des jours joués (23/10) :
+    -- [lundi, inscrits, éligibles J1, revenus J1, éligibles J7, encore là après 7 j, joué ces 7 derniers jours]
+    'cohortes', (select coalesce(jsonb_agg(jsonb_build_array(c.lundi, c.n, c.e1, c.r1, c.e7, c.r7, c.a7) order by c.lundi), '[]'::jsonb) from (
+        select date_trunc('week', z.d0)::date lundi, count(*) n,
+               count(*) filter (where z.d0 + 1 <= v_jour) e1, count(*) filter (where z.d0 + 1 <= v_jour and z.j1) r1,
+               count(*) filter (where z.d0 + 7 <= v_jour) e7, count(*) filter (where z.d0 + 7 <= v_jour and z.j7) r7,
+               count(*) filter (where z.a7) a7
+          from (select (jo.created_at at time zone 'Europe/Paris')::date d0,
+                       exists(select 1 from jours_joues x where x.joueur_id = jo.id and x.jour = (jo.created_at at time zone 'Europe/Paris')::date + 1) j1,
+                       exists(select 1 from jours_joues x where x.joueur_id = jo.id and x.jour >= (jo.created_at at time zone 'Europe/Paris')::date + 7) j7,
+                       exists(select 1 from jours_joues x where x.joueur_id = jo.id and x.jour > v_jour - 7) a7
+                  from joueurs jo
+                 where jo.created_at >= greatest(date '2026-10-19', date_trunc('week', (v_jour - 49)::timestamp)::date)::timestamp at time zone 'Europe/Paris') z
+         group by 1) c),
     'pseudos', (select jsonb_object_agg(id, pseudo) from joueurs))
   );
 end; $f$;

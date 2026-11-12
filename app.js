@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '4234d987b63b';
+const VERSION_JEU = 'ec9e9d17895a';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4062,8 +4062,8 @@ function ouvrirPanneau(code, xCss, yCss){
     if(e && e.clan && sonClan && (!monClan || sonClan.tag !== monClan.tag)){
       const dispo = e.inter_dispo_le ? new Date(e.inter_dispo_le) : null;
       const raison = e.pret_le ? 'Échanges possibles 48 h après ton arrivée dans ton clan'
-        : dispo && dispo.getTime() > Date.now() ? `Un échange entre clans par semaine : le prochain le ${dispo.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à ${dispo.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : '';
-      echInter = `<button class="pc-action pc-ech-inter" data-pc="ech-inter"${raison ? ` disabled title="${echapperHtml(raison)}"` : ''}><span aria-hidden="true">🤝</span>Proposer un échange <small>· 1 par semaine</small></button>${raison ? `<p class="pc-note">${echapperHtml(raison)}.</p>` : ''}`;
+        : dispo && dispo.getTime() > Date.now() ? `Un échange entre clans par jour : le prochain le ${dispo.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à ${dispo.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : '';
+      echInter = `<button class="pc-action pc-ech-inter" data-pc="ech-inter"${raison ? ` disabled title="${echapperHtml(raison)}"` : ''}><span aria-hidden="true">🤝</span>Proposer un échange <small>· 1 par jour</small></button>${raison ? `<p class="pc-note">${echapperHtml(raison)}.</p>` : ''}`;
     }
   }
   if(allie && enFrontClan()){}   // la suite des notes, comme avant
@@ -19837,7 +19837,7 @@ function blocEchangesClan(){
     ${(e.recus || []).length ? `<h3 class="ce-h3">Reçus</h3>${e.recus.map(x => prop(x, true)).join('')}` : ''}
     <h3 class="ce-h3">Proposer un échange</h3>${proposer}
     ${(e.envoyes || []).length ? `<h3 class="ce-h3">Envoyés</h3>${e.envoyes.map(x => prop(x, false)).join('')}` : ''}
-    <ul class="clan-regles"><li>Seulement entre membres du clan, une commune contre une commune de même rareté.</li><li>${parMembre ? '<b>3 échanges par jour avec chaque coéquipier</b>, 3 propositions en attente par coéquipier' : '3 échanges par jour et par joueur, 3 propositions en attente au plus'}. Une proposition expire au bout de 24 h.</li><li>Impossible pour une commune prise il y a moins de 24 h, en garnison, ou échangée il y a moins de 48 h.</li><li>Il faut être dans le clan depuis 48 h. Un échange ne rapporte aucun point de combat.</li><li><b>Entre clans</b> : touche sur la carte une commune d’un joueur d’un autre clan, puis « Proposer un échange ». Mêmes règles, mais <b>un échange par semaine</b>${clanEch.etat && clanEch.etat.inter_dispo_le && new Date(clanEch.etat.inter_dispo_le).getTime() > Date.now() ? ` (ton prochain le ${new Date(clanEch.etat.inter_dispo_le).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })})` : ''}.</li></ul></div>`;   // patch398
+    <ul class="clan-regles"><li>Seulement entre membres du clan, une commune contre une commune de même rareté.</li><li>${parMembre ? '<b>3 échanges par jour avec chaque coéquipier</b>, 3 propositions en attente par coéquipier' : '3 échanges par jour et par joueur, 3 propositions en attente au plus'}. Une proposition expire au bout de 24 h.</li><li>Impossible pour une commune prise il y a moins de 24 h, en garnison, ou échangée il y a moins de 48 h.</li><li>Il faut être dans le clan depuis 48 h. Un échange ne rapporte aucun point de combat.</li><li><b>Entre clans</b> : touche sur la carte une commune d’un joueur d’un autre clan, puis « Proposer un échange ». Mêmes règles, mais <b>un échange par jour</b>${clanEch.etat && clanEch.etat.inter_dispo_le && new Date(clanEch.etat.inter_dispo_le).getTime() > Date.now() ? ` (ton prochain le ${new Date(clanEch.etat.inter_dispo_le).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })})` : ''}.</li></ul></div>`;   // patch398
 }
 // patch304 : par pages (plus de 1 000 communes chez les gros joueurs), de la plus rare à la plus commune
 async function ceCommunesDe(joueur){
@@ -29260,7 +29260,7 @@ function eccBandeau(){
   if(!echCarte){ if(el) el.remove(); return; }
   if(!el){ el = document.createElement('div'); el.id = 'eccBandeau'; el.className = 'ecc-bandeau'; wrap.appendChild(el); }
   const t = echCarte.tier;
-  el.innerHTML = `<span class="ecc-ic">🤝</span><div class="ecc-txt">${echCarte.inter ? 'Échange entre clans' : 'Échange'} avec <b>${echapperHtml(echCarte.pseudo)}</b> : tu reçois <b>${echapperHtml(echCarte.nom)}</b> (${eccLibelle(t)}).<br><span>Seules tes communes <b class="rarete ${t}">${eccLibelle(t)}s</b> ressortent, entourées de jaune : touches-en une pour la proposer.${echCarte.inter ? ' Un échange entre clans par semaine.' : ''}</span></div>
+  el.innerHTML = `<span class="ecc-ic">🤝</span><div class="ecc-txt">${echCarte.inter ? 'Échange entre clans' : 'Échange'} avec <b>${echapperHtml(echCarte.pseudo)}</b> : tu reçois <b>${echapperHtml(echCarte.nom)}</b> (${eccLibelle(t)}).<br><span>Seules tes communes <b class="rarete ${t}">${eccLibelle(t)}s</b> ressortent, entourées de jaune : touches-en une pour la proposer.${echCarte.inter ? ' Un échange entre clans par jour.' : ''}</span></div>
     <div class="ecc-btns">${echCarte.inter ? '' : '<button type="button" data-ecc="clan">Onglet Clan</button>'}<button type="button" data-ecc="annuler">Annuler</button></div>`;   // patch398
 }
 function eccBlocFiche(code, c, mienne){
@@ -30460,3 +30460,5 @@ setInterval(() => {
   if(attaqueEnCours || !code || code !== panneauCommune) return;
   ouvrirAttaque(code);   // à zéro : chances et série relues, le bouton revient
 }, 1000);
+
+// patch425 : échanges entre clans, un par jour (s2-140)

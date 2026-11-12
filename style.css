@@ -9910,3 +9910,9 @@ body[data-dos^="podium-s2-"] .face-back:not(.bq-dos-apercu .face-back) .dos-embl
 .tc-suggest button{ display:inline-flex; align-items:center; font:inherit; font-size:.82rem; font-weight:600; color:#fff; background:var(--nuit-3);
   border:1px solid rgba(169,188,212,.3); border-radius:999px; padding:6px 12px; cursor:pointer; }
 .tc-suggest button:hover{ border-color: var(--clan); }
+
+/* patch423 : pseudos cliquables dans la discussion générale */
+.dg-at-lien{ display:inline; font:inherit; font-weight:700; color:#FFD35A; background:rgba(255,211,90,.12); border:0; border-radius:5px; padding:0 3px; margin:0; cursor:pointer; }
+.dg-at-lien:hover{ text-decoration:underline; text-underline-offset:3px; }
+.dg-qui{ background:none; border:0; padding:0; margin:0; font:inherit; font-weight:800; font-size:.8rem; cursor:pointer; }
+.dg-qui:hover{ text-decoration:underline; text-underline-offset:3px; }

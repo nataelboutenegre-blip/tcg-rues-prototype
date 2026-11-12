@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '5f616d1843be';
+const VERSION_JEU = '0d45b42ae14f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -28333,7 +28333,8 @@ function dgJour(le){
   if(d.toDateString() === h.toDateString()) return 'Hier';
   return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
 }
-function dgTexteHtml(t){ return echapperTexte(t || '').replace(/(^|\s)(@[^\s@]{2,20})/g, '$1<span class="dg-at">$2</span>'); }
+function dgTexteBrut(t){ return echapperTexte(t || '').replace(/(^|\s)(@[^\s@]{2,20})/g, '$1<span class="dg-at">$2</span>'); }
+function dgTexteHtml(t){ return tchatTexteHtml(t, dgIndex(), { cls: 'dg-at dg-at-lien', repli: dgTexteBrut }).html; }   // patch423
 function dgMsgHtml(m, groupe){
   if(m.retire) return `<div class="dg-m retire" data-dg-id="${m.id}"><span class="dg-av vide"></span><div class="dg-b">Message retiré par la modération</div></div>`;
   const cache = m.masque && !m.texte;
@@ -28347,7 +28348,7 @@ function dgMsgHtml(m, groupe){
   }
   const c = colorForPlayer(m.auteur || '');
   const av = dgAvatar(m, groupe);   // patch346
-  const h = groupe ? '' : `<div class="dg-h"><b style="color:${c}">${echapperTexte(m.pseudo || 'Joueur')}</b>${dgClanHtml(m)}${m.modo ? '<span class="dg-badge">Modération</span>' : ''}<span class="dg-t">${dgHeure(m.le)}</span></div>`;
+  const h = groupe ? '' : `<div class="dg-h"><button type="button" class="dg-qui" data-tc-profil="${echapperTexte(m.auteur || '')}" style="color:${c}">${echapperTexte(m.pseudo || 'Joueur')}</button>${dgClanHtml(m)}${m.modo ? '<span class="dg-badge">Modération</span>' : ''}<span class="dg-t">${dgHeure(m.le)}</span></div>`;
   return `<div class="dg-m${m.cite ? ' mention' : ''}${cache ? ' masque' : ''}" data-dg-id="${m.id}">${av}<div class="dg-b">${h}${txt}${sig}</div></div>`;
 }
 function dgFilHtml(){
@@ -28649,6 +28650,7 @@ document.addEventListener('click', (e) => {
     if(q === 'modo') return dgFeuilleModeration(DG.modoOnglet || 'signales');
     if(q === 'bas'){ const f = document.getElementById('dgFil'); if(f) f.scrollTop = f.scrollHeight; d.hidden = true; dgMarquerLu(); return; }
   }
+  if(e.target.closest('#dgFil [data-tc-profil]')) return;   // patch423 : le profil s'ouvre (patch422)
   const msg = e.target.closest('#dgFil .dg-m');
   if(msg){
     const m = dgTrouver(msg.dataset.dgId);
@@ -30364,9 +30366,9 @@ function tchatIndex(){
   return tchatIdx;
 }
 const MOT = /[\p{L}\p{N}_]/u;
-function tchatTexteHtml(texte, idx){
-  const t = String(texte || '');
-  if(!t.includes('@') || !idx.liste.length) return { html: echapperTexte(t), moi: false };
+function tchatTexteHtml(texte, idx, o){
+  const t = String(texte || ''), esc = (o && o.repli) || echapperTexte, cls = (o && o.cls) || 'tc-mention';   // patch423
+  if(!t.includes('@') || !idx.liste.length) return { html: esc(t), moi: false };
   const moiId = window.__monId;
   let html = '', i = 0, moi = false;
   for(let at = t.indexOf('@'); at >= 0; at = t.indexOf('@', at + 1)){
@@ -30379,10 +30381,10 @@ function tchatTexteHtml(texte, idx){
     if(!trouve) continue;
     const estMoi = trouve.id === moiId;
     if(estMoi) moi = true;
-    html += echapperTexte(t.slice(i, at)) + `<button type="button" class="tc-mention${estMoi ? ' moi' : ''}" data-tc-profil="${echapperTexte(trouve.id)}">@${echapperTexte(trouve.pseudo)}</button>`;
+    html += esc(t.slice(i, at)) + `<button type="button" class="${cls}${estMoi ? ' moi' : ''}" data-tc-profil="${echapperTexte(trouve.id)}">@${echapperTexte(trouve.pseudo)}</button>`;
     i = at + 1 + trouve.pseudo.length;
   }
-  return { html: html + echapperTexte(t.slice(i)), moi };
+  return { html: html + esc(t.slice(i)), moi };
 }
 function tchatSuggerer(champ){
   const box = document.getElementById('tcSuggest');
@@ -30429,3 +30431,15 @@ document.addEventListener('submit', (e) => {
   if(!e.target.closest('#tcForm')) return;
   const b = document.getElementById('tcSuggest'); if(b){ b.hidden = true; b.innerHTML = ''; }
 });
+
+// ---------- patch423 : la discussion générale reconnaît aussi ses auteurs ----------
+let dgIdx = { cle: '', map: null, liste: [] };
+function dgIndex(){
+  const base = tchatIndex(), der = DG.msgs.length ? DG.msgs[DG.msgs.length - 1].id : 0;
+  const cle = base.cle + '|' + DG.msgs.length + '|' + der;
+  if(dgIdx.cle === cle) return dgIdx;
+  const map = new Map(base.map);
+  for(const m of DG.msgs){ if(m && m.auteur && m.pseudo && !m.retire){ const k = normPseudo(m.pseudo); if(!map.has(k)) map.set(k, { id: m.auteur, pseudo: m.pseudo, clan: false }); } }
+  dgIdx = { cle, map, liste: [...map.entries()].sort((a, b) => b[0].length - a[0].length) };
+  return dgIdx;
+}

@@ -2,7 +2,8 @@
   {
     "date": "2026-11-12",
     "nouveautes": [
-      "🛡️ Clans : le clan d’un joueur s’affiche sur son profil ; touche-le pour ouvrir la fiche du clan, ses membres et « Voir son territoire ». Dans le tchat du clan, touche un pseudo pour voir son profil, et tape @ pour citer un joueur (idée d’Oshannir)"
+      "🛡️ Clans : le clan d’un joueur s’affiche sur son profil ; touche-le pour ouvrir la fiche du clan, ses membres et « Voir son territoire ». Dans le tchat du clan, touche un pseudo pour voir son profil, et tape @ pour citer un joueur (idée d’Oshannir)",
+      "💬 Discussion générale : touche un @pseudo cité ou le pseudo de l’auteur d’un message pour voir son profil (merci Oshannir)"
     ]
   },
   {

@@ -1,5 +1,11 @@
 [
   {
+    "date": "2026-11-12",
+    "nouveautes": [
+      "🛡️ Clans : le clan d’un joueur s’affiche sur son profil ; touche-le pour ouvrir la fiche du clan, ses membres et « Voir son territoire ». Dans le tchat du clan, touche un pseudo pour voir son profil, et tape @ pour citer un joueur (idée d’Oshannir)"
+    ]
+  },
+  {
     "date": "2026-11-11",
     "nouveautes": [
       "💣 Bombes : les points au classement suivent maintenant le niveau, +150 au niveau 1, +300 au niveau 2, +500 au niveau 3. Les bombes déjà lancées gardent au moins leurs 300 points, celles de niveau 3 passent à 500 (idée d’Oshannir)",

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd9919a115eaa';
+const VERSION_JEU = 'd2356f4d6862';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1709,6 +1709,7 @@ function ligneJournal(e){
   else if(e.type === 'fonderie') texte = `${acteur} ${a} construit une Fonderie à ${commune}`;   // patch310
   else if(e.type === 'forteresse') texte = `${acteur} ${a} construit une Forteresse à ${commune}`;
   else if(e.type === 'fonderie_detruite') texte = `${acteur} ${a} détruit ${e.je_suis_cible ? '<b>ta</b> Fonderie' : `la Fonderie de ${cible}`} à ${commune}`;
+  else if(e.type === 'pertes') texte = `En prenant ${commune}, ${acteur} t’a fait perdre ${pertesTexte(e.infos) || 'tes bâtiments'}`;   // patch427
   else texte = `${acteur} ${a} tiré ${({ legendaire: 'une légendaire', epique: 'une épique', rare: 'une rare', peucommun: 'une peu commune' })[e.tier] || 'une carte'} : ${commune}`;   // patch264 : l'épique était annoncée « rare »
   // Le monument change de mains avec la commune : quand la ligne en concerne
   // une, on le nomme. C'est ce qui transforme « Maroli a conquis Millau » en
@@ -1717,7 +1718,7 @@ function ligneJournal(e){
   // passe ; avant, la ligne reste exactement telle qu'elle etait.
   const mon = monumentsNoms.get(e.commune_code);
   if(mon) texte += ` <span class="jr-monument" title="Monument de la commune">${ICONE_MONUMENT}${echapperTexte(mon)}</span>`;
-  const perso = e.je_suis_cible && (e.type === 'conquete' || e.type === 'achat' || e.type === 'fonderie_detruite');   // patch310
+  const perso = e.je_suis_cible && (e.type === 'conquete' || e.type === 'achat' || e.type === 'fonderie_detruite' || e.type === 'pertes');   // patch310, patch427
   return `
     <div class="jr-ligne ${e.type} ${perso ? 'perdu' : ''} ${e.je_suis_acteur ? 'moi' : ''}">
       <span class="jr-icone">${ICONES_JOURNAL[e.type] || ICONES_JOURNAL.tirage}</span>
@@ -23506,8 +23507,10 @@ function ncConstruire(){
   for(const e of Array.isArray(d.journal) ? d.journal : []){
     if(new Date(e.cree_le).getTime() < limite) continue;
     const nom = `<b>${echapperTexte(e.commune_nom || '')}</b>${e.commune_code ? ' ' + badgeDept(depDuCode(e.commune_code)) : ''}`;   // patch308
-    if(e.type === 'conquete' && e.je_suis_cible && p.jeu.perdue)
-      items.push({ cle: `j|${e.id}`, sec: 'histo', c: 'histo', i: '🏴', mode: 'front', t: `<b>${echapperTexte(e.acteur_pseudo || 'Un joueur')}</b> t'a pris ${nom}`, s: `${label(e.tier)} · ${ilYA(e.cree_le)}` });
+    if(e.type === 'conquete' && e.je_suis_cible && p.jeu.perdue){
+      const pe = pertesDe(d.journal, e), pt = pe ? pertesTexte(pe.infos) : '';   // patch427
+      items.push({ cle: `j|${e.id}`, sec: 'histo', c: 'histo', i: '🏴', mode: 'front', t: `<b>${echapperTexte(e.acteur_pseudo || 'Un joueur')}</b> t'a pris ${nom}${pt ? `<span class="nc-pertes">Tu perds aussi ${pt}</span>` : ''}`, s: `${label(e.tier)} · ${ilYA(e.cree_le)}` });
+    }
     else if(e.type === 'defense' && e.je_suis_acteur && p.jeu.defense)
       items.push({ cle: `j|${e.id}`, sec: 'histo', c: 'histo', i: '🛡️', mode: 'front', t: `Tu as repoussé <b>${echapperTexte(e.cible_pseudo || 'un joueur')}</b> à ${nom}`, s: `Défense réussie · ${ilYA(e.cree_le)}` });
     else if(e.type === 'echange' && (e.je_suis_acteur || e.je_suis_cible) && p.jeu.echange)
@@ -30481,3 +30484,32 @@ setInterval(() => {   // l'étiquette suit la minute
   if(document.hidden || !SAISON2 || !(BOMBES_ZONES || []).length || modeJeu !== 'front') return;
   if(BOMBES_ZONES.some(z => new Date(z.fin).getTime() > Date.now() - 60e3)) demanderDessin();
 }, 60e3);
+
+// ---------- patch427 : ce qu'on perd avec une commune prise (s2-142) ----------
+ICONES_JOURNAL.pertes = ICONES_JOURNAL.fonderie_detruite;
+function pertesTexte(infos){
+  const L = infos && Array.isArray(infos.b) ? infos.b : [];
+  const nb = (n) => Number(n || 0).toLocaleString('fr-FR');
+  const nbL = (n) => `${nb(n)} lingot${n > 1 ? 's' : ''}`;
+  const out = L.map(x => {
+    if(x.t === 'fonderie'){
+      const d = [];
+      if(x.pille > 0) d.push(`${nbL(x.pille)} pillé${x.pille > 1 ? 's' : ''}`);
+      if(x.max_apres < x.max_avant) d.push(`plafond ${x.max_avant} → ${x.max_apres}`);
+      if(x.ecrete > 0) d.push(`${nbL(x.ecrete)} au-delà du plafond perdu${x.ecrete > 1 ? 's' : ''}`);
+      return '<b>ta Fonderie</b>' + (d.length ? ` (${d.join(', ')})` : '');
+    }
+    if(x.t === 'banque') return '<b>ta Banque</b>' + (x.contenu > 0 ? ` et ses ${nbL(x.contenu)}${x.pille > 0 ? ` (dont ${nb(x.pille)} pillés)` : ''}` : '');
+    if(x.t === 'forteresse') return '<b>ta Forteresse</b>';
+    if(x.t === 'radar') return '<b>ton Radar</b>';
+    if(x.t === 'centre') return '<b>ton Centre de recherche</b>' + (x.bombe ? ' et <b>ta bombe en préparation</b>' : '');
+    return '';
+  }).filter(Boolean);
+  if(out.length < 2) return out.join('');
+  return out.slice(0, -1).join(', ') + ' et ' + out[out.length - 1];
+}
+// la ligne « pertes » qui va avec une conquête (même commune, même instant)
+function pertesDe(journal, e){
+  const t = new Date(e.cree_le).getTime();
+  return (journal || []).find(x => x.type === 'pertes' && x.commune_code === e.commune_code && Math.abs(new Date(x.cree_le).getTime() - t) < 10e3) || null;
+}

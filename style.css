@@ -9916,3 +9916,9 @@ body[data-dos^="podium-s2-"] .face-back:not(.bq-dos-apercu .face-back) .dos-embl
 .dg-at-lien:hover{ text-decoration:underline; text-underline-offset:3px; }
 .dg-qui{ background:none; border:0; padding:0; margin:0; font:inherit; font-weight:800; font-size:.8rem; cursor:pointer; }
 .dg-qui:hover{ text-decoration:underline; text-underline-offset:3px; }
+
+/* patch427 : ce qu'on perd avec une commune prise */
+.nc-pertes{display:block;margin-top:3px;font-size:.86em;color:#ff9b94;line-height:1.35}
+.nc-pertes b{color:#ffb4ae;font-weight:600}
+.jr-ligne.pertes{ border-left-color:#E5484D; }
+.jr-ligne.pertes .jr-icone{ color:#FF8F92; background:rgba(229,72,77,.15); }

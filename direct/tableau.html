@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://yzcgroprydxhbwaufkdu.supabase.co wss://yzcgroprydxhbwaufkdu.supabase.co; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'">
+<title>TerraFront · Tableau de bord</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0A1628">
+<link rel="icon" type="image/png" href="../favicon.png?v=2">
+<link rel="stylesheet" href="../fonts/polices.css">
+<!--
+  Le tableau de bord de Nataël (s2-139, 12/11/2026) : les chiffres du jeu, qui est en ligne,
+  et dans deux autres onglets la régie et la carte en direct. Réservé à la modération :
+  il faut être connecté au jeu dans ce navigateur.
+-->
+<style>
+:root{ --titre:'Big Shoulders Display', Impact, sans-serif; --texte:'Instrument Sans', system-ui, sans-serif;
+  --nuit:#0A1628; --bloc:#132A4A; --bloc2:#1A3559; --trait:#284268; --brume:#A9BCD4; --muet:#7F95B3; --or:#F0B429; --orange:#E8833A; --rouge:#E5484D; --vert:#5FD39D; }
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body{ margin:0; background:var(--nuit); color:#EAF1F8; font-family:var(--texte); font-size:15px; }
+.haut{ position:sticky; top:0; z-index:3; background:var(--nuit); padding:calc(env(safe-area-inset-top) + 12px) 16px 0; border-bottom:1px solid var(--trait); }
+.ligne1{ display:flex; align-items:center; gap:10px; }
+.haut h1{ margin:0; font-family:var(--titre); font-weight:900; font-size:26px; flex:1; letter-spacing:.01em; }
+.haut h1 span{ color:var(--or); }
+.lien{ font-size:12px; font-weight:700; display:flex; align-items:center; gap:6px; padding:5px 9px; border-radius:999px; color:var(--brume); background:rgba(169,188,212,.1); white-space:nowrap; }
+.lien i{ width:8px; height:8px; border-radius:50%; background:var(--brume); }
+.lien.ok{ color:var(--vert); background:rgba(95,211,157,.12); } .lien.ok i{ background:var(--vert); }
+.lien.ko{ color:#FF9A9D; background:rgba(229,72,77,.14); } .lien.ko i{ background:var(--rouge); }
+.onglets{ display:flex; gap:4px; margin-top:12px; }
+.onglet{ flex:1; border:0; background:none; color:var(--brume); font:700 14px var(--texte); padding:10px 6px 11px; border-bottom:3px solid transparent; cursor:pointer; }
+.onglet.actif{ color:#fff; border-bottom-color:var(--or); }
+.vue[hidden], .msg[hidden]{ display:none; }
+main{ max-width:1100px; margin:0 auto; padding:16px 16px calc(env(safe-area-inset-bottom) + 28px); display:flex; flex-direction:column; gap:16px; }
+.msg{ max-width:520px; margin:40px auto; padding:0 18px; color:var(--brume); line-height:1.5; text-align:center; }
+.msg a{ color:var(--or); }
+.tuiles{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
+.tuile{ background:var(--bloc); border:1px solid var(--trait); border-radius:14px; padding:12px 14px 13px; min-width:0; }
+.tuile .t{ font-size:11px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--brume); display:flex; align-items:center; gap:6px; }
+.tuile .n{ font-family:var(--titre); font-weight:900; font-size:40px; line-height:1; margin-top:6px; font-variant-numeric:tabular-nums; }
+.tuile .s{ font-size:12.5px; color:var(--brume); margin-top:5px; }
+.tuile .s b{ color:#EAF1F8; font-weight:700; }
+.tuile.vive{ border-color:rgba(95,211,157,.45); background:linear-gradient(160deg, rgba(95,211,157,.12), var(--bloc) 60%); }
+.point{ width:8px; height:8px; border-radius:50%; background:var(--vert); box-shadow:0 0 0 0 rgba(95,211,157,.6); animation:pouls 2s infinite; }
+@keyframes pouls{ 0%{ box-shadow:0 0 0 0 rgba(95,211,157,.55); } 70%{ box-shadow:0 0 0 8px rgba(95,211,157,0); } 100%{ box-shadow:0 0 0 0 rgba(95,211,157,0); } }
+.bloc{ background:var(--bloc); border:1px solid var(--trait); border-radius:14px; padding:14px 16px; min-width:0; }
+.bloc h2{ margin:0 0 10px; font-size:12px; font-weight:700; letter-spacing:.11em; text-transform:uppercase; color:var(--brume); display:flex; justify-content:space-between; gap:10px; }
+.bloc h2 small{ font-weight:600; letter-spacing:0; text-transform:none; color:var(--muet); }
+.puces{ display:flex; flex-wrap:wrap; gap:6px; }
+.puce{ font-size:13px; font-weight:600; padding:5px 10px; border-radius:999px; background:var(--bloc2); border:1px solid var(--trait); }
+.puce i{ display:inline-block; width:7px; height:7px; border-radius:50%; background:var(--vert); margin-right:6px; vertical-align:1px; }
+.vide{ color:var(--muet); font-size:13.5px; }
+.activite{ display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:8px; }
+.act{ background:var(--bloc2); border-radius:10px; padding:10px 12px; min-width:0; }
+.act b{ display:block; font-family:var(--titre); font-weight:800; font-size:26px; line-height:1.05; font-variant-numeric:tabular-nums; }
+.act span{ font-size:12.5px; color:var(--brume); }
+.act small{ display:block; font-size:11.5px; color:var(--muet); margin-top:2px; }
+.deux{ display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:16px; }
+.trois{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:16px; }
+.graph{ position:relative; height:150px; display:flex; align-items:flex-end; gap:3px; padding-top:18px; border-bottom:1px solid var(--trait); }
+.barre{ position:relative; flex:1; min-width:0; height:100%; display:flex; align-items:flex-end; cursor:default; }
+.barre i{ display:block; width:100%; background:var(--or); border-radius:4px 4px 0 0; min-height:2px; opacity:.85; }
+.barre.auj i{ opacity:1; background:#FFD36B; }
+.barre:hover i, .barre.vue-on i{ opacity:1; filter:brightness(1.12); }
+.barre em{ position:absolute; left:50%; transform:translateX(-50%); font-style:normal; font-size:11px; font-weight:700; color:#EAF1F8; white-space:nowrap; }
+.axe{ display:flex; gap:3px; margin-top:5px; }
+.axe span{ flex:1; min-width:0; text-align:center; font-size:10px; color:var(--muet); white-space:nowrap; overflow:hidden; }
+.bulle{ position:fixed; z-index:9; pointer-events:none; background:#06101F; border:1px solid var(--trait); border-radius:8px; padding:6px 9px; font-size:12.5px; white-space:nowrap; box-shadow:0 6px 18px rgba(0,0,0,.45); }
+.bulle b{ font-family:var(--titre); font-size:17px; }
+.bulle[hidden]{ display:none; }
+table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+th{ text-align:left; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--muet); font-weight:700; padding:0 6px 6px 0; }
+td{ padding:7px 6px 7px 0; border-top:1px solid rgba(40,66,104,.7); font-variant-numeric:tabular-nums; }
+td.n, th.n{ text-align:right; }
+td .muet{ color:var(--muet); }
+.cadre{ position:relative; height:calc(100vh - 118px); height:calc(100dvh - 118px); }
+.cadre iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; background:var(--nuit); }
+.pied{ color:var(--muet); font-size:12px; text-align:center; }
+@media (max-width:760px){
+  .haut h1{ font-size:22px; }
+  .tuiles{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .activite{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .deux, .trois{ grid-template-columns:1fr; }
+  .tuile .n{ font-size:34px; }
+}
+</style>
+<script defer src="../lib/supabase-js-2.117.2.umd.js"></script>
+<script defer src="tableau.js?v=1"></script>
+</head>
+<body>
+<div class="haut">
+  <div class="ligne1"><h1>Terra<span>Front</span> · tableau de bord</h1><span class="lien" id="lien"><i></i><span id="lienTxt">Connexion…</span></span></div>
+  <nav class="onglets" role="tablist">
+    <button class="onglet actif" data-vue="stats" role="tab">Stats</button>
+    <button class="onglet" data-vue="regie" role="tab">Régie</button>
+    <button class="onglet" data-vue="carte" role="tab">Carte en direct</button>
+  </nav>
+</div>
+<p class="msg" id="msg" hidden></p>
+<main class="vue" id="vue-stats" hidden>
+  <section class="tuiles">
+    <div class="tuile vive"><div class="t"><span class="point"></span>En ligne</div><div class="n" id="tEnLigne">—</div><div class="s">en ce moment, en direct</div></div>
+    <div class="tuile"><div class="t">Joueurs</div><div class="n" id="tTotal">—</div><div class="s" id="tTotalS"></div></div>
+    <div class="tuile"><div class="t">Nouveaux</div><div class="n" id="tNouveaux">—</div><div class="s" id="tNouveauxS"></div></div>
+    <div class="tuile"><div class="t">Actifs aujourd’hui</div><div class="n" id="tActifs">—</div><div class="s" id="tActifsS"></div></div>
+  </section>
+  <section class="bloc"><h2>En ligne maintenant <small id="enLigneNb"></small></h2><div class="puces" id="enLigne"><span class="vide">…</span></div></section>
+  <section class="bloc"><h2>Aujourd’hui <small id="maj"></small></h2><div class="activite" id="activite"></div></section>
+  <section class="trois">
+    <div class="bloc"><h2>Joueurs actifs <small>14 jours</small></h2><div id="gActifs"></div></div>
+    <div class="bloc"><h2>Nouveaux inscrits <small>14 jours</small></h2><div id="gInscrits"></div></div>
+    <div class="bloc"><h2>Conquêtes <small>14 jours</small></h2><div id="gConquetes"></div></div>
+  </section>
+  <section class="deux">
+    <div class="bloc"><h2>Les plus actifs aujourd’hui</h2><div id="top"></div></div>
+    <div class="bloc"><h2>Derniers inscrits</h2><div id="derniers"></div></div>
+  </section>
+  <p class="pied">Les chiffres se mettent à jour toutes les minutes ; « en ligne » en direct. Journées à l’heure de Paris.</p>
+</main>
+<div class="vue cadre" id="vue-regie" hidden></div>
+<div class="vue cadre" id="vue-carte" hidden></div>
+<div class="bulle" id="bulle" hidden></div>
+</body>
+</html>

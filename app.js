@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ec9e9d17895a';
+const VERSION_JEU = 'd9919a115eaa';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4452,7 +4452,7 @@ function atkDetailHtml(code, a){
       : `<div class="sn-badge">${ICONE_TREFLE}<span><b>Série noire</b> : ${attaquePertes} assauts perdus d’affilée ici. Celui-ci a <b>+${SN_BONUS}\u00a0%</b>, jusqu’à ta prochaine victoire sur cette commune.</span></div>`) : ''}
     ${attaqueEffetBt && attaqueEffetBt.defense > 0 ? `<div class="gn-badge bt-badge">${ICONE_FORTERESSE}<span><b>Forteresse.</b> −${attaqueEffetBt.defense} % à tes chances sur cette commune.</span></div>` : ''}
     ${attaqueEffetBt && attaqueEffetBt.appui > 0 ? `<p class="bt-appui">${ICONE_FORTERESSE}<span>+${attaqueEffetBt.appui} % grâce à ta forteresse${attaqueEffetBt.appui_de ? ' de <b>' + echapperHtml(attaqueEffetBt.appui_de) + '</b>' : ''}</span></p>` : ''}
-    ${attaqueEffetBt && attaqueEffetBt.bombe > 0 ? `<p class="bt-appui bt-bombe"><span class="bt-bombe-ic">💥</span><span>+${attaqueEffetBt.bombe} % : zone bombardée${attaqueEffetBt.bombe_sur ? ' (<b>' + echapperHtml(attaqueEffetBt.bombe_sur) + '</b>)' : ''}</span></p>` : ''}
+    ${attaqueEffetBt && attaqueEffetBt.bombe > 0 ? `<p class="bt-appui bt-bombe"><span class="bt-bombe-ic">💥</span><span>+${attaqueEffetBt.bombe} % : zone bombardée${attaqueEffetBt.bombe_sur ? ' (<b>' + echapperHtml(attaqueEffetBt.bombe_sur) + '</b>)' : ''}${bombeZoneReste(attaqueEffetBt.bombe_sur)}</span></p>` : ''}
     ${rbBadgeHtml()}
     <div class="pc-prox ${a.a_distance && !debutantIci(code) ? 'loin' : ''}">
       ${estOutremerCode(code)   // patch246 : en outre-mer, tout le territoire compte (s2-49)
@@ -11808,7 +11808,7 @@ function dessinerZonesBombes(ctx, trait){
     ctx.setLineDash([trait(6), trait(4)]);
     ctx.strokeStyle = 'rgba(255,90,82,0.95)'; ctx.lineWidth = trait(1.8); ctx.stroke();
     ctx.setLineDash([]);
-    const f = trait(11), txt = `💥 +${btReglage('bombe_bonus', 15)} % · ${z.cible_nom || ''}`;
+    const f = trait(11), txt = `💥 +${btReglage('bombe_bonus', 15)} % · ${z.cible_nom || ''} · ${formatDuree(new Date(z.fin).getTime() - Date.now())}`;   // patch426
     ctx.font = `600 ${f}px "Instrument Sans", system-ui, sans-serif`;
     let w = ctx.measureText(txt).width + f * 1.2, h = f * 1.7, y = cy - ry - trait(6) - h;
     const chevauche = (a) => poses.some(b => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h);
@@ -12026,7 +12026,7 @@ function bfxToucher(x, y){
   const s = echelleCarte() * mapZoom, mx = (x - mapPanX) / s, my = (y - mapPanY) / s, m = 6 / s;
   for(const e of BOMBE_ETIQS){
     if(new Date(e.z.fin).getTime() < Date.now()) continue;
-    if(mx >= e.x - m && mx <= e.x + e.w + m && my >= e.y - m && my <= e.y + e.h + m){ bfxJouer(e.z, false); return true; }
+    if(mx >= e.x - m && mx <= e.x + e.w + m && my >= e.y - m && my <= e.y + e.h + m){ bfxJouer(e.z, false); bombeZoneDire(e.z); return true; }
   }
   return false;
 }
@@ -30462,3 +30462,22 @@ setInterval(() => {
 }, 1000);
 
 // patch425 : échanges entre clans, un par jour (s2-140)
+
+// ---------- patch426 : le temps qu'il reste à une zone bombardée (Arkhannou) ----------
+function bombeZoneDire(z){
+  const reste = new Date(z.fin).getTime() - Date.now();
+  if(!(reste > 0)) return;
+  const d = new Date(z.fin), h = d.getHours() + 'h' + String(d.getMinutes()).padStart(2, '0');
+  notifier({ type: 'info', titre: '💥 Zone bombardée · ' + (z.cible_nom || ''),
+             texte: `+${btReglage('bombe_bonus', 15)} % en attaque encore ${formatDuree(reste)} (jusqu’à ${h}).` });
+}
+function bombeZoneReste(nom){
+  const t = Date.now();
+  const z = (BOMBES_ZONES || []).filter(x => new Date(x.fin).getTime() > t && (!nom || x.cible_nom === nom))
+    .sort((a, b) => new Date(b.fin).getTime() - new Date(a.fin).getTime())[0];
+  return z ? ' · encore <b>' + formatDuree(new Date(z.fin).getTime() - t) + '</b>' : '';
+}
+setInterval(() => {   // l'étiquette suit la minute
+  if(document.hidden || !SAISON2 || !(BOMBES_ZONES || []).length || modeJeu !== 'front') return;
+  if(BOMBES_ZONES.some(z => new Date(z.fin).getTime() > Date.now() - 60e3)) demanderDessin();
+}, 60e3);

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd2356f4d6862';
+const VERSION_JEU = '91746f9c360c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -602,6 +602,7 @@ function mettreEnSceneAssaut(cible, r, enGarnison){   // patch393 : enGarnison =
         renderBatimentsBloc();
       });
       if(SAISON2 && BATIMENTS) setTimeout(chargerBatiments, 800);
+      if(SAISON2 && !(BATIMENTS_CARTE.get(String(cible.code)) || {}).fonderie) fonderieDetruiteVerifier(cible.code, fen, d);   // patch428
       if(SAISON2 && soldeAvant != null){
         // le gain reel (plafond du jour, reprise, degressif) se lit sur le solde
         sb.rpc('statut_paquets').then(({ data }) => {
@@ -30512,4 +30513,21 @@ function pertesTexte(infos){
 function pertesDe(journal, e){
   const t = new Date(e.cree_le).getTime();
   return (journal || []).find(x => x.type === 'pertes' && x.commune_code === e.commune_code && Math.abs(new Date(x.cree_le).getTime() - t) < 10e3) || null;
+}
+
+// ---------- patch428 : les bâtiments des autres ne vieillissent plus (Oshannir, Grigny) ----------
+VERIF_AU_RETOUR.push(() => { if(SAISON2 && BATIMENTS && Date.now() - batimentsLu > 5 * 60e3) chargerBatiments(); });
+setInterval(siVisible(() => { if(SAISON2 && BATIMENTS && Date.now() - batimentsLu > 10 * 60e3) chargerBatiments(); }), 60e3);
+async function fonderieDetruiteVerifier(code, fen, d){
+  try{
+    await new Promise(r => setTimeout(r, 600));
+    const { data } = await sb.rpc('journal', { p_mode: 'moi', p_type: 'fonderie_detruite', p_limite: 3 });
+    const e = (data || []).find(x => x.je_suis_acteur && String(x.commune_code) === String(code) && Date.now() - new Date(x.cree_le).getTime() < 5 * 60e3);
+    if(!e || !d || !d.isConnected || d.querySelector('.as-bt-fonderie')) return;
+    const s = document.createElement('span');
+    s.className = 'as-mon as-bt as-bt-fonderie';
+    s.innerHTML = `${ICONE_FONDERIE}Fonderie détruite : tu pilles la moitié de ses lingots`;
+    const lg = d.querySelector('.as-lg');
+    lg ? d.insertBefore(s, lg) : d.appendChild(s);
+  }catch(err){}
 }

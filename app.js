@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '91746f9c360c';
+const VERSION_JEU = '25a0331f0593';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -13566,6 +13566,7 @@ function majBascule(){
 async function majEnergie(){
   if(!SAISON2) return;
   if(!sgLu) sgChargerActif();   // patch405 : le siège est-il allumé ?
+  if(!messLu) messCharger();   // patch429 : le Mess
   const { data, error } = await sb.rpc('front_energie');
   if(error || !data || !data[0]) return;
   const el = document.getElementById('mbEnergie');
@@ -13899,6 +13900,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'defense'){ loadMenaces().then(loadReveil); loadCombat(); renderIntensite('defense'); if(SAISON2) chargerGarnisons(); }
     if(tab.dataset.tab === 'batiments' && SAISON2){ chargerBatiments(); window.scrollTo({ top: 0 }); }   // patch379
     if(tab.dataset.tab === 'combat' && SAISON2) majEnergie();
+    if(tab.dataset.tab === 'qg') messCharger();   // patch429
     if(tab.dataset.tab === 'combat') mfoEntrer();   // patch288
     if(SAISON2 && (tab.dataset.tab === 'territoire' || tab.dataset.tab === 'combat')) setTimeout(pcSansPaquet, 900);   // patch365
     if(tab.dataset.tab === 'combat'){
@@ -30530,4 +30532,225 @@ async function fonderieDetruiteVerifier(code, fen, d){
     const lg = d.querySelector('.as-lg');
     lg ? d.insertBefore(s, lg) : d.appendChild(s);
   }catch(err){}
+}
+
+// ---------- patch429 : Le Mess (saison 3, s3-10) ----------
+// Allumé par le serveur (config 'mess'.actif) ; « ?mess=test » le montre à un modérateur avant le 22/11.
+TITRES['mess-as'] = 'As du Mess';
+var MESS = null, messLu = false, messFen = null;
+const MESS_TEST = (() => {
+  try{
+    if(/[?&]mess=test\b/.test(location.search)) sessionStorage.setItem('tf-mess-test', '1');
+    return sessionStorage.getItem('tf-mess-test') === '1';
+  }catch(e){ return false; }
+})();
+const MESS_ORDRE = ['couronne', 'bombe', 'forteresse', 'fonderie', 'lingot', 'blason'];
+const MESS_PAL = { k: '#1b1f2a', o: '#F0B429', y: '#ffd76a', r: '#E5484D', g: '#7E8BA0', w: '#EEF2F6', b: '#2F7CF6', n: '#3a4456', f: '#ff8a3d', s: '#5b6577' };
+const MESS_SP = {
+  couronne: ['............', '.o...o...o..', '.oo.ooo.oo..', '.oooyoooooo.', '.ooyyoyyooo.', '.ooooooooo..', '.rorrorrorr.', '.oooooooooo.', '.kkkkkkkkkk.', '............', '............', '............'],
+  bombe: ['.......f....', '......fy....', '.....k......', '....kk......', '..kkkkkk....', '.kksskkkk...', '.ksskkkkk...', '.kskkkkkk...', '.kkkkkkkk...', '..kkkkkk....', '...kkkk.....', '............'],
+  forteresse: ['............', '.s.s....s.s.', '.ssss..ssss.', '.gsgs..gsgs.', '.gggg..gggg.', '.gggggggggg.', '.ggg.gg.ggg.', '.gggggggggg.', '.gggkkkkggg.', '.gggkkkkggg.', '.gggkkkkggg.', '............'],
+  fonderie: ['........ss..', '.......ss...', '.......nn...', '.......nn...', '.nn....nn...', '.nnnnnnnnnn.', '.nfnnfnnfnn.', '.nnnnnnnnnn.', '.nnnnnnnnnn.', '.nnkknnkknn.', '.nnkknnkknn.', '............'],
+  lingot: ['............', '............', '............', '....oooo....', '...oyyyyo...', '..oyyyyyoo..', '.ooooooooo..', '.oyoooooooo.', '.ooooooooo..', '............', '............', '............'],
+  blason: ['............', '.bbbbbbbbbb.', '.bwwbbbwwbb.', '.bwbbbbbwbb.', '.bbbbybbbbb.', '.bbbyyybbbb.', '.bbbbybbbbb.', '..bbbbbbbb..', '...bbbbbb...', '....bbbb....', '.....bb.....', '............'],
+};
+const messSpCache = {};
+function messSpriteUrl(nom){
+  if(messSpCache[nom]) return messSpCache[nom];
+  const c = document.createElement('canvas'); c.width = 12; c.height = 12;
+  const x = c.getContext('2d');
+  (MESS_SP[nom] || []).forEach((row, j) => [...row].forEach((ch, i) => { const col = MESS_PAL[ch]; if(col){ x.fillStyle = col; x.fillRect(i, j, 1, 1); } }));
+  return (messSpCache[nom] = c.toDataURL());
+}
+const messSp = (nom, cls) => `<img class="${cls || 'mess-sp'}" src="${messSpriteUrl(nom)}" alt="${nom}" draggable="false">`;
+function messVisible(){ return !!(MESS && (MESS.actif || (MESS_TEST && MESS.ouvert))); }
+async function messCharger(){
+  messLu = true;
+  try{
+    const { data, error } = await sb.rpc('mess_etat');
+    MESS = !error && data ? data : null;
+  }catch(e){ MESS = null; }
+  document.body.classList.toggle('mess-on', messVisible());
+  messCarteRendre();
+  messFenMaj();
+}
+function messCarteRendre(){
+  const panneau = document.getElementById('panel-qg');
+  if(!panneau) return;
+  let c = document.getElementById('qgMess');
+  if(!messVisible()){ if(c) c.hidden = true; return; }
+  if(!c){
+    c = document.createElement('div');
+    c.className = 'qg-carte mess-carte';
+    c.id = 'qgMess';
+    const sub = panneau.querySelector(':scope > .sub');
+    (sub || panneau.querySelector('h1')).insertAdjacentElement('afterend', c);
+    c.addEventListener('click', (e) => { if(e.target.closest('[data-mess="entrer"]')) messOuvrir(); });
+  }
+  c.hidden = false;
+  const R = MESS.regles || {}, n = Number(MESS.tickets) || 0;
+  c.innerHTML = `<div class="qg-tete">
+      <span class="qg-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 5v14M12 5v14M16 5v14"/><path d="M2 12h2M20 12h2"/></svg></span>
+      <div class="qg-titre"><h2>Le Mess</h2><p>L’arrière du front, où l’on joue entre deux batailles. Les tickets se gagnent en duel classé.</p></div>
+    </div>
+    <div class="qg-actions"><span class="mess-tk">🎟 <b>${n}</b> ticket${n > 1 ? 's' : ''}</span><button type="button" class="qg-btn plein" data-mess="entrer">Entrer</button>
+      <span class="qg-petit">+${R.victoire || 3} par duel gagné, +${R.defaite || 1} perdu · aujourd’hui ${Number(MESS.jour) || 0} / ${R.par_jour || 30}</span></div>`;
+}
+function messLotTexte(id, l){
+  if(!l) return '';
+  const p = [];
+  if(l.terra) p.push(`${l.terra} paquet${l.terra > 1 ? 's' : ''} Terra`);
+  if(l.titre && !(MESS && MESS.as)) p.push('titre « As du Mess »');
+  if(l.tp) p.push(`${l.tp} TP`);
+  if(l.energie) p.push(`+${l.energie} énergie (1 fois par jour)`);
+  return p.join(' + ');
+}
+function messTableHtml(){
+  const L = (MESS && MESS.machine && MESS.machine.lots) || {};
+  const ligne = (sy, t, or) => `<div class="mess-l"><span class="mess-sy">${sy}</span><span class="mess-lot${or ? ' or' : ''}">${t}</span></div>`;
+  let h = '';
+  for(const s of MESS_ORDRE) if(L[s]) h += ligne(messSp(s) + messSp(s) + messSp(s), messLotTexte(s, L[s]), !!L[s].terra);
+  if(L.paire_couronne) h += ligne(messSp('couronne') + messSp('couronne') + '<i class="mess-vide"></i>', `Deux couronnes : ${L.paire_couronne.tp} TP`);
+  if(L.paire) h += ligne(messSp('blason') + messSp('blason') + '<i class="mess-vide"></i>', `Une autre paire : ${L.paire.tp} TP`);
+  return h;
+}
+function messOuvrir(){
+  if(!messVisible()) return;
+  const prix = (MESS.machine && MESS.machine.prix) || 1;
+  const depart = [['blason', 'couronne', 'bombe'], ['fonderie', 'lingot', 'forteresse'], ['bombe', 'blason', 'couronne']];   // pas de triple au repos
+  const fermer = ouvrirFenetre(`
+    <div class="fenetre mess-fen" role="dialog" aria-modal="true" aria-label="Le Mess">
+      <button type="button" class="mess-x" data-mess="fermer" aria-label="Fermer">&times;</button>
+      <canvas class="mess-scene" width="195" height="92" aria-hidden="true"></canvas>
+      <div class="mess-corps">
+        <div class="mess-haut"><h2>Machine à chiffrer</h2><span class="mess-tk">🎟 <b data-mess="tickets">${Number(MESS.tickets) || 0}</b></span></div>
+        <div class="mess-machine">
+          <div class="mess-rotors">${depart.map(d => `<div class="mess-rotor"><div class="mess-bande">${d.map(s => messSp(s)).join('')}</div></div>`).join('')}</div>
+          <div class="mess-ligne"></div>
+        </div>
+        <div class="mess-res" aria-live="polite"><span class="mess-attente">Aligne trois symboles sur la ligne rouge</span></div>
+        <button type="button" class="mess-levier" data-mess="chiffrer">Chiffrer<small>· ${prix} ticket${prix > 1 ? 's' : ''}</small></button>
+        <div class="mess-table"><h3>Les lots</h3>${messTableHtml()}</div>
+        <p class="mess-note">Chaque symbole a la même chance sur chaque rotor : un triple tombe 1 fois sur 216. Les tickets ne s’achètent pas et la machine n’en rend jamais. Pas de lingots ici.</p>
+      </div>
+    </div>`, () => { messFen = null; });
+  const fen = document.querySelector('#fenetre .mess-fen');
+  messFen = fen;
+  messScene(fen.querySelector('.mess-scene'));
+  fen.addEventListener('click', (e) => {
+    const b = e.target.closest('[data-mess]');
+    if(!b) return;
+    if(b.dataset.mess === 'fermer') fermer(null);
+    if(b.dataset.mess === 'chiffrer') messChiffrer(fen);
+  });
+  messFenMaj();
+}
+function messFenMaj(){
+  const fen = messFen;
+  if(!fen || !fen.isConnected || !MESS) return;
+  const t = fen.querySelector('[data-mess="tickets"]'); if(t) t.textContent = Number(MESS.tickets) || 0;
+  const b = fen.querySelector('[data-mess="chiffrer"]');
+  const prix = (MESS.machine && MESS.machine.prix) || 1;
+  if(b && !fen.classList.contains('tourne')) b.disabled = (Number(MESS.tickets) || 0) < prix;
+  if(b && !fen.classList.contains('tourne') && (Number(MESS.tickets) || 0) < prix){
+    const r = fen.querySelector('.mess-res');
+    if(r && r.querySelector('.mess-attente')) r.innerHTML = '<span class="mess-attente">Plus de tickets : gagne des duels classés au QG</span>';
+  }
+}
+async function messChiffrer(fen){
+  if(fen.classList.contains('tourne')) return;
+  const bouton = fen.querySelector('[data-mess="chiffrer"]');
+  fen.classList.add('tourne'); bouton.disabled = true;
+  fen.querySelector('.mess-machine').classList.remove('gagne');
+  fen.querySelectorAll('.mess-rotor').forEach(r => r.classList.remove('gagnant'));
+  const res = fen.querySelector('.mess-res');
+  res.innerHTML = '<span class="mess-attente">Chiffrement…</span>';
+  let data;
+  try{
+    const r = await sb.rpc('mess_chiffrer');
+    if(r.error) throw r.error;
+    data = r.data;
+  }catch(err){
+    fen.classList.remove('tourne'); bouton.disabled = false;
+    res.innerHTML = '';
+    notifier({ type: 'erreur', titre: 'Le Mess', texte: messageLisible((err && err.message) || String(err)) });
+    return;
+  }
+  MESS.tickets = Number(data.tickets) || 0;
+  const t = fen.querySelector('[data-mess="tickets"]'); if(t) t.textContent = MESS.tickets;
+  const rot = (data.rotors || []).map(String);
+  const reduit = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fins = [...fen.querySelectorAll('.mess-rotor')].map((r, k) => new Promise(ok => {
+    const bande = r.querySelector('.mess-bande');
+    const pas = r.clientHeight / 3;
+    const n = reduit ? 3 : 14 + k * 5;
+    const suite = [];
+    for(let i = 0; i < n; i++) suite.push(MESS_ORDRE[Math.floor(Math.random() * MESS_ORDRE.length)]);
+    const iRes = MESS_ORDRE.indexOf(rot[k]);
+    suite.push(MESS_ORDRE[(iRes + 5) % 6], rot[k], MESS_ORDRE[(iRes + 1) % 6]);
+    const garder = [...bande.children].slice(0, 3).map(img => img.alt);
+    bande.innerHTML = garder.concat(suite).map(s => messSp(s)).join('');
+    const fin = -(suite.length) * pas;
+    if(reduit){ bande.style.transform = `translateY(${fin}px)`; ok(); return; }
+    const a = bande.animate([{ transform: 'translateY(0)', filter: 'blur(0)' }, { transform: `translateY(${fin * .55}px)`, filter: 'blur(1.5px)', offset: .5 }, { transform: `translateY(${fin}px)`, filter: 'blur(0)' }],
+      { duration: 900 + k * 420, easing: 'cubic-bezier(.25,.6,.25,1)', fill: 'forwards' });
+    a.onfinish = () => { bande.style.transform = `translateY(${fin}px)`; a.cancel(); ok(); };
+  }));
+  await Promise.all(fins);
+  // la bande repart des trois symboles visibles, pour le tour suivant
+  fen.querySelectorAll('.mess-rotor').forEach((r, k) => {
+    const b = r.querySelector('.mess-bande'); const imgs = [...b.children].slice(-3).map(i => i.alt);
+    b.style.transform = ''; b.innerHTML = imgs.map(s => messSp(s)).join('');
+  });
+  const g = data.gain || {};
+  if(data.lot){
+    const c = {}; rot.forEach(s => c[s] = (c[s] || 0) + 1);
+    fen.querySelectorAll('.mess-rotor').forEach((r, k) => r.classList.toggle('gagnant', c[rot[k]] >= 2 && (data.lot !== 'paire_couronne' || rot[k] === 'couronne')));
+    if(data.lot !== 'paire' && data.lot !== 'paire_couronne') fen.querySelector('.mess-machine').classList.add('gagne');
+    const chips = [];
+    if(g.terra) chips.push(`+${g.terra} paquet${g.terra > 1 ? 's' : ''} Terra`);
+    if(g.titre) chips.push(`Titre « ${echapperTexte(TITRES[g.titre] || g.titre)} »`);
+    if(g.energie) chips.push(`+${g.energie} énergie`);
+    if(g.tp) chips.push(`+${g.tp} TP`);
+    const grand = data.lot !== 'paire' && data.lot !== 'paire_couronne';
+    res.innerHTML = `<span class="mess-titre${grand ? ' grand' : ''}">${grand ? 'Message déchiffré !' : echapperTexte(data.nom || 'Une paire')}</span>${chips.map(x => `<span class="mess-chip">${x}</span>`).join('')}`;
+    if(g.tp || g.terra) { try{ loadPackStatus(); }catch(e){} }
+    if(g.energie) { try{ majEnergie(); }catch(e){} }
+    if(g.titre) notifier({ type: 'succes', titre: 'As du Mess', texte: 'Trois couronnes ! Le titre « As du Mess » est à toi : choisis-le dans ton profil.' });
+  } else {
+    res.innerHTML = '<span class="mess-titre brouille">Message brouillé</span>';
+  }
+  fen.classList.remove('tourne');
+  bouton.disabled = false;
+  messFenMaj();
+  messCarteRendre();
+}
+// la scène du Mess en pixel art (195 × 92, agrandie sans lissage)
+function messScene(sc){
+  if(!sc || !sc.getContext) return;
+  const g = sc.getContext('2d');
+  const R = (c, x, y, w, h) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
+  for(let y = 0; y < 60; y++){ const t = y / 60; g.fillStyle = `rgb(${14 + t * 6},${24 + t * 10},${40 + t * 10})`; g.fillRect(0, y, 195, 1); }
+  for(let x = 0; x < 195; x += 13) R('rgba(255,255,255,.025)', x, 0, 1, 60);
+  const neon = '#F0B429';
+  g.save(); g.shadowColor = neon; g.shadowBlur = 6;
+  const LET = { L: ['1..', '1..', '1..', '1..', '111'], E: ['111', '1..', '11.', '1..', '111'], M: ['1...1', '11.11', '1.1.1', '1...1', '1...1'], S: ['111', '1..', '111', '..1', '111'] };
+  let cx = 64;
+  ['L', 'E', ' ', 'M', 'E', 'S', 'S'].forEach(ch => { if(ch === ' '){ cx += 4; return; } const m = LET[ch]; m.forEach((row, j) => [...row].forEach((v, i) => { if(v === '1') R(neon, cx + i * 2, 8 + j * 2, 2, 2); })); cx += m[0].length * 2 + 3; });
+  g.restore();
+  R('rgba(240,180,41,.25)', 60, 6, 74, 1); R('rgba(240,180,41,.25)', 60, 20, 74, 1);
+  R('#2b3446', 10, 12, 34, 30); R('#e9e2cf', 12, 14, 30, 26);
+  ['....11......', '...1111.....', '..1111111...', '.111111111..', '1111111111..', '.1111111111.', '..111111111.', '...1111111..', '....11111...', '.....111....']
+    .forEach((row, j) => [...row].forEach((v, i) => { if(v === '1') R('#7E8BA0', 15 + i * 2, 16 + j * 2, 2, 2); }));
+  R('#E5484D', 28, 22, 2, 2); R('#E5484D', 21, 30, 2, 2); R('#2F7CF6', 33, 27, 2, 2);
+  R('#3a4456', 150, 0, 1, 12); R('#5b6577', 144, 12, 13, 4); R('#ffd76a', 147, 16, 7, 2);
+  g.fillStyle = 'rgba(255,215,106,.07)'; g.beginPath(); g.moveTo(144, 18); g.lineTo(120, 60); g.lineTo(182, 60); g.lineTo(157, 18); g.fill();
+  R('#0e3b2c', 0, 58, 195, 34); R('#145a40', 0, 58, 195, 3); R('#3b2a18', 0, 56, 195, 3);
+  for(let x = 0; x < 195; x += 3) for(let y = 62; y < 92; y += 4) if((x + y) % 7 === 0) R('rgba(255,255,255,.035)', x, y, 1, 1);
+  [[20, 72, '#E5484D'], [26, 74, '#2F7CF6'], [32, 72, '#F0B429']].forEach(([x, y, c]) => { for(let k = 0; k < 4; k++){ R(c, x, y - k * 2, 6, 2); R('rgba(255,255,255,.35)', x + 1, y - k * 2, 1, 1); } });
+  [['#2F7CF6', 96], ['#9B5CF6', 104], ['#F0B429', 112]].forEach(([c, x], k) => { R('#0a0e15', x + 1, 66 + k, 12, 16); R('#EEF2F6', x, 65 + k, 12, 16); R(c, x + 1, 66 + k, 10, 4); R('#c9ced8', x + 2, 72 + k, 8, 1); R('#c9ced8', x + 2, 74 + k, 6, 1); });
+  [[150, 74], [160, 78]].forEach(([x, y]) => { R('#F0B429', x, y, 9, 5); R('#9a6f0f', x + 3, y, 1, 5); });
+  [[60, 76, 4], [68, 78, 2], [75, 75, 1]].forEach(([x, y, n]) => { R('#EEF2F6', x, y, 6, 6); R('#9aa3b2', x, y + 5, 6, 1); ({ 1: [[2, 2]], 2: [[1, 1], [3, 3]], 4: [[1, 1], [3, 1], [1, 3], [3, 3]] })[n].forEach(([a, b]) => R('#13233B', x + a, y + b, 2, 2)); });
+  [[176, 40], [179, 34], [175, 28]].forEach(([x, y], k) => { g.fillStyle = `rgba(169,188,212,${.10 - k * .025})`; g.fillRect(x, y, 5, 4); });
+  R('#e9e2cf', 172, 52, 8, 2); R('#f86b2b', 179, 52, 2, 2);
 }

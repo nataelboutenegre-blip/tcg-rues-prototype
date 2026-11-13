@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '25a0331f0593';
+const VERSION_JEU = '02fbc661539c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -30622,7 +30622,9 @@ function messOuvrir(){
     <div class="fenetre mess-fen" role="dialog" aria-modal="true" aria-label="Le Mess">
       <button type="button" class="mess-x" data-mess="fermer" aria-label="Fermer">&times;</button>
       <canvas class="mess-scene" width="195" height="92" aria-hidden="true"></canvas>
-      <div class="mess-corps">
+      <div class="mess-onglets" role="tablist" aria-label="Jeux du Mess"><button type="button" role="tab" data-mess-jeu="machine">Machine à chiffrer</button><button type="button" role="tab" data-mess-jeu="rec">Le Recensement</button></div><!-- patch430 -->
+      <div class="mess-corps mess-rec" data-jeu="rec" hidden></div>
+      <div class="mess-corps" data-jeu="machine">
         <div class="mess-haut"><h2>Machine à chiffrer</h2><span class="mess-tk">🎟 <b data-mess="tickets">${Number(MESS.tickets) || 0}</b></span></div>
         <div class="mess-machine">
           <div class="mess-rotors">${depart.map(d => `<div class="mess-rotor"><div class="mess-bande">${d.map(s => messSp(s)).join('')}</div></div>`).join('')}</div>
@@ -30642,7 +30644,12 @@ function messOuvrir(){
     if(!b) return;
     if(b.dataset.mess === 'fermer') fermer(null);
     if(b.dataset.mess === 'chiffrer') messChiffrer(fen);
+    if(b.dataset.mess === 'rec-lancer') messRecAction(fen, 'mess_rec_lancer');   // patch430
+    if(b.dataset.mess === 'rec-tirer') messRecAction(fen, 'mess_rec_tirer');
+    if(b.dataset.mess === 'rec-clore') messRecAction(fen, 'mess_rec_clore');
   });
+  fen.querySelector('.mess-onglets').addEventListener('click', (e) => { const o = e.target.closest('[data-mess-jeu]'); if(o) messOnglet(fen, o.dataset.messJeu); });
+  messOnglet(fen, (() => { try{ return localStorage.getItem('tf-mess-jeu') === 'rec' ? 'rec' : 'machine'; }catch(e){ return 'machine'; } })());
   messFenMaj();
 }
 function messFenMaj(){
@@ -30753,4 +30760,76 @@ function messScene(sc){
   [[60, 76, 4], [68, 78, 2], [75, 75, 1]].forEach(([x, y, n]) => { R('#EEF2F6', x, y, 6, 6); R('#9aa3b2', x, y + 5, 6, 1); ({ 1: [[2, 2]], 2: [[1, 1], [3, 3]], 4: [[1, 1], [3, 1], [1, 3], [3, 3]] })[n].forEach(([a, b]) => R('#13233B', x + a, y + b, 2, 2)); });
   [[176, 40], [179, 34], [175, 28]].forEach(([x, y], k) => { g.fillStyle = `rgba(169,188,212,${.10 - k * .025})`; g.fillRect(x, y, 5, 4); });
   R('#e9e2cf', 172, 52, 8, 2); R('#f86b2b', 179, 52, 2, 2);
+}
+
+// ---------- patch430 : le Recensement (Mess, s3-11) ----------
+const messNb = (n) => Number(n || 0).toLocaleString('fr-FR');
+function messOnglet(fen, jeu){
+  try{ localStorage.setItem('tf-mess-jeu', jeu); }catch(e){}
+  fen.querySelectorAll('[data-mess-jeu]').forEach(b => { const on = b.dataset.messJeu === jeu; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
+  fen.querySelectorAll('.mess-corps[data-jeu]').forEach(c => { c.hidden = c.dataset.jeu !== jeu; });
+  const h2 = fen.querySelector('.mess-corps[data-jeu="machine"] .mess-haut h2');
+  if(jeu === 'rec') messRecRendre(fen, MESS && MESS.rec, false);
+}
+function messRecRendre(fen, v, revele){
+  const corps = fen.querySelector('.mess-corps[data-jeu="rec"]');
+  if(!corps || !MESS) return;
+  const R = MESS.recensement || {}, L = R.lots || {}, prix = R.prix || 2, plafond = R.plafond || 50000;
+  const tk = Number(v && v.tickets != null ? v.tickets : MESS.tickets) || 0;
+  const ligne = (x, cache, k) => `<div class="mess-ins${revele && !cache ? ' revele' : ''}"${revele ? ` style="animation-delay:${k * 160}ms"` : ''}><span>${echapperTexte(x.nom || '?')} <i>(${echapperTexte(x.dept || '')})</i></span><span class="mess-pop${cache ? ' cache' : ''}">${cache ? '? ? ?' : messNb(x.pop)}</span></div>`;
+  let jeu = '', res = '', boutons = '';
+  if(!v){
+    jeu = `<div class="mess-reg prefet vide"><h3><span>Registre du Préfet</span><b>—</b></h3><p>Le Préfet attend ton ticket.</p></div>`;
+    boutons = `<button type="button" class="mess-levier" data-mess="rec-lancer"${tk < prix ? ' disabled' : ''}>Jouer<small>· ${prix} tickets</small></button>`;
+    if(tk < prix) res = '<span class="mess-attente">Plus assez de tickets : gagne des duels classés au QG</span>';
+  } else {
+    const fini = !v.en_cours;
+    jeu = `<div class="mess-reg prefet"><h3><span>Registre du Préfet</span><b>${messNb(v.prefet_total)}</b></h3>${(v.prefet || []).map(x => ligne(x, false, 0)).join('')}</div>
+      <div class="mess-reg"><h3><span>Ton registre</span><b>${fini ? messNb(v.joueur_total) : '? ? ?'}</b></h3>${(v.joueur || []).map((x, k) => ligne(x, !fini, k)).join('')}</div>`;
+    if(!fini){
+      res = `<span class="mess-attente">Dépasse ${messNb(v.prefet_total)} sans franchir ${messNb(plafond)} habitants.</span>`;
+      boutons = `<div class="mess-boutons"><button type="button" class="mess-levier" data-mess="rec-tirer">Recenser</button><button type="button" class="mess-levier creux" data-mess="rec-clore">Clore</button></div>`;
+    } else {
+      const g = v.gain || {}, chips = [];
+      if(g.terra) chips.push(`+${g.terra} paquet${g.terra > 1 ? 's' : ''} Terra`);
+      if(g.tp) chips.push(`+${g.tp} TP`);
+      const titre = { parfait: 'Recensement parfait !', gagne: 'Recensé !', perdu: 'Le Préfet l’emporte', depasse: 'Plafond dépassé' }[v.resultat] || '';
+      const bon = v.resultat === 'parfait' || v.resultat === 'gagne';
+      res = `<span class="mess-titre${bon ? ' grand' : ' brouille'}">${titre}</span>${chips.map(x => `<span class="mess-chip">${x}</span>`).join('')}`;
+      boutons = `<button type="button" class="mess-levier" data-mess="rec-lancer"${tk < prix ? ' disabled' : ''}>Rejouer<small>· ${prix} tickets</small></button>`;
+    }
+  }
+  corps.innerHTML = `<div class="mess-haut"><h2>Le Recensement</h2><span class="mess-tk">🎟 <b data-mess="tickets">${tk}</b></span></div>
+    <div class="mess-cible">Plafond <b>${messNb(plafond)}</b> habitants</div>
+    ${jeu}
+    <div class="mess-res" aria-live="polite">${res}</div>
+    ${boutons}
+    <div class="mess-table"><h3>Les lots · ${prix} tickets</h3>
+      <div class="mess-l"><span>Tu dépasses le Préfet sans franchir le plafond</span><span class="mess-lot">${(L.gagne && L.gagne.tp) || 50} TP</span></div>
+      <div class="mess-l"><span>Recensement parfait (${messNb(R.parfait || 47500)} à ${messNb(plafond)})</span><span class="mess-lot or">${(L.parfait && L.parfait.terra) || 1} paquet Terra</span></div>
+      <div class="mess-l"><span>Au-dessus du plafond, ou pas plus que le Préfet</span><span class="mess-lot gris">rien</span></div></div>
+    <p class="mess-note">Des communes de 3 000 à 60 000 habitants. Tu vois leur nom, pas leur population : connaître la France aide.</p>`;
+}
+async function messRecAction(fen, rpc){
+  if(fen.classList.contains('tourne')) return;
+  fen.classList.add('tourne');
+  fen.querySelectorAll('.mess-rec .mess-levier').forEach(b => b.disabled = true);
+  let v = null;
+  try{
+    const r = await sb.rpc(rpc);
+    if(r.error) throw r.error;
+    v = r.data;
+  }catch(err){
+    fen.classList.remove('tourne');
+    messRecRendre(fen, MESS.rec, false);
+    notifier({ type: 'erreur', titre: 'Le Recensement', texte: messageLisible((err && err.message) || String(err)) });
+    return;
+  }
+  fen.classList.remove('tourne');
+  MESS.rec = v && v.en_cours ? v : null;
+  MESS.tickets = Number(v && v.tickets) || 0;
+  messRecRendre(fen, v, !!(v && !v.en_cours));
+  if(v && !v.en_cours && v.gain && (v.gain.tp || v.gain.terra)){ try{ loadPackStatus(); }catch(e){} }
+  const t = fen.querySelector('.mess-corps[data-jeu="machine"] [data-mess="tickets"]'); if(t) t.textContent = MESS.tickets;
+  messCarteRendre();
 }

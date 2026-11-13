@@ -2,7 +2,8 @@
   {
     "date": "2026-11-13",
     "nouveautes": [
-      "🏛️ Merveilles plus justes : une équipe envoyée dans les 12 premières heures compte depuis l’ouverture (la cloche te prévient), tous les bâtisseurs (1 000 h et plus) sont gravés, et chaque monument restauré chez toi donne +2 % de rythme à ton équipe, jusqu’à +40 % (merci Oshannir)"
+      "🏛️ Merveilles plus justes : une équipe envoyée dans les 12 premières heures compte depuis l’ouverture (la cloche te prévient), tous les bâtisseurs (1 000 h et plus) sont gravés, et chaque monument restauré chez toi donne +2 % de rythme à ton équipe, jusqu’à +40 % (merci Oshannir)",
+      "Roue du Front : le paquet Terra repasse à 5 % (il en sortait près de 5 par joueur et par jour) ; le Petit éclair (+4 énergie) passe de 20 à 25 %."
     ],
     "correctifs": [
       "🏗️ Les bâtiments des autres joueurs se mettent à jour pendant la partie : une Fonderie construite après l’ouverture du jeu n’apparaissait ni sur la carte ni sur l’écran de victoire (« Fonderie détruite »), même si le pillage avait bien lieu (merci Oshannir)",

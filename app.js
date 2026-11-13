@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '02fbc661539c';
+const VERSION_JEU = '923522ee3b3f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -14610,6 +14610,7 @@ function renderChantiers(){
     <div class="ch-carte">
       <div class="ch-haut"><h3>Ton équipe</h3><span class="ch-val">${chNb(E.ouvriers)} ouvriers</span></div>
       <p>Outils niveau ${chNb(E.outils)} : ton équipe fait <b>${chVirgule(E.rythme)} heures</b> de travail par heure, sur ton chantier comme sur la merveille.</p>
+      ${chSavoirHtml(E)}
       <button type="button" class="ch-bouton" data-ch="embaucher"${E.cout_ouvrier == null || solde < E.cout_ouvrier ? ' disabled' : ''}>${E.cout_ouvrier == null ? 'Équipe complète' : `Embaucher un ouvrier · ${chNb(E.cout_ouvrier)} TP`}</button>
       <button type="button" class="ch-bouton sec" data-ch="outils"${E.cout_outils == null || solde < E.cout_outils ? ' disabled' : ''}>${E.cout_outils == null ? 'Meilleurs outils' : `Outils niveau ${(Number(E.outils) || 1) + 1} (+15 %) · ${chNb(E.cout_outils)} TP`}</button>
       <p class="ch-petit">Tu as <b>${chNb(solde)} TP</b>.</p>
@@ -14621,7 +14622,8 @@ function renderChantiers(){
   if(M){
     const mm = I.mons.get(M.code), moi = M.moi || null, actif = !!(moi && moi.actif), graves = chR('graves', 10);
     h += `<h3 class="ch-h3 merv">La merveille du moment</h3>
-      <p class="ch-note">Une seule à la fois, pour tout le jeu. Envoie ton équipe : ton propre chantier s’arrête pendant ce temps. Avec au moins ${seuil} h de travail données, tu deviens mécène : +${chR('mecene_tp', 20)} TP par jour, pour toujours. Les ${graves} plus gros contributeurs sont gravés.</p>
+      <p class="ch-note">Une seule à la fois, pour tout le jeu. Envoie ton équipe : ton propre chantier s’arrête pendant ce temps. Envoyée dans les <b>${chR('ouverture_h', 12)} premières heures</b>, elle compte depuis l’ouverture. Avec au moins ${seuil} h données, tu deviens mécène : +${chR('mecene_tp', 20)} TP par jour, pour toujours. À partir de <b>${chNb(chR('batisseur', 1000))} h</b>, tu es bâtisseur : ton nom est gravé sur la merveille.</p>
+      ${chOuvertureHtml(M, actif)}
       <div class="ch-scene merv"><div class="ch-scene-tete"><p class="ch-scene-titre">${echapperTexte(mm ? chMaj(mm.embleme) : 'Merveille')}<small id="chMervSous"></small></p><div class="ch-boite merv"><span>MERVEILLE</span><b id="chMervPct">0 %</b></div></div>
         <canvas id="chCanvasMerv" width="192" height="108" role="img" aria-label="Le chantier de la merveille"></canvas></div>
       ${chSegs('chMervSegs')}
@@ -14629,11 +14631,11 @@ function renderChantiers(){
         <div class="ch-carte merv"><div class="ch-haut"><h3>Ton équipe</h3><span class="ch-val" id="chMesHeures">0 h</span></div>
           <p id="chMervTexte"></p>
           <button type="button" class="ch-bouton violet" data-ch="${actif ? 'rappeler' : 'envoyer'}">${actif ? 'Reprendre mon chantier' : 'Envoyer mon équipe'}</button></div>
-        <div class="ch-carte merv"><div class="ch-haut"><h3>Les mécènes</h3><span class="ch-petit">${chNb(M.mecenes)} mécène${Number(M.mecenes) > 1 ? 's' : ''}</span></div>
-          <div class="ch-mecenes">${(M.top || []).length ? M.top.map(x => `<div class="${x.moi ? 'moi' : ''}"><span>${chNb(x.rang)}</span><span>${x.moi ? 'Toi' : echapperTexte(x.pseudo)}${Number(x.heures) >= seuil ? ' ✦' : ''}</span><span>${chNb(x.heures)} h</span></div>`).join('')
+        <div class="ch-carte merv"><div class="ch-haut"><h3>Les mécènes</h3><span class="ch-petit">${chNb(M.mecenes)} mécène${Number(M.mecenes) > 1 ? 's' : ''}${Number(M.batisseurs) ? ` · ${chNb(M.batisseurs)} bâtisseur${Number(M.batisseurs) > 1 ? 's' : ''}` : ''}</span></div>
+          <div class="ch-mecenes">${(M.top || []).length ? M.top.map(x => `<div class="${x.moi ? 'moi' : ''}"><span>${chNb(x.rang)}</span><span>${x.moi ? 'Toi' : echapperTexte(x.pseudo)}${Number(x.heures) >= chR('batisseur', 1000) ? ' <i class="ch-bat" title="Bâtisseur">◆</i>' : Number(x.heures) >= seuil ? ' ✦' : ''}</span><span>${chNb(x.heures)} h</span></div>`).join('')
             + (moi && Number(moi.rang) > graves ? `<div class="moi"><span>${chNb(moi.rang)}</span><span>Toi</span><span>${chNb(moi.heures)} h</span></div>` : '')
             : '<p class="ch-petit">Personne pour l’instant : sois le premier.</p>'}</div>
-          <p class="ch-petit">✦ mécène (au moins ${seuil} h). Les ${graves} premiers sont gravés pour toujours.</p></div>
+          <p class="ch-petit">✦ mécène (au moins ${seuil} h) · <i class="ch-bat">◆</i> bâtisseur (au moins ${chNb(chR('batisseur', 1000))} h) : tous les bâtisseurs sont gravés pour toujours.</p></div>
       </div>`;
   } else if((CH.merveilles_finies || []).length){
     h += `<h3 class="ch-h3 merv">Les merveilles</h3><p class="ch-note">Toutes les merveilles sont restaurées. Bravo aux mécènes !</p>`;
@@ -14687,8 +14689,9 @@ function chMajTextes(){
     const hh = $('chMesHeures'); if(hh) hh.textContent = chNb(mh) + ' h';
     const tx = $('chMervTexte');
     if(tx) tx.innerHTML = actif
-      ? `Ton équipe (${chNb(CH.equipe.ouvriers)} ouvriers, casques blancs) travaille sur la merveille.${c ? ' <b>Ton chantier est en pause.</b>' : ''} ${mh < seuil ? `Encore ${Math.ceil(seuil - mh)} h pour devenir mécène.` : 'Tu es mécène.'}`
-      : (mh >= seuil ? `Tu es mécène (${chNb(mh)} h). Continue pour monter parmi les ${chR('graves', 10)} premiers.`
+      ? `Ton équipe (${chNb(CH.equipe.ouvriers)} ouvriers, casques blancs) travaille sur la merveille.${c ? ' <b>Ton chantier est en pause.</b>' : ''} ${mh < seuil ? `Encore ${Math.ceil(seuil - mh)} h pour devenir mécène.` : mh < chR('batisseur', 1000) ? `Tu es mécène. Encore ${chNb(Math.ceil(chR('batisseur', 1000) - mh))} h pour devenir bâtisseur.` : 'Tu es bâtisseur : ton nom sera gravé.'}`
+      : (mh >= chR('batisseur', 1000) ? `Tu es bâtisseur (${chNb(mh)} h) : ton nom sera gravé sur la merveille.`
+         : mh >= seuil ? `Tu es mécène (${chNb(mh)} h). Encore ${chNb(Math.ceil(chR('batisseur', 1000) - mh))} h pour devenir bâtisseur et être gravé.`
                      : `Envoie ton équipe aider.${c ? ' Ton chantier s’arrête pendant ce temps : tu le reprends quand tu veux.' : ' Tu n’as pas de chantier en cours : elle ne perd rien.'}`);
     if(pm >= 1) chRelire();
   }
@@ -23370,7 +23373,7 @@ function ncDemarrer(){
 
 async function ncCharger(){
   const rpc = async (n, a) => { try{ const { data, error } = await sb.rpc(n, a); return error ? undefined : data; }catch(e){ return undefined; } };
-  const [prefs, journal, sieges, ech, clanE, alertes, quetes, recolte, clan, effaces, diplo] = await Promise.all([
+  const [prefs, journal, sieges, ech, clanE, alertes, quetes, recolte, clan, effaces, diplo, merv] = await Promise.all([
     NC.prefs ? null : rpc('mes_notif_preferences'),
     rpc('journal', { p_mode: 'moi', p_limite: 40 }),
     rpc('sieges_contre_moi'),
@@ -23382,12 +23385,13 @@ async function ncCharger(){
     CLANS ? rpc('mon_clan') : null,
     SAISON2 ? rpc('mes_sieges_effaces') : null,   // patch326
     SAISON2 && CLANS ? rpc('clan_diplo_etat') : null,   // patch400
+    SAISON2 ? rpc('merveille_ouverture') : null,   // patch431
   ]);
   if(!NC.prefs){
     if(prefs === undefined) NC.prefsDispo = false;
     else { NC.prefsDispo = true; NC.prefs = ncPrefsDepuis(prefs); }
   }
-  NC.d = { journal, sieges, ech, clanE, alertes, quetes, recolte: Array.isArray(recolte) ? recolte[0] : recolte, clan, effaces, diplo };
+  NC.d = { journal, sieges, ech, clanE, alertes, quetes, recolte: Array.isArray(recolte) ? recolte[0] : recolte, clan, effaces, diplo, merv };
   if(diplo !== undefined && diplo !== null){ clanDiplo.etat = diplo; majBadgeClanTotal(); }   // patch400
   NC.charge = Date.now();   // patch262
   ncConstruire();
@@ -23412,6 +23416,13 @@ function ncConstruire(){
         s: `Série ${nb(m.victoires_consecutives)} / 3${m.dernier_round ? ' · ' + ilYA(m.dernier_round) : ''}`,
         a: 'Défendre', rouge: true, sourdine: String(m.commune_code), aller: () => ncAller('front', 'defense') });
     }
+  }
+  if(d.merv && !d.merv.envoye && new Date(d.merv.fin_fenetre).getTime() > Date.now()){   // patch431 : une merveille ouvre
+    const f = new Date(d.merv.fin_fenetre), hh = f.getHours() + 'h' + String(f.getMinutes()).padStart(2, '0');
+    items.push({ cle: `merv|${d.merv.code}`, sec: 'afaire', c: 'alerte', i: '🏛️', mode: 'terra',
+      t: `La merveille <b>${echapperTexte(chMaj(d.merv.nom || ''))}</b> ouvre : envoie ton équipe`,
+      s: `Avant ${hh} : elle comptera depuis l’ouverture`, a: 'Envoyer',
+      aller: () => ncAller('terra', 'monuments', () => setTimeout(() => { const el = document.querySelector('.ch-h3.merv'); if(el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 600)) });
   }
   if(SAISON2 && BATIMENTS && Array.isArray(BATIMENTS.banque_reperee_par)){   // patch375 : un Radar voit ma Banque
     for(const x of BATIMENTS.banque_reperee_par){
@@ -30832,4 +30843,18 @@ async function messRecAction(fen, rpc){
   if(v && !v.en_cours && v.gain && (v.gain.tp || v.gain.terra)){ try{ loadPackStatus(); }catch(e){} }
   const t = fen.querySelector('.mess-corps[data-jeu="machine"] [data-mess="tickets"]'); if(t) t.textContent = MESS.tickets;
   messCarteRendre();
+}
+
+// ---------- patch431 : merveilles plus justes (s2-143) ----------
+function chSavoirHtml(E){
+  if(!E || E.savoir == null) return '';
+  const n = Number(E.restaures) || 0, pct = Math.round((Number(E.savoir) || 0) * 100), max = Math.round(chR('savoir_max', 0.4) * 100);
+  return `<p class="ch-savoir"><b>Savoir-faire +${pct} %</b> · ${n} monument${n > 1 ? 's' : ''} restauré${n > 1 ? 's' : ''} chez toi. Chacun ajoute ${Math.round(chR('savoir_pct', 0.02) * 100)} % au rythme de ton équipe${pct >= max ? ' : le maximum est atteint.' : `, jusqu’à ${max} %.`}</p>`;
+}
+function chOuvertureHtml(M, actif){
+  if(!M || !M.ouverte_le) return '';
+  const fin = new Date(M.ouverte_le).getTime() + chR('ouverture_h', 12) * 3600e3, reste = fin - Date.now();
+  if(reste <= 0) return '';
+  const deja = actif || (M.moi && Number(M.moi.heures) > 0);
+  return `<div class="ch-ouverture${deja ? ' ok' : ''}"><b>Ouverture</b><span>${deja ? 'Ton équipe compte depuis l’ouverture.' : `Encore <b>${formatDuree(reste)}</b> pour envoyer ton équipe : elle comptera depuis l’ouverture, comme les premiers.`}</span></div>`;
 }

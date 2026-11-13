@@ -9994,3 +9994,12 @@ body.mess-on #panel-regles [data-s3="mess"]{ display:revert !important; }
 .mess-levier.creux{ background:transparent; color:var(--c-legendaire); border:2px solid var(--c-legendaire); box-shadow:none; }
 .mess-lot.gris{ color:var(--brume); }
 .mess-rec .mess-lot{ white-space:nowrap; flex:none; }
+
+/* patch431 : merveilles plus justes */
+.ch-savoir{ margin:6px 0 0; font-size:.86rem; color:var(--brume); line-height:1.45; }
+.ch-savoir b{ color:var(--c-legendaire); }
+.ch-bat{ font-style:normal; color:var(--c-legendaire); }
+.ch-ouverture{ display:flex; gap:10px; align-items:center; margin:8px 0 12px; padding:10px 12px; border-radius:12px; background:rgba(240,180,41,.12); border:1px solid rgba(240,180,41,.45); font-size:.9rem; line-height:1.4; }
+.ch-ouverture > b{ flex:none; font-family:var(--titre); font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--c-legendaire); }
+.ch-ouverture.ok{ background:rgba(34,160,107,.12); border-color:rgba(34,160,107,.45); }
+.ch-ouverture.ok > b{ color:#5fd39e; }

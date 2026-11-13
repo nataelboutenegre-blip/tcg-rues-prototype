@@ -10003,3 +10003,12 @@ body.mess-on #panel-regles [data-s3="mess"]{ display:revert !important; }
 .ch-ouverture > b{ flex:none; font-family:var(--titre); font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:var(--c-legendaire); }
 .ch-ouverture.ok{ background:rgba(34,160,107,.12); border-color:rgba(34,160,107,.45); }
 .ch-ouverture.ok > b{ color:#5fd39e; }
+
+/* patch432 : la ration du Mess */
+.mess-ration{ display:grid; grid-template-columns:1fr 1fr; gap:6px 12px; align-items:center; border-radius:12px; background:#121a28; border:1px solid rgba(240,180,41,.25); padding:10px 12px; font-size:13px; }
+.mess-ra-t{ grid-column:1 / -1; font:800 15px var(--titre); text-transform:uppercase; letter-spacing:.05em; color:var(--c-legendaire); }
+.mess-ra-l{ display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px; color:var(--brume); }
+.mess-ra-l b{ color:#fff; font-family:var(--titre); font-size:16px; }
+.mess-ra-barre{ display:block; width:100%; height:6px; border-radius:4px; background:#1f2a3d; overflow:hidden; }
+.mess-ra-barre b{ display:block; height:100%; background:linear-gradient(90deg,#22A06B,#F0B429); }
+.mess-ration small{ grid-column:1 / -1; color:var(--brume); font-size:11.5px; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '52d4db7498d9';
+const VERSION_JEU = 'bff483714701';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -30613,7 +30613,8 @@ function messLotTexte(id, l){
   if(l.terra) p.push(`${l.terra} paquet${l.terra > 1 ? 's' : ''} Terra`);
   if(l.titre && !(MESS && MESS.as)) p.push('titre « As du Mess »');
   if(l.tp) p.push(`${l.tp} TP`);
-  if(l.energie) p.push(`+${l.energie} énergie (1 fois par jour)`);
+  if(l.energie) p.push(`${l.energie} ⚡`);   // patch432
+  if(l.lingots) p.push(`${l.lingots} lingot${l.lingots > 1 ? 's' : ''}`);
   return p.join(' + ');
 }
 function messTableHtml(){
@@ -30644,6 +30645,7 @@ function messOuvrir(){
         <div class="mess-res" aria-live="polite"><span class="mess-attente">Aligne trois symboles sur la ligne rouge</span></div>
         <button type="button" class="mess-levier" data-mess="chiffrer">Chiffrer<small>· ${prix} ticket${prix > 1 ? 's' : ''}</small></button>
         <div class="mess-table"><h3>Les lots</h3>${messTableHtml()}</div>
+        <div data-mess="ration">${messRationHtml()}</div>
         <p class="mess-note">Chaque symbole a la même chance sur chaque rotor : un triple tombe 1 fois sur 216. Les tickets ne s’achètent pas et la machine n’en rend jamais. Pas de lingots ici.</p>
       </div>
     </div>`, () => { messFen = null; });
@@ -30667,6 +30669,7 @@ function messFenMaj(){
   const fen = messFen;
   if(!fen || !fen.isConnected || !MESS) return;
   const t = fen.querySelector('[data-mess="tickets"]'); if(t) t.textContent = Number(MESS.tickets) || 0;
+  const ra = fen.querySelector('[data-mess="ration"]'); if(ra) ra.innerHTML = messRationHtml();   // patch432
   const b = fen.querySelector('[data-mess="chiffrer"]');
   const prix = (MESS.machine && MESS.machine.prix) || 1;
   if(b && !fen.classList.contains('tourne')) b.disabled = (Number(MESS.tickets) || 0) < prix;
@@ -30729,11 +30732,12 @@ async function messChiffrer(fen){
     if(g.terra) chips.push(`+${g.terra} paquet${g.terra > 1 ? 's' : ''} Terra`);
     if(g.titre) chips.push(`Titre « ${echapperTexte(TITRES[g.titre] || g.titre)} »`);
     if(g.energie) chips.push(`+${g.energie} énergie`);
+    if(g.lingots) chips.push(`+${g.lingots} lingot${g.lingots > 1 ? 's' : ''}`);   // patch432
     if(g.tp) chips.push(`+${g.tp} TP`);
     const grand = data.lot !== 'paire' && data.lot !== 'paire_couronne';
     res.innerHTML = `<span class="mess-titre${grand ? ' grand' : ''}">${grand ? 'Message déchiffré !' : echapperTexte(data.nom || 'Une paire')}</span>${chips.map(x => `<span class="mess-chip">${x}</span>`).join('')}`;
     if(g.tp || g.terra) { try{ loadPackStatus(); }catch(e){} }
-    if(g.energie) { try{ majEnergie(); }catch(e){} }
+    if(g.energie || g.lingots) { try{ majEnergie(); }catch(e){} messRationAjouter(g); }   // patch432
     if(g.titre) notifier({ type: 'succes', titre: 'As du Mess', texte: 'Trois couronnes ! Le titre « As du Mess » est à toi : choisis-le dans ton profil.' });
   } else {
     res.innerHTML = '<span class="mess-titre brouille">Message brouillé</span>';
@@ -30803,6 +30807,8 @@ function messRecRendre(fen, v, revele){
     } else {
       const g = v.gain || {}, chips = [];
       if(g.terra) chips.push(`+${g.terra} paquet${g.terra > 1 ? 's' : ''} Terra`);
+      if(g.energie) chips.push(`+${g.energie} énergie`);   // patch432
+      if(g.lingots) chips.push(`+${g.lingots} lingot${g.lingots > 1 ? 's' : ''}`);
       if(g.tp) chips.push(`+${g.tp} TP`);
       const titre = { parfait: 'Recensement parfait !', gagne: 'Recensé !', perdu: 'Le Préfet l’emporte', depasse: 'Plafond dépassé' }[v.resultat] || '';
       const bon = v.resultat === 'parfait' || v.resultat === 'gagne';
@@ -30816,9 +30822,10 @@ function messRecRendre(fen, v, revele){
     <div class="mess-res" aria-live="polite">${res}</div>
     ${boutons}
     <div class="mess-table"><h3>Les lots · ${prix} tickets</h3>
-      <div class="mess-l"><span>Tu dépasses le Préfet sans franchir le plafond</span><span class="mess-lot">${(L.gagne && L.gagne.tp) || 50} TP</span></div>
-      <div class="mess-l"><span>Recensement parfait (${messNb(R.parfait || 47500)} à ${messNb(plafond)})</span><span class="mess-lot or">${(L.parfait && L.parfait.terra) || 1} paquet Terra</span></div>
+      <div class="mess-l"><span>Tu dépasses le Préfet sans franchir le plafond</span><span class="mess-lot">${messLotTexte('gagne', L.gagne) || '50 TP'}</span></div>
+      <div class="mess-l"><span>Recensement parfait (${messNb(R.parfait || 47500)} à ${messNb(plafond)})</span><span class="mess-lot or">${messLotTexte('parfait', L.parfait) || '1 paquet Terra'}</span></div>
       <div class="mess-l"><span>Au-dessus du plafond, ou pas plus que le Préfet</span><span class="mess-lot gris">rien</span></div></div>
+    ${messRationHtml()}
     <p class="mess-note">Des communes de 3 000 à 60 000 habitants. Tu vois leur nom, pas leur population : connaître la France aide.</p>`;
 }
 async function messRecAction(fen, rpc){
@@ -30839,6 +30846,7 @@ async function messRecAction(fen, rpc){
   fen.classList.remove('tourne');
   MESS.rec = v && v.en_cours ? v : null;
   MESS.tickets = Number(v && v.tickets) || 0;
+  if(v && !v.en_cours && v.gain && (v.gain.energie || v.gain.lingots)){ try{ majEnergie(); }catch(e){} messRationAjouter(v.gain); }   // patch432
   messRecRendre(fen, v, !!(v && !v.en_cours));
   if(v && !v.en_cours && v.gain && (v.gain.tp || v.gain.terra)){ try{ loadPackStatus(); }catch(e){} }
   const t = fen.querySelector('.mess-corps[data-jeu="machine"] [data-mess="tickets"]'); if(t) t.textContent = MESS.tickets;
@@ -30857,4 +30865,22 @@ function chOuvertureHtml(M, actif){
   if(reste <= 0) return '';
   const deja = actif || (M.moi && Number(M.moi.heures) > 0);
   return `<div class="ch-ouverture${deja ? ' ok' : ''}"><b>Ouverture</b><span>${deja ? 'Ton équipe compte depuis l’ouverture.' : `Encore <b>${formatDuree(reste)}</b> pour envoyer ton équipe : elle comptera depuis l’ouverture, comme les premiers.`}</span></div>`;
+}
+
+// ---------- patch432 : la ration du Mess (s3-12) ----------
+function messRationHtml(){
+  const r = MESS && MESS.ration;
+  if(!r) return '';
+  const e = Number(r.energie_jour) || 0, l = Number(r.lingots_jour) || 0, E = Number(r.energie) || 25, L = Number(r.lingots) || 6;
+  const barre = (n, m) => `<i class="mess-ra-barre"><b style="width:${Math.min(100, Math.round(n / m * 100))}%"></b></i>`;
+  return `<div class="mess-ration"><span class="mess-ra-t">Ration du jour</span>
+    <span class="mess-ra-l">⚡ <b>${e}</b> / ${E} ${barre(e, E)}</span>
+    <span class="mess-ra-l">Lingots <b>${l}</b> / ${L} ${barre(l, L)}</span>
+    <small>Au-delà, ${Number(r.tp_par_energie) || 10} TP par énergie et ${Number(r.tp_par_lingot) || 15} TP par lingot.</small></div>`;
+}
+function messRationAjouter(g){
+  if(!MESS || !MESS.ration || !g) return;
+  MESS.ration.energie_jour = (Number(MESS.ration.energie_jour) || 0) + (Number(g.energie) || 0);
+  MESS.ration.lingots_jour = (Number(MESS.ration.lingots_jour) || 0) + (Number(g.lingots) || 0);
+  if(messFen) messFenMaj();
 }

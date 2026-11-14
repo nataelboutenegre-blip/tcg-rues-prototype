@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-11-15",
+    "nouveautes": [],
+    "correctifs": [
+      "Rafale : plus de duel contre un joueur beaucoup plus fort (plus de 200 points d'Elo d'écart) ni trois fois de suite contre le même quand il n'y a pas d'autre adversaire ; ta partie attend alors un joueur de ton niveau (merci Maroli)."
+    ]
+  },
+  {
     "date": "2026-11-13",
     "nouveautes": [
       "🏛️ Merveilles plus justes : une équipe envoyée dans les 12 premières heures compte depuis l’ouverture (la cloche te prévient), tous les bâtisseurs (1 000 h et plus) sont gravés, et chaque monument restauré chez toi donne +2 % de rythme à ton équipe, jusqu’à +40 % (merci Oshannir)",

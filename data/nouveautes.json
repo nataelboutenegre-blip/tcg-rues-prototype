@@ -3,7 +3,7 @@
     "date": "2026-11-15",
     "nouveautes": [],
     "correctifs": [
-      "Rafale : plus de duel contre un joueur beaucoup plus fort (plus de 200 points d'Elo d'écart) ni trois fois de suite contre le même quand il n'y a pas d'autre adversaire ; ta partie attend alors un joueur de ton niveau (merci Maroli)."
+      "Rafale et Radar : plus de duel classé contre un joueur beaucoup plus fort ou beaucoup plus faible (plus de 300 points d'Elo d'écart) ; ta partie attend alors un adversaire de ton niveau, 12 h au plus (merci Maroli)."
     ]
   },
   {

@@ -1,0 +1,136 @@
+/* =====================================================================
+   patch439 : le pass de saison en vitrine — habillage Topo
+   Sous html.topo:not(.sans-vitrine), comme la boutique (patch438).
+   ===================================================================== */
+html.topo:not(.sans-vitrine) #panel-pass, VV #passCorps{ min-width:0; }
+VV .psx{ max-width:560px; min-width:0; --ps-rc:217,123,58; }
+VV .psx .psx-jauge{ height:5px; border-radius:3px; background:#22395C; overflow:hidden; }
+VV .psx .psx-jauge i{ display:block; height:100%; border-radius:3px; background:var(--t-or); }
+
+/* l'en-tête */
+VV .psx-tete{ position:relative; overflow:hidden; padding:18px 16px 16px; border-radius:18px; border:1px solid rgba(var(--ps-rc), .4);
+  background:
+    radial-gradient(90% 120% at 0% 0%, rgba(var(--ps-rc), .3), rgba(var(--ps-rc), 0) 70%),
+    repeating-radial-gradient(ellipse 130% 95% at 96% 0%, rgba(var(--ps-rc), 0) 0 17px, rgba(var(--ps-rc), .09) 17px 18px),
+    var(--bx-ecrin); }
+VV .psx-tete .bqx-sur{ --bx-rc:var(--ps-rc); }
+VV .psx-h1{ margin:3px 0 14px; font:700 1.65rem/1.1 var(--texte); letter-spacing:0; color:var(--t-texte); }
+VV .psx-niveau{ display:flex; align-items:center; gap:12px; }
+VV .psx-pastille{ flex:none; width:50px; height:50px; border-radius:50%; display:grid; place-items:center; font-family:var(--titre); font-weight:800; font-size:1.5rem;
+  color:var(--t-or); background:var(--bx-ecrin); box-shadow:inset 0 0 0 2px var(--t-or); }
+VV .psx-barre{ flex:1; min-width:0; }
+VV .psx-barre .l{ display:flex; justify-content:space-between; gap:10px; margin-bottom:6px; font-size:.8rem; color:var(--t-texte2); }
+VV .psx-barre .l b{ color:var(--t-texte); font-weight:600; }
+VV .psx-jour{ margin-top:6px; font-size:.74rem; color:var(--t-texte2); }
+
+/* à la une : à réclamer, ou la prochaine récompense */
+VV .psx-une{ margin-top:10px; --bx-rc:169,188,212; }
+VV .psx-une.pass{ --bx-rc:240,180,41; }
+VV .psx-une-vis{ width:124px; height:164px; display:grid; place-items:center; filter:drop-shadow(0 12px 14px rgba(0,0,0,.5)); }
+VV .psx-une-vis > *{ margin:0 !important; }
+VV .psx-une-vis .bq-dos-apercu{ width:109px; height:152.5px; transform:rotate(-4deg); }
+VV .psx-une-vis .bq-dos-echelle{ transform:scale(.58); }
+VV .psx-une-vis .sk-vig{ width:102px; height:153px; transform:rotate(-4deg); }
+VV .psx-une-vis .sk-vig-echelle{ transform:scale(.68); }
+VV .psx-une-vis .hab-vignette{ width:108px; transform:rotate(-4deg); }
+VV .psx-une-vis .psx-sachet{ transform:scale(2.1) rotate(-4deg); }
+VV .psx-une-vis .psx-qte svg{ width:84px; height:84px; }
+VV .psx-une-vis .psx-qte b{ font-size:1.7rem; }
+VV .psx-une-vis .psx-titre{ font-size:1.05rem; padding:12px 12px; }
+VV .psx-reste{ margin-top:10px; font-size:.84rem; color:var(--t-texte2); }
+VV .psx-reste b{ color:var(--t-texte); font-weight:600; }
+VV .psx-une .psx-verrou{ margin-top:6px; }
+
+/* les boutons */
+VV .psx-cta{ flex:none; margin:12px 0 0; padding:11px 18px; border:0; border-radius:12px; cursor:pointer; background:var(--t-or); color:var(--t-or-texte);
+  font:700 .95rem/1.2 var(--texte); letter-spacing:0; white-space:nowrap; }
+VV .psx-achat .psx-cta{ margin:0; font-family:var(--titre); font-weight:800; font-size:1.2rem; letter-spacing:.02em; }
+VV .psx-recl{ border:0; border-radius:9px; padding:7px 11px; cursor:pointer; background:var(--t-or); color:var(--t-or-texte); font:700 .8rem/1.2 var(--texte); white-space:nowrap; }
+VV .psx :is(.psx-cta, .psx-recl):disabled{ opacity:.5; }
+VV .psx-verrou{ display:inline-flex; align-items:center; gap:4px; font-size:.74rem; font-weight:600; color:#C9AE97; white-space:nowrap; }
+VV .psx-verrou .ps-cadenas{ position:static; width:13px; height:13px; color:inherit; }
+VV .psx-ok{ font-size:.76rem; font-weight:600; color:#5BE3A6; white-space:nowrap; }
+VV .psx-loin{ font-size:.74rem; color:var(--t-texte2); }
+
+/* le pass complet */
+VV .psx-achat{ display:flex; align-items:center; gap:14px; margin-top:10px; padding:13px 14px; border-radius:14px; background:var(--t-surface); border:1px solid rgba(240,180,41,.4); }
+VV .psx-achat.ok{ border-color:rgba(91,227,166,.4); }
+VV .psx-achat > div{ flex:1; min-width:0; }
+VV .psx-achat b{ font:700 .98rem/1.2 var(--texte); color:var(--t-texte); }
+VV .psx-achat p{ margin:3px 0 0; font-size:.76rem; line-height:1.4; color:var(--t-texte2); }
+
+/* les titres de bloc */
+VV .psx-h2{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:26px 0 10px; }
+VV .psx-h2 h2{ margin:0; font:700 1.08rem/1.25 var(--texte); letter-spacing:0; color:var(--t-texte); }
+VV .psx-h2 > span{ font-size:.76rem; color:var(--t-texte2); }
+
+/* les défis de la semaine */
+VV .psx-defi{ padding:11px 13px; border-radius:12px; background:var(--t-surface); border:1px solid var(--t-trait); }
+VV .psx-defi + .psx-defi{ margin-top:7px; }
+VV .psx-defi .l{ display:flex; justify-content:space-between; gap:10px; margin-bottom:8px; font-size:.86rem; }
+VV .psx-defi .l b{ font-weight:600; color:var(--t-texte); }
+VV .psx-defi .l span{ font-family:var(--titre); font-weight:800; font-size:.98rem; color:var(--t-or); white-space:nowrap; }
+VV .psx-defi small{ display:block; margin-top:5px; font-size:.7rem; color:var(--t-texte2); }
+VV .psx-defi.fait .l span, VV .psx-defi.fait .psx-jauge i{ color:#5BE3A6; }
+VV .psx-defi.fait .psx-jauge i{ background:#5BE3A6; }
+
+/* la piste : une ligne par niveau, le long d'un rail */
+VV .psx-piste{ list-style:none; margin:0; padding:0; }
+VV .psx-l{ position:relative; display:grid; grid-template-columns:30px minmax(0,1fr); gap:10px; align-items:center; padding:4px 0; }
+VV .psx-l::before{ content:""; position:absolute; left:14px; top:0; bottom:0; width:2px; background:#22395C; }
+VV .psx-l:first-child::before{ top:50%; }
+VV .psx-l:last-child::before{ bottom:50%; }
+VV .psx-l.atteint::before{ background:var(--t-or); }
+VV .psx-l.courant::before{ background:linear-gradient(180deg, var(--t-or) 0 50%, #22395C 50% 100%); }
+VV .psx-n{ position:relative; z-index:1; width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-family:var(--titre); font-weight:800; font-size:.95rem;
+  color:var(--t-texte2); background:#0F1F38; box-shadow:inset 0 0 0 2px #22395C; }
+VV .psx-l.atteint .psx-n{ color:var(--t-or-texte); background:var(--t-or); box-shadow:none; }
+VV .psx-l.courant .psx-n{ color:var(--t-texte); box-shadow:inset 0 0 0 2px var(--t-or); }
+VV .psx-carte{ display:grid; grid-template-columns:68px minmax(0,1fr) auto; gap:12px; align-items:center; padding:5px 12px 5px 5px; border-radius:14px;
+  background:var(--t-surface); border:1px solid var(--t-trait); }
+VV .psx-l.pass .psx-carte{ border-color:rgba(240,180,41,.3); }
+VV .psx-l.courant .psx-carte{ border-color:rgba(240,180,41,.75); }
+VV .psx-l.recu .psx-carte{ opacity:.62; }
+VV .psx-vis{ --bx-rc:169,188,212; position:relative; width:68px; height:84px; border-radius:10px; display:grid; place-items:center; overflow:hidden;
+  background: radial-gradient(115% 80% at 50% 0%, rgba(var(--bx-rc), .2), rgba(var(--bx-rc), 0) 66%), var(--bx-ecrin); }
+VV .psx-l.pass .psx-vis{ --bx-rc:240,180,41; }
+VV .psx-vis > *{ margin:0 !important; }
+VV .psx-vis :is(.bq-dos-apercu, .sk-vig, .hab-vignette){ filter:drop-shadow(0 5px 6px rgba(0,0,0,.45)); }
+VV .psx-vis .bq-dos-apercu{ width:48px; height:67.1px; }
+VV .psx-vis .bq-dos-echelle{ transform:scale(.2553); }
+VV .psx-vis .sk-vig{ width:45px; height:67.5px; }
+VV .psx-vis .sk-vig-echelle{ transform:scale(.3); }
+VV .psx-vis .hab-vignette{ width:48px; }
+VV .psx-qte{ display:flex; flex-direction:column; align-items:center; gap:1px; }
+VV .psx-qte svg{ width:40px; height:40px; }
+VV .psx-qte b{ font-family:var(--titre); font-weight:800; font-size:1.05rem; line-height:1; color:var(--t-texte); }
+VV .psx-titre{ display:block; padding:6px 5px; text-align:center; font:italic 600 .68rem/1.25 var(--texte); color:#FFE08A; overflow-wrap:anywhere; }
+VV .psx-l:not(.pass) .psx-titre, VV .psx-une:not(.pass) .psx-titre{ color:#D5E0EE; }
+VV .psx-sachet{ position:relative; width:46px; height:64.4px; }
+VV .psx-sachet .paquet{ position:absolute; left:0; top:0; width:200px; height:280px; transform:scale(.23); transform-origin:0 0; pointer-events:none; cursor:default;
+  animation:none !important; filter:drop-shadow(0 18px 18px rgba(0,0,0,.55)); }
+VV .psx-sachet .paquet :is(.coupe-consigne, .coupe-lueur, .coupe-trace, .coupe-tete, .coupe-eclair, .paquet-eclat, .paquet-bouts, .perfo-masque){ display:none !important; }
+VV .psx-txt{ min-width:0; display:flex; flex-direction:column; gap:2px; }
+VV .psx-txt b{ font:600 .9rem/1.25 var(--texte); color:var(--t-texte); overflow-wrap:anywhere; }
+VV .psx-txt span{ font-size:.74rem; line-height:1.35; color:var(--t-texte2); }
+VV .psx-l.bonus .psx-carte{ border-style:dashed; }
+
+/* le choix du département d'un paquet */
+.psx-dep{ max-width:100%; margin-top:6px; padding:7px 8px; border-radius:9px; font:inherit; font-size:.8rem; }
+VV .psx-dep{ width:100%; max-width:230px; background:var(--bx-ecrin); border:1px solid var(--t-trait); color:var(--t-texte); }
+VV .psx-une .psx-dep{ margin-top:10px; }
+
+/* le bas de page */
+VV .psx-infos{ margin-top:22px; }
+VV .psx-infos h3{ margin:0 0 8px; font:700 .95rem/1.25 var(--texte); color:var(--t-texte); }
+VV .psx-infos ul{ margin:0; padding:0; list-style:none; font-size:.8rem; line-height:1.7; color:var(--t-texte2); }
+VV .psx-infos li{ display:flex; justify-content:space-between; gap:10px; }
+VV .psx-infos li b{ color:var(--t-texte); font-weight:600; white-space:nowrap; }
+VV .psx-infos p{ margin:14px 0 0; font-size:.74rem; line-height:1.5; color:#7B8FAB; }
+@media (max-width:379px){
+  VV .psx-une-vis{ width:104px; height:146px; }
+  VV .psx-une-vis .bq-dos-apercu{ width:94px; height:131.5px; } VV .psx-une-vis .bq-dos-echelle{ transform:scale(.5); }
+  VV .psx-une-vis .sk-vig{ width:90px; height:135px; } VV .psx-une-vis .sk-vig-echelle{ transform:scale(.6); }
+  VV .psx-une-vis .hab-vignette{ width:92px; }
+  VV .psx-carte{ gap:9px; padding-right:9px; }
+}

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd107903e2da4';
+const VERSION_JEU = 'fe8c284a8644';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -12600,7 +12600,8 @@ function dessinerSiegesCanvas(ctx, liste){
   if(!jauges.size) return;
   const vue = vueCarteUnites(24);
   const u = 1 / (echelleCarte() * mapZoom);   // unités de carte par pixel d'écran
-  const rayon = (mapZoom < 3 ? 9 : 12) * u, ep = (mapZoom < 3 ? 3 : 3.6) * u;
+  const px = mapZoom < 2 ? 4.5 : mapZoom < 12 ? 6.5 : 10;   // plus discret de loin
+  const rayon = px * u, ep = Math.max(1.6, px * 0.32) * u;
   const debut = -Math.PI / 2;
   for(const c of liste){
     const j = jauges.get(String(c.code));
@@ -12619,7 +12620,7 @@ function dessinerSiegesCanvas(ctx, liste){
       ctx.strokeStyle = coul; ctx.lineWidth = ep; ctx.stroke();
     }
     ctx.restore();
-    if(mapZoom >= 3){   // de près : le pourcentage
+    if(mapZoom >= 12){   // de près : le pourcentage
       const f = 10.5 * u, txt = Math.round(100 * j.p) + ' %';
       ctx.save();
       ctx.font = `700 ${f}px "Instrument Sans", system-ui, sans-serif`;

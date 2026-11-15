@@ -1,0 +1,190 @@
+/* =====================================================================
+   patch438 : la boutique en vitrine (TP et euros) — habillage Topo
+   Tout est sous html.topo:not(.sans-vitrine). interface.vitrine = 0 l'éteint.
+   ===================================================================== */
+VV { --bx-ecrin:#0B1830; --bx-rc:169,188,212; }
+VV :is(.bqr-item, .bqx-une).commun{ --bx-rc:126,139,160; }
+VV :is(.bqr-item, .bqx-une).peucommun{ --bx-rc:34,160,107; }
+VV :is(.bqr-item, .bqx-une).rare{ --bx-rc:47,124,246; }
+VV :is(.bqr-item, .bqx-une).epique{ --bx-rc:155,92,246; }
+VV :is(.bqr-item, .bqx-une).legendaire{ --bx-rc:240,180,41; }
+
+/* --- l'en-tête : le solde à droite du titre --- */
+BQ { position:relative; min-width:0; }
+BQ .bq-section, BQ #bqeCorps, BQ #bqTourne{ min-width:0; width:100%; box-sizing:border-box; }
+VV #bqStatut{ position:absolute; top:1px; right:0; margin:0; gap:0; }
+VV #bqStatut .puce.bq-terra-seul{ display:none; }
+VV #bqStatut .puce.solde{ background:none; border:0; padding:0; font-size:.78rem; font-weight:500; color:var(--t-texte2); display:inline-flex; align-items:baseline; gap:6px; }
+VV #bqStatut .puce.solde b{ font-family:var(--titre); font-weight:800; font-size:1.3rem; line-height:1; color:var(--t-or); letter-spacing:.01em; }
+VV #bqStatut .puce.solde small{ font-size:.72rem; font-weight:600; color:#C9AE97; margin-left:-3px; }
+
+/* --- les titres de rayon --- */
+BQ .bq-section{ margin-top:28px; max-width:860px; }
+BQ .bq-section > h2{ display:flex; align-items:baseline; flex-wrap:wrap; gap:2px 8px; margin:0 0 12px; font:700 1.08rem/1.25 var(--texte); letter-spacing:0; color:var(--t-texte); }
+BQ .bq-section > h2 .bqe-mot{ order:3; flex-basis:100%; font-size:.8rem; font-weight:500; color:var(--t-texte2); }
+BQ .bqx-tout{ margin-left:auto; border:0; background:none; cursor:pointer; padding:4px 0; font:600 .82rem var(--texte); color:var(--t-or); }
+BQ .bqx-tout span{ color:var(--t-texte2); font-weight:500; }
+
+/* --- l'écrin : un fond sombre, éclairé d'en haut, où l'objet est posé --- */
+VV .bqx-ecrin{ position:relative; display:grid; place-items:center; padding:16px 8px 16px; border-radius:11px; min-height:164px; box-sizing:border-box;
+  background: radial-gradient(115% 78% at 50% 0%, rgba(var(--bx-rc), .2), rgba(var(--bx-rc), 0) 64%), var(--bx-ecrin);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.035); }
+VV .bqx-ecrin::after{ content:""; position:absolute; left:22%; right:22%; bottom:7px; height:9px; border-radius:50%; pointer-events:none;
+  background: radial-gradient(closest-side, rgba(0,0,0,.6), rgba(0,0,0,0)); }
+VV .bqx-ecrin > *{ margin:0 !important; position:relative; z-index:1; }
+
+/* --- la tuile d'un objet --- */
+BQ .bq-article{ background:var(--t-surface); border:1px solid var(--t-trait); border-radius:16px; padding:7px 7px 12px; gap:0; box-shadow:none; }
+BQ .bq-article > b{ margin:11px 5px 0; font:700 .97rem/1.2 var(--texte); letter-spacing:0; color:var(--t-texte); }
+BQ .bq-article > p{ margin:3px 5px 0; font-size:.76rem; line-height:1.35; color:var(--t-texte2); flex:0 0 auto; min-height:2.7em;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+BQ .bqe-article:hover{ border-color:rgba(240,180,41,.45); transform:none; }
+BQ .bq-dos.equipe{ border-color:var(--t-trait); }
+
+/* --- les boutons : un trait d'or, pas un aplat. L'aplat est réservé à la une et à la confirmation --- */
+BQ .bq-btn{ margin:11px 5px 0; padding:8px 10px; border-radius:10px; border:0; background:transparent; color:var(--t-or);
+  box-shadow: inset 0 0 0 1px rgba(240,180,41,.5); font-family:var(--titre); font-weight:800; font-size:1.02rem; line-height:1.1; letter-spacing:.02em; }
+BQ .bq-btn.confirmer{ background:var(--t-or); color:var(--t-or-texte); box-shadow:none; font:700 .84rem/1.3 var(--texte); letter-spacing:0; }
+BQ .bq-btn.secondaire{ color:var(--t-texte); box-shadow: inset 0 0 0 1px #3A557E; font:600 .86rem/1.3 var(--texte); letter-spacing:0; }
+BQ .bq-btn[data-court]{ opacity:.5; }
+BQ .bq-btn:disabled{ color:var(--t-texte2); box-shadow: inset 0 0 0 1px var(--t-trait); font:600 .84rem/1.3 var(--texte); letter-spacing:0; opacity:1; }
+BQ .bq-equipe{ margin:11px 5px 0; padding:8px 0; text-align:left; font-size:.84rem; font-weight:600; color:#5BE3A6; }
+BQ .bq-equipe::before{ content:"✓ "; }
+
+/* --- en euros : le prix se lit, il ne crie pas --- */
+BQ .bqe-article .bqe-prix{ display:block; margin:9px 5px 0; padding:0; background:none; box-shadow:none; text-align:left; color:var(--t-or); font-size:1.15rem; }
+BQ .bqe-article .bqe-prix s{ color:#7B8FAB; font-weight:600; font-size:.82em; margin-right:3px; }
+BQ .bqe-etat{ margin:11px 5px 0; padding:0; box-shadow:none; text-align:left; font-size:.74rem; white-space:nowrap; }
+BQ .bqe-etat.ok{ color:#5BE3A6; box-shadow:none; }
+BQ .bqe-etat.ok::before{ content:"✓ "; }
+/* une collection : le dos et le skin en éventail */
+BQ .bqe-col-vig{ gap:0; align-items:center; }
+BQ .bqe-col-vig .bq-dos-apercu{ width:80px; height:112px; transform:translateX(9px) rotate(-7deg); }
+BQ .bqe-col-vig .bq-dos-echelle{ transform:scale(.4255); }
+BQ .bqe-col-vig .sk-vig{ width:75px; height:112.5px; transform:translateX(-9px) rotate(6deg); z-index:1; filter:drop-shadow(-4px 4px 8px rgba(0,0,0,.45)); }
+BQ .bqe-col-vig .sk-vig-echelle{ transform:scale(.5); }
+BQ .hab-vignette{ width:86px; filter:drop-shadow(0 8px 10px rgba(0,0,0,.45)); }
+BQ .bqx-ecrin .bq-dos-apercu, BQ .bqx-ecrin .sk-vig{ filter:drop-shadow(0 8px 10px rgba(0,0,0,.45)); }
+BQ .bqe-col-vig .bq-dos-apercu{ filter:none; }
+
+/* --- à la une --- */
+VV .bqx-une{ position:relative; display:grid; grid-template-columns:auto minmax(0,1fr); gap:16px; align-items:center; width:100%; max-width:560px; box-sizing:border-box;
+  padding:18px 16px; border-radius:18px; overflow:hidden; text-align:left; font:inherit; color:var(--t-texte); cursor:default;
+  border:1px solid rgba(var(--bx-rc), .42);
+  background:
+    radial-gradient(62% 86% at 24% 46%, rgba(var(--bx-rc), .28), rgba(var(--bx-rc), 0) 72%),
+    repeating-radial-gradient(ellipse 130% 95% at 92% 4%, rgba(var(--bx-rc), 0) 0 17px, rgba(var(--bx-rc), .075) 17px 18px),
+    var(--bx-ecrin); }
+VV button.bqx-une{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
+VV button.bqx-une:focus-visible{ outline:2px solid var(--t-or); outline-offset:2px; }
+VV .bqx-une-eu{ --bx-rc:240,180,41; margin:4px 0 0; gap:12px; padding:16px 14px; }
+VV .bqx-une-carte{ transform:rotate(-4deg); filter:drop-shadow(0 14px 16px rgba(0,0,0,.55)); }
+VV .bqx-une .bqr-carte{ width:135px; height:189px; }
+VV .bqx-une .bqr-carte .card{ transform:scale(.718); }
+VV .bqx-une-txt{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0; }
+VV .bqx-sur{ font-size:.72rem; font-weight:600; color:rgb(var(--bx-rc)); filter:brightness(1.25) saturate(.9); }
+VV .bqx-une-nom{ font:700 1.3rem/1.15 var(--texte); letter-spacing:0; overflow-wrap:anywhere; }
+VV .bqx-une-dept{ font-size:.8rem; line-height:1.35; color:var(--t-texte2); }
+VV .bqx-une .bqr-prix{ margin:10px 0 0; align-items:baseline; gap:7px; flex-wrap:wrap; }
+VV .bqx-une .bqr-prix b{ font-size:1.9rem; line-height:1; color:#FFE08A; }
+VV .bqx-une .bqr-prix s{ font-size:.8rem; }
+VV .bqx-une .bqr-album{ position:static; transform:none; margin:6px 0 0; }
+BQ .bqx-une .bq-btn.bqx-cta, VV .bqx-une-prix{ display:inline-block; margin:12px 0 0; padding:11px 18px; border-radius:12px; border:0; cursor:pointer;
+  background:var(--t-or); color:var(--t-or-texte); box-shadow:none; font:700 .95rem/1.2 var(--texte); letter-spacing:0; }
+VV .bqx-une-prix{ font-family:var(--titre); font-weight:800; font-size:1.2rem; letter-spacing:.02em; font-variant-numeric:tabular-nums; }
+VV .bqx-une-prix{ white-space:nowrap; }
+VV .bqx-une-prix s{ opacity:.6; font-size:.82em; margin-right:4px; }
+BQ .bqx-une .bq-btn.bqx-cta.confirmer{ background:#fff; color:#10203A; }
+BQ .bqx-une .bq-btn.bqx-cta[data-court]{ opacity:.5; }
+VV .bqx-une .bqr-fait, VV .bqx-une .bqr-deja{ width:auto; margin-top:12px; padding:8px 12px; }
+VV .bqx-une.achete .bqx-une-carte, VV .bqx-une.deja .bqx-une-carte{ opacity:.5; filter:saturate(.4); }
+/* l'objet à la une, en euros */
+VV .bqx-une-vis{ width:150px; height:182px; display:grid; place-items:center; }
+VV .bqx-une-vis > *{ margin:0; transform:scale(1.25); }
+VV .bqx-une-vis .bqe-col-vig{ transform:scale(1.06); gap:0; align-items:center; }
+VV .bqx-une-eu.bqe-t-collection .bqx-une-vis{ width:166px; }
+VV .bqx-une-vis .bqe-col-vig .bq-dos-apercu{ transform:translateX(8px) rotate(-7deg); }
+VV .bqx-une-vis .bqe-col-vig .sk-vig{ transform:translateX(-8px) rotate(6deg); z-index:1; filter:drop-shadow(-4px 4px 8px rgba(0,0,0,.5)); }
+VV .bqx-une-vis .hab-vignette{ width:92px; }
+
+/* --- « Ta boutique » --- */
+VV .bqr.bqx-vitrine{ margin:18px 0 0; padding:0; border:0; border-radius:0; background:none; }
+VV .bqx-vitrine .bqr-tete h2{ font:700 1.08rem/1.25 var(--texte); letter-spacing:0; }
+VV .bqx-vitrine .bqr-tete p{ margin:3px 0 0; font-size:.8rem; color:var(--t-texte2); }
+VV .bqx-vitrine .bqr-rang{ margin:18px 0 9px; font-size:.86rem; font-weight:600; color:var(--t-texte); }
+VV .bqx-vitrine .bqr-tete + .bqr-rang{ margin-top:14px; }
+VV .bqx-vitrine .bqr-minuteur{ background:none; border:0; padding:0; color:var(--t-texte2); font-size:.76rem; font-weight:500; }
+VV .bqx-vitrine .bqr-grille{ gap:10px; }
+VV .bqx-vitrine .bqr-grille.semaine{ grid-template-columns:repeat(2, minmax(0,1fr)); margin-top:10px; max-width:560px; }
+VV .bqx-vitrine .bqr-item{ align-items:stretch; gap:0; padding:7px 7px 10px; border-radius:16px; background:var(--t-surface); border:1px solid var(--t-trait); box-shadow:none; }
+VV .bqx-vitrine .bqr-item .bqx-ecrin{ padding:14px 6px 18px; min-height:0; }
+VV .bqx-vitrine .bqr-item .bqr-carte, VV .bqx-vitrine .bqr-grille.semaine .bqr-item .bqr-carte{ width:118px; height:165px; }
+VV .bqx-vitrine .bqr-grille.semaine .bqr-carte .card{ transform:scale(.627); }
+VV .bqx-vitrine .bqr-item .bqr-carte{ filter:drop-shadow(0 8px 10px rgba(0,0,0,.45)); }
+VV .bqx-vitrine .bqr-item .bqr-remise{ top:-9px; right:-18px; }
+VV .bqx-vitrine .bqr-remise{ transform:none; padding:3px 7px; border-radius:999px; font:700 .7rem/1.2 var(--texte); letter-spacing:0;
+  color:var(--t-or-texte); background:var(--t-or); box-shadow:0 2px 6px rgba(0,0,0,.4); }
+VV .bqx-une .bqr-remise{ position:static; align-self:center; }
+VV .bqx-vitrine .bqr-album{ padding:0; border-radius:0; background:none; box-shadow:none; color:#7EE2B0; font-size:.68rem; font-weight:600; }
+VV .bqx-vitrine .bqr-item .bqr-album{ bottom:-17px; max-width:150px; overflow:hidden; text-overflow:ellipsis; }
+VV .bqx-vitrine .bqr-item .bqr-prix{ margin:9px 4px 0; gap:6px; }
+VV .bqx-vitrine .bqr-item .bqr-prix b, VV .bqx-vitrine .bqr-grille.semaine .bqr-prix b{ font-size:1.25rem; }
+BQ .bqx-vitrine .bqr-item .bq-btn, BQ .bqx-vitrine .bqr-grille.semaine .bq-btn{ margin:8px 4px 0; width:auto; padding:8px 6px; font:600 .84rem/1.3 var(--texte); letter-spacing:0; }
+VV .bqx-vitrine .bqr-item .bqr-fait, VV .bqx-vitrine .bqr-item .bqr-deja{ margin:8px 4px 0; width:auto; padding:7px 6px; font-size:.76rem; background:none; border:0; text-align:left; justify-content:flex-start; }
+VV .bqx-vitrine .bqr-item.legendaire{ border-color:var(--t-trait); box-shadow:none; }
+VV .bqx-vitrine .bqr-note{ margin:14px 0 0; font-size:.74rem; color:#7B8FAB; }
+
+/* --- les paquets : le sachet en petit, le texte à côté --- */
+VV #bqPaquets{ grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:10px; }
+VV .bqx-quota{ grid-column:1 / -1; display:flex; align-items:center; gap:5px; margin:-6px 0 2px; font-size:.8rem; color:var(--t-texte2); }
+VV .bqx-quota i{ width:7px; height:7px; border-radius:50%; background:#34507A; }
+VV .bqx-quota i.on{ background:var(--t-or); }
+VV .bqx-quota span{ margin-left:4px; }
+VV #bqPaquets .bq-paquet{ display:grid; grid-template-columns:86px minmax(0,1fr); grid-auto-rows:min-content; column-gap:14px; align-content:center; padding:12px 14px 12px 12px; }
+VV #bqPaquets .bq-paquet > *{ grid-column:2; }
+VV #bqPaquets .bq-paquet > b{ margin:2px 0 0; }
+VV #bqPaquets .bq-paquet > p{ margin:3px 0 0; min-height:0; }
+VV #bqPaquets .bq-dep{ margin:10px 0 0; padding:9px 8px; border-radius:10px; background:var(--bx-ecrin); border:1px solid var(--t-trait); color:var(--t-texte); font-size:.84rem; }
+BQ #bqPaquets .bq-btn{ margin:10px 0 0; justify-self:start; min-width:112px; }
+VV .bqx-sachet{ grid-column:1 !important; grid-row:1 / span 5; align-self:center; position:relative; width:86px; height:120px; border-radius:10px;
+  background: radial-gradient(110% 80% at 50% 0%, rgba(240,180,41,.16), rgba(240,180,41,0) 66%), var(--bx-ecrin); }
+VV .bqx-sachet .paquet{ position:absolute; left:14px; top:13px; width:200px; height:280px; transform:scale(.29); transform-origin:0 0; pointer-events:none; cursor:default;
+  animation:none !important; filter:drop-shadow(0 22px 22px rgba(0,0,0,.6)); }
+VV .bqx-sachet .paquet :is(.coupe-consigne, .coupe-lueur, .coupe-trace, .coupe-tete, .coupe-eclair, .paquet-eclat, .paquet-bouts, .perfo-masque){ display:none !important; }
+
+/* --- l'objectif du mois : une ligne fine sous la une --- */
+BQ .bqe-bandeau{ max-width:560px; margin:16px 0 0; padding:0; border:0; background:none; gap:6px; }
+BQ .bqe-l1 b{ font:600 .82rem/1.3 var(--texte); letter-spacing:0; color:var(--t-texte2); }
+BQ .bqe-pc{ font-size:1rem; }
+BQ .bqe-barre{ height:4px; border-radius:2px; background:#22395C; }
+BQ .bqe-barre i{ background:var(--t-or); border-radius:2px; }
+BQ .bqe-etapes{ display:none; }
+BQ .bqe-bandeau small{ font-size:.72rem; color:#7B8FAB; }
+BQ .bqe-achat{ background:var(--t-surface); border-color:var(--t-trait); border-radius:12px; }
+BQ > .note{ margin-top:22px; font-size:.76rem; color:#7B8FAB; background:none; border:0; padding:0; }
+
+/* --- téléphone : chaque rayon est une rangée qui glisse ; « Tout voir » l'ouvre en grille --- */
+@media (max-width:720px){
+  BQ .bq-grille-dos{ display:flex; gap:10px; overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x proximity; scroll-padding-left:14px;
+    margin:0 -14px; width:calc(100% + 28px); box-sizing:border-box; padding:2px 14px 6px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  BQ .bq-grille-dos::-webkit-scrollbar{ display:none; }
+  BQ .bq-grille-dos > .bq-article{ flex:0 0 150px; scroll-snap-align:start; box-sizing:border-box; }
+  BQ .bq-grille-dos > .bqe-t-collection{ flex-basis:176px; }
+  BQ .bq-section.ouvert .bq-grille-dos{ display:grid; grid-template-columns:1fr 1fr; overflow:visible; margin:0; padding:0; width:auto; }
+  VV #bqPaquets{ grid-template-columns:1fr; }
+}
+@media (min-width:721px){
+  BQ .bqx-tout{ display:none; }
+  VV #bqStatut{ right:auto; left:150px; top:3px; }
+}
+@media (max-width:379px){
+  VV .bqx-une-eu.bqe-t-collection .bqx-une-vis{ width:142px; }
+  VV .bqx-une-vis .bqe-col-vig{ transform:scale(.9); }
+  VV .bqx-une-prix{ padding:10px 12px; font-size:1.08rem; }
+}
+@media (max-width:359px){
+  VV .bqx-une{ gap:12px; padding:14px 12px; }
+  VV .bqx-une .bqr-carte{ width:112px; height:157px; }
+  VV .bqx-une .bqr-carte .card{ transform:scale(.596); }
+  VV .bqx-une-vis{ width:112px; }
+}

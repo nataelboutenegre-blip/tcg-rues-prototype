@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '5a858203034f';
+const VERSION_JEU = '5141f034f57b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8792,6 +8792,9 @@ function potRetirer(n){
 const ALU_COUCHES = '<span class="alu" aria-hidden="true"><i class="alu-bosse"></i><i class="alu-relief"></i><i class="alu-plis"></i><i class="alu-plis bas"></i><i class="alu-soudure"></i><i class="alu-soudure bas"></i><i class="alu-froisse"></i><i class="alu-iris"></i><i class="alu-reflet"></i></span>';
 // Allumé avec l'habillage de la saison 3 (html.topo : le 22/11 à 10 h, ou ?topo=test) ;
 // config_jeu 'interface'.sachet = 0 l'éteint seul, sans toucher à l'habillage.
+// patch438 : la boutique en vitrine (habillage Topo ; interface.vitrine = 0 l'éteint)
+function bqLuxe(){ const h = document.documentElement.classList; return h.contains('topo') && !h.contains('sans-vitrine'); }
+function bqxEcrin(html){ return bqLuxe() ? '<div class="bqx-ecrin">' + html + '</div>' : html; }
 function aluActif(){ const h = document.documentElement.classList; return h.contains('topo') && !h.contains('sans-sachet'); }
 function aluInstaller(pack){
   pack.classList.add('alu');
@@ -19403,11 +19406,22 @@ function renderBoutique(){
   const dos = document.getElementById('bqDos');
   if(!st || !paq || !dos) return;
   const restants = Math.max(0, b.paquets_max - b.paquets_du_jour);
-  st.innerHTML = `<span class="puce solde">Solde <b>${Number(b.solde).toLocaleString('fr-FR')}</b></span>`
+  const L = bqLuxe();   // patch438
+  st.innerHTML = `<span class="puce solde">Solde <b>${Number(b.solde).toLocaleString('fr-FR')}</b>${L ? ' <small>TP</small>' : ''}</span>`
                + `<span class="puce bq-terra-seul">Paquets de boutique aujourd'hui <b>${b.paquets_du_jour} sur ${b.paquets_max}</b></span>`;
 
   const deps = Object.keys(DEPT_NAMES).sort((x, y) => x.localeCompare(y, 'fr', { numeric: true }));
-  paq.innerHTML = b.articles.filter(a => a.type === 'paquet').map(a => {
+  // patch438 : le vrai sachet, en petit, à la place de l'épingle
+  const sachet = (id) => {
+    if(!L) return '<div class="bq-paquet-icone" aria-hidden="true">' + ICONE_EPINGLE + '</div>';
+    const p = makePackEl('achete');
+    const t = p.querySelector('.paquet-titre'), bd = p.querySelector('.paquet-bande');
+    if(t) t.textContent = id === 'paquet-departement' ? 'Département' : 'Garanti';
+    if(bd) bd.textContent = id === 'paquet-departement' ? '5 communes' : '1 rare ou mieux';
+    return '<div class="bqx-sachet" aria-hidden="true">' + p.outerHTML.replace(/^<button/, '<div').replace(/<\/button>$/, '</div>') + '</div>';
+  };
+  const quota = L ? `<div class="bqx-quota">${Array.from({ length: b.paquets_max }, (_, i) => `<i${i < b.paquets_du_jour ? ' class="on"' : ''}></i>`).join('')}<span>${b.paquets_du_jour} paquet${b.paquets_du_jour > 1 ? 's' : ''} sur ${b.paquets_max} aujourd'hui</span></div>` : '';
+  paq.innerHTML = quota + b.articles.filter(a => a.type === 'paquet').map(a => {
     const choixDep = a.id === 'paquet-departement'
       ? `<select class="bq-dep" id="bqDep" aria-label="Département"><option value="">Choisis un département${SUISSE ? ' ou un canton' : ''}</option>${
           (SUISSE   // patch332 : les cantons à part, sous « Suisse »
@@ -19418,7 +19432,7 @@ function renderBoutique(){
       ? `<button class="bq-btn" disabled>Revient demain</button>`
       : `<button class="bq-btn" data-bq-paquet="${a.id}" data-prix="${a.prix}"${b.solde < a.prix ? ' data-court="1"' : ''}>${bqPrix(a.prix)}</button>`;
     return `<div class="bq-article bq-paquet ${a.id}">
-        <div class="bq-paquet-icone" aria-hidden="true">${ICONE_EPINGLE}</div>
+        ${sachet(a.id)}
         <b>${echapperTexte(a.nom)}</b>
         <p>${echapperTexte(a.description)}</p>
         ${choixDep}
@@ -19435,12 +19449,13 @@ function renderBoutique(){
     else if(a.possede) action = `<button class="bq-btn secondaire" data-bq-mettre="${a.id || ''}">Équiper</button>`;
     else action = `<button class="bq-btn" data-bq-dos="${a.id}" data-prix="${a.prix}"${b.solde < a.prix ? ' data-court="1"' : ''}>${bqPrix(a.prix)}</button>`;
     return `<div class="bq-article bq-dos${equipe ? ' equipe' : ''}">
-        ${dosApercuHtml(a.id)}
+        ${bqxEcrin(dosApercuHtml(a.id))}
         <b>${echapperTexte(a.nom)}</b>
         <p>${echapperTexte(a.description)}</p>
         ${action}
       </div>`;
   }).join('');
+  if(L) try{ habGl.demarrer(); }catch(e){}
 }
 
 // achat en deux temps : le premier clic demande confirmation pendant 4 s
@@ -19520,6 +19535,14 @@ function renderBoutiqueTournante(){
   el.hidden = !B;
   if(!B){ el.innerHTML = ''; return; }
   const solde = boutiqueCache ? Number(boutiqueCache.solde) : Number(B.solde) || 0;
+  const L = bqLuxe();   // patch438
+  // à la une : la plus rare de la semaine, encore à vendre de préférence
+  let une = null;
+  if(L){
+    const sem = (B.cartes || []).filter(x => x.periode === 'semaine');
+    const rang = (x) => (RANG_TIER[x.tier] || 0) + (!x.achete && !x.possede ? 10 : 0);
+    une = sem.slice().sort((p, q) => rang(q) - rang(p))[0] || null;
+  }
   const item = (x) => {
     const tier = TIERS.find(t => t.id === x.tier) || TIERS[0];
     const carte = makeCardEl({ code: x.code, nom: x.nom, dept: x.dept, pop: Number(x.pop) || 0, tier, rank: Number(x.rang) || 0, tierSize: Number(x.palier_total) || 0 }, () => {});
@@ -19529,13 +19552,38 @@ function renderBoutiqueTournante(){
     else if(x.possede) action = '<span class="bqr-deja">Déjà dans ta collection</span>';
     else action = `<button class="bq-btn" data-bqr-periode="${x.periode}" data-bqr-case="${x.case}" data-prix="${x.prix}" data-libelle="Acheter"${solde < x.prix ? ' data-court="1"' : ''}>Acheter</button>`;
     const libre = !x.achete && !x.possede;
+    if(x === une){   // patch438 : à la une
+      const act = libre ? action.replace('class="bq-btn"', 'class="bq-btn bqx-cta"') : action;
+      return `<div class="bqx-une ${tier.id}${x.achete ? ' achete' : ''}${x.possede ? ' deja' : ''}">
+        <div class="bqx-une-carte"><div class="bqr-carte">${carte.outerHTML}</div></div>
+        <div class="bqx-une-txt">
+          <span class="bqx-sur">À la une · ${echapperTexte(tier.label)}</span>
+          <b class="bqx-une-nom">${echapperTexte(x.nom)}</b>
+          <span class="bqx-une-dept">${echapperTexte(DEPT_NAMES[x.dept] || '')} (${echapperTexte(x.dept)})</span>
+          <div class="bqr-prix"><s>${Number(x.base).toLocaleString('fr-FR')}</s><b>${Number(x.prix).toLocaleString('fr-FR')}<small>TP</small></b>${libre ? `<span class="bqr-remise">−${x.remise} %</span>` : ''}</div>
+          ${libre && x.album ? `<span class="bqr-album">Album · ${echapperTexte(x.album)}</span>` : ''}
+          ${act}
+        </div></div>`;
+    }
     return `<div class="bqr-item ${tier.id}${x.achete ? ' achete' : ''}${x.possede ? ' deja' : ''}">
-        <div class="bqr-carte">${carte.outerHTML}${libre ? `<span class="bqr-remise">−${x.remise} %</span>` : ''}${libre && x.album ? `<span class="bqr-album">Album · ${echapperTexte(x.album)}</span>` : ''}</div>
+        ${L ? '<div class="bqx-ecrin">' : ''}<div class="bqr-carte">${carte.outerHTML}${libre ? `<span class="bqr-remise">−${x.remise} %</span>` : ''}${libre && x.album ? `<span class="bqr-album">Album · ${echapperTexte(x.album)}</span>` : ''}</div>${L ? '</div>' : ''}
         <div class="bqr-prix"><s>${Number(x.base).toLocaleString('fr-FR')}</s><b>${Number(x.prix).toLocaleString('fr-FR')}<small>TP</small></b></div>
         ${action}</div>`;
   };
   const jour = (B.cartes || []).filter(x => x.periode === 'jour');
   const semaine = (B.cartes || []).filter(x => x.periode === 'semaine');
+  if(L){
+    const autres = semaine.filter(x => x !== une);
+    el.innerHTML = `<div class="bqr bqx-vitrine">
+      <div class="bqr-tete"><h2>Ta boutique</h2><p>Des communes qui te manquent, choisies pour toi. Chaque carte s’achète une fois.</p></div>
+      <div class="bqr-rang">De la semaine<span class="bqr-minuteur" data-fin="${B.fin_semaine}">${BQR_HORLOGE}${bqrReste(B.fin_semaine)}</span></div>
+      ${une ? item(une) : '<p class="bqr-vide">Tu as déjà toutes ces communes : bravo !</p>'}
+      ${autres.length ? `<div class="bqr-grille semaine">${autres.map(item).join('')}</div>` : ''}
+      <div class="bqr-rang">Du jour<span class="bqr-minuteur" data-fin="${B.fin_jour}">${BQR_HORLOGE}${bqrReste(B.fin_jour)}</span></div>
+      ${jour.length ? `<div class="bqr-grille">${jour.map(item).join('')}</div>` : '<p class="bqr-vide">Tu as déjà toutes ces communes : bravo !</p>'}
+      <p class="bqr-note">Les cartes achetées en TP ne s’échangent pas et ne vont pas à la Bourse. Elles ne comptent pas dans les 3 paquets de boutique par jour.</p>
+    </div>`;
+  } else
   el.innerHTML = `<div class="bqr">
       <div class="bqr-tete"><h2>Ta boutique</h2><p>Que des communes qui te manquent, rien que pour toi. Chaque carte s’achète une fois.</p></div>
       <div class="bqr-rang">Du jour<span class="bqr-minuteur" data-fin="${B.fin_jour}">${BQR_HORLOGE}${bqrReste(B.fin_jour)}</span></div>
@@ -22131,8 +22179,8 @@ function bqeCarte(a){
   const bas = a.possede ? '<span class="bqe-etat ok">Dans ta garde-robe</span>'
     : attente ? `<span class="bqe-etat">Arrive le ${dateLongue(a.livraison_le)}</span>`
     : `<span class="bq-btn bqe-prix">${bqePrixHtml(a)}</span>`;
-  return `<button type="button" class="bq-article bqe-article" data-bqe="${echapperTexte(a.id)}">
-      ${bqeVignette(a)}
+  return `<button type="button" class="bq-article bqe-article bqe-t-${a.type}" data-bqe="${echapperTexte(a.id)}">
+      ${bqxEcrin(bqeVignette(a))}
       <b>${echapperTexte(bqeNomCourt(a))}</b>
       <p>${echapperTexte(a.description)}</p>
       ${bas}
@@ -22153,6 +22201,23 @@ function bqeCommandeHtml(c){
   return `<div class="bqe-achat"><div><b>${echapperTexte(c.article)} · ${euros(c.prix_centimes)}</b><small>${etat}</small></div>${action}</div>`;
 }
 
+// patch438 : l'objet à la une (une collection de préférence), il change chaque jour
+function bqxUneEuros(arts){
+  const libres = arts.filter(a => !a.possede && !a.livraison_le && !a.reserve_og && a.type !== 'effet');
+  const cols = libres.filter(a => a.type === 'collection');
+  const liste = cols.length ? cols : libres;
+  if(!liste.length) return '';
+  const a = liste[Math.floor(Date.now() / 86400000) % liste.length];
+  const genre = { collection: 'Collection', habillage: 'Habillage de paquet', dos: 'Dos de carte', skin: 'Skin de carte' }[a.type] || '';
+  return `<button type="button" class="bqx-une bqx-une-eu bqe-t-${a.type}" data-bqe="${echapperTexte(a.id)}">
+      <div class="bqx-une-vis">${bqeVignette(a)}</div>
+      <div class="bqx-une-txt">
+        <span class="bqx-sur">À la une · ${genre}</span>
+        <b class="bqx-une-nom">${echapperTexte(bqeNomCourt(a))}</b>
+        <span class="bqx-une-dept">${echapperTexte(a.description || '')}</span>
+        <span class="bqx-une-prix">${bqePrixHtml(a)}</span>
+      </div></button>`;
+}
 function renderBoutiqueEuros(){
   const corps = document.getElementById('bqeCorps');
   const cat = bqeCat;
@@ -22163,10 +22228,11 @@ function renderBoutiqueEuros(){
   const dos = arts.filter(a => !a.reserve_og && a.type === 'dos');
   const skins = arts.filter(a => a.type === 'skin'), cols = arts.filter(a => a.type === 'collection');   // patch202
   const effets = arts.filter(a => a.type === 'effet');   // patch270
+  const L = bqLuxe();   // patch438
   const section = (titre, mot, liste, badge) => liste.length ? `<div class="bourse-section bq-section">
-      <h2>${titre}${badge ? ' <span class="bqe-og">OG</span>' : ''}${mot ? ` <small class="bqe-mot">${mot}</small>` : ''}</h2>
+      <h2>${titre}${badge ? ' <span class="bqe-og">OG</span>' : ''}${mot ? ` <small class="bqe-mot">${mot}</small>` : ''}${L && liste.length > 2 ? `<button type="button" class="bqx-tout" data-bqx-tout>Tout voir <span>(${liste.length})</span></button>` : ''}</h2>
       <div class="bq-grille bq-grille-dos">${liste.map(bqeCarte).join('')}</div></div>` : '';
-  corps.innerHTML = bqeBandeauHtml()
+  corps.innerHTML = (L ? bqxUneEuros(arts) : '') + bqeBandeauHtml()
     + (cat.ouverte ? '' : '<p class="bqe-test">Mode test : la boutique n\'est visible que des comptes testeurs. Paie avec une carte de test Stripe.</p>')
     + (cat.og ? section('Réservé aux OG', 'pour les joueurs de la saison 1', og, true) : '')
     + section('Collections', 'le dos et le skin ensemble, moins cher', cols)
@@ -22346,6 +22412,8 @@ async function bqeRetourPaiement(){
 }
 
 document.getElementById('bqeCorps').addEventListener('click', async (e) => {
+  const tv = e.target.closest('[data-bqx-tout]');   // patch438 : la rangée s'ouvre en grille
+  if(tv){ const sec = tv.closest('.bq-section'); const o = sec.classList.toggle('ouvert'); tv.firstChild.textContent = o ? 'Réduire ' : 'Tout voir '; return; }
   const art = e.target.closest('[data-bqe]');
   if(art){ bqeOuvrirFiche(art.dataset.bqe); return; }
   const r = e.target.closest('[data-retract]');
@@ -23829,6 +23897,7 @@ function ifaceCharger(){
       } else { try{ localStorage.removeItem('tf-topo-serveur'); }catch(e){} }
       document.documentElement.classList.toggle('sans-sachet', o.sachet !== undefined && o.sachet !== null && Number(o.sachet) === 0);   // patch436
       document.documentElement.classList.toggle('sans-revelation', o.revelation !== undefined && o.revelation !== null && Number(o.revelation) === 0);   // patch437
+      document.documentElement.classList.toggle('sans-vitrine', o.vitrine !== undefined && o.vitrine !== null && Number(o.vitrine) === 0);   // patch438
     }catch(e){}
     IFACE.lu = true;
     ifaceAppliquer();

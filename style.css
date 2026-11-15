@@ -10205,3 +10205,194 @@ html .ouv-slot-carte p.rev-cri{ position:absolute; left:-90px; right:-90px; bott
 .card.rev-haut .rev-holo{ animation: revBalaye 1.2s ease-out .25s both; }
 @keyframes revBalaye{ 0%{ opacity:0; background-position:0 0; } 20%{ opacity:.42; } 80%{ opacity:.42; } 100%{ opacity:0; background-position:100% 0; } }
 @media (prefers-reduced-motion: reduce){ .card.rev-tremble, .ouv-slot-carte .rev-rayons, .card.rev-haut .rev-holo{ animation:none; } }
+
+/* =====================================================================
+   patch438 : la boutique en vitrine (TP et euros) — habillage Topo
+   Tout est sous html.topo:not(.sans-vitrine). interface.vitrine = 0 l'éteint.
+   ===================================================================== */
+html.topo:not(.sans-vitrine) { --bx-ecrin:#0B1830; --bx-rc:169,188,212; }
+html.topo:not(.sans-vitrine) :is(.bqr-item, .bqx-une).commun{ --bx-rc:126,139,160; }
+html.topo:not(.sans-vitrine) :is(.bqr-item, .bqx-une).peucommun{ --bx-rc:34,160,107; }
+html.topo:not(.sans-vitrine) :is(.bqr-item, .bqx-une).rare{ --bx-rc:47,124,246; }
+html.topo:not(.sans-vitrine) :is(.bqr-item, .bqx-une).epique{ --bx-rc:155,92,246; }
+html.topo:not(.sans-vitrine) :is(.bqr-item, .bqx-une).legendaire{ --bx-rc:240,180,41; }
+
+/* --- l'en-tête : le solde à droite du titre --- */
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) { position:relative; min-width:0; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-section, html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) #bqeCorps, html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) #bqTourne{ min-width:0; width:100%; box-sizing:border-box; }
+html.topo:not(.sans-vitrine) #bqStatut{ position:absolute; top:1px; right:0; margin:0; gap:0; }
+html.topo:not(.sans-vitrine) #bqStatut .puce.bq-terra-seul{ display:none; }
+html.topo:not(.sans-vitrine) #bqStatut .puce.solde{ background:none; border:0; padding:0; font-size:.78rem; font-weight:500; color:var(--t-texte2); display:inline-flex; align-items:baseline; gap:6px; }
+html.topo:not(.sans-vitrine) #bqStatut .puce.solde b{ font-family:var(--titre); font-weight:800; font-size:1.3rem; line-height:1; color:var(--t-or); letter-spacing:.01em; }
+html.topo:not(.sans-vitrine) #bqStatut .puce.solde small{ font-size:.72rem; font-weight:600; color:#C9AE97; margin-left:-3px; }
+
+/* --- les titres de rayon --- */
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-section{ margin-top:28px; max-width:860px; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-section > h2{ display:flex; align-items:baseline; flex-wrap:wrap; gap:2px 8px; margin:0 0 12px; font:700 1.08rem/1.25 var(--texte); letter-spacing:0; color:var(--t-texte); }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-section > h2 .bqe-mot{ order:3; flex-basis:100%; font-size:.8rem; font-weight:500; color:var(--t-texte2); }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqx-tout{ margin-left:auto; border:0; background:none; cursor:pointer; padding:4px 0; font:600 .82rem var(--texte); color:var(--t-or); }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqx-tout span{ color:var(--t-texte2); font-weight:500; }
+
+/* --- l'écrin : un fond sombre, éclairé d'en haut, où l'objet est posé --- */
+html.topo:not(.sans-vitrine) .bqx-ecrin{ position:relative; display:grid; place-items:center; padding:16px 8px 16px; border-radius:11px; min-height:164px; box-sizing:border-box;
+  background: radial-gradient(115% 78% at 50% 0%, rgba(var(--bx-rc), .2), rgba(var(--bx-rc), 0) 64%), var(--bx-ecrin);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.035); }
+html.topo:not(.sans-vitrine) .bqx-ecrin::after{ content:""; position:absolute; left:22%; right:22%; bottom:7px; height:9px; border-radius:50%; pointer-events:none;
+  background: radial-gradient(closest-side, rgba(0,0,0,.6), rgba(0,0,0,0)); }
+html.topo:not(.sans-vitrine) .bqx-ecrin > *{ margin:0 !important; position:relative; z-index:1; }
+
+/* --- la tuile d'un objet --- */
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-article{ background:var(--t-surface); border:1px solid var(--t-trait); border-radius:16px; padding:7px 7px 12px; gap:0; box-shadow:none; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-article > b{ margin:11px 5px 0; font:700 .97rem/1.2 var(--texte); letter-spacing:0; color:var(--t-texte); }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-article > p{ margin:3px 5px 0; font-size:.76rem; line-height:1.35; color:var(--t-texte2); flex:0 0 auto; min-height:2.7em;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-article:hover{ border-color:rgba(240,180,41,.45); transform:none; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-dos.equipe{ border-color:var(--t-trait); }
+
+/* --- les boutons : un trait d'or, pas un aplat. L'aplat est réservé à la une et à la confirmation --- */
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-btn{ margin:11px 5px 0; padding:8px 10px; border-radius:10px; border:0; background:transparent; color:var(--t-or);
+  box-shadow: inset 0 0 0 1px rgba(240,180,41,.5); font-family:var(--titre); font-weight:800; font-size:1.02rem; line-height:1.1; letter-spacing:.02em; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-btn.confirmer{ background:var(--t-or); color:var(--t-or-texte); box-shadow:none; font:700 .84rem/1.3 var(--texte); letter-spacing:0; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-btn.secondaire{ color:var(--t-texte); box-shadow: inset 0 0 0 1px #3A557E; font:600 .86rem/1.3 var(--texte); letter-spacing:0; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-btn[data-court]{ opacity:.5; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-btn:disabled{ color:var(--t-texte2); box-shadow: inset 0 0 0 1px var(--t-trait); font:600 .84rem/1.3 var(--texte); letter-spacing:0; opacity:1; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-equipe{ margin:11px 5px 0; padding:8px 0; text-align:left; font-size:.84rem; font-weight:600; color:#5BE3A6; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-equipe::before{ content:"✓ "; }
+
+/* --- en euros : le prix se lit, il ne crie pas --- */
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-article .bqe-prix{ display:block; margin:9px 5px 0; padding:0; background:none; box-shadow:none; text-align:left; color:var(--t-or); font-size:1.15rem; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-article .bqe-prix s{ color:#7B8FAB; font-weight:600; font-size:.82em; margin-right:3px; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-etat{ margin:11px 5px 0; padding:0; box-shadow:none; text-align:left; font-size:.74rem; white-space:nowrap; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-etat.ok{ color:#5BE3A6; box-shadow:none; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-etat.ok::before{ content:"✓ "; }
+/* une collection : le dos et le skin en éventail */
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-col-vig{ gap:0; align-items:center; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-col-vig .bq-dos-apercu{ width:80px; height:112px; transform:translateX(9px) rotate(-7deg); }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-col-vig .bq-dos-echelle{ transform:scale(.4255); }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-col-vig .sk-vig{ width:75px; height:112.5px; transform:translateX(-9px) rotate(6deg); z-index:1; filter:drop-shadow(-4px 4px 8px rgba(0,0,0,.45)); }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-col-vig .sk-vig-echelle{ transform:scale(.5); }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .hab-vignette{ width:86px; filter:drop-shadow(0 8px 10px rgba(0,0,0,.45)); }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqx-ecrin .bq-dos-apercu, html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqx-ecrin .sk-vig{ filter:drop-shadow(0 8px 10px rgba(0,0,0,.45)); }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-col-vig .bq-dos-apercu{ filter:none; }
+
+/* --- à la une --- */
+html.topo:not(.sans-vitrine) .bqx-une{ position:relative; display:grid; grid-template-columns:auto minmax(0,1fr); gap:16px; align-items:center; width:100%; max-width:560px; box-sizing:border-box;
+  padding:18px 16px; border-radius:18px; overflow:hidden; text-align:left; font:inherit; color:var(--t-texte); cursor:default;
+  border:1px solid rgba(var(--bx-rc), .42);
+  background:
+    radial-gradient(62% 86% at 24% 46%, rgba(var(--bx-rc), .28), rgba(var(--bx-rc), 0) 72%),
+    repeating-radial-gradient(ellipse 130% 95% at 92% 4%, rgba(var(--bx-rc), 0) 0 17px, rgba(var(--bx-rc), .075) 17px 18px),
+    var(--bx-ecrin); }
+html.topo:not(.sans-vitrine) button.bqx-une{ cursor:pointer; -webkit-tap-highlight-color:transparent; }
+html.topo:not(.sans-vitrine) button.bqx-une:focus-visible{ outline:2px solid var(--t-or); outline-offset:2px; }
+html.topo:not(.sans-vitrine) .bqx-une-eu{ --bx-rc:240,180,41; margin:4px 0 0; gap:12px; padding:16px 14px; }
+html.topo:not(.sans-vitrine) .bqx-une-carte{ transform:rotate(-4deg); filter:drop-shadow(0 14px 16px rgba(0,0,0,.55)); }
+html.topo:not(.sans-vitrine) .bqx-une .bqr-carte{ width:135px; height:189px; }
+html.topo:not(.sans-vitrine) .bqx-une .bqr-carte .card{ transform:scale(.718); }
+html.topo:not(.sans-vitrine) .bqx-une-txt{ display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0; }
+html.topo:not(.sans-vitrine) .bqx-sur{ font-size:.72rem; font-weight:600; color:rgb(var(--bx-rc)); filter:brightness(1.25) saturate(.9); }
+html.topo:not(.sans-vitrine) .bqx-une-nom{ font:700 1.3rem/1.15 var(--texte); letter-spacing:0; overflow-wrap:anywhere; }
+html.topo:not(.sans-vitrine) .bqx-une-dept{ font-size:.8rem; line-height:1.35; color:var(--t-texte2); }
+html.topo:not(.sans-vitrine) .bqx-une .bqr-prix{ margin:10px 0 0; align-items:baseline; gap:7px; flex-wrap:wrap; }
+html.topo:not(.sans-vitrine) .bqx-une .bqr-prix b{ font-size:1.9rem; line-height:1; color:#FFE08A; }
+html.topo:not(.sans-vitrine) .bqx-une .bqr-prix s{ font-size:.8rem; }
+html.topo:not(.sans-vitrine) .bqx-une .bqr-album{ position:static; transform:none; margin:6px 0 0; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqx-une .bq-btn.bqx-cta, html.topo:not(.sans-vitrine) .bqx-une-prix{ display:inline-block; margin:12px 0 0; padding:11px 18px; border-radius:12px; border:0; cursor:pointer;
+  background:var(--t-or); color:var(--t-or-texte); box-shadow:none; font:700 .95rem/1.2 var(--texte); letter-spacing:0; }
+html.topo:not(.sans-vitrine) .bqx-une-prix{ font-family:var(--titre); font-weight:800; font-size:1.2rem; letter-spacing:.02em; font-variant-numeric:tabular-nums; }
+html.topo:not(.sans-vitrine) .bqx-une-prix{ white-space:nowrap; }
+html.topo:not(.sans-vitrine) .bqx-une-prix s{ opacity:.6; font-size:.82em; margin-right:4px; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqx-une .bq-btn.bqx-cta.confirmer{ background:#fff; color:#10203A; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqx-une .bq-btn.bqx-cta[data-court]{ opacity:.5; }
+html.topo:not(.sans-vitrine) .bqx-une .bqr-fait, html.topo:not(.sans-vitrine) .bqx-une .bqr-deja{ width:auto; margin-top:12px; padding:8px 12px; }
+html.topo:not(.sans-vitrine) .bqx-une.achete .bqx-une-carte, html.topo:not(.sans-vitrine) .bqx-une.deja .bqx-une-carte{ opacity:.5; filter:saturate(.4); }
+/* l'objet à la une, en euros */
+html.topo:not(.sans-vitrine) .bqx-une-vis{ width:150px; height:182px; display:grid; place-items:center; }
+html.topo:not(.sans-vitrine) .bqx-une-vis > *{ margin:0; transform:scale(1.25); }
+html.topo:not(.sans-vitrine) .bqx-une-vis .bqe-col-vig{ transform:scale(1.06); gap:0; align-items:center; }
+html.topo:not(.sans-vitrine) .bqx-une-eu.bqe-t-collection .bqx-une-vis{ width:166px; }
+html.topo:not(.sans-vitrine) .bqx-une-vis .bqe-col-vig .bq-dos-apercu{ transform:translateX(8px) rotate(-7deg); }
+html.topo:not(.sans-vitrine) .bqx-une-vis .bqe-col-vig .sk-vig{ transform:translateX(-8px) rotate(6deg); z-index:1; filter:drop-shadow(-4px 4px 8px rgba(0,0,0,.5)); }
+html.topo:not(.sans-vitrine) .bqx-une-vis .hab-vignette{ width:92px; }
+
+/* --- « Ta boutique » --- */
+html.topo:not(.sans-vitrine) .bqr.bqx-vitrine{ margin:18px 0 0; padding:0; border:0; border-radius:0; background:none; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-tete h2{ font:700 1.08rem/1.25 var(--texte); letter-spacing:0; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-tete p{ margin:3px 0 0; font-size:.8rem; color:var(--t-texte2); }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-rang{ margin:18px 0 9px; font-size:.86rem; font-weight:600; color:var(--t-texte); }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-tete + .bqr-rang{ margin-top:14px; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-minuteur{ background:none; border:0; padding:0; color:var(--t-texte2); font-size:.76rem; font-weight:500; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-grille{ gap:10px; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-grille.semaine{ grid-template-columns:repeat(2, minmax(0,1fr)); margin-top:10px; max-width:560px; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-item{ align-items:stretch; gap:0; padding:7px 7px 10px; border-radius:16px; background:var(--t-surface); border:1px solid var(--t-trait); box-shadow:none; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-item .bqx-ecrin{ padding:14px 6px 18px; min-height:0; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-item .bqr-carte, html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-grille.semaine .bqr-item .bqr-carte{ width:118px; height:165px; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-grille.semaine .bqr-carte .card{ transform:scale(.627); }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-item .bqr-carte{ filter:drop-shadow(0 8px 10px rgba(0,0,0,.45)); }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-item .bqr-remise{ top:-9px; right:-18px; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-remise{ transform:none; padding:3px 7px; border-radius:999px; font:700 .7rem/1.2 var(--texte); letter-spacing:0;
+  color:var(--t-or-texte); background:var(--t-or); box-shadow:0 2px 6px rgba(0,0,0,.4); }
+html.topo:not(.sans-vitrine) .bqx-une .bqr-remise{ position:static; align-self:center; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-album{ padding:0; border-radius:0; background:none; box-shadow:none; color:#7EE2B0; font-size:.68rem; font-weight:600; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-item .bqr-album{ bottom:-17px; max-width:150px; overflow:hidden; text-overflow:ellipsis; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-item .bqr-prix{ margin:9px 4px 0; gap:6px; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-item .bqr-prix b, html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-grille.semaine .bqr-prix b{ font-size:1.25rem; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqx-vitrine .bqr-item .bq-btn, html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqx-vitrine .bqr-grille.semaine .bq-btn{ margin:8px 4px 0; width:auto; padding:8px 6px; font:600 .84rem/1.3 var(--texte); letter-spacing:0; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-item .bqr-fait, html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-item .bqr-deja{ margin:8px 4px 0; width:auto; padding:7px 6px; font-size:.76rem; background:none; border:0; text-align:left; justify-content:flex-start; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-item.legendaire{ border-color:var(--t-trait); box-shadow:none; }
+html.topo:not(.sans-vitrine) .bqx-vitrine .bqr-note{ margin:14px 0 0; font-size:.74rem; color:#7B8FAB; }
+
+/* --- les paquets : le sachet en petit, le texte à côté --- */
+html.topo:not(.sans-vitrine) #bqPaquets{ grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:10px; }
+html.topo:not(.sans-vitrine) .bqx-quota{ grid-column:1 / -1; display:flex; align-items:center; gap:5px; margin:-6px 0 2px; font-size:.8rem; color:var(--t-texte2); }
+html.topo:not(.sans-vitrine) .bqx-quota i{ width:7px; height:7px; border-radius:50%; background:#34507A; }
+html.topo:not(.sans-vitrine) .bqx-quota i.on{ background:var(--t-or); }
+html.topo:not(.sans-vitrine) .bqx-quota span{ margin-left:4px; }
+html.topo:not(.sans-vitrine) #bqPaquets .bq-paquet{ display:grid; grid-template-columns:86px minmax(0,1fr); grid-auto-rows:min-content; column-gap:14px; align-content:center; padding:12px 14px 12px 12px; }
+html.topo:not(.sans-vitrine) #bqPaquets .bq-paquet > *{ grid-column:2; }
+html.topo:not(.sans-vitrine) #bqPaquets .bq-paquet > b{ margin:2px 0 0; }
+html.topo:not(.sans-vitrine) #bqPaquets .bq-paquet > p{ margin:3px 0 0; min-height:0; }
+html.topo:not(.sans-vitrine) #bqPaquets .bq-dep{ margin:10px 0 0; padding:9px 8px; border-radius:10px; background:var(--bx-ecrin); border:1px solid var(--t-trait); color:var(--t-texte); font-size:.84rem; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) #bqPaquets .bq-btn{ margin:10px 0 0; justify-self:start; min-width:112px; }
+html.topo:not(.sans-vitrine) .bqx-sachet{ grid-column:1 !important; grid-row:1 / span 5; align-self:center; position:relative; width:86px; height:120px; border-radius:10px;
+  background: radial-gradient(110% 80% at 50% 0%, rgba(240,180,41,.16), rgba(240,180,41,0) 66%), var(--bx-ecrin); }
+html.topo:not(.sans-vitrine) .bqx-sachet .paquet{ position:absolute; left:14px; top:13px; width:200px; height:280px; transform:scale(.29); transform-origin:0 0; pointer-events:none; cursor:default;
+  animation:none !important; filter:drop-shadow(0 22px 22px rgba(0,0,0,.6)); }
+html.topo:not(.sans-vitrine) .bqx-sachet .paquet :is(.coupe-consigne, .coupe-lueur, .coupe-trace, .coupe-tete, .coupe-eclair, .paquet-eclat, .paquet-bouts, .perfo-masque){ display:none !important; }
+
+/* --- l'objectif du mois : une ligne fine sous la une --- */
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-bandeau{ max-width:560px; margin:16px 0 0; padding:0; border:0; background:none; gap:6px; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-l1 b{ font:600 .82rem/1.3 var(--texte); letter-spacing:0; color:var(--t-texte2); }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-pc{ font-size:1rem; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-barre{ height:4px; border-radius:2px; background:#22395C; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-barre i{ background:var(--t-or); border-radius:2px; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-etapes{ display:none; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-bandeau small{ font-size:.72rem; color:#7B8FAB; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqe-achat{ background:var(--t-surface); border-color:var(--t-trait); border-radius:12px; }
+html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) > .note{ margin-top:22px; font-size:.76rem; color:#7B8FAB; background:none; border:0; padding:0; }
+
+/* --- téléphone : chaque rayon est une rangée qui glisse ; « Tout voir » l'ouvre en grille --- */
+@media (max-width:720px){
+  html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-grille-dos{ display:flex; gap:10px; overflow-x:auto; overscroll-behavior-x:contain; scroll-snap-type:x proximity; scroll-padding-left:14px;
+    margin:0 -14px; width:calc(100% + 28px); box-sizing:border-box; padding:2px 14px 6px; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+  html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-grille-dos::-webkit-scrollbar{ display:none; }
+  html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-grille-dos > .bq-article{ flex:0 0 150px; scroll-snap-align:start; box-sizing:border-box; }
+  html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-grille-dos > .bqe-t-collection{ flex-basis:176px; }
+  html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bq-section.ouvert .bq-grille-dos{ display:grid; grid-template-columns:1fr 1fr; overflow:visible; margin:0; padding:0; width:auto; }
+  html.topo:not(.sans-vitrine) #bqPaquets{ grid-template-columns:1fr; }
+}
+@media (min-width:721px){
+  html.topo:not(.sans-vitrine) :is(#panel-boutique, #panel-boutiqueeuros) .bqx-tout{ display:none; }
+  html.topo:not(.sans-vitrine) #bqStatut{ right:auto; left:150px; top:3px; }
+}
+@media (max-width:379px){
+  html.topo:not(.sans-vitrine) .bqx-une-eu.bqe-t-collection .bqx-une-vis{ width:142px; }
+  html.topo:not(.sans-vitrine) .bqx-une-vis .bqe-col-vig{ transform:scale(.9); }
+  html.topo:not(.sans-vitrine) .bqx-une-prix{ padding:10px 12px; font-size:1.08rem; }
+}
+@media (max-width:359px){
+  html.topo:not(.sans-vitrine) .bqx-une{ gap:12px; padding:14px 12px; }
+  html.topo:not(.sans-vitrine) .bqx-une .bqr-carte{ width:112px; height:157px; }
+  html.topo:not(.sans-vitrine) .bqx-une .bqr-carte .card{ transform:scale(.596); }
+  html.topo:not(.sans-vitrine) .bqx-une-vis{ width:112px; }
+}

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '71426f6c4101';
+const VERSION_JEU = '80b64dae6893';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3894,6 +3894,7 @@ function ouvrirPanneauDept(dep, xCss, yCss){
   panneauCommune = null;
   panneauDept = dep;
   panneauAncre = { x: xCss, y: yCss };
+  idfSurligner();   // patch434 : le cartouche suit (Arkhannou)
   const lignes = vus.map(j => `
     <div class="pc-ligne pd-j${j.moi ? ' moi' : ''}">
       <span><i class="pd-pastille" style="background:${j.couleur}"></i>${j.moi ? '<b>Toi</b>'
@@ -3960,6 +3961,7 @@ function ouvrirPanneau(code, xCss, yCss){
   if(libArme && libArme !== code) libArme = null;   // patch273
   panneauCommune = code;
   panneauDept = null;
+  idfSurligner();   // patch434
   if(typeof xCss === 'number' && typeof yCss === 'number'){
     panneauAncre = { x: xCss, y: yCss };
   }
@@ -4240,9 +4242,69 @@ function omfDessiner(dep){
     ctx.strokeStyle = couleur; ctx.lineWidth = grand ? 3.2 : 2.2; ctx.stroke(chemin);
     ctx.restore();
   }
+  if(SAISON2) omfBombesBatiments(ctx, contours, P, larg, haut, grand);   // patch434 (Bonjean)
   if(OMF.bulle && OMF.bulle.dep === dep){
     const c = tu.chemins.find(([code]) => code === OMF.bulle.code);
     if(c){ ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.4; ctx.stroke(c[1]); }
+  }
+}
+
+// patch434 : sur une tuile d'outre-mer, les zones de bombe en cours puis les bâtiments visibles,
+// avec les mêmes couleurs et les mêmes pastilles que sur la carte de France
+function omfBombesBatiments(ctx, contours, P, larg, haut, grand){
+  const maintenant = Date.now();
+  for(const z of (BOMBES_ZONES || [])){
+    if(z.lat == null || z.lon == null || new Date(z.fin).getTime() < maintenant) continue;
+    const lat = Number(z.lat), lon = Number(z.lon), rk = Number(z.rayon_km) || 0;
+    const [cx, cy] = P(lon, lat);
+    const [, yh] = P(lon, lat + rk / 111.19);
+    const [xd] = P(lon + rk / (111.19 * Math.cos(lat * Math.PI / 180)), lat);
+    const rx = Math.abs(xd - cx), ry = Math.abs(cy - yh);
+    if(!(rx > 0) || cx + rx < 0 || cx - rx > larg || cy + ry < 0 || cy - ry > haut) continue;
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(229,72,77,0.15)'; ctx.fill();
+    ctx.setLineDash([5, 3.5]); ctx.strokeStyle = 'rgba(255,90,82,0.95)'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.setLineDash([]);
+    const f = grand ? 11 : 10;
+    const txt = grand ? `💥 +${btReglage('bombe_bonus', 15)} % · ${formatDuree(new Date(z.fin).getTime() - maintenant)}` : '💥';
+    ctx.font = `600 ${f}px "Instrument Sans", system-ui, sans-serif`;
+    const w = grand ? ctx.measureText(txt).width + f * 1.2 : f * 1.9, h = f * 1.8;
+    const y = Math.max(2, cy - ry - h - 3);
+    ctx.fillStyle = 'rgba(229,72,77,0.92)';
+    ctx.beginPath(); if(ctx.roundRect) ctx.roundRect(cx - w / 2, y, w, h, h / 2); else ctx.rect(cx - w / 2, y, w, h); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(txt, cx, y + h / 2 + 0.5);
+    ctx.restore();
+  }
+  if(!BT_TRACES || !BATIMENTS_CARTE.size || (typeof CALQUES !== 'undefined' && CALQUES.batiments === false)) return;
+  const r = grand ? 9 : 6.5;
+  for(const code in contours){
+    const bt = BATIMENTS_CARTE.get(String(code));
+    if(!bt) continue;
+    const types = ['fonderie', 'forteresse', 'centre', 'banque', 'radar'].filter(t => bt[t] && BT_TRACES[t]);
+    if(!types.length) continue;
+    let anneau = contours[code][0];
+    for(const a of contours[code]) if(a.length > anneau.length) anneau = a;
+    let sx = 0, sy = 0;
+    for(const [lo, la] of anneau){ const [x, y] = P(lo, la); sx += x; sy += y; }
+    const x0 = sx / anneau.length, y0 = sy / anneau.length;
+    types.forEach((t, i) => {
+      const cx = x0 + (i - (types.length - 1) / 2) * (2 * r + 2), cy = y0;
+      ctx.save();
+      ctx.globalAlpha = bt[t].pret ? 1 : 0.65;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.shadowColor = t === 'centre' ? 'rgba(255,90,82,.7)' : t === 'radar' ? 'rgba(110,195,240,.75)' : 'rgba(255,150,60,.75)'; ctx.shadowBlur = 8;
+      ctx.fillStyle = '#3A220F'; ctx.fill(); ctx.shadowBlur = 0;
+      ctx.lineWidth = grand ? 2.2 : 1.8;
+      ctx.strokeStyle = bt[t].moi ? '#F0B429' : t === 'centre' ? '#FF6B63' : t === 'radar' ? '#6EC3F0' : '#FFB347';
+      if(!bt[t].pret) ctx.setLineDash([2.2, 1.6]);
+      ctx.stroke(); ctx.setLineDash([]);
+      const k = r / 14;
+      ctx.translate(cx - 12 * k, cy - 12 * k); ctx.scale(k, k);
+      ctx.strokeStyle = '#FFE0B8'; ctx.fillStyle = '#FFE0B8'; ctx.lineWidth = 2.1; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      ctx.stroke(BT_TRACES[t][0]); if(BT_TRACES[t][1]) ctx.fill(BT_TRACES[t][1]);
+      ctx.restore();
+    });
   }
 }
 
@@ -11176,6 +11238,7 @@ async function chargerBatiments(){
       carte.set(k, e);
     }
     BATIMENTS_CARTE = carte;
+    if(typeof omfRafraichir === 'function') omfRafraichir();   // patch434
     majMiniBt();   // patch397
     renderBatimentsBloc();
     if(typeof mfoRendre === 'function') mfoRendre();   // patch366

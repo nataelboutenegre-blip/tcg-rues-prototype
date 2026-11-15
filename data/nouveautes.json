@@ -3,7 +3,9 @@
     "date": "2026-11-15",
     "nouveautes": [],
     "correctifs": [
-      "Rafale et Radar : plus de duel classé contre un joueur beaucoup plus fort ou beaucoup plus faible (plus de 300 points d'Elo d'écart) ; ta partie attend alors un adversaire de ton niveau, 12 h au plus (merci Maroli)."
+      "Rafale et Radar : plus de duel classé contre un joueur beaucoup plus fort ou beaucoup plus faible (plus de 300 points d'Elo d'écart) ; ta partie attend alors un adversaire de ton niveau, 12 h au plus (merci Maroli).",
+      "Carte Outre-mer du Front : les bâtiments (Centres de recherche dévoilés compris) et les zones de bombe y apparaissent enfin, comme sur la carte de France (merci Bonjean).",
+      "Cartouche « Paris et petite couronne » : un département choisi ne reste plus en gras quand on en choisit un autre sur la carte (merci Arkhannou)."
     ]
   },
   {

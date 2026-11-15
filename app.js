@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'bff483714701';
+const VERSION_JEU = '71426f6c4101';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10999,7 +10999,7 @@ function initModes(){
   el.setAttribute('aria-label', 'Mode de jeu');
   el.innerHTML = `
     <button class="terra" data-mode="terra" role="tab"><span class="mb-nom">Terra</span><span class="mb-res"><b id="mbPoints">—</b>TP</span></button>
-    <button class="front" data-mode="front" role="tab"><span class="mb-nom">Front</span><span class="mb-res">${ICONE_ENERGIE}<b id="mbEnergie">—</b>/ <span id="mbMax">50</span> énergie</span></button>`;
+    <button class="front" data-mode="front" role="tab"><span class="mb-nom">Front</span><span class="mb-res">${ICONE_ENERGIE}<b id="mbEnergie">—</b>/ <span id="mbMax">50</span><span class="mb-u"> énergie</span></span></button>`;   // patch433 : « énergie » à part
   const entete = document.querySelector('.content .entete-mobile');
   entete.insertAdjacentElement('afterend', el);
   el.addEventListener('click', (e) => {
@@ -23577,6 +23577,12 @@ function ifaceCharger(){
       const o = !error && data && typeof data === 'object' ? data : {};
       IFACE.barre = Number(o.barre_stable) === 1;
       IFACE.recap = Number(o.recap_arrivee) === 1;
+      // patch433 : l'habillage Topo s'allume ou s'éteint pour tout le monde depuis la base
+      if(o.topo !== undefined && o.topo !== null){
+        const t = Number(o.topo) === 1;
+        document.documentElement.classList.toggle('topo', t || (Number(o.topo) !== 0 && document.documentElement.classList.contains('topo')));
+        try{ localStorage.setItem('tf-topo-serveur', String(Number(o.topo))); }catch(e){}
+      } else { try{ localStorage.removeItem('tf-topo-serveur'); }catch(e){} }
     }catch(e){}
     IFACE.lu = true;
     ifaceAppliquer();

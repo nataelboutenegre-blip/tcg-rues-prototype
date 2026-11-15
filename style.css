@@ -10012,3 +10012,114 @@ body.mess-on #panel-regles [data-s3="mess"]{ display:revert !important; }
 .mess-ra-barre{ display:block; width:100%; height:6px; border-radius:4px; background:#1f2a3d; overflow:hidden; }
 .mess-ra-barre b{ display:block; height:100%; background:linear-gradient(90deg,#22A06B,#F0B429); }
 .mess-ration small{ grid-column:1 / -1; color:var(--brume); font-size:11.5px; }
+
+
+/* =====================================================================
+   patch433 — habillage « Topo » de la saison 3 (direction A, décidée le 5/11)
+   Tout est sous html.topo : sans cette classe, rien ne change.
+   Allumé par topo.js (22/11 10 h, ?topo=test, ou interface_options.topo).
+   ===================================================================== */
+html.topo{
+  --t-fond:#0F1F38; --t-surface:#172C4B; --t-surface2:#1F3860; --t-trait:#284268;
+  --t-texte:#F1F5F9; --t-texte2:#A9BCD4; --t-or:#F0B429; --t-or-texte:#1A1404;
+  --t-danger:#D93A40; --t-rouge:#E5484D; --t-rouge-texte:#FF9A94;
+  --t-r-bouton:12px; --t-r-groupe:16px; --t-r-feuille:22px;
+}
+html.topo body{ background: var(--t-fond); color: var(--t-texte); }
+
+/* --- 1. plus de lueur de couleur en haut : le fond reste bleu nuit, le mode vit dans le liseré --- */
+html.topo body.mode-terra .content, html.topo body.mode-front .content{ background:none; }
+
+/* --- 2. plus de bloc « sur-titre + grand titre + paragraphe » en haut des onglets --- */
+html.topo .tab-panel > h1::before, html.topo .coll-ligne-titre > h1::before, html.topo .regles > h1::before{ content:none !important; display:none !important; }
+html.topo .tab-panel > .sub{ display:none !important; }
+html.topo :is(#panel-tirage, #panel-territoire, #panel-combat, #panel-qg, #panel-collection, #panel-contrat, #panel-profil) > h1{ display:none !important; }
+html.topo .tab-panel > h1{
+  font-family: var(--texte); font-weight:700; font-size:1.45rem; line-height:1.2; letter-spacing:0;
+  text-transform:none; margin:0 0 14px; }
+
+/* --- 3. titres et étiquettes : casse normale, une seule police de texte --- */
+html.topo :is(.content, .fenetre, .feuille-plus, [role="dialog"]) *:not(.face, .face *, .card-inner *, .c3d-face *, .col-carte *, .vt-carte *, .inv-carte *, .card, .card *, .paquet, .paquet *, #packZone *, .dos, .dos *, [class*="dos-"], [class*="dos-"] *, .rarete, .rarete *){
+  text-transform:none; letter-spacing:normal; }
+html.topo :is(.content, .fenetre, .feuille-plus, [role="dialog"]) :is(h2, h3, h4){
+  font-family: var(--texte); font-weight:700; letter-spacing:0; }
+html.topo .qg-h3, html.topo .qg-tete h3, html.topo .qg-tete b{ font-family: var(--texte); font-weight:700; letter-spacing:0; font-size:1.05rem; }
+html.topo .mfo-h > span:first-child, html.topo .mfo-h span{ letter-spacing:0; font-weight:700; font-size:.95rem; color: var(--t-texte); }
+html.topo .mfo-h .mfo-lien{ color: var(--t-or); font-weight:600; font-size:.88rem; }
+
+/* --- 4. surfaces : un seul niveau, même bord, même arrondi --- */
+html.topo :is(.mfo-t, .qg-carte, .cdj-carte, .rdf, .zd, .ra, .pp, .sd, .clan-jour, .mfo-t.mfo-calme){
+  background: var(--t-surface); border:1px solid var(--t-trait); border-radius: var(--t-r-groupe); box-shadow:none; }
+html.topo .mfo-t.neuf{ border-color: rgba(240,180,41,.55); }
+html.topo .mfo-t.mfo-calme{ background: var(--t-surface); }
+html.topo .qg-rang{ background: var(--t-surface2); }
+html.topo .mfo-btv{ background: var(--t-surface2); }
+
+/* --- 5. sélecteurs à onglets (Mon front / Attaquer / Défendre…) : segmentés, sans or --- */
+html.topo .volets{ display:inline-flex; background: var(--t-surface); border:1px solid var(--t-trait); border-radius:14px; padding:4px; gap:4px; }
+html.topo .volet{ justify-content:center; text-align:center; border-radius:10px; padding:10px 8px; font-weight:600; color: var(--t-texte2); }
+html.topo .volet.actif{ background: var(--t-surface2); color: var(--t-texte); box-shadow:none; }
+html.topo .qg-filtre{ background: var(--t-fond); border-color: var(--t-trait); }
+
+/* --- 6. boutons : principal or, secondaire bleu, même police --- */
+html.topo button.open-btn{
+  font-family: var(--texte); font-weight:700; font-size:1.02rem; letter-spacing:0;
+  min-height:52px; border-radius: var(--t-r-bouton); padding:12px 20px; box-shadow:none; color: var(--t-or-texte); }
+html.topo button.open-btn:active{ transform: translateY(1px); }
+html.topo :is(.qg-actions, .mfo-liens) button:not(.open-btn){
+  font-family: var(--texte); font-weight:600; letter-spacing:0; border-radius: var(--t-r-bouton); }
+
+/* --- 7a. sélecteur Terra / Front, partout --- */
+html.topo .mode-bascule button{ flex-direction:row; align-items:center; justify-content:center; gap:8px; padding:0 10px; border-radius:9px; }
+html.topo .mode-bascule .mb-nom{ font-family: var(--texte); font-weight:600; font-size:.92rem; letter-spacing:0; text-transform:none; }
+html.topo .mode-bascule .mb-res{ font-size:.8rem; color: var(--t-texte2); }
+html.topo .mode-bascule .mb-res b{ color: var(--t-texte); }
+html.topo .mode-bascule button.terra.on, html.topo .mode-bascule button.front.on{ background: var(--t-fond); }
+html.topo .mode-bascule button.terra.on{ box-shadow: inset 0 0 0 1.5px #5FD39D; }
+html.topo .mode-bascule button.front.on{ box-shadow: inset 0 0 0 1.5px #FF8A8E; }
+html.topo .mode-bascule button:not(.on) .mb-nom{ color: var(--t-texte2); }
+html.topo .mode-bascule{ background: var(--t-surface); border-color: var(--t-trait); }
+
+/* --- 7. en-tête du téléphone : le sélecteur Terra / Front prend la place du logo --- */
+@media (max-width: 720px){
+  html.topo .content{ position:relative; }
+  html.topo .entete-mobile{ min-height:44px; margin-bottom:12px; }
+  html.topo .entete-mobile .brand{ visibility:hidden; }
+  html.topo .mode-bascule{
+    position:absolute; top:14px; left:14px; right:96px; width:auto; max-width:none; height:44px; margin:0;
+    grid-template-columns:auto 1fr; padding:3px; gap:3px;
+    background: var(--t-surface); border:1px solid var(--t-trait); border-radius:12px; }
+  /* l'énergie « 34 / 40 énergie » tient en « 34 / 40 » */
+  html.topo .mode-bascule .mb-u{ display:none; }
+  html.topo .mode-bascule button.terra{ min-width:0; }
+}
+
+/* --- 8. la barre du bas : l'onglet actif en or, le liseré du mode reste --- */
+html.topo body.mode-terra .tab.active, html.topo body.mode-terra .tab.active .icon,
+html.topo body.mode-front .tab.active, html.topo body.mode-front .tab.active .icon{ color: var(--t-or); }
+
+/* --- 9. petits réglages --- */
+html.topo .qg-titre h2{ font-size:1.12rem; line-height:1.25; margin:0 0 2px; }
+html.topo .qg-titre p{ color: var(--t-texte2); }
+html.topo .territory{ border-top:none; padding-top:0; }
+html.topo .annonce-bandeau{ background: var(--t-surface); border:1px solid var(--t-trait); border-radius: var(--t-r-groupe); }
+html.topo .stats{ border-top-color: var(--t-trait); }
+html.topo .stats > h2{ color: var(--t-texte); font-size:1.05rem; }
+html.topo .puce{ background: var(--t-surface); border-color: var(--t-trait); }
+html.topo .pot-libres{ background: var(--t-surface); border-color: var(--t-trait); border-radius: var(--t-r-groupe); }
+html.topo .map-wrap{ border-color: var(--t-trait); border-radius: var(--t-r-groupe); }
+html.topo .toggle-others-btn{ border-color: var(--t-trait); border-radius: var(--t-r-bouton); }
+html.topo .mf-zone{ border-color: var(--t-trait); background: var(--t-surface); }
+html.topo .glisser-texte{ font-family: var(--texte); font-weight:600; letter-spacing:0; }
+html.topo .pack-buttons{ width:100%; }
+html.topo .pack-buttons .open-btn, html.topo .pack-buttons .glisser{ width:100%; }
+html.topo .glisser{ border-radius: var(--t-r-bouton); background: var(--t-surface); border-color: var(--t-trait); }
+
+/* --- 10. la police haute et étroite reste aux chiffres, aux cartes et aux paquets ; titres et boutons passent en texte --- */
+html.topo :is(h1, h2, h3, h4, h5, button, label, summary, .btn, .notif-corps > b, [class*="titre"]):not(.face, .face *, .card-inner *, .c3d-face *, .col-carte *, .vt-carte *, .inv-carte *, .card *, .paquet *, #packZone *, .dos *, [class*="dos-"] *, .tcg *){
+  --titre: var(--texte); }
+html.topo :is(.regles, .coll-ligne-titre) > h1{ font-family: var(--texte); font-weight:700; font-size:1.45rem; line-height:1.2; letter-spacing:0; margin-bottom:12px; }
+@media (max-width: 720px){
+  html.topo .volets{ display:flex; width:100%; }
+  html.topo .volet{ flex:1; }
+}

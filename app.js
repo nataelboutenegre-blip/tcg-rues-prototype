@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '4e40b4a04f8d';
+const VERSION_JEU = '5a858203034f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8472,6 +8472,7 @@ const sonsOuverture = (() => {
     assautGagne(){ if(pret()){ note(523, 0, 0.18, 'triangle', 0.3); note(784, 0.1, 0.32, 'triangle', 0.3); } },
     assautPerdu(){ if(pret()){ note(330, 0, 0.25, 'sawtooth', 0.16); note(220, 0.15, 0.42, 'sawtooth', 0.14); } },
     assautConquete(){ if(pret()) [523, 659, 784, 1047].forEach((f, i) => note(f, i * 0.12, 0.5, 'triangle', 0.3)); },
+    boum(v){ if(pret()) note(62, 0, 0.9, 'sine', 0.5 * (v || 1)); },   // patch437
     tension(tier){ if(!pret()) return;
       const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime, k = tier === 'legendaire' ? 1 : tier === 'epique' ? 0.9 : 0.8;
       o.type = 'sine'; o.frequency.setValueAtTime(180 * k, t); o.frequency.exponentialRampToValueAtTime(360 * k, t + 0.9);
@@ -8532,6 +8533,94 @@ function construirePileOuv(pileDraws){
   return pile;
 }
 
+// ---------- patch437 : la révélation mise en scène selon la rareté ----------
+const REV_COUL = { peucommun: '#2BD48B', rare: '#4D94FF', epique: '#B07CFF', legendaire: '#F0B429' };
+const REV_NOM = { rare: 'Rare', epique: 'Épique', legendaire: 'Légendaire' };
+function revActif(){ const h = document.documentElement.classList; return h.contains('topo') && !h.contains('sans-revelation') && ouvAnim && !REDUCED_MOTION; }
+// les particules : une toile fixe au-dessus de la page, qui ne tourne que tant qu'il en reste
+const revFx = (() => {
+  let cv = null, ctx = null, parts = [], raf = 0, dpr = 1;
+  const boucle = () => {
+    raf = 0; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
+    const vivantes = [];
+    for(const p of parts){
+      p.vie -= 1 / 60; if(p.vie <= 0) continue;
+      p.vy += p.g; p.vx *= p.fr; p.vy *= p.fr; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.globalAlpha = Math.min(1, p.vie / p.fin); ctx.fillStyle = p.c;
+      if(p.forme === 'eclat'){
+        ctx.globalCompositeOperation = 'lighter'; const t = p.t * (.6 + .4 * Math.abs(Math.sin(p.vie * 14)));
+        ctx.beginPath(); ctx.moveTo(0, -t * 2.6); ctx.lineTo(t * .45, 0); ctx.lineTo(0, t * 2.6); ctx.lineTo(-t * .45, 0); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(-t * 2.6, 0); ctx.lineTo(0, t * .45); ctx.lineTo(t * 2.6, 0); ctx.lineTo(0, -t * .45); ctx.closePath(); ctx.fill();
+      } else if(p.forme === 'feuille'){ ctx.scale(1, Math.cos(p.vie * 9 + p.t)); ctx.fillRect(-p.t, -p.t * .6, p.t * 2, p.t * 1.2); }
+      else { ctx.globalCompositeOperation = 'lighter'; ctx.beginPath(); ctx.arc(0, 0, p.t, 0, 6.283); ctx.fill(); }
+      ctx.restore(); vivantes.push(p);
+    }
+    parts = vivantes;
+    if(parts.length) raf = requestAnimationFrame(boucle); else { cv.remove(); cv = null; }
+  };
+  return { emettre(x, y, n, o){
+    if(!cv){ cv = document.createElement('canvas'); cv.className = 'rev-fx'; cv.setAttribute('aria-hidden', 'true'); document.body.appendChild(cv); ctx = cv.getContext('2d');
+      dpr = Math.min(window.devicePixelRatio || 1, 2); cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr); }
+    for(let i = 0; i < n; i++){
+      const ang = (o.ang != null ? o.ang : Math.random() * 6.283) + (Math.random() - .5) * (o.ouv || 0), v = o.v * (.35 + Math.random() * .9), vie = o.vie * (.6 + Math.random() * .7);
+      parts.push({ x: x + (Math.random() - .5) * (o.large || 0), y: y + (Math.random() - .5) * (o.haut || 0), vx: Math.cos(ang) * v, vy: Math.sin(ang) * v, g: o.g != null ? o.g : .08, fr: o.fr || .975,
+        r: Math.random() * 6.283, vr: (Math.random() - .5) * (o.vr || .2), vie, fin: vie * .5, t: o.t * (.6 + Math.random() * .8), c: o.c[Math.floor(Math.random() * o.c.length)], forme: o.forme || 'point' });
+    }
+    if(!raf) raf = requestAnimationFrame(boucle);
+  } };
+})();
+function revCentre(el){ const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, w: r.width, h: r.height }; }
+function revNettoyer(zone){
+  zone.querySelectorAll('.rev-rayons, .rev-lueur, .rev-cri').forEach(e => e.remove());
+  zone.querySelectorAll('.card.rev-aura, .card.rev-haut, .card.rev-tremble').forEach(c => c.classList.remove('rev-aura', 'rev-tremble', 'rev-haut'));
+  const o = document.getElementById('revOmbre'); if(o) o.remove();
+}
+// avant de retourner une rare, une épique ou une légendaire : le suspense
+async function revSuspens(slot, el, draw, sansSon){
+  const t = draw.tier.id, rg = RANG_TIER[t], duree = { rare: 420, epique: 760, legendaire: 1250 }[t] || 0;
+  if(!duree) return;
+  el.style.setProperty('--rc', REV_COUL[t]); slot.style.setProperty('--rc', REV_COUL[t]);
+  el.classList.add('rev-aura');
+  const lueur = document.createElement('i'); lueur.className = 'rev-lueur'; slot.insertBefore(lueur, slot.firstChild);
+  if(rg >= 3){
+    el.classList.add('rev-tremble');
+    const r = document.createElement('i'); r.className = 'rev-rayons' + (rg === 4 ? ' fort' : ''); slot.insertBefore(r, slot.firstChild);
+  }
+  if(rg === 4){
+    const c = revCentre(el), o = document.createElement('div'); o.id = 'revOmbre'; o.setAttribute('aria-hidden', 'true');
+    o.style.background = `radial-gradient(circle at ${Math.round(c.x)}px ${Math.round(c.y)}px, transparent 0, transparent ${Math.round(c.h * .62)}px, rgba(3,8,18,.82) ${Math.round(c.h * 1.6)}px)`;
+    document.body.appendChild(o); requestAnimationFrame(() => o.classList.add('vu'));
+  }
+  if(!sansSon) sonsOuverture.tension(t);
+  await attendreOuv(duree);
+  el.classList.remove('rev-tremble');
+}
+// au retournement : éclats, flash, nom de la rareté, reflet
+function revEclat(slot, el, draw){
+  const t = draw.tier.id, rg = RANG_TIER[t];
+  if(rg < 1) return;
+  const c = revCentre(el), coul = REV_COUL[t];
+  if(rg === 1){ revFx.emettre(c.x, c.y, 8, { v: 3.2, vie: .6, t: 1.6, c: [coul, '#fff'], g: .02 }); return; }
+  const n = { rare: 26, epique: 46, legendaire: 90 }[t];
+  revFx.emettre(c.x, c.y, n, { v: rg === 4 ? 9 : 6.5, vie: rg === 4 ? 1.5 : 1, t: 2.2, c: [coul, '#fff', '#FFE9A8'], forme: 'eclat', g: .05, fr: .96, large: c.w * .7, haut: c.h * .7 });
+  revFx.emettre(c.x, c.y, n, { v: rg === 4 ? 12 : 8, vie: .8, t: 1.5, c: [coul, '#fff'], g: .03, fr: .95 });
+  const f = document.createElement('div'); f.className = 'rev-flash'; f.setAttribute('aria-hidden', 'true');
+  f.style.background = `radial-gradient(circle at ${Math.round(c.x)}px ${Math.round(c.y)}px, #fff, ${coul} ${Math.round(c.h * .7)}px, transparent ${Math.round(c.h * 1.5)}px)`;
+  document.body.appendChild(f);
+  f.animate([{ opacity: rg === 4 ? .8 : rg === 3 ? .42 : .2 }, { opacity: 0 }], { duration: rg === 4 ? 520 : 320, easing: 'ease-out' }).onfinish = () => f.remove();
+  const cri = document.createElement('p'); cri.className = 'rev-cri'; cri.setAttribute('aria-hidden', 'true'); cri.textContent = REV_NOM[t]; slot.appendChild(cri);
+  const cadre = el.querySelector('.carte-cadre');
+  if(cadre && !cadre.querySelector('.rev-holo')) cadre.insertAdjacentHTML('beforeend', '<i class="rev-holo" aria-hidden="true"></i>');
+  el.classList.add('rev-haut', 'rev-' + t);
+  if(rg >= 3) sonsOuverture.boum(rg === 4 ? 1 : .55);
+  if(rg === 4){
+    const scene = slot.closest('.ouv-scene');
+    if(scene) scene.animate([{ translate: '0 0' }, { translate: '-5px 3px' }, { translate: '4px -4px' }, { translate: '-3px 2px' }, { translate: '2px -1px' }, { translate: '0 0' }], { duration: 380 });
+    setTimeout(() => revFx.emettre(c.x, c.y - c.h * .6, 40, { v: 3, vie: 2.2, t: 2.4, c: ['#F0B429', '#FFE9A8', '#fff'], forme: 'feuille', g: .05, fr: .99, large: c.w * 1.6, ang: Math.PI / 2, ouv: 2.4, vr: .4 }), 260);
+    if(navigator.vibrate) try{ navigator.vibrate([30, 40, 60]); }catch(e){}
+  }
+}
+
 function lancerRevelation(zone, scene, tries){
   const echelle = scene.querySelector('.ouv-echelle');
   const slotCarte = scene.querySelector('.ouv-slot-carte');
@@ -8583,6 +8672,7 @@ function lancerRevelation(zone, scene, tries){
     fini = true;
     actions.hidden = true;
     await attendreOuv(250);
+    revNettoyer(zone);   // patch437
     scene.remove();
     decouverte.remove();
     actions.remove();
@@ -8596,20 +8686,25 @@ function lancerRevelation(zone, scene, tries){
       scene.classList.add('etalee');
       await attendreOuv(480);
     }
+    revNettoyer(zone);   // patch437 : la mise en scène de la carte d'avant s'efface
     if(enCours){ versRangee(enCours.el); enCours = null; }
     const draw = pile.pop();
     const el = makeCardEl(draw, surCarteRetournee(draw));
     el.classList.add('ouv-scene-carte');
     slotCarte.appendChild(el);
     enCours = { draw, el };
+    const rev = revActif() && !draw.brillante;   // patch437
+    const derniere = !pile.length;               // la dernière a déjà eu sa lueur et son son sur la pile
     redessinerPile();
     sonsOuverture.retourne();
     requestAnimationFrame(() => requestAnimationFrame(async () => {
+      if(rev && RANG_TIER[draw.tier.id] >= 2) await revSuspens(slotCarte, el, draw, derniere);   // patch437
       el.click();                                  // retourne la carte et l'ajoute a la collection
       if(draw.brillante) briDecouverte(decouverte, draw); else decouvrir(draw);   // patch269
       await attendreOuv(420);
       sonsOuverture.revele(draw.tier.id);
       if(RANG_TIER[draw.tier.id] >= 2 || monumentsNoms.has(draw.code)) el.classList.add('ouv-eclat');
+      if(rev) revEclat(slotCarte, el, draw);   // patch437
       if(draw.brillante) briFete(slotCarte, el, draw);   // patch269
       annoncerOuv(draw.nom + ', ' + draw.tier.label);
       verrou = false;
@@ -8632,6 +8727,7 @@ function lancerRevelation(zone, scene, tries){
     if(!pile.length) return;
     verrou = true;
     btnTout.hidden = true;
+    revNettoyer(zone);   // patch437
     if(enCours){ versRangee(enCours.el); enCours = null; }
     const reste = pile.splice(0).reverse();
     redessinerPile();
@@ -23732,6 +23828,7 @@ function ifaceCharger(){
         try{ localStorage.setItem('tf-topo-serveur', String(Number(o.topo))); }catch(e){}
       } else { try{ localStorage.removeItem('tf-topo-serveur'); }catch(e){} }
       document.documentElement.classList.toggle('sans-sachet', o.sachet !== undefined && o.sachet !== null && Number(o.sachet) === 0);   // patch436
+      document.documentElement.classList.toggle('sans-revelation', o.revelation !== undefined && o.revelation !== null && Number(o.revelation) === 0);   // patch437
     }catch(e){}
     IFACE.lu = true;
     ifaceAppliquer();

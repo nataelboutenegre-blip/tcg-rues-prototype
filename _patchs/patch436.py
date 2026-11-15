@@ -13,15 +13,15 @@ A, S = 'app.js', 'style.css'
 if 'patch436' in open(A, encoding='utf-8').read(): sys.exit('déjà appliqué')
 
 ALU = '<span class="alu" aria-hidden="true"><i class="alu-bosse"></i><i class="alu-relief"></i><i class="alu-plis"></i><i class="alu-plis bas"></i><i class="alu-soudure"></i><i class="alu-soudure bas"></i><i class="alu-froisse"></i><i class="alu-iris"></i><i class="alu-reflet"></i></span>'
-rep(A, """    <div class="paquet-languette">${motif}</div>""", """    <div class="paquet-languette">${motif}${ALU_COUCHES}</div>""")
+rep(A, """    <div class="paquet-languette">${motif}</div>""", """    <div class="paquet-languette">${motif}${aluActif() ? ALU_COUCHES : ''}</div>""")
 rep(A, """      <div class="paquet-bande">5 communes</div>
     </div>
-    <div class="paquet-eclat"></div>""", """      <div class="paquet-bande">5 communes</div>${ALU_COUCHES}
+    <div class="paquet-eclat"></div>""", """      <div class="paquet-bande">5 communes</div>${aluActif() ? ALU_COUCHES : ''}
     </div>
     <div class="paquet-eclat"></div>""")
 rep(A, """  if(gl) setTimeout(() => habGl.demarrer(), 0);
   if(HW && HW.actif) hw2Paquet(pack);   // patch265 : le paquet maudit
-  return pack;""", """  aluInstaller(pack);   // patch436 : le sachet en aluminium
+  return pack;""", """  if(aluActif()) aluInstaller(pack);   // patch436 : le sachet en aluminium
   if(gl) setTimeout(() => habGl.demarrer(), 0);
   if(HW && HW.actif) hw2Paquet(pack);   // patch265 : le paquet maudit
   return pack;""")
@@ -30,6 +30,9 @@ function makePackEl(type){""", """// ---------- patch436 : le sachet en aluminiu
 // Des couches posées sur le motif (dans la languette et dans le corps, alignées comme lui), une copie de la
 // languette qui se décolle derrière la coupe, et un reflet qui suit le doigt ou la souris.
 const ALU_COUCHES = '""" + ALU + """';
+// Allumé avec l'habillage de la saison 3 (html.topo : le 22/11 à 10 h, ou ?topo=test) ;
+// config_jeu 'interface'.sachet = 0 l'éteint seul, sans toucher à l'habillage.
+function aluActif(){ const h = document.documentElement.classList; return h.contains('topo') && !h.contains('sans-sachet'); }
 function aluInstaller(pack){
   pack.classList.add('alu');
   const l = pack.querySelector('.paquet-languette');
@@ -114,4 +117,8 @@ CSS = """
 @media (prefers-reduced-motion: reduce){ .paquet .alu-reflet, .paquet .alu-iris{ animation:none; } .paquet.alu.coupee .paquet-languette.pelee{ animation:none; opacity:0; } }
 """
 open(S, 'a', encoding='utf-8').write(CSS)
+rep(A, """      } else { try{ localStorage.removeItem('tf-topo-serveur'); }catch(e){} }
+""", """      } else { try{ localStorage.removeItem('tf-topo-serveur'); }catch(e){} }
+      document.documentElement.classList.toggle('sans-sachet', o.sachet !== undefined && o.sachet !== null && Number(o.sachet) === 0);   // patch436
+""")
 print('patch436 OK')

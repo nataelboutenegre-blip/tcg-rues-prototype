@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '2378221c9641';
+const VERSION_JEU = '4e40b4a04f8d';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8694,6 +8694,9 @@ function potRetirer(n){
 // Des couches posées sur le motif (dans la languette et dans le corps, alignées comme lui), une copie de la
 // languette qui se décolle derrière la coupe, et un reflet qui suit le doigt ou la souris.
 const ALU_COUCHES = '<span class="alu" aria-hidden="true"><i class="alu-bosse"></i><i class="alu-relief"></i><i class="alu-plis"></i><i class="alu-plis bas"></i><i class="alu-soudure"></i><i class="alu-soudure bas"></i><i class="alu-froisse"></i><i class="alu-iris"></i><i class="alu-reflet"></i></span>';
+// Allumé avec l'habillage de la saison 3 (html.topo : le 22/11 à 10 h, ou ?topo=test) ;
+// config_jeu 'interface'.sachet = 0 l'éteint seul, sans toucher à l'habillage.
+function aluActif(){ const h = document.documentElement.classList; return h.contains('topo') && !h.contains('sans-sachet'); }
 function aluInstaller(pack){
   pack.classList.add('alu');
   const l = pack.querySelector('.paquet-languette');
@@ -8730,18 +8733,18 @@ function makePackEl(type){
   pack.className = 'paquet ' + (type === 'achete' ? 'achete' : 'gratuit') + (og ? ' og' : '') + (gl ? ' hab hab-' + hab : '');
   pack.setAttribute('aria-label', 'Ouvrir le paquet');
   pack.innerHTML = `
-    <div class="paquet-languette">${motif}${ALU_COUCHES}</div>
+    <div class="paquet-languette">${motif}${aluActif() ? ALU_COUCHES : ''}</div>
     <svg class="paquet-perfo" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><polyline class="perfo-base" points="${PERFO_POINTS}"/></svg>
     <div class="perfo-masque"><svg class="paquet-perfo perfo-lueur" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><polyline class="perfo-trace" points="${PERFO_POINTS}"/></svg></div>
     <div class="paquet-corps">${motif}
       <div class="paquet-etiquette">${embleme}<span class="paquet-titre">Paquet</span></div>
-      <div class="paquet-bande">5 communes</div>${ALU_COUCHES}
+      <div class="paquet-bande">5 communes</div>${aluActif() ? ALU_COUCHES : ''}
     </div>
     <div class="paquet-eclat"></div>
     <div class="paquet-bouts">${MORCEAUX_PAQUET}</div>
     <div class="coupe-lueur"></div><div class="coupe-trace"></div><div class="coupe-tete"></div><div class="coupe-eclair"></div>
     <span class="coupe-consigne" aria-hidden="true">Touche le paquet · ou coupe les pointillés</span>`;
-  aluInstaller(pack);   // patch436 : le sachet en aluminium
+  if(aluActif()) aluInstaller(pack);   // patch436 : le sachet en aluminium
   if(gl) setTimeout(() => habGl.demarrer(), 0);
   if(HW && HW.actif) hw2Paquet(pack);   // patch265 : le paquet maudit
   return pack;
@@ -23728,6 +23731,7 @@ function ifaceCharger(){
         document.documentElement.classList.toggle('topo', t || (Number(o.topo) !== 0 && document.documentElement.classList.contains('topo')));
         try{ localStorage.setItem('tf-topo-serveur', String(Number(o.topo))); }catch(e){}
       } else { try{ localStorage.removeItem('tf-topo-serveur'); }catch(e){} }
+      document.documentElement.classList.toggle('sans-sachet', o.sachet !== undefined && o.sachet !== null && Number(o.sachet) === 0);   // patch436
     }catch(e){}
     IFACE.lu = true;
     ifaceAppliquer();

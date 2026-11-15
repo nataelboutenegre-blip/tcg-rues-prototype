@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'fe8c284a8644';
+const VERSION_JEU = '2378221c9641';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8690,6 +8690,33 @@ function potRetirer(n){
   renderPot();
 }
 
+// ---------- patch436 : le sachet en aluminium ----------
+// Des couches posées sur le motif (dans la languette et dans le corps, alignées comme lui), une copie de la
+// languette qui se décolle derrière la coupe, et un reflet qui suit le doigt ou la souris.
+const ALU_COUCHES = '<span class="alu" aria-hidden="true"><i class="alu-bosse"></i><i class="alu-relief"></i><i class="alu-plis"></i><i class="alu-plis bas"></i><i class="alu-soudure"></i><i class="alu-soudure bas"></i><i class="alu-froisse"></i><i class="alu-iris"></i><i class="alu-reflet"></i></span>';
+function aluInstaller(pack){
+  pack.classList.add('alu');
+  const l = pack.querySelector('.paquet-languette');
+  if(l){ const c = l.cloneNode(true); c.classList.add('pelee'); c.style.display = 'none'; l.insertAdjacentElement('afterend', c); }
+  let dernier = 0;
+  pack.addEventListener('pointermove', (e) => {
+    const t = performance.now(); if(t - dernier < 24) return; dernier = t;
+    const r = pack.getBoundingClientRect(); if(!r.width) return;
+    pack.style.setProperty('--alu-x', (100 - Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * 100).toFixed(1) + '%');
+    pack.classList.add('alu-suit');
+  });
+  pack.addEventListener('pointerleave', () => pack.classList.remove('alu-suit'));
+}
+// v de 0 à 1 : la languette reste à droite de la coupe, sa copie se soulève à gauche
+function aluPeler(l, pl, v){
+  if(v <= 0){ l.style.webkitMaskImage = l.style.maskImage = ''; pl.style.display = 'none'; return; }
+  const x = (v * 200).toFixed(1) + 'px';
+  const m1 = `linear-gradient(90deg, transparent ${x}, #000 ${x})`, m2 = `linear-gradient(90deg, #000 ${x}, transparent ${x})`;
+  l.style.webkitMaskImage = m1; l.style.maskImage = m1; l.style.transform = '';
+  pl.style.display = ''; pl.style.webkitMaskImage = m2; pl.style.maskImage = m2;
+  pl.style.transformOrigin = `${x} 100%`; pl.style.transform = `rotate(${(-(5 + 27 * v)).toFixed(2)}deg)`;
+}
+
 // Paquet bleu pour le gratuit, dore pour celui achete
 function makePackEl(type){
   // patch175 : l'habillage choisi dans la garde-robe (Nacre : patch159)
@@ -8703,17 +8730,18 @@ function makePackEl(type){
   pack.className = 'paquet ' + (type === 'achete' ? 'achete' : 'gratuit') + (og ? ' og' : '') + (gl ? ' hab hab-' + hab : '');
   pack.setAttribute('aria-label', 'Ouvrir le paquet');
   pack.innerHTML = `
-    <div class="paquet-languette">${motif}</div>
+    <div class="paquet-languette">${motif}${ALU_COUCHES}</div>
     <svg class="paquet-perfo" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><polyline class="perfo-base" points="${PERFO_POINTS}"/></svg>
     <div class="perfo-masque"><svg class="paquet-perfo perfo-lueur" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true"><polyline class="perfo-trace" points="${PERFO_POINTS}"/></svg></div>
     <div class="paquet-corps">${motif}
       <div class="paquet-etiquette">${embleme}<span class="paquet-titre">Paquet</span></div>
-      <div class="paquet-bande">5 communes</div>
+      <div class="paquet-bande">5 communes</div>${ALU_COUCHES}
     </div>
     <div class="paquet-eclat"></div>
     <div class="paquet-bouts">${MORCEAUX_PAQUET}</div>
     <div class="coupe-lueur"></div><div class="coupe-trace"></div><div class="coupe-tete"></div><div class="coupe-eclair"></div>
     <span class="coupe-consigne" aria-hidden="true">Touche le paquet · ou coupe les pointillés</span>`;
+  aluInstaller(pack);   // patch436 : le sachet en aluminium
   if(gl) setTimeout(() => habGl.demarrer(), 0);
   if(HW && HW.actif) hw2Paquet(pack);   // patch265 : le paquet maudit
   return pack;
@@ -8974,6 +9002,7 @@ function armerPaquet(pack, demarrer){
   const zone = document.getElementById('packZone');
   const q = (c) => pack.querySelector(c);
   const languette = q('.paquet-languette'), trace = q('.coupe-trace'), tete = q('.coupe-tete'), lueur = q('.coupe-lueur');
+  const pelee = q('.paquet-languette.pelee');   // patch436
   const anim = ouvAnim && !REDUCED_MOTION;
   let p = 0, fini = false, tirage = null, g = null, rayons = null, jeton = 0, dernierGrain = 0, derniereEtincelle = 0;
 
@@ -8984,7 +9013,8 @@ function armerPaquet(pack, demarrer){
     lueur.style.opacity = Math.min(1, v * 3);
     tete.style.transform = `translateX(${(v * 200).toFixed(1)}px)`;
     tete.style.opacity = v > 0 && v < 1 ? 1 : 0;
-    languette.style.transform = v > 0 ? `rotate(${(-v * 4).toFixed(2)}deg)` : '';
+    if(pelee) aluPeler(languette, pelee, v);   // patch436 : la bandelette se décolle derrière la coupe
+    else languette.style.transform = v > 0 ? `rotate(${(-v * 4).toFixed(2)}deg)` : '';
     if(rayons){ rayons.style.opacity = Math.min(0.5, v * 0.8); rayons.style.transform = `scale(${(0.3 + v * 0.5).toFixed(3)})`; }
   };
   // quelques etincelles qui partent de la tete (peu : c'est pour un telephone)

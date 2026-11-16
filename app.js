@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'fac5096a15bb';
+const VERSION_JEU = '7ea7ed2489b4';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -13227,12 +13227,84 @@ function renderMaFranceTerra(el, totalFrance){
       <div class="mf-zoom"><button data-mf="plus" aria-label="Zoomer">+</button><button data-mf="moins" aria-label="Dézoomer">−</button><button data-mf="centre" aria-label="Recentrer">⌂</button></div>
       <div class="mf-bulle" id="mfBulle" hidden></div>
     </div>
-    <div class="mf-leg" id="mfLeg"></div>`;
+    <div class="mf-leg" id="mfLeg"></div>
+    ${mfListeHtml()}`;
+  mfListeArmer(el);   // patch441
   MF.cv = document.getElementById('mfCanvas');
   mfArmer(MF.cv);
   mfDimensionner();
   Promise.resolve(chargerDepartements()).then(() => { mfBoites(); mfPlanifier(); });
   majBulleMF();
+}
+
+// ---------- patch441 : Ma France, département par département (idée d'Arkhannou) ----------
+let mfListeOuverte = false;
+let mfListeTri = 'num';   // 'num' | 'proche'
+function mfListeLignes(){
+  const deps = Object.keys(COMMUNES_PAR_DEPT).filter(d => !estCanton(d) && !estOutremer(d));
+  const l = deps.map(d => {
+    const total = COMMUNES_PAR_DEPT[d] || 0, n = Math.min(total, MF.parDep[d] || 0);
+    return { d, nom: DEPT_NAMES[d] || d, n, total, manque: total - n };
+  });
+  const rang = (d) => d === '2A' ? 20.1 : d === '2B' ? 20.2 : Number(d);   // la Corse entre 19 et 21
+  const num = (a, b) => rang(a.d) - rang(b.d);
+  // les plus proches du complet : ceux déjà commencés, du plus avancé au moins avancé ; les complets à la fin
+  if(mfListeTri === 'proche') l.sort((a, b) => (a.manque === 0) - (b.manque === 0) || (a.n === 0) - (b.n === 0)
+                                     || (b.n / b.total) - (a.n / a.total) || a.manque - b.manque || num(a, b));
+  else l.sort(num);
+  return l;
+}
+function mfListeHtml(){
+  const l = mfListeLignes();
+  const manque = l.reduce((s, x) => s + x.manque, 0), incomplets = l.filter(x => x.manque > 0).length;
+  const t = (id, nom) => `<button type="button" data-mflt="${id}" class="${mfListeTri === id ? 'on' : ''}" aria-pressed="${mfListeTri === id}">${nom}</button>`;
+  return `<details class="mfl"${mfListeOuverte ? ' open' : ''}>
+    <summary><span class="mfl-t"><b>Département par département</b><span>il te manque ${fmtNombre(manque)} commune${manque > 1 ? 's' : ''} dans ${incomplets} département${incomplets > 1 ? 's' : ''}</span></span><i class="mfl-fl" aria-hidden="true"></i></summary>
+    <div class="mfl-tri" role="group" aria-label="Trier">${t('num', 'Par numéro')}${t('proche', 'Les plus proches du complet')}</div>
+    <ol class="mfl-l">${l.map(x => {
+      const ok = x.manque === 0, p = x.total ? 100 * x.n / x.total : 0;
+      return `<li><button type="button" class="${ok ? 'ok' : x.n ? '' : 'vide'}" data-mfld="${x.d}" aria-label="${echapperTexte(x.nom)} : ${x.n} sur ${x.total}${ok ? ', complet' : ', il en manque ' + x.manque}. Voir sur la carte">
+        <span class="mfl-c">${x.d}</span><span class="mfl-nom">${echapperTexte(x.nom)}</span>
+        <span class="mfl-nb">${fmtNombre(x.n)} / ${fmtNombre(x.total)}</span>
+        <span class="mfl-m">${ok ? '✓ complet' : 'il en manque ' + fmtNombre(x.manque)}</span>
+        <i class="mfl-b" style="--p:${p.toFixed(1)}%"></i></button></li>`;
+    }).join('')}</ol>
+  </details>`;
+}
+function mfListeArmer(el){
+  const d = el.querySelector('.mfl');
+  if(!d) return;
+  d.addEventListener('toggle', () => { mfListeOuverte = d.open; });
+  d.addEventListener('click', (ev) => {
+    const tr = ev.target.closest('[data-mflt]');
+    if(tr){
+      mfListeTri = tr.dataset.mflt;
+      const ol = d.querySelector('.mfl-l'), neuf = document.createElement('div');
+      neuf.innerHTML = mfListeHtml();
+      ol.replaceWith(neuf.querySelector('.mfl-l'));
+      d.querySelectorAll('[data-mflt]').forEach(b => { const on = b.dataset.mflt === mfListeTri; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+      return;
+    }
+    const li = ev.target.closest('[data-mfld]');
+    if(li) mfAllerDep(li.dataset.mfld);
+  });
+}
+// cadre la carte sur un département et la remonte à l'écran
+function mfAllerDep(dep){
+  mfBoites();
+  const b = MF.bbox && MF.bbox[dep];
+  if(!b || !MF.larg) return;
+  const w = Math.max(1, b[2] - b[0]), h = Math.max(1, b[3] - b[1]);
+  MF.k = Math.max(MF_COMMUNES, Math.min(60, 0.86 * Math.min(MF.larg / (w * MF.s0), MF.haut / (h * MF.s0))));
+  const S = mfEchelle();
+  MF.ox = MF.larg / 2 - (b[0] + w / 2) * S - MF.baseX * MF.k;
+  MF.oy = MF.haut / 2 - (b[1] + h / 2) * S - MF.baseY * MF.k;
+  MF.dernierZoom = performance.now();
+  mfLimiter();
+  MF.bulle = null; majBulleMF();
+  mfPlanifier();
+  const cadre = document.getElementById('mfCadre');
+  if(cadre) cadre.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function mfDimensionner(){

@@ -10539,3 +10539,32 @@ html.topo:not(.sans-vitrine) .psx-infos p{ margin:14px 0 0; font-size:.74rem; li
   font-size:.78rem; line-height:1.45; color:#FFD9D6; background:rgba(229,72,77,.13); border:1px solid rgba(229,72,77,.45); }
 .pc-bombe b{ color:#fff; font-weight:700; }
 .pc-bombe-l + .pc-bombe-l{ padding-top:6px; border-top:1px solid rgba(229,72,77,.3); color:#F1D9D7; }
+
+/* =====================================================================
+   patch441 — Ma France : département par département
+   ===================================================================== */
+.mfl{ width:100%; max-width:760px; margin:14px 0 4px; border:1px solid rgba(169,188,212,.16); border-radius:12px; background:rgba(169,188,212,.05); }
+.mfl summary{ list-style:none; display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; }
+.mfl summary::-webkit-details-marker{ display:none; }
+.mfl-t{ flex:1; min-width:0; }
+.mfl-t b{ display:block; color:#fff; font-size:.92rem; }
+.mfl-t span{ display:block; color:var(--brume); font-size:.72rem; margin-top:1px; }
+.mfl-fl{ width:9px; height:9px; border-right:2px solid var(--brume); border-bottom:2px solid var(--brume); transform:rotate(45deg); margin:-4px 4px 0 0; transition:transform .2s; flex:none; }
+.mfl[open] .mfl-fl{ transform:rotate(225deg); margin-top:4px; }
+.mfl-tri{ display:flex; gap:6px; flex-wrap:wrap; padding:0 12px 10px; }
+.mfl-tri button{ border:1px solid rgba(169,188,212,.22); background:none; color:var(--brume); font:inherit; font-size:.74rem; font-weight:600; padding:6px 11px; border-radius:999px; cursor:pointer; }
+.mfl-tri button.on{ background:#1E5A44; color:#E8F6EE; border-color:rgba(53,185,126,.55); }
+.mfl-l{ list-style:none; margin:0; padding:0 6px 8px; max-height:420px; overflow-y:auto; overscroll-behavior:contain; }
+.mfl-l li + li{ border-top:1px solid rgba(169,188,212,.08); }
+.mfl-l button{ position:relative; display:grid; grid-template-columns:30px 1fr auto; grid-template-rows:auto auto; column-gap:8px; row-gap:1px; align-items:baseline;
+  width:100%; border:none; background:none; color:#fff; font:inherit; text-align:left; padding:9px 8px 12px; border-radius:8px; cursor:pointer; }
+.mfl-l button:active{ background:rgba(169,188,212,.08); }
+.mfl-c{ grid-row:1 / 3; color:var(--brume); font-size:.78rem; font-weight:700; font-variant-numeric:tabular-nums; }
+.mfl-nom{ font-size:.86rem; font-weight:600; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mfl-nb{ font-size:.8rem; font-variant-numeric:tabular-nums; color:#fff; }
+.mfl-m{ grid-column:2 / 4; font-size:.7rem; color:var(--brume); }
+.mfl-b{ position:absolute; left:46px; right:8px; bottom:5px; height:3px; border-radius:2px; background:rgba(169,188,212,.12); overflow:hidden; }
+.mfl-b::after{ content:''; position:absolute; inset:0 auto 0 0; width:var(--p); background:#35B97E; border-radius:2px; }
+.mfl-l button.ok .mfl-m{ color:#5FD39C; font-weight:700; }
+.mfl-l button.ok .mfl-b::after{ background:linear-gradient(90deg, #35B97E, #F0B429); }
+.mfl-l button.vide .mfl-nom, .mfl-l button.vide .mfl-nb{ color:var(--brume); }

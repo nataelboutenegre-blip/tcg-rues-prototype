@@ -1,7 +1,9 @@
 [
   {
     "date": "2026-11-16",
-    "nouveautes": [],
+    "nouveautes": [
+      "Ma France : sous la carte, la liste « Département par département » montre combien de communes il te manque dans chaque département, triée par numéro ou par les plus proches du complet. Touche une ligne pour voir le département sur la carte. Idée d'Arkhannou, merci !"
+    ],
     "correctifs": [
       "Rafale : une partie lancée sans aucune réponse ne sert plus d'adversaire, et une partie qui attend depuis plus de 3 jours non plus. Fini les défaites qui tombent des jours après pour une partie pas jouée. L'Elo perdu à cause de ces parties a été rendu aux 7 joueurs touchés (merci Maroli).",
       "Fiche d'une commune dans une zone bombardée : elle dit jusqu'à quand dure la zone, si la garnison a sauté, et rappelle qu'une bombe ne détruit que les garnisons et les Forteresses. Un Centre de recherche, une Fonderie, un Radar ou une Banque restent debout : pour les faire tomber, il faut prendre la commune (merci Arkhannou)."

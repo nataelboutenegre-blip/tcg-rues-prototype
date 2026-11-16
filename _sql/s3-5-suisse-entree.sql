@@ -108,6 +108,14 @@ update public.communes c set rang = r.rg, palier_total = r.total
  where r.code = c.code
    and (c.rang is distinct from r.rg or c.palier_total is distinct from r.total);
 
+-- 2b. (ajout du 16/11) les Aurore suisses : 46 communes dont la photo pleine carte est dans
+--     aurore/CHxxxx.jpg et le crédit dans data/aurore.json (choix du 16/11). Même tirage que la France
+--     (aurore_tirage) : en Terra comme en Front, une carte de ces communes peut sortir en Aurore.
+insert into public.aurore_communes (code)
+select c.code from public.communes c
+ where c.code = any(array['CH1061', 'CH1711', 'CH2196', 'CH230', 'CH261', 'CH2939', 'CH3203', 'CH351', 'CH5002', 'CH5192', 'CH5938', 'CH6266', 'CH942', 'CH4566', 'CH5886', 'CH3427', 'CH4021', 'CH5724', 'CH4001', 'CH6608', 'CH1301', 'CH1372', 'CH2135', 'CH2275', 'CH2964', 'CH3101', 'CH5091', 'CH576', 'CH581', 'CH584', 'CH6300', 'CH6612', 'CH6037', 'CH250', 'CH1507', 'CH5613', 'CH228', 'CH5477', 'CH1069', 'CH1008', 'CH4260', 'CH6641', 'CH5859', 'CH4641', 'CH5260', 'CH562'])
+on conflict (code) do nothing;
+
 -- 3. (ajout du 11/11) le catalogue de la carte (jeu et carte en direct) : sans ça, les communes suisses
 --    n'apparaissent sur les cartes qu'après le passage de 4 h 17 (cron carte-catalogue)
 select public.carte_catalogue_refaire();
@@ -115,7 +123,7 @@ select public.carte_catalogue_refaire();
 commit;
 
 -- Contrôle :
---   2110 | legendaire 27, epique 218, rare 652, peucommun 953, commun 260 | 0 | 0 | true | Zurich : legendaire n° 1 / 27
+--   2110 | legendaire 27, epique 218, rare 652, peucommun 953, commun 260 | 0 | 0 | true | Zurich : legendaire n° 1 / 27 | 46
 -- (melanges = un code CH rangé en France, ou l'inverse ; france_a_part = le tableau des raretés de France
 --  ignore toujours la Suisse)
 select (select count(*) from public.communes where est_canton(departement))::integer          as communes_suisses,
@@ -132,7 +140,8 @@ select (select count(*) from public.communes where est_canton(departement))::int
        (select sum(total) from public.totaux_paliers())
          = (select count(*) from public.communes where est_metropole(departement))              as france_a_part,
        (select nom || ' : ' || tier || ' n° ' || rang || ' / ' || palier_total
-          from public.communes where code = 'CH261')                                            as zurich;
+          from public.communes where code = 'CH261')                                            as zurich,
+       (select count(*) from public.aurore_communes where code like 'CH%')::integer               as aurores_suisses;
 
 -- Après vérification du jeu (quelques jours plus tard), la réserve peut partir :
 --   drop table public.suisse_communes_attente;

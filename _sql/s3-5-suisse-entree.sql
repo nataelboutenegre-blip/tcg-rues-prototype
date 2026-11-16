@@ -19,7 +19,8 @@
 --    2. numérote les cartes suisses dans leur rareté, entre elles, comme
 --       l'outre-mer : « n° 1 / 27 » pour Zurich, la plus peuplée des 27
 --       légendaires. Les numéros de France ne bougent pas (« n° x / 302 »).
---  Photos, faits et gentilés : vides pour l'instant (photos plus tard).
+--  Photos : copiées de la réserve si s3-16 + photos-suisse.py sont passés
+--  (sinon vides). Faits et gentilés : vides.
 --  Rejouable : une commune déjà entrée n'est pas recopiée.
 --
 --  Contrôle attendu :
@@ -85,11 +86,13 @@ begin
 end $$;
 
 -- 1. les communes entrent, avec leur numéro dans leur rareté, entre communes suisses
-insert into public.communes (code, nom, departement, tier, population, rang, palier_total, latitude, longitude)
+insert into public.communes (code, nom, departement, tier, population, rang, palier_total, latitude, longitude,
+                             photo, photo_auteur, photo_licence, photo_source)
 select code, nom, departement, tier, population,
        row_number() over (partition by tier order by population desc nulls last, code),
        count(*) over (partition by tier),
-       latitude, longitude
+       latitude, longitude,
+       photo, photo_auteur, photo_licence, photo_source      -- s3-16
   from public.suisse_communes_attente
 on conflict (code) do nothing;
 

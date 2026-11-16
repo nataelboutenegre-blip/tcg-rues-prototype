@@ -10533,3 +10533,9 @@ html.topo:not(.sans-vitrine) .psx-infos p{ margin:14px 0 0; font-size:.74rem; li
   html.topo:not(.sans-vitrine) .psx-une-vis .hab-vignette{ width:92px; }
   html.topo:not(.sans-vitrine) .psx-carte{ gap:9px; padding-right:9px; }
 }
+
+/* patch440 : ce qu'une bombe a fait à cette commune */
+.pc-bombe{ margin:10px 0 0; padding:9px 11px; border-radius:10px; display:flex; flex-direction:column; gap:6px;
+  font-size:.78rem; line-height:1.45; color:#FFD9D6; background:rgba(229,72,77,.13); border:1px solid rgba(229,72,77,.45); }
+.pc-bombe b{ color:#fff; font-weight:700; }
+.pc-bombe-l + .pc-bombe-l{ padding-top:6px; border-top:1px solid rgba(229,72,77,.3); color:#F1D9D7; }

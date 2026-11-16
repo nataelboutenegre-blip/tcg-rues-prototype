@@ -2,7 +2,8 @@
   {
     "date": "2026-11-16",
     "nouveautes": [
-      "Ma France : sous la carte, la liste « Département par département » montre combien de communes il te manque dans chaque département, triée par numéro ou par les plus proches du complet. Touche une ligne pour voir le département sur la carte. Idée d'Arkhannou, merci !"
+      "Ma France : sous la carte, la liste « Département par département » montre combien de communes il te manque dans chaque département, triée par numéro ou par les plus proches du complet. Touche une ligne pour voir le département sur la carte. Idée d'Arkhannou, merci !",
+      "Clan › Diplomatie : les alliances. Un chef peut créer une alliance et y inviter jusqu'à 4 autres clans. Dès que 2 clans en sont membres, un salon commun s'ouvre sur le Discord, visible de tous leurs membres. Chaque chef peut inviter un clan de plus ou faire sortir le sien."
     ],
     "correctifs": [
       "Rafale : une partie lancée sans aucune réponse ne sert plus d'adversaire, et une partie qui attend depuis plus de 3 jours non plus. Fini les défaites qui tombent des jours après pour une partie pas jouée. L'Elo perdu à cause de ces parties a été rendu aux 7 joueurs touchés (merci Maroli).",

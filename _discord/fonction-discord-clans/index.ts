@@ -17,7 +17,10 @@
 //  - diplomatie (s2-134, 10/11) : un salon privé « 🤝│a-b » dans la catégorie
 //    « 🤝 Diplomatie » pour chaque paire de clans ouverte dans le jeu (onglet
 //    Clan › Diplomatie, accord des deux chefs), visible des deux rôles de clan ;
-//    supprimé (avec ses messages) quand un des chefs le ferme dans le jeu.
+//    supprimé (avec ses messages) quand un des chefs le ferme dans le jeu ;
+//  - alliances (s2-148, 16/11) : même chose pour un groupe de 2 à 5 clans
+//    (« 🤝│nom-de-l-alliance », id « a12 ») ; les droits suivent les clans qui
+//    entrent et sortent, et un message dans le salon annonce chaque arrivée.
 // Un pseudo du jeu est reconnu sur le Discord par son nom d'utilisateur, son
 // nom affiché ou son pseudo de serveur (majuscules, accents et ponctuation
 // ignorés), ou par la table discord_correspondances.
@@ -44,7 +47,8 @@ const DROITS_BOT = VOIR | ECRIRE | GERER_MSG | HISTORIQUE;
 const CATEGORIE_DIPLO = "🤝 Diplomatie";
 
 export type Clan = { tag: string; nom: string; couleur?: string | null; chef?: string | null; membres: string[] };
-export type Diplo = { id: number | string; a: string; b: string; nom_a: string; nom_b: string };
+export type Diplo = { id: number | string; a?: string; b?: string; nom_a?: string; nom_b?: string;
+  alliance?: string; clans?: { tag: string; nom: string }[] };   // s2-148 : une alliance a un nom et une liste de clans
 type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
 export type Options = {
   jeton: string;
@@ -239,7 +243,7 @@ export async function synchroniser(o: Options): Promise<Rapport> {
   // un salon par paire de clans ouverte dans le jeu, retrouvé par « tf-diplo:ID » dans son sujet
   const diplo = o.diplo ?? [];
   const voulusD = new Map<string, Diplo>(diplo.map((d) => [String(d.id), d]));
-  const idDe = (s: any): string | null => { const m = /tf-diplo:(\d+)/.exec(String(s.topic ?? "")); return m ? m[1] : null; };
+  const idDe = (s: any): string | null => { const m = /tf-diplo:(a?\d+)/.exec(String(s.topic ?? "")); return m ? m[1] : null; };
   let catD = salons.find((s) => s.type === 4 && s.name === CATEGORIE_DIPLO);
   const salonsD = salons.filter((s) => s.type === 0 && idDe(s) !== null && (!catD || s.parent_id === catD.id));
   if (!catD && voulusD.size) {
@@ -248,17 +252,22 @@ export async function synchroniser(o: Options): Promise<Rapport> {
   const CATD_ID: string | null = catD?.id ?? null;
   const roleDe = (tag: string) => roles.find((r) => String(r.name).startsWith(`${PREFIXE_ROLE}${tag}]`));
   let nbD = salonsD.length;
+  const slug = (t: string) => t.normalize("NFD").toLowerCase().replace(/\p{M}/gu, "").replace(/[^\p{L}\p{N}]/gu, "-").split("-").filter((x) => x).join("-");
   for (const d of diplo) {
-    const id = String(d.id), qui = `[${d.a}↔${d.b}]`;
-    const ra = roleDe(d.a), rb = roleDe(d.b);
-    if (!ra || !rb) { R.avertissements.push(`${qui} rôle de clan pas encore créé : le salon de diplomatie attend le prochain passage`); continue; }
-    const nom = `🤝│${d.a.toLowerCase()}-${d.b.toLowerCase()}`;
-    const sujet = `Diplomatie entre [${d.a}] ${d.nom_a} et [${d.b}] ${d.nom_b} : seuls leurs membres le voient. Un des deux chefs peut le fermer dans le jeu (Clan › Diplomatie). tf-diplo:${id}`;
+    const id = String(d.id);
+    const alli = !!d.alliance;
+    const liste = alli ? (d.clans ?? []) : [{ tag: d.a!, nom: d.nom_a! }, { tag: d.b!, nom: d.nom_b! }];
+    const qui = alli ? `[alliance ${d.alliance}]` : `[${d.a}↔${d.b}]`;
+    const rls = liste.map((c) => ({ c, r: roleDe(c.tag) }));
+    if (liste.length < 2 || rls.some((x) => !x.r)) { R.avertissements.push(`${qui} rôle de clan pas encore créé : le salon de diplomatie attend le prochain passage`); continue; }
+    const nom = alli ? `🤝│${slug(d.alliance!).slice(0, 90)}` : `🤝│${d.a!.toLowerCase()}-${d.b!.toLowerCase()}`;
+    const sujet = alli
+      ? `Alliance « ${d.alliance} » : ${liste.map((c) => `[${c.tag}] ${c.nom}`).join(", ")}. Seuls leurs membres le voient. Le chef d'un clan membre peut faire sortir son clan dans le jeu (Clan › Diplomatie). tf-diplo:${id}`
+      : `Diplomatie entre [${d.a}] ${d.nom_a} et [${d.b}] ${d.nom_b} : seuls leurs membres le voient. Un des deux chefs peut le fermer dans le jeu (Clan › Diplomatie). tf-diplo:${id}`;
     const base = [
       { id: EVERYONE, type: 0, allow: "0", deny: String(VOIR), quoi: "tout le monde : caché" },
       { id: moi.id, type: 1, allow: String(DROITS_BOT), deny: "0", quoi: "le bot" },
-      { id: ra.id, type: 0, allow: String(DROITS_MEMBRE), deny: "0", quoi: `le rôle [${d.a}]` },
-      { id: rb.id, type: 0, allow: String(DROITS_MEMBRE), deny: "0", quoi: `le rôle [${d.b}]` },
+      ...rls.map((x) => ({ id: x.r.id, type: 0, allow: String(DROITS_MEMBRE), deny: "0", quoi: `le rôle [${x.c.tag}]` })),
     ];
     const salon = salonsD.find((s) => idDe(s) === id);
     if (salon) {
@@ -267,11 +276,24 @@ export async function synchroniser(o: Options): Promise<Rapport> {
         await faire(`${qui} salon de diplomatie renommé : ${nom}`, () => appel("PATCH", `/channels/${sid}`, { name: nom, topic: sujet }));
       }
       const existantes = new Map<string, any>((salon.permission_overwrites ?? []).map((x: any) => [x.id, x]));
+      const arrives: string[] = [];
       for (const b of base) {
         const e = existantes.get(b.id);
         if (!e || big(e.allow) !== big(b.allow) || big(e.deny) !== big(b.deny)) {
           await faire(`${qui} droits du salon de diplomatie (${b.quoi})`, () => appel("PUT", `/channels/${sid}/permissions/${b.id}`, { type: b.type, allow: b.allow, deny: b.deny }));
+          if (!e && b.quoi.startsWith("le rôle [")) arrives.push(b.quoi.slice(8));
         }
+      }
+      // s2-148 : un clan sorti de l'alliance perd l'accès (seulement les rôles de clan)
+      const gardes = new Set(base.map((b) => b.id));
+      for (const [rid, e] of existantes) {
+        if (Number(e.type) !== 0 || gardes.has(rid)) continue;
+        const r = roles.find((x) => x.id === rid);
+        if (!r || !String(r.name).startsWith(PREFIXE_ROLE)) continue;
+        await faire(`${qui} accès retiré au rôle ${r.name} (sorti de l'alliance)`, () => appel("DELETE", `/channels/${sid}/permissions/${rid}`, undefined, false));
+      }
+      if (alli && arrives.length && !SIM) {
+        await appel("POST", `/channels/${sid}/messages`, { allowed_mentions: { parse: [] }, content: `🤝 ${arrives.join(", ")} ${arrives.length > 1 ? "rejoignent" : "rejoint"} l'alliance « ${d.alliance} ».` }, false);
       }
     } else {
       if (nbD >= 48) { R.avertissements.push(`catégorie ${CATEGORIE_DIPLO} presque pleine (Discord : 50 salons) : ${qui} attend`); continue; }
@@ -279,10 +301,13 @@ export async function synchroniser(o: Options): Promise<Rapport> {
       const cree = await faire(`${qui} salon de diplomatie ${nom}`, () => appel("POST", `/guilds/${G}/channels`, { name: nom, type: 0, topic: sujet, parent_id: CATD_ID, permission_overwrites: ow }));
       nbD++;
       if (cree?.id) {
-        await appel("POST", `/channels/${cree.id}/messages`, { allowed_mentions: { parse: [] }, content:
-          `🤝 **Salon de diplomatie : [${d.a}] ${d.nom_a} ↔ [${d.b}] ${d.nom_b}**\n` +
-          "Ouvert dans le jeu avec l'accord des deux chefs. Seuls les membres des deux clans le voient : le bot suit les arrivées et les départs.\n" +
-          "Un des deux chefs peut le fermer dans le jeu (onglet Clan › Diplomatie) : le salon est alors **supprimé**, avec tous ses messages." }, false);
+        await appel("POST", `/channels/${cree.id}/messages`, { allowed_mentions: { parse: [] }, content: alli
+          ? `🤝 **Alliance « ${d.alliance} » : ${liste.map((c) => `[${c.tag}] ${c.nom}`).join(" · ")}**\n` +
+            "Créée dans le jeu. Seuls les membres des clans de l'alliance la voient : le bot suit les arrivées et les départs, et les clans qui entrent ou sortent.\n" +
+            "Le chef d'un clan membre peut inviter un autre clan (5 au plus) ou faire sortir son clan (onglet Clan › Diplomatie). Quand il ne reste qu'un clan, le salon est **supprimé**, avec tous ses messages."
+          : `🤝 **Salon de diplomatie : [${d.a}] ${d.nom_a} ↔ [${d.b}] ${d.nom_b}**\n` +
+            "Ouvert dans le jeu avec l'accord des deux chefs. Seuls les membres des deux clans le voient : le bot suit les arrivées et les départs.\n" +
+            "Un des deux chefs peut le fermer dans le jeu (onglet Clan › Diplomatie) : le salon est alors **supprimé**, avec tous ses messages." }, false);
       }
     }
   }

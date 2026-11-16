@@ -10568,3 +10568,31 @@ html.topo:not(.sans-vitrine) .psx-infos p{ margin:14px 0 0; font-size:.74rem; li
 .mfl-l button.ok .mfl-m{ color:#5FD39C; font-weight:700; }
 .mfl-l button.ok .mfl-b::after{ background:linear-gradient(90deg, #35B97E, #F0B429); }
 .mfl-l button.vide .mfl-nom, .mfl-l button.vide .mfl-nb{ color:var(--brume); }
+
+/* =====================================================================
+   patch442 — Clan › Diplomatie : les alliances
+   ===================================================================== */
+.al-neuf{ margin-left:6px; padding:1px 6px; border-radius:999px; background:rgba(240,180,41,.16); color:#F0B429; font-size:.6rem; letter-spacing:.08em; vertical-align:1px; }
+.al-intro{ margin-top:4px; }
+.al-item{ padding-top:10px; }
+.al-tete{ display:flex; align-items:center; gap:10px; }
+.al-ico{ flex:none; width:32px; height:32px; border-radius:10px; display:grid; place-items:center; font-size:1rem; background:rgba(240,180,41,.12); box-shadow:inset 0 0 0 1px rgba(240,180,41,.35); }
+.al-clans{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 2px 42px; }
+.al-c{ display:inline-flex; align-items:center; gap:5px; padding:3px 8px 3px 4px; border-radius:999px; background:rgba(169,188,212,.08); border:1px solid rgba(169,188,212,.16); }
+.al-c b{ color:#fff; font-size:.74rem; }
+.al-c small{ color:#8297B5; font-size:.66rem; }
+.al-c.inv{ opacity:.6; border-style:dashed; }
+.al-c.moi{ border-color:rgba(43,212,139,.5); }
+.al-c .blason.petit{ transform:scale(.85); }
+.al-inv{ width:100%; }
+.al-ouvrir{ margin:8px 0 2px; }
+.al-creer{ margin:8px 0 4px; padding:12px; border-radius:12px; background:rgba(169,188,212,.05); border:1px solid rgba(169,188,212,.14); display:flex; flex-direction:column; gap:6px; }
+.al-lab{ color:#A9BCD4; font-size:.72rem; font-weight:600; }
+.al-lab small{ color:#8297B5; font-weight:400; margin-left:4px; }
+.al-creer input{ width:100%; box-sizing:border-box; padding:9px 11px; border-radius:9px; border:1px solid rgba(169,188,212,.25); background:rgba(11,24,44,.7); color:#fff; font:inherit; font-size:.9rem; margin-bottom:4px; }
+.al-choix{ display:flex; flex-wrap:wrap; gap:6px; }
+.al-ch{ display:inline-flex; align-items:center; gap:6px; padding:5px 10px 5px 5px; border-radius:10px; border:1px solid rgba(169,188,212,.2); background:none; color:#fff; font:inherit; cursor:pointer; max-width:100%; }
+.al-ch b{ font-size:.76rem; }
+.al-ch small{ color:#8297B5; font-size:.68rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:9em; }
+.al-ch.on{ border-color:rgba(43,212,139,.7); background:rgba(43,212,139,.12); }
+.al-ch:disabled{ opacity:.4; cursor:default; }

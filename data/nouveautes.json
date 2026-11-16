@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-11-16",
+    "nouveautes": [],
+    "correctifs": [
+      "Rafale : une partie lancée sans aucune réponse ne sert plus d'adversaire, et une partie qui attend depuis plus de 3 jours non plus. Fini les défaites qui tombent des jours après pour une partie pas jouée. L'Elo perdu à cause de ces parties a été rendu aux 7 joueurs touchés (merci Maroli)."
+    ]
+  },
+  {
     "date": "2026-11-15",
     "nouveautes": [],
     "correctifs": [

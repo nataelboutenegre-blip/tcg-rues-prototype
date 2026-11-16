@@ -12,3 +12,6 @@ _discord/correspondances.json
 
 # saison 3, Suisse : fichiers bruts téléchargés (swisstopo pèse plusieurs centaines de Mo)
 _donnees/suisse/brut/
+
+# saison 3 : candidates Aurore suisses (photos à trier, pas pour le site)
+_prochain-patch/aurore-suisse/

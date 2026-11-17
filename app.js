@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '81ab65be8d21';
+const VERSION_JEU = 'c24390d55603';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -31429,8 +31429,9 @@ function messOuvrir(){
     <div class="fenetre mess-fen" role="dialog" aria-modal="true" aria-label="Le Mess">
       <button type="button" class="mess-x" data-mess="fermer" aria-label="Fermer">&times;</button>
       <canvas class="mess-scene" width="195" height="92" aria-hidden="true"></canvas>
-      <div class="mess-onglets" role="tablist" aria-label="Jeux du Mess"><button type="button" role="tab" data-mess-jeu="machine">Machine à chiffrer</button><button type="button" role="tab" data-mess-jeu="rec">Le Recensement</button></div><!-- patch430 -->
+      <div class="mess-onglets" role="tablist" aria-label="Jeux du Mess"><button type="button" role="tab" data-mess-jeu="machine">Machine à chiffrer</button><button type="button" role="tab" data-mess-jeu="rec">Le Recensement</button><button type="button" role="tab" data-mess-jeu="des">Le 421</button></div><!-- patch430, patch444 -->
       <div class="mess-corps mess-rec" data-jeu="rec" hidden></div>
+      <div class="mess-corps mess-des" data-jeu="des" hidden></div>
       <div class="mess-corps" data-jeu="machine">
         <div class="mess-haut"><h2>Machine à chiffrer</h2><span class="mess-tk">🎟 <b data-mess="tickets">${Number(MESS.tickets) || 0}</b></span></div>
         <div class="mess-machine">
@@ -31455,9 +31456,13 @@ function messOuvrir(){
     if(b.dataset.mess === 'rec-lancer') messRecAction(fen, 'mess_rec_lancer');   // patch430
     if(b.dataset.mess === 'rec-tirer') messRecAction(fen, 'mess_rec_tirer');
     if(b.dataset.mess === 'rec-clore') messRecAction(fen, 'mess_rec_clore');
+    if(b.dataset.mess === 'des-lancer') messDesAction(fen, 'mess_421_lancer');   // patch444
+    if(b.dataset.mess === 'des-relancer') messDesAction(fen, 'mess_421_relancer', { p_garder: [0, 1, 2].map(i => MESS_DES.garder.has(i)) });
+    if(b.dataset.mess === 'des-arreter') messDesAction(fen, 'mess_421_arreter');
+    if(b.dataset.mess === 'de'){ messDesGarder(fen, Number(b.dataset.i)); }
   });
   fen.querySelector('.mess-onglets').addEventListener('click', (e) => { const o = e.target.closest('[data-mess-jeu]'); if(o) messOnglet(fen, o.dataset.messJeu); });
-  messOnglet(fen, (() => { try{ return localStorage.getItem('tf-mess-jeu') === 'rec' ? 'rec' : 'machine'; }catch(e){ return 'machine'; } })());
+  messOnglet(fen, (() => { try{ const j = localStorage.getItem('tf-mess-jeu'); return j === 'rec' || j === 'des' ? j : 'machine'; }catch(e){ return 'machine'; } })());   // patch444
   messFenMaj();
 }
 function messFenMaj(){
@@ -31580,6 +31585,7 @@ function messOnglet(fen, jeu){
   fen.querySelectorAll('.mess-corps[data-jeu]').forEach(c => { c.hidden = c.dataset.jeu !== jeu; });
   const h2 = fen.querySelector('.mess-corps[data-jeu="machine"] .mess-haut h2');
   if(jeu === 'rec') messRecRendre(fen, MESS && MESS.rec, false);
+  if(jeu === 'des'){ MESS_DES.garder = new Set(); messDesRendre(fen, MESS && MESS.de421, null); }   // patch444
 }
 function messRecRendre(fen, v, revele){
   const corps = fen.querySelector('.mess-corps[data-jeu="rec"]');
@@ -31644,6 +31650,102 @@ async function messRecAction(fen, rpc){
   if(v && !v.en_cours && v.gain && (v.gain.energie || v.gain.lingots)){ try{ majEnergie(); }catch(e){} messRationAjouter(v.gain); }   // patch432
   messRecRendre(fen, v, !!(v && !v.en_cours));
   if(v && !v.en_cours && v.gain && (v.gain.tp || v.gain.terra)){ try{ loadPackStatus(); }catch(e){} }
+  const t = fen.querySelector('.mess-corps[data-jeu="machine"] [data-mess="tickets"]'); if(t) t.textContent = MESS.tickets;
+  messCarteRendre();
+}
+
+// ---------- patch444 : le 421 (Mess, s3-17) ----------
+const MESS_DES = { garder: new Set() };
+const DES_POINTS = { 1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+// un dé : 9 cases, les points rouges sur le 1 et le 4 (comme les dés du 421 de comptoir)
+const deHtml = (v, cls) => `<span class="mess-de-face v${v}${cls ? ' ' + cls : ''}">${[...Array(9)].map((_, i) => `<i${(DES_POINTS[v] || []).includes(i) ? ` class="p${v === 1 || v === 4 ? ' r' : ''}"` : ''}></i>`).join('')}</span>`;
+const DES_NOMS = { '421sec': '421 du premier coup !', '421': '4 2 1 !', as: 'Trois as !', brelan: 'Brelan !', suite: 'Suite', paire: 'Une paire', nenette: 'Nénette…', rien: 'Rien' };
+function messDesTable(){
+  const D = (MESS && MESS.des) || {}, L = D.lots || {};
+  const lot = (k, def) => messLotTexte(k, L[k]) || def;
+  const l = (des, txt, k, def, or) => `<div class="mess-l"><span class="mess-sy des">${des.map(v => deHtml(v, 'mini')).join('')}</span><span>${txt}</span><span class="mess-lot${or ? ' or' : ''}${lot(k, def) === 'rien' ? ' gris' : ''}">${lot(k, def)}</span></div>`;
+  return l([4, 2, 1], 'du premier coup', '421sec', '1 paquet Terra + 5 ⚡', true)
+    + l([4, 2, 1], 'en relançant', '421', '3 ⚡')
+    + l([1, 1, 1], 'trois as', 'as', '6 ⚡')
+    + l([5, 5, 5], 'un autre brelan', 'brelan', '3 ⚡')
+    + l([3, 4, 5], 'une suite', 'suite', '15 TP')
+    + l([2, 2, 1], 'paire, nénette ou rien', 'rien', 'rien');
+}
+function messDesRendre(fen, v, roule){
+  const corps = fen.querySelector('.mess-corps[data-jeu="des"]');
+  if(!corps || !MESS) return;
+  const D = MESS.des || {}, prix = D.prix || 2;
+  const tk = Number(v && v.tickets != null ? v.tickets : MESS.tickets) || 0;
+  const enCours = !!(v && v.en_cours), des = (v && v.des) || [4, 2, 1];
+  const reste = enCours ? Math.max(0, 3 - (Number(v.lancer) || 1)) : 0;
+  const piste = `<div class="mess-piste${v && !enCours && /^(421|421sec|as)$/.test(v.resultat) ? ' gagne' : ''}">
+      ${des.map((d, i) => `<button type="button" class="mess-de${enCours && MESS_DES.garder.has(i) ? ' garde' : ''}${roule && roule.includes(i) ? ' roule' : ''}" data-mess="de" data-i="${i}"${enCours ? '' : ' disabled'} aria-label="Dé ${i + 1} : ${d}${enCours ? (MESS_DES.garder.has(i) ? ', gardé' : ', à relancer') : ''}">${deHtml(v ? d : [4, 2, 1][i])}<small>${enCours && MESS_DES.garder.has(i) ? 'gardé' : ''}</small></button>`).join('')}
+    </div>`;
+  let res = '', boutons = '';
+  if(!enCours){
+    if(v && v.resultat){
+      const g = v.gain || {}, chips = [];
+      if(g.terra) chips.push(`+${g.terra} paquet${g.terra > 1 ? 's' : ''} Terra`);
+      if(g.energie) chips.push(`+${g.energie} énergie`);
+      if(g.tp) chips.push(`+${g.tp} TP`);
+      const bon = chips.length > 0;
+      res = `<span class="mess-titre${bon ? ' grand' : ' brouille'}">${DES_NOMS[v.resultat] || ''}</span>${chips.map(x => `<span class="mess-chip">${x}</span>`).join('')}`;
+    } else res = tk < prix ? '<span class="mess-attente">Plus assez de tickets : gagne des duels classés au QG</span>' : '<span class="mess-attente">Trois dés, trois lancers : vise le 4 2 1</span>';
+    boutons = `<button type="button" class="mess-levier" data-mess="des-lancer"${tk < prix ? ' disabled' : ''}>${v && v.resultat ? 'Rejouer' : 'Lancer'}<small>· ${prix} tickets</small></button>`;
+  } else {
+    const n = MESS_DES.garder.size;
+    res = `<span class="mess-attente">Lancer ${Number(v.lancer) || 1} / 3 · touche les dés à <b>garder</b>, puis relance les autres</span>`;
+    boutons = `<div class="mess-boutons"><button type="button" class="mess-levier" data-mess="des-relancer"${n >= 3 ? ' disabled' : ''}>Relancer<small>· ${reste} restant${reste > 1 ? 's' : ''}</small></button><button type="button" class="mess-levier creux" data-mess="des-arreter">S’arrêter</button></div>`;
+  }
+  corps.innerHTML = `<div class="mess-haut"><h2>Le 421</h2><span class="mess-tk">🎟 <b data-mess="tickets">${tk}</b></span></div>
+    ${piste}
+    <div class="mess-res" aria-live="polite">${res}</div>
+    ${boutons}
+    <div class="mess-table"><h3>Les lots · ${prix} tickets</h3>${messDesTable()}</div>
+    ${messRationHtml()}
+    <p class="mess-note">Les dés sont lancés par le serveur. Après le premier lancer, tu peux relancer deux fois les dés que tu ne gardes pas, ou t’arrêter quand tu veux : seule la dernière combinaison compte.</p>`;
+  if(roule && roule.length && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)){
+    const els = roule.map(i => corps.querySelectorAll('.mess-de')[i]).filter(Boolean);
+    const fin = els.map(e => e.innerHTML);
+    let k = 0;
+    const t = setInterval(() => {
+      els.forEach(e => { e.innerHTML = deHtml(1 + Math.floor(Math.random() * 6)) + '<small></small>'; });
+      if(++k >= 7){ clearInterval(t); els.forEach((e, j) => { e.innerHTML = fin[j]; e.classList.remove('roule'); }); }
+    }, 80);
+  }
+}
+function messDesGarder(fen, i){
+  const v = MESS && MESS.de421;
+  if(!v || !v.en_cours || fen.classList.contains('tourne')) return;
+  MESS_DES.garder.has(i) ? MESS_DES.garder.delete(i) : MESS_DES.garder.add(i);
+  messDesRendre(fen, v, null);
+}
+async function messDesAction(fen, rpc, args){
+  if(fen.classList.contains('tourne')) return;
+  fen.classList.add('tourne');
+  fen.querySelectorAll('.mess-des .mess-levier').forEach(b => b.disabled = true);
+  const garde = new Set(MESS_DES.garder);
+  let v = null;
+  try{
+    const r = await sb.rpc(rpc, args || {});
+    if(r.error) throw r.error;
+    v = r.data;
+  }catch(err){
+    fen.classList.remove('tourne');
+    messDesRendre(fen, MESS.de421, null);
+    notifier({ type: 'erreur', titre: 'Le 421', texte: messageLisible((err && err.message) || String(err)) });
+    return;
+  }
+  fen.classList.remove('tourne');
+  MESS.de421 = v && v.en_cours ? v : null;
+  MESS.tickets = Number(v && v.tickets) || 0;
+  const roule = rpc === 'mess_421_lancer' ? [0, 1, 2] : rpc === 'mess_421_relancer' ? [0, 1, 2].filter(i => !garde.has(i)) : [];
+  if(rpc !== 'mess_421_relancer') MESS_DES.garder = new Set();
+  messDesRendre(fen, v, roule);
+  if(v && !v.en_cours && v.gain){
+    if(v.gain.energie){ try{ majEnergie(); }catch(e){} messRationAjouter(v.gain); }
+    if(v.gain.tp || v.gain.terra){ try{ loadPackStatus(); }catch(e){} }
+  }
   const t = fen.querySelector('.mess-corps[data-jeu="machine"] [data-mess="tickets"]'); if(t) t.textContent = MESS.tickets;
   messCarteRendre();
 }

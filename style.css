@@ -10614,3 +10614,26 @@ html.topo:not(.sans-vitrine) .psx-infos p{ margin:14px 0 0; font-size:.74rem; li
 .rs2-trophee-mini{ margin-left:6px; font-size:.85em; }
 .cf-trophees{ margin:6px 0 0; text-align:center; }
 .rs2-trophee{ display:inline-block; padding:4px 10px; border-radius:999px; background:rgba(240,180,41,.14); color:#F0B429; font-size:.78rem; font-weight:700; box-shadow:inset 0 0 0 1px rgba(240,180,41,.4); }
+
+/* =====================================================================
+   patch444 — Le Mess : le 421
+   ===================================================================== */
+.mess-onglets button{ font-size:13px; }
+.mess-piste{ display:flex; justify-content:center; gap:14px; padding:22px 12px 14px; border-radius:14px; background:radial-gradient(ellipse at 50% 40%, #1a6b4c, #0e3b2c 75%); border:3px solid #3b2a18; box-shadow:inset 0 0 0 2px #5a4024, inset 0 8px 18px rgba(0,0,0,.35); }
+.mess-piste.gagne{ box-shadow:inset 0 0 0 2px #5a4024, inset 0 8px 18px rgba(0,0,0,.35), 0 0 0 2px var(--c-legendaire), 0 0 22px rgba(240,180,41,.45); }
+.mess-de{ position:relative; display:flex; flex-direction:column; align-items:center; gap:4px; border:0; background:none; padding:0; cursor:pointer; color:var(--c-legendaire); font:700 11px var(--texte); }
+.mess-de:disabled{ cursor:default; }
+.mess-de small{ height:14px; letter-spacing:.05em; text-transform:uppercase; }
+.mess-de-face{ display:grid; grid-template-columns:repeat(3, 1fr); grid-template-rows:repeat(3, 1fr); width:64px; height:64px; padding:9px; box-sizing:border-box; border-radius:12px;
+  background:linear-gradient(145deg, #fbf7ec, #e2d9c2); box-shadow:0 5px 0 #b9ad8c, 0 8px 14px rgba(0,0,0,.45), inset 0 -2px 0 rgba(0,0,0,.08); transition:transform .15s; }
+.mess-de-face i{ display:block; margin:auto; width:11px; height:11px; border-radius:50%; }
+.mess-de-face i.p{ background:#1b1f2a; box-shadow:inset 0 2px 0 rgba(255,255,255,.18); }
+.mess-de-face i.p.r{ background:#d23a3f; }
+.mess-de.garde .mess-de-face{ transform:translateY(-4px); box-shadow:0 5px 0 #b9ad8c, 0 8px 14px rgba(0,0,0,.45), 0 0 0 3px var(--c-legendaire); }
+.mess-de.roule .mess-de-face{ animation:messRoule .56s cubic-bezier(.3,.7,.4,1); }
+@keyframes messRoule{ 0%{ transform:translate(-18px,-26px) rotate(-200deg) scale(.85); } 55%{ transform:translate(6px,4px) rotate(30deg); } 80%{ transform:translate(-2px,-3px) rotate(-8deg); } 100%{ transform:none; } }
+@media (prefers-reduced-motion: reduce){ .mess-de.roule .mess-de-face{ animation:none; } }
+.mess-sy.des{ gap:3px; }
+.mess-de-face.mini{ width:22px; height:22px; padding:3px; border-radius:5px; box-shadow:0 1px 0 #b9ad8c; }
+.mess-de-face.mini i{ width:4px; height:4px; }
+.mess-des .mess-l > span:nth-child(2){ color:var(--brume); font-size:12.5px; }

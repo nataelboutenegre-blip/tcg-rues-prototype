@@ -35,7 +35,7 @@ if not any(x.get('date') == '2026-11-22' for x in d):
         "🧭 Zone de départ : avant ton premier paquet du Front, choisis une région ou la Suisse ; tes 3 premiers paquets y tombent.",
         "🃏 Paquet Terra suisse : au Tirage, choisis France ou Suisse, mêmes jetons et même prix.",
         "🎖️ Le pass de la saison 3 est ouvert (QG › Pass de saison) : 20 niveaux jusqu'au 13 décembre, des paquets, des lingots et des titres.",
-        "🍺 Le Mess ouvre ses portes : la ration du jour et la Machine à chiffrer.",
+        "🍺 Le Mess ouvre ses portes au QG : la Machine à chiffrer, le Recensement et le 421, avec des tickets gagnés en duel classé.",
         "🎨 Nouveau look : la carte, les paquets, l'ouverture des cartes et la boutique ont été refaits.",
         "🏆 Les récompenses de la saison 2 sont dans les profils : médailles du podium, titres, seigneuries, clan champion, et un paquet Terra offert à tous les pionniers du Front."],
         'correctifs': []})

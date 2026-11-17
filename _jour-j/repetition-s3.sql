@@ -64,6 +64,7 @@ perform public.carte_catalogue_refaire();
   update public.config_jeu set valeur = (valeur::jsonb || '{"ouvert": 1}'::jsonb)::text where cle = 'zone_depart';
   update public.config_jeu set valeur = (valeur::jsonb || '{"actif": 1}'::jsonb)::text  where cle = 'mess';
   update public.config_jeu set valeur = (valeur::jsonb || '{"ouvert": 0}'::jsonb)::text where cle = 'reserve_accueil';
+  update public.config_jeu set valeur = (valeur::jsonb || '{"toujours": 1, "jetons_propres": 1}'::jsonb)::text where cle = 'roue_front';   -- s3-18
   update public.pass_saisons set debut = coalesce(debut, now()) where saison = 'saison-3';
   t3 := clock_timestamp();
 
@@ -84,6 +85,7 @@ perform public.carte_catalogue_refaire();
     (select count(*) from aurore_communes where code like 'CH%') ch_aurores,
     (select nom || ' ' || tier || ' n° ' || rang || ' / ' || palier_total from communes where code = 'CH261') zurich,
     exists (select 1 from public.pass_en_cours()) pass,
+    (select roue_front_ouverte(j.id)::text || ' / avec paquets ' || roue_avec_paquets(j.id)::text from joueurs j where j.pseudo = 'Nataël') roue,
     (select sum(total) from public.totaux_paliers()) = (select count(*) from public.communes where est_metropole(departement)) france_a_part;
   v_rap := v_rap || E'\n--- contrôle ---\n' || row_to_json(x)::text || E'\n';
   v_rap := v_rap || E'\n--- durées ---\nclôture ' || round(extract(epoch from t1 - t0)::numeric, 1) || ' s · Suisse '

@@ -2,9 +2,10 @@
 --  Saison 3, jour J — étape 4 : OUVERTURE (après la clôture et l'entrée de la Suisse)
 --  Allume le siège, la zone de départ et le Mess ; coupe la réserve d'accueil
 --  (décision du 16/11 : sinon les comptes de plus de 7 jours n'ont aucun paquet
---  du Front) ; ouvre le pass (l'XP compte ; la VENTE reste à part).
---  Réversible : remettre les valeurs (siège 0, zone 0, mess 0, réserve 1).
---  Contrôle attendu : 1 | 1 | 1 | 0 | <date> | true
+--  du Front) ; ouvre la roue du Front à tous, avec ses propres jetons (s3-18) ;
+--  ouvre le pass (l'XP compte ; la VENTE reste à part).
+--  Réversible : remettre les valeurs (siège 0, zone 0, mess 0, réserve 1, roue 0/0).
+--  Contrôle attendu : 1 | 1 | 1 | 0 | 1 | 1 | <date> | true
 -- ===========================================================================
 begin;
 do $$ begin
@@ -17,6 +18,7 @@ update public.config_jeu set valeur = (valeur::jsonb || '{"actif": 1}'::jsonb)::
 update public.config_jeu set valeur = (valeur::jsonb || '{"ouvert": 1}'::jsonb)::text where cle = 'zone_depart';
 update public.config_jeu set valeur = (valeur::jsonb || '{"actif": 1}'::jsonb)::text  where cle = 'mess';
 update public.config_jeu set valeur = (valeur::jsonb || '{"ouvert": 0}'::jsonb)::text where cle = 'reserve_accueil';
+update public.config_jeu set valeur = (valeur::jsonb || '{"toujours": 1, "jetons_propres": 1}'::jsonb)::text where cle = 'roue_front';   -- s3-18
 update public.pass_saisons set debut = coalesce(debut, now()) where saison = 'saison-3';
 commit;
 
@@ -24,6 +26,8 @@ select (select (valeur::jsonb->>'actif')::int  from config_jeu where cle = 'sieg
        (select (valeur::jsonb->>'ouvert')::int from config_jeu where cle = 'zone_depart')     as zone,
        (select (valeur::jsonb->>'actif')::int  from config_jeu where cle = 'mess')            as mess,
        (select (valeur::jsonb->>'ouvert')::int from config_jeu where cle = 'reserve_accueil') as reserve_accueil,
+       (select (valeur::jsonb->>'toujours')::int from config_jeu where cle = 'roue_front')     as roue_toujours,
+       (select (valeur::jsonb->>'jetons_propres')::int from config_jeu where cle = 'roue_front') as roue_jetons_propres,
        (select debut at time zone 'Europe/Paris' from pass_saisons where saison = 'saison-3') as pass_ouvert_le,
        exists (select 1 from public.pass_en_cours())                                          as pass_en_cours;
 

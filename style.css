@@ -10637,3 +10637,9 @@ html.topo:not(.sans-vitrine) .psx-infos p{ margin:14px 0 0; font-size:.74rem; li
 .mess-de-face.mini{ width:22px; height:22px; padding:3px; border-radius:5px; box-shadow:0 1px 0 #b9ad8c; }
 .mess-de-face.mini i{ width:4px; height:4px; }
 .mess-des .mess-l > span:nth-child(2){ color:var(--brume); font-size:12.5px; }
+
+/* patch445 : la roue sous les paquets (saison 3) */
+#roueFront.rdf-plus{ margin-top:22px; }
+.puce.puce-roue{ font-family:inherit; font-size:.85rem; cursor:pointer; border-color:rgba(240,180,41,.55); }
+.puce.puce-roue b{ color:#FFE29A; }
+html.topo .rdf{ align-self:stretch; }   /* le panneau Tirage est en colonne flex : la roue prenait la largeur de son contenu */

@@ -16,4 +16,5 @@ select
   (select count(*) from communes where code like 'CH%' and photo is not null)                   as photos_suisses,
   (select count(*) from aurore_communes where code like 'CH%')                                  as aurores_suisses,
   (select (valeur::jsonb->>'actif')::int from config_jeu where cle = 'siege')                   as siege,
-  (select (valeur::jsonb->>'ouvert')::int from config_jeu where cle = 'reserve_accueil')        as reserve_accueil;
+  (select (valeur::jsonb->>'ouvert')::int from config_jeu where cle = 'reserve_accueil')        as reserve_accueil,
+  (select (valeur::jsonb->>'toujours')::int + (valeur::jsonb->>'jetons_propres')::int from config_jeu where cle = 'roue_front') as roue_s3_2;

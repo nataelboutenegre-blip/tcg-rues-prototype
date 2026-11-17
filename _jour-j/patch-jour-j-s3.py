@@ -34,6 +34,7 @@ if not any(x.get('date') == '2026-11-22' for x in d):
         "🇨🇭 La Suisse rejoint la carte : 2 110 communes, 26 cantons qui comptent comme des départements, la région Suisse, et des cartes Aurore suisses.",
         "🧭 Zone de départ : avant ton premier paquet du Front, choisis une région ou la Suisse ; tes 3 premiers paquets y tombent.",
         "🃏 Paquet Terra suisse : au Tirage, choisis France ou Suisse, mêmes jetons et même prix.",
+        "🎡 La roue du Front reste ouverte toute la saison, en plus de tes paquets : elle a ses propres jetons (1 toutes les 20 min, 3 en réserve), jusqu'à 50 tours par jour, et la soirée de 21 h à 23 h.",
         "🎖️ Le pass de la saison 3 est ouvert (QG › Pass de saison) : 20 niveaux jusqu'au 13 décembre, des paquets, des lingots et des titres.",
         "🍺 Le Mess ouvre ses portes au QG : la Machine à chiffrer, le Recensement et le 421, avec des tickets gagnés en duel classé.",
         "🎨 Nouveau look : la carte, les paquets, l'ouverture des cartes et la boutique ont été refaits.",

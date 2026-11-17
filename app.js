@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'c24390d55603';
+const VERSION_JEU = 'cfaf9b70dc20';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9057,6 +9057,10 @@ function renderPackStatus(){
     const minutes = Math.ceil((1 - (live % 1)) * minParPaquet());
     puces.push(`<span class="puce">Prochain dans <b>${minutes} min</b></span>`);
   }
+  if(typeof roueRemplace === 'function' && roueActive() && !roueRemplace()){   // patch445 : la roue est plus bas
+    const rj = Math.floor(roueJetons()) + Math.max(0, Number(ROUE.offerts) || 0) + roueSoirReste();
+    puces.push(`<button type="button" class="puce puce-roue" data-roue-aller>🎡 Roue du Front : <b>${rj ? rj + ' tour' + (rj > 1 ? 's' : '') : 'bientôt'}</b></button>`);
+  }
   if(!SAISON2 || enTerra()){
     puces.push(`<span class="puce">Achetés aujourd'hui <b>${achetesJour} sur 5</b></span>`);
     puces.push(`<span class="puce solde">Solde <b>${Number(packStatusCache.solde).toLocaleString('fr-FR')}</b></span>`);
@@ -9070,14 +9074,14 @@ function renderPackStatus(){
     : packStatusCache.solde < 200 ? 'Solde insuffisant' : null);   // patch156
 
   // un jeton vient de se recharger pendant que le joueur est sur le jeu
-  if(dispoPrecedente !== null && dispo > dispoPrecedente && !paquetEnCours && roueActive() && !roueTourne && ROUE.tours_jour < ROUE.par_jour){   // patch343
+  if(dispoPrecedente !== null && dispo > dispoPrecedente && !paquetEnCours && roueRemplace() && !roueTourne && ROUE.tours_jour < ROUE.par_jour){   // patch343, patch445
     notifier({
       type: 'succes',
       titre: 'Un tour de roue t\'attend',
       texte: dispo > 1 ? `Tu en as ${dispo} en réserve. Touche ici pour tourner la roue du Front.` : 'Touche ici pour tourner la roue du Front.',
       aller: () => { ncAller('front', 'tirage'); window.scrollTo({ top: 0 }); }
     });
-  } else if(dispoPrecedente !== null && dispo > dispoPrecedente && !paquetEnCours && !raBloque() && !roueActive()){   // patch322
+  } else if(dispoPrecedente !== null && dispo > dispoPrecedente && !paquetEnCours && !raBloque() && !roueRemplace()){   // patch322, patch445
     notifier({
       type: 'succes',
       titre: 'Un paquet gratuit t\'attend',
@@ -9534,14 +9538,14 @@ function majPaquetPret(dispo){
 // Paquet paye mais pas encore ouvert (page fermee ou rechargee) : on le represente
 async function verifierTiragesEnAttente(){
   if(paquetEnCours) return;
-  if(typeof roueActive === 'function' && roueActive()) return;   // patch355 : la roue cache les paquets, les tirages restent gardés
+  if(typeof roueRemplace === 'function' && roueRemplace()) return;   // patch355, patch445 : la roue cache les paquets, les tirages restent gardés
   const { data: u } = await sb.auth.getUser();
   if(!u || !u.user) return;
   const data = await monEtat();
   if(!data || !(data.tirages_restants > 0)) return;
   // patch134 : un paquet a pu etre ouvert pendant qu'on interrogeait le serveur
   if(paquetEnCours || tirageEnVol) return;
-  if(typeof roueActive === 'function' && roueActive()) return;   // patch355
+  if(typeof roueRemplace === 'function' && roueRemplace()) return;   // patch355, patch445
   paquetEnCours = true;
   renderPackStatus();
   afficherPaquetATirer('gratuit', Math.min(5, data.tirages_restants));
@@ -9551,7 +9555,7 @@ async function verifierTiragesEnAttente(){
 // Un paquet attend encore : on propose un bouton sous les cartes, sans les effacer.
 async function proposerPaquetSuivant(){
   if(paquetEnCours) return;
-  if(typeof roueActive === 'function' && roueActive()) return;   // patch355
+  if(typeof roueRemplace === 'function' && roueRemplace()) return;   // patch355, patch445
   const zone = document.getElementById('packZone');
   if(!zone || zone.querySelector('.suivant-ligne')) return;
   const { data: u } = await sb.auth.getUser();
@@ -11350,7 +11354,7 @@ function initModes(){
     const b = e.target.closest('[data-mode]');
     if(!b || b.dataset.mode === modeJeu) return;
     // patch355 : un paquet caché par la roue (pot vide) ne bloque plus : on le range
-    if(paquetEnCours && modeJeu === 'front' && typeof roueActive === 'function' && roueActive()
+    if(paquetEnCours && modeJeu === 'front' && typeof roueRemplace === 'function' && roueRemplace()
        && !document.querySelector('#packZone .card, #packZone .ouv-pile')){
       paquetEnCours = false;
       const z = document.getElementById('packZone'); if(z) z.innerHTML = '';
@@ -28205,7 +28209,7 @@ function renderPremiersPas(){
   onbMarque('pp_vu');   // patch324
   const cible = P.attaque ? null : ppCible();
   if(cible && Date.now() - ppVerifLu > 60000){ ppVerifLu = Date.now(); ppGarnisVerifier().then(() => { if(PP_GARNIS.has(String(cible.code))) renderPremiersPas(); }); }   // patch365
-  const parRoue = !P.paquet && typeof roueActive === 'function' && roueActive();   // patch365 : pot vide
+  const parRoue = !P.paquet && typeof roueRemplace === 'function' && roueRemplace();   // patch365 : pot vide
   const deb = debutantActif();
   const etapes = [
     parRoue ? ['paquet', 'Tourne la roue du Front', 'Plus aucune commune libre en ce moment : la roue te donne de l’énergie pour attaquer', 'Tourner']
@@ -28231,7 +28235,7 @@ function renderPremiersPas(){
 }
 async function ppAction(quoi, bouton){
   onbMarque('pp_' + quoi);   // patch324
-  if(quoi === 'paquet' && typeof roueActive === 'function' && roueActive()){   // patch365 : pot vide, la roue
+  if(quoi === 'paquet' && typeof roueRemplace === 'function' && roueRemplace()){   // patch365 : pot vide, la roue
     ncAller('front', 'tirage', () => { const r = document.getElementById('roueFront'); if(r) r.scrollIntoView({ behavior: 'smooth', block: 'center' }); });
     return;
   }
@@ -28642,17 +28646,17 @@ function renderReserveAccueil(){
     const seuil = Number(R.communes) || 3000, jours = Number(R.jours) || 7;
     const ins = raInscription();
     const ancien = ins == null || ins < Date.now() - jours * 86400000;
-    if(libres === 0 && roueActive()){   // patch358 : pot vide, avant la réserve (plus de « Les 0 dernières communes »)
+    if(libres === 0 && roueRemplace()){   // patch358 : pot vide, avant la réserve (plus de « Les 0 dernières communes »)
       cas = 'bloque';
       html = `<span class="ra-ic">🛡️</span><span class="ra-t">Plus aucune commune libre</span>
         <p class="ra-x">Le pot du Front est vide. En attendant, <b>la roue du Front remplace tes paquets</b>. Pour gagner du terrain, attaque !</p>`;
     } else if(bloque){
       cas = 'bloque';
       html = `<span class="ra-ic">🛡️</span><span class="ra-t">Réserve d'accueil active</span>
-        ${roueActive() ? `<p class="ra-x">Les <b>${fr(Math.min(libres, seuil))}</b> dernières communes libres sont réservées aux joueurs arrivés depuis moins de ${jours} jours. En attendant, <b>la roue du Front remplace tes paquets</b>.</p>`
+        ${roueRemplace() ? `<p class="ra-x">Les <b>${fr(Math.min(libres, seuil))}</b> dernières communes libres sont réservées aux joueurs arrivés depuis moins de ${jours} jours. En attendant, <b>la roue du Front remplace tes paquets</b>.</p>`
         : `<p class="ra-x">Les <b>${fr(Math.min(libres, seuil))}</b> dernières communes libres sont réservées aux joueurs arrivés depuis moins de ${jours} jours. Tes paquets du Front sont gardés. Pour gagner du terrain, attaque !</p>
         <div class="ra-act"><button type="button" class="ra-go fort" data-ra="attaquer">Attaquer</button><button type="button" class="ra-go" data-ra="terra">Paquets Terra</button></div>`}`;   // patch343
-    } else if(libres === 0 && roueActive()){   // patch343 : pot vide, la roue est pour tout le monde
+    } else if(libres === 0 && roueRemplace()){   // patch343 : pot vide, la roue est pour tout le monde
       cas = 'bloque';
       html = `<span class="ra-ic">🛡️</span><span class="ra-t">Plus aucune commune libre</span>
         <p class="ra-x">Le pot du Front est vide. En attendant, <b>la roue du Front remplace tes paquets</b>. Pour gagner du terrain, attaque !</p>`;
@@ -28716,6 +28720,9 @@ async function chargerRoue(){
 }
 function roueActive(){
   return !!(SAISON2 && !enTerra() && ROUE && ROUE.ouverte);
+}
+function roueRemplace(){   // patch445 : la roue prend la place des paquets (pot vide, réserve d'accueil)
+  return roueActive() && !ROUE.avec_paquets;
 }
 function roueJetons(){
   if(!ROUE) return 0;
@@ -28801,20 +28808,27 @@ function setRoueRot(r){
 }
 function renderRoue(){
   const el = document.getElementById('roueFront'), panel = document.getElementById('panel-tirage');
-  const actif = roueActive();
-  if(panel) panel.classList.toggle('roue-active', actif);
-  if(actif && paquetEnCours && !document.querySelector('#packZone .card, #packZone .ouv-pile')){   // patch355
+  const actif = roueActive(), remplace = roueRemplace();   // patch445
+  if(panel) panel.classList.toggle('roue-active', remplace);
+  if(el){   // patch445 : avec les paquets, la roue passe sous le paquet ; sinon à sa place d'origine
+    const ancre = remplace ? document.getElementById('zoneDepart') : document.getElementById('packStatus');
+    if(ancre && (remplace ? el.nextElementSibling !== ancre : ancre.nextElementSibling !== el)){
+      if(remplace) ancre.before(el); else ancre.after(el);
+    }
+    el.classList.toggle('rdf-plus', actif && !remplace);
+  }
+  if(remplace && paquetEnCours && !document.querySelector('#packZone .card, #packZone .ouv-pile')){   // patch355
     paquetEnCours = false;
     const z = document.getElementById('packZone'); if(z) z.innerHTML = '';
   }
-  if(actif !== roueEtaitActive){ roueEtaitActive = actif; if(typeof renderReserveAccueil === 'function') renderReserveAccueil(); }
+  if(remplace !== roueEtaitActive){ roueEtaitActive = remplace; if(typeof renderReserveAccueil === 'function') renderReserveAccueil(); }   // patch445
   if(!el) return;
   el.hidden = !actif;
   if(!actif) return;
-  const sig = JSON.stringify(ROUE.cases || []);
+  const sig = JSON.stringify(ROUE.cases || []) + (ROUE.avec_paquets ? '+' : '');   // patch445
   if(sig !== roueSig && !roueTourne){
     roueSig = sig;
-    el.innerHTML = `<div class="rdf-titre">La roue du Front</div><div class="rdf-sous">${roueCases().some(k => Number(k.tp) > 0) ? 'Énergie, lingots et TerraPoints à gagner' : 'Énergie et lingots à gagner'}</div>
+    el.innerHTML = `<div class="rdf-titre">La roue du Front</div><div class="rdf-sous">${ROUE.avec_paquets ? 'En plus de tes paquets : ' : ''}${roueCases().some(k => Number(k.tp) > 0) ? (ROUE.avec_paquets ? 'énergie, lingots et TerraPoints' : 'Énergie, lingots et TerraPoints à gagner') : (ROUE.avec_paquets ? 'énergie et lingots' : 'Énergie et lingots à gagner')}</div>
       <div class="rdf-cadre">${roueSvgHtml()}<button type="button" class="rdf-centre" id="rdfCentre">Tourner</button><div class="rdf-gain" id="rdfGain" hidden></div></div>
       <div class="rdf-soir" id="rdfSoir" hidden></div>
       <div class="rdf-jetons"><span class="rdf-slots" id="rdfSlots"></span><span class="rdf-dispo"><b id="rdfDispo"></b><span id="rdfProchain"></span></span></div>
@@ -29021,7 +29035,7 @@ async function roueTourner(){
   ROUE.tours_jour = Number(data.tours_jour); if(data.par_jour) ROUE.par_jour = Number(data.par_jour);
   if(data.soir !== undefined){ ROUE.soir = !!data.soir; ROUE.soir_restants = Number(data.soir_restants) || 0; }   // patch388
   if(data.offerts !== undefined) ROUE.offerts = Number(data.offerts) || 0;   // patch389
-  if(packStatusCache){ packStatusCache.jetons_actuels = Number(data.jetons); packStatusFetchedAt = Date.now(); dispoPrecedente = Math.floor(Number(data.jetons)); }
+  if(packStatusCache && !ROUE.propres){ packStatusCache.jetons_actuels = Number(data.jetons); packStatusFetchedAt = Date.now(); dispoPrecedente = Math.floor(Number(data.jetons)); }   // patch445
   renderRoueInfos();
   await roueAnimer(data.case);
   if(el) el.classList.remove('tourne');
@@ -29037,6 +29051,10 @@ async function roueTourner(){
     majBascule();
   }
 }
+document.getElementById('packStatus')?.addEventListener('click', (e) => {   // patch445
+  if(!e.target.closest('[data-roue-aller]')) return;
+  const r = document.getElementById('roueFront'); if(r) r.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
 document.getElementById('roueFront')?.addEventListener('click', (e) => {
   if(e.target.closest('#rdfCentre')){ roueTourner(); return; }
   if(e.target.closest('#rdfLien')){ roueChancesOuvertes = !roueChancesOuvertes; renderRoue(); return; }
@@ -29754,13 +29772,13 @@ function zdOuverte(){ return !!(ZD && ZD.ouvert && !enTerra()); }
 function zdZonesLibres(){ return ZD && Array.isArray(ZD.zones) ? ZD.zones.filter(z => !z.fermee) : []; }
 // le joueur doit choisir avant d'ouvrir un paquet du Front
 function zdDoitChoisir(){
-  return zdOuverte() && !ZD.choisi && zdZonesLibres().length > 0 && !(typeof roueActive === 'function' && roueActive());
+  return zdOuverte() && !ZD.choisi && zdZonesLibres().length > 0 && !(typeof roueRemplace === 'function' && roueRemplace());
 }
 function renderZoneDepart(){
   const el = document.getElementById('zoneDepart');
   if(!el) return;
   const rien = () => { el.hidden = true; el.innerHTML = ''; el.className = 'zd'; };
-  if(!zdOuverte() || (typeof roueActive === 'function' && roueActive())) return rien();
+  if(!zdOuverte() || (typeof roueRemplace === 'function' && roueRemplace())) return rien();
   const n = Math.max(1, Number(ZD.paquets) || 3);
   let html;
   if(!ZD.choisi){

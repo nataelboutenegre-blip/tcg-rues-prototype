@@ -46,7 +46,8 @@ declare
   v_rafale integer; v_pom integer; v_exclus text[] := exclus_classement_liste();
   x record;
 begin
-  if (select etat from saisons where id = 'saison-2') is distinct from 'en_cours' then
+  -- s3-15b (17/11) : depuis le 17/11 la saison 2 est en « compte_a_rebours » (saison_courante, 5 jours avant la fin)
+  if coalesce((select etat from saisons where id = 'saison-2'), '') not in ('en_cours', 'compte_a_rebours') then
     raise exception 'La saison 2 n''est pas en cours';
   end if;
 

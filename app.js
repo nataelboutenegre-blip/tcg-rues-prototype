@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'cfaf9b70dc20';
+const VERSION_JEU = '10e799f2d13d';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4635,6 +4635,7 @@ async function lancerAssaut(code){
       if(!guidee) setTimeout(() => notifier({ type: 'succes', titre: 'Première conquête : bonus terminé', texte: 'Bravo ! Désormais tes chances dépendent de ton engagement (35, 50 ou 65 %) et de tes communes autour.' }), 2500);
     }
     pcApresAssaut(code, r);   // patch336
+    chancesPerimer(code, r.conquise);   // patch446 : le % de la grille suit
     if((r.gagne || r.conquise) && PREMIERS_PAS && !PREMIERS_PAS.attaque) ppRelire(800);   // patch306
     if(r.conquise){
       // patch145 : la commune change de couleur tout de suite ; le
@@ -10113,6 +10114,7 @@ let combatChargeLe = 0;
 let combatRafraichTimer = null, combatConquisePendante = false;
 // la reponse du serveur suffit a mettre la carte a jour : pas de rechargement
 function combatApresAssaut(code, r){
+  chancesPerimer(code, r && r.conquise);   // patch446
   const s = combatSieges.get(code) || { commune_code: code, victoires_consecutives: 0 };
   s.victoires_consecutives = r.conquise ? 0 : Number(r.victoires_consecutives || 0);
   s.dernier_round = new Date().toISOString();
@@ -10782,6 +10784,7 @@ async function loadCombat(){
   loadMenaces();
   combatSieges = new Map((mesSieges || []).map(s => [s.commune_code, s]));
   combatChargeLe = Date.now();   // patch135
+  if(Date.now() - chancesLe > 120000) oublierChances();   // patch446 : bâtiments, bombes, garnisons bougent avec le temps
   await skinsCharges;
   renderCombatGrid();
   demanderChances();
@@ -10808,7 +10811,9 @@ let chancesTimer = null;
 let chancesEnVol = false;
 const CHANCES_MAX = 400;           // la limite du serveur, à ne pas dépasser
 
+let chancesLe = 0;   // patch446 : quand le cache a commencé
 function oublierChances(){
+  chancesLe = Date.now();
   chancesCibles = new Map();
   chancesInconnues = new Set();   // patch293
   chancesPour = intensiteChoisie;
@@ -10861,6 +10866,11 @@ function appliquerChances(){
 
 // Groupé : l'arrivée d'un lot de soixante cartes ne doit déclencher qu'une
 // requête, pas soixante.
+// patch446 : après un assaut, la chance de la cible a pu changer (série noire) ; après une conquête, toutes (communes proches)
+function chancesPerimer(code, conquise){
+  if(conquise){ oublierChances(); return; }
+  if(code){ chancesCibles.delete(code); chancesInconnues.delete(code); }
+}
 function demanderChances(){
   clearTimeout(chancesTimer);
   chancesTimer = setTimeout(envoyerChances, 180);

@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-11-17",
+    "nouveautes": [],
+    "correctifs": [
+      "Combat : le pourcentage affiché sur le bouton « Attaquer » pouvait rester celui du premier calcul (60 % sur le bouton, 45 % dans l'assaut). Il est maintenant recalculé après chaque assaut, après chaque conquête, et au moins toutes les 2 minutes. Les chances de l'assaut, elles, ont toujours été les bonnes. Merci Arkhannou !"
+    ]
+  },
+  {
     "date": "2026-11-16",
     "nouveautes": [
       "Ma France : sous la carte, la liste « Département par département » montre combien de communes il te manque dans chaque département, triée par numéro ou par les plus proches du complet. Touche une ligne pour voir le département sur la carte. Idée d'Arkhannou, merci !",

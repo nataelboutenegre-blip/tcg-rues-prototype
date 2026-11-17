@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '10e799f2d13d';
+const VERSION_JEU = 'c3064bc28687';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10784,10 +10784,10 @@ async function loadCombat(){
   loadMenaces();
   combatSieges = new Map((mesSieges || []).map(s => [s.commune_code, s]));
   combatChargeLe = Date.now();   // patch135
-  if(Date.now() - chancesLe > 120000) oublierChances();   // patch446 : bâtiments, bombes, garnisons bougent avec le temps
   await skinsCharges;
   renderCombatGrid();
   demanderChances();
+  if(Date.now() - chancesLe > 120000){ chancesLe = Date.now(); chancesRafraichir(combatAffichees.map(c => c.commune_code)); }   // patch446/447 : bâtiments, bombes, garnisons bougent avec le temps
 }
 
 
@@ -10866,10 +10866,23 @@ function appliquerChances(){
 
 // Groupé : l'arrivée d'un lot de soixante cartes ne doit déclencher qu'une
 // requête, pas soixante.
-// patch446 : après un assaut, la chance de la cible a pu changer (série noire) ; après une conquête, toutes (communes proches)
+// patch446 + patch447 : après un assaut, la chance de la cible a pu changer (série noire) ; après une conquête,
+// celles d'à côté aussi (communes proches). On ne vide pas le cache (le tri referait tout et la page remonterait) :
+// on redemande au serveur et on remplace le texte des boutons sur place.
+async function chancesRafraichir(codes){
+  codes = [...new Set(codes.filter(k => k && chancesCibles.has(k)))].slice(0, CHANCES_MAX);
+  if(!codes.length || chancesPour !== intensiteChoisie) return;
+  const voulue = intensiteChoisie;
+  try{
+    const { data, error } = await sb.rpc('apercu_attaques', { p_codes: codes, p_intensite: voulue });
+    if(error || voulue !== intensiteChoisie || chancesPour !== voulue) return;
+    for(const x of (data || [])) chancesCibles.set(x.commune_code, { chances: x.chances, cout: x.cout });
+    appliquerChances();
+  }catch(e){}
+}
 function chancesPerimer(code, conquise){
-  if(conquise){ oublierChances(); return; }
-  if(code){ chancesCibles.delete(code); chancesInconnues.delete(code); }
+  if(conquise){ chancesLe = Date.now(); chancesRafraichir(combatAffichees.map(c => c.commune_code)); return; }
+  if(code) chancesRafraichir([code]);
 }
 function demanderChances(){
   clearTimeout(chancesTimer);

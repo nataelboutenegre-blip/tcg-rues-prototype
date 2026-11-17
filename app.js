@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'c3064bc28687';
+const VERSION_JEU = '8b9bda6ddba6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10876,8 +10876,14 @@ async function chancesRafraichir(codes){
   try{
     const { data, error } = await sb.rpc('apercu_attaques', { p_codes: codes, p_intensite: voulue });
     if(error || voulue !== intensiteChoisie || chancesPour !== voulue) return;
-    for(const x of (data || [])) chancesCibles.set(x.commune_code, { chances: x.chances, cout: x.cout });
-    appliquerChances();
+    let change = false;   // patch448
+    for(const x of (data || [])){
+      const avant = chancesCibles.get(x.commune_code);
+      if(!avant || avant.chances !== x.chances || avant.cout !== x.cout) change = true;
+      chancesCibles.set(x.commune_code, { chances: x.chances, cout: x.cout });
+    }
+    if(change && !combatEnCours && (triChances || combatProximite)) renderCombatGrid();   // patch448 : l'ordre suit
+    else appliquerChances();
   }catch(e){}
 }
 function chancesPerimer(code, conquise){

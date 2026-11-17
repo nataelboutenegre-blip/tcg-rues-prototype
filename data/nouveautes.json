@@ -5,6 +5,7 @@
       "Front : les paquets sont de retour pour tous, tant qu'il reste des communes libres dans le pot. La roue du Front reste ouverte en plus, sous tes paquets, avec ses propres jetons (1 toutes les 20 min, 3 en réserve, 50 tours par jour) : tes tours de roue ne prennent plus tes paquets."
     ],
     "correctifs": [
+      "Combat : avec le tri « Meilleures chances », la liste n'était plus toujours dans l'ordre quand un pourcentage changeait (série noire, bombe…). Elle se retrie maintenant toute seule, sans te faire perdre ta place. Merci H34VEN et D.C.A !",
       "Combat : depuis le correctif de 13 h, avec le tri « Meilleures chances » ou « Près de mon territoire », la liste remontait tout en haut après chaque assaut. C'est réparé : la page reste où tu en étais.",
       "Combat : le pourcentage affiché sur le bouton « Attaquer » pouvait rester celui du premier calcul (60 % sur le bouton, 45 % dans l'assaut). Il est maintenant recalculé après chaque assaut, après chaque conquête, et au moins toutes les 2 minutes. Les chances de l'assaut, elles, ont toujours été les bonnes. Merci Arkhannou !"
     ]

@@ -10596,3 +10596,21 @@ html.topo:not(.sans-vitrine) .psx-infos p{ margin:14px 0 0; font-size:.74rem; li
 .al-ch small{ color:#8297B5; font-size:.68rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:9em; }
 .al-ch.on{ border-color:rgba(43,212,139,.7); background:rgba(43,212,139,.12); }
 .al-ch:disabled{ opacity:.4; cursor:default; }
+
+/* =====================================================================
+   patch443 — les récompenses de la saison 2
+   ===================================================================== */
+.bg-saison{ margin:10px 0 6px; font-size:.68rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:#8297B5; }
+.bg-badge.rs2.or{ background:linear-gradient(120deg, rgba(240,180,41,.18), rgba(255,226,140,.06)); border-color:rgba(240,180,41,.55); }
+.bg-badge.rs2.argent{ background:linear-gradient(120deg, rgba(200,210,225,.16), rgba(255,255,255,.04)); border-color:rgba(200,210,225,.5); }
+.bg-badge.rs2.bronze{ background:linear-gradient(120deg, rgba(205,127,50,.18), rgba(255,200,150,.05)); border-color:rgba(205,127,50,.5); }
+.bg-badge.rs2.or .bg-medaille, .bg-badge.rs2.argent .bg-medaille, .bg-badge.rs2.bronze .bg-medaille{ font-size:26px; }
+.bg-badge.rs2.top{ border-color:rgba(240,180,41,.3); }
+.bg-badge.rs2.clan{ background:linear-gradient(120deg, rgba(240,180,41,.10), rgba(43,212,139,.06)); border-color:rgba(240,180,41,.4); }
+.bg-badge.rs2.terre{ border-color:rgba(43,212,139,.3); }
+.bg-badge.rs2.terre small{ white-space:normal; }
+.bg-badge.rs2.pionnier{ border-style:dashed; }
+.rs2-medaille{ display:inline-block; margin-left:6px; vertical-align:middle; font-size:.7em; line-height:1; filter:drop-shadow(0 1px 4px rgba(240,180,41,.45)); }
+.rs2-trophee-mini{ margin-left:6px; font-size:.85em; }
+.cf-trophees{ margin:6px 0 0; text-align:center; }
+.rs2-trophee{ display:inline-block; padding:4px 10px; border-radius:999px; background:rgba(240,180,41,.14); color:#F0B429; font-size:.78rem; font-weight:700; box-shadow:inset 0 0 0 1px rgba(240,180,41,.4); }

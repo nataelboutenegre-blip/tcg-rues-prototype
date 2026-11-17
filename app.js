@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ecc8d3c1228a';
+const VERSION_JEU = '81ab65be8d21';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1949,8 +1949,10 @@ async function chargerClassementClans(){
   classementDonnees = classementComplet ? tous : tous.filter(x => x.rang <= 10 || x.est_moi);
   classementDonnees.total = tous.length;
   scoreDetail = new Map();
+  TROPHEES_VUS = await chargerTrophees();   // patch443
   renderClassement();
 }
+let TROPHEES_VUS = new Map();   // patch443
 function renderClassementClans(podium, liste, plus){
   let leg = document.getElementById('clLegende');
   if(!leg && podium){ leg = document.createElement('p'); leg.id = 'clLegende'; leg.className = 'sc-legende'; podium.before(leg); }   // patch309
@@ -1960,7 +1962,7 @@ function renderClassementClans(podium, liste, plus){
   const qui = (x) => x.actifs != null ? `${nb(x.actifs)} actif${x.actifs > 1 ? 's' : ''} sur ${nb(x.membres)}` : `${nb(x.membres)} membres`;
   const ligne = (x) => `<button class="cl-ligne cl-clan${x.est_moi ? ' moi' : ''}" data-clan-voir="${echapperTexte(x.clan_id)}" title="Voir les membres de ce clan">
       <span class="cl-rang">${x.rang}</span>${blasonHtml(x.tag, x.couleur, true)}
-      <span class="cl-pseudo">${x.est_moi ? '<b>' + echapperTexte(x.nom) + '</b>' : echapperTexte(x.nom)}</span>
+      <span class="cl-pseudo">${x.est_moi ? '<b>' + echapperTexte(x.nom) + '</b>' : echapperTexte(x.nom)}${trophesHtml(TROPHEES_VUS.get(x.clan_id))}</span>
       <span class="cl-detail">${qui(x)}</span>
       <span class="cl-score">${nb(x.moyenne)}<small>/ membre</small></span>
     </button>`;
@@ -1982,7 +1984,7 @@ function renderClassementClans(podium, liste, plus){
     <button class="cl-marche cl-clan r${x.rang}${x.est_moi ? ' moi' : ''}" data-clan-voir="${echapperTexte(x.clan_id)}" title="Voir les membres de ce clan">
       <span class="cl-rang">${x.rang}</span>
       ${blasonHtml(x.tag, x.couleur)}
-      <span class="cl-pseudo">${echapperTexte(x.nom)}</span>
+      <span class="cl-pseudo">${echapperTexte(x.nom)}${trophesHtml(TROPHEES_VUS.get(x.clan_id))}</span>
       <span class="cl-score">${nb(x.moyenne)}<small>/ membre</small></span>
       <span class="cl-detail">${qui(x)}</span>
     </button>`).join('');
@@ -7735,7 +7737,78 @@ const TITRES = { parrain: 'Le Parrain', 'halloween-2026': 'Chasseur de fantômes
   // patch439 : le pass de la saison 3
   'pass-s3-mecene': 'Mécène d’automne', 'pass-s3-recrue': 'Recrue d’automne', 'pass-s3-vignes': 'Seigneur des vignes',
   'pass-s3-brumes': 'Gardien des brumes', 'pass-s3-legende': 'Légende de la saison 3', 'pass-s3-veteran': 'Vétéran de la saison 3' };
-const titreAffiche = (p, choisi) => TITRES[choisi] || titreDepuisDeps(p.deps);
+// ---------- patch443 : les récompenses de la saison 2 (s3-14) ----------
+const DEP_DE = (() => {   // « de la Charente », « du Nord », « des Landes », « de l'Ain »
+  const art = {};
+  const mettre = (a, liste) => liste.split('|').forEach(d => { art[d] = a; });
+  mettre('du ', '14|15|18|25|29|30|32|39|41|45|46|47|49|56|59|62|63|69|81|82|83|84|90|94|95|67|68');
+  mettre("de l'", '01|02|03|07|09|10|11|12|27|28|34|35|36|37|38|60|61|89|91');
+  mettre('des ', '04|05|06|08|13|22|40|64|65|66|79|88|78|92');
+  mettre('de ', '75|976|975|974');
+  return (d) => (art[d] || 'de la ') + (DEPT_NAMES[d] || d);
+})();
+const regionDeSlug = (s) => Object.keys(ARTICLE_REGION).find(r => r.toLowerCase().replace(/[ ']/g, '-').normalize('NFD').replace(/\p{M}/gu, '') === s) || null;
+const BADGES_S2 = {
+  'podium-1':  { ico: '🥇', nom: 'Champion de la saison 2', texte: '1er du classement du Front', u: 'points', cls: 'or', ordre: 1 },
+  'podium-2':  { ico: '🥈', nom: 'Vice-champion de la saison 2', texte: '2e du classement du Front', u: 'points', cls: 'argent', ordre: 1 },
+  'podium-3':  { ico: '🥉', nom: '3e de la saison 2', texte: '3e du classement du Front', u: 'points', cls: 'bronze', ordre: 1 },
+  'top10':     { ico: '🏅', nom: 'Top 10 de la saison 2', texte: 'Dans les 10 premiers du Front', u: 'points', cls: 'top', ordre: 2 },
+  'clan-champion': { ico: '🏆', nom: 'Clan champion', texte: 'Membre du 1er clan à la fin de la saison', u: 'communes par membre', cls: 'clan', ordre: 3 },
+  conquerant:  { ico: '🗺️', nom: 'Le Conquérant', texte: 'Le plus de conquêtes', u: 'conquêtes', ordre: 4 },
+  rempart:     { ico: '🛡️', nom: 'Le Rempart', texte: 'Le plus de défenses réussies', u: 'défenses', ordre: 4 },
+  gardien:     { ico: '🏰', nom: 'Le Gardien', texte: 'Le plus d’attaques repoussées par ses garnisons', u: 'attaques repoussées', ordre: 4 },
+  batisseur:   { ico: '🧱', nom: 'Le Bâtisseur', texte: 'Le plus de bâtiments terminés', u: 'bâtiments', ordre: 4 },
+  artificier:  { ico: '💣', nom: 'L’Artificier', texte: 'Le plus de bombes lancées', u: 'bombes', ordre: 4 },
+  rebelle:     { ico: '✊', nom: 'Le Rebelle', texte: 'Le plus de lingots mis dans les rébellions', u: 'lingots', ordre: 4 },
+  diplomate:   { ico: '🤝', nom: 'Le Diplomate', texte: 'Le plus d’échanges de clan conclus', u: 'échanges', ordre: 4 },
+  cible:       { ico: '🎯', nom: 'La Cible', texte: 'Le plus attaqué', u: 'attaques subies', ordre: 4 },
+  collectionneur: { ico: '🃏', nom: 'Le Collectionneur', texte: 'La plus grande collection Terra', u: 'communes', ordre: 4 },
+  geographe:   { ico: '📍', nom: 'Le Géographe', texte: 'Le plus de Communes du jour trouvées', u: 'jours', ordre: 4 },
+  navigateur:  { ico: '📡', nom: 'Le Navigateur', texte: 'Le meilleur Elo au Radar', u: 'Elo', ordre: 4 },
+  eclair:      { ico: '⚡', nom: 'L’Éclair', texte: 'Le meilleur Elo à Rafale', u: 'Elo', ordre: 4 },
+  flair:       { ico: '🔮', nom: 'Le Flair', texte: 'Le meilleur Elo au Plus ou moins', u: 'Elo', ordre: 4 },
+  pionnier:    { ico: '🚩', nom: 'Pionnier du Front', texte: 'A tenu une commune du Front pendant la saison 2', cls: 'pionnier', ordre: 7 },
+};
+// la définition d'un badge, selon sa saison (les ids de la S1 et de la S2 se recoupent)
+function badgeDef(b){
+  if(b.saison === 'saison-2'){
+    if(BADGES_S2[b.badge]) return BADGES_S2[b.badge];
+    if(/^seigneur-/.test(b.badge)){ const d = b.badge.slice(9); return { ico: '👑', nom: 'Seigneur ' + DEP_DE(d), texte: 'Département tenu à 50 % ou plus à la fin de la saison', u: '% du département', cls: 'terre', ordre: 5, dep: d }; }
+    if(/^maitre-/.test(b.badge)){ const r = regionDeSlug(b.badge.slice(7)); return r ? { ico: '⚜️', nom: 'Maître ' + articleRegion(r), texte: 'Bonus de région à la fin de la saison', u: 'départements', cls: 'terre', ordre: 6 } : null; }
+    return null;
+  }
+  return BADGES[b.badge] || null;
+}
+// les titres gagnés en fin de saison 2 (titres_possibles côté serveur)
+function titreLibelle(t){
+  if(TITRES[t]) return TITRES[t];
+  const fixes = { 'champion-s2': 'Champion de la saison 2', 'vice-champion-s2': 'Vice-champion de la saison 2', 'troisieme-s2': '3e de la saison 2', 'top10-s2': 'Top 10 de la saison 2' };
+  if(fixes[t]) return fixes[t];
+  let m = /^seigneur-s2-(.+)$/.exec(t || '');
+  if(m && DEPT_NAMES[m[1]]) return 'Seigneur ' + DEP_DE(m[1]);
+  m = /^maitre-s2-(.+)$/.exec(t || '');
+  if(m){ const r = regionDeSlug(m[1]); if(r) return 'Maître ' + articleRegion(r); }
+  return null;
+}
+const medailleS2 = (p) => {
+  const b = (p.badges || []).find(x => x.saison === 'saison-2' && /^podium-[123]$/.test(x.badge));
+  if(!b) return '';
+  const d = BADGES_S2[b.badge];
+  return `<span class="rs2-medaille ${d.cls}" title="${echapperTexte(d.nom)}">${d.ico}</span>`;
+};
+// le trophée du clan champion (table clan_trophees, lue une fois)
+let CLAN_TROPHEES = null;
+function chargerTrophees(){
+  if(CLAN_TROPHEES) return CLAN_TROPHEES;
+  CLAN_TROPHEES = sb.from('clan_trophees').select('clan_id, saison, rang')
+    .then(r => { const m = new Map(); if(!r.error) (r.data || []).forEach(t => { if(!m.has(t.clan_id)) m.set(t.clan_id, []); m.get(t.clan_id).push(t); }); return m; }, () => new Map());
+  return CLAN_TROPHEES;
+}
+const trophesHtml = (liste, long) => (liste || []).map(t => long
+  ? `<span class="rs2-trophee">🏆 Clan champion de la ${echapperTexte(nomSaison(t.saison).toLowerCase())}</span>`
+  : `<span class="rs2-trophee-mini" title="Clan champion de la ${echapperTexte(nomSaison(t.saison).toLowerCase())}">🏆</span>`).join('');
+
+const titreAffiche = (p, choisi) => titreLibelle(choisi) || titreDepuisDeps(p.deps);   // patch443
 const nomSaison = (s) => { const m = /(\d+)$/.exec(String(s || '')); return m ? 'Saison ' + m[1] : ''; };
 const estOG = (p) => (p.badges || []).some(b => b.badge === 'og');
 const marqueOG = (p) => estOG(p) ? '<span class="bg-og-marque" title="A joué la saison 1">OG</span>' : '';
@@ -7750,18 +7823,33 @@ async function chargerBadges(id){
   catch(e){ return []; }
 }
 function blocBadges(p, fiche){
-  const liste = (p.badges || []).filter(b => BADGES[b.badge])
-    .sort((a, b) => (a.badge === 'og' ? -1 : b.badge === 'og' ? 1 : 0));
+  // patch443 : badges de la saison 2 compris, rangés par saison (la plus récente d'abord)
+  const liste = (p.badges || []).map(b => ({ b, d: badgeDef(b) })).filter(x => x.d);
   if(!liste.length) return '';
-  const items = liste.map(b => {
-    const d = BADGES[b.badge];
-    return `<div class="bg-badge ${b.badge === 'og' ? 'og' : ''}" title="${echapperTexte(d.texte)}">
+  const saisons = [...new Set(liste.map(x => x.b.saison || ''))].sort().reverse();
+  const avecTitres = saisons.length > 1 || saisons[0] === 'saison-2';   // un titre par saison : la saison n'est plus répétée
+  const carte = (b, d, extra) => `<div class="bg-badge ${b.badge === 'og' ? 'og' : ''}${d.cls ? ' rs2 ' + d.cls : ''}" title="${echapperTexte(d.texte)}">
       <span class="bg-medaille">${d.ico}</span>
-      <span class="bg-txt"><b>${echapperTexte(d.nom)}</b><small>${echapperTexte([nomSaison(b.saison), b.valeur != null && b.badge !== 'og' ? Number(b.valeur).toLocaleString('fr-FR') + (d.u ? ' ' + d.u : '') : ''].filter(Boolean).join(' · '))}</small></span>
+      <span class="bg-txt"><b>${echapperTexte(d.nom)}</b><small>${extra != null ? extra : echapperTexte([avecTitres ? '' : nomSaison(b.saison), b.valeur != null && b.badge !== 'og' ? Number(b.valeur).toLocaleString('fr-FR') + (d.u ? ' ' + d.u : '') : ''].filter(Boolean).join(' · '))}</small></span>
     </div>`;
-  }).join('');
-  return fiche ? `<h3>Distinctions</h3><div class="bg-liste">${items}</div>`
-               : `<div class="pf-bloc"><h3>Distinctions</h3><div class="bg-liste">${items}</div></div>`;
+  const parSaison = saisons.map(s => {
+    const xs = liste.filter(x => (x.b.saison || '') === s)
+      .sort((a, b) => (a.b.badge === 'og' ? -1 : b.b.badge === 'og' ? 1 : 0) || (a.d.ordre || 4) - (b.d.ordre || 4));
+    // trois seigneuries ou plus : une seule carte, les départements en dessous
+    const seig = xs.filter(x => x.d.dep);
+    let items = '';
+    for(const x of xs){
+      if(x.d.dep && seig.length >= 3){
+        if(x !== seig[0]) continue;   // trois seigneuries ou plus : une seule carte, à la place de la première
+        const noms = seig.map(y => (DEPT_NAMES[y.d.dep] || y.d.dep) + (y.b.valeur != null ? ' ' + y.b.valeur + ' %' : '')).join(' · ');
+        items += carte({ badge: 'seigneuries' }, { ico: '👑', nom: `Seigneur de ${seig.length} départements`, texte: 'Départements tenus à 50 % ou plus à la fin de la saison', cls: 'terre' }, echapperTexte(noms));
+      } else items += carte(x.b, x.d);
+    }
+    return { s, items, titre: avecTitres ? `<h4 class="bg-saison">${echapperTexte(nomSaison(s) || 'Distinctions')}</h4>` : '' };
+  });
+  const corps = parSaison.map(x => `${x.titre}<div class="bg-liste">${x.items}</div>`).join('');
+  return fiche ? `<h3>Distinctions</h3>${corps}`
+               : `<div class="pf-bloc"><h3>Distinctions</h3>${corps}</div>`;
 }
 
 // patch359 : « Tes dés au Front » (s2-106), seulement dans son propre Profil
@@ -7915,7 +8003,7 @@ function rendreProfilPanneau(){
     <div class="pf-tete" style="--joueur:${COULEUR_MOI}">
       ${anneauNiveau(p, 112)}
       <div class="pf-id">
-        <h2>${echapperTexte(p.pseudo)}${marqueOG(p)}</h2>
+        <h2>${echapperTexte(p.pseudo)}${marqueOG(p)}${medailleS2(p)}</h2>
         <div class="pf-rangs">
           ${g ? `<span class="pf-grade" style="background:${g.couleur}22;color:${g.couleur}">${g.nom}</span>` : ''}
           <span class="pf-titre"><b>${echapperTexte(titreAffiche(p, (p.titres || {}).choisi))}</b></span>
@@ -8152,7 +8240,7 @@ function rendreProfil(){
         ${moi ? '' : boutonAmiProfil(p.id)}
         <button class="pr-fermer" data-pr="fermer" aria-label="Fermer">✕</button>
         <div class="pr-avatar-niv">${anneauNiveau(p, 92)}</div>
-        <h2 id="prNom">${echapperTexte(p.pseudo)}${marqueOG(p)}</h2>
+        <h2 id="prNom">${echapperTexte(p.pseudo)}${marqueOG(p)}${medailleS2(p)}</h2>
         <p class="pr-sous">${p.niveau ? `<span class="pf-grade" style="background:${
           gradeDe(Number(p.niveau)).couleur}22;color:${gradeDe(Number(p.niveau)).couleur}">${
           gradeDe(Number(p.niveau)).nom}</span> ` : ''}<b>${echapperTexte(titreAffiche(p, p.titre))}</b>${
@@ -16331,7 +16419,7 @@ function ouvrirChoixTitre(){
   if(!p || !p.titres) return;
   const choisi = p.titres.choisi || 'region';
   const options = [['region', titreDepuisDeps(p.deps), 'Selon la région où tu as le plus de communes']]
-    .concat((p.titres.disponibles || []).filter(t => TITRES[t]).map(t => [t, TITRES[t], t === 'parrain' ? '5 amis invités et actifs' : t.startsWith('pass-') ? 'Pass de saison' : '']));
+    .concat((p.titres.disponibles || []).filter(t => titreLibelle(t)).map(t => [t, titreLibelle(t), t === 'parrain' ? '5 amis invités et actifs' : t.startsWith('pass-') ? 'Pass de saison' : /-s2(-|$)/.test(t) ? 'Récompense de la saison 2' : '']));   // patch443
   const fermer = ouvrirFenetre(`
     <form class="fenetre prix" role="dialog" aria-modal="true" aria-labelledby="titreChoixT" novalidate>
       <h2 id="titreChoixT">Ton titre</h2>
@@ -30993,7 +31081,7 @@ async function ouvrirFicheClan(id){
     notifier({ type: 'info', titre: 'Clan indisponible', texte: 'Cette fiche n’est pas disponible pour le moment.' });
     return;
   }
-  clanFicheEnCours = { ...c, membres: mb.data };
+  clanFicheEnCours = { ...c, membres: mb.data, trophees: (await chargerTrophees()).get(id) || [] };   // patch443
   rendreFicheClan();
 }
 function rendreFicheClan(){
@@ -31023,6 +31111,7 @@ function rendreFicheClan(){
         <div class="cf-blason">${blasonHtml(c.tag, c.couleur)}</div>
         <h2 id="cfNom">${echapperTexte(c.nom)}</h2>
         <p class="pr-sous"><span class="cf-tag">${echapperTexte(c.tag)}</span>${r ? ` · ${c.rang ? `<span class="pr-rang">${c.rang}${c.rang === 1 ? 'er' : 'e'}</span> des clans` : r}` : ''}</p>
+        ${(c.trophees || []).length ? `<p class="cf-trophees">${trophesHtml(c.trophees, true)}</p>` : ''}
       </div>
       <div class="pr-corps">
         <div class="pr-chiffres cf-chiffres n${chiffres.length}">${chiffres.map(([v, l]) =>

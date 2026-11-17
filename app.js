@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '8b9bda6ddba6';
+const VERSION_JEU = '6b7f56f12dd7';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -16541,7 +16541,7 @@ const ETAPES_GUIDE_S2 = [
   { mode: 'front', cible: '.tab[data-tab="combat"]', titre: 'Attaque et défends',
     texte: 'Trois victoires prennent une commune, et une défaite ne te fait rien perdre. Mets tes communes clés en garnison : elles se défendent seules pendant ton absence.' },
   { cible: '.tab[data-tab="qg"]', titre: 'Chaque jour',
-    texte: 'Les quêtes, la Commune du jour et le Radar rapportent des TerraPoints (TP) et de l\'énergie. Une saison du Front dure 4 semaines.' },
+    texte: 'Les quêtes, la Commune du jour et le Radar rapportent des TerraPoints (TP) et de l\'énergie. Une saison du Front dure de 3 à 4 semaines.' },
 ];
 if(SAISON2) ETAPES_GUIDE.splice(0, ETAPES_GUIDE.length, ...ETAPES_GUIDE_S2);
 

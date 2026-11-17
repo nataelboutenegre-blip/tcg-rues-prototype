@@ -25,7 +25,7 @@
 --
 --  Contrôle attendu :
 --    2110 | legendaire 27, epique 218, rare 652, peucommun 953, commun 260
---         | 0 | 0 | true | Zurich : legendaire n° 1 / 27
+--         | 0 | 0 | true | Zurich : legendaire n° 1 / 27 | 46 (Aurore suisses)
 -- ===========================================================================
 begin;
 

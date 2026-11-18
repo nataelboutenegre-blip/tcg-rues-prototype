@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '770550c65566';
+const VERSION_JEU = '3c1890b30b10';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -29030,15 +29030,19 @@ function roueGainMontrer(d){
   const k = seg ? seg.k : { nom: 'Gagné', energie: d.energie_prevue, lingots: d.lingots_prevus, terra: d.terra, tp: d.tp };
   const e = Number(d.energie) || 0, ep = Number(d.energie_prevue) || 0, l = Number(d.lingots) || 0, lp = Number(d.lingots_prevus) || 0, t = Number(d.terra) || 0;
   const tp = Number(d.tp) || 0, offert = d.relance === true;   // patch351
+  const rep = Number(d.tp_repli) || 0, chg = Number(d.lingots_changes) || 0;   // patch452 (s3-24) : réserve pleine → TP
   const parts = [];
   const nOff = Number(d.tours_offerts) || 1;   // patch385 : la Relance peut offrir plusieurs tours
   if(offert) parts.push(nOff > 1 ? `${nOff} tours offerts` : 'Tour offert');
   if(tp) parts.push(`+${tp} TP`);
   if(ep) parts.push(`+${ep}<span class="rdf-e">${ICONE_ENERGIE}</span>`);
-  if(lp) parts.push(`+${lp}${ICONE_LINGOT}`);
+  if(rep){ if(l) parts.push(`+${l}${ICONE_LINGOT}`); parts.push(`+${rep} TP`); }
+  else if(lp) parts.push(`+${lp}${ICONE_LINGOT}`);
   if(t) parts.push(`+${t} paquet${t > 1 ? 's' : ''} Terra`);
   let note;
-  if(ep && e < ep) note = e ? `Énergie au maximum : +${e} seulement` : 'Ton énergie était déjà au maximum';
+  if(rep) note = l ? `Réserve de lingots pleine : ${chg} lingot${chg > 1 ? 's' : ''} changé${chg > 1 ? 's' : ''} en ${rep} TP`
+                   : `Ta réserve de lingots est pleine : ${chg > 1 ? `tes ${chg} lingots deviennent` : 'ton lingot devient'} ${rep} TP`;
+  else if(ep && e < ep) note = e ? `Énergie au maximum : +${e} seulement` : 'Ton énergie était déjà au maximum';
   else if(lp && l < lp) note = l ? `Réserve de lingots pleine : +${l} seulement` : 'Ta réserve de lingots était déjà pleine';
   else if(ep && lp) note = `Énergie : ${d.energie_totale} · lingots : ${d.lingots_total}`;
   else if(ep) note = `Ton énergie : ${d.energie_totale}`;
@@ -29088,7 +29092,7 @@ async function roueTourner(){
   setTimeout(() => roueJournalCharger(true), 600);   // patch396
   if(PREMIERS_PAS && !PREMIERS_PAS.paquet) ppRelire(1500);   // patch365 : étape 1 par la roue
   if(Number(data.energie) > 0 && typeof majEnergie === 'function') majEnergie();
-  if(Number(data.tp) > 0 && data.solde != null){   // patch351 : le solde de TP suit
+  if((Number(data.tp) || 0) + (Number(data.tp_repli) || 0) > 0 && data.solde != null){   // patch351 : le solde de TP suit ; patch452 : repli des lingots compris
     if(packStatusCache) packStatusCache.solde = Number(data.solde);
     if(typeof majSoldeGlobal === 'function') majSoldeGlobal(Number(data.solde));
     majBascule();

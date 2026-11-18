@@ -2,6 +2,7 @@
   {
     "date": "2026-11-18",
     "nouveautes": [
+      "Roue du Front : quand ta réserve de lingots est pleine, les lingots gagnés à la roue ne sont plus perdus. Ils deviennent des TerraPoints, 5 TP par lingot (une case Lingots = +10 TP).",
       "Quêtes du Front : elles changent chaque jour ! 7 par jour, les mêmes pour tout le monde : la Commune du jour et une conquête tous les jours, plus 5 tirées dans une réserve d'une trentaine (combat, mini-jeux, économie, Mess ou clan). +10 énergie chacune, +15 pour les plus dures, et un bonus de +15 énergie et 1 lingot quand les 7 sont faites. Le plafond passe à 100 énergie de quêtes par jour. Les quêtes Terra piochent maintenant dans 16 quêtes. Merci pour l'idée !"
     ],
     "correctifs": [

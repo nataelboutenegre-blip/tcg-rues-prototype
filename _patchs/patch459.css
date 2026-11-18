@@ -1,0 +1,20 @@
+/* patch459 : les lauriers du podium des clans */
+.lr{ position: relative; display: inline-grid; place-items: center; isolation: isolate; flex-shrink: 0; vertical-align: middle; }
+.lr > .laurier-svg{ position: absolute; z-index: -1; left: 50%; top: 50%; width: 150%; height: auto; transform: translate(-50%, -48%); pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
+.lr.petit > .laurier-svg{ width: 140%; }
+.lr > .blason{ position: relative; }
+.clan-tete > .lr, .cf-tete .lr, .pr-tete .lr{ margin: 8px 16px 8px 12px; }
+.lr.petit{ margin: 0 4px; }
+.lr-ed{ display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin: 4px 0 14px; border-radius: 12px; border: 1px solid rgba(240,180,41,.4); background: rgba(240,180,41,.08); }
+.lr-ed2{ border-color: rgba(207,216,228,.4); background: rgba(207,216,228,.07); }
+.lr-ed3{ border-color: rgba(201,138,75,.45); background: rgba(201,138,75,.08); }
+.lr-ed .lr{ margin: 4px 6px; }
+.lr-ed-ecu{ width: 40px !important; height: 48px !important; }
+.lr-ed b{ color: #fff; font-size: .92rem; }
+.lr-ed small{ display: block; color: #C6D2E2; font-size: .76rem; line-height: 1.4; margin-top: 2px; }
+.lr-sw{ margin-left: auto; flex: none; width: 48px; height: 28px; border-radius: 999px; border: none; background: rgba(169,188,212,.3); position: relative; cursor: pointer; transition: background .15s; }
+.lr-sw::after{ content: ''; position: absolute; left: 4px; top: 4px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: left .15s; }
+.lr-sw.on{ background: #2BB673; }
+.lr-sw.on::after{ left: 24px; }
+.lr-sw:disabled{ opacity: .6; }
+.rs2-trophee.r2{ color: #DCE6F2; } .rs2-trophee.r3{ color: #E7B07A; }

@@ -31,13 +31,14 @@ d = json.load(open(p, encoding='utf-8'))
 if not any(x.get('date') == '2026-11-22' for x in d):
     d.insert(0, {'date': '2026-11-22', 'nouveautes': [
         "⚔️ La saison 3 est lancée ! Le Front repart de zéro, tes 5 communes ★ sont toujours à toi, et tes TP aussi.",
+        "🧭 Les onglets changent de nom : Combat devient le QG (attaquer, défendre, bâtiments), et l'ancien QG des mini-jeux devient l'Arcade (Commune du jour, Radar, Rafale, le Mess et le pass). Les icônes ne bougent pas.",
         "🏰 Le siège remplace les dés : pose un siège (2 ⚡), envoie des vagues d'énergie et remplis la jauge de la commune avant que son propriétaire la défende. Renforcer, garnison-bouclier, course entre assiégeants : tout est dans Règles › Le siège.",
         "🇨🇭 La Suisse rejoint la carte : 2 110 communes, 26 cantons qui comptent comme des départements, la région Suisse, et des cartes Aurore suisses.",
         "🧭 Zone de départ : avant ton premier paquet du Front, choisis une région ou la Suisse ; tes 3 premiers paquets y tombent.",
         "🃏 Paquet Terra suisse : au Tirage, choisis France ou Suisse, mêmes jetons et même prix.",
         "🎡 La roue du Front reste ouverte toute la saison, en plus de tes paquets : elle a ses propres jetons (1 toutes les 20 min, 3 en réserve), jusqu'à 50 tours par jour, et la soirée de 21 h à 23 h.",
-        "🎖️ Le pass de la saison 3 est ouvert (QG › Pass de saison) : 20 niveaux jusqu'au 13 décembre, des paquets, des lingots et des titres.",
-        "🍺 Le Mess ouvre ses portes au QG : la Machine à chiffrer, le Recensement et le 421, avec des tickets gagnés en duel classé.",
+        "🎖️ Le pass de la saison 3 est ouvert (Arcade › Pass de saison) : 20 niveaux jusqu'au 13 décembre, des paquets, des lingots et des titres.",
+        "🍺 Le Mess ouvre ses portes à l'Arcade : la Machine à chiffrer, le Recensement et le 421, avec des tickets gagnés en duel classé.",
         "🎨 Nouveau look : la carte, les paquets, l'ouverture des cartes et la boutique ont été refaits.",
         "✨ Cinq nouveaux skins en boutique : Givre, Aquarelle, Topo, Vitrail et Kintsugi. Et les onze skins existants ont été redessinés : ils jouent maintenant avec la photo de ta carte. Si tu en as déjà un, il change tout seul, sans rien payer.",
         "🏆 Les récompenses de la saison 2 sont dans les profils : médailles du podium, titres, seigneuries, clan champion, et un paquet Terra offert à tous les pionniers du Front."],

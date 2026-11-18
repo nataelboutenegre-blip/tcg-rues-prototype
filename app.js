@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1ba5c4b88324';
+const VERSION_JEU = '52d29d14a9fb';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11251,6 +11251,35 @@ document.getElementById('combatFilters').addEventListener('click', (e) => {
 // revient a Collection. L'onglet Defense reste dans la page, cache, et
 // n'apparait ni dans la barre ni dans le menu.
 let ONGLETS_BARRE = ['tirage', 'territoire', 'qg', 'combat'];
+// patch455 : noms de la saison 3. « Combat » devient « QG », le QG des mini-jeux devient « Arcade ».
+// Seulement les textes : identifiants, liens (?onglet=qg, ?onglet=combat) et volets ne changent pas.
+// Allumé avec l'habillage Topo (html.topo : le 22/11 à 10 h 01, ou ?topo=test).
+const nomsS3 = () => document.documentElement.classList.contains('topo');
+const nQG = () => nomsS3() ? 'Arcade' : 'QG';
+const nAuQG = () => nomsS3() ? 'à l’Arcade' : 'au QG';
+const nDansQG = () => nomsS3() ? 'dans l’Arcade' : 'dans le QG';
+const nDuQG = () => nomsS3() ? 'de l’Arcade' : 'du QG';
+const nCombat = () => nomsS3() ? 'QG' : 'Combat';
+function appliquerNomsS3(){
+  const s3 = nomsS3();
+  const texte = (sel, ancien, nouveau) => document.querySelectorAll(sel).forEach(el => {
+    for(const n of el.childNodes){
+      if(n.nodeType !== 3 || !n.textContent.trim()) continue;
+      if(el.dataset.nomS2 === undefined) el.dataset.nomS2 = n.textContent;
+      n.textContent = s3 ? el.dataset.nomS2.replace(ancien, nouveau) : el.dataset.nomS2;
+      break;
+    }
+  });
+  const aria = (sel, ancien, nouveau) => document.querySelectorAll(sel).forEach(el => {
+    if(el.dataset.ariaS2 === undefined) el.dataset.ariaS2 = el.getAttribute('aria-label') || '';
+    el.setAttribute('aria-label', s3 ? el.dataset.ariaS2.replace(ancien, nouveau) : el.dataset.ariaS2);
+  });
+  texte('.tab[data-tab="qg"], #panel-qg > h1, #panel-pass .volet[data-volet="qg"], #rfAnnulerVs', 'QG', 'Arcade');
+  texte('.tab[data-tab="combat"], #panel-combat > h1, #panel-batiments > h1, #panel-defense > h1', 'Combat', 'QG');
+  aria('#panel-pass > .volets', 'QG', 'Arcade');
+  aria('#panel-combat > .volets, #panel-batiments > .volets, #panel-defense > .volets', 'Combat', 'QG');
+}
+appliquerNomsS3();
 const ONGLETS_FUSIONNES = ['defense', 'batiments', 'succes', 'cdj', 'radar', 'rafale', 'boutiqueeuros', 'personnaliser', 'monuments', 'pass', 'bourse', 'echange'];   // patch298 : bourse, echange   // patch254 : pass   // patch191 : monuments
 // l'onglet qui s'allume quand on ouvre un volet fusionne
 const ONGLET_PARENT = { defense: 'combat', batiments: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg', boutiqueeuros: 'boutique', personnaliser: 'profil', monuments: 'collection', pass: 'qg', bourse: 'contrat', echange: 'contrat' };   // patch298
@@ -11639,7 +11668,7 @@ function blocBatimentsEtat(code, c){
     html += `<div class="bt">
       <div class="bt-haut">${ICONE_FONDERIE}Fonderie <b>${n} / ${max} ${ICONE_LINGOT}</b></div>
       <div class="bt-barre" style="grid-template-columns:repeat(${max},1fr)">${Array.from({ length: max }, (_, i) => `<i class="${i < n ? 'p' : ''}"></i>`).join('')}</div>
-      <p class="bt-txt">${prete ? `<b>+${B.production} lingots par jour</b>${mesFonderies().length > 1 ? ' (réserve partagée avec ton autre Fonderie)' : ''}, jusqu’à ${max} en réserve${pr ? ` · prochain dans ${formatDuree(pr)}` : ''}.` : route ? `<b>En déplacement</b> : prête dans ${formatDuree(btPretDans(ici))}, elle ne produit rien d’ici là.` : `<b>En construction</b> : prête dans ${formatDuree(btPretDans(ici))}.`}${prete ? ` Tu peux la déplacer pour ${fdDepPrix()} lingots : Combat › Bâtiments, ou « Déplacer une Fonderie ici » sur une autre de tes communes.` : ''}
+      <p class="bt-txt">${prete ? `<b>+${B.production} lingots par jour</b>${mesFonderies().length > 1 ? ' (réserve partagée avec ton autre Fonderie)' : ''}, jusqu’à ${max} en réserve${pr ? ` · prochain dans ${formatDuree(pr)}` : ''}.` : route ? `<b>En déplacement</b> : prête dans ${formatDuree(btPretDans(ici))}, elle ne produit rien d’ici là.` : `<b>En construction</b> : prête dans ${formatDuree(btPretDans(ici))}.`}${prete ? ` Tu peux la déplacer pour ${fdDepPrix()} lingots : ${nCombat()} › Bâtiments, ou « Déplacer une Fonderie ici » sur une autre de tes communes.` : ''}
         Visible de tous : si on te prend ${echapperHtml(c.nom)}, la Fonderie est détruite et l’attaquant pille ${Math.round(btReglage('pillage', 50) / Math.max(1, mesFonderies().length))} % de ta réserve${B.banque ? ' (pas ce qui est dans ta Banque)' : ''}.</p>
       ${prete || route ? '' : btAnnulerHtml(code, 'fonderie')}
     </div>`;
@@ -11649,7 +11678,7 @@ function blocBatimentsEtat(code, c){
     const prete = btPretDans(fort) <= 0, route = fort.deplacee && !prete;   // patch374
     html += `<div class="bt bt-fort">
       <div class="bt-haut">${ICONE_FORTERESSE}Forteresse <b>${prete ? 'active' : (route ? 'en route · ' : '') + 'prête dans ' + formatDuree(btPretDans(fort))}</b></div>
-      <p class="bt-txt">${route ? '<b>Déplacement en cours</b> : elle ne protège rien avant la fin du chantier. ' : ''}<b>−${btReglage('forteresse_defense', 15)} %</b> aux chances des attaquants ici, et <b>+${btReglage('forteresse_appui', 5)} %</b> à tes attaques à moins de ${btReglage('rayon_km', 20)} km.${prete ? ` Tu peux la déplacer pour ${ftDepPrix()} lingots : Combat › Bâtiments, ou « Déplacer une forteresse ici » sur une autre de tes communes.` : ''}</p>
+      <p class="bt-txt">${route ? '<b>Déplacement en cours</b> : elle ne protège rien avant la fin du chantier. ' : ''}<b>−${btReglage('forteresse_defense', 15)} %</b> aux chances des attaquants ici, et <b>+${btReglage('forteresse_appui', 5)} %</b> à tes attaques à moins de ${btReglage('rayon_km', 20)} km.${prete ? ` Tu peux la déplacer pour ${ftDepPrix()} lingots : ${nCombat()} › Bâtiments, ou « Déplacer une forteresse ici » sur une autre de tes communes.` : ''}</p>
       ${prete || route ? '' : btAnnulerHtml(code, 'forteresse')}
     </div>`;
   }
@@ -11658,7 +11687,7 @@ function blocBatimentsEtat(code, c){
     const pret = btPretDans(rd) <= 0, nv = (rd.voit || []).length + (rd.voit_banques || []).length, po = rdReglage('portee_km', 50);   // patch375
     html += `<div class="bt bt-radar">
       <div class="bt-haut">${ICONE_RADAR}Radar <b>${pret ? (nv ? nv + ' bâtiment' + (nv > 1 ? 's' : '') + ' en vue' : 'rien en vue') : 'prêt dans ' + formatDuree(btPretDans(rd))}</b></div>
-      <p class="bt-txt">Il voit les Centres de recherche et les Banques à moins de <b>${po} km</b>, même secrets : ils apparaissent sur ta carte, et leur propriétaire est prévenu. Visible de tous : si on te prend ${echapperHtml(c.nom)}, il est détruit. Le détail est dans Combat › Bâtiments.</p>
+      <p class="bt-txt">Il voit les Centres de recherche et les Banques à moins de <b>${po} km</b>, même secrets : ils apparaissent sur ta carte, et leur propriétaire est prévenu. Visible de tous : si on te prend ${echapperHtml(c.nom)}, il est détruit. Le détail est dans ${nCombat()} › Bâtiments.</p>
       ${pret ? '' : btAnnulerHtml(code, 'radar')}
     </div>`;
   }
@@ -11667,7 +11696,7 @@ function blocBatimentsEtat(code, c){
     const P = B.preparation, pret = btPretDans(ce) <= 0, niv = bombeEtat().niv;
     html += `<div class="bt bt-centre">
       <div class="bt-haut">${ICONE_CENTRE}Centre de recherche <b>${!pret ? 'prêt dans ' + formatDuree(btPretDans(ce)) : P ? (niv ? 'bombe niveau ' + niv : 'bombe en préparation') : 'prêt'}</b></div>
-      <p class="bt-txt">${!pret && P ? '<b>Déménagement en cours</b> : ta bombe est en pause jusqu’à la fin du chantier. ' : ''}${ce.devoile ? '<b>Dévoilé</b> : tout le monde le voit sur la carte.' : (B.repere_par || []).length ? `<b>Repéré</b> par ${(B.repere_par || []).length === 1 ? 'un Radar' : (B.repere_par || []).length + ' Radars'} : son propriétaire le voit sur sa carte.` : 'Secret : les autres ne le voient pas sur la carte.'} Si on te prend ${echapperHtml(c.nom)}, il est détruit${P ? ' et ta bombe est perdue' : ''}. Tout se gère dans Combat › Bâtiments.</p>
+      <p class="bt-txt">${!pret && P ? '<b>Déménagement en cours</b> : ta bombe est en pause jusqu’à la fin du chantier. ' : ''}${ce.devoile ? '<b>Dévoilé</b> : tout le monde le voit sur la carte.' : (B.repere_par || []).length ? `<b>Repéré</b> par ${(B.repere_par || []).length === 1 ? 'un Radar' : (B.repere_par || []).length + ' Radars'} : son propriétaire le voit sur sa carte.` : 'Secret : les autres ne le voient pas sur la carte.'} Si on te prend ${echapperHtml(c.nom)}, il est détruit${P ? ' et ta bombe est perdue' : ''}. Tout se gère dans ${nCombat()} › Bâtiments.</p>
       ${pret || P ? '' : btAnnulerHtml(code, 'centre')}
     </div>`;
   }
@@ -11678,7 +11707,7 @@ function blocBatimentsEtat(code, c){
     html += `<div class="bt bt-banque">
       <div class="bt-haut">${ICONE_BANQUE}Banque <b>${pret ? `${dedans} / ${res} ${ICONE_LINGOT}` : (route ? `en route · ${dedans} ${ICONE_LINGOT} · ` : '') + 'prête dans ' + formatDuree(btPretDans(bq))}</b></div>
       ${pret ? `<div class="bt-barre" style="grid-template-columns:repeat(${res},1fr)">${Array.from({ length: res }, (_, i) => `<i class="${i < dedans ? 'b' : ''}"></i>`).join('')}</div>` : ''}
-      <p class="bt-txt">${bqEpargne() ? `Ton épargne : dépose des lingots dans Combat › Bâtiments, ils rapportent <b>${bqReglage('interet', 10)} % par nuit</b> (jusqu’à ${res}). Pour les dépenser, retire-les. ${route ? '<b>Déplacement en cours</b> : ni dépôt ni intérêts avant la fin du chantier. ' : ''}${bqSecretTexte()}` : `Ce qui dépasse la réserve de tes Fonderies (${Number(B.max_fonderies) || 30}) est rangé ici : <b>tu peux garder jusqu’à ${(Number(B.max_fonderies) || 30) + res} lingots</b>. Secrète : les autres ne la voient pas sur la carte.`}
+      <p class="bt-txt">${bqEpargne() ? `Ton épargne : dépose des lingots dans ${nCombat()} › Bâtiments, ils rapportent <b>${bqReglage('interet', 10)} % par nuit</b> (jusqu’à ${res}). Pour les dépenser, retire-les. ${route ? '<b>Déplacement en cours</b> : ni dépôt ni intérêts avant la fin du chantier. ' : ''}${bqSecretTexte()}` : `Ce qui dépasse la réserve de tes Fonderies (${Number(B.max_fonderies) || 30}) est rangé ici : <b>tu peux garder jusqu’à ${(Number(B.max_fonderies) || 30) + res} lingots</b>. Secrète : les autres ne la voient pas sur la carte.`}
         Si on te prend ${echapperHtml(c.nom)}, elle est détruite et l’attaquant pille <b>la moitié de son contenu</b>. Une bombe qui tombe sur la zone en détruit ${(bqReglage('bombe', [20, 30, 40]) || [20])[0]} à ${(bqReglage('bombe', [20, 30, 40]) || [40]).slice(-1)[0]} %.</p>
       ${pret || route ? '' : btAnnulerHtml(code, 'banque')}
     </div>`;
@@ -14438,7 +14467,7 @@ async function loadQuetes(){
   const { data, error } = await sb.rpc('quetes');
   const bloc = document.getElementById('objectifs');
   if(error){ if(bloc) bloc.hidden = true; return; }
-  quetesTout = data || [];
+  quetesTout = (data || []).map(q => nomsS3() && q.detail ? { ...q, detail: String(q.detail).replace('Dans le QG', 'Dans l’Arcade').replace('dans le QG', 'dans l’Arcade') } : q);   // patch455
   renderObjectifs();
   invCharger();   // patch350
 }
@@ -17055,7 +17084,7 @@ function renderCdjFin(){
     <p>C’était <b>${echapperTexte(r.nom)}</b>, ${echapperTexte(DEPT_NAMES[r.dept] || r.dept)}, ${Number(r.pop).toLocaleString('fr-FR')} habitants.</p>
     <p>${qui}${serie} Nouvelle commune à minuit.</p>
     <pre class="cdj-partage" id="cdjPartage">${echapperTexte(cdjTextePartage())}</pre>
-    <div class="cdj-fin-actions"><button type="button" class="qg-btn plein" id="cdjRetourQG">Retour au QG</button><button type="button" class="cdj-copier" id="cdjCopier">Copier le résultat pour Discord</button></div>`;
+    <div class="cdj-fin-actions"><button type="button" class="qg-btn plein" id="cdjRetourQG">Retour ${nAuQG()}</button><button type="button" class="cdj-copier" id="cdjCopier">Copier le résultat pour Discord</button></div>`;
   document.getElementById('cdjRetourQG').onclick = () => { const t = document.querySelector('.tab[data-tab="qg"]'); if(t) t.click(); };   // patch229
   document.getElementById('cdjCopier').onclick = async (ev) => {
     const b = ev.currentTarget;
@@ -17579,7 +17608,7 @@ document.getElementById('rfLancer').addEventListener('click', async (ev) => {
     if(data.parti) rafaleAvant(data, 'Ta partie est en cours : le chrono tourne toujours.', a ? a.pseudo : '?', '', moi);
     else if(a) rafaleAvant(data, `${a.pseudo} a joué cette lettre. À toi de faire mieux.`, a.pseudo,
       a.elo ? `${rafaleRangDe(a.elo)} · ${Number(a.elo).toLocaleString('fr-FR')}` : '', moi);
-    else rafaleAvant(data, 'Personne de disponible pour l’instant : tu joues une lettre neuve, et le prochain joueur l’affrontera. Le résultat arrivera dans le QG.', '?', '', moi);
+    else rafaleAvant(data, 'Personne de disponible pour l’instant : tu joues une lettre neuve, et le prochain joueur l’affrontera. Le résultat arrivera ' + nDansQG() + '.', '?', '', moi);
   } catch(err){
     notifier({ type: 'erreur', titre: 'Rafale', texte: messageLisible(err.message) });
     chargerRafale();
@@ -17789,12 +17818,12 @@ function rafaleAfficherFin(p, fin){
     const cible = echapperTexte(p.cible);
     const phrase = p.resultat === 'refuse' ? `${cible} a décliné ton défi.`
       : p.resultat === 'expire' ? `${cible} n’a pas relevé ton défi à temps.`
-      : `Défi envoyé à ${cible} : il a 7 jours pour le relever. Le résultat arrivera dans le QG.`;
+      : `Défi envoyé à ${cible} : il a 7 jours pour le relever. Le résultat arrivera ${nDansQG()}.`;
     tete = `<span class="rd-etiq">Défi amical</span><div class="rd-titre">${lettre}<h2>${com(p.score)}</h2></div><p class="qg-petit">${phrase}</p>`;
   } else {
     tete = `<div class="rd-titre">${lettre}<h2>${com(p.score)}</h2></div>
-      <p class="qg-petit">${fin ? 'Ta partie attend un adversaire : le prochain joueur qui lance un duel aura la même lettre. Le résultat et l’Elo arriveront dans le QG.'
-        : 'Cette partie attend encore un adversaire. Le résultat et l’Elo arriveront dans le QG.'}</p>`;
+      <p class="qg-petit">${fin ? 'Ta partie attend un adversaire : le prochain joueur qui lance un duel aura la même lettre. Le résultat et l’Elo arriveront ' + nDansQG() + '.'
+        : 'Cette partie attend encore un adversaire. Le résultat et l’Elo arriveront ' + nDansQG() + '.'}</p>`;
   }
   const liste = (mots) => mots && mots.length
     ? mots.map(m => `<span class="rf-plaque">${echapperTexte(m.n)}<small>${echapperTexte(m.d)}</small></span>`).join('')
@@ -17808,13 +17837,13 @@ function rafaleAfficherFin(p, fin){
 ${mot} contre ${adv.pseudo || 'un joueur'} : ${com(p.score)} contre ${fmt(adv.score)}
 terrafront.fr/?onglet=qg`
     : null;
-  document.getElementById('rfFin').innerHTML = `<button type="button" class="rd-retour" id="rfRetourHaut">← QG</button>
+  document.getElementById('rfFin').innerHTML = `<button type="button" class="rd-retour" id="rfRetourHaut">← ${nQG()}</button>
     <div class="rd-bloc">${tete}</div>
     <div class="rd-bloc">${colonnes}<p class="rf-oubliees" id="rfOubliees"></p>
       ${partage ? `<pre class="cdj-partage" id="rfPartage">${echapperTexte(partage)}</pre>` : ''}
       <div class="qg-actions">${p.entr
-        ? '<button type="button" class="qg-btn plein" id="rfRejouer">Rejouer</button><button type="button" class="qg-btn" id="rfRetourBas">QG</button>'
-        : `${rejouerDuel ? '<button type="button" class="qg-btn plein" id="rfRejouerDuel">Rejouer</button>' : ''}<button type="button" class="qg-btn${rejouerDuel ? '' : ' plein'}" id="rfRetourBas">${rejouerDuel ? 'QG' : 'Retour au QG'}</button>${partage ? '<button type="button" class="qg-btn" id="rfCopier">Copier pour Discord</button>' : ''}`}</div></div>`;
+        ? '<button type="button" class="qg-btn plein" id="rfRejouer">Rejouer</button><button type="button" class="qg-btn" id="rfRetourBas">' + nQG() + '</button>'
+        : `${rejouerDuel ? '<button type="button" class="qg-btn plein" id="rfRejouerDuel">Rejouer</button>' : ''}<button type="button" class="qg-btn${rejouerDuel ? '' : ' plein'}" id="rfRetourBas">${rejouerDuel ? nQG() : 'Retour ' + nAuQG()}</button>${partage ? '<button type="button" class="qg-btn" id="rfCopier">Copier pour Discord</button>' : ''}`}</div></div>`;
   const rfRej = document.getElementById('rfRejouerDuel');   // patch381
   if(rfRej) rfRej.onclick = () => { const b = document.getElementById('rfLancer'); if(b) b.click(); };
   document.getElementById('rfRetourHaut').onclick = rafaleAuQG;
@@ -17879,13 +17908,13 @@ document.getElementById('rfDefier').addEventListener('click', async () => {
   };
   const amis = (amisListe || []).filter(x => x.etat === 'accepte').map(x => ligne(x.id, x.pseudo, 'ami')).join('');
   const classes = [...((rafaleEtat && rafaleEtat.classement) || []), ...((radarEtat && radarEtat.classement) || [])]
-    .filter(x => !x.moi).map(x => ligne(x.id, x.pseudo, 'joueur du QG')).join('');
+    .filter(x => !x.moi).map(x => ligne(x.id, x.pseudo, 'joueur ' + nDuQG())).join('');
   const fermer = ouvrirFenetre(`
     <div class="fenetre defi-choix" role="dialog" aria-modal="true" aria-labelledby="dcTitre">
       <h2 id="dcTitre">Défier à Rafale</h2>
       <p class="dc-aide">Défi amical, sans Elo ni TP. Tu joues une lettre maintenant ; ton adversaire a 7 jours pour faire mieux avec la même.</p>
       ${amis ? `<h3>Tes amis</h3><div class="dc-liste">${amis}</div>` : ''}
-      ${classes ? `<h3>Joueurs du QG</h3><div class="dc-liste">${classes}</div>` : ''}
+      ${classes ? `<h3>Joueurs ${nDuQG()}</h3><div class="dc-liste">${classes}</div>` : ''}
       ${!amis && !classes ? '<p class="dc-aide">Personne à proposer pour l’instant.</p>' : ''}
       <button type="button" class="open-btn secondary" data-dc-fermer>Annuler</button>
     </div>`);
@@ -18838,7 +18867,7 @@ function renderPomDuelFin(){
           + (d.gain ? `<span class="pom-gain">+${d.gain} TP</span>` : '');
   } else {
     titre = `${d.justes} / ${d.total}`;
-    detail = "En attente d'un adversaire : le duel se règle quand un autre joueur aura joué les mêmes 10 duels. Tu verras le résultat dans le QG.";
+    detail = "En attente d'un adversaire : le duel se règle quand un autre joueur aura joué les mêmes 10 duels. Tu verras le résultat " + nDansQG() + ".";
   }
   corps.innerHTML = `<div class="pom-fin">
       <span class="pom-sur">Duel classé${adv ? ' contre ' + echapperTexte(adv.pseudo) : ''}</span>
@@ -18886,7 +18915,7 @@ document.getElementById('qgLancer').addEventListener('click', async (ev) => {
     } else {
       document.getElementById('rdVsLui').textContent = '?';
       document.getElementById('rdVsLuiInfo').textContent = '';
-      document.getElementById('rdVsTexte').textContent = 'Personne de disponible pour l’instant : tu joues 5 communes neuves, et le prochain joueur les affrontera. Le résultat arrivera dans le QG.';
+      document.getElementById('rdVsTexte').textContent = 'Personne de disponible pour l’instant : tu joues 5 communes neuves, et le prochain joueur les affrontera. Le résultat arrivera ' + nDansQG() + '.';
     }
     setTimeout(radarSuite, a ? 2200 : 3200);
   } catch(err){
@@ -19410,13 +19439,13 @@ function radarAfficherResume(p, fin){
     const cible = echapperTexte(p.cible);
     const phrase = p.resultat === 'refuse' ? `${cible} a décliné ton défi.`
       : p.resultat === 'expire' ? `${cible} n’a pas relevé ton défi à temps.`
-      : `Défi envoyé à ${cible} : il a 7 jours pour le relever. Le résultat arrivera dans le QG.`;
+      : `Défi envoyé à ${cible} : il a 7 jours pour le relever. Le résultat arrivera ${nDansQG()}.`;
     tete = `<span class="rd-etiq">Défi amical</span><h2>${fmt(p.total_km)} km</h2><p class="qg-petit">${phrase}</p>`;
   } else {
     tete = `<h2>${fmt(p.total_km)} km</h2>
       <p class="qg-petit">${fin
-        ? 'Ta partie attend un adversaire : le prochain joueur qui lance un duel affrontera ces 5 communes. Le résultat et l’Elo arriveront dans le QG.'
-        : 'Cette partie attend encore un adversaire. Le résultat et l’Elo arriveront dans le QG.'}</p>`;
+        ? 'Ta partie attend un adversaire : le prochain joueur qui lance un duel affrontera ces 5 communes. Le résultat et l’Elo arriveront ' + nDansQG() + '.'
+        : 'Cette partie attend encore un adversaire. Le résultat et l’Elo arriveront ' + nDansQG() + '.'}</p>`;
   }
   const gagne = (m) => m.lui && m.moi.km < m.lui.km;
   const puces = `<div class="rd-manches"><button type="button" data-m="-1" class="actif">Tout</button>${p.jouees.map((m, i) =>
@@ -19429,7 +19458,7 @@ function radarAfficherResume(p, fin){
   const partage = adv
     ? `TerraFront · Radar\n${p.resultat === 'victoire' ? 'Victoire' : p.resultat === 'defaite' ? 'Défaite' : 'Égalité'} contre ${adv.pseudo || 'un joueur'} : ${fmt(p.total_km)} km contre ${fmt(adv.total_km)} km\n${p.jouees.map(m => gagne(m) ? '🟦' : '🟥').join('')}\nterrafront.fr/?onglet=qg`
     : null;
-  document.getElementById('rdFin').innerHTML = `<button type="button" class="rd-retour" id="rdRetourHaut">← QG</button>
+  document.getElementById('rdFin').innerHTML = `<button type="button" class="rd-retour" id="rdRetourHaut">← ${nQG()}</button>
     <div class="rd-resume">
       <div class="rd-bloc rd-res-tete">${tete}${puces}</div>
       <div class="rd-bloc rd-res-carte"><div class="rd-zone"><svg id="rdResCarte" role="img" aria-label="Carte du duel : les communes et les points des joueurs"></svg></div>
@@ -19437,8 +19466,8 @@ function radarAfficherResume(p, fin){
       <div class="rd-bloc rd-res-detail">${tableau}
         ${partage ? `<pre class="cdj-partage" id="rdPartage">${echapperTexte(partage)}</pre>` : ''}
         <div class="qg-actions">${p.entr
-          ? '<button type="button" class="qg-btn plein" id="rdRejouer">Rejouer</button><button type="button" class="qg-btn" id="rdReglages">Réglages</button><button type="button" class="qg-btn" id="rdRetour">QG</button>'
-          : `${rejouerDuel ? '<button type="button" class="qg-btn plein" id="rdRejouerDuel">Rejouer</button>' : ''}<button type="button" class="qg-btn${rejouerDuel ? '' : ' plein'}" id="rdRetour">${rejouerDuel ? 'QG' : 'Retour au QG'}</button>${partage ? '<button type="button" class="qg-btn" id="rdCopier">Copier pour Discord</button>' : ''}`}</div></div>
+          ? '<button type="button" class="qg-btn plein" id="rdRejouer">Rejouer</button><button type="button" class="qg-btn" id="rdReglages">Réglages</button><button type="button" class="qg-btn" id="rdRetour">' + nQG() + '</button>'
+          : `${rejouerDuel ? '<button type="button" class="qg-btn plein" id="rdRejouerDuel">Rejouer</button>' : ''}<button type="button" class="qg-btn${rejouerDuel ? '' : ' plein'}" id="rdRetour">${rejouerDuel ? nQG() : 'Retour ' + nAuQG()}</button>${partage ? '<button type="button" class="qg-btn" id="rdCopier">Copier pour Discord</button>' : ''}`}</div></div>
     </div>`;
   const rdRej = document.getElementById('rdRejouerDuel');   // patch381
   if(rdRej) rdRej.onclick = () => { const b = document.getElementById('qgLancer'); if(b && !b.disabled) b.click(); else { const t = document.querySelector('.tab[data-tab="qg"]'); if(t) t.click(); } };
@@ -25245,6 +25274,7 @@ function ifaceCharger(){
         const t = Number(o.topo) === 1;
         document.documentElement.classList.toggle('topo', t || (Number(o.topo) !== 0 && document.documentElement.classList.contains('topo')));
         try{ localStorage.setItem('tf-topo-serveur', String(Number(o.topo))); }catch(e){}
+        appliquerNomsS3();   // patch455
       } else { try{ localStorage.removeItem('tf-topo-serveur'); }catch(e){} }
       document.documentElement.classList.toggle('sans-sachet', o.sachet !== undefined && o.sachet !== null && Number(o.sachet) === 0);   // patch436
       document.documentElement.classList.toggle('sans-revelation', o.revelation !== undefined && o.revelation !== null && Number(o.revelation) === 0);   // patch437
@@ -25462,7 +25492,7 @@ function recapOuvrir(c){
   RECAP.ouvert = true;
   RECAP.lignes = c.lignes;
   const pseudo = ((document.getElementById('whoami') || {}).textContent || '').trim();
-  const NOMS = { front: 'FRONT', terra: 'TERRA', qg: 'QG', clan: 'CLAN' };
+  const NOMS = { front: 'FRONT', terra: 'TERRA', qg: nQG().toUpperCase(), clan: 'CLAN' };
   const tag = (t) => t && NOMS[t] ? `<span class="ra-tag ${t}">${NOMS[t]}</span> ` : '';
   const calme = !c.pertes && !c.repoussees && !c.sieges;
   const chiffre = (n, un, plusieurs, cls) => `<div class="ra-chiffre ${cls}${n ? '' : ' zero'}"><b>${n}</b><span>${n > 1 ? plusieurs : un}</span></div>`;
@@ -29092,7 +29122,7 @@ function renderPremiersPas(){
   const etapes = [
     parRoue ? ['paquet', 'Tourne la roue du Front', 'Plus aucune commune libre en ce moment : la roue te donne de l’énergie pour attaquer', 'Tourner']
             : ['paquet', 'Ouvre ton premier paquet du Front', '5 communes rien qu’à toi sur la carte partagée', 'Ouvrir'],   // patch324
-    ['attaque', 'Gagne ta première attaque', deb && pcSansCommune() ? `Choisis une commune près de chez toi : ${DEBUTANT.chances}\u00a0% avec ton bonus` : cible ? `Une cible facile${deb ? '' : ' près de chez toi'} : ${echapperHtml(cible.nom)} (${echapperHtml(cible.dept)})${deb ? ` · ${DEBUTANT.chances}\u00a0% avec ton bonus` : ''}` : 'Choisis une commune proche dans l’onglet Combat', 'Attaquer'],
+    ['attaque', 'Gagne ta première attaque', deb && pcSansCommune() ? `Choisis une commune près de chez toi : ${DEBUTANT.chances}\u00a0% avec ton bonus` : cible ? `Une cible facile${deb ? '' : ' près de chez toi'} : ${echapperHtml(cible.nom)} (${echapperHtml(cible.dept)})${deb ? ` · ${DEBUTANT.chances}\u00a0% avec ton bonus` : ''}` : `Choisis une commune proche dans l’onglet ${nCombat()}`, 'Attaquer'],
     ['clan', 'Rejoins un clan ou crée le tien', 'Les membres ne s’attaquent pas entre eux, et s’échangent des communes', 'Voir les clans'],
     ['fonderie', 'Construis ta Fonderie', `Gratuite : ${(BATIMENTS && BATIMENTS.production) || 10} lingots par jour pour tes bâtiments`, 'Comment ?'],
   ];
@@ -32375,7 +32405,7 @@ function messFenMaj(){
   if(b && !fen.classList.contains('tourne')) b.disabled = (Number(MESS.tickets) || 0) < prix;
   if(b && !fen.classList.contains('tourne') && (Number(MESS.tickets) || 0) < prix){
     const r = fen.querySelector('.mess-res');
-    if(r && r.querySelector('.mess-attente')) r.innerHTML = '<span class="mess-attente">Plus de tickets : gagne des duels classés au QG</span>';
+    if(r && r.querySelector('.mess-attente')) r.innerHTML = '<span class="mess-attente">Plus de tickets : gagne des duels classés ' + nAuQG() + '</span>';
   }
 }
 async function messChiffrer(fen){
@@ -32497,7 +32527,7 @@ function messRecRendre(fen, v, revele){
   if(!v){
     jeu = `<div class="mess-reg prefet vide"><h3><span>Registre du Préfet</span><b>—</b></h3><p>Le Préfet attend ton ticket.</p></div>`;
     boutons = `<button type="button" class="mess-levier" data-mess="rec-lancer"${tk < prix ? ' disabled' : ''}>Jouer<small>· ${prix} tickets</small></button>`;
-    if(tk < prix) res = '<span class="mess-attente">Plus assez de tickets : gagne des duels classés au QG</span>';
+    if(tk < prix) res = '<span class="mess-attente">Plus assez de tickets : gagne des duels classés ' + nAuQG() + '</span>';
   } else {
     const fini = !v.en_cours;
     jeu = `<div class="mess-reg prefet"><h3><span>Registre du Préfet</span><b>${messNb(v.prefet_total)}</b></h3>${(v.prefet || []).map(x => ligne(x, false, 0)).join('')}</div>
@@ -32590,7 +32620,7 @@ function messDesRendre(fen, v, roule){
       if(g.tp) chips.push(`+${g.tp} TP`);
       const bon = chips.length > 0;
       res = `<span class="mess-titre${bon ? ' grand' : ' brouille'}">${DES_NOMS[v.resultat] || ''}</span>${chips.map(x => `<span class="mess-chip">${x}</span>`).join('')}`;
-    } else res = tk < prix ? '<span class="mess-attente">Plus assez de tickets : gagne des duels classés au QG</span>' : '<span class="mess-attente">Trois dés, trois lancers : vise le 4 2 1</span>';
+    } else res = tk < prix ? '<span class="mess-attente">Plus assez de tickets : gagne des duels classés ' + nAuQG() + '</span>' : '<span class="mess-attente">Trois dés, trois lancers : vise le 4 2 1</span>';
     boutons = `<button type="button" class="mess-levier" data-mess="des-lancer"${tk < prix ? ' disabled' : ''}>${v && v.resultat ? 'Rejouer' : 'Lancer'}<small>· ${prix} tickets</small></button>`;
   } else {
     const n = MESS_DES.garder.size;

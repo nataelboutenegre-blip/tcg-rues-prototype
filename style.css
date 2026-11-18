@@ -10675,3 +10675,8 @@ html.topo .rdf{ align-self:stretch; }   /* le panneau Tirage est en colonne flex
 .sk-p-topo{ background: linear-gradient(135deg, #16335F, #F0B429); }
 .sk-p-aquarelle{ background: linear-gradient(135deg, #F3EEE2, #7FA7D9 55%, #D9A85B); }
 .sk-p-kintsugi{ background: linear-gradient(135deg, #15131D 40%, #E8C566 48%, #15131D 56%); }
+
+/* patch455 : noms de la saison 3 dans les textes fixes (Combat → QG, QG → Arcade), avec l'habillage Topo */
+.nom-s3{ display: none; }
+html.topo .nom-s3{ display: inline; }
+html.topo .nom-s2{ display: none; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'fa96ec872e28';
+const VERSION_JEU = '268075da2af8';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11592,6 +11592,7 @@ async function chargerBatiments(){
     if(typeof mfoRendre === 'function') mfoRendre();   // patch366
     if(btEcranOuvert() && BTE.vue === 'miens') btEcranRendre();
     if(typeof s3Charger === 'function') s3Charger();   // patch456
+    document.body.classList.toggle('art-on', !!BATIMENTS.artilleries_ouvertes);   // patch457
     if(!document.querySelector('#mapCalques [data-calque="batiments"]') && typeof rendreCalques === 'function') rendreCalques();   // patch244
     legendeSignature = '';
     if(typeof demanderDessin === 'function' && canvasActif()){ CV.donneesSignature = null; demanderDessin(); }
@@ -32765,6 +32766,9 @@ async function s3Charger(force){
 }
 setInterval(() => { if(document.visibilityState === 'visible') s3Charger(); }, 120e3);
 function s3Rendre(fiche){
+  document.body.classList.toggle('art-on', s3Art());   // patch457 : les règles
+  document.body.classList.toggle('centrale-on', s3CentraleOk());
+  document.body.classList.toggle('ordres-on', s3OrdresOk());
   const ce = S3C.centrale && S3C.centrale.centrale;   // la Centrale de mon clan compte comme « à moi » sur la carte
   if(ce && BATIMENTS_CARTE){ const e = BATIMENTS_CARTE.get(String(ce.code)); if(e && e.centrale) e.centrale.moi = true; }
   try{ if(typeof mfoRendre === 'function') mfoRendre(); }catch(e){}

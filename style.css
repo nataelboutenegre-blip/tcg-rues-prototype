@@ -10761,3 +10761,6 @@ html.topo .nom-s2{ display: none; }
 /* la feuille de siège */
 .sg-l.s3-sg > span:first-child{ display: flex; align-items: center; gap: 5px; }
 .sg-l.s3-sg svg{ width: 14px; height: 14px; color: #FFB27A; }
+/* patch457 : les règles de l'Artillerie, de la Centrale et des ordres, montrées quand le serveur les allume */
+#panel-regles [data-s3="artillerie"], #panel-regles [data-s3="centrale"], #panel-regles [data-s3="ordres"]{ display:none !important; }
+body.art-on #panel-regles [data-s3="artillerie"], body.centrale-on #panel-regles [data-s3="centrale"], body.ordres-on #panel-regles [data-s3="ordres"]{ display:revert !important; }

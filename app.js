@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '6b7f56f12dd7';
+const VERSION_JEU = '700d4725ef3d';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -19820,6 +19820,8 @@ function renderBoutique(){
                + `<span class="puce bq-terra-seul">Paquets de boutique aujourd'hui <b>${b.paquets_du_jour} sur ${b.paquets_max}</b></span>`;
 
   const deps = Object.keys(DEPT_NAMES).sort((x, y) => x.localeCompare(y, 'fr', { numeric: true }));
+  const prixDep = b.prix_dep || {};   // patch450 : départements plus chers (Paris et petite couronne, Bouches-du-Rhône)
+  const optDep = (d) => `<option value="${d}">${d} · ${echapperTexte(DEPT_NAMES[d])}${prixDep[d] ? ' · ' + bqPrix(prixDep[d]) : ''}</option>`;
   // patch438 : le vrai sachet, en petit, à la place de l'épingle
   const sachet = (id) => {
     if(!L) return '<div class="bq-paquet-icone" aria-hidden="true">' + ICONE_EPINGLE + '</div>';
@@ -19834,9 +19836,9 @@ function renderBoutique(){
     const choixDep = a.id === 'paquet-departement'
       ? `<select class="bq-dep" id="bqDep" aria-label="Département"><option value="">Choisis un département${SUISSE ? ' ou un canton' : ''}</option>${
           (SUISSE   // patch332 : les cantons à part, sous « Suisse »
-            ? '<optgroup label="France">' + deps.filter(d => !estCanton(d)).map(d => `<option value="${d}">${d} · ${echapperTexte(DEPT_NAMES[d])}</option>`).join('')
+            ? '<optgroup label="France">' + deps.filter(d => !estCanton(d)).map(optDep).join('')
               + '</optgroup><optgroup label="Suisse">' + deps.filter(estCanton).map(d => `<option value="${d}">${d} · ${echapperTexte(DEPT_NAMES[d])}</option>`).join('') + '</optgroup>'
-            : deps.map(d => `<option value="${d}">${d} · ${echapperTexte(DEPT_NAMES[d])}</option>`).join(''))}</select>` : '';
+            : deps.map(optDep).join(''))}</select>` : '';
     const bouton = restants < 1
       ? `<button class="bq-btn" disabled>Revient demain</button>`
       : `<button class="bq-btn" data-bq-paquet="${a.id}" data-prix="${a.prix}"${b.solde < a.prix ? ' data-court="1"' : ''}>${bqPrix(a.prix)}</button>`;
@@ -20045,6 +20047,18 @@ async function mettreDosBoutique(id){
   renderBoutique();
 }
 
+// patch450 : le bouton du paquet du département prend le prix du département choisi
+document.getElementById('panel-boutique').addEventListener('change', (e) => {
+  if(e.target.id !== 'bqDep' || !boutiqueCache) return;
+  const btn = document.querySelector('#bqPaquets button[data-bq-paquet="paquet-departement"]');
+  const art = (boutiqueCache.articles || []).find(a => a.id === 'paquet-departement');
+  if(!btn || !art) return;
+  const prix = (boutiqueCache.prix_dep || {})[e.target.value] || art.prix;
+  btn.dataset.prix = prix;
+  if(Number(boutiqueCache.solde) < prix) btn.dataset.court = '1'; else delete btn.dataset.court;
+  btn.classList.remove('confirmer');
+  btn.textContent = bqPrix(prix);
+});
 document.getElementById('panel-boutique').addEventListener('click', (e) => {
   const btn = e.target.closest('button.bq-btn');
   if(!btn || btn.disabled) return;

@@ -3,6 +3,7 @@
     "date": "2026-11-18",
     "nouveautes": [],
     "correctifs": [
+      "Boutique : le paquet du département a maintenant un prix selon le département. Paris et la petite couronne sont pleins de légendaires : un paquet y rapportait bien plus qu'il ne coûtait. Paris passe à 3 700 TP, les Hauts-de-Seine et la Seine-Saint-Denis à 3 100, le Val-de-Marne à 2 600, les Bouches-du-Rhône à 1 500 ; tous les autres restent à 800. Le prix s'affiche dans la liste et sur le bouton.",
       "Règles, « La saison » : à la fin de la saison 2, ta collection Terra reçoit tes 5 communes gardées (★), mais plus les communes des départements tenus à plus de 45 %. Une saison dure de 3 à 4 semaines (la saison 3 en dure 3)."
     ]
   },

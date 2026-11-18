@@ -22728,10 +22728,24 @@ function bqxUneEuros(arts){
         <span class="bqx-une-prix">${bqePrixHtml(a)}</span>
       </div></button>`;
 }
+// patch454 : les cinq skins de la saison 3 arrivent en boutique le 22/11 (lignes euros_articles du jour J).
+// Avant, sur l'appareil où ?topo=test est posé, la boutique les montre déjà, en aperçu seul (pas d'achat).
+const SKINS_S3_APERCU = [
+  { id: 'skin-givre', nom: 'Skin Givre', description: 'Le gel prend sur les bords, la photo se voit à travers une vitre givrée', prix_centimes: 399 },
+  { id: 'skin-aquarelle', nom: 'Skin Aquarelle', description: 'La photo repeinte à l\'aquarelle sur papier à grain, avec sa palette', prix_centimes: 399 },
+  { id: 'skin-topo', nom: 'Skin Topo', description: 'La photo en carte d\'état-major : deux encres et des courbes de niveau dorées', prix_centimes: 499 },
+  { id: 'skin-vitrail', nom: 'Skin Vitrail', description: 'La photo devient un vitrail, sa lumière colorée tombe sur la carte', prix_centimes: 499 },
+  { id: 'skin-kintsugi', nom: 'Skin Kintsugi', description: 'La carte brisée puis réparée à l\'or, à la japonaise', prix_centimes: 599 }];
+function bqeApercusS3(cat){
+  let test = false; try{ test = localStorage.getItem('tf-topo') === '1'; }catch(e){}
+  if(!test || !cat || !Array.isArray(cat.articles)) return;
+  for(const a of SKINS_S3_APERCU) if(!cat.articles.some(x => x.id === a.id)) cat.articles.push({ ...a, type: 'skin', actif: true, reserve_og: false, apercu: true });
+}
 function renderBoutiqueEuros(){
   const corps = document.getElementById('bqeCorps');
   const cat = bqeCat;
   if(!corps || !cat) return;
+  bqeApercusS3(cat);
   const arts = (cat.articles || []).filter(a => ['dos', 'habillage', 'skin', 'collection', 'effet'].includes(a.type));
   const og = arts.filter(a => a.reserve_og);
   const hab = arts.filter(a => !a.reserve_og && a.type === 'habillage');
@@ -22791,8 +22805,8 @@ function bqeApercuSeul(a){
     <div class="fenetre bqe-fiche bqe-fiche-apercu" role="dialog" aria-modal="true" aria-labelledby="bqeNomA">
       <button type="button" class="bqe-fermer" aria-label="Fermer">×</button>
       <div class="bqe-apercu">${bqeGrandApercu(a)}</div>
-      <div class="bqe-tete-a"><small>Dans ta garde-robe</small><h2 id="bqeNomA">${echapperTexte(bqeNomCourt(a))}</h2></div>
-      <p class="bqe-recoit">${echapperTexte(a.description || '')}. ${a.type === 'effet' ? 'C\'est déjà à toi, dans l\'atelier (Profil › Personnaliser).' : 'Tu l\'as déjà : équipe-le ou pose-le sur tes cartes dans Profil › Personnaliser.'}</p>
+      <div class="bqe-tete-a"><small>${a.apercu ? 'Aperçu · en vente le 22 novembre' : 'Dans ta garde-robe'}</small><h2 id="bqeNomA">${echapperTexte(bqeNomCourt(a))}</h2></div>
+      <p class="bqe-recoit">${echapperTexte(a.description || '')}. ${a.apercu ? euros(a.prix_centimes) + ', à partir du 22 novembre.' : a.type === 'effet' ? 'C\'est déjà à toi, dans l\'atelier (Profil › Personnaliser).' : 'Tu l\'as déjà : équipe-le ou pose-le sur tes cartes dans Profil › Personnaliser.'}</p>
     </div>`);
   const f = document.querySelector('#fenetre .bqe-fiche-apercu');
   if(!f) return;
@@ -22805,7 +22819,7 @@ function bqeOuvrirFiche(id, retour){   // patch270 : retour = 'atelier'
   const cat = bqeCat;
   const a = cat && (cat.articles || []).find(x => x.id === id);
   if(!a) return;
-  if(a.possede){ bqeApercuSeul(a); return; }   // patch207
+  if(a.possede || a.apercu){ bqeApercuSeul(a); return; }   // patch207, patch454
   if(a.livraison_le){ notifier({ type: 'info', titre: 'Déjà payé', texte: 'Il arrive le ' + dateLongue(a.livraison_le) + '.' }); return; }
   const nom = bqeNomCourt(a), prix = euros(bqePrixMoi(a));
   const date14 = dateLongue(Date.now() + 14 * 86400000);
@@ -23508,13 +23522,830 @@ vec3 face(vec2 q,vec2 uv,float t){
   col=mix(frame,col,ii);
   return col; }`,
 };
+// patch454 : les skins de la saison 3. Cinq nouveaux (vitrail, givre, topo, aquarelle, kintsugi) et les onze
+// d'avant repris : leur dessin lit la photo de la carte (flou par niveaux de la texture, contours, ciel deviné).
+// Les onze repris remplacent ceux de SKIN_GLSL quand l'habillage de la saison 3 est allumé (html.topo :
+// le 22/11 à 10 h, ou ?topo=test) ; avant, on garde l'ancien dessin. Si un dessin repris ne compile pas
+// sur un appareil, on revient à l'ancien (skinV2Casse).
+const SKIN_PRE = `
+vec3 pL(vec2 s,float l){ return textureLod(u_photo,clamp(s,.004,.996),l).rgb; }
+vec3 sat(vec3 c,float k){ float l=lum(c); return max(vec3(0.),mix(vec3(l),c,k)); }
+`;
+const SKIN_PRE2 = SKIN_PRE + `
+float rbox(vec2 q,vec4 R,float r){ return sdBox(q-(R.xy+R.zw)*.5,(R.zw-R.xy)*.5,r); }
+vec2 gradL(vec2 q,vec4 R,float l,float d){ return vec2(lum(pL(photoUV(q+vec2(d,0.),R),l))-lum(pL(photoUV(q-vec2(d,0.),R),l)),lum(pL(photoUV(q+vec2(0.,d),R),l))-lum(pL(photoUV(q-vec2(0.,d),R),l))); }
+float skyM(vec3 p,vec2 s){ float L=lum(p); float bl=p.b-max(p.r,p.g)*.92;
+  return clamp(smoothstep(-.02,.1,bl)+smoothstep(.8,.96,L)*.7+smoothstep(.13,.04,L)*.85,0.,1.)*(1.-smoothstep(.4,.92,s.y)); }
+`;
+const SKIN_GLSL_V2 = {
+  // ------------------------------------------------------------------ VITRAIL
+  vitrail: SKIN_PRE + `
+float vE;
+vec3 vcell(vec2 p){
+  vec2 n=floor(p),f=fract(p); vec2 mg=vec2(0.),mr=vec2(0.); float md=9.;
+  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){ vec2 g=vec2(float(i),float(j)); vec2 o=.14+.72*h22(n+g+3.7); vec2 r=g+o-f; float d=dot(r,r); if(d<md){ md=d; mr=r; mg=g; } }
+  float e=9.;
+  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){ vec2 g=mg+vec2(float(i),float(j)); vec2 o=.14+.72*h22(n+g+3.7); vec2 r=g+o-f; vec2 dr=r-mr; if(dot(dr,dr)>1e-5) e=min(e,dot(.5*(mr+r),normalize(dr))); }
+  vE=e; return vec3(p+mr,h21(n+mg+9.1)); }
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b);
+  vec2 rc=(R.xy+R.zw)*.5, rh=(R.zw-R.xy)*.5;
+  float dW=sdBox(q-rc,rh,6.5); float win=1.-smoothstep(-upx(),upx(),dW);
+  float lev=u_rev<2.4?smoothstep(.15,2.,u_rev):1.;
+  vec2 sun=vec2(W*(.5+u_tilt.x*.6),R.y+(R.w-R.y)*(.38-u_tilt.y*.55));
+  float sl=exp(-dot(q-sun,q-sun)/(62.*62.));
+  float an=atan(q.y-H*.5,q.x-W*.5);
+  vec3 frame=mix(vec3(.13,.1,.08),vec3(.74,.58,.3),pow(.5+.5*sin(an*2.+t*.3+u_tilt.x*2.2),4.))*(.75+.4*glint(uv,u_tilt,9.));
+  // les pièces de verre : chacune prend la couleur de la photo en son centre
+  float sc=1./9.6; vec2 off=vec2(.31,.17); vec3 c=vcell(q*sc+off); float e=vE/sc;
+  vec2 cq=(c.xy-off)/sc;
+  vec2 s=photoUV(q,R);
+  vec3 plat=pL(photoUV(cq,R),3.1); vec3 det=photo(s);
+  vec3 g=mix(plat,det,.68); g=sat(g,1.85); g=pow(g,vec3(.88));
+  g*=.84+.3*c.z;
+  g*=.9+.22*fbm3(q*vec2(1.1,.14)+c.z*20.);
+  // la bordure : une frise de verres de couleur
+  float bord=smoothstep(-6.9,-6.4,dW);
+  vec2 dq=abs(q-rc)-rh; bool hz=dq.y>dq.x;
+  float co=hz?q.x:q.y; float ti=floor(co/8.2), tf=fract(co/8.2);
+  float cote=hz?(q.y<rc.y?1.:2.):(q.x<rc.x?3.:4.);
+  float hs=h21(vec2(ti,cote));
+  vec3 jw=hs<.36?vec3(.72,.07,.09):hs<.7?vec3(.07,.2,.66):hs<.88?vec3(.96,.66,.13):vec3(.08,.5,.27);
+  jw*=.78+.34*fbm3(q*.4+hs*9.);
+  float tl=min(tf,1.-tf)*8.2;
+  vec3 verre=mix(g,jw,bord);
+  // le plomb
+  float plomb=1.-smoothstep(.26,.62,e);
+  plomb=mix(plomb,1.-smoothstep(.3,.7,tl),bord);
+  plomb=max(plomb,1.-smoothstep(.45,.9,abs(dW+6.65)));
+  float bx=min(abs(q.x-(R.x+(R.z-R.x)/3.)),abs(q.x-(R.x+2.*(R.z-R.x)/3.))); float by=abs(q.y-(R.y+(R.w-R.y)*.52));
+  plomb=max(plomb,(1.-smoothstep(.6,1.05,min(bx,by)))*(1.-bord));
+  verre*=.74+.26*smoothstep(0.,1.9,mix(e,tl,bord));
+  float lit=mix(.1,.86+.75*sl,lev);
+  vec3 fen=verre*lit+verre*verre*sl*.35*lev;
+  fen=mix(fen,vec3(.06,.07,.1),(1.-lev)*.45);
+  vec3 pb=vec3(.055,.05,.05)+vec3(.5,.46,.38)*glint(uv,u_tilt,16.)*.22;
+  fen=mix(fen,pb,plomb);
+  // la pierre, et la lumière colorée qui tombe dessus
+  float py=q.y-R.w;
+  float gp=fbm(q*.045+1.3);
+  vec3 pierre=mix(vec3(.1,.095,.115),vec3(.17,.16,.175),gp)*(1.-.35*smoothstep(40.,170.,py));
+  pierre*=.94+.06*vnoise(q*1.7);
+  vec2 pq=vec2(q.x-py*(.3+u_tilt.x*.7),R.w-3.-py*.7);
+  vec3 pr=sat(pL(photoUV(pq,R),5.3),2.1);
+  float pm=inRnet(pq,R)*smoothstep(2.,22.,py)*(1.-smoothstep(70.,150.,py));
+  float bxp=min(abs(pq.x-(R.x+(R.z-R.x)/3.)),abs(pq.x-(R.x+2.*(R.z-R.x)/3.)));
+  pm*=.35+.65*smoothstep(1.5,9.,bxp);
+  pierre+=pr*pm*.5*lev*(.65+.7*sl);
+  // poussière dans le rayon
+  vec2 dp=q+vec2(t*1.3,-t*2.1); vec2 di=floor(dp/9.); vec2 dr=h22(di+.5); float dd=length(dp-(di+.2+dr*.6)*9.);
+  pierre+=vec3(1.,.9,.7)*exp(-dd*dd/.5)*step(.72,dr.x)*pm*.5*lev*(.5+.5*sin(t*1.7+dr.y*30.));
+  vec3 col=mix(pierre,fen,win);
+  col=mix(frame,col,ii);
+  return col; }`,
+
+  // ------------------------------------------------------------------ GIVRE
+  givre: SKIN_PRE + `
+float ridge(vec2 p){ float v=0.,a=.55; for(int i=0;i<4;i++){ float n=1.-abs(2.*vnoise(p)-1.); v+=a*n*n*n; p=mat2(1.7,1.1,-1.1,1.7)*p+7.1; a*=.5; } return v; }
+float etoile(vec2 p,float R0){
+  float r=length(p); float a=atan(p.y,p.x); a=mod(a+PI/6.,PI/3.)-PI/6.; vec2 u=r*vec2(cos(a),abs(sin(a)));
+  float ep=.2+.3*(1.-u.x/R0);
+  float arm=(1.-smoothstep(ep*.4,ep,u.y))*(1.-smoothstep(R0*.86,R0,u.x));
+  float sp=R0*.2; vec2 bq=vec2(mod(u.x,sp)-sp*.3,u.y);
+  float bl=(R0-u.x)*.46;
+  float db=abs(dot(bq,vec2(-.866,.5))), lb=dot(bq,vec2(.5,.866));
+  float barb=(1.-smoothstep(.12,.36,db))*step(0.,lb)*(1.-smoothstep(bl*.75,bl,lb))*step(sp*.7,u.x)*(1.-smoothstep(R0*.78,R0*.9,u.x));
+  return max(arm,barb*.85)*(1.-.45*r/R0)+exp(-r*r/(R0*R0*.012))*.7; }
+float cristaux(vec2 q,float cs,float seed){ float v=0.; vec2 id=floor(q/cs);
+  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){ vec2 g=id+vec2(float(i),float(j)); vec2 r=h22(g+seed); float pr=h21(g+seed*1.7+3.);
+    vec2 c=(g+.15+r*.7)*cs; float R0=cs*(.4+.5*pr); float an=pr*6.28; vec2 p=mat2(cos(an),-sin(an),sin(an),cos(an))*(q-c);
+    v=max(v,etoile(p,R0)*step(.22,pr)); }
+  return v; }
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  float an=atan(q.y-H*.5,q.x-W*.5);
+  vec3 frame=mix(vec3(.36,.48,.62),vec3(.9,.96,1.),pow(.5+.5*sin(an*2.+t*.3+u_tilt.x*2.2),3.))*(.8+.32*glint(uv,u_tilt,9.));
+  frame=mix(frame,vec3(.96,.985,1.),smoothstep(.45,.8,ridge(q*.9))*.4);
+  float lev=u_rev<2.6?1.-smoothstep(.2,2.3,u_rev):0.;
+  vec2 s=photoUV(q,R);
+  vec2 rc=(R.xy+R.zw)*.5, rh=(R.zw-R.xy)*.5; vec2 dd=rh-abs(q-rc); float dE=min(dd.x,dd.y);
+  float n1=fbm(q*.04+3.), n2=fbm3(q*.15+8.);
+  float reach=11.+22.*n1+lev*120.;
+  float g=1.-smoothstep(reach*.15,reach,dE+(n2-.5)*8.);
+  float cn=exp(-dd.x/30.)*exp(-dd.y/24.);
+  g=max(g,smoothstep(.1,.42,cn+(n1-.5)*.3));
+  float cr=ridge(q*.5+vec2(0.,n1*2.)), cr2=ridge(q*1.1+11.);
+  // des étoiles de givre, grandes et petites
+  float st=max(cristaux(q,23.,1.3),cristaux(q+7.,11.5,5.1)*.8);
+  float stz=smoothstep(.0,.42,g+.2*n1-.02+lev);
+  float fr=clamp(g*(.3+.55*smoothstep(.2,.6,cr)+.5*cr2)+g*g*.3,0.,1.);
+  vec2 gr=vec2(ridge(q*.5+vec2(.5,n1*2.))-cr,ridge(q*.5+vec2(0.,.5+n1*2.))-cr);
+  vec3 net=photo(s); vec3 flou=pL(photoUV(q+gr*16.+vec2(st*2.5,-st*2.),R),3.3);
+  vec3 ph=mix(net,flou,smoothstep(.04,.45,fr+st*stz*.5));
+  ph=mix(vec3(lum(ph)),ph,.84)*vec3(.9,.97,1.07)+vec3(0.,.012,.035);
+  vec3 glace=mix(vec3(.66,.81,.94),vec3(.98,.995,1.),clamp(cr*.7+cr2*.5,0.,1.));
+  ph=mix(ph,glace,fr*(.62+.3*cr2));
+  ph=mix(ph,vec3(.95,.985,1.),st*stz*.82);
+  ph+=vec3(.75,.9,1.)*glint(uv,u_tilt,12.)*(.07+.3*st*stz+.16*fr);
+  vec2 gi=floor(q*1.7); float sp=h21(gi);
+  float tw=pow(max(0.,sin(sp*60.+u_tilt.x*11.+u_tilt.y*8.+t*.8)),26.);
+  ph+=vec3(.9,.97,1.)*tw*step(.9,sp)*clamp(fr+st*stz,0.,1.)*1.5;
+  // le bas de la carte : un bloc de glace
+  float py=clamp((q.y-R.w)/(H-R.w),-.3,1.);
+  vec3 inner=mix(vec3(.05,.17,.29),vec3(.012,.045,.1),smoothstep(-.25,.95,py));
+  float ca=fbm(q*.022+vec2(t*.02,0.));
+  inner+=vec3(.1,.34,.48)*pow(.5+.5*sin(q.x*.045+q.y*.03+ca*6.+u_tilt.x*2.5),7.)*.28;
+  float rg=lineU(ringDist(ringsF(q,0.,0.)),.35); inner+=vec3(.55,.8,.95)*rg*.08;
+  // cristaux pris dans la glace
+  float sti=cristaux(q+vec2(3.,11.),38.,8.7);
+  inner+=vec3(.45,.75,.95)*sti*(.1+.35*glint(uv,u_tilt,7.));
+  for(int L=0;L<2;L++){ float fl=float(L); float cs=17.+9.*fl;
+    vec2 p=q; p.y-=t*(5.+4.*fl); p.x+=sin(p.y*.045+fl*2.)*3.5+u_tilt.x*(5.+9.*fl);
+    vec2 id=floor(p/cs); vec2 r=h22(id+fl*17.); float d=length(p-(id+.2+r*.6)*cs);
+    inner+=vec3(.85,.95,1.)*exp(-d*d/(.45+.6*fl))*step(.5,r.x)*(.32+.28*fl); }
+  // le givre gagne les bords
+  float bordG=exp(-min(q.x-3.,W-3.-q.x)/4.)+exp(-(H-3.-q.y)/4.5);
+  float gf=clamp(bordG*(.35+.9*cr2)+lev*.8,0.,1.);
+  inner=mix(inner,glace*.93,gf*.62);
+  inner=mix(inner,vec3(.93,.98,1.),st*smoothstep(.25,.9,bordG+lev)*.7);
+  inner+=vec3(.9,.97,1.)*tw*step(.9,sp)*gf;
+  vec3 col=mix(inner,ph,ip);
+  float joint=exp(-pow((q.y-R.w+6.)/9.,2.));
+  col=mix(col,glace,joint*(.12+.3*cr2));
+  col=mix(col,vec3(.95,.985,1.),st*joint*.75);
+  col=mix(frame,col,ii);
+  return col; }`,
+
+  // ------------------------------------------------------------------ TOPO (saison 3)
+  topo: SKIN_PRE + `
+float Lq(vec2 q,vec4 R,float l){ return lum(pL(photoUV(q,R),l)); }
+vec3 pal(float x){ x=clamp(x,0.,1.);
+  vec3 c=mix(vec3(.028,.062,.125),vec3(.055,.145,.29),smoothstep(0.,.2,x));
+  c=mix(c,vec3(.11,.27,.5),smoothstep(.2,.4,x));
+  c=mix(c,vec3(.26,.48,.73),smoothstep(.4,.6,x));
+  c=mix(c,vec3(.62,.77,.89),smoothstep(.6,.8,x));
+  c=mix(c,vec3(.955,.925,.835),smoothstep(.8,.98,x)); return c; }
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b);
+  vec3 nuit=vec3(.028,.062,.125), acier=vec3(.27,.47,.7), ivoire=vec3(.965,.93,.845), orc=vec3(.95,.72,.17);
+  vec2 rc=(R.xy+R.zw)*.5, rh=(R.zw-R.xy)*.5; float dR=sdBox(q-rc,rh,2.5); float ip=1.-smoothstep(-upx(),upx(),dR);
+  float dr=u_rev<2.8?smoothstep(.1,2.4,u_rev):1.;
+  float an=atan(q.y-H*.5,q.x-W*.5);
+  vec3 frame=mix(vec3(.04,.085,.17),vec3(.17,.3,.5),pow(.5+.5*sin(an*2.+t*.3+u_tilt.x*2.2),3.));
+  frame=mix(frame,orc,pow(.5+.5*sin(an*2.+t*.3+u_tilt.x*2.2+1.2),14.)*.75)*(.85+.3*glint(uv,u_tilt,9.));
+  // la photo passe en deux encres, nuit et ivoire ; sa lumière sert d'altitude aux courbes de niveau
+  vec2 s=photoUV(q,R); vec3 p=photo(s); float L=lum(p);
+  float mo=mix(.45,lum(pL(vec2(.5),8.)),.65);
+  float Ln=clamp((L-mo)*1.3+.5,0.,1.);
+  vec3 plan=pal(Ln*.94+.03);
+  float off=t*.02; float N=5.;
+  float Lb=clamp((Lq(q,R,4.6)-mo)*1.3+.5,0.,1.);
+  float f=Lb*N+off; float n=floor(f+.5);
+  float iso=lineU(ringDist(f),.3)*step(n-off,dr*N+.5);
+  float maj=step(abs(mod(n,2.)),.5);
+  vec3 trait=mix(vec3(.72,.82,.92),vec3(.06,.15,.3),smoothstep(.5,.75,Ln));
+  plan=mix(plan,mix(trait,orc,maj),iso*(.5+.4*maj));
+  plan+=orc*glint(uv,u_tilt,10.)*iso*maj*.55;
+  // carroyage
+  float gx=abs(fract(q.x/22.2+.5)-.5)*22.2, gy=abs(fract((q.y-R.y)/22.2+.5)-.5)*22.2;
+  float gri=lineU(min(gx,gy),.2);
+  float croix=lineU(min(gx,gy),.3)*step(max(gx,gy),2.4);
+  plan=mix(plan,ivoire,croix*.55);
+  plan=mix(plan,acier,gri*.12);
+  // le relevé : de temps en temps une bande de lumière passe et montre la vraie photo
+  float ph=fract(t/8.5)*3.2; float xs=mix(-50.,W+50.,ph)+(q.y-60.)*.28;
+  float bande=exp(-pow((q.x-xs)/12.,2.))*step(ph,1.)*dr;
+  plan=mix(plan,p*1.03+vec3(.01,.02,.04),clamp(bande*1.15,0.,1.)*.95);
+  plan+=vec3(.75,.92,1.)*exp(-pow((q.x-xs-14.)/.8,2.))*.6*step(ph,1.)*dr;
+  // filet de carte : segments ivoire et nuit
+  vec2 dq=abs(q-rc)-rh; bool hz=dq.y>dq.x; float co=hz?q.x:q.y;
+  float seg=step(.5,fract(co/14.));
+  float liste=smoothstep(-2.7,-2.4,dR);
+  plan=mix(plan,mix(nuit,ivoire,seg),liste);
+  plan=mix(plan,ivoire,lineU(abs(dR+2.55),.28));
+  // le bas : la carte continue, en teintes sombres
+  float rf=ringsF(q,0.,0.)+off*.5; float rn=floor(rf);
+  float alt=1.-clamp((rn+.5-off*.5)/9.,0.,1.);
+  vec3 inner=pal(.04+.3*alt)*(1.-.28*smoothstep(R.w+40.,H,q.y));
+  float rg=lineU(ringDist(rf),.3);
+  float rmaj=step(abs(mod(rn,4.)-3.),.5);
+  inner=mix(inner,mix(acier,orc,rmaj),rg*(.3+.45*rmaj)*dr);
+  inner+=orc*glint(uv,u_tilt,10.)*rg*rmaj*.5;
+  inner=mix(inner,acier,(gri*.1+croix*.32)*step(R.w+3.,q.y));
+  vec3 col=mix(inner,plan,ip);
+  col=mix(col,ivoire,lineU(abs(dR),.28)*.9);
+  col=mix(frame,col,ii);
+  return col; }`,
+
+  // ------------------------------------------------------------------ AQUARELLE
+  aquarelle: SKIN_PRE + `
+float Lq(vec2 q,vec4 R,float l){ return lum(pL(photoUV(q,R),l)); }
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b);
+  float gr=vnoise(q*2.3)*.6+vnoise(q*5.3+7.)*.4;
+  vec3 paper=vec3(.975,.957,.918)*(1.-.065*gr)-vec3(0.,.004,.014)*fbm3(q*.03);
+  float lev=u_rev<2.9?smoothstep(.1,2.5,u_rev):1.;
+  vec2 rc=(R.xy+R.zw)*.5, rh=(R.zw-R.xy)*.5;
+  float wob=fbm(q*.055+2.)-.5, wob2=fbm3(q*.21+8.)-.5;
+  float dP=sdBox(q-rc-vec2(0.,1.),rh-vec2(4.5,5.5),10.)+wob*10.+wob2*3.2;
+  float sp=length((q-rc)/rh)-lev*2.1+wob*.6;
+  float m=(1.-smoothstep(-1.3,1.3,dP))*(1.-smoothstep(-.18,.08,sp));
+  vec2 w2=vec2(fbm3(q*.085),fbm3(q*.085+5.3))-.5;
+  vec2 s=photoUV(q+w2*3.2,R);
+  vec3 c=mix(pL(s,4.1),pL(s,2.3),.42);
+  c=mix(c,floor(c*5.+.5)/5.,.3);
+  float L=lum(c);
+  c=sat(c,1.45); c=1.-(1.-c)*.86;
+  float lx=Lq(q+vec2(1.7,0.),R,3.)-Lq(q-vec2(1.7,0.),R,3.), ly=Lq(q+vec2(0.,1.7),R,3.)-Lq(q-vec2(0.,1.7),R,3.);
+  float e=smoothstep(.03,.17,length(vec2(lx,ly)));
+  c*=1.-.2*e;
+  c*=1.-.17*gr*(1.-L);
+  float dens=.9-.6*smoothstep(.62,.98,L)-.1*smoothstep(.3,.7,fbm3(q*.05+13.));
+  vec3 paint=mix(paper,c*mix(vec3(1.),paper,.4),dens);
+  float cerne=smoothstep(.12,.5,m)*(1.-smoothstep(.5,.96,m));
+  paint*=1.-.2*cerne;
+  paint+=vec3(1.)*glint(uv,u_tilt,10.)*.05;
+  vec3 col=mix(paper,paint,m);
+  // le crayon, dessous : le trait suit les arêtes de la photo
+  vec2 qc=q+vec2(wob2,-wob2)*.9;
+  float cx=Lq(qc+vec2(.65,0.),R,1.15)-Lq(qc-vec2(.65,0.),R,1.15), cy=Lq(qc+vec2(0.,.65),R,1.15)-Lq(qc-vec2(0.,.65),R,1.15);
+  float tr=smoothstep(.08,.2,length(vec2(cx,cy)));
+  float zc=(1.-smoothstep(-2.,1.,sdBox(q-rc,rh-5.,6.)+wob*5.))*smoothstep(0.,.35,u_rev<3.?u_rev:1.);
+  col=mix(col,vec3(.2,.2,.28),tr*zc*(.24+.2*gr));
+  // le nuancier : cinq touches prises dans la photo
+  if(q.y>R.w+60.){
+    for(int i=0;i<5;i++){ float fi=float(i);
+      vec2 cp=vec2(25.+fi*34.5,216.+sin(fi*2.3+1.)*2.6);
+      vec2 sq=vec2(.16+fi*.17,mod(fi,2.)<.5?.3:.7);
+      vec3 pc=sat(pL(sq,4.8),1.75); pc=1.-(1.-pc)*.9;
+      float d=length((q-cp)*vec2(1.,1.08))+(fbm3(q*.28+fi*7.)-.5)*3.6-10.2;
+      float dm=(1.-smoothstep(-.9,.9,d))*smoothstep(.5+fi*.08,.62+fi*.08,lev);
+      float rim=smoothstep(-3.2,-.5,d);
+      vec3 dab=mix(paper,pc*mix(vec3(1.),paper,.35),.9)*(1.-.17*rim)*(1.-.13*gr);
+      col=mix(col,dab,dm*(.82+.18*fbm3(q*.5+fi))); } }
+  float rg=lineU(ringDist(ringsF(q,0.,0.)),.3); col=mix(col,vec3(.36,.37,.45),rg*.1*smoothstep(R.w,R.w+10.,q.y));
+  float fd=frameD(q,b);
+  vec3 frame=vec3(.93,.915,.875)*(1.-.05*gr)*(.9+.1*smoothstep(0.,3.,fd));
+  col*=1.-.1*(1.-smoothstep(0.,3.5,-fd));
+  col=mix(frame,col,ii);
+  return col; }`,
+
+  // ------------------------------------------------------------------ KINTSUGI
+  kintsugi: SKIN_PRE + `
+float kE; float kI;
+float seig(vec2 p){ float jy=floor(p.y*2.); float v=0.; bool pris=false;
+  for(int k=1;k>=-1;k--){ float j=jy+float(k); float ox=mod(j,2.)*.5;
+    for(int i=0;i<2;i++){ float cx=floor(p.x-ox+float(i))+ox+.0; vec2 c=vec2(cx+.5-float(i)*0.,j*.5+.5);
+      c.x=floor(p.x-ox)+ox+float(i); c.y=j*.5+.5;
+      float d=length(p-c); if(!pris && d<.5 && p.y<c.y+.02){ pris=true; v=smoothstep(.55,1.,abs(sin(d*PI*6.))); } } }
+  return v; }
+void kcell(vec2 p){
+  vec2 n=floor(p),f=fract(p); vec2 mg=vec2(0.),mr=vec2(0.); float md=9.;
+  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){ vec2 g=vec2(float(i),float(j)); vec2 o=.1+.8*h22(n+g+1.9); vec2 r=g+o-f; float d=dot(r,r); if(d<md){ md=d; mr=r; mg=g; } }
+  float e=9.;
+  for(int j=-2;j<=2;j++) for(int i=-2;i<=2;i++){ vec2 g=mg+vec2(float(i),float(j)); vec2 o=.1+.8*h22(n+g+1.9); vec2 r=g+o-f; vec2 dr=r-mr; if(dot(dr,dr)>1e-5) e=min(e,dot(.5*(mr+r),normalize(dr))); }
+  kE=e; kI=h21(n+mg+4.4); }
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  float an=atan(q.y-H*.5,q.x-W*.5);
+  vec3 frame=mix(vec3(.05,.045,.06),vec3(.2,.17,.14),pow(.5+.5*sin(an*2.+t*.3+u_tilt.x*2.2),3.));
+  frame=mix(frame,vec3(1.,.84,.45),pow(.5+.5*sin(an*2.+t*.3+u_tilt.x*2.2+.9),12.)*.8)*(.85+.3*glint(uv,u_tilt,9.));
+  vec2 wq=q+(vec2(fbm3(q*.03),fbm3(q*.03+4.7))-.5)*16.;
+  float sc=1./82.; kcell(wq*sc+vec2(.37,.61)); float e=kE/sc; float id=kI;
+  float wv=.75+1.5*fbm3(q*.07+id*3.);
+  float hg=1.-clamp(e/wv,0.,1.);
+  float seam=1.-smoothstep(wv*.6,wv,e);
+  vec2 o=vec2(26.,14.); float dist=length(q-o);
+  float reach=u_rev<3.?u_rev*120.-10.:9999.;
+  float coule=1.-smoothstep(reach-8.,reach,dist);
+  // la photo : des éclats de céramique émaillée
+  vec2 dec=(h22(vec2(id*31.,7.))-.5)*2.6;
+  vec2 s=photoUV(q+dec,R); vec3 p=photo(s);
+  p=sat(p,.92)*vec3(1.035,1.,.955)*(.93+.14*h21(vec2(id,2.)));
+  p*=1.-.34*(1.-smoothstep(wv,wv+2.6,e));
+  p+=vec3(1.,.97,.9)*glint(uv+dec*.01,u_tilt,5.)*.12;
+  float py=clamp((q.y-R.w)/(H-R.w),0.,1.);
+  vec3 laque=mix(vec3(.075,.07,.105),vec3(.025,.024,.04),py)*(.9+.2*h21(vec2(id,5.)));
+  float sg=seig((q+dec)/15.); laque+=vec3(.5,.46,.6)*sg*(.035+.16*glint(uv,u_tilt,5.));
+  laque+=vec3(.25,.22,.3)*glint(uv+dec*.01,u_tilt,6.)*.14;
+  laque*=1.-.4*(1.-smoothstep(wv,wv+3.,e));
+  float pd=h21(floor(q*2.1)+id); float pres=1.-smoothstep(wv,wv+11.,e);
+  laque+=vec3(1.,.82,.4)*step(.9985-.06*pres,pd)*(.35+.65*pow(max(0.,sin(pd*90.+u_tilt.x*9.+u_tilt.y*7.)),6.))*.8*coule;
+  vec3 col=mix(laque,p,ip);
+  // l'or dans les fêlures
+  vec2 gd=vec2(dFdx(e),dFdy(e)); gd/=max(length(gd),1e-4);
+  vec2 lum2=normalize(vec2(-.5+u_tilt.x*2.,-.7+u_tilt.y*2.));
+  float nl=dot(gd,lum2)*(1.-hg*hg);
+  float sh=.5+.5*nl;
+  vec3 orc=mix(vec3(.42,.25,.05),vec3(1.,.8,.36),smoothstep(.1,.85,sh*.75+hg*.3));
+  orc+=vec3(1.,.96,.8)*pow(clamp(sh*.6+hg*.5,0.,1.),7.)*.55;
+  orc*=.88+.24*vnoise(q*3.1);
+  orc+=vec3(1.,.95,.8)*pow(max(0.,sin(h21(floor(q*2.6))*70.+u_tilt.x*10.+u_tilt.y*8.+t*.6)),22.)*.6;
+  vec3 fente=vec3(.03,.025,.03);
+  col=mix(col,fente,(1.-smoothstep(.25,.7,e))*(1.-coule));
+  col=mix(col,orc,seam*coule);
+  col+=vec3(1.,.85,.5)*exp(-pow((dist-reach+4.)/7.,2.))*seam*step(u_rev,3.)*1.2;
+  col=mix(frame,col,ii);
+  return col; }`,
+
+  // ------------------------------------------------------------------ COMÈTE
+  comete: SKIN_PRE2 + `
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  float an=atan(q.y-H*.5,q.x-W*.5);
+  vec3 frame=mix(vec3(.08,.12,.28),vec3(.62,.74,1.),pow(.5+.5*sin(an*2.+t*.3+u_tilt.x*2.2),3.))*(.8+.35*glint(uv,u_tilt,9.));
+  vec2 s=photoUV(q,R); vec3 p=photo(s); float L=lum(p);
+  // la comète traverse le ciel (tout de suite à l'apparition, puis toutes les 7 secondes et demie)
+  float pas=u_rev<1.7?u_rev/1.7*1.15:fract(t/7.5)*1.85;
+  vec2 a0=vec2(W+40.,12.), a1=vec2(-70.,74.);
+  vec2 head=mix(a0,a1,pas/1.15)+vec2(0.,-16.*sin(clamp(pas/1.15,0.,1.)*PI))+u_tilt*vec2(8.,5.);
+  vec2 dir=normalize(a1-a0);
+  vec2 rel=q-head; float al=dot(rel,-dir); float ac=dot(rel,vec2(-dir.y,dir.x));
+  float on=1.-step(1.15,pas);
+  float tete=(exp(-dot(rel,rel)/9.)+exp(-dot(rel,rel)/60.)*.35)*on;
+  float queue=exp(-ac*ac/(2.+max(al,0.)*.3))*smoothstep(-1.,2.,al)*exp(-max(al,0.)/70.)*on;
+  float halo=exp(-dot(rel,rel)/(46.*46.))*on;
+  // la nuit tombe sur la photo ; les étoiles sortent dans son ciel
+  vec3 nuit=mix(vec3(L),p,.55)*vec3(.3,.43,.86)*.8+vec3(.012,.02,.06);
+  float ciel=skyM(p,s);
+  nuit=mix(nuit,vec3(.018,.03,.1)+vec3(.05,.07,.2)*(1.-s.y),ciel*.78);
+  nuit+=stars(q,u_tilt*2.,t,.13)*ciel;
+  nuit+=p*vec3(1.,.8,.5)*smoothstep(.72,.95,L)*(1.-ciel)*.22;
+  // la lumière de la comète rend ses couleurs à la photo
+  vec3 ph=mix(nuit,p*vec3(.95,1.,1.1),clamp(halo*1.2,0.,1.));
+  ph+=vec3(.8,.9,1.)*tete*2.4+mix(vec3(.85,.93,1.),vec3(.35,.55,1.),clamp(al/80.,0.,1.))*queue*1.15;
+  float py=clamp((q.y-R.w)/(H-R.w),0.,1.);
+  vec3 inner=mix(vec3(.03,.05,.15),vec3(.008,.012,.04),py);
+  float voie=fbm(q*.02+vec2(3.,t*.01)); inner+=vec3(.12,.16,.4)*smoothstep(.45,.8,voie)*.34*(1.-py*.6);
+  inner+=stars(q,u_tilt*3.,t,.16)*.9;
+  float rg=lineU(ringDist(ringsF(q,0.,0.)),.35); inner+=vec3(.4,.55,1.)*rg*.08;
+  inner+=vec3(.2,.36,.9)*exp(-pow((q.x-head.x)/46.,2.))*exp(-max(q.y-R.w,0.)/55.)*.55*on;
+  vec2 dp=q+vec2(t*2.,-t*7.); vec2 di=floor(dp/11.); vec2 dr=h22(di+3.); float dd=length(dp-(di+.2+dr*.6)*11.);
+  inner+=vec3(.7,.85,1.)*exp(-dd*dd/.4)*step(.62,dr.x)*(.5+.5*sin(t*2.+dr.y*30.))*.55*(1.-py);
+  vec3 col=mix(inner,ph,ip);
+  col+=vec3(.75,.88,1.)*queue*.5*(1.-ip)*ii;
+  col=mix(frame,col,ii);
+  return col; }`,
+
+  // ------------------------------------------------------------------ 14 JUILLET
+  juillet: SKIN_PRE2 + `
+vec3 bouquet(vec2 q,vec2 c,float ph,vec3 col,float seed,float taille,out float jet){
+  float life=clamp((ph-.1)/.9,0.,1.); float ex=step(.1,ph);
+  vec2 d=(q-c)/taille; d.y-=life*life*8.;
+  float r=length(d); float a=atan(d.y,d.x);
+  float n=24.; float ai=floor(a/TAU*n+.5); float hr=h21(vec2(ai,seed));
+  float da=abs(a/TAU*n-ai)/n*TAU*r;
+  float R0=46.*(1.-pow(1.-life,3.)); float rr=R0*(.5+.5*hr);
+  float trait=exp(-da*da/1.1)*smoothstep(rr*.25,rr,r)*(1.-smoothstep(rr,rr+1.6,r));
+  float pointe=exp(-(da*da+(r-rr)*(r-rr))/2.6);
+  float fade=(1.-life)*(1.-life)*ex;
+  float flash=exp(-life*16.)*exp(-r*r/50.)*ex;
+  jet=(fade*.9+flash)*exp(-r*r/(64.*64.));
+  return mix(col,vec3(1.),.25)*(trait*1.5+pointe*2.8)*fade*(.7+.3*sin(hr*40.+life*30.))+mix(col,vec3(1.),.6)*flash*1.6; }
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  float an=atan(q.y-H*.5,q.x-W*.5);
+  float tri=fract(an/TAU+.5+t*.02+u_tilt.x*.1);
+  vec3 frame=mix(mix(vec3(.2,.35,.9),vec3(.92,.94,1.),smoothstep(.28,.38,tri)),vec3(.9,.2,.25),smoothstep(.62,.72,tri));
+  frame=mix(frame,vec3(.2,.35,.9),smoothstep(.95,1.,tri))*(.55+.5*glint(uv,u_tilt,9.));
+  vec2 s=photoUV(q,R); vec3 p=photo(s); float L=lum(p);
+  float ciel=skyM(p,s);
+  vec3 nuit=mix(vec3(L),p,.5)*vec3(.3,.38,.78)*.7+vec3(.01,.015,.05);
+  nuit=mix(nuit,vec3(.015,.025,.09)+vec3(.04,.05,.16)*(1.-s.y),ciel*.8);
+  nuit+=stars(q,u_tilt*2.,t,.08)*ciel*.6;
+  // trois bouquets, bleu, blanc, rouge : leur lumière colore la photo
+  vec3 feu=vec3(0.); vec3 lum3=vec3(0.); vec3 reflet=vec3(0.);
+  for(int k=0;k<3;k++){ float fk=float(k);
+    float per=5.2+fk*.55; float T=t/per+fk*.37; float cyc=floor(T); float ph=fract(T);
+    vec3 cl=k==0?vec3(.3,.5,1.):k==1?vec3(1.,.97,.88):vec3(1.,.22,.28);
+    vec2 c=vec2(46.+fk*46.,34.-mod(fk,2.)*10.)+(h22(vec2(cyc,fk*3.1))-.5)*vec2(28.,18.)+u_tilt*4.;
+    float jet; vec3 f=bouquet(q,c,ph*1.25,cl,cyc+fk*9.,1.,jet);
+    feu+=f*step(ph,.8); lum3+=cl*jet*step(ph,.8);
+    reflet+=cl*jet*exp(-pow((q.x-c.x)/42.,2.))*step(ph,.8); }
+  // le bouquet final, à l'apparition
+  if(u_rev<1.8){ float jet; vec3 f=bouquet(q,vec2(W*.5,42.),.1+u_rev/1.8*.9,vec3(1.,.92,.7),77.,1.6,jet); feu+=f; lum3+=vec3(1.,.92,.75)*jet*1.3; reflet+=vec3(1.,.92,.75)*jet; }
+  vec3 ph2=nuit+p*lum3*1.25;
+  ph2+=feu*(.6+.4*ciel);
+  float py=clamp((q.y-R.w)/(H-R.w),0.,1.);
+  vec3 inner=mix(vec3(.03,.04,.13),vec3(.008,.01,.04),py);
+  inner+=reflet*exp(-py*3.2)*.42;
+  float fum=fbm(q*.025+vec2(t*.03,-t*.02)); inner+=(vec3(.1,.11,.2)+lum3*.25)*smoothstep(.45,.85,fum)*.3*(1.-py);
+  // les étincelles retombent, bleu, blanc, rouge
+  for(int Lr=0;Lr<2;Lr++){ float fl=float(Lr); float cs=13.+7.*fl;
+    vec2 pp=q; pp.y-=t*(7.+5.*fl); pp.x+=sin(pp.y*.06+fl*3.)*3.+u_tilt.x*(4.+6.*fl);
+    vec2 id=floor(pp/cs); vec2 r=h22(id+fl*11.); float d=length(pp-(id+.2+r*.6)*cs);
+    float h3=h21(id+7.); vec3 cc=h3<.33?vec3(.4,.6,1.):h3<.66?vec3(1.,.97,.9):vec3(1.,.35,.4);
+    inner+=cc*exp(-d*d/(.4+.4*fl))*step(.55,r.x)*(.45+.55*sin(t*5.+r.y*40.))*.8*(1.-py*.7); }
+  float rg=lineU(ringDist(ringsF(q,0.,0.)),.35); inner+=vec3(.5,.6,1.)*rg*.06;
+  vec3 col=mix(inner,ph2,ip);
+  col=mix(frame,col,ii);
+  return col; }`,
+
+  // ------------------------------------------------------------------ MARÉE
+  maree: SKIN_PRE2 + `
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b);
+  float an=atan(q.y-H*.5,q.x-W*.5);
+  vec3 frame=mix(vec3(.06,.3,.38),vec3(.75,.97,1.),pow(.5+.5*sin(an*2.+t*.3+u_tilt.x*2.2),3.))*(.8+.32*glint(uv,u_tilt,9.));
+  float lev=u_rev<2.2?1.-smoothstep(.1,2.,u_rev):0.;
+  // la ligne d'eau, au pied de la photo
+  float y0=R.w-15.+sin(t*.33)*2.4-lev*135.+(q.x-W*.5)*u_tilt.x*.06;
+  float ys=y0+sin(q.x*.11+t*1.1)*1.+sin(q.x*.23-t*1.6)*.55+sin(q.x*.047+t*.5)*1.3;
+  float sous=smoothstep(ys-.7,ys+.7,q.y);
+  vec2 s=photoUV(q,R); vec3 p=photo(s)*vec3(.95,1.,1.03);
+  float cadre=1.-smoothstep(-upx(),upx(),rbox(q,vec4(R.x,R.y,R.z,R.w+2.),7.8));
+  vec3 dessus=mix(vec3(.01,.07,.1),p,cadre);
+  // dessous : le reflet de la photo, retourné, qui ondule et s'enfonce
+  float prof=max(0.,q.y-ys);
+  vec2 qr=vec2(q.x+sin(q.y*.44+t*1.9)*(.7+prof*.045)+sin(q.y*.17-t*1.1)*1.1,ys-prof*1.02);
+  vec3 refl=pL(photoUV(qr,R),1.1+prof*.04);
+  vec3 fond=mix(vec3(.02,.21,.28),vec3(.004,.045,.085),smoothstep(0.,150.,prof));
+  float fr=(.86*exp(-prof/44.))*smoothstep(R.y-12.,R.y+16.,qr.y);
+  vec3 eau=mix(fond,refl*vec3(.5,.88,.94)*.92,fr);
+  float ca=pow(.5+.5*sin(q.x*.09+q.y*.05-t*.7+fbm(q*.03+t*.05)*5.),9.);
+  eau+=vec3(.2,.72,.78)*ca*.15*smoothstep(14.,70.,prof);
+  float rg=lineU(ringDist(ringsF(q,0.,0.)),.35); eau+=vec3(.3,.8,.85)*rg*.06*smoothstep(20.,60.,prof);
+  // la surface : un liseré clair et des éclats de soleil
+  float men=exp(-pow((q.y-ys)/1.1,2.));
+  eau+=vec3(.8,1.,1.)*men*.55;
+  float soleil=exp(-pow((q.x-W*(.5+u_tilt.x*.75))/30.,2.));
+  float ecl=pow(vnoise(vec2(q.x*.3+t*.9,q.y*1.5-t*.6)),5.)*exp(-prof/13.)*2.2;
+  eau+=vec3(1.,1.,.95)*ecl*soleil*.9;
+  // des bulles montent
+  vec2 bp=q+vec2(sin(q.y*.07)*3.,t*6.); vec2 bi=floor(bp/19.); vec2 br=h22(bi+2.); float bd=length(bp-(bi+.2+br*.6)*19.);
+  float rb=.8+1.2*br.y; eau+=vec3(.6,.95,1.)*(exp(-pow((bd-rb)/.35,2.))*.5+exp(-bd*bd/.3)*.15)*step(.7,br.x)*smoothstep(25.,60.,prof);
+  vec3 col=mix(dessus,eau,sous);
+  col=mix(frame,col,ii);
+  return col; }`,
+
+  // ------------------------------------------------------------------ BRASIER
+  feu: SKIN_PRE2 + `
+float fE; float fI;
+void fcell(vec2 p){
+  vec2 n=floor(p),f=fract(p); vec2 mg=vec2(0.),mr=vec2(0.); float md=9.;
+  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){ vec2 g=vec2(float(i),float(j)); vec2 o=.12+.76*h22(n+g+6.3); vec2 r=g+o-f; float d=dot(r,r); if(d<md){ md=d; mr=r; mg=g; } }
+  float e=9.;
+  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){ vec2 g=mg+vec2(float(i),float(j)); vec2 o=.12+.76*h22(n+g+6.3); vec2 r=g+o-f; vec2 dr=r-mr; if(dot(dr,dr)>1e-5) e=min(e,dot(.5*(mr+r),normalize(dr))); }
+  fE=e; fI=h21(n+mg+2.2); }
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  float an=atan(q.y-H*.5,q.x-W*.5);
+  float souffle=.78+.22*fbm3(vec2(t*1.6,3.));
+  vec3 frame=mix(vec3(.22,.03,.0),vec3(1.,.55,.12),pow(.5+.5*sin(an*2.+t*.3+u_tilt.x*2.2),3.))*(.65+.45*souffle)*(.85+.3*glint(uv,u_tilt,9.));
+  float lev=u_rev<1.8?1.-smoothstep(0.,1.6,u_rev):0.;
+  // l'air chaud fait trembler la photo, la nuit tombe, le feu l'éclaire d'en bas
+  float hz=smoothstep(R.w-75.,R.w,q.y);
+  vec2 qh=q+vec2(sin(q.y*.5-t*5.+fbm3(q*.08)*6.)*1.15*hz,0.);
+  vec2 s=photoUV(qh,R); vec3 p=photo(s); float L=lum(p);
+  float bas=smoothstep(R.y-20.,R.w,q.y);
+  vec3 nuit=mix(vec3(L),p,.6)*vec3(.42,.36,.5)*.5;
+  vec3 ph=nuit*(1.-bas*.55)+p*vec3(1.4,.8,.36)*(.16+1.05*bas*bas)*(souffle+lev);
+  // les flammes, au pied de la photo
+  float base=R.w-3.; float hgt=base-q.y;
+  float n=fbm(vec2(q.x*.07,q.y*.06+t*1.9))*.65+fbm3(vec2(q.x*.16+3.,q.y*.11+t*2.9))*.35;
+  float haut=40.+22.*fbm3(vec2(q.x*.045,t*.55))+lev*70.;
+  float f=clamp(1.-hgt/haut,0.,1.);
+  float fi=smoothstep(.42,1.,f+(n-.52)*1.25)*smoothstep(-5.,2.,hgt);
+  vec3 fc=mix(vec3(.7,.07,.0),vec3(1.,.48,.04),smoothstep(.08,.5,fi)); fc=mix(fc,vec3(1.,.93,.6),smoothstep(.55,.98,fi));
+  // les braises, en bas : du charbon fendu qui rougeoie
+  float py=clamp((q.y-R.w)/(H-R.w),0.,1.);
+  fcell(q/18.+vec2(.3,.7)); float e=fE*18.;
+  float chaud=(1.-py*.8)*smoothstep(.3,.9,.5+.5*sin(t*.7+fI*20.))*(.6+.4*souffle)*smoothstep(.35,.7,fbm3(q*.03+vec2(0.,t*.05)));
+  vec3 inner=vec3(.05,.022,.02)*(.7+.6*fI)*(1.-.4*py);
+  inner=mix(inner,vec3(.015,.008,.008),(1.-smoothstep(.2,.9,e))*.8);
+  inner+=vec3(1.,.3,.04)*exp(-e/1.3)*chaud*.7+vec3(1.,.8,.3)*exp(-e/.35)*chaud*.45;
+  inner+=vec3(.5,.08,.0)*(1.-smoothstep(0.,7.,e))*chaud*.22;
+  vec3 col=mix(inner,ph,ip);
+  col=mix(col,fc,smoothstep(.04,.45,fi));
+  col+=fc*fi*.25+vec3(1.,.4,.06)*exp(-pow(hgt/26.,2.))*.16*souffle*step(-30.,hgt);
+  col+=ember(q,t,13.,-17.,.5,.3,1.,vec3(1.,.6,.15))+ember(q,t,21.,-26.,.9,.22,5.,vec3(1.,.42,.08));
+  col=mix(frame,col,ii);
+  return col; }`,
+
+  // ------------------------------------------------------------------ PRISME
+  prisme: SKIN_PRE2 + `
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  float an=atan(q.y-H*.5,q.x-W*.5);
+  vec3 frame=mix(vec3(.5,.55,.64),vec3(.96,.98,1.),pow(.5+.5*sin(an*2.+t*.3+u_tilt.x*2.2),3.));
+  frame=mix(frame,spectral(an/TAU+t*.04+u_tilt.x*.6),.3)*(.85+.3*glint(uv,u_tilt,9.));
+  vec2 s=photoUV(q,R);
+  // la lumière se décompose : les trois couleurs se séparent quand on incline la carte
+  vec2 dsp=(u_tilt+vec2(.1,.05))*1.7;
+  vec3 p=vec3(photo(photoUV(q+dsp,R)).r,photo(s).g,photo(photoUV(q-dsp,R)).b); float L=lum(p);
+  // un film irisé dont les couleurs suivent les formes de la photo
+  float Lb=lum(pL(s,3.2));
+  float x=dot(q,vec2(.86,.5))*.011+Lb*1.15+u_tilt.x*1.4+u_tilt.y*.9+fbm3(q*.02)*.5+t*.02;
+  vec3 iri=spectral(x);
+  float gl=glint(uv,u_tilt,5.);
+  // des facettes qui s'allument tour à tour
+  vec2 g=vec2(q.x+q.y*.5774,q.y*1.1547)/8.; vec2 gi=floor(g),gf=fract(g); float tr=step(gf.x+gf.y,1.); float fh=h21(gi*2.+tr);
+  float fac=pow(.5+.5*sin(fh*40.+u_tilt.x*7.+u_tilt.y*5.+t*.35),7.);
+  float ar=min(min(gf.x,gf.y),abs(1.-gf.x-gf.y)); float arete=1.-smoothstep(0.,.05,ar);
+  vec3 ph=p*(1.-.12*gl)+iri*(.04+.3*gl+.24*fac*(.3+.7*Lb))*(.45+.6*L);
+  ph=mix(ph,ph*(.84+.42*iri),.3)+iri*arete*.05*(.4+gl);
+  float bal=u_rev<1.6?exp(-pow((q.x+q.y*.4-(u_rev/1.4)*(W+140.)+40.)/22.,2.)):0.;
+  ph+=spectral(q.x*.01+q.y*.006)*bal*.9+vec3(1.)*bal*.25;
+  // le bas : la feuille holographique, avec les courbes de niveau en arc-en-ciel
+  float py=clamp((q.y-R.w)/(H-R.w),0.,1.);
+  vec3 inner=mix(vec3(.06,.055,.12),vec3(.02,.02,.05),py);
+  float rf=ringsF(q,t*.15,0.); float rg=lineU(ringDist(rf),.5);
+  vec3 arc=spectral(rf*.11+u_tilt.x*1.2+u_tilt.y*.8+t*.03);
+  inner+=arc*rg*(.55+.4*gl);
+  float x2=dot(q,vec2(.86,.5))*.011+lum(pL(photoUV(vec2(q.x,2.*R.w-q.y),R),5.))*1.15+u_tilt.x*1.4+u_tilt.y*.9+t*.02;
+  inner+=spectral(x2)*(.04+.18*gl+.2*fac)*(1.-py*.5);
+  inner+=arc*arete*.05;
+  inner+=stars(q,u_tilt*3.,t,.1)*.5;
+  inner+=spectral(q.x*.01+q.y*.006)*bal*.6;
+  vec3 col=mix(inner,ph,ip);
+  col=mix(frame,col,ii);
+  return col; }`,
+
+  // ------------------------------------------------------------------ OR FONDU
+  orfondu: SKIN_PRE2 + `
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  float an=atan(q.y-H*.5,q.x-W*.5);
+  vec3 frame=mix(vec3(.4,.24,.05),vec3(1.,.9,.56),pow(.5+.5*sin(an*2.+t*.35+u_tilt.x*2.5),2.))*(.8+.4*glint(uv,u_tilt,9.));
+  float lev=u_rev<2.2?1.-smoothstep(.1,2.,u_rev):0.;
+  vec2 s=photoUV(q,R); vec3 p=photo(s); float L=lum(p);
+  // la photo est repoussée dans une feuille d'or : son relief accroche la lumière quand on incline
+  vec2 g=gradL(q,R,1.7,1.);
+  vec3 n=normalize(vec3(-g*7.5,1.));
+  vec3 lt=normalize(vec3(-.45+u_tilt.x*1.9,-.6+u_tilt.y*1.9,.75));
+  float dif=clamp(dot(n,lt),0.,1.); float spec=pow(clamp(reflect(-lt,n).z,0.,1.),16.);
+  vec3 orG=mix(vec3(.2,.11,.02),vec3(.84,.6,.2),smoothstep(.02,.6,L)); orG=mix(orG,vec3(1.,.93,.66),smoothstep(.6,1.,L));
+  orG=orG*(.5+.8*dif)+vec3(1.,.95,.75)*spec*.65;
+  orG*=.9+.18*vnoise(q*2.6);
+  float k=.38+.42*smoothstep(.42,.85,L)+.25*glint(uv,u_tilt,6.)+lev;
+  vec3 ph=mix(p*vec3(1.08,.95,.78)*.94,orG,clamp(k,0.,.94));
+  // en bas, l'or fondu coule lentement dans le noir
+  float py=clamp((q.y-R.w)/(H-R.w),0.,1.);
+  vec3 inner=mix(vec3(.085,.055,.02),vec3(.03,.018,.006),py);
+  float w=fbm(q*.022+vec2(0.,-t*.035));
+  float nappe=pow(.5+.5*sin(q.x*.03+q.y*.06-t*.2+w*5.+u_tilt.x*2.),3.);
+  inner+=vec3(.9,.58,.13)*nappe*(.1+.26*glint(uv,u_tilt,5.))*smoothstep(30.,80.,q.y-R.w);
+  inner+=vec3(1.,.9,.55)*pow(nappe,5.)*.1*smoothstep(30.,80.,q.y-R.w);
+  float rg=lineU(ringDist(ringsF(q,0.,0.)),.35); inner+=vec3(1.,.8,.4)*rg*.07;
+  // des gouttes d'or perlent sous la photo
+  float cw=15.; float ci=floor(q.x/cw); float ch=h21(vec2(ci,3.));
+  float xc=(ci+.5)*cw+(h21(vec2(ci,5.))-.5)*8.; float lg=(1.5+5.5*ch)*(.8+.2*sin(t*.4+ch*20.))+lev*30.;
+  float yb=R.w-1.+lg; float larg=1.7+1.1*ch;
+  float dg=q.y<yb?abs(q.x-xc)-larg*(.55+.45*smoothstep(R.w-4.,yb,q.y)):length(q-vec2(xc,yb))-larg;
+  float goutte=(1.-smoothstep(-.4,.4,dg))*step(R.w-6.,q.y)*step(.3,ch);
+  vec3 og=mix(vec3(.5,.3,.06),vec3(1.,.86,.45),clamp(.5-(q.x-xc)/larg*.5+u_tilt.x*.6,0.,1.))+vec3(1.,.97,.8)*exp(-pow((q.x-xc+larg*.35)/.4,2.))*.5;
+  inner=mix(inner,og,goutte);
+  float joint=exp(-pow((q.y-R.w+1.)/2.2,2.));
+  // poussière d'or
+  vec2 pi=floor(q*1.9); float pd=h21(pi);
+  float sc=step(.985,pd)*(.3+.7*pow(max(0.,sin(pd*90.+u_tilt.x*9.+u_tilt.y*7.+t*.5)),5.));
+  inner+=vec3(1.,.84,.42)*sc*.8;
+  vec3 col=mix(inner,ph,ip);
+  col=mix(col,vec3(.95,.72,.25)*(.7+.5*glint(uv,u_tilt,7.)),joint*.75);
+  col=mix(col,og,goutte*step(R.w-1.,q.y));
+  col=mix(frame,col,ii);
+  return col; }`,
+
+  // ------------------------------------------------------------------ NÉON
+  neon: SKIN_PRE2 + `
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  vec3 rose=vec3(1.,.17,.84), cyan=vec3(.13,.89,1.);
+  float an=atan(q.y-H*.5,q.x-W*.5);
+  vec3 frame=mix(rose,cyan,.5+.5*sin(an+t*.8+u_tilt.x*2.))*(.55+.45*sin(an*2.-t*1.3)*.5+.25)+vec3(.06,.01,.1);
+  // le tube grésille à l'allumage
+  float on=u_rev<1.5?step(.45,fract(sin(floor(u_rev*13.)*12.9)*43758.5))*smoothstep(0.,1.2,u_rev)+step(1.3,u_rev):1.;
+  on=min(on,1.);
+  vec2 s=photoUV(q,R); vec3 p=photo(s); float L=lum(p);
+  vec3 base=mix(vec3(.03,.008,.08),vec3(.27,.04,.4),smoothstep(.04,.6,L)); base=mix(base,vec3(.5,.28,.78),smoothstep(.6,1.,L)*.6);
+  // les contours de la photo deviennent des tubes de néon, roses d'un côté, cyan de l'autre
+  vec2 g=gradL(q,R,1.35,.9); float e=length(g);
+  float tube=smoothstep(.065,.2,e);
+  float lueur=smoothstep(.015,.15,length(gradL(q,R,3.3,2.3)));
+  float cote=smoothstep(-.2,.2,sin(q.x*.03+q.y*.018+1.)+g.x*2.5);
+  vec3 nc=mix(rose,cyan,cote);
+  float gres=.8+.2*step(.14,fract(sin(floor(t*9.)+floor(q.x/38.)*7.3)*91.7));
+  vec3 ph=base+nc*lueur*.4*on*gres+mix(nc,vec3(1.),.62)*tube*on*gres;
+  ph*=.9+.1*sin(q.y*3.3);
+  // en bas : le sol mouillé renvoie les néons, et une grille part vers l'horizon
+  float py=max(q.y-R.w,0.); float pn=clamp(py/(H-R.w),0.,1.);
+  vec3 inner=mix(vec3(.07,.012,.12),vec3(.012,.004,.03),pn);
+  vec2 qr=vec2(q.x+(vnoise(vec2(q.x*.9,3.))-.5)*2.4,R.w-py*.9-2.);
+  vec3 pr=pL(photoUV(qr,R),3.2); float Lr=lum(pr);
+  float lr=smoothstep(.015,.15,length(gradL(qr,R,3.4,2.4)));
+  float cr=smoothstep(-.2,.2,sin(qr.x*.03+qr.y*.018+1.));
+  vec3 refl=mix(vec3(.2,.03,.3),vec3(.4,.2,.6),Lr)*.5+mix(rose,cyan,cr)*lr*.6;
+  inner+=refl*exp(-py/50.)*(.55+.45*vnoise(vec2(q.x*1.3,q.y*.05+t*.2)))*on*.55*smoothstep(0.,30.,py);
+  float z=14./(py+3.); float hl=1.-smoothstep(.0,.06+z*.02,abs(fract(z*2.4-t*.25)-.5)*2.-.9+.9);
+  float lignes=smoothstep(.9,1.,1.-abs(fract(z*2.4-t*.25)-.5)*2.);
+  float vx=(q.x-W*.5)*z*.085; float vert=smoothstep(.9,1.,1.-abs(fract(vx)-.5)*2.);
+  float grille=max(lignes,vert)*smoothstep(4.,26.,py)*(1.-pn*.35);
+  inner+=mix(rose,cyan,.25)*grille*.26*on;
+  inner+=rose*exp(-py/3.)*.22*on;
+  vec3 col=mix(inner,ph,ip);
+  col=mix(frame,col,ii);
+  return col; }`,
+
+  // ------------------------------------------------------------------ GRAVURE
+  gravure: SKIN_PRE2 + `
+float sdHexa(vec2 p,float r){ p=abs(p); return max(dot(p,vec2(.5,.866)),p.x)-r; }
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b);
+  float gr=vnoise(q*2.1)*.6+vnoise(q*5.+3.)*.4;
+  vec3 paper=vec3(.925,.885,.775)*(1.-.06*gr)-vec3(.02,.03,.05)*smoothstep(.55,.85,fbm(q*.03+4.));
+  paper*=1.-.12*smoothstep(.62,.9,fbm3(q*.11+9.))*step(.5,fbm3(q*.02));
+  vec3 encre=vec3(.16,.105,.06);
+  float dR=rbox(q,R,2.5); float plaque=1.-smoothstep(-upx(),upx(),dR);
+  // l'encre arrive de gauche à droite, comme sous la presse
+  float presse=u_rev<2.4?1.-smoothstep(-12.,12.,q.x+q.y*.2-(u_rev/2.)*(W+70.)+20.):1.;
+  vec2 s=photoUV(q,R); float L=lum(pL(s,.9)); float Lb=lum(pL(s,2.8));
+  float Lc=clamp((L-.06)*1.12,0.,1.);
+  // les tailles : des lignes dont l'épaisseur suit l'ombre et qui épousent les formes de la photo
+  float pas=2.15;
+  float u1=dot(q,vec2(.82,.57))/pas+Lb*1.5; float u2=dot(q,vec2(-.57,.82))/pas-Lb*1.2;
+  float w1=(1.-Lc)*.66; float a1=abs(fract(u1)-.5); float aa1=fwidth(u1)*.8;
+  float l1=(1.-smoothstep(w1*.5-aa1,w1*.5+aa1,a1))*smoothstep(.03,.12,w1);
+  float w2=clamp((.52-Lc)*1.25,0.,.6); float a2=abs(fract(u2)-.5); float aa2=fwidth(u2)*.8;
+  float l2=(1.-smoothstep(w2*.5-aa2,w2*.5+aa2,a2))*smoothstep(.03,.12,w2);
+  float ed=smoothstep(.07,.2,length(gradL(q,R,1.2,.75)));
+  float ink=clamp(max(l1,l2*.92)+ed*.75,0.,1.);
+  vec3 grav=mix(paper*vec3(1.,.985,.95),encre,ink*.9*presse);
+  // le coup de planche : un double filet autour de la gravure
+  float filet=max(lineU(abs(dR+1.6),.28),lineU(abs(dR+3.1),.14));
+  grav=mix(grav,encre,filet*.85);
+  // le bas : le papier, ses courbes de niveau gravées
+  vec3 inner=paper;
+  float rg=lineU(ringDist(ringsF(q,0.,0.)),.24); inner=mix(inner,encre,rg*.2);
+  inner=mix(inner,encre,lineU(abs(q.y-(H-13.5)),.16)*.5*step(8.,q.x)*step(q.x,W-8.));
+  inner*=1.-.07*(1.-smoothstep(0.,4.,dR))*step(0.,dR);
+  // le cachet rouge de l'atlas
+  vec2 cc=vec2(W-34.,212.); float ca=-.22; vec2 cp=mat2(cos(ca),-sin(ca),sin(ca),cos(ca))*(q-cc);
+  float r=length(cp);
+  float anneau=max(lineU(abs(r-15.5),.9),lineU(abs(r-12.6),.3));
+  float hexa=lineU(abs(sdHexa(cp,7.4)),.55);
+  float etoile=1.-smoothstep(-.3,.3,r-2.2-1.5*pow(abs(cos(atan(cp.y,cp.x)*2.5)),1.5));
+  float dents=lineU(abs(r-14.),.5)*step(.5,fract(atan(cp.y,cp.x)/TAU*36.));
+  float tampon=clamp(anneau+hexa+etoile*.9+dents*.8,0.,1.);
+  float usure=smoothstep(.25,.6,fbm(q*.35+2.))*(.75+.25*gr);
+  float frappe=u_rev<3.?smoothstep(2.05,2.2,u_rev):1.;
+  inner=mix(inner,vec3(.66,.1,.09),tampon*usure*.82*frappe);
+  vec3 col=mix(inner,grav,plaque);
+  float fd=frameD(q,b);
+  vec3 frame=vec3(.83,.78,.66)*(1.-.06*gr)*(.86+.14*smoothstep(0.,3.,fd));
+  col=mix(col,encre,lineU(abs(fd+1.2),.2)*.5);
+  col=mix(frame,col,ii);
+  return col; }`,
+
+  // ------------------------------------------------------------------ ORAGE
+  orage: SKIN_PRE2 + `
+float eclair(vec2 q,float k){ float x0=28.+h21(vec2(k,1.7))*130.;
+  float x=x0+(vnoise(vec2(q.y*.085,k*7.))-.5)*36.+(vnoise(vec2(q.y*.3,k*3.))-.5)*9.; float d=abs(q.x-x);
+  float x2=x+ (q.y-38.)*.7*(h21(vec2(k,9.))-.5)*2.+(vnoise(vec2(q.y*.2,k*5.))-.5)*8.; float d2=abs(q.x-x2);
+  return exp(-d*d*1.5)*1.5+exp(-d*.26)*.32+(exp(-d2*d2*2.5)*.7+exp(-d2*.4)*.12)*step(38.,q.y)*step(.4,h21(vec2(k,4.))); }
+float pluie(vec2 q,float t){ float v=0.;
+  for(int i=0;i<2;i++){ float f=float(i); vec2 p=vec2(q.x+q.y*.2,q.y); float cw=2.4+1.2*f; float ci=floor(p.x/cw); float h=h21(vec2(ci,f*7.+1.));
+    float y=fract(p.y/(36.+22.*h)-t*(1.7+.9*h)+h*9.);
+    v+=step(.7,h)*smoothstep(0.,.22,y)*(1.-smoothstep(.22,.3,y))*exp(-pow(fract(p.x/cw)-.5,2.)*50.)*(.45+.3*f); }
+  return v; }
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  // l'éclair : tout de suite à l'apparition, puis de temps en temps
+  float T=u_rev<1.2?u_rev/5.3:t/5.3; float k=u_rev<1.2?77.:floor(T); float f=fract(T);
+  float fl=max(exp(-f*9.),exp(-max(0.,f-.06)*13.)*step(.06,f)*.75)*(.65+.35*h21(vec2(k,2.)));
+  float an=atan(q.y-H*.5,q.x-W*.5);
+  vec3 frame=mix(vec3(.27,.33,.44),vec3(.08,.11,.18),uv.y)+glint(uv,u_tilt,10.)*.18+fl*.4;
+  // des gouttes sur la vitre : chacune fait loupe ; celles qui coulent essuient la buée
+  vec2 gi=floor(q/13.); vec2 gr=h22(gi+5.); vec2 gc=(gi+.25+gr*.5)*13.; float rad=1.5+2.2*h21(gi+9.);
+  vec2 dd=q-gc; dd.y*=.82; float goutte=(1.-smoothstep(.78,1.,length(dd)/rad))*step(.62,h21(gi+2.));
+  float ci=floor(q.x/14.); float ch=h21(vec2(ci,4.)); float vy=fract(t*(.045+.06*ch)+ch*7.);
+  vec2 cc=vec2((ci+.3+.4*h21(vec2(ci,8.)))*14.+sin(q.y*.2+ci)*1.1,mix(R.y-12.,R.w+14.,vy));
+  vec2 cd=q-cc; cd.y*=.68; float coul=(1.-smoothstep(1.5,2.5,length(cd)))*step(.45,ch);
+  float trace=(1.-smoothstep(.5,1.5,abs(q.x-cc.x)))*step(q.y,cc.y)*smoothstep(cc.y-50.,cc.y-4.,q.y)*step(.45,ch);
+  float lens=max(goutte,coul); vec2 dl=goutte>coul?dd:cd;
+  vec2 s=photoUV(q,R);
+  vec3 c0=mix(pL(s,1.7),photo(s),clamp(trace*.85+.4,0.,1.));
+  vec3 cl=photo(photoUV(q-dl*2.4*lens,R));
+  vec3 p=mix(c0,cl,lens); float L=lum(p);
+  // le ciel d'orage : la photo s'assombrit, les nuages passent, l'éclair l'illumine
+  vec3 g=mix(vec3(L),p,.45)*vec3(.62,.75,1.)*.9;
+  float nu=fbm(vec2(q.x*.02+t*.03,q.y*.045-t*.01));
+  float ciel=skyM(p,s);
+  g=mix(g,vec3(.07,.09,.14)+vec3(.1,.12,.17)*nu,smoothstep(.35,.8,nu)*(1.-smoothstep(0.,.6,s.y))*(.35+.5*ciel));
+  g*=mix(.62,.95,smoothstep(0.,.65,s.y));
+  g*=1.+fl*(1.3+.6*(1.-s.y));
+  float vis=1.-smoothstep(R.w*.45,R.w*.8,q.y);
+  g+=vec3(.85,.92,1.)*eclair(q,k)*vis*fl*(.35+.65*ciel);
+  float bordg=lens*(1.-lens)*4.; g*=1.-.35*bordg; g+=vec3(.8,.9,1.)*lens*(.03+.5*fl)+vec3(1.)*exp(-dot(dl+vec2(.45,.55)*rad*.55,dl+vec2(.45,.55)*rad*.55)/.22)*lens*.45;
+  g=min(g,vec3(1.));
+  // le bas : le sol mouillé, les ronds de pluie, le reflet de la photo
+  float py=max(q.y-R.w,0.); float pn=clamp(py/(H-R.w),0.,1.);
+  vec3 inner=mix(vec3(.04,.065,.12),vec3(.012,.02,.045),pn)*(1.+fl*1.6);
+  vec2 qr=vec2(q.x+sin(q.y*.5+t*1.5)*1.2,R.w-py*.85-2.);
+  vec3 rf=pL(photoUV(qr,R),3.6); rf=mix(vec3(lum(rf)),rf,.4)*vec3(.55,.7,1.);
+  inner+=rf*.3*exp(-py/45.)*(1.+fl*2.);
+  for(int i=0;i<2;i++){ float fi=float(i); float cs=24.+10.*fi; vec2 pp=vec2(q.x,q.y*1.9)+fi*13.; vec2 id=floor(pp/cs); vec2 r=h22(id+fi*5.);
+    float phi=fract(t*(.55+.3*r.x)+r.y*9.); float d=length(pp-(id+.25+r*.5)*cs);
+    inner+=vec3(.5,.65,.9)*exp(-pow((d-phi*13.)/.8,2.))*(1.-phi)*(1.-phi)*.28*(1.+fl)*step(.5,h21(id+fi*3.+floor(t*(.55+.3*r.x)+r.y*9.))); }
+  float rg=lineU(ringDist(ringsF(q,0.,0.)),.35); inner+=vec3(.5,.62,.85)*rg*.05;
+  vec3 col=mix(inner,g,ip);
+  col+=vec3(.75,.85,1.)*pluie(q,t)*(.22+.7*fl)*(.65+.35*ip);
+  col=mix(frame,col,ii);
+  return col; }`,
+  // ------------------------------------------------------------------ BRUME (pass)
+  brume: SKIN_PRE2 + `
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  float an=atan(q.y-H*.5,q.x-W*.5);
+  vec3 frame=mix(vec3(.42,.47,.54),vec3(.86,.9,.95),pow(.5+.5*sin(an*2.+t*.35+u_tilt.x*2.),3.))*(.82+.3*glint(uv,u_tilt,9.));
+  frame*=.92+.08*fbm(q*vec2(.9,.06));
+  float lev=u_rev<2.?1.-smoothstep(.1,1.9,u_rev):0.;
+  vec2 s=photoUV(q,R);
+  // la brume : plus dense en bas, en nappes qui glissent à des vitesses différentes
+  float f1=fbm(vec2(q.x*.02-t*.05+u_tilt.x*4.,q.y*.05)+vec2(0.,t*.008));
+  float f2=fbm(vec2(q.x*.04+t*.09+u_tilt.x*9.,q.y*.085)+3.7);
+  float dens=clamp(smoothstep(.3,.85,f1*.65+f2*.45)*(.3+.75*smoothstep(.1,1.,s.y))+lev*1.1,0.,1.);
+  // dans la brume la photo perd ses détails et ses couleurs, comme ce qui est loin
+  vec3 net=photo(s); vec3 flou=pL(s,1.5+dens*3.2);
+  vec3 p=mix(net,flou,smoothstep(.1,.7,dens)); float L=lum(p);
+  vec3 ph=mix(vec3(L),p,.64-.3*dens)*vec3(.88,.94,1.)*.94+vec3(.03,.04,.06);
+  vec3 brumeC=vec3(.83,.87,.91);
+  ph=mix(ph,brumeC,dens*.72);
+  // le soleil perce : les rayons partent des parties claires du ciel de la photo
+  vec2 sol=vec2(R.x+(R.z-R.x)*(.22+u_tilt.x*.35),R.y-14.);
+  float ray=0.; vec2 pasr=(sol-q)/7.;
+  for(int i=1;i<=6;i++){ vec2 qq=q+pasr*float(i); vec2 sq=photoUV(qq,R); vec3 c=pL(sq,3.2); ray+=skyM(c,sq)*smoothstep(.45,.9,lum(c)+.25); }
+  ray/=6.;
+  float eventail=pow(.5+.5*sin(atan(q.y-sol.y,q.x-sol.x)*13.+t*.25+f1*2.),3.);
+  ph+=vec3(1.,.96,.86)*ray*(.22+.55*eventail)*(1.-lev)*(.45+.45*dens);
+  // le bas : une mer de brume
+  float py=max(q.y-R.w,0.);
+  vec3 inner=mix(vec3(.2,.23,.27),vec3(.08,.1,.13),smoothstep(R.w,H,q.y));
+  float f3=fbm(vec2(q.x*.022+t*.04+u_tilt.x*5.,q.y*.045-t*.008)+9.);
+  float f4=fbm(vec2(q.x*.045-t*.07+u_tilt.x*10.,q.y*.09)+1.3);
+  inner=mix(inner,vec3(.5,.55,.6),smoothstep(.42,.9,f3)*.38+lev*.5);
+  inner=mix(inner,vec3(.72,.77,.82),smoothstep(.55,.95,f4)*.22*(1.-smoothstep(0.,110.,py)));
+  vec3 rf=pL(photoUV(vec2(q.x,2.*R.w-q.y-4.),R),5.5); inner+=mix(vec3(lum(rf)),rf,.5)*.14*exp(-py/50.);
+  float rg=lineU(ringDist(ringsF(q,0.,0.)),.35); inner+=vec3(.75,.8,.88)*rg*.07;
+  inner+=vec3(1.,.96,.86)*eventail*.06*exp(-py/60.)*(1.-lev);
+  vec3 col=mix(inner,ph,ip);
+  float bas=exp(-pow((q.y-R.w+6.)/14.,2.))*(.5+.5*fbm(vec2(q.x*.05-t*.08,t*.05)));
+  col=mix(col,brumeC*.82,bas*.5);
+  col=mix(frame,col,ii);
+  return col; }`,
+
+  // ------------------------------------------------------------------ VENDANGES (pass)
+  vendanges: SKIN_PRE2 + `
+vec3 face(vec2 q,vec2 uv,float t){
+  float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
+  vec3 frame=mix(vec3(.5,.31,.08),vec3(1.,.86,.46),pow(.5+.5*sin(atan(q.y-H*.5,q.x-W*.5)*2.+t*.4+u_tilt.x*2.5),2.))*(.8+.35*glint(uv,u_tilt,9.));
+  float vigne=sin(q.x*.35+sin(q.y*.2)*2.)*sin(q.y*.35+sin(q.x*.2)*2.); frame*=.88+.12*smoothstep(.2,.8,vigne);
+  vec2 s=photoUV(q,R); vec3 p=photo(s); float L=lum(p);
+  // la lumière d'une fin d'après-midi de septembre
+  vec3 ph=p*vec3(1.12,.96,.76)+vec3(.07,.025,0.)*(1.-s.y);
+  // le soleil bas entre par le coin de la photo et la dore
+  vec2 so=q-vec2(R.x+8.,R.y+2.)-u_tilt*vec2(16.,10.);
+  float flare=exp(-length(so)/58.);
+  ph=mix(ph,ph*vec3(1.1,.9,.68),.35*smoothstep(.2,1.,s.y));
+  ph+=vec3(1.,.74,.36)*flare*.34+vec3(1.,.9,.7)*exp(-dot(so,so)/90.)*.3;
+  ph+=p*vec3(1.,.7,.3)*flare*.25;
+  ph+=vec3(1.,.75,.4)*glint(uv,u_tilt,10.)*.12;
+  // le verre : le vin monte à l'apparition et penche avec la carte
+  float lev=u_rev<1.8?(1.-smoothstep(.1,1.6,u_rev))*120.:0.;
+  float tilt=clamp(u_tilt.x*.4,-.26,.26);
+  float ys=168.+lev+(q.x-W*.5)*tilt+sin(q.x*.07+t*1.3)*1.8+sin(q.x*.13-t*.9)*1.;
+  float sous=smoothstep(ys-.6,ys+.6,q.y);
+  vec3 air=mix(vec3(.16,.05,.08),vec3(.09,.03,.05),smoothstep(116.,ys,q.y));
+  float prof=clamp((q.y-ys)/(H-ys),0.,1.);
+  vec3 vin=mix(vec3(.5,.04,.12),vec3(.16,.01,.04),prof);
+  // le vin fait loupe : on y voit la commune à l'envers, teintée de rouge
+  vec2 lq=vec2(W*.5-(q.x-W*.5)*1.12+sin(q.y*.09+t*.8)*1.6,R.w-6.-(q.y-ys)*.95);
+  vec3 loupe=pL(photoUV(lq,R),2.3+prof*1.6);
+  vin=mix(vin,loupe*vec3(1.,.24,.3)*.85+vin*.4,.6*(1.-prof*.8)*inRnet(lq,R));
+  vin+=vec3(.9,.25,.3)*pow(.5+.5*sin(q.x*.09+q.y*.04-t*.8+fbm(q*.03+t*.05)*5.),10.)*.16*(1.-prof);
+  float men=exp(-pow((q.y-ys)/1.3,2.)); vin+=vec3(1.,.6,.6)*men*.55;
+  vin+=vec3(1.,.85,.8)*men*step(.94,h21(floor(vec2(q.x*.5-t*3.,0.))))*.6;
+  // les larmes du vin sur le verre
+  float lc=floor(q.x/9.); float lh=h21(vec2(lc,6.)); float lx=(lc+.3+.4*h21(vec2(lc,2.)))*9.;
+  float larme=(1.-smoothstep(.3,1.1,abs(q.x-lx)))*smoothstep(ys-10.-22.*lh,ys-6.,q.y)*(1.-sous)*step(.4,lh);
+  air=mix(air,vec3(.36,.05,.1),larme*.4);
+  vec3 inner=mix(air,vin,sous)+vec3(1.,.82,.5)*men*(1.-sous)*.25;
+  float verre=exp(-pow((q.x-20.-u_tilt.x*8.)/4.,2.))+.5*exp(-pow((q.x-31.-u_tilt.x*8.)/1.6,2.)); inner+=vec3(1.,.85,.9)*verre*.07*smoothstep(118.,140.,q.y);
+  vec3 col=mix(inner,ph,ip);
+  col=mix(frame,col,ii);
+  return col; }`,
+};
+const skinV2Casse = new Set();
+const skinV2 = (k) => !!SKIN_GLSL_V2[k] && !skinV2Casse.has(k) && (!SKIN_GLSL[k] || document.documentElement.classList.contains('topo'));
+const SKIN_T_FIXE_V2 = { orage: 10.68, juillet: 4.2 };
+const skinTFixe = (k) => (skinV2(k) ? SKIN_T_FIXE_V2[k] : SKIN_T_FIXE[k]) || 2.2;
 const SKIN_GLSL_FIN = `
 void main(){ vec2 q=cardQ(); vec2 uv=q/vec2(W,H); vec3 c=face(q,uv,u_time);
   c=clamp(c,0.,1.)+(h21(gl_FragCoord.xy+fract(u_time))-.5)/255.; fragColor=vec4(c,1.); }`;
-const SKIN_NOMS = { comete: 'Comète', juillet: '14 Juillet', maree: 'Marée', feu: 'Brasier', prisme: 'Prisme', orfondu: 'Or fondu', neon: 'Néon', gravure: 'Gravure', orage: 'Orage', brume: 'Brume', vendanges: 'Vendanges' };
+const SKIN_NOMS = { comete: 'Comète', juillet: '14 Juillet', maree: 'Marée', feu: 'Brasier', prisme: 'Prisme', orfondu: 'Or fondu', neon: 'Néon', gravure: 'Gravure', orage: 'Orage', brume: 'Brume', vendanges: 'Vendanges',
+  vitrail: 'Vitrail', givre: 'Givre', topo: 'Topo', aquarelle: 'Aquarelle', kintsugi: 'Kintsugi' };   // patch454
 const SKIN_T_FIXE = { orage: 4.62, juillet: .9 };
 const skinCle = (id) => id ? String(id).replace(/^pass-s\d+-/, '').replace(/^skin-/, '') : null;   // patch256 : objets du pass
-const skinConnu = (k) => !!k && Object.prototype.hasOwnProperty.call(SKIN_GLSL, k);
+const skinConnu = (k) => !!k && (Object.prototype.hasOwnProperty.call(SKIN_GLSL, k) || Object.prototype.hasOwnProperty.call(SKIN_GLSL_V2, k));   // patch454
 
 let mesSkinsCartes = null;   // Map 'terra|83137' -> { skin, nom }
 let mesSkins = null;         // [{ id, nom }] : les skins que je possède
@@ -23569,15 +24400,18 @@ const skinGl = (() => {
     return !!gl;
   }
   function programme(k){
+    const v2 = skinV2(k);   // patch454
+    if(!v2 && !SKIN_GLSL[k]) return null;
     let e = progs.get(k);
+    if(e && e.v2 !== v2){ try{ gl.deleteProgram(e.p); gl.deleteShader(e.fs); }catch(err){} progs.delete(k); e = undefined; }
     if(e === undefined){
       if(compilees >= 1) return null;
       compilees++;
       const fs = gl.createShader(gl.FRAGMENT_SHADER);
-      gl.shaderSource(fs, SKIN_GLSL_COMMUN + SKIN_GLSL[k] + SKIN_GLSL_FIN); gl.compileShader(fs);
+      gl.shaderSource(fs, SKIN_GLSL_COMMUN + (v2 ? SKIN_GLSL_V2[k] : SKIN_GLSL[k]) + SKIN_GLSL_FIN); gl.compileShader(fs);
       const p = gl.createProgram(); gl.attachShader(p, vs); gl.attachShader(p, fs);
       gl.bindAttribLocation(p, 0, 'p'); gl.linkProgram(p);
-      e = { p, fs, u: {}, pret: false };
+      e = { p, fs, u: {}, pret: false, v2 };
       progs.set(k, e);
     }
     if(!e) return null;
@@ -23585,6 +24419,7 @@ const skinGl = (() => {
       if(ext && !gl.getProgramParameter(e.p, ext.COMPLETION_STATUS_KHR)) return null;
       if(!gl.getProgramParameter(e.p, gl.LINK_STATUS)){
         console.error('skin', k, gl.getShaderInfoLog(e.fs) || gl.getProgramInfoLog(e.p));
+        if(e.v2 && SKIN_GLSL[k]){ skinV2Casse.add(k); progs.delete(k); sale = true; return null; }   // patch454 : l'ancien dessin à la place
         progs.set(k, false); return null;
       }
       e.pret = true;
@@ -23724,7 +24559,7 @@ const skinGl = (() => {
       if(reduit) tilt = [.15, -.1];
       else if(carte){ const s = carte.style; tilt = [(parseFloat(s.getPropertyValue('--ry')) || 0) / 20, -(parseFloat(s.getPropertyValue('--rx')) || 0) / 16]; }
       else tilt = [Math.sin(t * .7 + mini._skph) * .42, Math.sin(t * .53 + 1 + mini._skph) * .28];
-      rendre(e, tex, w, h, reduit ? (SKIN_T_FIXE[k] || 2.2) : t, tilt, reduit ? 99 : Math.max(0, (now - revs.get(cleRev)) / 1000));
+      rendre(e, tex, w, h, reduit ? skinTFixe(k) : t, tilt, reduit ? 99 : Math.max(0, (now - revs.get(cleRev)) / 1000));
       copier(habiller(mini, k, true), w, h);
       if(!reduit) anime = true;
     }
@@ -23741,7 +24576,7 @@ const skinGl = (() => {
         const tex = texture(mini);
         if(tex.echec) continue;
         const [w, h] = taille(mini, r);
-        const cle = k + '|' + tex.cle + '|' + w + 'x' + h;
+        const cle = k + (skinV2(k) ? '~2' : '') + '|' + tex.cle + '|' + w + 'x' + h;
         if(mini.dataset.skinFait === cle) continue;
         if(faits >= 4){ attente = true; continue; }   // la suite à l'image suivante
         const e = programme(k);
@@ -23752,7 +24587,7 @@ const skinGl = (() => {
           if(c.width !== w || c.height !== h){ c.width = w; c.height = h; }
           c.getContext('2d').drawImage(deja, 0, 0);
         } else {
-          rendre(e, tex, w, h, SKIN_T_FIXE[k] || 2.2, [.15, -.1], 99);
+          rendre(e, tex, w, h, skinTFixe(k), [.15, -.1], 99);
           copier(c, w, h);
           const garde = document.createElement('canvas'); garde.width = w; garde.height = h;
           garde.getContext('2d').drawImage(c, 0, 0);

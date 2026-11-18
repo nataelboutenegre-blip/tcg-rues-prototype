@@ -10643,3 +10643,35 @@ html.topo:not(.sans-vitrine) .psx-infos p{ margin:14px 0 0; font-size:.74rem; li
 .puce.puce-roue{ font-family:inherit; font-size:.85rem; cursor:pointer; border-color:rgba(240,180,41,.55); }
 .puce.puce-roue b{ color:#FFE29A; }
 html.topo .rdf{ align-self:stretch; }   /* le panneau Tirage est en colonne flex : la roue prenait la largeur de son contenu */
+
+/* patch454 : les cinq skins de la saison 3 (textes, accent, pastille) */
+.mini.skin-vitrail{ --sk-acc: #F3C766; }
+.mini.skin-vitrail .mini-nom{ color: #FFF1CF; text-shadow: 0 1px 0 #170D07, 0 0 8px rgba(255,170,60,.4); }
+.mini.skin-vitrail .mini-num{ color: #D5C4A1; } .mini.skin-vitrail .mini-rarete{ color: #F3C766 !important; } .mini.skin-vitrail .mini-dept{ color: rgba(255,241,207,.34); }
+.mini.skin-vitrail .mini-art::after{ display: none; }
+
+.mini.skin-givre{ --sk-acc: #BFE6FF; }
+.mini.skin-givre .mini-nom{ color: #F4FBFF; text-shadow: 0 0 7px rgba(120,200,255,.65), 0 1px 0 rgba(4,20,40,.6); }
+.mini.skin-givre .mini-num{ color: #A6CBE2; } .mini.skin-givre .mini-rarete{ color: #D8F0FF !important; } .mini.skin-givre .mini-dept{ color: rgba(235,248,255,.42); }
+
+.mini.skin-topo{ --sk-acc: #F0B429; }
+.mini.skin-topo .mini-nom{ color: #F6EFD9; }
+.mini.skin-topo .mini-num{ color: #8FB0D8; } .mini.skin-topo .mini-rarete{ color: #F0B429 !important; }
+.mini.skin-topo .mini-dept{ color: transparent; -webkit-text-stroke: 1px rgba(246,239,217,.7); }
+.mini.skin-topo .mini-art::after{ display: none; }
+
+.mini.skin-aquarelle{ --sk-acc: #5B6B8A; }
+.mini.skin-aquarelle .mini-nom{ color: #2A2B3A; }
+.mini.skin-aquarelle .mini-num{ color: #6E7182; } .mini.skin-aquarelle .mini-rarete{ color: #2A2B3A !important; } .mini.skin-aquarelle .mini-dept{ color: rgba(42,43,58,.2); }
+.mini.skin-aquarelle .mini-art::after{ display: none; }
+
+.mini.skin-kintsugi{ --sk-acc: #E8C566; }
+.mini.skin-kintsugi .mini-nom{ color: #F6E7BD; text-shadow: 0 0 2px #0B0A10, 0 0 5px #0B0A10, 0 0 9px #0B0A10, 0 1px 0 #000; }
+.mini.skin-kintsugi .mini-num, .mini.skin-kintsugi .mini-rarete{ text-shadow: 0 0 3px #0B0A10, 0 0 6px #0B0A10; }
+.mini.skin-kintsugi .mini-num{ color: #B9A982; } .mini.skin-kintsugi .mini-rarete{ color: #E8C566 !important; } .mini.skin-kintsugi .mini-dept{ color: rgba(246,231,189,.3); }
+
+.sk-p-vitrail{ background: conic-gradient(from 20deg, #C8362B, #F3C766, #2E7DBF, #3E9B5F, #C8362B); }
+.sk-p-givre{ background: linear-gradient(135deg, #0E2C4A, #BFE6FF); }
+.sk-p-topo{ background: linear-gradient(135deg, #16335F, #F0B429); }
+.sk-p-aquarelle{ background: linear-gradient(135deg, #F3EEE2, #7FA7D9 55%, #D9A85B); }
+.sk-p-kintsugi{ background: linear-gradient(135deg, #15131D 40%, #E8C566 48%, #15131D 56%); }

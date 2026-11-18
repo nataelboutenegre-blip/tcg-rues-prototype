@@ -16,6 +16,9 @@ select
   (select count(*) from suisse_communes_attente where photo is not null) >= 1900                as photos_suisses,
   (select count(*) from communes where code like 'CH%') = 0                                     as suisse_pas_encore_entree,
   to_regprocedure('public.est_canton(text)') is not null                                       as s3_1_passe,
+  (select count(*) from belgique_communes_attente) = 565                                       as reserve_belge,          -- ajout du 19/11
+  (select count(*) from communes where code like 'BE%') = 0                                     as belgique_pas_encore_entree,
+  to_regprocedure('public.est_province_be(text)') is not null                                  as s3_31_passe,
   (select coalesce((valeur::jsonb->>'actif')::int, 0) from config_jeu where cle = 'siege') = 0  as siege_eteint,
   (select coalesce((valeur::jsonb->>'ouvert')::int, 0) from config_jeu where cle = 'zone_depart') = 0 as zone_fermee,
   (select coalesce((valeur::jsonb->>'actif')::int, 0) from config_jeu where cle = 'mess') = 0   as mess_eteint,

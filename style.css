@@ -10764,3 +10764,45 @@ html.topo .nom-s2{ display: none; }
 /* patch457 : les règles de l'Artillerie, de la Centrale et des ordres, montrées quand le serveur les allume */
 #panel-regles [data-s3="artillerie"], #panel-regles [data-s3="centrale"], #panel-regles [data-s3="ordres"]{ display:none !important; }
 body.art-on #panel-regles [data-s3="artillerie"], body.centrale-on #panel-regles [data-s3="centrale"], body.ordres-on #panel-regles [data-s3="ordres"]{ display:revert !important; }
+/* patch458 : clans S3 — défense alliée, objectif de la semaine */
+.sga h2{ color: #FFB3AE; }
+.sga-note{ font-size: .8rem; line-height: 1.5; color: #C6D2E2; margin: 0 0 10px; }
+.sga-note b{ color: #fff; }
+.sga-c{ border-color: rgba(122,169,255,.35); }
+.sga-aide{ display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: .76rem; color: #C6D2E2; margin: 6px 0 2px; }
+.sga-aide b{ color: #9CC2FF; }
+.sga-max{ font-size: .8rem; color: #8FE6BC; font-weight: 700; }
+.sga-mfo .mfo-h > span{ color: #9CC2FF; }
+/* l'objectif de la semaine */
+.cob{ border-color: rgba(240,180,41,.4); background: linear-gradient(160deg, rgba(240,180,41,.12), rgba(240,180,41,.03)); }
+.cob h3 .cob-ic{ font-size: 1.05rem; }
+.cob-n{ font-size: .86rem; color: #DCE6F2; margin: 2px 0 10px; }
+.cob-n b{ color: #fff; font-size: 1.05rem; }
+.cob-piste{ position: relative; height: 10px; border-radius: 999px; background: rgba(7,17,31,.55); margin: 4px 6px 14px; }
+.cob-piste > i{ position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px; background: linear-gradient(90deg, #C98A3A, #F0B429); }
+.cob-cran{ position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #0D1B2E; border: 2px solid rgba(169,188,212,.5); }
+.cob-cran.ok{ background: #F0B429; border-color: #FFE29A; }
+.cob-pal{ display: grid; grid-template-columns: 62px 1fr auto auto; align-items: center; gap: 8px; padding: 7px 0; border-top: 1px solid rgba(169,188,212,.12); font-size: .82rem; color: #C6D2E2; }
+.cob-pal.ok{ color: #fff; }
+.cob-med{ font-size: .66rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; padding: 3px 0; border-radius: 999px; text-align: center; }
+.cob-med.m1{ background: rgba(201,138,58,.2); color: #E7B07A; }
+.cob-med.m2{ background: rgba(200,212,226,.16); color: #E4ECF5; }
+.cob-med.m3{ background: rgba(240,180,41,.22); color: #FFD66B; }
+.cob-seuil b{ color: #fff; }
+.cob-gain{ font-weight: 700; color: #FFE29A; display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.cob-gain svg, .cob-ramasser svg, .cob-avant svg, .cob-rc svg{ width: 13px; height: 13px; vertical-align: -2px; }
+.cob-etat{ font-size: .72rem; font-weight: 700; color: #8FE6BC; min-width: 62px; text-align: right; }
+.cob-ramasser{ width: 100%; margin-top: 10px; }
+.cob-p{ font-size: .8rem; color: #FFE29A; margin: 8px 0 0; }
+.cob-avant{ display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; padding: 8px 10px; border-radius: 10px; background: rgba(7,17,31,.4); font-size: .8rem; color: #C6D2E2; }
+.cob-qui small{ color: #9CC2FF; }
+.cob-rc span b{ color: #fff; }
+.s3c-p .btl-nom{ display:inline; font-size:inherit; font-weight:700; text-decoration: underline; text-decoration-color: rgba(255,255,255,.35); text-underline-offset: 2px; }
+.cob-pal{ grid-template-columns: 64px minmax(0,1fr) auto; }
+.cob-seuil{ white-space: nowrap; }
+.cob-etat{ grid-column: 2 / 4; min-width: 0; text-align: left; margin-top: -4px; }
+.cob-etat:empty{ display: none; }
+/* les règles des trois, montrées quand le serveur les allume */
+#panel-regles [data-s3="allie"], #panel-regles [data-s3="objectif"], #panel-regles [data-s3="top5"]{ display:none !important; }
+body.allie-on #panel-regles [data-s3="allie"], body.objectif-on #panel-regles [data-s3="objectif"], body.top5-on #panel-regles [data-s3="top5"]{ display:revert !important; }
+body:not(.top5-on) #panel-regles [data-s3="moyenne"]{ display:inline !important; }

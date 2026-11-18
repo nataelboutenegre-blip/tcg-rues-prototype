@@ -1945,6 +1945,7 @@ async function chargerClassementClans(){
   const [cl, mc] = await Promise.all([sb.rpc('clans_classement'), sb.rpc('mon_clan')]);
   if(cl.error) console.error('Classement des clans :', cl.error.message);
   const monClan = !mc.error && mc.data && mc.data.clan ? mc.data.clan.id : null;
+  if(!cl.error && typeof clModeMaj === 'function') clModeMaj(cl.data);   // patch458
   const tous = cl.error ? [] : (cl.data || []).map((x, i) => ({ ...x, rang: i + 1, est_moi: x.clan_id === monClan }));
   classementDonnees = classementComplet ? tous : tous.filter(x => x.rang <= 10 || x.est_moi);
   classementDonnees.total = tous.length;
@@ -1964,7 +1965,7 @@ function renderClassementClans(podium, liste, plus){
       <span class="cl-rang">${x.rang}</span>${blasonHtml(x.tag, x.couleur, true)}
       <span class="cl-pseudo">${x.est_moi ? '<b>' + echapperTexte(x.nom) + '</b>' : echapperTexte(x.nom)}${trophesHtml(TROPHEES_VUS.get(x.clan_id))}</span>
       <span class="cl-detail">${qui(x)}</span>
-      <span class="cl-score">${nb(x.moyenne)}<small>/ membre</small></span>
+      <span class="cl-score">${nb(x.moyenne)}<small>${clScoreUnite()}</small></span>
     </button>`;
   if(!classementOuvert){
     const moi = d.find(x => x.est_moi);
@@ -1985,11 +1986,11 @@ function renderClassementClans(podium, liste, plus){
       <span class="cl-rang">${x.rang}</span>
       ${blasonHtml(x.tag, x.couleur)}
       <span class="cl-pseudo">${echapperTexte(x.nom)}${trophesHtml(TROPHEES_VUS.get(x.clan_id))}</span>
-      <span class="cl-score">${nb(x.moyenne)}<small>/ membre</small></span>
+      <span class="cl-score">${nb(x.moyenne)}<small>${clScoreUnite()}</small></span>
       <span class="cl-detail">${qui(x)}</span>
     </button>`).join('');
   liste.innerHTML = d.filter(x => x.rang > 3).map(ligne).join('')
-    + `<p class="cl-note-clans">Moyenne de communes du Front par membre actif (jeu ouvert dans les 7 derniers jours) : un gros clan n'a pas d'avantage.</p>`;
+    + `<p class="cl-note-clans">${clNoteClassement()}</p>`;   // patch458
   if(plus) plus.hidden = classementComplet || (d.total || 0) <= 10;
 }
 
@@ -2014,11 +2015,11 @@ function clCalcRendre(legende, quoi){
   const bouton = '<span class="cl-calc-btns">'   // patch417 : « Mes points » et « Comment c'est calculé ? » ensemble
     + (quoi === 'front' && classementDonnees.some(l => l.est_moi) ? '<button type="button" class="cl-calc-btn" data-mp-ouvrir>Mes points</button>' : '')
     + `<button type="button" class="cl-calc-btn" data-cl-calc aria-expanded="${clCalcOuvert}">${clCalcOuvert ? 'Masquer le calcul' : 'Comment c’est calculé ?'}</button></span>`;
-  legende.innerHTML = (quoi === 'clans' ? 'Moyenne par membre actif'
+  legende.innerHTML = (quoi === 'clans' ? (CL_TOP5 ? 'Communes des 5 meilleurs membres actifs' : 'Moyenne par membre actif')
     : '<i class="sc-pt c"></i>cartes <i class="sc-pt co"></i>combats <i class="sc-pt t"></i>territoires <i class="sc-pt b"></i>bâtiments') + bouton;   // patch354
   legende.hidden = false;
   panneau.hidden = !clCalcOuvert;
-  if(clCalcOuvert) panneau.innerHTML = quoi === 'clans' ? CL_CALC_CLANS : CL_CALC_FRONT;
+  if(clCalcOuvert) panneau.innerHTML = quoi === 'clans' ? (CL_TOP5 ? CL_CALC_CLANS_TOP5 : CL_CALC_CLANS) : CL_CALC_FRONT;   // patch458
 }
 document.addEventListener('click', (e) => {
   if(!e.target.closest('[data-cl-calc]')) return;
@@ -11592,6 +11593,7 @@ async function chargerBatiments(){
     if(typeof mfoRendre === 'function') mfoRendre();   // patch366
     if(btEcranOuvert() && BTE.vue === 'miens') btEcranRendre();
     if(typeof s3Charger === 'function') s3Charger();   // patch456
+    if(typeof objCharger === 'function') objCharger();   // patch458
     document.body.classList.toggle('art-on', !!BATIMENTS.artilleries_ouvertes);   // patch457
     if(!document.querySelector('#mapCalques [data-calque="batiments"]') && typeof rendreCalques === 'function') rendreCalques();   // patch244
     legendeSignature = '';
@@ -20834,6 +20836,8 @@ async function loadClan(){
   if(mc.error){ zone.innerHTML = `<p class="collection-empty">${echapperTexte(messageLisible(mc.error.message))}</p>`; return; }
   if(SAISON2) await Promise.all([chargerClanEch(), chargerClanDiplo(), chargerDiscordStatut()]);   // patch194, patch400, patch401
   await chargerCandidatures();   // patch307
+  if(!cl.error && typeof clModeMaj === 'function') clModeMaj(cl.data);   // patch458
+  if(typeof objCharger === 'function') await objCharger(true);   // patch458
   clanCache = { moi: mc.data || {}, classement: cl.error ? [] : (cl.data || []), formation: cf.error ? [] : (cf.data || []),
                 activite: ac.error ? null : new Map((ac.data || []).map(a => [a.joueur_id, a])) };
   renderClan();
@@ -20957,7 +20961,7 @@ function renderClan(){
   const c = moi.clan;
   const rang = c ? classement.findIndex(x => x.clan_id === c.id) : -1;
   const lignesClassement = classement.length
-    ? classement.map((x, i) => `<div class="cl-bloc"><button type="button" class="cl-ligne cl-depli${c && x.clan_id === c.id ? ' moi' : ''}" data-clan-voir="${x.clan_id}" aria-expanded="${clansOuverts.has(x.clan_id)}"><b>${i + 1}</b>${blasonHtml(x.tag, x.couleur, true)}<span class="cl-nom">${echapperTexte(x.nom)}${!c ? candEtiquette(x) : ''}</span><span class="cl-score">${nbClan(x.moyenne)}<small>${x.actifs != null ? 'par membre actif' : 'par membre'}</small></span>${CHEVRON_CLAN}</button>${clansOuverts.has(x.clan_id) ? membresClanHtml(x) + candPostulerHtml(x) : ''}</div>`).join('') + `<p class="clan-note">${!c && CAND ? 'Touche un clan pour voir ses membres et postuler. 3 candidatures en attente au plus ; sans réponse, elles expirent au bout de 3 jours.' : 'Touche un clan pour voir ses membres.'}</p>`
+    ? classement.map((x, i) => `<div class="cl-bloc"><button type="button" class="cl-ligne cl-depli${c && x.clan_id === c.id ? ' moi' : ''}" data-clan-voir="${x.clan_id}" aria-expanded="${clansOuverts.has(x.clan_id)}"><b>${i + 1}</b>${blasonHtml(x.tag, x.couleur, true)}<span class="cl-nom">${echapperTexte(x.nom)}${!c ? candEtiquette(x) : ''}</span><span class="cl-score">${nbClan(x.moyenne)}<small>${clScoreUniteLong(x.actifs != null)}</small></span>${CHEVRON_CLAN}</button>${clansOuverts.has(x.clan_id) ? membresClanHtml(x) + candPostulerHtml(x) : ''}</div>`).join('') + `<p class="clan-note">${!c && CAND ? 'Touche un clan pour voir ses membres et postuler. 3 candidatures en attente au plus ; sans réponse, elles expirent au bout de 3 jours.' : 'Touche un clan pour voir ses membres.'}</p>`
     : '<p class="collection-empty">Aucun clan classé pour l\'instant (il faut 3 membres).</p>';
   // patch176 : les clans de 1 ou 2 membres, pour pouvoir demander une invitation
   const formation = (clanCache.formation || []).filter(x => !c || x.clan_id !== c.id);
@@ -20965,7 +20969,7 @@ function renderClan(){
     ${formation.map(x => `<div class="cl-bloc"><button type="button" class="cl-ligne cl-depli formation" data-clan-voir="${x.clan_id}" aria-expanded="${clansOuverts.has(x.clan_id)}">${blasonHtml(x.tag, x.couleur, true)}<span class="cl-nom">${echapperTexte(x.nom)}<small>${x.chef ? 'chef : ' + echapperTexte(x.chef) : ''}</small>${!c ? candEtiquette(x) : ''}</span><span class="cl-score">${x.membres} / 3<small>membres</small></span>${CHEVRON_CLAN}</button>${clansOuverts.has(x.clan_id) ? membresClanHtml(x, x.chef || 'son chef') + candPostulerHtml(x) : ''}</div>`).join('')}
     <p class="clan-note">${CAND ? 'Pour en rejoindre un, déplie-le et postule, ou demande une invitation à son chef.' : 'Pour en rejoindre un, demande une invitation à son chef (sur le Discord, salon recrutement-clans).'} Il sera classé à partir de 3 membres.</p>` : '';
   const blocClassement = `<div class="clan-carte"><h2>Classement des clans</h2>${lignesClassement}
-    <p class="clan-note">À la moyenne de communes du Front par membre actif (jeu ouvert dans les 7 derniers jours), jamais au total : un gros clan n'a pas d'avantage, et un membre absent ne fait pas baisser son clan.</p>${blocFormation}</div>`;
+    <p class="clan-note">${CL_TOP5 ? clNoteClassement() : 'À la moyenne de communes du Front par membre actif (jeu ouvert dans les 7 derniers jours), jamais au total : un gros clan n\'a pas d\'avantage, et un membre absent ne fait pas baisser son clan.'}</p>${blocFormation}</div>`;
 
   let gauche;
   if(!c){
@@ -21022,7 +21026,7 @@ function renderClan(){
         <span><b>${nbClan(somme('defenses'))}</b> défenses</span><span><b>${nbClan(somme('energie'))}</b> énergie</span></div>` : '';
     gauche = `<div class="clan-carte">
       <div class="clan-tete">${blasonHtml(c.tag, c.couleur)}<div><div class="clan-nom">${echapperTexte(c.nom)}</div><small>${n} membre${n > 1 ? 's' : ''} sur 8${n < 3 ? ' · classé à partir de 3' : ''}</small></div>${c.chef || (c.droits || {}).modifier ? '<button type="button" class="bq-btn secondaire bl-modifier" data-bl-ouvrir>Modifier le clan</button>' : ''}</div>
-      <div class="puces"><span class="puce">Communes en Front <b>${nbClan(total)}</b></span><span class="puce">Moyenne par membre${actifs ? ' actif' : ''} <b>${nbClan(moyenne)}</b></span>${actifs ? `<span class="puce">Actifs <b>${actifs.length}</b> sur ${n}</span>` : ''}${rang >= 0 ? `<span class="puce">Rang <b>${rang + 1}</b> sur ${classement.length}</span>` : ''}</div>
+      <div class="puces"><span class="puce">Communes en Front <b>${nbClan(total)}</b></span><span class="puce">${CL_TOP5 ? 'Score (5 meilleurs)' : `Moyenne par membre${actifs ? ' actif' : ''}`} <b>${nbClan(CL_TOP5 ? clScoreClan(c.membres, act) : moyenne)}</b></span>${actifs ? `<span class="puce">Actifs <b>${actifs.length}</b> sur ${n}</span>` : ''}${rang >= 0 ? `<span class="puce">Rang <b>${rang + 1}</b> sur ${classement.length}</span>` : ''}</div>
       ${bandeauDiscordClan(c)}   <!-- patch401 -->
       ${blocJour}
       ${typeof s3ClanBlocs === 'function' ? s3ClanBlocs() : ''}
@@ -28393,7 +28397,7 @@ function mfoRendre(){
   // 5. les quêtes du jour : le même bandeau que dans le Tirage
   const ob = document.getElementById('objBandeau');
   const blocQ = ob && !ob.hidden && ob.innerHTML ? `<button type="button" class="${ob.className} mfo-quetes" data-mfo="quetes" aria-label="${echapperTexte(ob.getAttribute('aria-label') || 'Quêtes du jour')}">${ob.innerHTML}</button>` : '';
-  z.innerHTML = blocDanger + (typeof s3MfoOrdres === 'function' ? s3MfoOrdres() : '') + blocEnergie + blocAtt + mfoBatimentsHtml() + blocCom + blocQ;   // patch366, patch456
+  z.innerHTML = blocDanger + (typeof sgaMfo === 'function' ? sgaMfo() : '') + (typeof s3MfoOrdres === 'function' ? s3MfoOrdres() : '') + (typeof objMfo === 'function' ? objMfo() : '') + blocEnergie + blocAtt + mfoBatimentsHtml() + blocCom + blocQ;   // patch366, patch456
 }
 // patch379 : la galerie depuis le volet Bâtiments
 document.getElementById('panel-batiments')?.addEventListener('click', (e) => {
@@ -31256,6 +31260,7 @@ async function loadMenacesSiege(){
   sgMenaces = Array.isArray(data) ? data : [];
   if(typeof canvasActif === 'function' && canvasActif()) demanderDessin();   // patch435
   renderMenacesSiege();
+  if(typeof sgaCharger === 'function') sgaCharger();   // patch458
   sgRafraichirFiche();   // patch406
   if(typeof mfoRendre === 'function') mfoRendre();
 }
@@ -31984,6 +31989,7 @@ async function chargerClansInfos(force){
     const [cl, cf] = await Promise.all([sb.rpc('clans_classement'), sb.rpc('clans_en_formation')]);
     if(cl.error && cf.error) return clansInfos;
     const parTag = new Map(), parId = new Map();
+    if(!cl.error && typeof clModeMaj === 'function') clModeMaj(cl.data);   // patch458
     (cl.error ? [] : cl.data || []).forEach((x, i) => { const o = { ...x, id: x.clan_id, rang: i + 1 }; parTag.set(x.tag, o); parId.set(x.clan_id, o); });
     (cf.error ? [] : cf.data || []).forEach(x => {
       if(parTag.has(x.tag)) return;
@@ -32047,7 +32053,7 @@ function rendreFicheClan(){
       <span class="cl-mb-nb"><b>${nb(m.communes)}</b> commune${m.communes > 1 ? 's' : ''}</span></div>`;
   }).join('');
   const chiffres = [[`${membres.length}<small>/8</small>`, 'membres'], [nb(actifs), actifs > 1 ? 'actifs' : 'actif'], [nb(communes), 'communes']];
-  if(c.rang && c.moyenne != null) chiffres.push([nb(c.moyenne), 'par membre actif']);
+  if(c.rang && c.moyenne != null) chiffres.push([nb(c.moyenne), CL_TOP5 ? 'points' : 'par membre actif']);   // patch458
   const r = rangClanTexte(c);
   const html = `
     <div class="fenetre profil clan-fiche" role="dialog" aria-modal="true" aria-labelledby="cfNom" style="--joueur:${echapperTexte(c.couleur || '#E07A2E')};--clan:${echapperTexte(c.couleur || '#E07A2E')}">
@@ -32811,7 +32817,7 @@ function s3MfoCentrale(){
 function s3ClanBlocs(){ return `<div data-s3-clan>${s3ClanHtml()}</div>`; }
 function s3MajClan(){ const el = document.querySelector('[data-s3-clan]'); if(el) el.innerHTML = s3ClanHtml(); }
 function s3ClanHtml(){
-  let h = '';
+  let h = typeof objHtml === 'function' ? objHtml() : '';   // patch458
   if(s3CentraleOk()) h += s3CentraleHtml();
   if(s3OrdresOk()){
     const O = S3C.ordres, L = O.ordres || [];
@@ -33047,3 +33053,157 @@ function s3DessinerOrdres(ctx, liste){
     ctx.restore();
   }
 }
+
+// ---------- patch458 : clans S3 — défense alliée, classement des 5 meilleurs, objectif de la semaine (s3-28) ----------
+// Tout dépend du serveur (config_jeu 'clans_s3' : defense_allie, classement_top5, objectif). Éteint → rien ne change.
+var CL_TOP5 = false;
+function clModeMaj(rows){
+  if(!Array.isArray(rows) || !rows.length) return;
+  CL_TOP5 = rows.some(r => r && r.mode === 'top5');
+  document.body.classList.toggle('top5-on', CL_TOP5);
+}
+function clScoreUnite(){ return CL_TOP5 ? 'points' : '/ membre'; }
+function clScoreUniteLong(actifs){ return CL_TOP5 ? 'points' : (actifs ? 'par membre actif' : 'par membre'); }
+function clNoteClassement(){
+  return CL_TOP5 ? 'Les communes du Front des 5 meilleurs membres actifs (jeu ouvert dans les 7 derniers jours), additionnées : une recrue ne fait jamais baisser son clan.'
+    : 'Moyenne de communes du Front par membre actif (jeu ouvert dans les 7 derniers jours) : un gros clan n\'a pas d\'avantage.';
+}
+const CL_CALC_CLANS_TOP5 = `<p class="cl-calc-txt">On additionne les communes du Front des <b>5 meilleurs membres actifs</b> du clan (jeu ouvert dans les 7 derniers jours). Une recrue ne fait jamais baisser le score : au pire elle ne compte pas, au mieux elle prend la place du 5e. Un membre absent ne compte pas. Un clan est classé à partir de <b>3 membres</b>.</p>`;
+function clScoreClan(membres, act){
+  return (membres || []).filter(m => !act || membreActif(act.get(m.id))).map(m => Number(m.communes) || 0)
+    .sort((a, b) => b - a).slice(0, 5).reduce((s, n) => s + n, 0);
+}
+
+// ---- 1. Défense alliée : Défendre › « Ton clan est assiégé » et Mon front
+var SGA = { liste: [], ouvert: false };
+async function sgaCharger(){
+  if(typeof SIEGE === 'undefined' || !SIEGE || !CLANS) return;
+  const [r, o] = await Promise.all([sb.rpc('clan_sieges_allies'), sb.rpc('defense_allie_ouverte')]);
+  if(r.error) return;   // serveur pas encore lancé : rien
+  SGA.liste = Array.isArray(r.data) ? r.data : [];
+  document.body.classList.toggle('allie-on', !o.error && o.data === true);
+  sgaRendre();
+  try{ if(typeof mfoRendre === 'function') mfoRendre(); }catch(e){}
+}
+function sgaReste(m){ return Math.max(0, (Number(m.allie_max) || 60) - (Number(m.mon_renfort) || 0)); }
+function sgaRendre(){
+  const ref = document.getElementById('combatMenaces');
+  if(!ref) return;
+  let el = document.getElementById('combatAllies');
+  if(!el){ el = document.createElement('div'); el.id = 'combatAllies'; el.className = 'menaces sga'; ref.after(el); }
+  el.hidden = !SGA.liste.length;
+  if(el.hidden){ el.innerHTML = ''; return; }
+  const max = Number(SGA.liste[0].allie_max) || 60;
+  el.innerHTML = `<h2>Ton clan est assiégé</h2>
+    <p class="sga-note">Renforce la commune d’un membre : chaque énergie fait reculer la jauge de l’attaquant (× 1 pour toi, × 1,2 pour le propriétaire). Au plus <b>${max} ⚡</b> par siège pour toi ; la défense réussie compte pour lui.</p>`
+    + SGA.liste.map(m => {
+      const tier = sgTier(m.tier), res = Number(m.resistance) || 0, deg = Number(m.degats) || 0;
+      const p = res ? Math.round(100 * deg / res) : 0, reste = sgaReste(m), mon = Number(m.mon_renfort) || 0, tous = Number(m.allies) || 0;
+      const etat = m.long ? `<b class="sg-long">Siège long</b>` : `<b class="sg-eclair">Siège éclair</b> · elle peut tomber d'un coup`;
+      const vals = [5, 10, 20].filter(x => x <= reste);
+      if(reste > 0 && !vals.includes(reste) && reste < 20) vals.push(reste);
+      return `<div class="sg-def sga-c${p >= 66 ? ' chaud' : ''}">
+        <div class="sg-def-h"><i class="sg-rar" style="--c:${tier.color}"></i><button type="button" class="sg-def-nom" data-voir-carte="${echapperTexte(m.commune)}">${echapperTexte(m.nom)}</button>${badgeDept(m.dept)}<span class="sg-def-qui">à <b>${echapperTexte(m.proprio_pseudo || 'un membre')}</b> · assiégée par <b>${echapperTexte(m.attaquant_pseudo || 'un joueur')}</b></span></div>
+        ${Number(m.bouclier) > 0 ? `<div class="sg-bcl"><span>Sa garnison</span><b>${sgNb(m.bouclier)} points de bouclier</b></div>` : ''}
+        ${sgBarre(deg, res)}
+        <div class="sg-jl"><span><b>${sgNb(deg)}</b> / ${sgNb(res)} · ${p} %</span><span>${etat}</span></div>
+        <div class="sga-aide"><span>Ton aide <b>${mon}</b> / ${Number(m.allie_max) || 60} ⚡</span>${tous > mon ? `<span>Tout le clan : <b>${tous}</b> ⚡</span>` : ''}</div>
+        <div class="sg-def-a">${reste > 0 ? `<span class="sg-renf-l">Renforcer</span>${vals.map(x => `<button type="button" class="sg-renf" data-sga-renf="${x}" data-code="${echapperTexte(m.commune)}" data-att="${echapperTexte(m.attaquant)}">${x} ⚡</button>`).join('')}`
+          : '<span class="sga-max">✓ Tu as mis le maximum sur ce siège.</span>'}</div></div>`;
+    }).join('');
+}
+function sgaMfo(){
+  if(!SGA.liste.length) return '';
+  const l = SGA.liste;
+  return `<div class="mfo-t mfo-alerte sga-mfo"><div class="mfo-h"><span>🛡️ Ton clan a besoin d’aide</span><button type="button" class="mfo-lien" data-mfo="defendre">Tout voir${l.length > 2 ? ` (${l.length})` : ''} ›</button></div>`
+    + l.slice(0, 2).map(m => {
+      const p = Number(m.resistance) ? Math.round(100 * Number(m.degats) / Number(m.resistance)) : 0;
+      return `<div class="mfo-l"><div><b>${echapperTexte(m.nom || m.commune)}</b> · à ${echapperTexte(m.proprio_pseudo || 'un membre')}<small>${echapperTexte(m.attaquant_pseudo || 'un joueur')} · jauge à ${p} % · ton aide ${Number(m.mon_renfort) || 0} / ${Number(m.allie_max) || 60}</small></div>`
+        + `${sgaReste(m) > 0 ? '<button type="button" class="mfo-btn mfo-rouge" data-mfo="defendre">Aider</button>' : '<span class="mfo-ok">✓</span>'}</div>`;
+    }).join('') + '</div>';
+}
+document.addEventListener('click', async (ev) => {
+  const t = ev.target.closest('[data-sga-renf]');
+  if(!t || t.disabled) return;
+  t.disabled = true;
+  const m = SGA.liste.find(x => x.commune === t.dataset.code && x.attaquant === t.dataset.att);
+  const { data, error } = await sb.rpc('siege_renforcer', { p_code: t.dataset.code, p_attaquant: t.dataset.att, p_energie: Number(t.dataset.sgaRenf) });
+  if(error){ notifier({ type: 'erreur', titre: 'Renfort', texte: messageLisible(error.message) }); t.disabled = false; return; }
+  const recul = m && data ? Math.max(0, (Number(m.degats) || 0) - (Number(data.degats) || 0)) : 0;
+  notifier({ type: 'succes', titre: 'Renfort envoyé', texte: `${recul > 0 ? `La jauge recule de ${sgNb(recul)} points. ` : ''}${echapperTexte((m && m.proprio_pseudo) || 'Ton allié')} est prévenu.` });
+  if(typeof majEnergie === 'function') majEnergie();
+  await sgaCharger();
+});
+
+// ---- 3. Objectif de clan de la semaine : onglet Clan et Mon front
+var OBJ = { etat: null, lu: 0, charge: null };
+async function objCharger(force){
+  if(!SAISON2 || !CLANS) return;
+  if(OBJ.charge) return OBJ.charge;
+  if(!force && Date.now() - OBJ.lu < 60e3) return;
+  OBJ.charge = (async () => {
+    try{
+      const { data, error } = await sb.rpc('clan_objectif_etat');
+      if(!error){ OBJ.etat = data; OBJ.lu = Date.now(); document.body.classList.toggle('objectif-on', !!(data && data.ouvert)); objRendre(); }
+    }catch(e){}
+    finally{ OBJ.charge = null; }
+  })();
+  return OBJ.charge;
+}
+function objOk(){ const e = OBJ.etat; return !!(e && e.ouvert && e.clan && e.cette); }
+const OBJ_NOMS = ['Bronze', 'Argent', 'Or'];
+function objGainTxt(p){ return [p.lingots ? `+${p.lingots} ${ICONE_LINGOT}` : '', p.energie ? `+${p.energie} ⚡` : ''].filter(Boolean).join(' '); }
+function objDispo(s){
+  if(!s || !s.participe) return null;
+  const l = (s.paliers || []).filter(p => p.atteint && !p.ramasse);
+  if(!l.length) return null;
+  return { semaine: s.semaine, lingots: l.reduce((a, p) => a + (p.lingots || 0), 0), energie: l.reduce((a, p) => a + (p.energie || 0), 0) };
+}
+function objDispoTxt(d){ return [d.lingots ? `+${d.lingots} ${ICONE_LINGOT}` : '', d.energie ? `+${d.energie} ⚡` : ''].filter(Boolean).join(' '); }
+function objRendre(){
+  try{ if(typeof s3MajClan === 'function') s3MajClan(); }catch(e){}
+  try{ if(typeof mfoRendre === 'function') mfoRendre(); }catch(e){}
+}
+function objHtml(){
+  if(!objOk()) return '';
+  const S = OBJ.etat.cette, P = S.paliers || [], top = P.length ? P[P.length - 1].seuil : 1;
+  const pct = Math.min(100, 100 * S.prises / Math.max(1, top));
+  const fin = Math.max(0, new Date(S.fin).getTime() - Date.now());
+  const d = objDispo(S), dl = objDispo(OBJ.etat.derniere);
+  const prochain = P.find(p => !p.atteint);
+  const lignes = P.map((p, i) => `<div class="cob-pal${p.atteint ? ' ok' : ''}"><span class="cob-med m${i + 1}">${OBJ_NOMS[i] || 'Palier ' + (i + 1)}</span>
+      <span class="cob-seuil"><b>${p.seuil}</b> commune${p.seuil > 1 ? 's' : ''}</span><span class="cob-gain">${objGainTxt(p)}</span>
+      <span class="cob-etat">${p.ramasse ? '✓ ramassé' : p.atteint ? (S.participe ? 'à ramasser' : 'atteint') : ''}</span></div>`).join('');
+  const membres = (S.membres || []).filter(m => m.prises || m.renforts);
+  return `<div class="s3-carte cob"><h3><span class="cob-ic">🏁</span>Objectif de la semaine <small>fin dimanche à minuit · encore ${formatDuree(fin)}</small></h3>
+    <p class="cob-n"><b>${S.prises}</b> commune${S.prises > 1 ? 's' : ''} prise${S.prises > 1 ? 's' : ''} par le clan${prochain ? ` · encore <b>${Math.max(0, prochain.seuil - S.prises)}</b> pour ${(OBJ_NOMS[prochain.n - 1] || 'le palier').toLowerCase()}` : ' · tous les paliers atteints'}</p>
+    <div class="cob-piste"><i style="width:${pct}%"></i>${P.map((p, i) => `<span class="cob-cran${p.atteint ? ' ok' : ''}" style="left:${Math.min(100, 100 * p.seuil / Math.max(1, top))}%"></span>`).join('')}</div>
+    ${lignes}
+    ${d ? `<button type="button" class="bq-btn cob-ramasser" data-obj="ramasser" data-sem="${d.semaine}">Ramasser ma part · ${objDispoTxt(d)}</button>` : ''}
+    ${S.participe ? '' : '<p class="cob-p">Ta part arrive dès que tu prends une commune ou que tu renforces un allié cette semaine.</p>'}
+    ${dl ? `<div class="cob-avant"><span>Semaine dernière : ${OBJ.etat.derniere.prises} prises</span><button type="button" class="s3o-mini" data-obj="ramasser" data-sem="${dl.semaine}">Ramasser · ${objDispoTxt(dl)}</button></div>` : ''}
+    ${membres.length ? `<p class="clan-note cob-qui">${membres.map(m => `${m.moi ? '<b>' : ''}${echapperHtml(m.pseudo || '?')}${m.moi ? '</b>' : ''} ${m.prises}${m.renforts ? ` <small>+ ${m.renforts} ⚡ d’aide</small>` : ''}`).join(' · ')}</p>` : ''}
+    <p class="clan-note">Communes prises par les membres du lundi au dimanche. Seuils fixés le lundi : ${(P.map(p => p.seuil)).join(', ')} pour ${S.actifs} membres actifs. Chaque membre qui a pris une commune ou aidé un allié ramasse sa part ; il a jusqu’à la fin de la semaine suivante.</p></div>`;
+}
+function objMfo(){
+  if(!objOk()) return '';
+  const S = OBJ.etat.cette, d = objDispo(S) || objDispo(OBJ.etat.derniere);
+  if(d) return `<div class="mfo-rc cob-rc"><span>🏁 Objectif du clan : palier atteint</span><button type="button" class="mfo-btn mfo-or" data-obj="ramasser" data-sem="${d.semaine}">Ramasser ${objDispoTxt(d)}</button></div>`;
+  const prochain = (S.paliers || []).find(p => !p.atteint);
+  if(!prochain) return `<div class="mfo-rc cob-rc"><span>🏁 Objectif du clan : or atteint ✓</span></div>`;
+  return `<div class="mfo-rc cob-rc"><span>🏁 Objectif du clan : <b>${S.prises}</b> / ${prochain.seuil} pour ${(OBJ_NOMS[prochain.n - 1] || 'le palier').toLowerCase()}</span><button type="button" class="mfo-btn mfo-sec" data-s3="vers-clan">Voir ›</button></div>`;
+}
+document.addEventListener('click', async (ev) => {
+  const b = ev.target.closest('[data-obj]');
+  if(!b || b.disabled) return;
+  b.disabled = true;
+  const { data, error } = await sb.rpc('clan_objectif_ramasser', { p_semaine: b.dataset.sem });
+  if(error){ notifier({ type: 'erreur', titre: 'Objectif du clan', texte: messageLisible(error.message) }); b.disabled = false; return; }
+  OBJ.etat = data; OBJ.lu = Date.now();
+  const l = Number(data.gagne_lingots) || 0, e = Number(data.gagne_energie) || 0, ep = Number(data.energie_prevue) || 0;
+  notifier({ type: 'succes', titre: 'Objectif du clan', texte: `${[l ? `+${l} lingots` : '', e ? `+${e} énergie` : ''].filter(Boolean).join(' et ') || 'Ramassé'}${ep > e ? ' (réserve d’énergie au maximum)' : ''}.` });
+  if(typeof majEnergie === 'function') majEnergie();
+  try{ if(typeof chargerBatiments === 'function') chargerBatiments(); }catch(e2){}
+  objRendre();
+});
+setInterval(() => { if(document.visibilityState === 'visible'){ objCharger(); } }, 120e3);

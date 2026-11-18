@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '22e83105fca0';
+const VERSION_JEU = 'dcc8075ab242';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2984,8 +2984,8 @@ function dessinerTerritoiresCanvas(ctx, trait, k){
   }
   dessinerFrontieres(ctx, trait, mode === 'contours');
   if(s3){   // patch331 : la frontière suisse, comme une limite de région, plus épaisse
-    ctx.strokeStyle = 'rgba(7,17,31,0.6)'; ctx.lineWidth = trait(6.6); ctx.stroke(s3.frontiere);
-    ctx.strokeStyle = 'rgba(214,230,246,0.8)'; ctx.lineWidth = trait(3); ctx.stroke(s3.frontiere);
+    ctx.strokeStyle = 'rgba(7,17,31,0.6)'; ctx.lineWidth = trait(4.6); ctx.stroke(s3.frontiere);   // patch461 : plus fine (6,6 → 4,6)
+    ctx.strokeStyle = 'rgba(214,230,246,0.8)'; ctx.lineWidth = trait(2.1); ctx.stroke(s3.frontiere);   // patch461 (3 → 2,1)
     ctx.setLineDash([trait(7), trait(5)]);
     ctx.strokeStyle = 'rgba(15,31,56,0.85)'; ctx.lineWidth = trait(1.1); ctx.stroke(s3.frontiere);
     ctx.setLineDash([]);

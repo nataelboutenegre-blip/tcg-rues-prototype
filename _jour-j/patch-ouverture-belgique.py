@@ -6,7 +6,10 @@
 # Ensuite : python3 maj-version.py, puis commit de app.js + index.html + version.json + direct/
 # + mentions-legales.html, puis push. La ligne de la cloche (data/nouveautes.json) : à écrire le jour même.
 import os, re, sys
-R = sys.argv[1] if len(sys.argv) > 1 else '.'
+ARGS = [x for x in sys.argv[1:] if not x.startswith('--')]
+R = ARGS[0] if ARGS else '.'
+# --sans-direct-v : appelé par patch-jour-j-s3.py le 22/11, qui monte déjà direct.js?v=5 -> 6 dans le même envoi
+SANS_V = '--sans-direct-v' in sys.argv
 def rep(f, a, b):
     p = os.path.join(R, f); t = open(p, encoding='utf-8').read()
     if b in t and a not in t: print(f'{f} : déjà fait'); return
@@ -15,8 +18,9 @@ def rep(f, a, b):
 
 rep('app.js', 'const BELGIQUE_OUVERTE = false;', 'const BELGIQUE_OUVERTE = true;')
 rep('app.js', "const AURORE_V = '1';", "const AURORE_V = '2';")
+deja = 'const BELGIQUE_OUVERTE = true;' in open(os.path.join(R, 'direct/direct.js'), encoding='utf-8').read()
 rep('direct/direct.js', 'const BELGIQUE_OUVERTE = false;', 'const BELGIQUE_OUVERTE = true;')
-for f in ('direct/index.html', 'direct/tiktok.html'):
+for f in (() if (deja or SANS_V) else ('direct/index.html', 'direct/tiktok.html')):   # une seule fois
     p = os.path.join(R, f); t = open(p, encoding='utf-8').read()
     m = re.search(r'direct\.js\?v=(\d+)', t)
     if m:

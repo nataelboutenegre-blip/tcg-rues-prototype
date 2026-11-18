@@ -28,7 +28,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
 <script src="topo.js?v=1"></script><!-- patch433 : habillage Topo -->
-<link rel="stylesheet" href="style.css?v=dcc8075ab242">
+<link rel="stylesheet" href="style.css?v=611ae7174488">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -1257,6 +1257,7 @@
           <a href="#s2-clans">Clans et amis</a>
           <a href="#s2-outremer">Outre-mer</a>
           <a href="#s3-suisse" data-s3="suisse">Suisse</a>
+          <a href="#s3-belgique" data-s3="belgique">Belgique</a>
           <a href="#s2-quetes">Quêtes et mini-jeux</a>
           <a href="#s2-saison">La saison</a>
         </nav>
@@ -1387,7 +1388,7 @@
                 </tbody>
               </table>
             </div>
-            <p>Par département, seul le palier le plus haut compte (métropole<span data-s3="suisse"> et cantons suisses</span>).<span class="nom-s3"> Les bonus de département et de région sont <b>multipliés selon leur population</b> : × 0,6 pour les moins peuplés (Lozère, Creuse…) jusqu'à × 1,6 pour les plus peuplés (Nord, Paris, Bouches-du-Rhône, Zurich…) ; un département moyen (environ 540 000 habitants) reste à × 1. Les seuils restent en pourcentage de communes.</span><!-- patch460 --> Points des communes, de commune à légendaire. Une victoire ne compte qu'une fois par commune et par type, et reste acquise même si tu reperds la commune.</p>
+            <p>Par département, seul le palier le plus haut compte (métropole<span data-s3="suisse"> et cantons suisses</span><span data-s3="belgique">, provinces belges</span>).<span class="nom-s3"> Les bonus de département et de région sont <b>multipliés selon leur population</b> : × 0,6 pour les moins peuplés (Lozère, Creuse…) jusqu'à × 1,6 pour les plus peuplés (Nord, Paris, Bouches-du-Rhône, Zurich…) ; un département moyen (environ 540 000 habitants) reste à × 1. Les seuils restent en pourcentage de communes.</span><!-- patch460 --> Points des communes, de commune à légendaire. Une victoire ne compte qu'une fois par commune et par type, et reste acquise même si tu reperds la commune.</p>
             <p><b>Bâtiments</b> : sur une de tes communes, construis ta <b>Fonderie</b> (gratuite) : elle produit <b>10 lingots par jour</b>, 30 en réserve. Une <b>2e Fonderie</b> coûte 30 lingots : 10 lingots de plus par jour, réserve jusqu'à 45. Une Fonderie prête se <b>déplace</b> sur une autre de tes communes pour <b>10 lingots</b> (<span class="nom-s2">Combat</span><span class="nom-s3">QG</span> › Bâtiments, ou la fiche de la commune) : 6 h de chantier sans production, pas pendant un assaut, et ça ne s'annule pas.<!-- patch384 --> Les <b>combats</b> en rapportent aussi : <b>+2</b> par commune conquise, <b>+1</b> par défense réussie, <b>10 au plus par jour</b> (seules les victoires qui comptent pour le score).<!-- patch300 --> Avec <b>20 lingots</b>, fais d'une commune une <b>Forteresse</b> (5 au plus) : <span data-s2="des"><b>−15 %</b> aux chances des attaquants sur elle, et <b>+5 %</b> à tes attaques à moins de 20 km.</span><span data-s3="siege">sa résistance est <b>× 1,5</b> et tout siège contre elle est long ; tes sièges à moins de 20 km font <b>× 1,1</b> de dégâts.</span> Une Forteresse active se <b>déplace</b> sur une autre de tes communes pour <b>10 lingots</b> (<span class="nom-s2">Combat</span><span class="nom-s3">QG</span> › Bâtiments, ou la fiche de la commune) : 6 h de chantier sans effet, pas pendant un assaut, et ça ne s'annule pas.<!-- patch374 --> Un bâtiment met <b>6 h</b> à se construire (on peut l'annuler pendant ce temps : ses lingots sont rendus, sauf pendant un assaut sur sa commune)<!-- patch305 -->, se voit sur la carte et disparaît si on prend sa commune ; prendre une Fonderie pille la moitié des lingots de son propriétaire (le quart s'il en a deux). Les lingots ne servent qu'aux bâtiments et repartent à zéro à chaque saison.</p>
             <p><b>Banque</b> : avec une Fonderie, construis ta <b>Banque</b> (20 lingots, une seule). C'est ton <b>épargne</b> : tu y déposes jusqu'à <b>60 lingots</b>, qui rapportent <b>10 % par nuit</b> et sont à l'abri du pillage des Fonderies. Pour les dépenser, retire-les (<span class="nom-s2">Combat</span><span class="nom-s3">QG</span> › Bâtiments). Elle est <b>secrète</b>, sauf pour les Radars des autres joueurs à moins de 50 km. Tu peux la <b>déplacer</b> sur une autre de tes communes pour 10 lingots (<span class="nom-s2">Combat</span><span class="nom-s3">QG</span> › Bâtiments, ou la fiche de la commune) : son contenu la suit ; 6 h de chantier sans dépôt ni intérêts, pas pendant un assaut, et ça ne s'annule pas.<!-- patch375 --> Si on prend sa commune, elle est détruite et l'attaquant pille la moitié de son contenu ; une bombe qui tombe sur sa zone en détruit 20, 30 ou 40 % selon son niveau.</p><!-- patch354 -->
             <p><b>Centre de recherche et bombe</b> : avec 2 Fonderies, construis un <b>Centre de recherche</b> (40 lingots, un seul). Il est <b>secret</b> : les autres ne le voient pas sur la carte. <b>Préparer une bombe</b> coûte 45 lingots et l'annonce à tous, sans ton nom, avec ton département. La bombe est prête en 24 h (rayon 15 km), puis grossit : 20 km à 36 h, 25 km à 48 h. À partir de 36 h de préparation, ton centre apparaît sur la carte ; s'il est pris, la bombe est perdue. Tu la lâches depuis la mallette, sur une commune à moins de 50 km des tiennes : elle détruit garnisons et forteresses de tout le monde dans la zone (les tiennes aussi), personne ne peut y reposer de garnison pendant 24 h, et pendant ce temps tout le monde y <span data-s2="des">attaque à +15 %</span><span data-s3="siege">fait +15 % de dégâts</span>. Ton nom est donné à l'impact et ton centre reste visible 24 h. Pas de bombe à moins de 30 km d'une zone encore active. Tu peux <b>déménager ton centre</b> sur une autre de tes communes (<span class="nom-s2">Combat</span><span class="nom-s3">QG</span> › Bâtiments) : l'ancien te rend 20 lingots, le nouveau en coûte 40, 6 h de chantier ; ta bombe suit, en pause pendant le chantier, et un centre dévoilé le reste.</p><!-- patch370, patch371 -->
@@ -1486,6 +1487,20 @@
             <p>Pas encore de Suisse dans les mini-jeux (Commune du jour, Radar, Rafale, Plus ou moins), dans les contrats, ni dans la quête « Complète un département ».</p>
           </div>
         </details><!-- patch418 -->
+        <details class="regle" id="s3-belgique" data-s3="belgique">
+          <summary>
+            <span class="regle-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="14" rx="3"/><path d="M9.3 5v14M14.7 5v14"/></svg></span>
+            <h2>Belgique<small>11 provinces, 565 communes</small></h2>
+            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="regle-corps">
+            <p>Les <b>565 communes</b> de Belgique rejoignent la carte. Ses <b>11 provinces</b> (en comptant la Région de Bruxelles-Capitale : VAN pour Anvers, WLG pour Liège, BRU pour Bruxelles…) jouent le rôle des départements, et forment ensemble la région <b>Belgique</b>. La rareté suit la population, dans les mêmes proportions qu'en France ; leur numéro, par exemple <b>n° 1 / 5</b> pour Anvers, est leur rang parmi les communes belges. Les grandes villes gardent leur nom français (Anvers, Gand, Bruges, Louvain…), les autres leur nom officiel.</p>
+            <p><b>Front</b> : elles sortent des paquets du Front et s'assiègent comme les autres ; la frontière ne compte pas pour la proximité. Chaque province rapporte les mêmes paliers qu'un département ; Bruxelles-Capitale (19 communes) rapporte au prorata, comme les petits cantons suisses. Région Belgique : seul en tête avec 10 % ou plus dans plus de la moitié des provinces (<b>6 sur 11</b>).</p>
+            <p><b>Terra</b> : au Tirage, choisis <b>France</b>, <b>Suisse</b> ou <b>Belgique</b> : mêmes jetons et même prix, même tirage de la rareté. Ta collection a son choix de pays ; Ma France reste française.</p>
+            <p>Pas encore de Belgique dans les mini-jeux (Commune du jour, Radar, Rafale, Plus ou moins), dans les contrats, dans le paquet Département de la boutique, ni dans la quête « Complète un département ».</p>
+            <p class="regle-source">Communes, contours et population : Statbel (Office belge de statistique), 1<sup>er</sup> janvier 2025.</p>
+          </div>
+        </details><!-- patch462 -->
         <details class="regle" id="s2-quetes">
           <summary>
             <span class="regle-icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v16l-7-4-7 4z"/></svg></span>
@@ -1810,6 +1825,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=dcc8075ab242"></script>
+<script defer src="app.js?v=611ae7174488"></script>
 </body>
 </html>

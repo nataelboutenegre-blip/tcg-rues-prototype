@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'dcc8075ab242';
+const VERSION_JEU = '611ae7174488';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -27,7 +27,17 @@ const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
 // ?suisse=test l'allume dans cet onglet pour essayer. Les cantons tiennent le
 // rôle des départements (code à deux lettres, région « Suisse »).
 const SUISSE_OUVERTE = false;
-const SUISSE = SUISSE_OUVERTE || (() => {
+// patch462 : la Belgique (pendant la saison 3), même principe : BELGIQUE_OUVERTE le jour de son
+// ouverture, ?belgique=test pour essayer (allume aussi la Suisse et le fond de la saison 3).
+// Les 11 provinces tiennent le rôle des départements (code à trois lettres, région « Belgique »).
+const BELGIQUE_OUVERTE = false;
+const BELGIQUE = BELGIQUE_OUVERTE || (() => {
+  try {
+    if(/[?&]belgique=test\b/.test(location.search)) sessionStorage.setItem('tf-belgique-test', '1');
+    return sessionStorage.getItem('tf-belgique-test') === '1';
+  } catch(e){ return /[?&]belgique=test\b/.test(location.search); }
+})();
+const SUISSE = SUISSE_OUVERTE || BELGIQUE || (() => {
   try {
     if(/[?&]suisse=test\b/.test(location.search)) sessionStorage.setItem('tf-suisse-test', '1');
     return sessionStorage.getItem('tf-suisse-test') === '1';
@@ -43,9 +53,15 @@ const PASS_TEST = (() => {
 const CANTONS = {"AG":"Argovie","AI":"Appenzell Rhodes-Intérieures","AR":"Appenzell Rhodes-Extérieures","BE":"Berne","BL":"Bâle-Campagne","BS":"Bâle-Ville","FR":"Fribourg","GE":"Genève","GL":"Glaris","GR":"Grisons","JU":"Jura","LU":"Lucerne","NE":"Neuchâtel","NW":"Nidwald","OW":"Obwald","SG":"Saint-Gall","SH":"Schaffhouse","SO":"Soleure","SZ":"Schwytz","TG":"Thurgovie","TI":"Tessin","UR":"Uri","VD":"Vaud","VS":"Valais","ZG":"Zoug","ZH":"Zurich"};
 const CANTON_RE = /^(AG|AI|AR|BE|BL|BS|FR|GE|GL|GR|JU|LU|NE|NW|OW|SG|SH|SO|SZ|TG|TI|UR|VD|VS|ZG|ZH)$/;
 const estCanton = (dep) => CANTON_RE.test(String(dep || ''));
+const PROVINCES_BE = {"VAN":"Anvers","VBR":"Brabant flamand","WBR":"Brabant wallon","VWV":"Flandre-Occidentale","VOV":"Flandre-Orientale","WHT":"Hainaut","WLG":"Liège","VLI":"Limbourg","WLX":"Luxembourg","WNA":"Namur","BRU":"Bruxelles-Capitale"};   // patch462
+const PROV_BE_RE = /^(VAN|VBR|WBR|VWV|VOV|WHT|WLG|VLI|WLX|WNA|BRU)$/;
+const estProvinceBe = (dep) => PROV_BE_RE.test(String(dep || ''));
+// patch462 : un « département » hors de France (canton suisse ou province belge)
+const estEtrangerDep = (dep) => estCanton(dep) || estProvinceBe(dep);
 // la zone dessinée sur la carte de France (outre-mer à part, dans son encart)
-const estZoneCarte = (dep) => METRO_DEPT_RE.test(dep) || (SUISSE && estCanton(dep));
+const estZoneCarte = (dep) => METRO_DEPT_RE.test(dep) || (SUISSE && estCanton(dep)) || (BELGIQUE && estProvinceBe(dep));
 if(SUISSE) Object.assign(DEPT_NAMES, CANTONS);
+if(BELGIQUE) Object.assign(DEPT_NAMES, PROVINCES_BE);   // patch462
 // patch219 : l'outre-mer — un set à part (rareté propre, numéros « / 129 »), qui ne se
 // mélange ni aux compteurs ni à la carte de la métropole. 97x = DOM ; 98x = Pacifique (plus tard).
 // Le code INSEE suffit à reconnaître une carte : 97xxx / 98xxx, jamais en métropole.
@@ -1300,6 +1316,13 @@ async function chargerFondSuisse(){
     const [terre, frontiere, lacs, voisins] = await Promise.all(
       ['suisse-terre.json', 'suisse-frontiere.json', 'lacs-suisse.json', 'voisins.json'].map(lire));
     FOND_S3 = { terre, frontiere, lacs, voisins, chemins: null };
+    if(BELGIQUE){   // patch462
+      try {
+        const [bt, bf] = await Promise.all(['belgique-terre.json', 'belgique-frontiere.json'].map(lire));
+        FOND_S3.terre = terre.concat(bt); FOND_S3.frontiere = frontiere.concat(bf);
+        FOND_S3.voisins = voisins.filter(v => v.nom !== 'BELGIQUE');
+      } catch(e){}
+    }
   } catch(e){ FOND_S3 = null; }
 }
 function cheminsFondS3(){
@@ -2201,6 +2224,27 @@ function departementsVisibles(liste){
     if(x > -60 && x < w + 60 && y > -60 && y < h + 60) vus.add(c.dept);
   };
   for(const c of liste) ajouter(c);
+  // patch462 : les cantons et provinces à l'écran, même sans commune possédée (leur boîte, d'après les contours de loin)
+  if(SUISSE && CONTOURS_DEPTS && typeof CONTOURS_DEPTS === 'object'){
+    if(!departementsVisibles.boites || departementsVisibles.boitesDe !== mapBounds){
+      const bt = {};
+      for(const d in CONTOURS_DEPTS){
+        if(!estEtrangerDep(d) || !estZoneCarte(d)) continue;
+        let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+        for(const r of CONTOURS_DEPTS[d]) for(const [lon, lat] of r){
+          const p = project(lat, lon), x = p.x * MAP_W, y = p.y * MAP_H;
+          if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y;
+        }
+        bt[d] = [x0, y0, x1, y1];
+      }
+      departementsVisibles.boites = bt; departementsVisibles.boitesDe = mapBounds;
+    }
+    const k = ech * mapZoom;
+    for(const d in departementsVisibles.boites){
+      const [x0, y0, x1, y1] = departementsVisibles.boites[d];
+      if(x1 * k + mapPanX > -60 && x0 * k + mapPanX < w + 60 && y1 * k + mapPanY > -60 && y0 * k + mapPanY < h + 60) vus.add(d);
+    }
+  }
   // sans ca, une commune perdue dans un departement ou l'on ne possede plus
   // rien n'aurait jamais ses contours charges : elle resterait invisible
   if(CALQUES.passage) for(const c of perduesMap.values()) ajouter(c);
@@ -2230,6 +2274,9 @@ async function chargerDepartements(){
     const deps = await rep.json();
     if(SUISSE){   // patch331
       try { Object.assign(deps, await (await fetch('data/contours-cantons.json?v=1', { cache: 'force-cache' })).json()); } catch(e){}
+    }
+    if(BELGIQUE){   // patch462 : les provinces
+      try { Object.assign(deps, await (await fetch('data/contours-provinces-be.json?v=1', { cache: 'force-cache' })).json()); } catch(e){}
     }
     CONTOURS_DEPTS = deps;
   } catch(e){
@@ -3402,6 +3449,7 @@ const DEP_REGION = {
   '83':"Provence-Alpes-Côte d'Azur",'84':"Provence-Alpes-Côte d'Azur",
 };
 if(SUISSE) for(const c in CANTONS) DEP_REGION[c] = 'Suisse';   // patch330
+if(BELGIQUE) for(const c in PROVINCES_BE) DEP_REGION[c] = 'Belgique';   // patch462
 
 const CLE_CALQUES = 'terrafront-calques';
 const CALQUES = (() => {
@@ -3642,6 +3690,9 @@ const COMMUNES_PAR_DEPT = Object.fromEntries('01:391,02:797,03:316,04:197,05:161
   .split(',').map(x => { const [d, n] = x.split(':'); return [d, Number(n)]; }));
 // patch330 : les cantons (swissBOUNDARIES3D 2026)
 if(SUISSE) 'AG:196,AI:5,AR:20,BE:334,BL:86,BS:3,FR:119,GE:45,GL:3,GR:100,JU:51,LU:79,NE:24,NW:11,OW:7,SG:75,SH:26,SO:104,SZ:30,TG:80,TI:100,UR:19,VD:300,VS:122,ZG:11,ZH:160'
+  .split(',').forEach(x => { const [d, n] = x.split(':'); COMMUNES_PAR_DEPT[d] = Number(n); });
+// patch462 : les provinces belges (Statbel, 1/1/2025)
+if(BELGIQUE) 'VAN:67,VBR:63,WBR:27,VWV:62,VOV:55,WHT:69,WLG:84,VLI:38,WLX:43,WNA:38,BRU:19'
   .split(',').forEach(x => { const [d, n] = x.split(':'); COMMUNES_PAR_DEPT[d] = Number(n); });
 
 function vueDepartements(){
@@ -4052,7 +4103,7 @@ function ouvrirPanneau(code, xCss, yCss){
     }
   }
   if(c.pop != null) lignes.push(['Population', nbFr(c.pop)]);
-  if(mienne && c.rank) lignes.push([estOutremerCode(code) ? 'Rang outre-mer' : estSuisseCode(code) ? 'Rang en Suisse' : 'Rang national', nbFr(c.rank) + '<sup>e</sup>']);   // patch220
+  if(mienne && c.rank) lignes.push([estOutremerCode(code) ? 'Rang outre-mer' : estSuisseCode(code) ? 'Rang en Suisse' : estBelgeCode(code) ? 'Rang en Belgique' : 'Rang national', nbFr(c.rank) + '<sup>e</sup>']);   // patch220
   lignes.push(['Propriétaire', mienne
     ? '<b>Toi</b>'
     : `<button class="pc-proprio" data-profil="${echapperHtml(c.joueurId)}">${echapperHtml(c.pseudo)}</button>`]);
@@ -5590,8 +5641,10 @@ function codeDepartement(texte){
   // patch330 (saison 3) : « canton de Vaud », « canton du Jura » -> seulement les cantons
   let cantonsSeuls = false;
   if(SUISSE){ const m = t.match(/^canton(?:des|du|de|d)?(.{3,})$/); if(m){ t = m[1]; cantonsSeuls = true; } }
+  let provincesSeules = false;   // patch462 : « province de Liège » -> seulement les provinces belges
+  if(BELGIQUE){ const m = t.match(/^province(?:des|du|de|d)?(.{3,})$/); if(m){ t = m[1]; provincesSeules = true; } }
   if(t.length < 3) return null;
-  const codes = Object.keys(DEPT_NAMES).filter(c => !cantonsSeuls || estCanton(c));
+  const codes = Object.keys(DEPT_NAMES).filter(c => (!cantonsSeuls || estCanton(c)) && (!provincesSeules || estProvinceBe(c)));
   // patch219 : « Réunion » sans l'article trouve La Réunion
   const noms = (c) => { const n = DEPT_NAMES[c], s = n.replace(/^(la|le|les|l['’])\s*/i, ''); return s !== n ? [nu(n), nu(s)] : [nu(n)]; };
   // « Jura » : le département 39 passe avant le canton (les clés numériques viennent d'abord)
@@ -5638,8 +5691,8 @@ function correspondRecherche(nom, dept, recherche){
   if(!recherche) return true;
   return sansAccents(nom).includes(recherche)
       // patch219 : « 74 » ne doit pas trouver La Réunion (974) — un code d'outre-mer se tape par le début
-      || (String(dept).length > 2 ? String(dept).toLowerCase().startsWith(recherche)
-          : estCanton(dept) ? String(dept).toLowerCase() === recherche   // patch332 : un code de canton se tape en entier
+      || (estEtrangerDep(dept) ? String(dept).toLowerCase() === recherche   // patch332, patch462 : un code de canton ou de province se tape en entier
+          : String(dept).length > 2 ? String(dept).toLowerCase().startsWith(recherche)
           : String(dept).toLowerCase().includes(recherche))
       || sansAccents(DEPT_NAMES[dept] || '').includes(recherche)
       || departementsRegion(recherche).includes(String(dept).toUpperCase());   // patch369 : une région
@@ -5867,7 +5920,7 @@ function composerLot(){
 // patch308 : le département d'une commune, depuis son code INSEE (3 chiffres en outre-mer)
 const depDuCode = (cc) => {
   cc = String(cc || '');
-  if(/^CH\d/.test(cc)){   // patch330 : « CH6621 » -> le canton, lu dans les données
+  if(/^(CH|BE)\d/.test(cc)){   // patch330 : « CH6621 » -> le canton, lu dans les données ; patch462 : « BE11002 » -> la province (sinon « BE » = Berne)
     const r = CARTE.cat && CARTE.cat.get(cc);
     const e = collectionMap.get(cc) || othersMap.get(cc);
     return (r && r[2]) || (e && e.dept) || '';
@@ -6022,7 +6075,7 @@ document.getElementById('ctExclAjouter').addEventListener('click', async () => {
   const champ = document.getElementById('ctExclDept');
   const saisi = (champ.value || '').trim();
   if(!saisi) return;
-  { const ks = codesDepartements(saisi).filter(k => !estCanton(k));   // patch368 : « corse » = 2A et 2B ; patch369 : une région ; patch414 : pas de canton (contrats français)
+  { const ks = codesDepartements(saisi).filter(k => !estEtrangerDep(k));   // patch368 : « corse » = 2A et 2B ; patch369 : une région ; patch414 : pas de canton (contrats français)
     if(ks.length > 1){
       champ.value = ''; direErreurExclusion('');
       for(const k of ks){
@@ -7050,11 +7103,11 @@ function renderCollection(){
       ? `<span class="mini-siege" title="${s.nb > 1 ? s.nb + ' joueurs attaquent cette commune' : 'Un joueur attaque cette commune'} — meilleure série ${s.max} sur 3">${s.max}/3${s.nb > 1 ? ' ×' + s.nb : ''}</span>`
       : '';
     return `
-    <div class="mini ${entry.tier.id}${auroreFront(entry.code) ? ' aurore' : ''}${estSuisseCode(entry.code) ? ' suisse' : ''}${entry.perdue ? ' perdue' : ''}${favorisSet.has(entry.code) ? ' favori' : ''}${hntParts(entry.code, 'front').cls}" data-code="${entry.code}" role="button" tabindex="0" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
+    <div class="mini ${entry.tier.id}${auroreFront(entry.code) ? ' aurore' : ''}${estSuisseCode(entry.code) ? ' suisse' : estBelgeCode(entry.code) ? ' belgique' : ''}${entry.perdue ? ' perdue' : ''}${favorisSet.has(entry.code) ? ' favori' : ''}${hntParts(entry.code, 'front').cls}" data-code="${entry.code}" role="button" tabindex="0" title="${echapperTexte(entry.nom)} (${entry.dept}) — ${entry.tier.label}${entry.perdue ? ' — tu ne la possèdes plus' : ''}">
       <div class="mini-int">
         ${auroreFront(entry.code) ? fondAurore(entry.code, entry.tier.id, false) : ''}
         ${entry.perdue ? '<span class="mini-perdue">PERDUE</span>' : ''}${favorisSet.has(entry.code) ? '<span class="mini-fav" title="Gardée à la fin de la saison">★</span>' : ''}
-        <div class="mini-art">${estSuisseCode(entry.code) ? chBadge(true) : ''}${artCommune(entry, entry.tier.id)}${hntParts(entry.code, 'front').art}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}${monumentsNoms.has(entry.code) ? `<span class="mini-monument" title="Monument : ${echapperTexte(monumentsNoms.get(entry.code))}">${ICONE_MONUMENT}</span>` : ''}${entry.etiquette ? `<span class="mini-etiq" title="Ton étiquette">${echapperTexte(entry.etiquette)}</span>` : ''}</div>
+        <div class="mini-art">${estSuisseCode(entry.code) ? chBadge(true) : estBelgeCode(entry.code) ? beBadge(true) : ''}${artCommune(entry, entry.tier.id)}${hntParts(entry.code, 'front').art}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}${monumentsNoms.has(entry.code) ? `<span class="mini-monument" title="Monument : ${echapperTexte(monumentsNoms.get(entry.code))}">${ICONE_MONUMENT}</span>` : ''}${entry.etiquette ? `<span class="mini-etiq" title="Ton étiquette">${echapperTexte(entry.etiquette)}</span>` : ''}</div>
         <div class="mini-infos">
           <p class="mini-nom ${entry.nom.length > 14 ? 'long' : ''}">${entry.nom}</p>
           ${entry.rank ? `<span class="mini-num">n° ${Number(entry.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(entry.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
@@ -8385,7 +8438,7 @@ function makeCardEl(draw, onFlip){
   const bxg = briParts(draw, true);   // patch269
   const hng = hntParts(draw.code, draw.terraExemplaires != null ? 'terra-tirage' : (enTerra() ? 'terra' : 'front'));   // patch276
   const atg = atlParts(draw.terraExemplaires != null ? { ...draw, atelier: atlPour(draw.code, 2), skin: skinDeMaCarte('terra', draw.code) } : draw, true, !!hng.cls);   // patch270, patch286
-  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '') + (draw.aurore ? ' aurore' : '') + (estOutremerCode(draw.code) ? ' outremer' : '') + (estSuisseCode(draw.code) ? ' suisse' : '') + bxg.cls + atg.cls + hng.cls;   // patch219, patch269, patch270
+  wrap.className = 'card ' + draw.tier.id + (mon ? ' a-monument' : '') + (draw.aurore ? ' aurore' : '') + (estOutremerCode(draw.code) ? ' outremer' : '') + (estSuisseCode(draw.code) ? ' suisse' : estBelgeCode(draw.code) ? ' belgique' : '') + bxg.cls + atg.cls + hng.cls;   // patch219, patch269, patch270
   wrap.innerHTML = `
     <div class="card-inner">
       <div class="face face-back">
@@ -8401,13 +8454,13 @@ function makeCardEl(draw, onFlip){
               <span class="carte-rarete">${draw.tier.label}</span>
               <span class="carte-num">${draw.rank.toLocaleString('fr-FR')} / ${draw.tierSize.toLocaleString('fr-FR')}</span>
             </div>
-            <div class="carte-art">${estOutremerCode(draw.code) ? OM_BADGE : estSuisseCode(draw.code) ? chBadge(false) : ''}${carteArtSvg(draw.code, draw.tier.id)}${bxg.art}${atg.art}${hng.art}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
+            <div class="carte-art">${estOutremerCode(draw.code) ? OM_BADGE : estSuisseCode(draw.code) ? chBadge(false) : estBelgeCode(draw.code) ? beBadge(false) : ''}${carteArtSvg(draw.code, draw.tier.id)}${bxg.art}${atg.art}${hng.art}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
             <div class="carte-infos">
               <p class="carte-nom ${draw.nom.length > 26 ? 'tres-long' : draw.nom.length > 16 ? 'long' : ''}" title="${echapperTexte(draw.nom)}">${draw.nom}</p>
               <p class="carte-departement">${DEPT_NAMES[draw.dept] ? `<span class="dep-nom">${DEPT_NAMES[draw.dept]}</span> <span class="dep-num">(${draw.dept})</span>` : `<span class="dep-num">${draw.dept}</span>`}</p>
               <div class="carte-stats">
                 <div><span>Habitants</span><b>${draw.pop.toLocaleString('fr-FR')}</b></div>
-                <div><span>${estOutremerCode(draw.code) ? 'Rang outre-mer' : estSuisseCode(draw.code) ? 'Rang suisse' : 'Rang'}</span><b>${draw.rank.toLocaleString('fr-FR')}</b></div>
+                <div><span>${estOutremerCode(draw.code) ? 'Rang outre-mer' : estSuisseCode(draw.code) ? 'Rang suisse' : estBelgeCode(draw.code) ? 'Rang belge' : 'Rang'}</span><b>${draw.rank.toLocaleString('fr-FR')}</b></div>
               </div>
               ${draw.aurore ? creditAurore(draw.code) : ''}
             </div>
@@ -11010,7 +11063,7 @@ function renderCombatGrid(){
       const ds = codesDepartements(t);   // patch368 : « corse » = 2A et 2B ; patch369 : une région
       if(ds.length > 1){ deps.push(...ds); continue; }
       const d = ds[0] || t;
-      if(/^(\d{2,3}|2a|2b)$/i.test(d) || (SUISSE && estCanton(d.toUpperCase()))){ deps.push(d.toUpperCase()); continue; }   // patch332
+      if(/^(\d{2,3}|2a|2b)$/i.test(d) || (SUISSE && estCanton(d.toUpperCase())) || (BELGIQUE && estProvinceBe(d.toUpperCase()))){ deps.push(d.toUpperCase()); continue; }   // patch332
       if([...owners].some(x => x.includes(t))) pseudos.push(t); else noms.push(t);
     }
     cibles = cibles.filter(c => {
@@ -12050,8 +12103,12 @@ const nomDept = (d) => (DEPT_NAMES && DEPT_NAMES[d]) || d || '';
 // patch414 : un canton : « dans le canton de Vaud (VD) », « du Valais », « des Grisons », « d’Argovie »
 const CANTON_DE = { VS: 'du Valais', TI: 'du Tessin', JU: 'du Jura', GR: 'des Grisons' };
 const cantonDe = (d) => CANTON_DE[d] || (/^[AEIOUÉ]/i.test(CANTONS[d] || '') ? 'd’' : 'de ') + (CANTONS[d] || d);
-const motDep = (d) => estCanton(d) ? 'canton' : 'département';
+const PROVINCE_DANS = { VAN: 'la province d’Anvers', VBR: 'le Brabant flamand', WBR: 'le Brabant wallon', VWV: 'la Flandre-Occidentale',
+  VOV: 'la Flandre-Orientale', WHT: 'le Hainaut', WLG: 'la province de Liège', VLI: 'le Limbourg', WLX: 'la province de Luxembourg',
+  WNA: 'la province de Namur', BRU: 'la Région de Bruxelles-Capitale' };   // patch462
+const motDep = (d) => estCanton(d) ? 'canton' : estProvinceBe(d) ? 'province' : 'département';
 const dansDept = (d) => estCanton(d) ? `dans le canton ${cantonDe(d)} (${d})`
+  : estProvinceBe(d) ? `dans ${PROVINCE_DANS[d] || d} (${d})`
   : `dans le ${d}${DEPT_NAMES && DEPT_NAMES[d] ? ' (' + DEPT_NAMES[d] + ')' : ''}`;
 
 // Défendre : le bloc du centre
@@ -13192,11 +13249,11 @@ function miniTerra(e){
   const bx = briParts(e, false);   // patch269
   const hn = hntParts(e.code, e.hntNon ? '' : 'terra');   // patch276
   const at = atlParts(e, false, !!hn.cls);   // patch270, patch286
-  return `<div class="mini ${e.tier.id}${au ? ' aurore' : ''}${estOutremerCode(e.code) ? ' outremer' : ''}${estSuisseCode(e.code) ? ' suisse' : ''}${bx.cls}${at.cls}${hn.cls}"${e.skin ? ` data-skin="${echapperTexte(e.skin)}"` : ''} title="${nom} (${e.dept}) — ${e.tier.label}${au ? ' — Aurore' + (e.aurore > 1 ? ' ×' + e.aurore : '') : ''}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}${au ? titreCreditAurore(e.code) : ''}">
+  return `<div class="mini ${e.tier.id}${au ? ' aurore' : ''}${estOutremerCode(e.code) ? ' outremer' : ''}${estSuisseCode(e.code) ? ' suisse' : estBelgeCode(e.code) ? ' belgique' : ''}${bx.cls}${at.cls}${hn.cls}"${e.skin ? ` data-skin="${echapperTexte(e.skin)}"` : ''} title="${nom} (${e.dept}) — ${e.tier.label}${au ? ' — Aurore' + (e.aurore > 1 ? ' ×' + e.aurore : '') : ''}${e.exemplaires > 1 ? ' — ' + e.exemplaires + ' exemplaires' : ''}${au ? titreCreditAurore(e.code) : ''}">
     ${bx.dehors}${at.dehors}<div class="mini-int">${at.fond}
       ${au ? fondAurore(e.code, e.tier.id, false) : ''}
       ${e.exemplaires > 1 ? `<span class="mini-ex">×${e.exemplaires}</span>` : ''}
-      <div class="mini-art">${estOutremerCode(e.code) ? OM_BADGE_MINI : estSuisseCode(e.code) ? chBadge(true) : ''}${e.photo ? artCommune(e, e.tier.id, 'mini') : miniArtSvg(e.code, e.tier.id)}${bx.art}${at.art}${hn.art}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
+      <div class="mini-art">${estOutremerCode(e.code) ? OM_BADGE_MINI : estSuisseCode(e.code) ? chBadge(true) : estBelgeCode(e.code) ? beBadge(true) : ''}${e.photo ? artCommune(e, e.tier.id, 'mini') : miniArtSvg(e.code, e.tier.id)}${bx.art}${at.art}${hn.art}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
       <div class="mini-infos">
         <p class="mini-nom ${e.nom.length > 14 ? 'long' : ''}">${nom}</p>
         ${e.rank ? `<span class="mini-num">n° ${Number(e.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(e.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
@@ -13297,7 +13354,7 @@ function renderCollectionTerra(){
   const parTierM = {};
   for(const e of tcVue.values()) if(!estOutremer(e.dept)) parTierM[e.tier.id] = (parTierM[e.tier.id] || 0) + 1;
   const tot = totauxPaliers || {};
-  const totV = SUISSE && tcPays() === 'CH' ? tcTotauxSuisse() : tot;   // patch407
+  const totV = SUISSE && tcPays() !== 'FR' ? tcTotauxPays(tcPays()) : tot;   // patch407, patch462
   const totalFrance = Object.values(tot).reduce((s, l) => s + Number(l.total || 0), 0) || 34739;
   const dbl = doublonsTerra();
   const nbDbl = Object.values(dbl).reduce((s, n) => s + n, 0);
@@ -13328,7 +13385,7 @@ function renderCollectionTerra(){
       ${evtVisible ? `<button class="coll-filtre ${terraFiltre === 'evenement' ? 'actif' : ''}" data-tcf="evenement"><i class="evt-pt" aria-hidden="true"></i>Événements <span class="nb">${fmtNombre(nbEvt)}</span></button>` : ''}
       ${ordre.filter(t => parTier[t.id]).map(t => `<button class="coll-filtre ${terraFiltre === t.id ? 'actif' : ''}" data-tcf="${t.id}"><span class="point" style="background:${COULEURS_FILTRE[t.id]}"></span>${t.label} <span class="nb">${fmtNombre(parTier[t.id])}</span></button>`).join('')}
     </div>
-    <input type="text" id="tcRecherche" class="bourse-search coll-recherche" placeholder="${SUISSE && tcPays() === 'CH' ? 'Rechercher une commune ou un canton…' : 'Rechercher une commune ou un département…'}" value="${echapperTexte(terraRecherche)}">
+    <input type="text" id="tcRecherche" class="bourse-search coll-recherche" placeholder="${SUISSE && tcPays() === 'CH' ? 'Rechercher une commune ou un canton…' : SUISSE && tcPays() === 'BE' ? 'Rechercher une commune ou une province…' : 'Rechercher une commune ou un département…'}" value="${echapperTexte(terraRecherche)}">
     <div class="coll-grille" id="tcGrille"></div>
     <div class="tc-plus-zone" id="tcPlus"></div>`;
   renderGrilleTerra();
@@ -13369,9 +13426,9 @@ function renderMaFranceTerra(el, totalFrance){
   if(mfZone === 'outremer') return renderOutremerTerra(el);   // patch219
   MF.parDep = {};
   for(const e of terraCollection.values()) MF.parDep[e.dept] = (MF.parDep[e.dept] || 0) + 1;
-  const touches = Object.keys(MF.parDep).filter(d => COMMUNES_PAR_DEPT[d] && !estCanton(d)).length;   // patch407 : sans les cantons
-  const complets = Object.keys(MF.parDep).filter(d => COMMUNES_PAR_DEPT[d] && !estCanton(d) && MF.parDep[d] >= COMMUNES_PAR_DEPT[d]).length;
-  const nbDepts = Object.keys(COMMUNES_PAR_DEPT).filter(d => !estCanton(d)).length;
+  const touches = Object.keys(MF.parDep).filter(d => COMMUNES_PAR_DEPT[d] && !estEtrangerDep(d)).length;   // patch407 : sans les cantons
+  const complets = Object.keys(MF.parDep).filter(d => COMMUNES_PAR_DEPT[d] && !estEtrangerDep(d) && MF.parDep[d] >= COMMUNES_PAR_DEPT[d]).length;
+  const nbDepts = Object.keys(COMMUNES_PAR_DEPT).filter(d => !estEtrangerDep(d)).length;
   const pct = totalFrance ? 100 * collectionMetro() / totalFrance : 0;   // patch219
   el.innerHTML = `
     <div class="coll-ligne-titre"><h1>Collection</h1>${compteurCollectionHtml(totalFrance)}</div>
@@ -13402,7 +13459,7 @@ function renderMaFranceTerra(el, totalFrance){
 let mfListeOuverte = false;
 let mfListeTri = 'num';   // 'num' | 'proche'
 function mfListeLignes(){
-  const deps = Object.keys(COMMUNES_PAR_DEPT).filter(d => !estCanton(d) && !estOutremer(d));
+  const deps = Object.keys(COMMUNES_PAR_DEPT).filter(d => !estEtrangerDep(d) && !estOutremer(d));
   const l = deps.map(d => {
     const total = COMMUNES_PAR_DEPT[d] || 0, n = Math.min(total, MF.parDep[d] || 0);
     return { d, nom: DEPT_NAMES[d] || d, n, total, manque: total - n };
@@ -13758,7 +13815,7 @@ function mfArmer(cv){
 // en-tête de la collection : la métropole sur 34 739, l'outre-mer à part sur 129
 function collectionMetro(){
   let n = 0;
-  for(const e of terraCollection.values()) if(!estOutremer(e.dept) && !estSuisseCode(e.code)) n++;   // patch407 : sans la Suisse
+  for(const e of terraCollection.values()) if(!estOutremer(e.dept) && !estEtrangerCode(e.code)) n++;   // patch407 : sans la Suisse
   return n;
 }
 function compteurCollectionHtml(totalFrance){
@@ -13980,7 +14037,7 @@ function renderGrilleTerra(){
   if(!grille) return;
   const liste = [...terraCollection.values()]
     .filter(e => terraFiltre === 'tous' || (terraFiltre === 'doublons' ? libresTerra(e) > 0 : terraFiltre === 'aurore' ? e.aurore > 0 : terraFiltre === 'brillante' ? (e.brillantes > 0 || e.eclat) : terraFiltre === 'evenement' ? estCarteEvenement(e) : e.tier.id === terraFiltre))   // patch282 : + evenement
-    .filter(e => !SUISSE || estSuisseCode(e.code) === (tcPays() === 'CH'))   // patch407 : le pays choisi
+    .filter(e => !SUISSE || paysDuCode(e.code) === tcPays())   // patch407, patch462 : le pays choisi
     .filter(e => correspondRecherche(e.nom, e.dept, sansAccents(terraRecherche.trim())))
     .sort((a, b) => (terraFiltre === 'doublons' ? (terraDblCroissant ? 1 : -1) * ((a.exemplaires || 0) - (b.exemplaires || 0)) : 0)   // patch353
       || RANG_TIER[b.tier.id] - RANG_TIER[a.tier.id] || (b.pop || 0) - (a.pop || 0));
@@ -13991,7 +14048,7 @@ function renderGrilleTerra(){
   }
   grille.innerHTML = liste.length
     ? liste.slice(0, terraLimite).map(e => miniTerra(atlMoi(e)).replace('<div class="mini ', '<div data-tcode="' + echapperTexte(e.code) + '" tabindex="0" role="button" class="mini ')).join('')
-    : `<p class="collection-empty">${SUISSE && tcPays() === 'CH' && ![...terraCollection.keys()].some(estSuisseCode) ? 'Pas encore de commune suisse : choisis le paquet Suisse dans l’onglet Tirage.' : terraCollection.size ? 'Aucune commune ne correspond.' : 'Ta collection Terra est vide : ouvre un paquet dans l’onglet Tirage.'}</p>`;   // patch407
+    : `<p class="collection-empty">${SUISSE && tcPays() !== 'FR' && ![...terraCollection.keys()].some(c => paysDuCode(c) === tcPays()) ? (tcPays() === 'BE' ? 'Pas encore de commune belge : choisis le paquet Belgique dans l’onglet Tirage.' : 'Pas encore de commune suisse : choisis le paquet Suisse dans l’onglet Tirage.') : terraCollection.size ? 'Aucune commune ne correspond.' : 'Ta collection Terra est vide : ouvre un paquet dans l’onglet Tirage.'}</p>`;   // patch407
   const plus = document.getElementById('tcPlus');
   if(plus) plus.innerHTML = liste.length > terraLimite
     ? `<button class="open-btn secondary" data-tc="plus">Afficher plus (${fmtNombre(liste.length - terraLimite)} de plus)</button>` : '';
@@ -14381,7 +14438,7 @@ async function loadReveil(){
   // patch358 : le numéro du département à côté du nom (idée d'Arkhannou)
   const dep = (code) => {
     const c = code && (collectionMap.get(code) || othersMap.get(code));
-    const d = (c && c.dept) || (code ? (String(code).startsWith('97') ? String(code).slice(0, 3) : String(code).slice(0, 2)) : '');
+    const d = (c && c.dept) || (code ? depDuCode(code) : '');
     return d ? ` <span class="reveil-dep">(${echapperTexte(d)})</span>` : '';
   };
 
@@ -18019,7 +18076,7 @@ function psxVisuel(r){
   return `<span class="psx-qte">${PS_ICO[t] || ''}<b>${t === 'energie' ? '+' : ''}${Number(r.quantite)}</b></span>`;
 }
 function psxDepSelect(){
-  const deps = Object.keys(DEPT_NAMES).filter(d => !estCanton(d)).sort((x, y) => x.localeCompare(y, 'fr', { numeric: true }));
+  const deps = Object.keys(DEPT_NAMES).filter(d => !estEtrangerDep(d)).sort((x, y) => x.localeCompare(y, 'fr', { numeric: true }));
   return `<select class="psx-dep" aria-label="Département"><option value="">Choisis un département</option>${deps.map(d => `<option value="${d}">${d} · ${echapperTexte(DEPT_NAMES[d])}</option>`).join('')}</select>`;
 }
 // le bouton d'une récompense prête : un paquet s'ouvre, le reste se réclame
@@ -19874,11 +19931,8 @@ function renderBoutique(){
   const quota = L ? `<div class="bqx-quota">${Array.from({ length: b.paquets_max }, (_, i) => `<i${i < b.paquets_du_jour ? ' class="on"' : ''}></i>`).join('')}<span>${b.paquets_du_jour} paquet${b.paquets_du_jour > 1 ? 's' : ''} sur ${b.paquets_max} aujourd'hui</span></div>` : '';
   paq.innerHTML = quota + b.articles.filter(a => a.type === 'paquet').map(a => {
     const choixDep = a.id === 'paquet-departement'
-      ? `<select class="bq-dep" id="bqDep" aria-label="Département"><option value="">Choisis un département${SUISSE ? ' ou un canton' : ''}</option>${
-          (SUISSE   // patch332 : les cantons à part, sous « Suisse »
-            ? '<optgroup label="France">' + deps.filter(d => !estCanton(d)).map(optDep).join('')
-              + '</optgroup><optgroup label="Suisse">' + deps.filter(estCanton).map(d => `<option value="${d}">${d} · ${echapperTexte(DEPT_NAMES[d])}</option>`).join('') + '</optgroup>'
-            : deps.map(optDep).join(''))}</select>` : '';
+      ? `<select class="bq-dep" id="bqDep" aria-label="Département"><option value="">Choisis un département</option>${
+          deps.filter(d => !estEtrangerDep(d)).map(optDep).join('')}</select>` : '';   // patch463 : pas de canton ni de province (le serveur les refuse)
     const bouton = restants < 1
       ? `<button class="bq-btn" disabled>Revient demain</button>`
       : `<button class="bq-btn" data-bq-paquet="${a.id}" data-prix="${a.prix}"${b.solde < a.prix ? ' data-court="1"' : ''}>${bqPrix(a.prix)}</button>`;
@@ -25687,7 +25741,7 @@ function ncRendreSourdine(el){
     + `<button type="button"${liste === 'alerte' ? ' class="retirer"' : ''} data-nc-dep="${liste}|${echapperTexte(d)}|0">${liste === 'alerte' ? 'Retirer' : 'Réactiver'}</button></div>`;
   const sec = (liste, titre) => `<div class="nc-s-sec"><p>${titre}</p>${off ? '' : `<button type="button" data-nc-dep-ajout="${liste}">${NC.depListe === liste ? 'Fermer' : '+ Ajouter'}</button>`}</div>`;
   const cherche = (liste) => NC.depListe === liste && !off
-    ? `<div class="nc-s-cherche"><input type="search" id="ncDepQ" placeholder="${SUISSE ? 'Département ou canton' : 'Nom ou numéro du département'}" autocomplete="off" value="${echapperTexte(NC.depQ || '')}" aria-label="Chercher un département"></div><div id="ncDepProps">${ncDepProps()}</div>` : '';
+    ? `<div class="nc-s-cherche"><input type="search" id="ncDepQ" placeholder="${BELGIQUE ? 'Département, canton ou province' : SUISSE ? 'Département ou canton' : 'Nom ou numéro du département'}" autocomplete="off" value="${echapperTexte(NC.depQ || '')}" aria-label="Chercher un département"></div><div id="ncDepProps">${ncDepProps()}</div>` : '';
   const liste = (cle, l) => p[cle].length ? p[cle].map(d => ligneDep(d, l)).join('') : (NC.depListe === l ? '' : '<p class="nc-vide">Aucun département.</p>');
   el.innerHTML = `<div class="nc-tete"><button type="button" class="nc-retour" data-nc="reglages" aria-label="Retour">←</button><h2>Par département</h2>
       <button type="button" class="nc-x" data-nc="fermer" aria-label="Fermer">✕</button></div>
@@ -30613,26 +30667,27 @@ function ouvrirEchangeClan(qui, code, nom){
 
 // La France au survol (ou au toucher) du numéro d'un département.
 var depChemins = null, depCheminsP = null, depBulle = null, depBulleCible = null;
-var depCheminsCH = null, depCheminsCHP = null, depCheminsCHHaut = 200;   // patch414 : les cantons, sur la carte de la Suisse
+var DEP_PAYS = {}, DEP_PAYS_P = {}, DEP_PAYS_HAUT = { CH: 200, BE: 200 };   // patch414 : les cantons sur la carte de la Suisse ; patch462 : les provinces sur celle de la Belgique
 // carre : la France tient dans 200 × 200 ; sinon (la Suisse, plus large que haute) 200 de large et la hauteur qu'il faut
-function depCheminsTracer(C, carre){
+function depCheminsTracer(C, carre, pays){
   const k = Math.cos(46.5 * Math.PI / 180);
   let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
   Object.values(C).forEach(rs => rs.forEach(r => r.forEach(p => { const x = p[0] * k, y = -p[1]; if(x < x0) x0 = x; if(x > x1) x1 = x; if(y < y0) y0 = y; if(y > y1) y1 = y; })));
   const e = 190 / Math.max(x1 - x0, y1 - y0), ox = (200 - (x1 - x0) * e) / 2, oy = carre ? (200 - (y1 - y0) * e) / 2 : 5;
-  if(!carre) depCheminsCHHaut = Math.ceil((y1 - y0) * e + 10);
+  if(!carre) DEP_PAYS_HAUT[pays] = Math.ceil((y1 - y0) * e + 10);
   const out = {};
   Object.keys(C).forEach(d => {
     out[d] = C[d].map(r => 'M' + r.map(p => ((p[0] * k - x0) * e + ox).toFixed(1) + ' ' + ((-p[1] - y0) * e + oy).toFixed(1)).join('L') + 'Z').join('');
   });
   return out;
 }
-function depCheminsCharger(suisse){
-  if(suisse){
-    if(depCheminsCH) return Promise.resolve(depCheminsCH);
-    if(!depCheminsCHP) depCheminsCHP = fetch('data/contours-cantons.json?v=1', { cache: 'force-cache' }).then(r => r.json())
-      .then(C => (depCheminsCH = depCheminsTracer(C, false))).catch(() => { depCheminsCHP = null; return null; });
-    return depCheminsCHP;
+function depCheminsCharger(pays){
+  if(pays === 'CH' || pays === 'BE'){
+    if(DEP_PAYS[pays]) return Promise.resolve(DEP_PAYS[pays]);
+    const f = pays === 'BE' ? 'data/contours-provinces-be.json?v=1' : 'data/contours-cantons.json?v=1';
+    if(!DEP_PAYS_P[pays]) DEP_PAYS_P[pays] = fetch(f, { cache: 'force-cache' }).then(r => r.json())
+      .then(C => (DEP_PAYS[pays] = depCheminsTracer(C, false, pays))).catch(() => { DEP_PAYS_P[pays] = null; return null; });
+    return DEP_PAYS_P[pays];
   }
   if(depChemins) return Promise.resolve(depChemins);
   if(!depCheminsP) depCheminsP = fetch('contours-departements.json', { cache: 'force-cache' }).then(r => r.json())
@@ -30651,9 +30706,9 @@ async function depBulleMontrer(b){
   if(depBulleCible) depBulleCible.classList.remove('dep-on');
   depBulleCible = b; b.classList.add('dep-on');
   const nom = DEPT_NAMES[d] || '', region = (typeof DEP_REGION !== 'undefined' && DEP_REGION[d]) || '';
-  const ch = estCanton(d), C = await depCheminsCharger(ch);   // patch414
+  const pays = estCanton(d) ? 'CH' : estProvinceBe(d) ? 'BE' : 'FR', ch = pays !== 'FR', C = await depCheminsCharger(pays);   // patch414, patch462
   if(depBulleCible !== b) return;
-  const carte = C && C[d] ? `<svg viewBox="0 0 200 ${ch ? depCheminsCHHaut : 200}" aria-hidden="true">${Object.keys(C).map(x => x === d ? '' : `<path d="${C[x]}" fill="#2A4468" stroke="#0B1A33" stroke-width=".5"/>`).join('')}<path class="dep-bulle-or" d="${C[d]}" fill="#F0B429" stroke="#FFE7A0" stroke-width="1"/></svg>` : '';
+  const carte = C && C[d] ? `<svg viewBox="0 0 200 ${ch ? DEP_PAYS_HAUT[pays] : 200}" aria-hidden="true">${Object.keys(C).map(x => x === d ? '' : `<path d="${C[x]}" fill="#2A4468" stroke="#0B1A33" stroke-width=".5"/>`).join('')}<path class="dep-bulle-or" d="${C[d]}" fill="#F0B429" stroke="#FFE7A0" stroke-width="1"/></svg>` : '';
   depBulle.innerHTML = `${carte}<p><b>${echapperTexte(nom || d)}</b> (${echapperTexte(d)})${region ? `<small>${echapperTexte(region)}</small>` : ''}</p>`;
   depBulle.hidden = false;
   const or = depBulle.querySelector('.dep-bulle-or');
@@ -30689,7 +30744,7 @@ window.addEventListener('scroll', () => { if(depBulleCible) depBulleCacher(); },
 // premiers paquets du Front y tombent. Le serveur décide de tout (ouvert, zones,
 // cartes restantes) ; sans s3-6 ou éteint, rien ne s'affiche.
 var ZD = null, zdSel = null, zdApres = null, zdEnvoi = false;
-const ZD_NOUVEAU = new Set(['Suisse']);
+const ZD_NOUVEAU = new Set(['Suisse', 'Belgique']);   // patch462
 const ZD_DANS = { 'Grand Est': 'dans le', 'Centre-Val de Loire': 'dans le', 'Hauts-de-France': 'dans les', 'Pays de la Loire': 'dans les' };
 function zdDans(z){ return (ZD_DANS[z] || 'en') + ' ' + z; }
 async function zdCharger(){
@@ -30767,7 +30822,7 @@ function zdRendre(){
   if(!b) return;
   const n = Math.max(1, Number(ZD && ZD.paquets) || 3);
   const zones = (ZD && Array.isArray(ZD.zones) ? ZD.zones.slice() : [])
-    .sort((a, c) => (a.zone === 'Suisse') - (c.zone === 'Suisse') || a.zone.localeCompare(c.zone, 'fr'));
+    .sort((a, c) => ZD_NOUVEAU.has(a.zone) - ZD_NOUVEAU.has(c.zone) || a.zone.localeCompare(c.zone, 'fr'));
   if(zdSel && !zones.some(z => z.zone === zdSel && !z.fermee)) zdSel = null;
   const nb = (x) => Number(x || 0).toLocaleString('fr-FR');
   const cases = zones.map(z => {
@@ -31467,39 +31522,48 @@ function sgCalcHtml(a){
 // Fonctions déclarées (et pas des const) : elles servent dans des gabarits plus haut dans le fichier.
 var tpPaquetPaye = null;   // pays du paquet payé, le temps de l'ouvrir
 function estSuisseCode(code){ return /^CH\d/.test(String(code || '')); }
+function estBelgeCode(code){ return /^BE\d/.test(String(code || '')); }   // patch462
+function estEtrangerCode(code){ return estSuisseCode(code) || estBelgeCode(code); }
+function paysDuCode(code){ return estSuisseCode(code) ? 'CH' : estBelgeCode(code) ? 'BE' : 'FR'; }
+function beDrapeau(cls){ return `<svg${cls ? ` class="${cls}"` : ''} viewBox="0 0 3 2" aria-hidden="true"><rect width="1" height="2" fill="#1A1A1A" stroke="none"/><rect x="1" width="1" height="2" fill="#FDDA24" stroke="none"/><rect x="2" width="1" height="2" fill="#EF3340" stroke="none"/></svg>`; }
+function beBadge(mini){ return `<span class="ch-badge be-badge${mini ? ' ch-mini' : ''}" title="Commune belge">${beDrapeau()}${mini ? '' : '<b>Belgique</b>'}</span>`; }
+const TP_NOMS = { FR: 'France', CH: 'Suisse', BE: 'Belgique' };
+function tpPaysOuverts(){ return ['FR'].concat(SUISSE ? ['CH'] : [], BELGIQUE ? ['BE'] : []); }
+function tpPaysValide(p){ return tpPaysOuverts().includes(p) ? p : 'FR'; }
 function chCroix(){ return '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M13 5h6v8h8v6h-8v8h-6v-8H5v-6h8z" fill="#fff"/></svg>'; }
 function chBadge(mini){ return `<span class="ch-badge${mini ? ' ch-mini' : ''}" title="Commune suisse">${chCroix()}${mini ? '' : '<b>Suisse</b>'}</span>`; }
 function tpDrapeau(pays){
+  if(pays === 'BE') return beDrapeau('tp-drap tp-drap-be');   // patch462
   return pays === 'CH'
     ? '<svg class="tp-drap tp-drap-ch" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="4" fill="#DA291C"/><path d="M13 6h6v7h7v6h-7v7h-6v-7H6v-6h7z" fill="#fff"/></svg>'
     : '<svg class="tp-drap" viewBox="0 0 3 2" aria-hidden="true"><rect width="1" height="2" fill="#2B5BD7"/><rect x="1" width="1" height="2" fill="#fff"/><rect x="2" width="1" height="2" fill="#E5484D"/></svg>';
 }
 function tpLire(cle){ try{ return localStorage.getItem(cle); }catch(e){ return null; } }
 function tpEcrire(cle, v){ try{ localStorage.setItem(cle, v); }catch(e){} }
-function tpPays(){ return SUISSE && tpLire('tf-terra-pays') === 'CH' ? 'CH' : 'FR'; }
-function tcPays(){ return SUISSE && tpLire('tf-coll-pays') === 'CH' ? 'CH' : 'FR'; }
-function tpNouveauVu(){ return tpLire('tf-terra-ch-vu') === '1'; }
+function tpPays(){ return SUISSE ? tpPaysValide(tpLire('tf-terra-pays')) : 'FR'; }   // patch462 : FR, CH ou BE
+function tcPays(){ return SUISSE ? tpPaysValide(tpLire('tf-coll-pays')) : 'FR'; }
+function tpNouveauVu(p){ return tpLire(p === 'BE' ? 'tf-terra-be-vu' : 'tf-terra-ch-vu') === '1'; }
 // les arguments de terra_ouvrir_paquet : p_pays seulement pour la Suisse (un serveur sans s3-8 reste servi pour la France)
 function tpArgs(args){
   const p = enTerra() ? tpPays() : 'FR';
   tpPaquetPaye = p;
-  if(p !== 'CH') return args;
-  tpEcrire('tf-terra-ch-vu', '1');
-  return Object.assign({}, args, { p_pays: 'CH' });
+  if(p === 'FR') return args;
+  tpEcrire(p === 'BE' ? 'tf-terra-be-vu' : 'tf-terra-ch-vu', '1');
+  return Object.assign({}, args, { p_pays: p });
 }
 function tpHabiller(pack, pays){
-  if(!pack || !SUISSE || pays !== 'CH') return;
-  pack.classList.add('paquet-ch');
+  if(!pack || !SUISSE || (pays !== 'CH' && pays !== 'BE')) return;
+  pack.classList.add(pays === 'BE' ? 'paquet-be' : 'paquet-ch');   // patch462
   const et = pack.querySelector('.paquet-etiquette');
-  if(et) et.innerHTML = tpDrapeau('CH') + '<span class="paquet-titre">Paquet Suisse</span>';
+  if(et) et.innerHTML = tpDrapeau(pays) + '<span class="paquet-titre">Paquet ' + TP_NOMS[pays] + '</span>';
   const bd = pack.querySelector('.paquet-bande');
-  if(bd) bd.textContent = '5 communes de Suisse';
+  if(bd) bd.textContent = '5 communes de ' + TP_NOMS[pays];
 }
 function tpSelecteurHtml(pays, coll){
   const at = coll ? 'data-tcp' : 'data-tpp';
   return `<div class="tp-pays${coll ? ' tp-coll-pays' : ''}" role="group" aria-label="${coll ? 'Quel pays' : 'Quel paquet'}">`
-    + `<button type="button" ${at}="FR" class="${pays === 'FR' ? 'on' : ''}" aria-pressed="${pays === 'FR'}">${tpDrapeau('FR')}France</button>`
-    + `<button type="button" ${at}="CH" class="tp-b-ch${pays === 'CH' ? ' on' : ''}" aria-pressed="${pays === 'CH'}">${tpDrapeau('CH')}Suisse${coll || tpNouveauVu() ? '' : '<small>Nouveau</small>'}</button></div>`;
+    + tpPaysOuverts().map(p => `<button type="button" ${at}="${p}" class="${p === 'FR' ? '' : 'tp-b-' + p.toLowerCase()}${pays === p ? ' on' : ''}" aria-pressed="${pays === p}">${tpDrapeau(p)}${TP_NOMS[p]}${p === 'FR' || coll || tpNouveauVu(p) ? '' : '<small>Nouveau</small>'}</button>`).join('')   // patch462
+    + '</div>';
 }
 // Tirage : le choix au-dessus des boutons (Terra seulement), appelé à chaque renderPackStatus
 function tpRendre(){
@@ -31513,21 +31577,22 @@ function tpRendre(){
     if(court && court.dataset.tpAvant){ court.textContent = court.dataset.tpAvant; delete court.dataset.tpAvant; }
     return;
   }
-  if(sub && !sub.dataset.tpAvant){ sub.dataset.tpAvant = sub.textContent; sub.textContent = 'Chaque carte tirée est une vraie commune, de France ou de Suisse, à sa vraie position géographique. Elle n’appartient qu’à toi tant que tu la gardes. Clique sur le paquet pour le déchirer.'; }
-  if(court && !court.dataset.tpAvant){ court.dataset.tpAvant = court.textContent; court.textContent = 'Chaque carte est une vraie commune de France ou de Suisse.'; }
+  const pays3 = BELGIQUE ? 'de France, de Suisse ou de Belgique' : 'de France ou de Suisse';   // patch462
+  if(sub && !sub.dataset.tpAvant){ sub.dataset.tpAvant = sub.textContent; sub.textContent = 'Chaque carte tirée est une vraie commune, ' + pays3 + ', à sa vraie position géographique. Elle n’appartient qu’à toi tant que tu la gardes. Clique sur le paquet pour le déchirer.'; }
+  if(court && !court.dataset.tpAvant){ court.dataset.tpAvant = court.textContent; court.textContent = 'Chaque carte est une vraie commune ' + pays3 + '.'; }
   const btns = panel.querySelector('.pack-buttons');
   if(!btns) return;
   if(!z){ z = document.createElement('div'); z.id = 'tpPays'; btns.parentNode.insertBefore(z, btns); }
-  const p = tpPays(), etat = p + (tpNouveauVu() ? 'v' : '');
+  const p = tpPays(), etat = p + (tpNouveauVu('CH') ? 'v' : '') + (tpNouveauVu('BE') ? 'b' : '');
   if(z.dataset.etat === etat) return;
   z.dataset.etat = etat;
   z.innerHTML = tpSelecteurHtml(p, false)
-    + `<p class="tp-note">${p === 'CH' ? '5 vraies communes suisses. ' : ''}Mêmes jetons et même prix pour les deux paquets ; les raretés tombent aussi souvent dans les deux.</p>`;
+    + `<p class="tp-note">${p === 'CH' ? '5 vraies communes suisses. ' : p === 'BE' ? '5 vraies communes belges. ' : ''}Mêmes jetons et même prix pour ${BELGIQUE ? 'les trois paquets' : 'les deux paquets'} ; les raretés tombent aussi souvent dans ${BELGIQUE ? 'les trois' : 'les deux'}.</p>`;
 }
 document.addEventListener('click', (ev) => {
   const b = ev.target.closest('[data-tpp]');
   if(!b) return;
-  tpEcrire('tf-terra-pays', b.dataset.tpp === 'CH' ? 'CH' : 'FR');
+  tpEcrire('tf-terra-pays', tpPaysValide(b.dataset.tpp));
   tpRendre();
   const zone = document.getElementById('packZone');
   if(zone && !paquetEnCours && zone.querySelector('.paquet[data-pret]')){ afficherPaquetPret('gratuit'); renderPackStatus(); }
@@ -31536,29 +31601,34 @@ document.addEventListener('click', (ev) => {
 // Collection : le pays choisi
 function tcVueCollection(){
   if(!SUISSE) return terraCollection;
-  const ch = tcPays() === 'CH';
-  return new Map([...terraCollection].filter(([, e]) => estSuisseCode(e.code) === ch));
+  const p = tcPays();   // patch462
+  return new Map([...terraCollection].filter(([, e]) => paysDuCode(e.code) === p));
 }
 function tcChoisirPays(p){
-  tpEcrire('tf-coll-pays', p === 'CH' ? 'CH' : 'FR');
+  tpEcrire('tf-coll-pays', tpPaysValide(p));
   terraFiltre = 'tous'; terraLimite = 120;
   renderCollectionTerra();
 }
-function tcTotauxSuisse(){
-  const t = { legendaire: 27, epique: 218, rare: 652, peucommun: 953, commun: 260 };   // s3-5 : 2 110 communes
-  for(const e of terraCollection.values()) if(estSuisseCode(e.code) && e.tierSize) t[e.tier.id] = Number(e.tierSize);
+function tcTotauxPays(p){
+  const t = p === 'BE' ? { legendaire: 5, epique: 16, rare: 56, peucommun: 209, commun: 279 }   // s3-32 : 565 communes (patch462)
+    : { legendaire: 27, epique: 218, rare: 652, peucommun: 953, commun: 260 };   // s3-5 : 2 110 communes
+  for(const e of terraCollection.values()) if(paysDuCode(e.code) === p && e.tierSize) t[e.tier.id] = Number(e.tierSize);
   const r = {};
   for(const k in t) r[k] = { total: t[k] };
   return r;
 }
-function tcTotalSuisse(){ return Object.values(tcTotauxSuisse()).reduce((s, l) => s + l.total, 0); }
+function tcTotalPays(p){ return Object.values(tcTotauxPays(p)).reduce((s, l) => s + l.total, 0); }
+function tcTotauxSuisse(){ return tcTotauxPays('CH'); }
+function tcTotalSuisse(){ return tcTotalPays('CH'); }
 function tcDoublonsVue(vue){ let n = 0; for(const e of vue.values()) n += Math.max(0, libresTerra(e)); return n; }
 function tcCompteurHtml(totalFrance){
-  let ch = 0;
-  for(const e of terraCollection.values()) if(estSuisseCode(e.code)) ch++;
-  if(tcPays() === 'CH')
-    return `<span class="coll-compteur"><b>${fmtNombre(ch)}</b> / ${fmtNombre(tcTotalSuisse())} communes suisses <span class="om-compteur">· <b>${fmtNombre(collectionMetro() + collectionOutremer().n)}</b> en France</span></span>`;
-  return compteurCollectionHtml(totalFrance).replace(/<\/span>$/, ` <span class="om-compteur">· <b>${fmtNombre(ch)}</b> / ${fmtNombre(tcTotalSuisse())} en Suisse</span></span>`);
+  const n = { FR: 0, CH: 0, BE: 0 };   // patch462 : la Belgique aussi
+  for(const e of terraCollection.values()) n[paysDuCode(e.code)]++;
+  const p = tcPays();
+  if(p !== 'FR')
+    return `<span class="coll-compteur"><b>${fmtNombre(n[p])}</b> / ${fmtNombre(tcTotalPays(p))} communes ${p === 'BE' ? 'belges' : 'suisses'} <span class="om-compteur">· <b>${fmtNombre(collectionMetro() + collectionOutremer().n)}</b> en France</span></span>`;
+  const etr = tpPaysOuverts().filter(x => x !== 'FR').map(x => ` <span class="om-compteur">· <b>${fmtNombre(n[x])}</b> / ${fmtNombre(tcTotalPays(x))} en ${TP_NOMS[x]}</span>`).join('');
+  return compteurCollectionHtml(totalFrance).replace(/<\/span>$/, etr + '</span>');
 }
 
 // ---------- patch410 : les points d'une bombe selon son niveau (s2-136 : score_s2 bombe_1..3) ----------
@@ -31887,6 +31957,7 @@ document.addEventListener('click', (e) => {
 
 // ---------- patch418 : la règle de la Suisse s'affiche avec la Suisse ; le lien « Le siège » ouvre sa section ----------
 document.body.classList.toggle('suisse-on', !!SUISSE);
+document.body.classList.toggle('belgique-on', !!BELGIQUE);   // patch462 : la règle de la Belgique
 document.addEventListener('click', (e) => {
   const a = e.target.closest('#panel-regles .rg-lien');
   if(!a) return;

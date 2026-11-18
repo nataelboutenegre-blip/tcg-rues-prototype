@@ -13,10 +13,14 @@ const TIERS = ['commun', 'peucommun', 'rare', 'epique', 'legendaire'];
 const MER = '#0A1628', LIBRE = '#1E3A60', SEUL = '#3A5378';
 // patch414 : la Suisse (saison 3), même interrupteur que le jeu : SUISSE_OUVERTE le jour J, ?suisse=test pour essayer
 const SUISSE_OUVERTE = false;
-const SUISSE = SUISSE_OUVERTE || /[?&]suisse=test\b/.test(location.search);
+// patch462 : la Belgique, même interrupteur que le jeu (BELGIQUE_OUVERTE, ?belgique=test)
+const BELGIQUE_OUVERTE = false;
+const BELGIQUE = BELGIQUE_OUVERTE || /[?&]belgique=test\b/.test(location.search);
+const SUISSE = SUISSE_OUVERTE || BELGIQUE || /[?&]suisse=test\b/.test(location.search);
 const CANTONS = {"AG":"Argovie","AI":"Appenzell Rhodes-Intérieures","AR":"Appenzell Rhodes-Extérieures","BE":"Berne","BL":"Bâle-Campagne","BS":"Bâle-Ville","FR":"Fribourg","GE":"Genève","GL":"Glaris","GR":"Grisons","JU":"Jura","LU":"Lucerne","NE":"Neuchâtel","NW":"Nidwald","OW":"Obwald","SG":"Saint-Gall","SH":"Schaffhouse","SO":"Soleure","SZ":"Schwytz","TG":"Thurgovie","TI":"Tessin","UR":"Uri","VD":"Vaud","VS":"Valais","ZG":"Zoug","ZH":"Zurich"};
 if(SUISSE) Object.assign(DEPT_NAMES, CANTONS);
-const VUE = { lon0: -5.25, lon1: SUISSE ? 10.8 : 9.65, lat0: 41.3, lat1: 51.15 }, W = 1080, H = 1060;
+if(BELGIQUE) Object.assign(DEPT_NAMES, {"VAN":"Anvers","VBR":"Brabant flamand","WBR":"Brabant wallon","VWV":"Flandre-Occidentale","VOV":"Flandre-Orientale","WHT":"Hainaut","WLG":"Liège","VLI":"Limbourg","WLX":"Luxembourg","WNA":"Namur","BRU":"Bruxelles-Capitale"});
+const VUE = { lon0: -5.25, lon1: SUISSE ? 10.8 : 9.65, lat0: 41.3, lat1: BELGIQUE ? 51.56 : 51.15 }, W = 1080, H = 1060;
 const KX = Math.cos((VUE.lat0 + VUE.lat1) / 2 * Math.PI / 180);
 const ECH = Math.min(W / ((VUE.lon1 - VUE.lon0) * KX), H / (VUE.lat1 - VUE.lat0));
 const OX = (W - (VUE.lon1 - VUE.lon0) * KX * ECH) / 2, OY = (H - (VUE.lat1 - VUE.lat0) * ECH) / 2;
@@ -119,6 +123,11 @@ async function chargerContours(){
     for(const [c, rings] of Object.entries(cantons || {})){ D.depBords.push(chemin(rings)); liste.push(c); }
     if(lacs) D.lacs = chemin(lacs);
     if(frontiere) D.frontiere = chemin(frontiere);
+    if(BELGIQUE){   // patch462 : les provinces et la frontière belge
+      const [provinces, fb] = await Promise.all([lire('contours-provinces-be.json'), lire('belgique-frontiere.json')]);
+      for(const [c, rings] of Object.entries(provinces || {})){ D.depBords.push(chemin(rings)); liste.push(c); }
+      if(fb) D.frontiere = chemin((frontiere || []).concat(fb));
+    }
   }
   for(let i = 0; i < liste.length; i += 12){
     await Promise.all(liste.slice(i, i + 12).map((dep) => fetch('../contours/' + dep + '.json?v=' + CONTOURS_V, { cache: 'force-cache' })
@@ -416,7 +425,7 @@ function heure(){
   ajuster(); heure();
   if(SUISSE){   // patch414
     const z = document.getElementById('zFrance'); if(z) z.textContent = 'Tout';
-    const p = document.querySelector('.pied span'); if(p) p.textContent = 'Les 37 000 communes de France et de Suisse, à prendre. Gratuit.';
+    const p = document.querySelector('.pied span'); if(p) p.textContent = BELGIQUE ? 'Les 37 000 communes de France, de Suisse et de Belgique, à prendre. Gratuit.' : 'Les 37 000 communes de France et de Suisse, à prendre. Gratuit.';
   }
   setInterval(heure, 10000);
   setInterval(rendreFil, 5000);

@@ -105,6 +105,13 @@ def main():
         for r in csv.DictReader(fh):
             if r.get("fichier") and (r.get("auteur") or r.get("licence") in ("Public domain", "CC0")) and r["code"] not in choix:
                 choix[r["code"]] = r
+    # les photos choisies à la main (prep/photos-choisies-belgique.csv : code, fichier, auteur, licence)
+    CHOISIES = os.path.join(ICI, "prep", "photos-choisies-belgique.csv")
+    if os.path.exists(CHOISIES):
+        with open(CHOISIES, encoding="utf-8") as fh:
+            for r in csv.DictReader(fh):
+                if r.get("fichier") and r.get("auteur"):
+                    choix[r["code"]] = r
     print("Inventaire : %d communes avec une photo utilisable." % len(choix))
 
     # la réserve en base

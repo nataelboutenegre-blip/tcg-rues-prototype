@@ -1,566 +1,566 @@
-code,nom,departement,population,latitude,longitude,tier,rang,nom_officiel,nom_fr,nom_nl,nom_de
-BE11001,Aartselaar,VAN,15093,51.1314,4.3868,peucommun,243,Aartselaar,Aartselaar,Aartselaar,Aartselaar
-BE11002,Anvers,VAN,562002,51.2279,4.4043,legendaire,1,Antwerpen,Anvers,Antwerpen,Antwerpen
-BE11004,Boechout,VAN,14084,51.1641,4.5049,peucommun,264,Boechout,Boechout,Boechout,Boechout
-BE11005,Boom,VAN,19699,51.0948,4.365,peucommun,179,Boom,Boom,Boom,Boom
-BE11008,Brasschaat,VAN,38416,51.3143,4.5058,rare,57,Brasschaat,Brasschaat,Brasschaat,Brasschaat
-BE11009,Brecht,VAN,30664,51.3325,4.6107,peucommun,86,Brecht,Brecht,Brecht,Brecht
-BE11013,Edegem,VAN,23502,51.16,4.4329,peucommun,136,Edegem,Edegem,Edegem,Edegem
-BE11016,Essen,VAN,19606,51.4436,4.4633,peucommun,180,Essen,Essen,Essen,Essen
-BE11018,Hemiksem,VAN,12428,51.1443,4.3408,commun,301,Hemiksem,Hemiksem,Hemiksem,Hemiksem
-BE11021,Hove,VAN,8366,51.1521,4.4749,commun,401,Hove,Hove,Hove,Hove
-BE11022,Kalmthout,VAN,19712,51.3856,4.4774,peucommun,178,Kalmthout,Kalmthout,Kalmthout,Kalmthout
-BE11023,Kapellen,VAN,27976,51.3308,4.4361,peucommun,102,Kapellen,Kapellen,Kapellen,Kapellen
-BE11024,Kontich,VAN,21801,51.1225,4.4565,peucommun,152,Kontich,Kontich,Kontich,Kontich
-BE11025,Lint,VAN,8499,51.1242,4.4913,commun,397,Lint,Lint,Lint,Lint
-BE11029,Mortsel,VAN,26736,51.1749,4.4651,peucommun,109,Mortsel,Mortsel,Mortsel,Mortsel
-BE11030,Niel,VAN,11032,51.1053,4.3404,commun,336,Niel,Niel,Niel,Niel
-BE11035,Ranst,VAN,19755,51.1907,4.5909,peucommun,177,Ranst,Ranst,Ranst,Ranst
-BE11037,Rumst,VAN,15692,51.0962,4.4161,peucommun,231,Rumst,Rumst,Rumst,Rumst
-BE11038,Schelle,VAN,8682,51.1238,4.3558,commun,393,Schelle,Schelle,Schelle,Schelle
-BE11039,Schilde,VAN,20508,51.2531,4.5762,peucommun,166,Schilde,Schilde,Schilde,Schilde
-BE11040,Schoten,VAN,34926,51.2633,4.516,rare,71,Schoten,Schoten,Schoten,Schoten
-BE11044,Stabroek,VAN,18970,51.3325,4.3697,peucommun,191,Stabroek,Stabroek,Stabroek,Stabroek
-BE11050,Wijnegem,VAN,10650,51.2314,4.5258,commun,345,Wijnegem,Wijnegem,Wijnegem,Wijnegem
-BE11052,Wommelgem,VAN,13564,51.2062,4.5218,peucommun,275,Wommelgem,Wommelgem,Wommelgem,Wommelgem
-BE11053,Wuustwezel,VAN,21941,51.3912,4.5511,peucommun,148,Wuustwezel,Wuustwezel,Wuustwezel,Wuustwezel
-BE11054,Zandhoven,VAN,13423,51.2129,4.6735,peucommun,276,Zandhoven,Zandhoven,Zandhoven,Zandhoven
-BE11055,Zoersel,VAN,22770,51.2509,4.6401,peucommun,144,Zoersel,Zoersel,Zoersel,Zoersel
-BE11057,Malle,VAN,16248,51.2948,4.7445,peucommun,226,Malle,Malle,Malle,Malle
-BE12002,Berlaar,VAN,12115,51.1055,4.6544,commun,306,Berlaar,Berlaar,Berlaar,Berlaar
-BE12005,Bonheiden,VAN,15641,51.0164,4.5711,peucommun,233,Bonheiden,Bonheiden,Bonheiden,Bonheiden
-BE12007,Bornem,VAN,22232,51.0896,4.214,peucommun,147,Bornem,Bornem,Bornem,Bornem
-BE12009,Duffel,VAN,18100,51.0933,4.4928,peucommun,201,Duffel,Duffel,Duffel,Duffel
-BE12014,Heist-op-den-Berg,VAN,44723,51.0682,4.7276,rare,42,Heist-op-den-Berg,Heist-op-den-Berg,Heist-op-den-Berg,Heist-op-den-Berg
-BE12021,Lierre,VAN,38517,51.1247,4.5843,rare,56,Lier,Lierre,Lier,Lier
-BE12025,Malines,VAN,89655,51.0347,4.4388,epique,16,Mechelen,Malines,Mechelen,Mechelen
-BE12026,Nijlen,VAN,23747,51.1512,4.689,peucommun,132,Nijlen,Nijlen,Nijlen,Nijlen
-BE12029,Putte,VAN,19091,51.0503,4.6398,peucommun,188,Putte,Putte,Putte,Putte
-BE12035,Sint-Katelijne-Waver,VAN,21917,51.0671,4.5318,peucommun,150,Sint-Katelijne-Waver,Sint-Katelijne-Waver,Sint-Katelijne-Waver,Sint-Katelijne-Waver
-BE12040,Willebroek,VAN,28620,51.0599,4.3659,peucommun,99,Willebroek,Willebroek,Willebroek,Willebroek
-BE12041,Puurs-Sint-Amands,VAN,27066,51.0622,4.3121,peucommun,106,Puurs-Sint-Amands,Puurs-Sint-Amands,Puurs-Sint-Amands,Puurs-Sint-Amands
-BE13001,Arendonk,VAN,13323,51.3368,5.0811,peucommun,280,Arendonk,Arendonk,Arendonk,Arendonk
-BE13002,Baarle-Hertog,VAN,3083,51.408,4.8862,commun,544,Baarle-Hertog,Baerle-Duc,Baarle-Hertog,Baarle-Hertog
-BE13003,Balen,VAN,23777,51.1547,5.1733,peucommun,130,Balen,Balen,Balen,Balen
-BE13004,Beerse,VAN,18710,51.3147,4.8168,peucommun,193,Beerse,Beerse,Beerse,Beerse
-BE13006,Dessel,VAN,10076,51.2451,5.1474,commun,361,Dessel,Dessel,Dessel,Dessel
-BE13008,Geel,VAN,42427,51.1722,4.9739,rare,47,Geel,Geel,Geel,Geel
-BE13010,Grobbendonk,VAN,11609,51.1799,4.7356,commun,319,Grobbendonk,Grobbendonk,Grobbendonk,Grobbendonk
-BE13011,Herentals,VAN,29001,51.1778,4.8266,peucommun,96,Herentals,Herentals,Herentals,Herentals
-BE13012,Herenthout,VAN,9504,51.1353,4.7457,commun,374,Herenthout,Herenthout,Herenthout,Herenthout
-BE13013,Herselt,VAN,14829,51.0509,4.8914,peucommun,251,Herselt,Herselt,Herselt,Herselt
-BE13014,Hoogstraten,VAN,22403,51.4378,4.7342,peucommun,146,Hoogstraten,Hoogstraten,Hoogstraten,Hoogstraten
-BE13016,Hulshout,VAN,10634,51.0638,4.808,commun,348,Hulshout,Hulshout,Hulshout,Hulshout
-BE13017,Kasterlee,VAN,19802,51.2383,4.9132,peucommun,174,Kasterlee,Kasterlee,Kasterlee,Kasterlee
-BE13019,Lille,VAN,17130,51.2511,4.8258,peucommun,214,Lille,Lille,Lille,Lille
-BE13021,Meerhout,VAN,10377,51.1237,5.0501,commun,353,Meerhout,Meerhout,Meerhout,Meerhout
-BE13023,Merksplas,VAN,8921,51.373,4.8631,commun,386,Merksplas,Merksplas,Merksplas,Merksplas
-BE13025,Mol,VAN,38701,51.2834,5.193,rare,55,Mol,Mol,Mol,Mol
-BE13029,Olen,VAN,12915,51.1684,4.8924,commun,287,Olen,Olen,Olen,Olen
-BE13031,Oud-Turnhout,VAN,15045,51.3211,4.9995,peucommun,245,Oud-Turnhout,Oud-Turnhout,Oud-Turnhout,Oud-Turnhout
-BE13035,Ravels,VAN,15712,51.4015,5.0205,peucommun,230,Ravels,Ravels,Ravels,Ravels
-BE13036,Retie,VAN,11995,51.269,5.0592,commun,310,Retie,Retie,Retie,Retie
-BE13037,Rijkevorsel,VAN,12560,51.3529,4.7614,commun,298,Rijkevorsel,Rijkevorsel,Rijkevorsel,Rijkevorsel
-BE13040,Turnhout,VAN,47965,51.3202,4.9398,rare,37,Turnhout,Turnhout,Turnhout,Turnhout
-BE13044,Vorselaar,VAN,8079,51.2185,4.7718,commun,412,Vorselaar,Vorselaar,Vorselaar,Vorselaar
-BE13046,Vosselaar,VAN,11816,51.308,4.8864,commun,315,Vosselaar,Vosselaar,Vosselaar,Vosselaar
-BE13049,Westerlo,VAN,25691,51.1118,4.8934,peucommun,120,Westerlo,Westerlo,Westerlo,Westerlo
-BE13053,Laakdal,VAN,16935,51.0718,4.9818,peucommun,217,Laakdal,Laakdal,Laakdal,Laakdal
-BE21001,Anderlecht,BRU,128724,50.8308,4.2983,epique,7,Anderlecht,Anderlecht,Anderlecht,Anderlecht
-BE21002,Auderghem,BRU,35698,50.8114,4.4379,rare,65,Auderghem,Auderghem,Oudergem,Auderghem
-BE21003,Berchem-Sainte-Agathe,BRU,25803,50.8652,4.2927,peucommun,117,Berchem-Sainte-Agathe,Berchem-Sainte-Agathe,Sint-Agatha-Berchem,Berchem-Sainte-Agathe
-BE21004,Bruxelles,BRU,198314,50.8846,4.3551,legendaire,4,Bruxelles,Bruxelles,Brussel,Brüssel
-BE21005,Etterbeek,BRU,49131,50.8343,4.4002,rare,33,Etterbeek,Etterbeek,Etterbeek,Etterbeek
-BE21006,Evere,BRU,45892,50.8665,4.4112,rare,40,Evere,Evere,Evere,Evere
-BE21007,Forest,BRU,58675,50.8169,4.3273,rare,29,Forest,Forest,Vorst,Forest
-BE21008,Ganshoren,BRU,25693,50.8741,4.3134,peucommun,119,Ganshoren,Ganshoren,Ganshoren,Ganshoren
-BE21009,Ixelles,BRU,89897,50.8155,4.3912,epique,15,Ixelles,Ixelles,Elsene,Ixelles
-BE21010,Jette,BRU,54390,50.8759,4.3298,rare,31,Jette,Jette,Jette,Jette
-BE21011,Koekelberg,BRU,22979,50.8643,4.3158,peucommun,142,Koekelberg,Koekelberg,Koekelberg,Koekelberg
-BE21012,Molenbeek-Saint-Jean,BRU,98713,50.8544,4.3287,epique,11,Molenbeek-Saint-Jean,Molenbeek-Saint-Jean,Sint-Jans-Molenbeek,Molenbeek-Saint-Jean
-BE21013,Saint-Gilles,BRU,48827,50.8276,4.3495,rare,34,Saint-Gilles,Saint-Gilles,Sint-Gillis,Saint-Gilles
-BE21014,Saint-Josse-ten-Noode,BRU,27258,50.8518,4.3744,peucommun,105,Saint-Josse-ten-Noode,Saint-Josse-ten-Noode,Sint-Joost-ten-Node,Saint-Josse-ten-Noode
-BE21015,Schaerbeek,BRU,129775,50.8654,4.3838,epique,6,Schaerbeek,Schaerbeek,Schaarbeek,Schaerbeek
-BE21016,Uccle,BRU,87194,50.7943,4.3554,epique,18,Uccle,Uccle,Ukkel,Uccle
-BE21017,Watermael-Boitsfort,BRU,25327,50.7909,4.4183,peucommun,121,Watermael-Boitsfort,Watermael-Boitsfort,Watermaal-Bosvoorde,Watermael-Boitsfort
-BE21018,Woluwe-Saint-Lambert,BRU,60956,50.8505,4.4308,rare,27,Woluwe-Saint-Lambert,Woluwe-Saint-Lambert,Sint-Lambrechts-Woluwe,Woluwe-Saint-Lambert
-BE21019,Woluwe-Saint-Pierre,BRU,42549,50.8294,4.4567,rare,46,Woluwe-Saint-Pierre,Woluwe-Saint-Pierre,Sint-Pieters-Woluwe,Woluwe-Saint-Pierre
-BE23002,Asse,VBR,35882,50.912,4.1853,rare,64,Asse,Asse,Asse,Asse
-BE23003,Beersel,VBR,26593,50.7482,4.2995,peucommun,110,Beersel,Beersel,Beersel,Beersel
-BE23009,Bever,VBR,2266,50.7122,3.9301,commun,557,Bever,Biévène,Bever,Bever
-BE23016,Dilbeek,VBR,45069,50.8533,4.2339,rare,41,Dilbeek,Dilbeek,Dilbeek,Dilbeek
-BE23025,Grimbergen,VBR,40062,50.9505,4.3823,rare,54,Grimbergen,Grimbergen,Grimbergen,Grimbergen
-BE23027,Hal,VBR,42884,50.7247,4.2433,rare,45,Halle,Hal,Halle,Halle
-BE23033,Hoeilaart,VBR,11565,50.7611,4.4401,commun,322,Hoeilaart,Hoeilaart,Hoeilaart,Hoeilaart
-BE23038,Kampenhout,VBR,12606,50.9407,4.548,commun,296,Kampenhout,Kampenhout,Kampenhout,Kampenhout
-BE23039,Kapelle-op-den-Bos,VBR,9806,51.0005,4.354,commun,367,Kapelle-op-den-Bos,Kapelle-op-den-Bos,Kapelle-op-den-Bos,Kapelle-op-den-Bos
-BE23044,Liedekerke,VBR,14155,50.8682,4.0953,peucommun,262,Liedekerke,Liedekerke,Liedekerke,Liedekerke
-BE23045,Londerzeel,VBR,19491,51.0072,4.2643,peucommun,182,Londerzeel,Londerzeel,Londerzeel,Londerzeel
-BE23047,Machelen,VBR,16784,50.9051,4.4434,peucommun,219,Machelen,Machelen,Machelen,Machelen
-BE23050,Meise,VBR,20392,50.963,4.3156,peucommun,168,Meise,Meise,Meise,Meise
-BE23052,Merchtem,VBR,18361,50.9503,4.251,peucommun,195,Merchtem,Merchtem,Merchtem,Merchtem
-BE23060,Opwijk,VBR,15006,50.9634,4.1766,peucommun,247,Opwijk,Opwijk,Opwijk,Opwijk
-BE23062,Overijse,VBR,26250,50.77,4.538,peucommun,113,Overijse,Overijse,Overijse,Overijse
-BE23064,Pepingen,VBR,4564,50.7628,4.1662,commun,507,Pepingen,Pepingen,Pepingen,Pepingen
-BE23077,Sint-Pieters-Leeuw,VBR,36732,50.7893,4.2373,rare,62,Sint-Pieters-Leeuw,Sint-Pieters-Leeuw,Sint-Pieters-Leeuw,Sint-Pieters-Leeuw
-BE23081,Steenokkerzeel,VBR,12727,50.9207,4.4981,commun,293,Steenokkerzeel,Steenokkerzeel,Steenokkerzeel,Steenokkerzeel
-BE23086,Ternat,VBR,16691,50.8654,4.1723,peucommun,220,Ternat,Ternat,Ternat,Ternat
-BE23088,Vilvorde,VBR,48040,50.9371,4.4458,rare,36,Vilvoorde,Vilvorde,Vilvoorde,Vilvoorde
-BE23094,Zaventem,VBR,37271,50.882,4.4826,rare,59,Zaventem,Zaventem,Zaventem,Zaventem
-BE23096,Zemst,VBR,23369,50.9782,4.4451,peucommun,138,Zemst,Zemst,Zemst,Zemst
-BE23097,Roosdaal,VBR,12021,50.8351,4.0883,commun,309,Roosdaal,Roosdaal,Roosdaal,Roosdaal
-BE23098,Drogenbos,VBR,6040,50.7886,4.3127,commun,459,Drogenbos,Drogenbos,Drogenbos,Drogenbos
-BE23099,Kraainem,VBR,13940,50.8559,4.469,peucommun,267,Kraainem,Kraainem,Kraainem,Kraainem
-BE23100,Linkebeek,VBR,4646,50.7653,4.3532,commun,505,Linkebeek,Linkebeek,Linkebeek,Linkebeek
-BE23101,Sint-Genesius-Rode,VBR,18700,50.7478,4.3756,peucommun,194,Sint-Genesius-Rode,Rhode-Saint-Genèse,Sint-Genesius-Rode,Sint-Genesius-Rode
-BE23102,Wemmel,VBR,18292,50.9078,4.3047,peucommun,198,Wemmel,Wemmel,Wemmel,Wemmel
-BE23103,Wezembeek-Oppem,VBR,14760,50.8453,4.4908,peucommun,252,Wezembeek-Oppem,Wezembeek-Oppem,Wezembeek-Oppem,Wezembeek-Oppem
-BE23104,Lennik,VBR,9481,50.8124,4.1616,commun,377,Lennik,Lennik,Lennik,Lennik
-BE23105,Affligem,VBR,13770,50.9043,4.1199,peucommun,271,Affligem,Affligem,Affligem,Affligem
-BE23106,Pajottegem,VBR,25287,50.7386,4.0358,peucommun,122,Pajottegem,Pajottegem,Pajottegem,Pajottegem
-BE24001,Aarschot,VBR,31514,50.989,4.8714,peucommun,81,Aarschot,Aarschot,Aarschot,Aarschot
-BE24007,Begijnendijk,VBR,10642,51.0156,4.7861,commun,346,Begijnendijk,Begijnendijk,Begijnendijk,Begijnendijk
-BE24008,Bekkevoort,VBR,6922,50.9395,4.9719,commun,442,Bekkevoort,Bekkevoort,Bekkevoort,Bekkevoort
-BE24009,Bertem,VBR,10342,50.8528,4.6198,commun,354,Bertem,Bertem,Bertem,Bertem
-BE24011,Bierbeek,VBR,10778,50.834,4.7735,commun,343,Bierbeek,Bierbeek,Bierbeek,Bierbeek
-BE24014,Boortmeerbeek,VBR,13400,50.9851,4.5494,peucommun,277,Boortmeerbeek,Boortmeerbeek,Boortmeerbeek,Boortmeerbeek
-BE24016,Boutersem,VBR,8709,50.8317,4.8303,commun,391,Boutersem,Boutersem,Boutersem,Boutersem
-BE24020,Diest,VBR,25141,50.9867,5.049,peucommun,123,Diest,Diest,Diest,Diest
-BE24028,Geetbets,VBR,6342,50.8913,5.1357,commun,454,Geetbets,Geetbets,Geetbets,Geetbets
-BE24033,Haacht,VBR,15671,50.9643,4.6486,peucommun,232,Haacht,Haacht,Haacht,Haacht
-BE24038,Herent,VBR,23081,50.904,4.6585,peucommun,140,Herent,Herent,Herent,Herent
-BE24041,Hoegaarden,VBR,6963,50.7857,4.8686,commun,439,Hoegaarden,Hoegaarden,Hoegaarden,Hoegaarden
-BE24043,Holsbeek,VBR,10234,50.9333,4.8206,commun,357,Holsbeek,Holsbeek,Holsbeek,Holsbeek
-BE24045,Huldenberg,VBR,10071,50.8,4.6072,commun,362,Huldenberg,Huldenberg,Huldenberg,Huldenberg
-BE24048,Keerbergen,VBR,13355,51.0042,4.6452,peucommun,278,Keerbergen,Keerbergen,Keerbergen,Keerbergen
-BE24054,Kortenaken,VBR,7984,50.8916,5.01,commun,415,Kortenaken,Kortenaken,Kortenaken,Kortenaken
-BE24055,Kortenberg,VBR,21386,50.8862,4.5603,peucommun,156,Kortenberg,Kortenberg,Kortenberg,Kortenberg
-BE24059,Landen,VBR,16375,50.7534,5.0742,peucommun,223,Landen,Landen,Landen,Landen
-BE24062,Louvain,VBR,104906,50.8789,4.7139,epique,10,Leuven,Louvain,Leuven,Löwen
-BE24066,Lubbeek,VBR,15236,50.8815,4.8254,peucommun,239,Lubbeek,Lubbeek,Lubbeek,Lubbeek
-BE24086,Oud-Heverlee,VBR,11406,50.8134,4.6659,commun,327,Oud-Heverlee,Oud-Heverlee,Oud-Heverlee,Oud-Heverlee
-BE24094,Rotselaar,VBR,17689,50.9589,4.7564,peucommun,206,Rotselaar,Rotselaar,Rotselaar,Rotselaar
-BE24104,Tervuren,VBR,23246,50.8257,4.5475,peucommun,139,Tervuren,Tervuren,Tervuren,Tervuren
-BE24107,Tirlemont,VBR,36890,50.7992,4.9542,rare,61,Tienen,Tirlemont,Tienen,Tienen
-BE24109,Tremelo,VBR,15418,51.0026,4.7417,peucommun,235,Tremelo,Tremelo,Tremelo,Tremelo
-BE24130,Zoutleeuw,VBR,8766,50.8394,5.1047,commun,390,Zoutleeuw,Léau,Zoutleeuw,Zoutleeuw
-BE24133,Linter,VBR,7354,50.8157,5.0448,commun,429,Linter,Linter,Linter,Linter
-BE24134,Scherpenheuvel-Zichem,VBR,24200,50.9977,4.9616,peucommun,127,Scherpenheuvel-Zichem,Montaigu-Zichem,Scherpenheuvel-Zichem,Scherpenheuvel-Zichem
-BE24135,Tielt-Winge,VBR,11568,50.9236,4.8882,commun,321,Tielt-Winge,Tielt-Winge,Tielt-Winge,Tielt-Winge
-BE24137,Glabbeek,VBR,5449,50.8676,4.9487,commun,486,Glabbeek,Glabbeek,Glabbeek,Glabbeek
-BE25005,Beauvechain,WBR,7242,50.7773,4.76,commun,433,Beauvechain,Beauvechain,Bevekom,Beauvechain
-BE25014,Braine-l’Alleud,WBR,40756,50.6622,4.3609,rare,50,Braine-l’Alleud,Braine-l’Alleud,Eigenbrakel,Braine-l’Alleud
-BE25015,Braine-le-Château,WBR,10638,50.6808,4.2668,commun,347,Braine-le-Château,Braine-le-Château,Kasteelbrakel,Braine-le-Château
-BE25018,Chaumont-Gistoux,WBR,11894,50.6813,4.6722,commun,313,Chaumont-Gistoux,Chaumont-Gistoux,Chaumont-Gistoux,Chaumont-Gistoux
-BE25023,Court-Saint-Etienne,WBR,10927,50.6263,4.5656,commun,338,Court-Saint-Etienne,Court-Saint-Etienne,Court-Saint-Etienne,Court-Saint-Etienne
-BE25031,Genappe,WBR,16160,50.6099,4.4429,peucommun,228,Genappe,Genappe,Genepiën,Genappe
-BE25037,Grez-Doiceau,WBR,14014,50.7492,4.6879,peucommun,265,Grez-Doiceau,Grez-Doiceau,Graven,Grez-Doiceau
-BE25043,Incourt,WBR,5658,50.6914,4.7866,commun,475,Incourt,Incourt,Incourt,Incourt
-BE25044,Ittre,WBR,6963,50.6371,4.2601,commun,440,Ittre,Ittre,Itter,Ittre
-BE25048,Jodoigne,WBR,14935,50.7276,4.8434,peucommun,248,Jodoigne,Jodoigne,Geldenaken,Jodoigne
-BE25050,La Hulpe,WBR,7482,50.7369,4.4646,commun,424,La Hulpe,La Hulpe,Terhulpen,La Hulpe
-BE25068,Mont-Saint-Guibert,WBR,8451,50.6267,4.6129,commun,398,Mont-Saint-Guibert,Mont-Saint-Guibert,Mont-Saint-Guibert,Mont-Saint-Guibert
-BE25072,Nivelles,WBR,29429,50.5964,4.3489,peucommun,92,Nivelles,Nivelles,Nijvel,Nivelles
-BE25084,Perwez,WBR,9844,50.6388,4.7947,commun,366,Perwez,Perwez,Perwijs,Perwez
-BE25091,Rixensart,WBR,23052,50.7123,4.5264,peucommun,141,Rixensart,Rixensart,Rixensart,Rixensart
-BE25105,Tubize,WBR,28716,50.6812,4.2017,peucommun,97,Tubize,Tubize,Tubeke,Tubize
-BE25107,Villers-la-Ville,WBR,11059,50.5647,4.543,commun,335,Villers-la-Ville,Villers-la-Ville,Villers-la-Ville,Villers-la-Ville
-BE25110,Waterloo,WBR,30389,50.7159,4.4074,peucommun,88,Waterloo,Waterloo,Waterloo,Waterloo
-BE25112,Wavre,WBR,35581,50.7167,4.5876,rare,67,Wavre,Wavre,Waver,Wavre
-BE25117,Chastre,WBR,7813,50.5885,4.6344,commun,418,Chastre,Chastre,Chastre,Chastre
-BE25118,Hélécine,WBR,3894,50.75,4.9954,commun,521,Hélécine,Hélécine,Hélécine,Hélécine
-BE25119,Lasne,WBR,14175,50.6865,4.4689,peucommun,261,Lasne,Lasne,Lasne,Lasne
-BE25120,Orp-Jauche,WBR,9092,50.6893,4.9629,commun,383,Orp-Jauche,Orp-Jauche,Orp-Jauche,Orp-Jauche
-BE25121,Ottignies-Louvain-la-Neuve,WBR,31766,50.6733,4.5336,peucommun,79,Ottignies-Louvain-la-Neuve,Ottignies-Louvain-la-Neuve,Ottignies-Louvain-la-Neuve,Ottignies-Louvain-la-Neuve
-BE25122,Ramillies,WBR,6710,50.6616,4.8907,commun,448,Ramillies,Ramillies,Ramillies,Ramillies
-BE25123,Rebecq,WBR,11185,50.6666,4.1315,commun,333,Rebecq,Rebecq,Rebecq,Rebecq
-BE25124,Walhain,WBR,7556,50.6276,4.6934,commun,422,Walhain,Walhain,Walhain,Walhain
-BE31003,Beernem,VWV,16318,51.1511,3.3379,peucommun,225,Beernem,Beernem,Beernem,Beernem
-BE31004,Blankenberge,VWV,20654,51.3025,3.142,peucommun,164,Blankenberge,Blankenberge,Blankenberge,Blankenberge
-BE31005,Bruges,VWV,120283,51.2182,3.2198,epique,8,Brugge,Bruges,Brugge,Brügge
-BE31006,Damme,VWV,11278,51.2569,3.3356,commun,332,Damme,Damme,Damme,Damme
-BE31012,Jabbeke,VWV,14932,51.1812,3.0884,peucommun,249,Jabbeke,Jabbeke,Jabbeke,Jabbeke
-BE31022,Oostkamp,VWV,24142,51.1215,3.2349,peucommun,128,Oostkamp,Oostkamp,Oostkamp,Oostkamp
-BE31033,Torhout,VWV,21159,51.0581,3.089,peucommun,159,Torhout,Torhout,Torhout,Torhout
-BE31040,Zedelgem,VWV,23635,51.1259,3.1469,peucommun,133,Zedelgem,Zedelgem,Zedelgem,Zedelgem
-BE31042,Zuienkerke,VWV,2657,51.2477,3.1176,commun,552,Zuienkerke,Zuienkerke,Zuienkerke,Zuienkerke
-BE31043,Knokke-Heist,VWV,32415,51.3318,3.3137,rare,76,Knokke-Heist,Knokke-Heist,Knokke-Heist,Knokke-Heist
-BE32003,Diksmuide,VWV,17337,51.0398,2.8483,peucommun,209,Diksmuide,Dixmude,Diksmuide,Diksmuide
-BE32006,Houthulst,VWV,10525,50.9704,2.9019,commun,349,Houthulst,Houthulst,Houthulst,Houthulst
-BE32010,Koekelare,VWV,8801,51.0919,2.9683,commun,387,Koekelare,Koekelare,Koekelare,Koekelare
-BE32011,Kortemark,VWV,12882,51.0242,2.9953,commun,289,Kortemark,Kortemark,Kortemark,Kortemark
-BE32030,Lo-Reninge,VWV,3183,50.9505,2.7875,commun,542,Lo-Reninge,Lo-Reninge,Lo-Reninge,Lo-Reninge
-BE33011,Ypres,VWV,35587,50.8569,2.8698,rare,66,Ieper,Ypres,Ieper,Ypern
-BE33016,Mesen,VWV,1071,50.7603,2.9019,commun,564,Mesen,Messines,Mesen,Mesen
-BE33021,Poperinge,VWV,19962,50.863,2.6607,peucommun,173,Poperinge,Poperinge,Poperinge,Poperinge
-BE33029,Wervik,VWV,19207,50.8079,3.0532,peucommun,185,Wervik,Wervik,Wervik,Wervik
-BE33037,Zonnebeke,VWV,12769,50.8575,3.0051,commun,292,Zonnebeke,Zonnebeke,Zonnebeke,Zonnebeke
-BE33039,Heuvelland,VWV,8021,50.7647,2.8099,commun,413,Heuvelland,Heuvelland,Heuvelland,Heuvelland
-BE33040,Langemark-Poelkapelle,VWV,8202,50.915,2.9369,commun,405,Langemark-Poelkapelle,Langemark-Poelkapelle,Langemark-Poelkapelle,Langemark-Poelkapelle
-BE33041,Vleteren,VWV,3583,50.9141,2.7356,commun,528,Vleteren,Vleteren,Vleteren,Vleteren
-BE34002,Anzegem,VWV,15246,50.8362,3.4474,peucommun,238,Anzegem,Anzegem,Anzegem,Anzegem
-BE34003,Avelgem,VWV,10450,50.7763,3.4452,commun,351,Avelgem,Avelgem,Avelgem,Avelgem
-BE34009,Deerlijk,VWV,12690,50.8446,3.3651,commun,294,Deerlijk,Deerlijk,Deerlijk,Deerlijk
-BE34013,Harelbeke,VWV,30311,50.8849,3.2973,peucommun,89,Harelbeke,Harelbeke,Harelbeke,Harelbeke
-BE34022,Courtrai,VWV,80776,50.7994,3.2626,epique,21,Kortrijk,Courtrai,Kortrijk,Kortrijk
-BE34023,Kuurne,VWV,14244,50.8595,3.2699,peucommun,258,Kuurne,Kuurne,Kuurne,Kuurne
-BE34025,Lendelede,VWV,5849,50.8853,3.2371,commun,466,Lendelede,Lendelede,Lendelede,Lendelede
-BE34027,Menin,VWV,34585,50.7796,3.1818,rare,73,Menen,Menin,Menen,Menen
-BE34040,Waregem,VWV,40436,50.8768,3.4125,rare,53,Waregem,Waregem,Waregem,Waregem
-BE34041,Wevelgem,VWV,31940,50.8286,3.1782,rare,77,Wevelgem,Wevelgem,Wevelgem,Wevelgem
-BE34042,Zwevegem,VWV,25870,50.7787,3.3651,peucommun,114,Zwevegem,Zwevegem,Zwevegem,Zwevegem
-BE34043,Spiere-Helkijn,VWV,2053,50.725,3.3535,commun,560,Spiere-Helkijn,Espierres-Helchin,Spiere-Helkijn,Spiere-Helkijn
-BE35002,Bredene,VWV,18196,51.2409,2.9787,peucommun,199,Bredene,Bredene,Bredene,Bredene
-BE35005,Gistel,VWV,12117,51.1485,2.9508,commun,305,Gistel,Gistel,Gistel,Gistel
-BE35006,Ichtegem,VWV,14622,51.1211,3.0271,peucommun,253,Ichtegem,Ichtegem,Ichtegem,Ichtegem
-BE35011,Middelkerke,VWV,20023,51.156,2.8386,peucommun,172,Middelkerke,Middelkerke,Middelkerke,Middelkerke
-BE35013,Ostende,VWV,72817,51.2195,2.933,rare,22,Oostende,Ostende,Oostende,Ostende
-BE35014,Oudenburg,VWV,10231,51.1832,3.0138,commun,358,Oudenburg,Oudenburg,Oudenburg,Oudenburg
-BE35029,De Haan,VWV,12627,51.2534,3.0385,commun,295,De Haan,De Haan,De Haan,De Haan
-BE36006,Hooglede,VWV,10312,50.9879,3.0817,commun,355,Hooglede,Hooglede,Hooglede,Hooglede
-BE36007,Ingelmunster,VWV,11597,50.9212,3.2608,commun,320,Ingelmunster,Ingelmunster,Ingelmunster,Ingelmunster
-BE36008,Izegem,VWV,29427,50.9211,3.2122,peucommun,93,Izegem,Izegem,Izegem,Izegem
-BE36010,Ledegem,VWV,9775,50.8689,3.1328,commun,369,Ledegem,Ledegem,Ledegem,Ledegem
-BE36011,Lichtervelde,VWV,9437,51.0315,3.1433,commun,378,Lichtervelde,Lichtervelde,Lichtervelde,Lichtervelde
-BE36012,Moorslede,VWV,11504,50.8864,3.0703,commun,324,Moorslede,Moorslede,Moorslede,Moorslede
-BE36015,Roulers,VWV,66888,50.9361,3.132,rare,25,Roeselare,Roulers,Roeselare,Roeselare
-BE36019,Staden,VWV,11696,50.9584,3.0049,commun,316,Staden,Staden,Staden,Staden
-BE37002,Dentergem,VWV,8673,50.9601,3.3958,commun,394,Dentergem,Dentergem,Dentergem,Dentergem
-BE37010,Oostrozebeke,VWV,8013,50.9252,3.3346,commun,414,Oostrozebeke,Oostrozebeke,Oostrozebeke,Oostrozebeke
-BE37011,Pittem,VWV,6971,51.0059,3.2582,commun,438,Pittem,Pittem,Pittem,Pittem
-BE37017,Wielsbeke,VWV,10256,50.9188,3.3762,commun,356,Wielsbeke,Wielsbeke,Wielsbeke,Wielsbeke
-BE37020,Ardooie,VWV,9514,50.9766,3.2018,commun,373,Ardooie,Ardooie,Ardooie,Ardooie
-BE37021,Wingene,VWV,20781,51.0684,3.2975,peucommun,163,Wingene,Wingene,Wingene,Wingene
-BE37022,Tielt,VWV,31908,51.0016,3.3448,peucommun,78,Tielt,Tielt,Tielt,Tielt
-BE38002,Alveringem,VWV,4966,50.9688,2.663,commun,500,Alveringem,Alveringem,Alveringem,Alveringem
-BE38008,De Panne,VWV,10874,51.0827,2.5914,commun,341,De Panne,La Panne,De Panne,De Panne
-BE38014,Koksijde,VWV,21344,51.1175,2.691,peucommun,157,Koksijde,Koksijde,Koksijde,Koksijde
-BE38016,Nieuwpoort,VWV,11399,51.1167,2.7803,commun,328,Nieuwpoort,Nieuport,Nieuwpoort,Nieuwpoort
-BE38025,Veurne,VWV,12564,51.0419,2.6574,commun,297,Veurne,Furnes,Veurne,Veurne
-BE41002,Alost,VOV,92131,50.9489,4.0502,epique,13,Aalst,Alost,Aalst,Aalst
-BE41011,Denderleeuw,VOV,21257,50.8881,4.0587,peucommun,158,Denderleeuw,Denderleeuw,Denderleeuw,Denderleeuw
-BE41018,Grammont,VOV,35236,50.7856,3.9059,rare,68,Geraardsbergen,Grammont,Geraardsbergen,Geraardsbergen
-BE41024,Haaltert,VOV,19517,50.8874,4.0003,peucommun,181,Haaltert,Haaltert,Haaltert,Haaltert
-BE41027,Herzele,VOV,19179,50.8617,3.8928,peucommun,186,Herzele,Herzele,Herzele,Herzele
-BE41034,Lede,VOV,19425,50.9651,3.9055,peucommun,183,Lede,Lede,Lede,Lede
-BE41048,Ninove,VOV,40580,50.8236,4.0098,rare,51,Ninove,Ninove,Ninove,Ninove
-BE41063,Sint-Lievens-Houtem,VOV,10748,50.9341,3.8698,commun,344,Sint-Lievens-Houtem,Sint-Lievens-Houtem,Sint-Lievens-Houtem,Sint-Lievens-Houtem
-BE41081,Zottegem,VOV,28236,50.8598,3.8081,peucommun,100,Zottegem,Zottegem,Zottegem,Zottegem
-BE41082,Erpe-Mere,VOV,21117,50.9275,3.957,peucommun,160,Erpe-Mere,Erpe-Mere,Erpe-Mere,Erpe-Mere
-BE42003,Berlare,VOV,15425,51.0493,3.9576,peucommun,234,Berlare,Berlare,Berlare,Berlare
-BE42004,Buggenhout,VOV,15079,51.0067,4.1939,peucommun,244,Buggenhout,Buggenhout,Buggenhout,Buggenhout
-BE42006,Termonde,VOV,47539,51.0367,4.1071,rare,38,Dendermonde,Termonde,Dendermonde,Dendermonde
-BE42008,Hamme,VOV,25706,51.0817,4.1494,peucommun,118,Hamme,Hamme,Hamme,Hamme
-BE42010,Laarne,VOV,12496,51.0439,3.9094,commun,300,Laarne,Laarne,Laarne,Laarne
-BE42011,Lebbeke,VOV,20298,50.9894,4.1207,peucommun,169,Lebbeke,Lebbeke,Lebbeke,Lebbeke
-BE42023,Waasmunster,VOV,11395,51.1169,4.0444,commun,329,Waasmunster,Waasmunster,Waasmunster,Waasmunster
-BE42025,Wetteren,VOV,26926,50.9924,3.864,peucommun,108,Wetteren,Wetteren,Wetteren,Wetteren
-BE42026,Wichelen,VOV,12050,50.9945,3.9335,commun,307,Wichelen,Wichelen,Wichelen,Wichelen
-BE42028,Zele,VOV,21521,51.0665,4.037,peucommun,154,Zele,Zele,Zele,Zele
-BE43002,Assenede,VOV,14617,51.2303,3.7125,peucommun,254,Assenede,Assenede,Assenede,Assenede
-BE43005,Eeklo,VOV,22733,51.1924,3.555,peucommun,145,Eeklo,Eeklo,Eeklo,Eeklo
-BE43007,Kaprijke,VOV,6638,51.2014,3.633,commun,449,Kaprijke,Kaprijke,Kaprijke,Kaprijke
-BE43010,Maldegem,VOV,24883,51.1978,3.4407,peucommun,124,Maldegem,Maldegem,Maldegem,Maldegem
-BE43014,Sint-Laureins,VOV,6941,51.2549,3.5623,commun,441,Sint-Laureins,Sint-Laureins,Sint-Laureins,Sint-Laureins
-BE43018,Zelzate,VOV,13653,51.198,3.8122,peucommun,272,Zelzate,Zelzate,Zelzate,Zelzate
-BE44013,Destelbergen,VOV,19088,51.052,3.8116,peucommun,189,Destelbergen,Destelbergen,Destelbergen,Destelbergen
-BE44019,Evergem,VOV,37254,51.1315,3.6834,rare,60,Evergem,Evergem,Evergem,Evergem
-BE44020,Gavere,VOV,13353,50.9316,3.6863,peucommun,279,Gavere,Gavere,Gavere,Gavere
-BE44021,Gand,VOV,272657,51.0472,3.7026,legendaire,2,Gent,Gand,Gent,Gent
-BE44052,Oosterzele,VOV,14088,50.9416,3.7965,peucommun,263,Oosterzele,Oosterzele,Oosterzele,Oosterzele
-BE44064,Sint-Martens-Latem,VOV,8149,51.0131,3.6257,commun,409,Sint-Martens-Latem,Sint-Martens-Latem,Sint-Martens-Latem,Sint-Martens-Latem
-BE44081,Zulte,VOV,16233,50.9381,3.4801,peucommun,227,Zulte,Zulte,Zulte,Zulte
-BE44083,Deinze,VOV,46026,51.0052,3.5429,rare,39,Deinze,Deinze,Deinze,Deinze
-BE44084,Aalter,VOV,29830,51.1,3.4597,peucommun,91,Aalter,Aalter,Aalter,Aalter
-BE44085,Lievegem,VOV,27350,51.133,3.6072,peucommun,104,Lievegem,Lievegem,Lievegem,Lievegem
-BE44086,Nazareth-De Pinte,VOV,23574,50.9821,3.6613,peucommun,135,Nazareth-De Pinte,Nazareth-De Pinte,Nazareth-De Pinte,Nazareth-De Pinte
-BE44087,Lochristi,VOV,30916,51.1129,3.8635,peucommun,85,Lochristi,Lochristi,Lochristi,Lochristi
-BE44088,Merelbeke-Melle,VOV,37369,50.9967,3.7716,rare,58,Merelbeke-Melle,Merelbeke-Melle,Merelbeke-Melle,Merelbeke-Melle
-BE45035,Audenarde,VOV,32930,50.8611,3.6195,rare,75,Oudenaarde,Audenarde,Oudenaarde,Oudenaarde
-BE45041,Ronse,VOV,27577,50.747,3.6245,peucommun,103,Ronse,Renaix,Ronse,Ronse
-BE45059,Brakel,VOV,15127,50.81,3.7485,peucommun,242,Brakel,Brakel,Brakel,Brakel
-BE45060,Kluisbergen,VOV,6869,50.7866,3.5375,commun,443,Kluisbergen,Kluisbergen,Kluisbergen,Kluisbergen
-BE45061,Wortegem-Petegem,VOV,6545,50.8483,3.5392,commun,450,Wortegem-Petegem,Wortegem-Petegem,Wortegem-Petegem,Wortegem-Petegem
-BE45062,Horebeke,VOV,2026,50.841,3.699,commun,561,Horebeke,Horebeke,Horebeke,Horebeke
-BE45063,Lierde,VOV,6858,50.8008,3.8409,commun,446,Lierde,Lierde,Lierde,Lierde
-BE45064,Maarkedal,VOV,6320,50.7934,3.6214,commun,455,Maarkedal,Maarkedal,Maarkedal,Maarkedal
-BE45065,Zwalm,VOV,8348,50.8751,3.7242,commun,403,Zwalm,Zwalin,Zwalm,Zwalm
-BE45068,Kruisem,VOV,16006,50.916,3.531,peucommun,229,Kruisem,Kruisem,Kruisem,Kruisem
-BE46020,Sint-Gillis-Waas,VOV,20139,51.2337,4.1224,peucommun,170,Sint-Gillis-Waas,Sint-Gillis-Waas,Sint-Gillis-Waas,Sint-Gillis-Waas
-BE46021,Saint-Nicolas,VOV,82661,51.1695,4.1622,epique,19,Sint-Niklaas,Saint-Nicolas,Sint-Niklaas,Sint-Niklaas
-BE46024,Stekene,VOV,19767,51.2149,4.0235,peucommun,176,Stekene,Stekene,Stekene,Stekene
-BE46025,Tamise,VOV,31613,51.1453,4.2189,peucommun,80,Temse,Tamise,Temse,Temse
-BE46029,Lokeren,VOV,50606,51.1191,3.949,rare,32,Lokeren,Lokeren,Lokeren,Lokeren
-BE46030,Beveren-Kruibeke-Zwijndrecht,VOV,87927,51.2613,4.2306,epique,17,Beveren-Kruibeke-Zwijndrecht,Beveren-Kruibeke-Zwijndrecht,Beveren-Kruibeke-Zwijndrecht,Beveren-Kruibeke-Zwijndrecht
-BE51004,Ath,WHT,30123,50.6444,3.76,peucommun,90,Ath,Ath,Aat,Ath
-BE51008,Beloeil,WHT,14232,50.5412,3.6857,peucommun,259,Beloeil,Beloeil,Beloeil,Beloeil
-BE51009,Bernissart,WHT,11894,50.4883,3.6549,commun,314,Bernissart,Bernissart,Bernissart,Bernissart
-BE51012,Brugelette,WHT,3878,50.6054,3.8612,commun,522,Brugelette,Brugelette,Brugelette,Brugelette
-BE51014,Chièvres,WHT,7145,50.5735,3.7907,commun,435,Chièvres,Chièvres,Chièvres,Chièvres
-BE51017,Ellezelles,WHT,5948,50.7287,3.6763,commun,463,Ellezelles,Ellezelles,Elzele,Ellezelles
-BE51019,Flobecq,WHT,3441,50.7527,3.7421,commun,532,Flobecq,Flobecq,Vloesberg,Flobecq
-BE51065,Frasnes-lez-Anvaing,WHT,12256,50.6826,3.583,commun,303,Frasnes-lez-Anvaing,Frasnes-lez-Anvaing,Frasnes-lez-Anvaing,Frasnes-lez-Anvaing
-BE51067,Enghien,WHT,14567,50.6677,3.9925,peucommun,256,Enghien,Enghien,Edingen,Enghien
-BE51068,Silly,WHT,8422,50.6618,3.9356,commun,399,Silly,Silly,Opzullik,Silly
-BE51069,Lessines,WHT,18853,50.7097,3.8538,peucommun,192,Lessines,Lessines,Lessen,Lessines
-BE52010,Chapelle-lez-Herlaimont,WHT,15030,50.4784,4.2828,peucommun,246,Chapelle-lez-Herlaimont,Chapelle-lez-Herlaimont,Chapelle-lez-Herlaimont,Chapelle-lez-Herlaimont
-BE52011,Charleroi,WHT,205763,50.4215,4.4374,legendaire,3,Charleroi,Charleroi,Charleroi,Charleroi
-BE52012,Châtelet,WHT,35979,50.3922,4.5215,rare,63,Châtelet,Châtelet,Châtelet,Châtelet
-BE52015,Courcelles,WHT,31436,50.4704,4.3397,peucommun,83,Courcelles,Courcelles,Courcelles,Courcelles
-BE52018,Farciennes,WHT,11471,50.4361,4.5403,commun,325,Farciennes,Farciennes,Farciennes,Farciennes
-BE52021,Fleurus,WHT,22922,50.4799,4.5345,peucommun,143,Fleurus,Fleurus,Fleurus,Fleurus
-BE52022,Fontaine-l’Evêque,WHT,17985,50.4127,4.3222,peucommun,202,Fontaine-l’Evêque,Fontaine-l’Evêque,Fontaine-l’Evêque,Fontaine-l’Evêque
-BE52025,Gerpinnes,WHT,12900,50.3427,4.5293,commun,288,Gerpinnes,Gerpinnes,Gerpinnes,Gerpinnes
-BE52048,Montigny-le-Tilleul,WHT,10170,50.3749,4.3738,commun,360,Montigny-le-Tilleul,Montigny-le-Tilleul,Montigny-le-Tilleul,Montigny-le-Tilleul
-BE52055,Pont-à-Celles,WHT,17662,50.5243,4.3583,peucommun,207,Pont-à-Celles,Pont-à-Celles,Pont-à-Celles,Pont-à-Celles
-BE52074,Aiseau-Presles,WHT,10956,50.4163,4.5841,commun,337,Aiseau-Presles,Aiseau-Presles,Aiseau-Presles,Aiseau-Presles
-BE52075,Les Bons Villers,WHT,9705,50.5132,4.4726,commun,370,Les Bons Villers,Les Bons Villers,Les Bons Villers,Les Bons Villers
-BE53014,Boussu,WHT,20401,50.4255,3.7988,peucommun,167,Boussu,Boussu,Boussu,Boussu
-BE53020,Dour,WHT,16559,50.3963,3.7544,peucommun,222,Dour,Dour,Dour,Dour
-BE53028,Frameries,WHT,21630,50.3868,3.8812,peucommun,153,Frameries,Frameries,Frameries,Frameries
-BE53039,Hensies,WHT,6776,50.4391,3.6863,commun,447,Hensies,Hensies,Hensies,Hensies
-BE53044,Jurbise,WHT,10912,50.5242,3.9259,commun,339,Jurbise,Jurbise,Jurbeke,Jurbise
-BE53046,Lens,WHT,4677,50.5762,3.9335,commun,503,Lens,Lens,Lens,Lens
-BE53053,Mons,WHT,97120,50.4479,3.9981,epique,12,Mons,Mons,Bergen,Mons
-BE53065,Quaregnon,WHT,19022,50.4408,3.8588,peucommun,190,Quaregnon,Quaregnon,Quaregnon,Quaregnon
-BE53068,Quiévrain,WHT,6861,50.3995,3.697,commun,445,Quiévrain,Quiévrain,Quiévrain,Quiévrain
-BE53070,Saint-Ghislain,WHT,23756,50.4917,3.7915,peucommun,131,Saint-Ghislain,Saint-Ghislain,Saint-Ghislain,Saint-Ghislain
-BE53082,Colfontaine,WHT,20813,50.4,3.8457,peucommun,162,Colfontaine,Colfontaine,Colfontaine,Colfontaine
-BE53083,Honnelles,WHT,5104,50.3433,3.7071,commun,497,Honnelles,Honnelles,Honnelles,Honnelles
-BE53084,Quévy,WHT,8194,50.3654,3.9246,commun,407,Quévy,Quévy,Quévy,Quévy
-BE55004,Braine-le-Comte,WHT,23604,50.6013,4.1211,peucommun,134,Braine-le-Comte,Braine-le-Comte,’s Gravenbrakel,Braine-le-Comte
-BE55035,Le Roeulx,WHT,8709,50.4908,4.0865,commun,392,Le Roeulx,Le Roeulx,Le Roeulx,Le Roeulx
-BE55040,Soignies,WHT,29249,50.5632,4.0354,peucommun,94,Soignies,Soignies,Zinnik,Soignies
-BE55050,Ecaussinnes,WHT,11622,50.5625,4.1789,commun,318,Ecaussinnes,Ecaussinnes,Ecaussinnes,Ecaussinnes
-BE55085,Seneffe,WHT,11631,50.5514,4.2655,commun,317,Seneffe,Seneffe,Seneffe,Seneffe
-BE55086,Manage,WHT,24202,50.4952,4.2368,peucommun,126,Manage,Manage,Manage,Manage
-BE56001,Anderlues,WHT,12955,50.4048,4.2657,peucommun,285,Anderlues,Anderlues,Anderlues,Anderlues
-BE56005,Beaumont,WHT,7096,50.2257,4.2539,commun,437,Beaumont,Beaumont,Beaumont,Beaumont
-BE56016,Chimay,WHT,9673,50.0654,4.2953,commun,371,Chimay,Chimay,Chimay,Chimay
-BE56022,Erquelinnes,WHT,9983,50.3014,4.1434,commun,363,Erquelinnes,Erquelinnes,Erquelinnes,Erquelinnes
-BE56029,Froidchapelle,WHT,4067,50.154,4.3324,commun,517,Froidchapelle,Froidchapelle,Froidchapelle,Froidchapelle
-BE56044,Lobbes,WHT,5958,50.3586,4.2485,commun,462,Lobbes,Lobbes,Lobbes,Lobbes
-BE56049,Merbes-le-Château,WHT,4137,50.3013,4.2206,commun,516,Merbes-le-Château,Merbes-le-Château,Merbes-le-Château,Merbes-le-Château
-BE56051,Momignies,WHT,5213,50.0065,4.1997,commun,495,Momignies,Momignies,Momignies,Momignies
-BE56078,Thuin,WHT,14864,50.3268,4.3094,peucommun,250,Thuin,Thuin,Thuin,Thuin
-BE56086,Ham-sur-Heure-Nalinnes,WHT,13838,50.3335,4.418,peucommun,270,Ham-sur-Heure-Nalinnes,Ham-sur-Heure-Nalinnes,Ham-sur-Heure-Nalinnes,Ham-sur-Heure-Nalinnes
-BE56088,Sivry-Rance,WHT,4862,50.1673,4.1883,commun,501,Sivry-Rance,Sivry-Rance,Sivry-Rance,Sivry-Rance
-BE57003,Antoing,WHT,7538,50.562,3.4577,commun,423,Antoing,Antoing,Antoing,Antoing
-BE57018,Celles,WHT,5775,50.7157,3.4329,commun,468,Celles,Celles,Celles,Celles
-BE57027,Estaimpuis,WHT,10878,50.6961,3.2826,commun,340,Estaimpuis,Estaimpuis,Estaimpuis,Estaimpuis
-BE57062,Pecq,WHT,5899,50.6824,3.3585,commun,464,Pecq,Pecq,Pecq,Pecq
-BE57064,Péruwelz,WHT,17350,50.5339,3.5701,peucommun,208,Péruwelz,Péruwelz,Péruwelz,Péruwelz
-BE57072,Rumes,WHT,5345,50.5418,3.3088,commun,490,Rumes,Rumes,Rumes,Rumes
-BE57081,Tournai,WHT,68991,50.6059,3.3797,rare,23,Tournai,Tournai,Doornik,Tournai
-BE57093,Brunehaut,WHT,8129,50.5308,3.3988,commun,410,Brunehaut,Brunehaut,Brunehaut,Brunehaut
-BE57094,Leuze-en-Hainaut,WHT,14200,50.5955,3.6405,peucommun,260,Leuze-en-Hainaut,Leuze-en-Hainaut,Leuze-en-Hainaut,Leuze-en-Hainaut
-BE57095,Mont-de-l’Enclus,WHT,3838,50.7355,3.5122,commun,523,Mont-de-l’Enclus,Mont-de-l’Enclus,Mont-de-l’Enclus,Mont-de-l’Enclus
-BE57096,Mouscron,WHT,60304,50.7379,3.2246,rare,28,Mouscron,Mouscron,Moeskroen,Mouscron
-BE57097,Comines-Warneton,WHT,18337,50.7271,2.9015,peucommun,197,Comines-Warneton,Comines-Warneton,Komen-Waasten,Comines-Warneton
-BE58001,La Louvière,WHT,81674,50.4807,4.1646,epique,20,La Louvière,La Louvière,La Louvière,La Louvière
-BE58002,Binche,WHT,33784,50.404,4.2019,rare,74,Binche,Binche,Binche,Binche
-BE58003,Estinnes,WHT,7947,50.3887,4.0892,commun,416,Estinnes,Estinnes,Estinnes,Estinnes
-BE58004,Morlanwelz,WHT,19113,50.4479,4.2464,peucommun,187,Morlanwelz,Morlanwelz,Morlanwelz,Morlanwelz
-BE61003,Amay,WLG,14494,50.5543,5.31,peucommun,257,Amay,Amay,Amay,Amay
-BE61010,Burdinne,WLG,3334,50.585,5.1372,commun,537,Burdinne,Burdinne,Burdinne,Burdinne
-BE61012,Clavier,WLG,4989,50.42,5.3608,commun,498,Clavier,Clavier,Clavier,Clavier
-BE61019,Ferrières,WLG,5156,50.4082,5.6218,commun,496,Ferrières,Ferrières,Ferrières,Ferrières
-BE61024,Hamoir,WLG,3776,50.4334,5.5496,commun,525,Hamoir,Hamoir,Hamoir,Hamoir
-BE61028,Héron,WLG,5599,50.5427,5.1118,commun,479,Héron,Héron,Héron,Héron
-BE61031,Huy,WLG,21850,50.4934,5.1693,peucommun,151,Huy,Huy,Hoei,Huy
-BE61039,Marchin,WLG,5636,50.4691,5.2376,commun,476,Marchin,Marchin,Marchin,Marchin
-BE61041,Modave,WLG,4169,50.4811,5.2909,commun,515,Modave,Modave,Modave,Modave
-BE61043,Nandrin,WLG,5755,50.5152,5.4124,commun,469,Nandrin,Nandrin,Nandrin,Nandrin
-BE61048,Ouffet,WLG,2822,50.4394,5.4679,commun,548,Ouffet,Ouffet,Ouffet,Ouffet
-BE61063,Verlaine,WLG,4414,50.6054,5.3109,commun,509,Verlaine,Verlaine,Verlaine,Verlaine
-BE61068,Villers-Le-Bouillet,WLG,6869,50.6004,5.2255,commun,444,Villers-Le-Bouillet,Villers-Le-Bouillet,Villers-Le-Bouillet,Villers-Le-Bouillet
-BE61072,Wanze,WLG,14005,50.5474,5.1927,peucommun,266,Wanze,Wanze,Wanze,Wanze
-BE61079,Anthisnes,WLG,4204,50.494,5.4856,commun,512,Anthisnes,Anthisnes,Anthisnes,Anthisnes
-BE61080,Engis,WLG,6391,50.5625,5.4007,commun,452,Engis,Engis,Engis,Engis
-BE61081,Tinlot,WLG,2782,50.4789,5.3813,commun,549,Tinlot,Tinlot,Tinlot,Tinlot
-BE62003,Ans,WLG,29110,50.6665,5.5175,peucommun,95,Ans,Ans,Ans,Ans
-BE62006,Awans,WLG,9373,50.6803,5.4551,commun,380,Awans,Awans,Awans,Awans
-BE62009,Aywaille,WLG,12969,50.4447,5.6785,peucommun,284,Aywaille,Aywaille,Aywaille,Aywaille
-BE62011,Bassenge,WLG,9053,50.7657,5.6355,commun,385,Bassenge,Bassenge,Bitsingen,Bassenge
-BE62015,Beyne-Heusay,WLG,11977,50.6216,5.6514,commun,311,Beyne-Heusay,Beyne-Heusay,Beyne-Heusay,Beyne-Heusay
-BE62022,Chaudfontaine,WLG,20523,50.5864,5.63,peucommun,165,Chaudfontaine,Chaudfontaine,Chaudfontaine,Chaudfontaine
-BE62026,Comblain-au-Pont,WLG,5366,50.4784,5.567,commun,488,Comblain-au-Pont,Comblain-au-Pont,Comblain-au-Pont,Comblain-au-Pont
-BE62027,Dalhem,WLG,7711,50.724,5.7687,commun,419,Dalhem,Dalhem,Dalhem,Dalhem
-BE62032,Esneux,WLG,12794,50.5432,5.576,commun,290,Esneux,Esneux,Esneux,Esneux
-BE62038,Fléron,WLG,16374,50.619,5.6864,peucommun,224,Fléron,Fléron,Fléron,Fléron
-BE62051,Herstal,WLG,40834,50.6795,5.6247,rare,49,Herstal,Herstal,Herstal,Herstal
-BE62060,Juprelle,WLG,9906,50.72,5.5633,commun,365,Juprelle,Juprelle,Juprelle,Juprelle
-BE62063,Liège,WLG,197323,50.6325,5.5828,legendaire,5,Liège,Liège,Luik,Lüttich
-BE62079,Oupeye,WLG,25846,50.7207,5.6509,peucommun,115,Oupeye,Oupeye,Oupeye,Oupeye
-BE62093,Saint-Nicolas,WLG,24517,50.638,5.5205,peucommun,125,Saint-Nicolas,Saint-Nicolas,Saint-Nicolas,Saint-Nicolas
-BE62096,Seraing,WLG,64609,50.5863,5.5171,rare,26,Seraing,Seraing,Seraing,Seraing
-BE62099,Soumagne,WLG,17265,50.6342,5.7373,peucommun,210,Soumagne,Soumagne,Soumagne,Soumagne
-BE62100,Sprimont,WLG,15171,50.5164,5.6542,peucommun,241,Sprimont,Sprimont,Sprimont,Sprimont
-BE62108,Visé,WLG,18110,50.7373,5.7036,peucommun,200,Visé,Visé,Wezet,Visé
-BE62118,Grâce-Hollogne,WLG,23416,50.6421,5.4752,peucommun,137,Grâce-Hollogne,Grâce-Hollogne,Grâce-Hollogne,Grâce-Hollogne
-BE62119,Blegny,WLG,13579,50.6863,5.7254,peucommun,274,Blegny,Blegny,Blegny,Blegny
-BE62120,Flémalle,WLG,27045,50.5973,5.443,peucommun,107,Flémalle,Flémalle,Flémalle,Flémalle
-BE62121,Neupré,WLG,9952,50.5436,5.4765,commun,364,Neupré,Neupré,Neupré,Neupré
-BE62122,Trooz,WLG,8200,50.5713,5.6812,commun,406,Trooz,Trooz,Trooz,Trooz
-BE63001,Amel,WLG,5608,50.3496,6.1939,commun,478,Amel,Amblève,Amel,Amel
-BE63003,Aubel,WLG,4288,50.7003,5.8406,commun,511,Aubel,Aubel,Aubel,Aubel
-BE63004,Baelen,WLG,4529,50.5609,6.0851,commun,508,Baelen,Baelen,Baelen,Baelen
-BE63012,Büllingen,WLG,5533,50.4094,6.2998,commun,482,Büllingen,Bullange,Büllingen,Büllingen
-BE63013,Bütgenbach,WLG,5586,50.4594,6.2008,commun,480,Bütgenbach,Butgenbach,Bütgenbach,Bütgenbach
-BE63020,Dison,WLG,15226,50.6172,5.8817,peucommun,240,Dison,Dison,Dison,Dison
-BE63023,Eupen,WLG,20053,50.594,6.1806,peucommun,171,Eupen,Eupen,Eupen,Eupen
-BE63035,Herve,WLG,17784,50.6471,5.799,peucommun,205,Herve,Herve,Herve,Herve
-BE63038,Jalhay,WLG,8770,50.5352,5.9713,commun,389,Jalhay,Jalhay,Jalhay,Jalhay
-BE63040,Kelmis,WLG,11338,50.716,6.0201,commun,331,Kelmis,La Calamine,Kelmis,Kelmis
-BE63045,Lierneux,WLG,3611,50.3025,5.7865,commun,527,Lierneux,Lierneux,Lierneux,Lierneux
-BE63046,Limbourg,WLG,5689,50.6013,5.9423,commun,473,Limbourg,Limbourg,Limburg,Limbourg
-BE63048,Lontzen,WLG,6092,50.6731,6.0009,commun,457,Lontzen,Lontzen,Lontzen,Lontzen
-BE63049,Malmedy,WLG,12991,50.4112,6.0332,peucommun,283,Malmedy,Malmedy,Malmedy,Malmedy
-BE63057,Olne,WLG,4172,50.5869,5.7246,commun,514,Olne,Olne,Olne,Olne
-BE63058,Pepinster,WLG,9294,50.5752,5.7943,commun,381,Pepinster,Pepinster,Pepinster,Pepinster
-BE63061,Raeren,WLG,11185,50.6742,6.1081,commun,334,Raeren,Raeren,Raeren,Raeren
-BE63067,Sankt Vith,WLG,10180,50.3015,6.0554,commun,359,Sankt Vith,Saint-Vith,Sankt Vith,Sankt Vith
-BE63072,Spa,WLG,9806,50.4772,5.8809,commun,368,Spa,Spa,Spa,Spa
-BE63073,Stavelot,WLG,7279,50.4064,5.9489,commun,432,Stavelot,Stavelot,Stavelot,Stavelot
-BE63075,Stoumont,WLG,3233,50.4017,5.7473,commun,539,Stoumont,Stoumont,Stoumont,Stoumont
-BE63076,Theux,WLG,12144,50.5125,5.802,commun,304,Theux,Theux,Theux,Theux
-BE63079,Verviers,WLG,56127,50.5784,5.8787,rare,30,Verviers,Verviers,Verviers,Verviers
-BE63080,Waimes,WLG,7560,50.4174,6.1194,commun,421,Waimes,Waimes,Weismes,Weismes
-BE63084,Welkenraedt,WLG,10521,50.6694,5.9423,commun,350,Welkenraedt,Welkenraedt,Welkenraedt,Welkenraedt
-BE63086,Trois-Ponts,WLG,2566,50.3657,5.8497,commun,553,Trois-Ponts,Trois-Ponts,Trois-Ponts,Trois-Ponts
-BE63087,Burg-Reuland,WLG,3962,50.2075,6.0717,commun,520,Burg-Reuland,Burg-Reuland,Burg-Reuland,Burg-Reuland
-BE63088,Plombières,WLG,10814,50.7274,5.9453,commun,342,Plombières,Plombières,Plombières,Plombières
-BE63089,Thimister-Clermont,WLG,5584,50.6594,5.8694,commun,481,Thimister-Clermont,Thimister-Clermont,Thimister-Clermont,Thimister-Clermont
-BE64008,Berloz,WLG,3394,50.7039,5.2138,commun,534,Berloz,Berloz,Berloz,Berloz
-BE64015,Braives,WLG,6476,50.6212,5.1656,commun,451,Braives,Braives,Braives,Braives
-BE64021,Crisnée,WLG,3573,50.7128,5.3911,commun,529,Crisnée,Crisnée,Crisnée,Crisnée
-BE64023,Donceel,WLG,3128,50.6486,5.3152,commun,543,Donceel,Donceel,Donceel,Donceel
-BE64025,Fexhe-le-Haut-Clocher,WLG,3399,50.6641,5.4053,commun,533,Fexhe-le-Haut-Clocher,Fexhe-le-Haut-Clocher,Fexhe-le-Haut-Clocher,Fexhe-le-Haut-Clocher
-BE64029,Geer,WLG,3571,50.6691,5.1833,commun,530,Geer,Geer,Geer,Geer
-BE64034,Hannut,WLG,17202,50.6705,5.0794,peucommun,213,Hannut,Hannut,Hannuit,Hannut
-BE64047,Lincent,WLG,3375,50.7181,5.0287,commun,535,Lincent,Lincent,Lijsem,Lincent
-BE64056,Oreye,WLG,4062,50.7214,5.3487,commun,519,Oreye,Oreye,Oerle,Oreye
-BE64063,Remicourt,WLG,6023,50.6846,5.3342,commun,461,Remicourt,Remicourt,Remicourt,Remicourt
-BE64065,Saint-Georges-sur-Meuse,WLG,7184,50.5983,5.3613,commun,434,Saint-Georges-sur-Meuse,Saint-Georges-sur-Meuse,Saint-Georges-sur-Meuse,Saint-Georges-sur-Meuse
-BE64074,Waremme,WLG,15366,50.6925,5.2705,peucommun,236,Waremme,Waremme,Borgworm,Waremme
-BE64075,Wasseiges,WLG,3187,50.6143,5.026,commun,541,Wasseiges,Wasseiges,Wasseiges,Wasseiges
-BE64076,Faimes,WLG,4192,50.649,5.2393,commun,513,Faimes,Faimes,Faimes,Faimes
-BE71002,As,VLI,8298,51.0024,5.5785,commun,404,As,As,As,As
-BE71004,Beringen,VLI,48755,51.0664,5.2213,rare,35,Beringen,Beringen,Beringen,Beringen
-BE71011,Diepenbeek,VLI,19788,50.9102,5.4176,peucommun,175,Diepenbeek,Diepenbeek,Diepenbeek,Diepenbeek
-BE71016,Genk,VLI,68058,50.9674,5.5006,rare,24,Genk,Genk,Genk,Genk
-BE71017,Gingelom,VLI,8788,50.7365,5.1488,commun,388,Gingelom,Gingelom,Gingelom,Gingelom
-BE71020,Halen,VLI,9490,50.9404,5.0945,commun,376,Halen,Halen,Halen,Halen
-BE71024,Herk-de-Stad,VLI,12927,50.9401,5.185,peucommun,286,Herk-de-Stad,Herck-la-Ville,Herk-de-Stad,Herk-de-Stad
-BE71034,Leopoldsburg,VLI,16858,51.1215,5.2585,peucommun,218,Leopoldsburg,Bourg-Léopold,Leopoldsburg,Leopoldsburg
-BE71037,Lummen,VLI,15347,50.9993,5.2005,peucommun,237,Lummen,Lummen,Lummen,Lummen
-BE71045,Nieuwerkerken,VLI,7328,50.8705,5.1923,commun,431,Nieuwerkerken,Nieuwerkerken,Nieuwerkerken,Nieuwerkerken
-BE71053,Saint-Trond,VLI,41743,50.8103,5.192,rare,48,Sint-Truiden,Saint-Trond,Sint-Truiden,Sint-Truiden
-BE71066,Zonhoven,VLI,21923,50.9893,5.3457,peucommun,149,Zonhoven,Zonhoven,Zonhoven,Zonhoven
-BE71067,Zutendaal,VLI,7404,50.9373,5.5746,commun,428,Zutendaal,Zutendaal,Zutendaal,Zutendaal
-BE71070,Heusden-Zolder,VLI,34985,51.0185,5.2818,rare,70,Heusden-Zolder,Heusden-Zolder,Heusden-Zolder,Heusden-Zolder
-BE71071,Tessenderlo-Ham,VLI,30645,51.0874,5.1474,peucommun,87,Tessenderlo-Ham,Tessenderlo-Ham,Tessenderlo-Ham,Tessenderlo-Ham
-BE71072,Hasselt,VLI,90249,50.937,5.3062,epique,14,Hasselt,Hasselt,Hasselt,Hasselt
-BE72003,Bocholt,VLI,13875,51.1888,5.5621,peucommun,269,Bocholt,Bocholt,Bocholt,Bocholt
-BE72004,Bree,VLI,17210,51.1439,5.6426,peucommun,212,Bree,Bree,Bree,Bree
-BE72018,Kinrooi,VLI,12527,51.1581,5.7431,commun,299,Kinrooi,Kinrooi,Kinrooi,Kinrooi
-BE72020,Lommel,VLI,35208,51.2163,5.2916,rare,69,Lommel,Lommel,Lommel,Lommel
-BE72021,Maaseik,VLI,25828,51.1009,5.7001,peucommun,116,Maaseik,Maaseik,Maaseik,Maaseik
-BE72030,Peer,VLI,16685,51.1162,5.4392,peucommun,221,Peer,Peer,Peer,Peer
-BE72037,Hamont-Achel,VLI,14568,51.2713,5.4939,peucommun,255,Hamont-Achel,Hamont-Achel,Hamont-Achel,Hamont-Achel
-BE72038,Hechtel-Eksel,VLI,13105,51.137,5.3536,peucommun,282,Hechtel-Eksel,Hechtel-Eksel,Hechtel-Eksel,Hechtel-Eksel
-BE72039,Houthalen-Helchteren,VLI,30945,51.0508,5.3951,peucommun,84,Houthalen-Helchteren,Houthalen-Helchteren,Houthalen-Helchteren,Houthalen-Helchteren
-BE72041,Dilsen-Stokkem,VLI,21486,51.039,5.7234,peucommun,155,Dilsen-Stokkem,Dilsen-Stokkem,Dilsen-Stokkem,Dilsen-Stokkem
-BE72042,Oudsbergen,VLI,23871,51.0765,5.5329,peucommun,129,Oudsbergen,Oudsbergen,Oudsbergen,Oudsbergen
-BE72043,Pelt,VLI,34635,51.2228,5.4317,rare,72,Pelt,Pelt,Pelt,Pelt
-BE73001,Alken,VLI,11937,50.8771,5.2818,commun,312,Alken,Alken,Alken,Alken
-BE73022,Heers,VLI,7574,50.7537,5.3006,commun,420,Heers,Heers,Heers,Heers
-BE73028,Herstappe,VLI,75,50.7261,5.4264,commun,565,Herstappe,Herstappe,Herstappe,Herstappe
-BE73042,Lanaken,VLI,26457,50.9075,5.6456,peucommun,112,Lanaken,Lanaken,Lanaken,Lanaken
-BE73066,Riemst,VLI,16938,50.8092,5.5967,peucommun,216,Riemst,Riemst,Riemst,Riemst
-BE73098,Wellen,VLI,7479,50.8436,5.3386,commun,425,Wellen,Wellen,Wellen,Wellen
-BE73107,Maasmechelen,VLI,40486,50.9687,5.6825,rare,52,Maasmechelen,Maasmechelen,Maasmechelen,Maasmechelen
-BE73109,Voeren,VLI,4412,50.7398,5.8701,commun,510,Voeren,Fourons,Voeren,Voeren
-BE73110,Bilzen-Hoeselt,VLI,43052,50.866,5.4962,rare,44,Bilzen-Hoeselt,Bilzen-Hoeselt,Bilzen-Hoeselt,Bilzen-Hoeselt
-BE73111,Tongres-Looz,VLI,43980,50.7756,5.4426,rare,43,Tongeren-Borgloon,Tongres-Looz,Tongeren-Borgloon,Tongeren-Borgloon
-BE81001,Arlon,WLX,31492,49.6713,5.7601,peucommun,82,Arlon,Arlon,Aarlen,Arlon
-BE81003,Attert,WLX,5788,49.756,5.7731,commun,467,Attert,Attert,Attert,Attert
-BE81004,Aubange,WLX,17871,49.5784,5.7525,peucommun,204,Aubange,Aubange,Aubange,Aubange
-BE81013,Martelange,WLX,2124,49.8,5.7275,commun,558,Martelange,Martelange,Martelange,Martelange
-BE81015,Messancy,WLX,8627,49.6117,5.8191,commun,396,Messancy,Messancy,Messancy,Messancy
-BE82009,Fauvillers,WLX,2512,49.8713,5.6838,commun,556,Fauvillers,Fauvillers,Fauvillers,Fauvillers
-BE82014,Houffalize,WLX,5336,50.1401,5.7352,commun,491,Houffalize,Houffalize,Houffalize,Houffalize
-BE82032,Vielsalm,WLX,7853,50.2953,5.9089,commun,417,Vielsalm,Vielsalm,Vielsalm,Vielsalm
-BE82036,Vaux-sur-Sûre,WLX,6352,49.9457,5.6277,commun,453,Vaux-sur-Sûre,Vaux-sur-Sûre,Vaux-sur-Sûre,Vaux-sur-Sûre
-BE82037,Gouvy,WLX,5452,50.182,5.9051,commun,485,Gouvy,Gouvy,Gouvy,Gouvy
-BE82038,Sainte-Ode,WLX,2687,50.0184,5.5475,commun,551,Sainte-Ode,Sainte-Ode,Sainte-Ode,Sainte-Ode
-BE82039,Bastogne,WLX,20940,50.0197,5.7431,peucommun,161,Bastogne,Bastogne,Bastenaken,Bastnach
-BE83012,Durbuy,WLX,11511,50.3693,5.4894,commun,323,Durbuy,Durbuy,Durbuy,Durbuy
-BE83013,Erezée,WLX,3356,50.2939,5.5776,commun,536,Erezée,Erezée,Erezée,Erezée
-BE83028,Hotton,WLX,5682,50.2669,5.431,commun,474,Hotton,Hotton,Hotton,Hotton
-BE83031,La Roche-en-Ardenne,WLX,4067,50.1626,5.6098,commun,518,La Roche-en-Ardenne,La Roche-en-Ardenne,La Roche-en-Ardenne,La Roche-en-Ardenne
-BE83034,Marche-en-Famenne,WLX,17946,50.199,5.2923,peucommun,203,Marche-en-Famenne,Marche-en-Famenne,Marche-en-Famenne,Marche-en-Famenne
-BE83040,Nassogne,WLX,5716,50.1388,5.3567,commun,470,Nassogne,Nassogne,Nassogne,Nassogne
-BE83044,Rendeux,WLX,2717,50.2192,5.5117,commun,550,Rendeux,Rendeux,Rendeux,Rendeux
-BE83049,Tenneville,WLX,2876,50.1087,5.5083,commun,546,Tenneville,Tenneville,Tenneville,Tenneville
-BE83055,Manhay,WLX,3762,50.2733,5.6705,commun,526,Manhay,Manhay,Manhay,Manhay
-BE84009,Bertrix,WLX,9057,49.8604,5.2434,commun,384,Bertrix,Bertrix,Bertrix,Bertrix
-BE84010,Bouillon,WLX,5351,49.8219,5.055,commun,489,Bouillon,Bouillon,Bouillon,Bouillon
-BE84016,Daverdisse,WLX,1416,49.9914,5.0871,commun,563,Daverdisse,Daverdisse,Daverdisse,Daverdisse
-BE84029,Herbeumont,WLX,1743,49.7867,5.2675,commun,562,Herbeumont,Herbeumont,Herbeumont,Herbeumont
-BE84033,Léglise,WLX,5868,49.8222,5.5874,commun,465,Léglise,Léglise,Léglise,Léglise
-BE84035,Libin,WLX,5367,49.9723,5.2453,commun,487,Libin,Libin,Libin,Libin
-BE84043,Neufchâteau,WLX,8350,49.8452,5.4203,commun,402,Neufchâteau,Neufchâteau,Neufchâteau,Neufchâteau
-BE84050,Paliseul,WLX,5530,49.8867,5.1319,commun,483,Paliseul,Paliseul,Paliseul,Paliseul
-BE84059,Saint-Hubert,WLX,5691,50.0417,5.3425,commun,472,Saint-Hubert,Saint-Hubert,Saint-Hubert,Saint-Hubert
-BE84068,Tellin,WLX,2519,50.0673,5.2123,commun,555,Tellin,Tellin,Tellin,Tellin
-BE84075,Wellin,WLX,3207,50.059,5.0902,commun,540,Wellin,Wellin,Wellin,Wellin
-BE84077,Libramont-Chevigny,WLX,12033,49.9549,5.4616,commun,308,Libramont-Chevigny,Libramont-Chevigny,Libramont-Chevigny,Libramont-Chevigny
-BE85007,Chiny,WLX,5265,49.7197,5.4017,commun,493,Chiny,Chiny,Chiny,Chiny
-BE85009,Etalle,WLX,6035,49.6605,5.6142,commun,460,Etalle,Etalle,Etalle,Etalle
-BE85011,Florenville,WLX,5705,49.731,5.2255,commun,471,Florenville,Florenville,Florenville,Florenville
-BE85024,Meix-devant-Virton,WLX,2849,49.5999,5.4609,commun,547,Meix-devant-Virton,Meix-devant-Virton,Meix-devant-Virton,Meix-devant-Virton
-BE85026,Musson,WLX,4708,49.5691,5.6865,commun,502,Musson,Musson,Musson,Musson
-BE85034,Saint-Léger,WLX,3809,49.6134,5.6601,commun,524,Saint-Léger,Saint-Léger,Saint-Léger,Saint-Léger
-BE85039,Tintigny,WLX,4593,49.6714,5.4992,commun,506,Tintigny,Tintigny,Tintigny,Tintigny
-BE85045,Virton,WLX,11466,49.5734,5.5782,commun,326,Virton,Virton,Virton,Virton
-BE85046,Habay,WLX,8668,49.7326,5.6292,commun,395,Habay,Habay,Habay,Habay
-BE85047,Rouvroy,WLX,2111,49.5299,5.4895,commun,559,Rouvroy,Rouvroy,Rouvroy,Rouvroy
-BE91005,Anhée,WNA,7109,50.325,4.8308,commun,436,Anhée,Anhée,Anhée,Anhée
-BE91013,Beauraing,WNA,9496,50.0962,4.9861,commun,375,Beauraing,Beauraing,Beauraing,Beauraing
-BE91015,Bièvre,WNA,3467,49.9369,5.0342,commun,531,Bièvre,Bièvre,Bièvre,Bièvre
-BE91030,Ciney,WNA,17220,50.2634,5.1114,peucommun,211,Ciney,Ciney,Ciney,Ciney
-BE91034,Dinant,WNA,13261,50.2619,4.9494,peucommun,281,Dinant,Dinant,Dinant,Dinant
-BE91054,Gedinne,WNA,4661,49.9817,4.8916,commun,504,Gedinne,Gedinne,Gedinne,Gedinne
-BE91059,Hamois,WNA,7438,50.3449,5.125,commun,427,Hamois,Hamois,Hamois,Hamois
-BE91064,Havelange,WNA,5461,50.3529,5.2516,commun,484,Havelange,Havelange,Havelange,Havelange
-BE91072,Houyet,WNA,5215,50.1936,5.0207,commun,494,Houyet,Houyet,Houyet,Houyet
-BE91103,Onhaye,WNA,3243,50.2541,4.8318,commun,538,Onhaye,Onhaye,Onhaye,Onhaye
-BE91114,Rochefort,WNA,12772,50.1621,5.1792,commun,291,Rochefort,Rochefort,Rochefort,Rochefort
-BE91120,Somme-Leuze,WNA,6191,50.2764,5.2999,commun,456,Somme-Leuze,Somme-Leuze,Somme-Leuze,Somme-Leuze
-BE91141,Yvoir,WNA,9210,50.3179,4.9136,commun,382,Yvoir,Yvoir,Yvoir,Yvoir
-BE91142,Hastière,WNA,6081,50.1925,4.8256,commun,458,Hastière,Hastière,Hastière,Hastière
-BE91143,Vresse-sur-Semois,WNA,2549,49.8376,4.9193,commun,554,Vresse-sur-Semois,Vresse-sur-Semois,Vresse-sur-Semois,Vresse-sur-Semois
-BE92003,Andenne,WNA,28231,50.4947,5.0557,peucommun,101,Andenne,Andenne,Andenne,Andenne
-BE92006,Assesse,WNA,7343,50.3778,4.9686,commun,430,Assesse,Assesse,Assesse,Assesse
-BE92035,Eghezée,WNA,16954,50.5804,4.8953,peucommun,215,Eghezée,Eghezée,Eghezée,Eghezée
-BE92045,Floreffe,WNA,8083,50.4394,4.7591,commun,411,Floreffe,Floreffe,Floreffe,Floreffe
-BE92048,Fosses-la-Ville,WNA,10436,50.3982,4.6948,commun,352,Fosses-la-Ville,Fosses-la-Ville,Fosses-la-Ville,Fosses-la-Ville
-BE92054,Gesves,WNA,7445,50.4288,5.0477,commun,426,Gesves,Gesves,Gesves,Gesves
-BE92087,Mettet,WNA,13613,50.3151,4.6689,peucommun,273,Mettet,Mettet,Mettet,Mettet
-BE92094,Namur,WNA,115029,50.4579,4.8891,epique,9,Namur,Namur,Namen,Namur
-BE92097,Ohey,WNA,5316,50.4384,5.1845,commun,492,Ohey,Ohey,Ohey,Ohey
-BE92101,Profondeville,WNA,12322,50.3831,4.8264,commun,302,Profondeville,Profondeville,Profondeville,Profondeville
-BE92114,Sombreffe,WNA,8384,50.5326,4.6073,commun,400,Sombreffe,Sombreffe,Sombreffe,Sombreffe
-BE92137,Sambreville,WNA,28638,50.4504,4.613,peucommun,98,Sambreville,Sambreville,Sambreville,Sambreville
-BE92138,Fernelmont,WNA,8175,50.5545,4.9977,commun,408,Fernelmont,Fernelmont,Fernelmont,Fernelmont
-BE92140,Jemeppe-sur-Sambre,WNA,19225,50.4671,4.6786,peucommun,184,Jemeppe-sur-Sambre,Jemeppe-sur-Sambre,Jemeppe-sur-Sambre,Jemeppe-sur-Sambre
-BE92141,La Bruyère,WNA,9397,50.5286,4.7982,commun,379,La Bruyère,La Bruyère,La Bruyère,La Bruyère
-BE92142,Gembloux,WNA,26550,50.5468,4.7079,peucommun,111,Gembloux,Gembloux,Gembloux,Gembloux
-BE93010,Cerfontaine,WNA,4989,50.1801,4.443,commun,499,Cerfontaine,Cerfontaine,Cerfontaine,Cerfontaine
-BE93014,Couvin,WNA,13919,50.0206,4.4815,peucommun,268,Couvin,Couvin,Couvin,Couvin
-BE93018,Doische,WNA,2973,50.1252,4.6292,commun,545,Doische,Doische,Doische,Doische
-BE93022,Florennes,WNA,11394,50.2493,4.5779,commun,330,Florennes,Florennes,Florennes,Florennes
-BE93056,Philippeville,WNA,9589,50.1621,4.5559,commun,372,Philippeville,Philippeville,Philippeville,Philippeville
-BE93088,Walcourt,WNA,18353,50.2669,4.4744,peucommun,196,Walcourt,Walcourt,Walcourt,Walcourt
-BE93090,Viroinval,WNA,5616,50.0478,4.6384,commun,477,Viroinval,Viroinval,Viroinval,Viroinval
+code,nom,departement,population,latitude,longitude,tier,rang,nom_officiel,nom_fr,nom_nl,nom_de,wikidata,article_fr,photo
+BE11001,Aartselaar,VAN,15093,51.1314,4.3868,peucommun,243,Aartselaar,Aartselaar,Aartselaar,Aartselaar,Q303246,Aartselaar,Gemeentehuis Aartselaar voorgevel.jpg
+BE11002,Anvers,VAN,562002,51.2279,4.4043,legendaire,1,Antwerpen,Anvers,Antwerpen,Antwerpen,Q12892,Anvers,Amberes; vistas MAS 2.jpg
+BE11004,Boechout,VAN,14084,51.1641,4.5049,peucommun,264,Boechout,Boechout,Boechout,Boechout,Q723822,Boechout,Gemeentehuis Boechout.JPG
+BE11005,Boom,VAN,19699,51.0948,4.365,peucommun,179,Boom,Boom,Boom,Boom,Q723972,Boom (Belgique),Boom aan de Rupel.JPG
+BE11008,Brasschaat,VAN,38416,51.3143,4.5058,rare,57,Brasschaat,Brasschaat,Brasschaat,Brasschaat,Q693513,Brasschaat,Gemeentehuis Brasschaat.jpg
+BE11009,Brecht,VAN,30664,51.3325,4.6107,peucommun,86,Brecht,Brecht,Brecht,Brecht,Q724131,Brecht (Belgique),Brecht kerk.jpg
+BE11013,Edegem,VAN,23502,51.16,4.4329,peucommun,136,Edegem,Edegem,Edegem,Edegem,Q724238,Edegem,Edegem Gemeentehuis 13.jpg
+BE11016,Essen,VAN,19606,51.4436,4.4633,peucommun,180,Essen,Essen,Essen,Essen,Q724283,Essen (Belgique),Essen Belgium 2.JPG
+BE11018,Hemiksem,VAN,12428,51.1443,4.3408,commun,301,Hemiksem,Hemiksem,Hemiksem,Hemiksem,Q724448,Hemiksem,Stbernardusabdij.jpg
+BE11021,Hove,VAN,8366,51.1521,4.4749,commun,401,Hove,Hove,Hove,Hove,Q649982,Hove (Belgique),"Geelhandlaan 1, Hove.JPG"
+BE11022,Kalmthout,VAN,19712,51.3856,4.4774,peucommun,178,Kalmthout,Kalmthout,Kalmthout,Kalmthout,Q724777,Kalmthout,Achterbroek Kalmthout.JPG
+BE11023,Kapellen,VAN,27976,51.3308,4.4361,peucommun,102,Kapellen,Kapellen,Kapellen,Kapellen,Q724942,Kapellen (Anvers),Kapellen Belgium.JPG
+BE11024,Kontich,VAN,21801,51.1225,4.4565,peucommun,152,Kontich,Kontich,Kontich,Kontich,Q725074,Kontich,Kontich Sint-Martinuskerk 1.jpg
+BE11025,Lint,VAN,8499,51.1242,4.4913,commun,397,Lint,Lint,Lint,Lint,Q725268,Lint (Belgique),Lint Kasteel Lindenhof 09.jpg
+BE11029,Mortsel,VAN,26736,51.1749,4.4651,peucommun,109,Mortsel,Mortsel,Mortsel,Mortsel,Q688781,Mortsel,"Village centre of Mortsel, Belgium (aerial view).jpg"
+BE11030,Niel,VAN,11032,51.1053,4.3404,commun,336,Niel,Niel,Niel,Niel,Q912054,Niel (Belgique),Gemeentehuis Niel.jpg
+BE11035,Ranst,VAN,19755,51.1907,4.5909,peucommun,177,Ranst,Ranst,Ranst,Ranst,Q501748,Ranst,Ranst Sint-Pancratiuskerk 1.jpg
+BE11037,Rumst,VAN,15692,51.0962,4.4161,peucommun,231,Rumst,Rumst,Rumst,Rumst,Q943446,Rumst,Rumst Sint-Pieterskerk 2.JPG
+BE11038,Schelle,VAN,8682,51.1238,4.3558,commun,393,Schelle,Schelle,Schelle,Schelle,Q911968,Schelle (Belgique),Schelle elektriciteitscentrale (cropped).jpg
+BE11039,Schilde,VAN,20508,51.2531,4.5762,peucommun,166,Schilde,Schilde,Schilde,Schilde,Q263177,Schilde (Belgique),Parochiekerk Sint-Guibertus (zuiden).JPG
+BE11040,Schoten,VAN,34926,51.2633,4.516,rare,71,Schoten,Schoten,Schoten,Schoten,Q655203,Schoten (Belgique),Kasteel van Schoten.jpg
+BE11044,Stabroek,VAN,18970,51.3325,4.3697,peucommun,191,Stabroek,Stabroek,Stabroek,Stabroek,Q595654,Stabroek (Belgique),Antitankgracht 005.jpg
+BE11050,Wijnegem,VAN,10650,51.2314,4.5258,commun,345,Wijnegem,Wijnegem,Wijnegem,Wijnegem,Q527808,Wijnegem,Kasteel Kijckuit.jpg
+BE11052,Wommelgem,VAN,13564,51.2062,4.5218,peucommun,275,Wommelgem,Wommelgem,Wommelgem,Wommelgem,Q839037,Wommelgem,Wommelgem Sint-Pieters- en Pauluskerk 14.JPG
+BE11053,Wuustwezel,VAN,21941,51.3912,4.5511,peucommun,148,Wuustwezel,Wuustwezel,Wuustwezel,Wuustwezel,Q912045,Wuustwezel,Herbergdekeizerloenhout.jpg
+BE11054,Zandhoven,VAN,13423,51.2129,4.6735,peucommun,276,Zandhoven,Zandhoven,Zandhoven,Zandhoven,Q146656,Zandhoven,Hof van Massenhoven.JPG
+BE11055,Zoersel,VAN,22770,51.2509,4.6401,peucommun,144,Zoersel,Zoersel,Zoersel,Zoersel,Q218253,Zoersel,"Belgium, Zoersel (1), church.JPG"
+BE11057,Malle,VAN,16248,51.2948,4.7445,peucommun,226,Malle,Malle,Malle,Malle,Q917591,Malle (Belgique),Oostmalle Kasteel de Renesse 01.jpg
+BE12002,Berlaar,VAN,12115,51.1055,4.6544,commun,306,Berlaar,Berlaar,Berlaar,Berlaar,Q723774,Berlaar,"Berlaar, kerk foto8 2009-08-30 15.11.JPG"
+BE12005,Bonheiden,VAN,15641,51.0164,4.5711,peucommun,233,Bonheiden,Bonheiden,Bonheiden,Bonheiden,Q528222,Bonheiden,"Onze-Lieve-Vrouwkerk, Bonheiden.jpg"
+BE12007,Bornem,VAN,22232,51.0896,4.214,peucommun,147,Bornem,Bornem,Bornem,Bornem,Q724025,Bornem,Bornem Landhuis achterzijde.JPG
+BE12009,Duffel,VAN,18100,51.0933,4.4928,peucommun,201,Duffel,Duffel,Duffel,Duffel,Q615109,Duffel,Duffel Gemeentehuis 6.jpg
+BE12014,Heist-op-den-Berg,VAN,44723,51.0682,4.7276,rare,42,Heist-op-den-Berg,Heist-op-den-Berg,Heist-op-den-Berg,Heist-op-den-Berg,Q257979,Heist-op-den-Berg,Heist-op-den-Berg - Gemeentehuis.jpg
+BE12021,Lierre,VAN,38517,51.1247,4.5843,rare,56,Lier,Lierre,Lier,Lier,Q12460,Lierre (Belgique),10361 Stadhuis van Lier.jpg
+BE12025,Malines,VAN,89655,51.0347,4.4388,epique,16,Mechelen,Malines,Mechelen,Mechelen,Q162022,Malines,"Stadhuis Mechelen, 2013.jpg"
+BE12026,Nijlen,VAN,23747,51.1512,4.689,peucommun,132,Nijlen,Nijlen,Nijlen,Nijlen,Q912084,Nijlen,Parochiekerk Sint-Willibrordus Nijlen.jpg
+BE12029,Putte,VAN,19091,51.0503,4.6398,peucommun,188,Putte,Putte,Putte,Putte,Q929397,Putte (Pallieterland),Beerzel Parochiekerk Sint-Remigius.jpg
+BE12035,Sint-Katelijne-Waver,VAN,21917,51.0671,4.5318,peucommun,150,Sint-Katelijne-Waver,Sint-Katelijne-Waver,Sint-Katelijne-Waver,Sint-Katelijne-Waver,Q696578,Wavre-Sainte-Catherine,"Gemeentehuis Sint-Katelijne-Waver, kijkrichting centrum.jpg"
+BE12040,Willebroek,VAN,28620,51.0599,4.3659,peucommun,99,Willebroek,Willebroek,Willebroek,Willebroek,Q695278,Willebroeck,Bridge in center.JPG
+BE12041,Puurs-Sint-Amands,VAN,27066,51.0622,4.3121,peucommun,106,Puurs-Sint-Amands,Puurs-Sint-Amands,Puurs-Sint-Amands,Puurs-Sint-Amands,Q45202943,Puers-Saint-Amand,Fort van Liezele (DSCF0582).jpg
+BE13001,Arendonk,VAN,13323,51.3368,5.0811,peucommun,280,Arendonk,Arendonk,Arendonk,Arendonk,Q641905,Arendonk,Arendonk - Onze-Lieve-Vrouw ten Hemel Opgenomenkerk.jpg
+BE13002,Baarle-Hertog,VAN,3083,51.408,4.8862,commun,544,Baarle-Hertog,Baerle-Duc,Baarle-Hertog,Baarle-Hertog,Q244959,Baerle-Duc,Gemeentehuis Baarle-Hertog.jpg
+BE13003,Balen,VAN,23777,51.1547,5.1733,peucommun,130,Balen,Balen,Balen,Balen,Q723651,Balen,"Balen, kerk foto2 2009-08-31 13.38.JPG"
+BE13004,Beerse,VAN,18710,51.3147,4.8168,peucommun,193,Beerse,Beerse,Beerse,Beerse,Q723728,Beerse,Parochiekerk St. Lambertus - Beerse - Kerkplein.jpg
+BE13006,Dessel,VAN,10076,51.2451,5.1474,commun,361,Dessel,Dessel,Dessel,Dessel,Q386732,Dessel,Voormalig gemeentehuis te Dessel.jpg
+BE13008,Geel,VAN,42427,51.1722,4.9739,rare,47,Geel,Geel,Geel,Geel,Q464454,Geel,Geel Parochiekerk Sint-Amands 02.jpg
+BE13010,Grobbendonk,VAN,11609,51.1799,4.7356,commun,319,Grobbendonk,Grobbendonk,Grobbendonk,Grobbendonk,Q724389,Grobbendonk,"A Bouwel, Molen van Bouwel, standerdmolen 04W.JPG"
+BE13011,Herentals,VAN,29001,51.1778,4.8266,peucommun,96,Herentals,Herentals,Herentals,Herentals,Q383723,Herentals,Lakenhal DSCF6789.jpg
+BE13012,Herenthout,VAN,9504,51.1353,4.7457,commun,374,Herenthout,Herenthout,Herenthout,Herenthout,Q724534,Herenthout,"2009-08-30 11.27 Herenthout, kerk foto4.JPG"
+BE13013,Herselt,VAN,14829,51.0509,4.8914,peucommun,251,Herselt,Herselt,Herselt,Herselt,Q280182,Herselt,"Herselt, kerk foto6 2009-08-30 17.35.JPG"
+BE13014,Hoogstraten,VAN,22403,51.4378,4.7342,peucommun,146,Hoogstraten,Hoogstraten,Hoogstraten,Hoogstraten,Q724638,Hoogstraten,Gemeentehuis Hoogstraten.jpg
+BE13016,Hulshout,VAN,10634,51.0638,4.808,commun,348,Hulshout,Hulshout,Hulshout,Hulshout,Q518758,Hulshout,Hulshout Parochiekerk Sint-Mattheüs.jpg
+BE13017,Kasterlee,VAN,19802,51.2383,4.9132,peucommun,174,Kasterlee,Kasterlee,Kasterlee,Kasterlee,Q725029,Kasterlee,Kasterlee - gemeentehuis - Antwerpen - België.jpg
+BE13019,Lille,VAN,17130,51.2511,4.8258,peucommun,214,Lille,Lille,Lille,Lille,Q725235,Lille (Belgique),"Gemeentehuis, Poederlee (landscape).JPG"
+BE13021,Meerhout,VAN,10377,51.1237,5.0501,commun,353,Meerhout,Meerhout,Meerhout,Meerhout,Q846207,Meerhout,Meerhout - Sint-Trudokerk.jpg
+BE13023,Merksplas,VAN,8921,51.373,4.8631,commun,386,Merksplas,Merksplas,Merksplas,Merksplas,Q532277,Merksplas,"Merksplas, straatzicht met kerk op achtergrond foto1 2010-10-03 14.08.JPG"
+BE13025,Mol,VAN,38701,51.2834,5.193,rare,55,Mol,Mol,Mol,Mol,Q465710,Mol (Belgique),Oud Gemeentehuis Mol Centrum.jpg
+BE13029,Olen,VAN,12915,51.1684,4.8924,commun,287,Olen,Olen,Olen,Olen,Q839044,Olen,"Olen, kerk 2009-08-30 10.31.JPG"
+BE13031,Oud-Turnhout,VAN,15045,51.3211,4.9995,peucommun,245,Oud-Turnhout,Oud-Turnhout,Oud-Turnhout,Oud-Turnhout,Q943555,Vieux-Turnhout,Oud-Turnhout - Sint-Antonius Abtkerk.jpg
+BE13035,Ravels,VAN,15712,51.4015,5.0205,peucommun,230,Ravels,Ravels,Ravels,Ravels,Q839119,Ravels,Ravels - Sint-Servaaskerk.jpg
+BE13036,Retie,VAN,11995,51.269,5.0592,commun,310,Retie,Retie,Retie,Retie,Q912062,Réthy,Gemeentehuis in neogotische stijl te Retie.jpg
+BE13037,Rijkevorsel,VAN,12560,51.3529,4.7614,commun,298,Rijkevorsel,Rijkevorsel,Rijkevorsel,Rijkevorsel,Q929459,Rijkevorsel,Rijkevorsel (Belgium) - aerial view.jpg
+BE13040,Turnhout,VAN,47965,51.3202,4.9398,rare,37,Turnhout,Turnhout,Turnhout,Turnhout,Q271783,Turnhout,Turnhout 015.jpg
+BE13044,Vorselaar,VAN,8079,51.2185,4.7718,commun,412,Vorselaar,Vorselaar,Vorselaar,Vorselaar,Q909914,Vorselaar,Borrekens.jpg
+BE13046,Vosselaar,VAN,11816,51.308,4.8864,commun,315,Vosselaar,Vosselaar,Vosselaar,Vosselaar,Q929485,Vosselaar,Vosselaar Kerk1.JPG
+BE13049,Westerlo,VAN,25691,51.1118,4.8934,peucommun,120,Westerlo,Westerlo,Westerlo,Westerlo,Q475931,Westerlo,"Westerlo, stadhuis foto6 2009-08-30 09.29.JPG"
+BE13053,Laakdal,VAN,16935,51.0718,4.9818,peucommun,217,Laakdal,Laakdal,Laakdal,Laakdal,Q725122,Laakdal,Vorst - Sint-Niklaaskerk.jpg
+BE21001,Anderlecht,BRU,128724,50.8308,4.2983,epique,7,Anderlecht,Anderlecht,Anderlecht,Anderlecht,Q12886,Anderlecht,Town hall of Anderlecht (DSC 2233).jpg
+BE21002,Auderghem,BRU,35698,50.8114,4.4379,rare,65,Auderghem,Auderghem,Oudergem,Auderghem,Q272228,Auderghem,Chateau Sainte-Anne.JPG
+BE21003,Berchem-Sainte-Agathe,BRU,25803,50.8652,4.2927,peucommun,117,Berchem-Sainte-Agathe,Berchem-Sainte-Agathe,Sint-Agatha-Berchem,Berchem-Sainte-Agathe,Q272272,Berchem-Sainte-Agathe,Berchem-Sainte-Agathe Town Hall (1).jpg
+BE21004,Bruxelles,BRU,198314,50.8846,4.3551,legendaire,4,Bruxelles,Bruxelles,Brussel,Brüssel,Q239,Ville de Bruxelles,"Brussels view from Mont des Arts, Brussels, Belgium (cropped).jpg"
+BE21005,Etterbeek,BRU,49131,50.8343,4.4002,rare,33,Etterbeek,Etterbeek,Etterbeek,Etterbeek,Q192859,Etterbeek,Town hall of Etterbeek (DSC 2183).jpg
+BE21006,Evere,BRU,45892,50.8665,4.4112,rare,40,Evere,Evere,Evere,Evere,Q321718,Evere,EvereTownHall.jpg
+BE21007,Forest,BRU,58675,50.8169,4.3273,rare,29,Forest,Forest,Vorst,Forest,Q72946,Forest (Bruxelles),MaisonCommunaleForest.jpg
+BE21008,Ganshoren,BRU,25693,50.8741,4.3134,peucommun,119,Ganshoren,Ganshoren,Ganshoren,Ganshoren,Q366552,Ganshoren,GanshorenMC7230.jpg
+BE21009,Ixelles,BRU,89897,50.8155,4.3912,epique,15,Ixelles,Ixelles,Elsene,Ixelles,Q208713,Ixelles,MAISON-40.jpg
+BE21010,Jette,BRU,54390,50.8759,4.3298,rare,31,Jette,Jette,Jette,Jette,Q241918,Jette,Jette voormalig gemeentehuis 27-04-2013.jpg
+BE21011,Koekelberg,BRU,22979,50.8643,4.3158,peucommun,142,Koekelberg,Koekelberg,Koekelberg,Koekelberg,Q219244,Koekelberg,Maison communale Koekelberg.jpg
+BE21012,Molenbeek-Saint-Jean,BRU,98713,50.8544,4.3287,epique,11,Molenbeek-Saint-Jean,Molenbeek-Saint-Jean,Sint-Jans-Molenbeek,Molenbeek-Saint-Jean,Q180775,Molenbeek-Saint-Jean,Gemeentehuis Sint-Jans-Molenbeek.jpg
+BE21013,Saint-Gilles,BRU,48827,50.8276,4.3495,rare,34,Saint-Gilles,Saint-Gilles,Sint-Gillis,Saint-Gilles,Q237674,Saint-Gilles (Bruxelles),Maison Communale de Saint-Gilles.jpg
+BE21014,Saint-Josse-ten-Noode,BRU,27258,50.8518,4.3744,peucommun,105,Saint-Josse-ten-Noode,Saint-Josse-ten-Noode,Sint-Joost-ten-Node,Saint-Josse-ten-Noode,Q272243,Saint-Josse-ten-Noode,Town hall of Saint-Josse-ten-Noode.01.jpg
+BE21015,Schaerbeek,BRU,129775,50.8654,4.3838,epique,6,Schaerbeek,Schaerbeek,Schaarbeek,Schaerbeek,Q12887,Schaerbeek,Hôtel communal de Schaerbeek (2) - 2264-0007-0.jpg
+BE21016,Uccle,BRU,87194,50.7943,4.3554,epique,18,Uccle,Uccle,Ukkel,Uccle,Q203312,Uccle,3557uccleTownHall.jpg
+BE21017,Watermael-Boitsfort,BRU,25327,50.7909,4.4183,peucommun,121,Watermael-Boitsfort,Watermael-Boitsfort,Watermaal-Bosvoorde,Watermael-Boitsfort,Q272262,Watermael-Boitsfort,WatermaelBoitsfortTownHall.jpg
+BE21018,Woluwe-Saint-Lambert,BRU,60956,50.8505,4.4308,rare,27,Woluwe-Saint-Lambert,Woluwe-Saint-Lambert,Sint-Lambrechts-Woluwe,Woluwe-Saint-Lambert,Q211764,Woluwe-Saint-Lambert,Town hall of Woluwe-Saint-Lambert during golden hour (DSC 2171).jpg
+BE21019,Woluwe-Saint-Pierre,BRU,42549,50.8294,4.4567,rare,46,Woluwe-Saint-Pierre,Woluwe-Saint-Pierre,Sint-Pieters-Woluwe,Woluwe-Saint-Pierre,Q242393,Woluwe-Saint-Pierre,Mais.Comm.W-S-P.01.JPG
+BE23002,Asse,VBR,35882,50.912,4.1853,rare,64,Asse,Asse,Asse,Asse,Q515710,Asse (Belgique),België - Asse - Sint-Martinuskerk - 01.jpg
+BE23003,Beersel,VBR,26593,50.7482,4.2995,peucommun,110,Beersel,Beersel,Beersel,Beersel,Q692168,Beersel,Beersel JPG1.jpg
+BE23009,Bever,VBR,2266,50.7122,3.9301,commun,557,Bever,Biévène,Bever,Bever,Q839017,Biévène,Bever St Martinuskapel 01.JPG
+BE23016,Dilbeek,VBR,45069,50.8533,4.2339,rare,41,Dilbeek,Dilbeek,Dilbeek,Dilbeek,Q641134,Dilbeek,Viron 1.jpg
+BE23025,Grimbergen,VBR,40062,50.9505,4.3823,rare,54,Grimbergen,Grimbergen,Grimbergen,Grimbergen,Q633063,Grimbergen,Grimbergen abdijkerk.jpg
+BE23027,Hal,VBR,42884,50.7247,4.2433,rare,45,Halle,Hal,Halle,Halle,Q210003,Hal (Belgique),"Halle, Grote Markt-PM 46290.jpg"
+BE23033,Hoeilaart,VBR,11565,50.7611,4.4401,commun,322,Hoeilaart,Hoeilaart,Hoeilaart,Hoeilaart,Q641278,Hoeilaart,HoeilaartGemeentehuis.jpg
+BE23038,Kampenhout,VBR,12606,50.9407,4.548,commun,296,Kampenhout,Kampenhout,Kampenhout,Kampenhout,Q492453,Kampenhout,Kampenhout-Hutstraat18-Kasteel-van-Opstal.JPG
+BE23039,Kapelle-op-den-Bos,VBR,9806,51.0005,4.354,commun,367,Kapelle-op-den-Bos,Kapelle-op-den-Bos,Kapelle-op-den-Bos,Kapelle-op-den-Bos,Q911995,Kapelle-op-den-Bos,Station Kapelle-op-den-Bos - brug omhoog (2017).jpg
+BE23044,Liedekerke,VBR,14155,50.8682,4.0953,peucommun,262,Liedekerke,Liedekerke,Liedekerke,Liedekerke,Q818621,Liedekerke,"Liedekerke, Belgium.jpg"
+BE23045,Londerzeel,VBR,19491,51.0072,4.2643,peucommun,182,Londerzeel,Londerzeel,Londerzeel,Londerzeel,Q587819,Londerzeel,Belgium Steenhuffel Palm Castle 01.JPG
+BE23047,Machelen,VBR,16784,50.9051,4.4434,peucommun,219,Machelen,Machelen,Machelen,Machelen,Q752115,Machelen (Brabant flamand),StGertrudisChurchMachelen.jpg
+BE23050,Meise,VBR,20392,50.963,4.3156,peucommun,168,Meise,Meise,Meise,Meise,Q922260,Meise,"Meise (Belgium), the Bouchout castle (XII-XIXth centuries).jpg"
+BE23052,Merchtem,VBR,18361,50.9503,4.251,peucommun,195,Merchtem,Merchtem,Merchtem,Merchtem,Q912106,Merchtem,Parochiekerk Onze-Lieve-Vrouw Kerkstraat Merchtem Belgium.jpg
+BE23060,Opwijk,VBR,15006,50.9634,4.1766,peucommun,247,Opwijk,Opwijk,Opwijk,Opwijk,Q930292,Opwijk,OpwijkGemeentehuisBldg2.jpg
+BE23062,Overijse,VBR,26250,50.77,4.538,peucommun,113,Overijse,Overijse,Overijse,Overijse,Q599127,Overijse,Overijse gemeentehuis 1.jpg
+BE23064,Pepingen,VBR,4564,50.7628,4.1662,commun,507,Pepingen,Pepingen,Pepingen,Pepingen,Q646037,Pepingen,"Kasteel Ten Dael, Pepingen.jpg"
+BE23077,Sint-Pieters-Leeuw,VBR,36732,50.7893,4.2373,rare,62,Sint-Pieters-Leeuw,Sint-Pieters-Leeuw,Sint-Pieters-Leeuw,Sint-Pieters-Leeuw,Q688790,Leeuw-Saint-Pierre,Schloss Coloma.JPG
+BE23081,Steenokkerzeel,VBR,12727,50.9207,4.4981,commun,293,Steenokkerzeel,Steenokkerzeel,Steenokkerzeel,Steenokkerzeel,Q984888,Steenokkerzeel,41321-Kasteel van Ham.jpg
+BE23086,Ternat,VBR,16691,50.8654,4.1723,peucommun,220,Ternat,Ternat,Ternat,Ternat,Q930249,Ternat (Belgique),Kasteel ter Linden-Baron Liebaertstraat 8.JPG
+BE23088,Vilvorde,VBR,48040,50.9371,4.4458,rare,36,Vilvoorde,Vilvorde,Vilvoorde,Vilvoorde,Q318418,Vilvorde,
+BE23094,Zaventem,VBR,37271,50.882,4.4826,rare,59,Zaventem,Zaventem,Zaventem,Zaventem,Q28898,Zaventem,Zaventem Heldenplein - 202850 - onroerenderfgoed.jpg
+BE23096,Zemst,VBR,23369,50.9782,4.4451,peucommun,138,Zemst,Zemst,Zemst,Zemst,Q179249,Zemst,"Kasteel van Relegem, Zemst.JPG"
+BE23097,Roosdaal,VBR,12021,50.8351,4.0883,commun,309,Roosdaal,Roosdaal,Roosdaal,Roosdaal,Q936660,Roosdaal,Monument-40525-Lindemansschool-3.JPG
+BE23098,Drogenbos,VBR,6040,50.7886,4.3127,commun,459,Drogenbos,Drogenbos,Drogenbos,Drogenbos,Q688377,Drogenbos,Drogenbos St.-Niklaas 01.jpg
+BE23099,Kraainem,VBR,13940,50.8559,4.469,peucommun,267,Kraainem,Kraainem,Kraainem,Kraainem,Q839023,Kraainem,België - Kraainem - Sint-Pancratiuskerk - 01.jpg
+BE23100,Linkebeek,VBR,4646,50.7653,4.3532,commun,505,Linkebeek,Linkebeek,Linkebeek,Linkebeek,Q631639,Linkebeek,Sint-Sebastianuskerk (Linkebeek) 7.jpg
+BE23101,Sint-Genesius-Rode,VBR,18700,50.7478,4.3756,peucommun,194,Sint-Genesius-Rode,Rhode-Saint-Genèse,Sint-Genesius-Rode,Sint-Genesius-Rode,Q841597,Rhode-Saint-Genèse,Ruine du Prieuré de Sept Fontaines.JPG
+BE23102,Wemmel,VBR,18292,50.9078,4.3047,peucommun,198,Wemmel,Wemmel,Wemmel,Wemmel,Q913195,Wemmel,Wemmel CH1bJPG.jpg
+BE23103,Wezembeek-Oppem,VBR,14760,50.8453,4.4908,peucommun,252,Wezembeek-Oppem,Wezembeek-Oppem,Wezembeek-Oppem,Wezembeek-Oppem,Q912091,Wezembeek-Oppem,WezembeekOppemGemeentehuis.jpg
+BE23104,Lennik,VBR,9481,50.8124,4.1616,commun,377,Lennik,Lennik,Lennik,Lennik,Q912022,Lennik,LennikTownHall.jpeg
+BE23105,Affligem,VBR,13770,50.9043,4.1199,peucommun,271,Affligem,Affligem,Affligem,Affligem,Q382860,Affligem,Affligemabdij5.jpg
+BE23106,Pajottegem,VBR,25287,50.7386,4.0358,peucommun,122,Pajottegem,Pajottegem,Pajottegem,Pajottegem,Q123848537,Pajottegem,
+BE24001,Aarschot,VBR,31514,50.989,4.8714,peucommun,81,Aarschot,Aarschot,Aarschot,Aarschot,Q273442,Aarschot,Aarschot Begijnhof R01.jpg
+BE24007,Begijnendijk,VBR,10642,51.0156,4.7861,commun,346,Begijnendijk,Begijnendijk,Begijnendijk,Begijnendijk,Q432610,Begijnendijk,Parochiekerk Heilige Lucia van 1955.jpg
+BE24008,Bekkevoort,VBR,6922,50.9395,4.9719,commun,442,Bekkevoort,Bekkevoort,Bekkevoort,Bekkevoort,Q815054,Bekkevoort,Bekkevoort - Sint-Pieterskerk.jpg
+BE24009,Bertem,VBR,10342,50.8528,4.6198,commun,354,Bertem,Bertem,Bertem,Bertem,Q827665,Bertem,Bertemkerk.jpg
+BE24011,Bierbeek,VBR,10778,50.834,4.7735,commun,343,Bierbeek,Bierbeek,Bierbeek,Bierbeek,Q729929,Bierbeek,Bierbeek Hilarius A.jpg
+BE24014,Boortmeerbeek,VBR,13400,50.9851,4.5494,peucommun,277,Boortmeerbeek,Boortmeerbeek,Boortmeerbeek,Boortmeerbeek,Q746078,Boortmeerbeek,BoortmeerbeekChurch.jpg
+BE24016,Boutersem,VBR,8709,50.8317,4.8303,commun,391,Boutersem,Boutersem,Boutersem,Boutersem,Q895293,Boutersem,Château de Kwabeek.JPG
+BE24020,Diest,VBR,25141,50.9867,5.049,peucommun,123,Diest,Diest,Diest,Diest,Q743236,Diest,Diest15.jpg
+BE24028,Geetbets,VBR,6342,50.8913,5.1357,commun,454,Geetbets,Geetbets,Geetbets,Geetbets,Q984874,Geetbets,Kasteel van Bets Geetbets 02.jpg
+BE24033,Haacht,VBR,15671,50.9643,4.6486,peucommun,232,Haacht,Haacht,Haacht,Haacht,Q950129,Haecht,Kerkhaacht.jpg
+BE24038,Herent,VBR,23081,50.904,4.6585,peucommun,140,Herent,Herent,Herent,Herent,Q930269,Herent,HerentTownHall.jpg
+BE24041,Hoegaarden,VBR,6963,50.7857,4.8686,commun,439,Hoegaarden,Hoegaarden,Hoegaarden,Hoegaarden,Q818787,Hoegaarden,"Hoegaarden, centraal plein foto1 2011-09-25 11.40.JPG"
+BE24043,Holsbeek,VBR,10234,50.9333,4.8206,commun,357,Holsbeek,Holsbeek,Holsbeek,Holsbeek,Q676893,Holsbeek,Kasteel van Horst (westflank) - zomerdag 02.JPG
+BE24045,Huldenberg,VBR,10071,50.8,4.6072,commun,362,Huldenberg,Huldenberg,Huldenberg,Huldenberg,Q943472,Huldenberg,Municipality house Huldenberg2.jpg
+BE24048,Keerbergen,VBR,13355,51.0042,4.6452,peucommun,278,Keerbergen,Keerbergen,Keerbergen,Keerbergen,Q984894,Keerbergen,"Keerbergen, kerk foto2 2007-08-27 14.54.JPG"
+BE24054,Kortenaken,VBR,7984,50.8916,5.01,commun,415,Kortenaken,Kortenaken,Kortenaken,Kortenaken,Q984877,Kortenaken,Kortenaken - Sint-Amorkerk.jpg
+BE24055,Kortenberg,VBR,21386,50.8862,4.5603,peucommun,156,Kortenberg,Kortenberg,Kortenberg,Kortenberg,Q929474,Cortenbergh,In Voscapel Kortenberg (1719).jpg
+BE24059,Landen,VBR,16375,50.7534,5.0742,peucommun,223,Landen,Landen,Landen,Landen,Q943502,Landen,Landen - Watertoren.jpg
+BE24062,Louvain,VBR,104906,50.8789,4.7139,epique,10,Leuven,Louvain,Leuven,Löwen,Q118958,Louvain,Oude Markt Leuven.jpg
+BE24066,Lubbeek,VBR,15236,50.8815,4.8254,peucommun,239,Lubbeek,Lubbeek,Lubbeek,Lubbeek,Q929447,Lubbeek,42643-Kasteel Lubbeek.jpg
+BE24086,Oud-Heverlee,VBR,11406,50.8134,4.6659,commun,327,Oud-Heverlee,Oud-Heverlee,Oud-Heverlee,Oud-Heverlee,Q746641,Oud-Heverlee,Belgium - Oud-Heverlee - Sint-Annakerk - 01.jpg
+BE24094,Rotselaar,VBR,17689,50.9589,4.7564,peucommun,206,Rotselaar,Rotselaar,Rotselaar,Rotselaar,Q926139,Rotselaar,Kerk Werchter.jpg
+BE24104,Tervuren,VBR,23246,50.8257,4.5475,peucommun,139,Tervuren,Tervuren,Tervuren,Tervuren,Q456544,Tervuren,Tervuren church A.jpg
+BE24107,Tirlemont,VBR,36890,50.7992,4.9542,rare,61,Tienen,Tirlemont,Tienen,Tienen,Q456550,Tirlemont,Tienen OLV Ten Poel Kerk.jpg
+BE24109,Tremelo,VBR,15418,51.0026,4.7417,peucommun,235,Tremelo,Tremelo,Tremelo,Tremelo,Q926110,Tremelo,Belgie tremelo damiaan.jpg
+BE24130,Zoutleeuw,VBR,8766,50.8394,5.1047,commun,390,Zoutleeuw,Léau,Zoutleeuw,Zoutleeuw,Q227070,Léau,Zoutleeuw - Casa de la vila.jpg
+BE24133,Linter,VBR,7354,50.8157,5.0448,commun,429,Linter,Linter,Linter,Linter,Q984881,Linter,KerkDrieslinter2.jpg
+BE24134,Scherpenheuvel-Zichem,VBR,24200,50.9977,4.9616,peucommun,127,Scherpenheuvel-Zichem,Montaigu-Zichem,Scherpenheuvel-Zichem,Scherpenheuvel-Zichem,Q932020,Montaigu-Zichem,Belgie scherpenheuvel basiliek02.jpg
+BE24135,Tielt-Winge,VBR,11568,50.9236,4.8882,commun,321,Tielt-Winge,Tielt-Winge,Tielt-Winge,Tielt-Winge,Q984892,Tielt-Winge,Sint-Joris-Winge - Sint-Joriskerk.jpg
+BE24137,Glabbeek,VBR,5449,50.8676,4.9487,commun,486,Glabbeek,Glabbeek,Glabbeek,Glabbeek,Q984868,Glabbeek,Glabbeek-Zuurbemde - Sint-Catharinakerk.jpg
+BE25005,Beauvechain,WBR,7242,50.7773,4.76,commun,433,Beauvechain,Beauvechain,Bevekom,Beauvechain,Q276266,Beauvechain,Maison communale Beauvechain.jpg
+BE25014,Braine-l’Alleud,WBR,40756,50.6622,4.3609,rare,50,Braine-l’Alleud,Braine-l’Alleud,Eigenbrakel,Braine-l’Alleud,Q497572,Braine-l'Alleud,Braine-l'Alleud 051012 (6).JPG
+BE25015,Braine-le-Château,WBR,10638,50.6808,4.2668,commun,347,Braine-le-Château,Braine-le-Château,Kasteelbrakel,Braine-le-Château,Q497558,Braine-le-Château,Braine-le-Château CH1b JPG.jpg
+BE25018,Chaumont-Gistoux,WBR,11894,50.6813,4.6722,commun,313,Chaumont-Gistoux,Chaumont-Gistoux,Chaumont-Gistoux,Chaumont-Gistoux,Q670141,Chaumont-Gistoux,Church of Chaumont.jpg
+BE25023,Court-Saint-Etienne,WBR,10927,50.6263,4.5656,commun,338,Court-Saint-Etienne,Court-Saint-Etienne,Court-Saint-Etienne,Court-Saint-Etienne,Q670210,Court-Saint-Étienne,Église de Court-Saint-Étienne 01.JPG
+BE25031,Genappe,WBR,16160,50.6099,4.4429,peucommun,228,Genappe,Genappe,Genepiën,Genappe,Q517899,Genappe,Grand Place Genappe.jpg
+BE25037,Grez-Doiceau,WBR,14014,50.7492,4.6879,peucommun,265,Grez-Doiceau,Grez-Doiceau,Graven,Grez-Doiceau,Q670310,Grez-Doiceau,Grez-Doiceau church A.jpg
+BE25043,Incourt,WBR,5658,50.6914,4.7866,commun,475,Incourt,Incourt,Incourt,Incourt,Q670455,Incourt (Belgique),Incourt MC1JPG.jpg
+BE25044,Ittre,WBR,6963,50.6371,4.2601,commun,440,Ittre,Ittre,Itter,Ittre,Q281080,Ittre,
+BE25048,Jodoigne,WBR,14935,50.7276,4.8434,peucommun,248,Jodoigne,Jodoigne,Geldenaken,Jodoigne,Q670500,Jodoigne,
+BE25050,La Hulpe,WBR,7482,50.7369,4.4646,commun,424,La Hulpe,La Hulpe,Terhulpen,La Hulpe,Q670407,La Hulpe,La Hulpe JPG04.jpg
+BE25068,Mont-Saint-Guibert,WBR,8451,50.6267,4.6129,commun,398,Mont-Saint-Guibert,Mont-Saint-Guibert,Mont-Saint-Guibert,Mont-Saint-Guibert,Q650152,Mont-Saint-Guibert,Maison Communale in Mont Saint Guibert.jpg
+BE25072,Nivelles,WBR,29429,50.5964,4.3489,peucommun,92,Nivelles,Nivelles,Nijvel,Nivelles,Q319463,Nivelles,Nivelle Collégiale Ste. Gertrude 01.jpg
+BE25084,Perwez,WBR,9844,50.6388,4.7947,commun,366,Perwez,Perwez,Perwijs,Perwez,Q678458,Perwez,Perwez JPG01.jpg
+BE25091,Rixensart,WBR,23052,50.7123,4.5264,peucommun,141,Rixensart,Rixensart,Rixensart,Rixensart,Q630478,Rixensart,Rixensart CH1aJPG.jpg
+BE25105,Tubize,WBR,28716,50.6812,4.2017,peucommun,97,Tubize,Tubize,Tubeke,Tubize,Q497549,Tubize,Tubize Hôtel de ville (1).jpg
+BE25107,Villers-la-Ville,WBR,11059,50.5647,4.543,commun,335,Villers-la-Ville,Villers-la-Ville,Villers-la-Ville,Villers-la-Ville,Q678612,Villers-la-Ville (Belgique),0 Villers-la-Ville 050910 (7).JPG
+BE25110,Waterloo,WBR,30389,50.7159,4.4074,peucommun,88,Waterloo,Waterloo,Waterloo,Waterloo,Q179034,Waterloo,Belgique Butte du Lion dit de Waterloo.jpg
+BE25112,Wavre,WBR,35581,50.7167,4.5876,rare,67,Wavre,Wavre,Waver,Wavre,Q181314,Wavre,Wavre - Saint-Jean-Baptiste - vue d'ensemble.JPG
+BE25117,Chastre,WBR,7813,50.5885,4.6344,commun,418,Chastre,Chastre,Chastre,Chastre,Q618054,Chastre,Maison communale Chastre.jpg
+BE25118,Hélécine,WBR,3894,50.75,4.9954,commun,521,Hélécine,Hélécine,Hélécine,Hélécine,Q670355,Hélécine,Opheylissem Ab3JPG.jpg
+BE25119,Lasne,WBR,14175,50.6865,4.4689,peucommun,261,Lasne,Lasne,Lasne,Lasne,Q678158,Lasne,Lasne Gertrude B.jpg
+BE25120,Orp-Jauche,WBR,9092,50.6893,4.9629,commun,383,Orp-Jauche,Orp-Jauche,Orp-Jauche,Orp-Jauche,Q678218,Orp-Jauche,Orp-Jauche JPG01.jpg
+BE25121,Ottignies-Louvain-la-Neuve,WBR,31766,50.6733,4.5336,peucommun,79,Ottignies-Louvain-la-Neuve,Ottignies-Louvain-la-Neuve,Ottignies-Louvain-la-Neuve,Ottignies-Louvain-la-Neuve,Q329642,Ottignies-Louvain-la-Neuve,Belgique - Ottignies - maison communale - 01.jpg
+BE25122,Ramillies,WBR,6710,50.6616,4.8907,commun,448,Ramillies,Ramillies,Ramillies,Ramillies,Q531456,Ramillies (Belgique),Petit-Rosière JPG01.jpg
+BE25123,Rebecq,WBR,11185,50.6666,4.1315,commun,333,Rebecq,Rebecq,Rebecq,Rebecq,Q374861,Rebecq,Rebecq JPG01.jpg
+BE25124,Walhain,WBR,7556,50.6276,4.6934,commun,422,Walhain,Walhain,Walhain,Walhain,Q650216,Walhain,0 Walhain - Église Notre-Dame (1).JPG
+BE31003,Beernem,VWV,16318,51.1511,3.3379,peucommun,225,Beernem,Beernem,Beernem,Beernem,Q687921,Beernem,Beernem - Sint-Amanduskerk 1.jpg
+BE31004,Blankenberge,VWV,20654,51.3025,3.142,peucommun,164,Blankenberge,Blankenberge,Blankenberge,Blankenberge,Q328104,Blankenberge,Blankenberge - Stadhuis.jpg
+BE31005,Bruges,VWV,120283,51.2182,3.2198,epique,8,Brugge,Bruges,Brugge,Brügge,Q12994,Bruges,Brugge-CanalRozenhoedkaai.JPG
+BE31006,Damme,VWV,11278,51.2569,3.3356,commun,332,Damme,Damme,Damme,Damme,Q323408,Damme (Belgique),0 Damme - Onze-Lieve-Vrouw-Hemelvaartkerk (1).JPG
+BE31012,Jabbeke,VWV,14932,51.1812,3.0884,peucommun,249,Jabbeke,Jabbeke,Jabbeke,Jabbeke,Q465973,Jabbeke,Jabbeke - Gemeentehuis.jpg
+BE31022,Oostkamp,VWV,24142,51.1215,3.2349,peucommun,128,Oostkamp,Oostkamp,Oostkamp,Oostkamp,Q742892,Oostkamp,Gemeentehuis Oostkamp.JPG
+BE31033,Torhout,VWV,21159,51.0581,3.089,peucommun,159,Torhout,Torhout,Torhout,Torhout,Q270633,Thourout,Torhout - City hall 1.jpg
+BE31040,Zedelgem,VWV,23635,51.1259,3.1469,peucommun,133,Zedelgem,Zedelgem,Zedelgem,Zedelgem,Q184287,Zedelghem,Gemeentehuis van Zedelgem - 2019-1.jpg
+BE31042,Zuienkerke,VWV,2657,51.2477,3.1176,commun,552,Zuienkerke,Zuienkerke,Zuienkerke,Zuienkerke,Q228685,Zuienkerke,Zuienkerke - Sint-Michielskerk.jpg
+BE31043,Knokke-Heist,VWV,32415,51.3318,3.3137,rare,76,Knokke-Heist,Knokke-Heist,Knokke-Heist,Knokke-Heist,Q12988,Knokke-Heist,Knocke-Heist.jpg
+BE32003,Diksmuide,VWV,17337,51.0398,2.8483,peucommun,209,Diksmuide,Dixmude,Diksmuide,Diksmuide,Q215244,Dixmude,ID78010 Diksmuide stadhuis PM 50590.jpg
+BE32006,Houthulst,VWV,10525,50.9704,2.9019,commun,349,Houthulst,Houthulst,Houthulst,Houthulst,Q696942,Houthulst,Houthulst Gemeentehuis.jpg
+BE32010,Koekelare,VWV,8801,51.0919,2.9683,commun,387,Koekelare,Koekelare,Koekelare,Koekelare,Q822795,Koekelare,Koekelare - Dorpsstraat.jpg
+BE32011,Kortemark,VWV,12882,51.0242,2.9953,commun,289,Kortemark,Kortemark,Kortemark,Kortemark,Q822763,Kortemark,Kortemark Lichterveldestraat 94.JPG
+BE32030,Lo-Reninge,VWV,3183,50.9505,2.7875,commun,542,Lo-Reninge,Lo-Reninge,Lo-Reninge,Lo-Reninge,Q822790,Lo-Reninge,Lo - Westpoort and Caesarsboom.jpg
+BE33011,Ypres,VWV,35587,50.8569,2.8698,rare,66,Ieper,Ypres,Ieper,Ypern,Q102728,Ypres,Ieper25.jpg
+BE33016,Mesen,VWV,1071,50.7603,2.9019,commun,564,Mesen,Messines,Mesen,Mesen,Q737077,Messines,Mesen skyline.jpg
+BE33021,Poperinge,VWV,19962,50.863,2.6607,peucommun,173,Poperinge,Poperinge,Poperinge,Poperinge,Q499588,Poperinge,L'Hôtel de ville de Poperinge.JPG
+BE33029,Wervik,VWV,19207,50.8079,3.0532,peucommun,185,Wervik,Wervik,Wervik,Wervik,Q318532,Wervik,Wervik JPG05.jpg
+BE33037,Zonnebeke,VWV,12769,50.8575,3.0051,commun,292,Zonnebeke,Zonnebeke,Zonnebeke,Zonnebeke,Q214154,Zonnebeke,Zonnebeke - Town hall 1.jpg
+BE33039,Heuvelland,VWV,8021,50.7647,2.8099,commun,413,Heuvelland,Heuvelland,Heuvelland,Heuvelland,Q822755,Heuvelland (commune),Heuvelland vanaf de Rodeberg.jpg
+BE33040,Langemark-Poelkapelle,VWV,8202,50.915,2.9369,commun,405,Langemark-Poelkapelle,Langemark-Poelkapelle,Langemark-Poelkapelle,Langemark-Poelkapelle,Q735865,Langemark-Poelkapelle,LangemarkChurch.jpg
+BE33041,Vleteren,VWV,3583,50.9141,2.7356,commun,528,Vleteren,Vleteren,Vleteren,Vleteren,Q735813,Vleteren,Onroerenderfgoed 31572 Oostvleteren.jpg
+BE34002,Anzegem,VWV,15246,50.8362,3.4474,peucommun,238,Anzegem,Anzegem,Anzegem,Anzegem,Q614274,Anzegem,Anzegem - Hof ter Walskerke 1.jpg
+BE34003,Avelgem,VWV,10450,50.7763,3.4452,commun,351,Avelgem,Avelgem,Avelgem,Avelgem,Q177133,Avelgem,Avelgem - Sint-Martinuskerk 2.jpg
+BE34009,Deerlijk,VWV,12690,50.8446,3.3651,commun,294,Deerlijk,Deerlijk,Deerlijk,Deerlijk,Q822771,Deerlijk,Sint-Lodewijk (Deerlijk) Onze-Lieve-Vrouw Onbevlekt Ontvangenkerk -11.JPG
+BE34013,Harelbeke,VWV,30311,50.8849,3.2973,peucommun,89,Harelbeke,Harelbeke,Harelbeke,Harelbeke,Q478797,Harelbeke,Sint-Ritakerk in Harelbeke.jpg
+BE34022,Courtrai,VWV,80776,50.7994,3.2626,epique,21,Kortrijk,Courtrai,Kortrijk,Kortrijk,Q12995,Courtrai,Kortrijk Hotel de ville.jpg
+BE34023,Kuurne,VWV,14244,50.8595,3.2699,peucommun,258,Kuurne,Kuurne,Kuurne,Kuurne,Q731501,Kuurne,Kuurne Marktplein.JPG
+BE34025,Lendelede,VWV,5849,50.8853,3.2371,commun,466,Lendelede,Lendelede,Lendelede,Lendelede,Q696887,Lendelede,Sint-Blasiuskerk in Lendelede (03).jpg
+BE34027,Menin,VWV,34585,50.7796,3.1818,rare,73,Menen,Menin,Menen,Menen,Q213224,Menin,Menen Lauwestraat f1 - 239168 - onroerenderfgoed.jpg
+BE34040,Waregem,VWV,40436,50.8768,3.4125,rare,53,Waregem,Waregem,Waregem,Waregem,Q204547,Waregem,Nieuwenhove - Sint-Margaretakerk 2.jpg
+BE34041,Wevelgem,VWV,31940,50.8286,3.1782,rare,77,Wevelgem,Wevelgem,Wevelgem,Wevelgem,Q392343,Wevelgem,Wevelgem gemeentehuis -1.JPG
+BE34042,Zwevegem,VWV,25870,50.7787,3.3651,peucommun,114,Zwevegem,Zwevegem,Zwevegem,Zwevegem,Q244513,Zwevegem,ZwevegemGemeentehuis.JPG
+BE34043,Spiere-Helkijn,VWV,2053,50.725,3.3535,commun,560,Spiere-Helkijn,Espierres-Helchin,Spiere-Helkijn,Spiere-Helkijn,Q846212,Espierres-Helchin,Spiere - Kerk Sint-Amandus en Heilig Hart 1.jpg
+BE35002,Bredene,VWV,18196,51.2409,2.9787,peucommun,199,Bredene,Bredene,Bredene,Bredene,Q742920,Bredene,Bredene - Skyline 1.jpg
+BE35005,Gistel,VWV,12117,51.1485,2.9508,commun,305,Gistel,Gistel,Gistel,Gistel,Q815948,Gistel,Gistel Administration Center.jpg
+BE35006,Ichtegem,VWV,14622,51.1211,3.0271,peucommun,253,Ichtegem,Ichtegem,Ichtegem,Ichtegem,Q281181,Ichtegem,Ichtegem - Markt 1.jpg
+BE35011,Middelkerke,VWV,20023,51.156,2.8386,peucommun,172,Middelkerke,Middelkerke,Middelkerke,Middelkerke,Q492369,Middelkerke,Middelkerke - Town hall 1.jpg
+BE35013,Ostende,VWV,72817,51.2195,2.933,rare,22,Oostende,Ostende,Oostende,Ostende,Q12996,Ostende,Oostende Europacentrum 01.jpg
+BE35014,Oudenburg,VWV,10231,51.1832,3.0138,commun,358,Oudenburg,Oudenburg,Oudenburg,Oudenburg,Q835128,Oudenburg,Onze-Lieve-Vrouwekerk (Oudenburg) 22-07-2021 11-34-41.jpg
+BE35029,De Haan,VWV,12627,51.2534,3.0385,commun,295,De Haan,De Haan,De Haan,De Haan,Q492351,Le Coq,"Street scene in De Haan, Belgium.jpg"
+BE36006,Hooglede,VWV,10312,50.9879,3.0817,commun,355,Hooglede,Hooglede,Hooglede,Hooglede,Q696907,Hooglede,Hooglede.JPG
+BE36007,Ingelmunster,VWV,11597,50.9212,3.2608,commun,320,Ingelmunster,Ingelmunster,Ingelmunster,Ingelmunster,Q822748,Ingelmunster,Ingelmunster Kasteel 10.JPG
+BE36008,Izegem,VWV,29427,50.9211,3.2122,peucommun,93,Izegem,Izegem,Izegem,Izegem,Q392337,Iseghem,Izegem Heilig-Hartkerk-0.JPG
+BE36010,Ledegem,VWV,9775,50.8689,3.1328,commun,369,Ledegem,Ledegem,Ledegem,Ledegem,Q735842,Ledeghem,Ledegem - Sint-Petruskerk 1.jpg
+BE36011,Lichtervelde,VWV,9437,51.0315,3.1433,commun,378,Lichtervelde,Lichtervelde,Lichtervelde,Lichtervelde,Q696871,Lichtervelde,Lichtervelde - Sint-Jacobuskerk 1.jpg
+BE36012,Moorslede,VWV,11504,50.8864,3.0703,commun,324,Moorslede,Moorslede,Moorslede,Moorslede,Q628733,Moorslede,Moorslede - Town hall 1.jpg
+BE36015,Roulers,VWV,66888,50.9361,3.132,rare,25,Roeselare,Roulers,Roeselare,Roeselare,Q211037,Roulers,Roeselare - Market square 1.jpg
+BE36019,Staden,VWV,11696,50.9584,3.0049,commun,316,Staden,Staden,Staden,Staden,Q742876,Staden,"Westrozebeke, voormalig gemeentehuis.jpg"
+BE37002,Dentergem,VWV,8673,50.9601,3.3958,commun,394,Dentergem,Dentergem,Dentergem,Dentergem,Q742906,Dentergem,Dentergem kerktoren.JPG
+BE37010,Oostrozebeke,VWV,8013,50.9252,3.3346,commun,414,Oostrozebeke,Oostrozebeke,Oostrozebeke,Oostrozebeke,Q822777,Oostrozebeke,Oostrozebeke St-Amanduskerk-3.JPG
+BE37011,Pittem,VWV,6971,51.0059,3.2582,commun,438,Pittem,Pittem,Pittem,Pittem,Q651724,Pittem,"Pittem, de Onze Lieve Vrouwkerk oeg211770 foto1 2013-05-12 13.59.jpg"
+BE37017,Wielsbeke,VWV,10256,50.9188,3.3762,commun,356,Wielsbeke,Wielsbeke,Wielsbeke,Wielsbeke,Q339395,Wielsbeke,Wielsbeke kasteel Hernieuwenburg-2.JPG
+BE37020,Ardooie,VWV,9514,50.9766,3.2018,commun,373,Ardooie,Ardooie,Ardooie,Ardooie,Q639974,Ardoye,Kerk Ardooie.jpg
+BE37021,Wingene,VWV,20781,51.0684,3.2975,peucommun,163,Wingene,Wingene,Wingene,Wingene,Q735797,Wingene,Wingene - Town hall 1.jpg
+BE37022,Tielt,VWV,31908,51.0016,3.3448,peucommun,78,Tielt,Tielt,Tielt,Tielt,Q651811,Tielt,Belforttielt 28-10-2008 17-45-13.JPG
+BE38002,Alveringem,VWV,4966,50.9688,2.663,commun,500,Alveringem,Alveringem,Alveringem,Alveringem,Q448840,Alveringem,Alveringem - Sint-Audomaruskerk 2.jpg
+BE38008,De Panne,VWV,10874,51.0827,2.5914,commun,341,De Panne,La Panne,De Panne,De Panne,Q674954,La Panne,De Panne - Kapel Paters Oblaten 2.jpg
+BE38014,Koksijde,VWV,21344,51.1175,2.691,peucommun,157,Koksijde,Koksijde,Koksijde,Koksijde,Q465545,Coxyde,
+BE38016,Nieuwpoort,VWV,11399,51.1167,2.7803,commun,328,Nieuwpoort,Nieuport,Nieuwpoort,Nieuwpoort,Q623310,Nieuport (Belgique),Nieuwpoort - City hall 2.jpg
+BE38025,Veurne,VWV,12564,51.0419,2.6574,commun,297,Veurne,Furnes,Veurne,Veurne,Q506707,Furnes,Veurne markt.jpg
+BE41002,Alost,VOV,92131,50.9489,4.0502,epique,13,Aalst,Alost,Aalst,Aalst,Q13121,Alost,Aalst belfry.jpg
+BE41011,Denderleeuw,VOV,21257,50.8881,4.0587,peucommun,158,Denderleeuw,Denderleeuw,Denderleeuw,Denderleeuw,Q696825,Denderleeuw,Denderleeuw Sint-Amanduskerk.jpg
+BE41018,Grammont,VOV,35236,50.7856,3.9059,rare,68,Geraardsbergen,Grammont,Geraardsbergen,Geraardsbergen,Q499532,Grammont (Belgique),0 Grammont - Hôtel de ville et fontaine Marbol.JPG
+BE41024,Haaltert,VOV,19517,50.8874,4.0003,peucommun,181,Haaltert,Haaltert,Haaltert,Haaltert,Q911974,Haaltert,"Kerksken, kerk foto1 2011-10-02 15.11.JPG"
+BE41027,Herzele,VOV,19179,50.8617,3.8928,peucommun,186,Herzele,Herzele,Herzele,Herzele,Q587979,Herzele,Herzele - Belgium - town hall.jpg
+BE41034,Lede,VOV,19425,50.9651,3.9055,peucommun,183,Lede,Lede,Lede,Lede,Q912113,Lede,Lede 001.JPG
+BE41048,Ninove,VOV,40580,50.8236,4.0098,rare,51,Ninove,Ninove,Ninove,Ninove,Q385026,Ninove,Vooraanzicht ziekenhuis Ninove.jpg
+BE41063,Sint-Lievens-Houtem,VOV,10748,50.9341,3.8698,commun,344,Sint-Lievens-Houtem,Sint-Lievens-Houtem,Sint-Lievens-Houtem,Sint-Lievens-Houtem,Q817372,Hautem-Saint-Liévin,PM 124554 B Sint Lievens Houtem.jpg
+BE41081,Zottegem,VOV,28236,50.8598,3.8081,peucommun,100,Zottegem,Zottegem,Zottegem,Zottegem,Q226941,Zottegem,"Markt met stadhuis en Egmontstandbeeld, Zottegem, Vlaanderen, België 02.jpg"
+BE41082,Erpe-Mere,VOV,21117,50.9275,3.957,peucommun,160,Erpe-Mere,Erpe-Mere,Erpe-Mere,Erpe-Mere,Q817458,Erpe-Mere,AaigemKerk2.JPG
+BE42003,Berlare,VOV,15425,51.0493,3.9576,peucommun,234,Berlare,Berlare,Berlare,Berlare,Q793584,Berlare,Berlare - Sint-Martinuskerk 1.jpg
+BE42004,Buggenhout,VOV,15079,51.0067,4.1939,peucommun,244,Buggenhout,Buggenhout,Buggenhout,Buggenhout,Q202309,Buggenhout,"Buggenhout, Cruysveltstede.jpg"
+BE42006,Termonde,VOV,47539,51.0367,4.1071,rare,38,Dendermonde,Termonde,Dendermonde,Dendermonde,Q13122,Termonde,"Dendermonde, stadhuis en monumentale panden op Grote Markt foto2 2010-10-09 14.59.jpg"
+BE42008,Hamme,VOV,25706,51.0817,4.1494,peucommun,118,Hamme,Hamme,Hamme,Hamme,Q391294,Hamme (Flandre-Orientale),Hamme - Town hall 1.jpg
+BE42010,Laarne,VOV,12496,51.0439,3.9094,commun,300,Laarne,Laarne,Laarne,Laarne,Q730696,Laerne,Laarne Schloss 2014 04 1.JPG
+BE42011,Lebbeke,VOV,20298,50.9894,4.1207,peucommun,169,Lebbeke,Lebbeke,Lebbeke,Lebbeke,Q504653,Lebbeke,
+BE42023,Waasmunster,VOV,11395,51.1169,4.0444,commun,329,Waasmunster,Waasmunster,Waasmunster,Waasmunster,Q587906,Waesmunster,"Waasmunster, straatzicht foto2 2010-10-09 13.16.JPG"
+BE42025,Wetteren,VOV,26926,50.9924,3.864,peucommun,108,Wetteren,Wetteren,Wetteren,Wetteren,Q643980,Wetteren,Wetteren - Town hall 1.jpg
+BE42026,Wichelen,VOV,12050,50.9945,3.9335,commun,307,Wichelen,Wichelen,Wichelen,Wichelen,Q730801,Wichelen,Wichelen - Sint-Gertrudiskerk 2.jpg
+BE42028,Zele,VOV,21521,51.0665,4.037,peucommun,154,Zele,Zele,Zele,Zele,Q388115,Zele,Gemeentehuis Zele.jpg
+BE43002,Assenede,VOV,14617,51.2303,3.7125,peucommun,254,Assenede,Assenede,Assenede,Assenede,Q12901,Assenede,Assenede - Gemeentehuis 1.jpg
+BE43005,Eeklo,VOV,22733,51.1924,3.555,peucommun,145,Eeklo,Eeklo,Eeklo,Eeklo,Q12440,Eeklo,"Eeklo, monumentaal stadhuis foto3 2011-10-03 12.51.JPG"
+BE43007,Kaprijke,VOV,6638,51.2014,3.633,commun,449,Kaprijke,Kaprijke,Kaprijke,Kaprijke,Q12437,Kaprijke,Kaprijke gemeentehuis (44708) 2-06-2019 15-16-14.jpg
+BE43010,Maldegem,VOV,24883,51.1978,3.4407,peucommun,124,Maldegem,Maldegem,Maldegem,Maldegem,Q12896,Maldeghem,Maldegem (Belgium) - Rectorie Maldegem (Dekenij).jpg
+BE43014,Sint-Laureins,VOV,6941,51.2549,3.5623,commun,441,Sint-Laureins,Sint-Laureins,Sint-Laureins,Sint-Laureins,Q13126,Saint-Laurent (Belgique),GemeentehuisStLaureins 10-06-2008 13-13-00.JPG
+BE43018,Zelzate,VOV,13653,51.198,3.8122,peucommun,272,Zelzate,Zelzate,Zelzate,Zelzate,Q14062,Zelzate,ZelzateRathaus.JPG
+BE44013,Destelbergen,VOV,19088,51.052,3.8116,peucommun,189,Destelbergen,Destelbergen,Destelbergen,Destelbergen,Q3177595,Destelbergen,Destelbergen - Town hall and church 1.jpg
+BE44019,Evergem,VOV,37254,51.1315,3.6834,rare,60,Evergem,Evergem,Evergem,Evergem,Q12997,Everghem,
+BE44020,Gavere,VOV,13353,50.9316,3.6863,peucommun,279,Gavere,Gavere,Gavere,Gavere,Q690611,Gavre,Semmerzake - Sint-Pietersbandenkerk 1.jpg
+BE44021,Gand,VOV,272657,51.0472,3.7026,legendaire,2,Gent,Gand,Gent,Gent,Q1296,Gand,
+BE44052,Oosterzele,VOV,14088,50.9416,3.7965,peucommun,263,Oosterzele,Oosterzele,Oosterzele,Oosterzele,Q842477,Oosterzele,Moortsele (Oosterzele) - Sint-Amanduskerk.jpg
+BE44064,Sint-Martens-Latem,VOV,8149,51.0131,3.6257,commun,409,Sint-Martens-Latem,Sint-Martens-Latem,Sint-Martens-Latem,Sint-Martens-Latem,Q737538,Laethem-Saint-Martin,Parochiekerk Sint-Martinus 4.JPG
+BE44081,Zulte,VOV,16233,50.9381,3.4801,peucommun,227,Zulte,Zulte,Zulte,Zulte,Q228863,Zulte,Machelen aan de Leie.JPG
+BE44083,Deinze,VOV,46026,51.0052,3.5429,rare,39,Deinze,Deinze,Deinze,Deinze,Q499313,Deinze,OLVkerkDeinze.jpg
+BE44084,Aalter,VOV,29830,51.1,3.4597,peucommun,91,Aalter,Aalter,Aalter,Aalter,Q300970,Aalter,Aalter - Town hall.jpg
+BE44085,Lievegem,VOV,27350,51.133,3.6072,peucommun,104,Lievegem,Lievegem,Lievegem,Lievegem,Q46865167,Lievegem,Waarschoot Sint-Ghislenuskerk erfgoed 33247 24-03-2019 14-46-021.jpg
+BE44086,Nazareth-De Pinte,VOV,23574,50.9821,3.6613,peucommun,135,Nazareth-De Pinte,Nazareth-De Pinte,Nazareth-De Pinte,Nazareth-De Pinte,Q125550409,Nazareth-La Pinte,
+BE44087,Lochristi,VOV,30916,51.1129,3.8635,peucommun,85,Lochristi,Lochristi,Lochristi,Lochristi,Q735827,Lochristi,Lochristi - Sint-Niklaaskerk 2.jpg
+BE44088,Merelbeke-Melle,VOV,37369,50.9967,3.7716,rare,58,Merelbeke-Melle,Merelbeke-Melle,Merelbeke-Melle,Merelbeke-Melle,Q124477893,Merelbeke-Melle,
+BE45035,Audenarde,VOV,32930,50.8611,3.6195,rare,75,Oudenaarde,Audenarde,Oudenaarde,Oudenaarde,Q12992,Audenarde,Oudenaarde Rathaus 4.jpg
+BE45041,Ronse,VOV,27577,50.747,3.6245,peucommun,103,Ronse,Renaix,Ronse,Ronse,Q268219,Renaix,Renaix centre.jpg
+BE45059,Brakel,VOV,15127,50.81,3.7485,peucommun,242,Brakel,Brakel,Brakel,Brakel,Q845980,Brakel (Belgique),St-Maria-Oudenhove Lilarekasteel.JPG
+BE45060,Kluisbergen,VOV,6869,50.7866,3.5375,commun,443,Kluisbergen,Kluisbergen,Kluisbergen,Kluisbergen,Q840517,Kluisbergen,Kwaremont - Municipal school 1.jpg
+BE45061,Wortegem-Petegem,VOV,6545,50.8483,3.5392,commun,450,Wortegem-Petegem,Wortegem-Petegem,Wortegem-Petegem,Wortegem-Petegem,Q840935,Wortegem-Petegem,"ID28211-Wortegem-Petegem, nieuw kasteel-PM 54950.jpg"
+BE45062,Horebeke,VOV,2026,50.841,3.699,commun,561,Horebeke,Horebeke,Horebeke,Horebeke,Q912076,Horebeke,Sint-Kornelis-Horebeke - dorp.jpg
+BE45063,Lierde,VOV,6858,50.8008,3.8409,commun,446,Lierde,Lierde,Lierde,Lierde,Q648509,Lierde,Lierde - Oost-Vlaanderen - België - Town hall.jpg
+BE45064,Maarkedal,VOV,6320,50.7934,3.6214,commun,455,Maarkedal,Maarkedal,Maarkedal,Maarkedal,Q912099,Markedal,Nukerke church.jpg
+BE45065,Zwalm,VOV,8348,50.8751,3.7242,commun,403,Zwalm,Zwalin,Zwalm,Zwalm,Q231568,Zwalin,Rozebeke - Onze-Lieve-Vrouw Bezoekingkerk 1.jpg
+BE45068,Kruisem,VOV,16006,50.916,3.531,peucommun,229,Kruisem,Kruisem,Kruisem,Kruisem,Q46865464,Kruisem,Kasteel Casier 02.jpg
+BE46020,Sint-Gillis-Waas,VOV,20139,51.2337,4.1224,peucommun,170,Sint-Gillis-Waas,Sint-Gillis-Waas,Sint-Gillis-Waas,Sint-Gillis-Waas,Q430510,Saint-Gilles-Waes,Saleghem krekengebied.JPG
+BE46021,Saint-Nicolas,VOV,82661,51.1695,4.1622,epique,19,Sint-Niklaas,Saint-Nicolas,Sint-Niklaas,Sint-Niklaas,Q13127,Saint-Nicolas (Flandre-Orientale),
+BE46024,Stekene,VOV,19767,51.2149,4.0235,peucommun,176,Stekene,Stekene,Stekene,Stekene,Q735851,Stekene,
+BE46025,Tamise,VOV,31613,51.1453,4.2189,peucommun,80,Temse,Tamise,Temse,Temse,Q823623,Tamise (Belgique),Temse kaai.jpg
+BE46029,Lokeren,VOV,50606,51.1191,3.949,rare,32,Lokeren,Lokeren,Lokeren,Lokeren,Q12910,Lokeren,Onroerenderfgoed 17915 Lokeren.jpg
+BE46030,Beveren-Kruibeke-Zwijndrecht,VOV,87927,51.2613,4.2306,epique,17,Beveren-Kruibeke-Zwijndrecht,Beveren-Kruibeke-Zwijndrecht,Beveren-Kruibeke-Zwijndrecht,Beveren-Kruibeke-Zwijndrecht,Q130298413,Beveren-Kruibeke-Zwijndrecht,
+BE51004,Ath,WHT,30123,50.6444,3.76,peucommun,90,Ath,Ath,Aat,Ath,Q95096,Ath,0 Ath 617 JPG.jpg
+BE51008,Beloeil,WHT,14232,50.5412,3.6857,peucommun,259,Beloeil,Beloeil,Beloeil,Beloeil,Q95105,Belœil (Belgique),0 Beloeil - Château des Princes de Ligne (1).JPG
+BE51009,Bernissart,WHT,11894,50.4883,3.6549,commun,314,Bernissart,Bernissart,Bernissart,Bernissart,Q95112,Bernissart,"Bernissart, église de la Sainte-Vierge J1.jpg"
+BE51012,Brugelette,WHT,3878,50.6054,3.8612,commun,522,Brugelette,Brugelette,Brugelette,Brugelette,Q95130,Brugelette,
+BE51014,Chièvres,WHT,7145,50.5735,3.7907,commun,435,Chièvres,Chièvres,Chièvres,Chièvres,Q95318,Chièvres,Chièvres JPG01.jpg
+BE51017,Ellezelles,WHT,5948,50.7287,3.6763,commun,463,Ellezelles,Ellezelles,Elzele,Ellezelles,Q665992,Ellezelles,Ellezelles JPG00.jpg
+BE51019,Flobecq,WHT,3441,50.7527,3.7421,commun,532,Flobecq,Flobecq,Vloesberg,Flobecq,Q666559,Flobecq,Flobecq 050918 (3).JPG
+BE51065,Frasnes-lez-Anvaing,WHT,12256,50.6826,3.583,commun,303,Frasnes-lez-Anvaing,Frasnes-lez-Anvaing,Frasnes-lez-Anvaing,Frasnes-lez-Anvaing,Q666813,Frasnes-lez-Anvaing,Frasnes-lez-Anvaing JPG01.jpg
+BE51067,Enghien,WHT,14567,50.6677,3.9925,peucommun,256,Enghien,Enghien,Edingen,Enghien,Q666238,Enghien,Enghien 050918 (1).jpg
+BE51068,Silly,WHT,8422,50.6618,3.9356,commun,399,Silly,Silly,Opzullik,Silly,Q669088,Silly (Belgique),
+BE51069,Lessines,WHT,18853,50.7097,3.8538,peucommun,192,Lessines,Lessines,Lessen,Lessines,Q667790,Lessines,Lessines JPG1 HoNdR.jpg
+BE52010,Chapelle-lez-Herlaimont,WHT,15030,50.4784,4.2828,peucommun,246,Chapelle-lez-Herlaimont,Chapelle-lez-Herlaimont,Chapelle-lez-Herlaimont,Chapelle-lez-Herlaimont,Q95140,Chapelle-lez-Herlaimont,Chapelle-lez-Herlaimont (7).JPG
+BE52011,Charleroi,WHT,205763,50.4215,4.4374,legendaire,3,Charleroi,Charleroi,Charleroi,Charleroi,Q81046,Charleroi,Charleroi - Hôtel de ville vu de la place Charles II - 2019-06-01.jpg
+BE52012,Châtelet,WHT,35979,50.3922,4.5215,rare,63,Châtelet,Châtelet,Châtelet,Châtelet,Q95144,Châtelet (Belgique),
+BE52015,Courcelles,WHT,31436,50.4704,4.3397,peucommun,83,Courcelles,Courcelles,Courcelles,Courcelles,Q665860,Courcelles (Belgique),Trazegnies 050911 (35).JPG
+BE52018,Farciennes,WHT,11471,50.4361,4.5403,commun,325,Farciennes,Farciennes,Farciennes,Farciennes,Q666503,Farciennes,Le château de Farciennes.jpg
+BE52021,Fleurus,WHT,22922,50.4799,4.5345,peucommun,143,Fleurus,Fleurus,Fleurus,Fleurus,Q314922,Fleurus,Fleurus JPG00.jpg
+BE52022,Fontaine-l’Evêque,WHT,17985,50.4127,4.3222,peucommun,202,Fontaine-l’Evêque,Fontaine-l’Evêque,Fontaine-l’Evêque,Fontaine-l’Evêque,Q666696,Fontaine-l'Évêque,Fontaine-l'Evêque JPG00c.jpg
+BE52025,Gerpinnes,WHT,12900,50.3427,4.5293,commun,288,Gerpinnes,Gerpinnes,Gerpinnes,Gerpinnes,Q666902,Gerpinnes,Gerpinnes Hv1JPG.jpg
+BE52048,Montigny-le-Tilleul,WHT,10170,50.3749,4.3738,commun,360,Montigny-le-Tilleul,Montigny-le-Tilleul,Montigny-le-Tilleul,Montigny-le-Tilleul,Q668437,Montigny-le-Tilleul,Montigny-le-Tilleul JPG01.jpg
+BE52055,Pont-à-Celles,WHT,17662,50.5243,4.3583,peucommun,207,Pont-à-Celles,Pont-à-Celles,Pont-à-Celles,Pont-à-Celles,Q607182,Pont-à-Celles,Lutcanalbxl.jpg
+BE52074,Aiseau-Presles,WHT,10956,50.4163,4.5841,commun,337,Aiseau-Presles,Aiseau-Presles,Aiseau-Presles,Aiseau-Presles,Q95004,Aiseau-Presles,Presles033.jpg
+BE52075,Les Bons Villers,WHT,9705,50.5132,4.4726,commun,370,Les Bons Villers,Les Bons Villers,Les Bons Villers,Les Bons Villers,Q95123,Les Bons Villers,HotelDeVilleFrasnes.jpg
+BE53014,Boussu,WHT,20401,50.4255,3.7988,peucommun,167,Boussu,Boussu,Boussu,Boussu,Q95126,Boussu,Boussu 050817 (32).jpg
+BE53020,Dour,WHT,16559,50.3963,3.7544,peucommun,222,Dour,Dour,Dour,Dour,Q665938,Dour,
+BE53028,Frameries,WHT,21630,50.3868,3.8812,peucommun,153,Frameries,Frameries,Frameries,Frameries,Q666751,Frameries,Frameries JPG00.jpg
+BE53039,Hensies,WHT,6776,50.4391,3.6863,commun,447,Hensies,Hensies,Hensies,Hensies,Q666983,Hensies,Hensies MC1a.jpg
+BE53044,Jurbise,WHT,10912,50.5242,3.9259,commun,339,Jurbise,Jurbise,Jurbeke,Jurbise,Q377152,Jurbise,Administration Communale de Jurbise.jpg
+BE53046,Lens,WHT,4677,50.5762,3.9335,commun,503,Lens,Lens,Lens,Lens,Q667158,Lens (Belgique),Lens (Hainaut) - L'étang du moulin.jpg
+BE53053,Mons,WHT,97120,50.4479,3.9981,epique,12,Mons,Mons,Bergen,Mons,Q83407,Mons,Mons beffroi JPG01B.jpg
+BE53065,Quaregnon,WHT,19022,50.4408,3.8588,peucommun,190,Quaregnon,Quaregnon,Quaregnon,Quaregnon,Q538735,Quaregnon,Quaregnon JPG01.jpg
+BE53068,Quiévrain,WHT,6861,50.3995,3.697,commun,445,Quiévrain,Quiévrain,Quiévrain,Quiévrain,Q668815,Quiévrain,Eglise ferme du mayeur.jpeg
+BE53070,Saint-Ghislain,WHT,23756,50.4917,3.7915,peucommun,131,Saint-Ghislain,Saint-Ghislain,Saint-Ghislain,Saint-Ghislain,Q668950,Saint-Ghislain,Saint-Ghislain JPG001.jpg
+BE53082,Colfontaine,WHT,20813,50.4,3.8457,peucommun,162,Colfontaine,Colfontaine,Colfontaine,Colfontaine,Q665573,Colfontaine,Colfontaine JPG01.jpg
+BE53083,Honnelles,WHT,5104,50.3433,3.7071,commun,497,Honnelles,Honnelles,Honnelles,Honnelles,Q667091,Honnelles,Autreppe Maison communale 1.jpg
+BE53084,Quévy,WHT,8194,50.3654,3.9246,commun,407,Quévy,Quévy,Quévy,Quévy,Q668702,Quévy,Givry (Hainaut) JPG02.jpg
+BE55004,Braine-le-Comte,WHT,23604,50.6013,4.1211,peucommun,134,Braine-le-Comte,Braine-le-Comte,’s Gravenbrakel,Braine-le-Comte,Q95129,Braine-le-Comte,Braine-le-Comte JPG02.jpg
+BE55035,Le Roeulx,WHT,8709,50.4908,4.0865,commun,392,Le Roeulx,Le Roeulx,Le Roeulx,Le Roeulx,Q668861,Le Rœulx,Le Roeulx 051218 (4).JPG
+BE55040,Soignies,WHT,29249,50.5632,4.0354,peucommun,94,Soignies,Soignies,Zinnik,Soignies,Q462985,Soignies,Soignies 070304 (2).JPG
+BE55050,Ecaussinnes,WHT,11622,50.5625,4.1789,commun,318,Ecaussinnes,Ecaussinnes,Ecaussinnes,Ecaussinnes,Q273316,Écaussinnes,Ecaussinnes-Lalaing CH1JPG.jpg
+BE55085,Seneffe,WHT,11631,50.5514,4.2655,commun,317,Seneffe,Seneffe,Seneffe,Seneffe,Q669051,Seneffe,Seneffe JPG01.jpg
+BE55086,Manage,WHT,24202,50.4952,4.2368,peucommun,126,Manage,Manage,Manage,Manage,Q667987,Manage,Manage JPG00.jpg
+BE56001,Anderlues,WHT,12955,50.4048,4.2657,peucommun,285,Anderlues,Anderlues,Anderlues,Anderlues,Q95005,Anderlues,
+BE56005,Beaumont,WHT,7096,50.2257,4.2539,commun,437,Beaumont,Beaumont,Beaumont,Beaumont,Q95100,Beaumont (Hainaut),Mairie beaumont (Hainaut).jpg
+BE56016,Chimay,WHT,9673,50.0654,4.2953,commun,371,Chimay,Chimay,Chimay,Chimay,Q95380,Chimay,Chimay.jpg
+BE56022,Erquelinnes,WHT,9983,50.3014,4.1434,commun,363,Erquelinnes,Erquelinnes,Erquelinnes,Erquelinnes,Q666335,Erquelinnes,Erquelinnes Vi1a.jpg
+BE56029,Froidchapelle,WHT,4067,50.154,4.3324,commun,517,Froidchapelle,Froidchapelle,Froidchapelle,Froidchapelle,Q666853,Froidchapelle,Froidchapelle 070308 (3).JPG
+BE56044,Lobbes,WHT,5958,50.3586,4.2485,commun,462,Lobbes,Lobbes,Lobbes,Lobbes,Q667936,Lobbes,
+BE56049,Merbes-le-Château,WHT,4137,50.3013,4.2206,commun,516,Merbes-le-Château,Merbes-le-Château,Merbes-le-Château,Merbes-le-Château,Q668139,Merbes-le-Château,Merbes-le-Château JPG01.jpg
+BE56051,Momignies,WHT,5213,50.0065,4.1997,commun,495,Momignies,Momignies,Momignies,Momignies,Q668187,Momignies,Momignies JPG01.jpg
+BE56078,Thuin,WHT,14864,50.3268,4.3094,peucommun,250,Thuin,Thuin,Thuin,Thuin,Q669186,Thuin,Thuin - jardins suspendus - 2018-09-09 - 16.jpg
+BE56086,Ham-sur-Heure-Nalinnes,WHT,13838,50.3335,4.418,peucommun,270,Ham-sur-Heure-Nalinnes,Ham-sur-Heure-Nalinnes,Ham-sur-Heure-Nalinnes,Ham-sur-Heure-Nalinnes,Q666952,Ham-sur-Heure-Nalinnes,Ham-sur-Heure 050525 (1).JPG
+BE56088,Sivry-Rance,WHT,4862,50.1673,4.1883,commun,501,Sivry-Rance,Sivry-Rance,Sivry-Rance,Sivry-Rance,Q669136,Sivry-Rance,Sivry 051106 (6).JPG
+BE57003,Antoing,WHT,7538,50.562,3.4577,commun,423,Antoing,Antoing,Antoing,Antoing,Q95011,Antoing,Antoing.01.jpg
+BE57018,Celles,WHT,5775,50.7157,3.4329,commun,468,Celles,Celles,Celles,Celles,Q95136,Celles (Hainaut),Celles (Hainaut) JPG00.jpg
+BE57027,Estaimpuis,WHT,10878,50.6961,3.2826,commun,340,Estaimpuis,Estaimpuis,Estaimpuis,Estaimpuis,Q666393,Estaimpuis,
+BE57062,Pecq,WHT,5899,50.6824,3.3585,commun,464,Pecq,Pecq,Pecq,Pecq,Q668540,Pecq,
+BE57064,Péruwelz,WHT,17350,50.5339,3.5701,peucommun,208,Péruwelz,Péruwelz,Péruwelz,Péruwelz,Q668630,Péruwelz,Péruwelz JPG04.jpg
+BE57072,Rumes,WHT,5345,50.5418,3.3088,commun,490,Rumes,Rumes,Rumes,Rumes,Q668903,Rumes,Rumes - Eglise Saint-Pierre.jpg
+BE57081,Tournai,WHT,68991,50.6059,3.3797,rare,23,Tournai,Tournai,Doornik,Tournai,Q173219,Tournai,Grand'Place de Tournai vue du Beffroi.jpg
+BE57093,Brunehaut,WHT,8129,50.5308,3.3988,commun,410,Brunehaut,Brunehaut,Brunehaut,Brunehaut,Q95132,Brunehaut (Belgique),Bléharies.- Maison communale de Brunehaut.jpg
+BE57094,Leuze-en-Hainaut,WHT,14200,50.5955,3.6405,peucommun,260,Leuze-en-Hainaut,Leuze-en-Hainaut,Leuze-en-Hainaut,Leuze-en-Hainaut,Q667862,Leuze-en-Hainaut,Gemeentehuis Leuze-en-Hainaut 11-05-2021 9-56-33.jpg
+BE57095,Mont-de-l’Enclus,WHT,3838,50.7355,3.5122,commun,523,Mont-de-l’Enclus,Mont-de-l’Enclus,Mont-de-l’Enclus,Mont-de-l’Enclus,Q668295,Mont-de-l'Enclus,Mont-de-l'Enclus JPG01.jpg
+BE57096,Mouscron,WHT,60304,50.7379,3.2246,rare,28,Mouscron,Mouscron,Moeskroen,Mouscron,Q220145,Mouscron,Mouscron Centre Culturel Marius Staquet.JPG
+BE57097,Comines-Warneton,WHT,18337,50.7271,2.9015,peucommun,197,Comines-Warneton,Comines-Warneton,Komen-Waasten,Comines-Warneton,Q665761,Comines-Warneton,Comines-Warneton JPG01.jpg
+BE58001,La Louvière,WHT,81674,50.4807,4.1646,epique,20,La Louvière,La Louvière,La Louvière,La Louvière,Q211572,La Louvière,Bois-du-Luc CM3JPG.jpg
+BE58002,Binche,WHT,33784,50.404,4.2019,rare,74,Binche,Binche,Binche,Binche,Q95121,Binche,
+BE58003,Estinnes,WHT,7947,50.3887,4.0892,commun,416,Estinnes,Estinnes,Estinnes,Estinnes,Q666446,Estinnes,Vellereille-les-Brayeux - Abbaye de Bonne-Espérance - vue depuis la cour d'honneur - 2023-09-23 - 01.jpg
+BE58004,Morlanwelz,WHT,19113,50.4479,4.2464,peucommun,187,Morlanwelz,Morlanwelz,Morlanwelz,Morlanwelz,Q668493,Morlanwelz,Hotel de ville de Morlanwelz.jpg
+BE61003,Amay,WLG,14494,50.5543,5.31,peucommun,257,Amay,Amay,Amay,Amay,Q455969,Amay,Amay Col 1c.jpg
+BE61010,Burdinne,WLG,3334,50.585,5.1372,commun,537,Burdinne,Burdinne,Burdinne,Burdinne,Q681368,Burdinne,Burdinne MC1 JPG.jpg
+BE61012,Clavier,WLG,4989,50.42,5.3608,commun,498,Clavier,Clavier,Clavier,Clavier,Q681854,Clavier (Liège),Ocquier - Écoles.JPG
+BE61019,Ferrières,WLG,5156,50.4082,5.6218,commun,496,Ferrières,Ferrières,Ferrières,Ferrières,Q682570,Ferrières (Belgique),0 Ferrières - Maison communale (1).JPG
+BE61024,Hamoir,WLG,3776,50.4334,5.5496,commun,525,Hamoir,Hamoir,Hamoir,Hamoir,Q683083,Hamoir,HamoirFromBelvédèreDeCoïsse.jpg
+BE61028,Héron,WLG,5599,50.5427,5.1118,commun,479,Héron,Héron,Héron,Héron,Q683321,Héron (commune),00 Héron 051017 (7).jpg
+BE61031,Huy,WLG,21850,50.4934,5.1693,peucommun,151,Huy,Huy,Hoei,Huy,Q207095,Huy,0 Huy - Grand'Place (1).JPG
+BE61039,Marchin,WLG,5636,50.4691,5.2376,commun,476,Marchin,Marchin,Marchin,Marchin,Q710190,Marchin,Marchin JPG03.jpg
+BE61041,Modave,WLG,4169,50.4811,5.2909,commun,515,Modave,Modave,Modave,Modave,Q710237,Modave,Château de Modave - Vue sud-est.jpg
+BE61043,Nandrin,WLG,5755,50.5152,5.4124,commun,469,Nandrin,Nandrin,Nandrin,Nandrin,Q710280,Nandrin,Nandrin JPG01.jpg
+BE61048,Ouffet,WLG,2822,50.4394,5.4679,commun,548,Ouffet,Ouffet,Ouffet,Ouffet,Q222233,Ouffet,Ouffet JPG01.jpg
+BE61063,Verlaine,WLG,4414,50.6054,5.3109,commun,509,Verlaine,Verlaine,Verlaine,Verlaine,Q711292,Verlaine (Liège),Verlaine - Gemeentehuis.jpg
+BE61068,Villers-Le-Bouillet,WLG,6869,50.6004,5.2255,commun,444,Villers-Le-Bouillet,Villers-Le-Bouillet,Villers-Le-Bouillet,Villers-Le-Bouillet,Q711373,Villers-le-Bouillet,Villers-le-Bouillet JPG01.jpg
+BE61072,Wanze,WLG,14005,50.5474,5.1927,peucommun,266,Wanze,Wanze,Wanze,Wanze,Q711443,Wanze,Wanze JPG01.jpg
+BE61079,Anthisnes,WLG,4204,50.494,5.4856,commun,512,Anthisnes,Anthisnes,Anthisnes,Anthisnes,Q572472,Anthisnes,Anthisnes JPG01.jpg
+BE61080,Engis,WLG,6391,50.5625,5.4007,commun,452,Engis,Engis,Engis,Engis,Q682223,Engis,Engis - Gare de Engis.jpg
+BE61081,Tinlot,WLG,2782,50.4789,5.3813,commun,549,Tinlot,Tinlot,Tinlot,Tinlot,Q711152,Tinlot,TinlotMaisonCommunale.jpg
+BE62003,Ans,WLG,29110,50.6665,5.5175,peucommun,95,Ans,Ans,Ans,Ans,Q499594,Ans,Place Nicolai Ans.jpg
+BE62006,Awans,WLG,9373,50.6803,5.4551,commun,380,Awans,Awans,Awans,Awans,Q680564,Awans,Awans - Gemeentehuis.jpg
+BE62009,Aywaille,WLG,12969,50.4447,5.6785,peucommun,284,Aywaille,Aywaille,Aywaille,Aywaille,Q793396,Aywaille,Aywaille JPG01.jpg
+BE62011,Bassenge,WLG,9053,50.7657,5.6355,commun,385,Bassenge,Bassenge,Bitsingen,Bassenge,Q680918,Bassenge (Belgique),Bassenge (Belgien) Saint-Pierre 196.JPG
+BE62015,Beyne-Heusay,WLG,11977,50.6216,5.6514,commun,311,Beyne-Heusay,Beyne-Heusay,Beyne-Heusay,Beyne-Heusay,Q681039,Beyne-Heusay,Beyne-Heusay Rathaus.jpg
+BE62022,Chaudfontaine,WLG,20523,50.5864,5.63,peucommun,165,Chaudfontaine,Chaudfontaine,Chaudfontaine,Chaudfontaine,Q503363,Chaudfontaine,Chaudfontaine - Ecole communale.jpg
+BE62026,Comblain-au-Pont,WLG,5366,50.4784,5.567,commun,488,Comblain-au-Pont,Comblain-au-Pont,Comblain-au-Pont,Comblain-au-Pont,Q681909,Comblain-au-Pont,Comblain-au-Pont JPG01.jpg
+BE62027,Dalhem,WLG,7711,50.724,5.7687,commun,419,Dalhem,Dalhem,Dalhem,Dalhem,Q846182,Dalhem,Dalhem - casa de a vila a Berneau.jpg
+BE62032,Esneux,WLG,12794,50.5432,5.576,commun,290,Esneux,Esneux,Esneux,Esneux,Q682271,Esneux,Esneux JPG01.jpg
+BE62038,Fléron,WLG,16374,50.619,5.6864,peucommun,224,Fléron,Fléron,Fléron,Fléron,Q682811,Fléron,Fléron St Denis.jpg
+BE62051,Herstal,WLG,40834,50.6795,5.6247,rare,49,Herstal,Herstal,Herstal,Herstal,Q211033,Herstal,Herstal - casa de la vila.jpg
+BE62060,Juprelle,WLG,9906,50.72,5.5633,commun,365,Juprelle,Juprelle,Juprelle,Juprelle,Q914102,Juprelle,Juprelle - Eglise Saint-Barthélémy.jpg
+BE62063,Liège,WLG,197323,50.6325,5.5828,legendaire,5,Liège,Liège,Luik,Lüttich,Q3992,Liège,Liege View 01.jpg
+BE62079,Oupeye,WLG,25846,50.7207,5.6509,peucommun,115,Oupeye,Oupeye,Oupeye,Oupeye,Q286215,Oupeye,Oupeye - cdv - 22-12.jpg
+BE62093,Saint-Nicolas,WLG,24517,50.638,5.5205,peucommun,125,Saint-Nicolas,Saint-Nicolas,Saint-Nicolas,Saint-Nicolas,Q65062,Saint-Nicolas (Liège),Saint-Nicolas (Liège) Hôtel Communal).JPG
+BE62096,Seraing,WLG,64609,50.5863,5.5171,rare,26,Seraing,Seraing,Seraing,Seraing,Q194037,Seraing,Seraing - Casa de la vila.jpg
+BE62099,Soumagne,WLG,17265,50.6342,5.7373,peucommun,210,Soumagne,Soumagne,Soumagne,Soumagne,Q696099,Soumagne,Soumagnewkped08.jpg
+BE62100,Sprimont,WLG,15171,50.5164,5.6542,peucommun,241,Sprimont,Sprimont,Sprimont,Sprimont,Q696110,Sprimont,Sprimont - Casa de la vila.jpg
+BE62108,Visé,WLG,18110,50.7373,5.7036,peucommun,200,Visé,Visé,Wezet,Visé,Q49743,Visé,Visé - Casa de la Vila.jpg
+BE62118,Grâce-Hollogne,WLG,23416,50.6421,5.4752,peucommun,137,Grâce-Hollogne,Grâce-Hollogne,Grâce-Hollogne,Grâce-Hollogne,Q683034,Grâce-Hollogne,Grace - Hotel Communal.jpg
+BE62119,Blegny,WLG,13579,50.6863,5.7254,peucommun,274,Blegny,Blegny,Blegny,Blegny,Q681109,Blegny,Blegny - Casa de la Vila.jpg
+BE62120,Flémalle,WLG,27045,50.5973,5.443,peucommun,107,Flémalle,Flémalle,Flémalle,Flémalle,Q175322,Flémalle,Flémalle (petite) - Castle - Town Hall.jpg
+BE62121,Neupré,WLG,9952,50.5436,5.4765,commun,364,Neupré,Neupré,Neupré,Neupré,Q710316,Neupré,0 Neupré - Maison communale.JPG
+BE62122,Trooz,WLG,8200,50.5713,5.6812,commun,406,Trooz,Trooz,Trooz,Trooz,Q711205,Trooz,Trooz JPG01.jpg
+BE63001,Amel,WLG,5608,50.3496,6.1939,commun,478,Amel,Amblève,Amel,Amel,Q159868,Amblève (commune),Eglise Medell 3.jpg
+BE63003,Aubel,WLG,4288,50.7003,5.8406,commun,511,Aubel,Aubel,Aubel,Aubel,Q678920,Aubel,Aubel 049.jpg
+BE63004,Baelen,WLG,4529,50.5609,6.0851,commun,508,Baelen,Baelen,Baelen,Baelen,Q680845,Baelen,Baelen 08.jpg
+BE63012,Büllingen,WLG,5533,50.4094,6.2998,commun,482,Büllingen,Bullange,Büllingen,Büllingen,Q152737,Bullange,Sint-Eligiuskerk Büllingen 6-10-2025 13-37-13.jpg
+BE63013,Bütgenbach,WLG,5586,50.4594,6.2008,commun,480,Bütgenbach,Butgenbach,Bütgenbach,Bütgenbach,Q160005,Butgenbach,Eglise Bütgenbach 1.jpg
+BE63020,Dison,WLG,15226,50.6172,5.8817,peucommun,240,Dison,Dison,Dison,Dison,Q682105,Dison,Andrimont - Antiga casa de la vila.jpg
+BE63023,Eupen,WLG,20053,50.594,6.1806,peucommun,171,Eupen,Eupen,Eupen,Eupen,Q151831,Eupen,Eupen (DSCF6509).jpg
+BE63035,Herve,WLG,17784,50.6471,5.799,peucommun,205,Herve,Herve,Herve,Herve,Q683465,Herve,Herve JPG03a.jpg
+BE63038,Jalhay,WLG,8770,50.5352,5.9713,commun,389,Jalhay,Jalhay,Jalhay,Jalhay,Q683634,Jalhay,Jalhay -Maison communale.png
+BE63040,Kelmis,WLG,11338,50.716,6.0201,commun,331,Kelmis,La Calamine,Kelmis,Kelmis,Q159864,La Calamine,Kelmis - Casa de la Vila.jpg
+BE63045,Lierneux,WLG,3611,50.3025,5.7865,commun,527,Lierneux,Lierneux,Lierneux,Lierneux,Q710022,Lierneux,"Lierneux, oorlogsmonument 2009-05-02 14.04.JPG"
+BE63046,Limbourg,WLG,5689,50.6013,5.9423,commun,473,Limbourg,Limbourg,Limburg,Limbourg,Q506739,Limbourg (ville),"Place Saint-Georges, Limbourg Ville Haute (2).jpg"
+BE63048,Lontzen,WLG,6092,50.6731,6.0009,commun,457,Lontzen,Lontzen,Lontzen,Lontzen,Q159958,Lontzen,Lontzen-panorama.jpg
+BE63049,Malmedy,WLG,12991,50.4112,6.0332,peucommun,283,Malmedy,Malmedy,Malmedy,Malmedy,Q159838,Malmedy,0 Malmedy - Place Albert 1er.JPG
+BE63057,Olne,WLG,4172,50.5869,5.7246,commun,514,Olne,Olne,Olne,Olne,Q710358,Olne,"Olne, stadhuis foto2 2010-07-10 12.53.JPG"
+BE63058,Pepinster,WLG,9294,50.5752,5.7943,commun,381,Pepinster,Pepinster,Pepinster,Pepinster,Q710522,Pepinster,Pepinster - Maison communale.jpg
+BE63061,Raeren,WLG,11185,50.6742,6.1081,commun,334,Raeren,Raeren,Raeren,Raeren,Q152734,Raeren,Raeren Rathaus.jpg
+BE63067,Sankt Vith,WLG,10180,50.3015,6.0554,commun,359,Sankt Vith,Saint-Vith,Sankt Vith,Sankt Vith,Q152748,Saint-Vith,0 Saint-Vith - Ville (1).jpg
+BE63072,Spa,WLG,9806,50.4772,5.8809,commun,368,Spa,Spa,Spa,Spa,Q39865,Spa (ville),Spa JPG05.jpg
+BE63073,Stavelot,WLG,7279,50.4064,5.9489,commun,432,Stavelot,Stavelot,Stavelot,Stavelot,Q468920,Stavelot,Stavelot - algemeen zicht - België.jpg
+BE63075,Stoumont,WLG,3233,50.4017,5.7473,commun,539,Stoumont,Stoumont,Stoumont,Stoumont,Q711046,Stoumont,Stoumont JPG02.jpg
+BE63076,Theux,WLG,12144,50.5125,5.802,commun,304,Theux,Theux,Theux,Theux,Q711079,Theux,0 Theux - Hôtel de ville (1).JPG
+BE63079,Verviers,WLG,56127,50.5784,5.8787,rare,30,Verviers,Verviers,Verviers,Verviers,Q202954,Verviers,Hôtel de ville de Verviers 01.JPG
+BE63080,Waimes,WLG,7560,50.4174,6.1194,commun,421,Waimes,Waimes,Weismes,Weismes,Q159961,Waimes,"Waimes, Rathaus.jpg"
+BE63084,Welkenraedt,WLG,10521,50.6694,5.9423,commun,350,Welkenraedt,Welkenraedt,Welkenraedt,Welkenraedt,Q152743,Welkenraedt,Welkenraedt-Place des combattants (1).jpg
+BE63086,Trois-Ponts,WLG,2566,50.3657,5.8497,commun,553,Trois-Ponts,Trois-Ponts,Trois-Ponts,Trois-Ponts,Q711183,Trois-Ponts,Troisponts-v.jpg
+BE63087,Burg-Reuland,WLG,3962,50.2075,6.0717,commun,520,Burg-Reuland,Burg-Reuland,Burg-Reuland,Burg-Reuland,Q159981,Burg-Reuland,Vennbahn-reuland.jpg
+BE63088,Plombières,WLG,10814,50.7274,5.9453,commun,342,Plombières,Plombières,Plombières,Plombières,Q710606,Plombières (Liège),Plombieres Rathaus.jpg
+BE63089,Thimister-Clermont,WLG,5584,50.6594,5.8694,commun,481,Thimister-Clermont,Thimister-Clermont,Thimister-Clermont,Thimister-Clermont,Q711115,Thimister-Clermont,Thimister-Clermont JPG01.jpg
+BE64008,Berloz,WLG,3394,50.7039,5.2138,commun,534,Berloz,Berloz,Berloz,Berloz,Q680978,Berloz,Berloz - Eglise Saint-Lambert.jpg
+BE64015,Braives,WLG,6476,50.6212,5.1656,commun,451,Braives,Braives,Braives,Braives,Q681153,Braives,0 Braives 051017 (10).JPG
+BE64021,Crisnée,WLG,3573,50.7128,5.3911,commun,529,Crisnée,Crisnée,Crisnée,Crisnée,Q929415,Crisnée,Crisnée JPG01.jpg
+BE64023,Donceel,WLG,3128,50.6486,5.3152,commun,543,Donceel,Donceel,Donceel,Donceel,Q682163,Donceel,Donceel - Eglise Saint-Cyr et Sainte-Juliette.JPG
+BE64025,Fexhe-le-Haut-Clocher,WLG,3399,50.6641,5.4053,commun,533,Fexhe-le-Haut-Clocher,Fexhe-le-Haut-Clocher,Fexhe-le-Haut-Clocher,Fexhe-le-Haut-Clocher,Q379113,Fexhe-le-Haut-Clocher,Fexhe-le-Haut-Clocher JPG00.jpg
+BE64029,Geer,WLG,3571,50.6691,5.1833,commun,530,Geer,Geer,Geer,Geer,Q682982,Geer (commune),Geer 051017 (3).JPG
+BE64034,Hannut,WLG,17202,50.6705,5.0794,peucommun,213,Hannut,Hannut,Hannuit,Hannut,Q683141,Hannut,Hannut JPG00.jpg
+BE64047,Lincent,WLG,3375,50.7181,5.0287,commun,535,Lincent,Lincent,Lijsem,Lincent,Q509457,Lincent,Lijsem - panoramio.jpg
+BE64056,Oreye,WLG,4062,50.7214,5.3487,commun,519,Oreye,Oreye,Oerle,Oreye,Q710409,Oreye,Oreye JPG00.jpg
+BE64063,Remicourt,WLG,6023,50.6846,5.3342,commun,461,Remicourt,Remicourt,Remicourt,Remicourt,Q710690,Remicourt (Belgique),Remicourt JPG01.jpg
+BE64065,Saint-Georges-sur-Meuse,WLG,7184,50.5983,5.3613,commun,434,Saint-Georges-sur-Meuse,Saint-Georges-sur-Meuse,Saint-Georges-sur-Meuse,Saint-Georges-sur-Meuse,Q710718,Saint-Georges-sur-Meuse,Saint-Georges-sur-Meuse JPG01.jpg
+BE64074,Waremme,WLG,15366,50.6925,5.2705,peucommun,236,Waremme,Waremme,Borgworm,Waremme,Q711474,Waremme,Waremme 050910 (6).JPG
+BE64075,Wasseiges,WLG,3187,50.6143,5.026,commun,541,Wasseiges,Wasseiges,Wasseiges,Wasseiges,Q711502,Wasseiges,Wasseiges JPG04.jpg
+BE64076,Faimes,WLG,4192,50.649,5.2393,commun,513,Faimes,Faimes,Faimes,Faimes,Q682441,Faimes,Les Waleffes CH0JPG.jpg
+BE71002,As,VLI,8298,51.0024,5.5785,commun,404,As,As,As,As,Q696591,As (Belgique),"As, Sint Aldegondiskerk foto2 2007-09-22 13.09.JPG"
+BE71004,Beringen,VLI,48755,51.0664,5.2213,rare,35,Beringen,Beringen,Beringen,Beringen,Q242407,Beringen,Beringen-Mijn - Sint-Theodarduskerk1.jpg
+BE71011,Diepenbeek,VLI,19788,50.9102,5.4176,peucommun,175,Diepenbeek,Diepenbeek,Diepenbeek,Diepenbeek,Q651826,Diepenbeek,Servatiusdiepenbeek.jpg
+BE71016,Genk,VLI,68058,50.9674,5.5006,rare,24,Genk,Genk,Genk,Genk,Q189692,Genk,Sint-Martinuskerk (21611) (Genk) 19-05-2019 12-21-58.jpg
+BE71017,Gingelom,VLI,8788,50.7365,5.1488,commun,388,Gingelom,Gingelom,Gingelom,Gingelom,Q651837,Gingelom,Gingelom - Sint-Pieterskerk.jpg
+BE71020,Halen,VLI,9490,50.9404,5.0945,commun,376,Halen,Halen,Halen,Halen,Q461436,Halen (Belgique),Sint-Pietersbandenkerk (Halen) (21764) 18-08-2019.jpg
+BE71024,Herk-de-Stad,VLI,12927,50.9401,5.185,peucommun,286,Herk-de-Stad,Herck-la-Ville,Herk-de-Stad,Herk-de-Stad,Q696585,Herck-la-Ville,Herk-de-Stad - Sint-Martinuskerk.jpg
+BE71034,Leopoldsburg,VLI,16858,51.1215,5.2585,peucommun,218,Leopoldsburg,Bourg-Léopold,Leopoldsburg,Leopoldsburg,Q736120,Bourg-Léopold,Leopoldsburg - Onze-Lieve-Vrouw Tenhemelopnemingskerk.jpg
+BE71037,Lummen,VLI,15347,50.9993,5.2005,peucommun,237,Lummen,Lummen,Lummen,Lummen,Q329628,Lummen,Lummen - Sint-Rochuskerk.jpg
+BE71045,Nieuwerkerken,VLI,7328,50.8705,5.1923,commun,431,Nieuwerkerken,Nieuwerkerken,Nieuwerkerken,Nieuwerkerken,Q696740,Nieuwerkerken (Limbourg),Nieuwerkerken - Sint-Pieterskerk.jpg
+BE71053,Saint-Trond,VLI,41743,50.8103,5.192,rare,48,Sint-Truiden,Saint-Trond,Sint-Truiden,Sint-Truiden,Q37792,Saint-Trond,Sint-Truiden.jpg
+BE71066,Zonhoven,VLI,21923,50.9893,5.3457,peucommun,149,Zonhoven,Zonhoven,Zonhoven,Zonhoven,Q133769,Zonhoven,Kerk zonhoven.jpg
+BE71067,Zutendaal,VLI,7404,50.9373,5.5746,commun,428,Zutendaal,Zutendaal,Zutendaal,Zutendaal,Q231090,Zutendaal,Zutendaal - Onze-Lieve-Vrouw Tenhemelopnemingskerk.jpg
+BE71070,Heusden-Zolder,VLI,34985,51.0185,5.2818,rare,70,Heusden-Zolder,Heusden-Zolder,Heusden-Zolder,Heusden-Zolder,Q319792,Heusden-Zolder,
+BE71071,Tessenderlo-Ham,VLI,30645,51.0874,5.1474,peucommun,87,Tessenderlo-Ham,Tessenderlo-Ham,Tessenderlo-Ham,Tessenderlo-Ham,Q130298677,Tessenderlo-Ham,
+BE71072,Hasselt,VLI,90249,50.937,5.3062,epique,14,Hasselt,Hasselt,Hasselt,Hasselt,Q58780,Hasselt,Hasselt-Rathaus-20060906.jpg
+BE72003,Bocholt,VLI,13875,51.1888,5.5621,peucommun,269,Bocholt,Bocholt,Bocholt,Bocholt,Q889044,Bocholt (Belgique),Bocholt - Sint-Laurentiuskerk.jpg
+BE72004,Bree,VLI,17210,51.1439,5.6426,peucommun,212,Bree,Bree,Bree,Bree,Q275863,Brée (Belgique),Bree - Voormalig Augustijnenklooster.jpg
+BE72018,Kinrooi,VLI,12527,51.1581,5.7431,commun,299,Kinrooi,Kinrooi,Kinrooi,Kinrooi,Q819133,Kinrooi,Kinrooi - Sint-Martinuskerk.jpg
+BE72020,Lommel,VLI,35208,51.2163,5.2916,rare,69,Lommel,Lommel,Lommel,Lommel,Q194366,Lommel,Lommel - Sint-Pietersbandenkerk.jpg
+BE72021,Maaseik,VLI,25828,51.1009,5.7001,peucommun,116,Maaseik,Maaseik,Maaseik,Maaseik,Q110989,Maaseik,"Maaseik, centraal plein foto21 2011-03-20 11.58.JPG"
+BE72030,Peer,VLI,16685,51.1162,5.4392,peucommun,221,Peer,Peer,Peer,Peer,Q736085,Peer,Peer centre 01.JPG
+BE72037,Hamont-Achel,VLI,14568,51.2713,5.4939,peucommun,255,Hamont-Achel,Hamont-Achel,Hamont-Achel,Hamont-Achel,Q499599,Hamont-Achel,"Hamont, kerk foto3 2009-08-31 17.43.JPG"
+BE72038,Hechtel-Eksel,VLI,13105,51.137,5.3536,peucommun,282,Hechtel-Eksel,Hechtel-Eksel,Hechtel-Eksel,Hechtel-Eksel,Q819164,Hechtel-Eksel,Eksel - Sint-Trudokerk.jpg
+BE72039,Houthalen-Helchteren,VLI,30945,51.0508,5.3951,peucommun,84,Houthalen-Helchteren,Houthalen-Helchteren,Houthalen-Helchteren,Houthalen-Helchteren,Q478795,Houthalen-Helchteren,Houthalen - Sint-Martinuskerk1.jpg
+BE72041,Dilsen-Stokkem,VLI,21486,51.039,5.7234,peucommun,155,Dilsen-Stokkem,Dilsen-Stokkem,Dilsen-Stokkem,Dilsen-Stokkem,Q581246,Dilsen-Stokkem,OMMERSTEIN.JPG
+BE72042,Oudsbergen,VLI,23871,51.0765,5.5329,peucommun,129,Oudsbergen,Oudsbergen,Oudsbergen,Oudsbergen,Q41795471,Oudsbergen,Oudsberg omgeving.jpg
+BE72043,Pelt,VLI,34635,51.2228,5.4317,rare,72,Pelt,Pelt,Pelt,Pelt,Q42878311,Pelt (Belgique),"Sint Huibrechts-Lille, Sint Mondulphus en Gondulphuskerk foto1 2009-08-31 17.02.JPG"
+BE73001,Alken,VLI,11937,50.8771,5.2818,commun,312,Alken,Alken,Alken,Alken,Q499604,Alken (Belgique),Kerkalken 29-04-2007 19-55-12.jpg
+BE73022,Heers,VLI,7574,50.7537,5.3006,commun,420,Heers,Heers,Heers,Heers,Q819162,Heers,Kasteelheers.jpg
+BE73028,Herstappe,VLI,75,50.7261,5.4264,commun,565,Herstappe,Herstappe,Herstappe,Herstappe,Q499584,Herstappe,Herstappe lucht 1.jpg
+BE73042,Lanaken,VLI,26457,50.9075,5.6456,peucommun,112,Lanaken,Lanaken,Lanaken,Lanaken,Q695315,Lanaken,Lanaken - Sint-Ursulakerk.jpg
+BE73066,Riemst,VLI,16938,50.8092,5.5967,peucommun,216,Riemst,Riemst,Riemst,Riemst,Q736097,Riemst,Riemst - Sint-Martinuskerk.jpg
+BE73098,Wellen,VLI,7479,50.8436,5.3386,commun,425,Wellen,Wellen,Wellen,Wellen,Q119331,Wellen,Kerkwellen 29-04-2007 20-04-48.jpg
+BE73107,Maasmechelen,VLI,40486,50.9687,5.6825,rare,52,Maasmechelen,Maasmechelen,Maasmechelen,Maasmechelen,Q329633,Maasmechelen,20140726 Maasmechelen 03.jpg
+BE73109,Voeren,VLI,4412,50.7398,5.8701,commun,510,Voeren,Fourons,Voeren,Voeren,Q460479,Fourons,Gravenvoeren-1.jpg
+BE73110,Bilzen-Hoeselt,VLI,43052,50.866,5.4962,rare,44,Bilzen-Hoeselt,Bilzen-Hoeselt,Bilzen-Hoeselt,Bilzen-Hoeselt,Q125522830,Bilzen-Hoeselt,
+BE73111,Tongres-Looz,VLI,43980,50.7756,5.4426,rare,43,Tongeren-Borgloon,Tongres-Looz,Tongeren-Borgloon,Tongeren-Borgloon,Q125378487,Tongres-Looz,
+BE81001,Arlon,WLX,31492,49.6713,5.7601,peucommun,82,Arlon,Arlon,Aarlen,Arlon,Q675960,Arlon,Arlon E1aJPG.jpg
+BE81003,Attert,WLX,5788,49.756,5.7731,commun,467,Attert,Attert,Attert,Attert,Q690926,Attert (commune),Attert JPG02.jpg
+BE81004,Aubange,WLX,17871,49.5784,5.7525,peucommun,204,Aubange,Aubange,Aubange,Aubange,Q713088,Aubange,Aubange - Eglise Notre Dame du Rosaire.JPG
+BE81013,Martelange,WLX,2124,49.8,5.7275,commun,558,Martelange,Martelange,Martelange,Martelange,Q713498,Martelange,Martelange JPG01.jpg
+BE81015,Messancy,WLX,8627,49.6117,5.8191,commun,396,Messancy,Messancy,Messancy,Messancy,Q692243,Messancy,Messancy - vestiges du château.JPG
+BE82009,Fauvillers,WLX,2512,49.8713,5.6838,commun,556,Fauvillers,Fauvillers,Fauvillers,Fauvillers,Q713282,Fauvillers,Fauvillers JPG00.jpg
+BE82014,Houffalize,WLX,5336,50.1401,5.7352,commun,491,Houffalize,Houffalize,Houffalize,Houffalize,Q650274,Houffalize,Houffalize JPG01.jpg
+BE82032,Vielsalm,WLX,7853,50.2953,5.9089,commun,417,Vielsalm,Vielsalm,Vielsalm,Vielsalm,Q650172,Vielsalm,Vielsalm JPG01.jpg
+BE82036,Vaux-sur-Sûre,WLX,6352,49.9457,5.6277,commun,453,Vaux-sur-Sûre,Vaux-sur-Sûre,Vaux-sur-Sûre,Vaux-sur-Sûre,Q713864,Vaux-sur-Sûre,Vaux-sur-Sûre JPG01.jpg
+BE82037,Gouvy,WLX,5452,50.182,5.9051,commun,485,Gouvy,Gouvy,Gouvy,Gouvy,Q713319,Gouvy (Belgique),Gouvy kerk.jpg
+BE82038,Sainte-Ode,WLX,2687,50.0184,5.5475,commun,551,Sainte-Ode,Sainte-Ode,Sainte-Ode,Sainte-Ode,Q713708,Sainte-Ode,Vue sur Lavacherie.jpg
+BE82039,Bastogne,WLX,20940,50.0197,5.7431,peucommun,161,Bastogne,Bastogne,Bastenaken,Bastnach,Q34021,Bastogne,
+BE83012,Durbuy,WLX,11511,50.3693,5.4894,commun,323,Durbuy,Durbuy,Durbuy,Durbuy,Q497697,Durbuy,"L'ancien couvent des Récollets, l'église Saint-Nicolas et le château de Durbuy.jpg"
+BE83013,Erezée,WLX,3356,50.2939,5.5776,commun,536,Erezée,Erezée,Erezée,Erezée,Q287813,Érezée,Erezée JPG01.jpg
+BE83028,Hotton,WLX,5682,50.2669,5.431,commun,474,Hotton,Hotton,Hotton,Hotton,Q160709,Hotton,Hotton JPG01.jpg
+BE83031,La Roche-en-Ardenne,WLX,4067,50.1626,5.6098,commun,518,La Roche-en-Ardenne,La Roche-en-Ardenne,La Roche-en-Ardenne,La Roche-en-Ardenne,Q159974,La Roche-en-Ardenne,La Roche-en-Ardenne - Le château féodal et l'église Saint-Nicolas.jpg
+BE83034,Marche-en-Famenne,WLX,17946,50.199,5.2923,peucommun,203,Marche-en-Famenne,Marche-en-Famenne,Marche-en-Famenne,Marche-en-Famenne,Q269908,Marche-en-Famenne,Marche-en-Famenne Pa1aJPG.jpg
+BE83040,Nassogne,WLX,5716,50.1388,5.3567,commun,470,Nassogne,Nassogne,Nassogne,Nassogne,Q429794,Nassogne,Nassogne JPG02.jpg
+BE83044,Rendeux,WLX,2717,50.2192,5.5117,commun,550,Rendeux,Rendeux,Rendeux,Rendeux,Q713615,Rendeux,Rendeux CH1a JPG.jpg
+BE83049,Tenneville,WLX,2876,50.1087,5.5083,commun,546,Tenneville,Tenneville,Tenneville,Tenneville,Q511239,Tenneville,Tenneville - église N-D de Bauraing.JPG
+BE83055,Manhay,WLX,3762,50.2733,5.6705,commun,526,Manhay,Manhay,Manhay,Manhay,Q713458,Manhay,Manhay JPG01.jpg
+BE84009,Bertrix,WLX,9057,49.8604,5.2434,commun,384,Bertrix,Bertrix,Bertrix,Bertrix,Q713135,Bertrix,Vue de Bertrix de la clairière P6140039.JPG
+BE84010,Bouillon,WLX,5351,49.8219,5.055,commun,489,Bouillon,Bouillon,Bouillon,Bouillon,Q217216,Bouillon (Belgique),Bouillon - Château-fort et cité (1).jpg
+BE84016,Daverdisse,WLX,1416,49.9914,5.0871,commun,563,Daverdisse,Daverdisse,Daverdisse,Daverdisse,Q713189,Daverdisse,Daverdisse JPG01.jpg
+BE84029,Herbeumont,WLX,1743,49.7867,5.2675,commun,562,Herbeumont,Herbeumont,Herbeumont,Herbeumont,Q713353,Herbeumont,Heurbeumont vue.jpg
+BE84033,Léglise,WLX,5868,49.8222,5.5874,commun,465,Léglise,Léglise,Léglise,Léglise,Q713404,Léglise,Léglise JPG01.jpg
+BE84035,Libin,WLX,5367,49.9723,5.2453,commun,487,Libin,Libin,Libin,Libin,Q713433,Libin,Libin JPG01.jpg
+BE84043,Neufchâteau,WLX,8350,49.8452,5.4203,commun,402,Neufchâteau,Neufchâteau,Neufchâteau,Neufchâteau,Q650135,Neufchâteau (Belgique),Neufchâteau JPG02.jpg
+BE84050,Paliseul,WLX,5530,49.8867,5.1319,commun,483,Paliseul,Paliseul,Paliseul,Paliseul,Q696127,Paliseul,Paliseul JPG001.jpg
+BE84059,Saint-Hubert,WLX,5691,50.0417,5.3425,commun,472,Saint-Hubert,Saint-Hubert,Saint-Hubert,Saint-Hubert,Q713740,Saint-Hubert (Belgique),Saint-Hubert JPG02.jpg
+BE84068,Tellin,WLX,2519,50.0673,5.2123,commun,555,Tellin,Tellin,Tellin,Tellin,Q713812,Tellin,Tellin JPG05.jpg
+BE84075,Wellin,WLX,3207,50.059,5.0902,commun,540,Wellin,Wellin,Wellin,Wellin,Q713911,Wellin,Wellin JPG01.jpg
+BE84077,Libramont-Chevigny,WLX,12033,49.9549,5.4616,commun,308,Libramont-Chevigny,Libramont-Chevigny,Libramont-Chevigny,Libramont-Chevigny,Q612267,Libramont-Chevigny,Libramont-Chevigny JPG01.jpg
+BE85007,Chiny,WLX,5265,49.7197,5.4017,commun,493,Chiny,Chiny,Chiny,Chiny,Q713170,Chiny,Chiny JPG01.jpg
+BE85009,Etalle,WLX,6035,49.6605,5.6142,commun,460,Etalle,Etalle,Etalle,Etalle,Q288872,Étalle (Belgique),B-Etalle4.JPG
+BE85011,Florenville,WLX,5705,49.731,5.2255,commun,471,Florenville,Florenville,Florenville,Florenville,Q713300,Florenville,Florenville JPG000.jpg
+BE85024,Meix-devant-Virton,WLX,2849,49.5999,5.4609,commun,547,Meix-devant-Virton,Meix-devant-Virton,Meix-devant-Virton,Meix-devant-Virton,Q669134,Meix-devant-Virton,Mech-divant-Vierton.jpg
+BE85026,Musson,WLX,4708,49.5691,5.6865,commun,502,Musson,Musson,Musson,Musson,Q713538,Musson,Musson - Charriot sur la place (août 2013).JPG
+BE85034,Saint-Léger,WLX,3809,49.6134,5.6601,commun,524,Saint-Léger,Saint-Léger,Saint-Léger,Saint-Léger,Q713786,Saint-Léger (Gaume),"Saint-Léger, Eglise.JPG"
+BE85039,Tintigny,WLX,4593,49.6714,5.4992,commun,506,Tintigny,Tintigny,Tintigny,Tintigny,Q713845,Tintigny,"Tintigny, église Notre-Dame de l'Assomption 85039-CLT-0004-01 foto3 2014-06-10 143.259.jpg"
+BE85045,Virton,WLX,11466,49.5734,5.5782,commun,326,Virton,Virton,Virton,Virton,Q456495,Virton,Virton JPG02.jpg
+BE85046,Habay,WLX,8668,49.7326,5.6292,commun,395,Habay,Habay,Habay,Habay,Q713334,Habay,Habay JPG01.jpg
+BE85047,Rouvroy,WLX,2111,49.5299,5.4895,commun,559,Rouvroy,Rouvroy,Rouvroy,Rouvroy,Q713677,Rouvroy (Belgique),Montquintin JPG00.JPG
+BE91005,Anhée,WNA,7109,50.325,4.8308,commun,436,Anhée,Anhée,Anhée,Anhée,Q545889,Anhée,
+BE91013,Beauraing,WNA,9496,50.0962,4.9861,commun,375,Beauraing,Beauraing,Beauraing,Beauraing,Q329621,Beauraing,0 Beauraing.JPG
+BE91015,Bièvre,WNA,3467,49.9369,5.0342,commun,531,Bièvre,Bièvre,Bièvre,Bièvre,Q715371,Bièvre (Belgique),Bièvre 050422.JPG
+BE91030,Ciney,WNA,17220,50.2634,5.1114,peucommun,211,Ciney,Ciney,Ciney,Ciney,Q456490,Ciney,Ciney JPG00.jpg
+BE91034,Dinant,WNA,13261,50.2619,4.9494,peucommun,281,Dinant,Dinant,Dinant,Dinant,Q108247,Dinant,Dinan.jpg
+BE91054,Gedinne,WNA,4661,49.9817,4.8916,commun,504,Gedinne,Gedinne,Gedinne,Gedinne,Q241069,Gedinne,Gedinne JPG00.jpg
+BE91059,Hamois,WNA,7438,50.3449,5.125,commun,427,Hamois,Hamois,Hamois,Hamois,Q696133,Hamois,Hamois JPG00.jpg
+BE91064,Havelange,WNA,5461,50.3529,5.2516,commun,484,Havelange,Havelange,Havelange,Havelange,Q720709,Havelange,Havelange JPG01.jpg
+BE91072,Houyet,WNA,5215,50.1936,5.0207,commun,494,Houyet,Houyet,Houyet,Houyet,Q695390,Houyet,HourView.jpg
+BE91103,Onhaye,WNA,3243,50.2541,4.8318,commun,538,Onhaye,Onhaye,Onhaye,Onhaye,Q695349,Onhaye,Onhaye JPG00.jpg
+BE91114,Rochefort,WNA,12772,50.1621,5.1792,commun,291,Rochefort,Rochefort,Rochefort,Rochefort,Q497764,Rochefort (Belgique),Rochefort JPG001.jpg
+BE91120,Somme-Leuze,WNA,6191,50.2764,5.2999,commun,456,Somme-Leuze,Somme-Leuze,Somme-Leuze,Somme-Leuze,Q721342,Somme-Leuze,Chardeneux JPG02.jpg
+BE91141,Yvoir,WNA,9210,50.3179,4.9136,commun,382,Yvoir,Yvoir,Yvoir,Yvoir,Q650163,Yvoir,Yvoir JPG01.jpg
+BE91142,Hastière,WNA,6081,50.1925,4.8256,commun,458,Hastière,Hastière,Hastière,Hastière,Q514641,Hastière,Hastière-par-Delà EAIJPG.jpg
+BE91143,Vresse-sur-Semois,WNA,2549,49.8376,4.9193,commun,554,Vresse-sur-Semois,Vresse-sur-Semois,Vresse-sur-Semois,Vresse-sur-Semois,Q650206,Vresse-sur-Semois,Vresse-sur-Semois JPG02.jpg
+BE92003,Andenne,WNA,28231,50.4947,5.0557,peucommun,101,Andenne,Andenne,Andenne,Andenne,Q333466,Andenne,Andenne 050802 (9).JPG
+BE92006,Assesse,WNA,7343,50.3778,4.9686,commun,430,Assesse,Assesse,Assesse,Assesse,Q715246,Assesse,Maison communale Assesse.jpg
+BE92035,Eghezée,WNA,16954,50.5804,4.8953,peucommun,215,Eghezée,Eghezée,Eghezée,Eghezée,Q274522,Éghezée,Éghezée - Maison communale (1).jpg
+BE92045,Floreffe,WNA,8083,50.4394,4.7591,commun,411,Floreffe,Floreffe,Floreffe,Floreffe,Q578583,Floreffe,Floreffe - Abbaye et village (1).JPG
+BE92048,Fosses-la-Ville,WNA,10436,50.3982,4.6948,commun,352,Fosses-la-Ville,Fosses-la-Ville,Fosses-la-Ville,Fosses-la-Ville,Q720478,Fosses-la-Ville,
+BE92054,Gesves,WNA,7445,50.4288,5.0477,commun,426,Gesves,Gesves,Gesves,Gesves,Q388879,Gesves,Gesves JPG01.jpg
+BE92087,Mettet,WNA,13613,50.3151,4.6689,peucommun,273,Mettet,Mettet,Mettet,Mettet,Q118769,Mettet,Mettet JPG01.jpg
+BE92094,Namur,WNA,115029,50.4579,4.8891,epique,9,Namur,Namur,Namen,Namur,Q134121,Namur,Namur JPG02.jpg
+BE92097,Ohey,WNA,5316,50.4384,5.1845,commun,492,Ohey,Ohey,Ohey,Ohey,Q721090,Ohey,0 Ohey - Maison communale et église St-Pierre.JPG
+BE92101,Profondeville,WNA,12322,50.3831,4.8264,commun,302,Profondeville,Profondeville,Profondeville,Profondeville,Q696940,Profondeville,Profondeville JPG01.jpg
+BE92114,Sombreffe,WNA,8384,50.5326,4.6073,commun,400,Sombreffe,Sombreffe,Sombreffe,Sombreffe,Q650226,Sombreffe,0 Sombreffe - Château (1).JPG
+BE92137,Sambreville,WNA,28638,50.4504,4.613,peucommun,98,Sambreville,Sambreville,Sambreville,Sambreville,Q650185,Sambreville,Gare de Tamines.JPG
+BE92138,Fernelmont,WNA,8175,50.5545,4.9977,commun,408,Fernelmont,Fernelmont,Fernelmont,Fernelmont,Q696104,Fernelmont,Noville-les-Bois CH1aJPG.jpg
+BE92140,Jemeppe-sur-Sambre,WNA,19225,50.4671,4.6786,peucommun,184,Jemeppe-sur-Sambre,Jemeppe-sur-Sambre,Jemeppe-sur-Sambre,Jemeppe-sur-Sambre,Q720791,Jemeppe-sur-Sambre,Jemeppe-sur-SambreRailwaystation.jpg
+BE92141,La Bruyère,WNA,9397,50.5286,4.7982,commun,379,La Bruyère,La Bruyère,La Bruyère,La Bruyère,Q715422,La Bruyère (Namur),La Bruyère (Rhisnes) JPG00.jpg
+BE92142,Gembloux,WNA,26550,50.5468,4.7079,peucommun,111,Gembloux,Gembloux,Gembloux,Gembloux,Q223927,Gembloux,Gembloux JPG05.jpg
+BE93010,Cerfontaine,WNA,4989,50.1801,4.443,commun,499,Cerfontaine,Cerfontaine,Cerfontaine,Cerfontaine,Q715474,Cerfontaine (Belgique),Cerfontaine JPG01B.JPG
+BE93014,Couvin,WNA,13919,50.0206,4.4815,peucommun,268,Couvin,Couvin,Couvin,Couvin,Q326771,Couvin,Couvin JPG01.jpg
+BE93018,Doische,WNA,2973,50.1252,4.6292,commun,545,Doische,Doische,Doische,Doische,Q720275,Doische,Doische JPG01.jpg
+BE93022,Florennes,WNA,11394,50.2493,4.5779,commun,330,Florennes,Florennes,Florennes,Florennes,Q720429,Florennes,Florennes Vi2JPG.jpg
+BE93056,Philippeville,WNA,9589,50.1621,4.5559,commun,372,Philippeville,Philippeville,Philippeville,Philippeville,Q650239,Philippeville,"Belgium, Namur, Philippeville (08), Hotel de Ville.jpg"
+BE93088,Walcourt,WNA,18353,50.2669,4.4744,peucommun,196,Walcourt,Walcourt,Walcourt,Walcourt,Q497565,Walcourt,Walcourt (DSC 0255).jpg
+BE93090,Viroinval,WNA,5616,50.0478,4.6384,commun,477,Viroinval,Viroinval,Viroinval,Viroinval,Q650261,Viroinval,Nismes JPG02.jpg

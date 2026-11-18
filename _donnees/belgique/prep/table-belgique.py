@@ -20,13 +20,20 @@ def tier(rang):
     for t, b in bornes:
         if rang <= b: return t
     return 'commun'
+# Wikidata (CC0) et Commons : identifiant, article, photo (gardée seulement si on connaît l'auteur, ou domaine public / CC0)
+wd = {('BE' + r['nis']): r for r in csv.DictReader(open(os.path.join(ICI, 'wikidata-communes.csv'), encoding='utf-8'))}
+ph = {r['code']: r for r in csv.DictReader(open(os.path.join(ICI, 'photos-inventaire-belgique.csv'), encoding='utf-8'))}
+def photo(k):
+    r = ph.get(k)
+    return r['fichier'] if r and (r['auteur'] or r['licence'] in ('Public domain', 'CC0')) else ''
 lignes = []
 for rang, k in enumerate(codes, 1):
     b, nis = base[k], k[2:]
     officiel = b['de'] if nis in GERMANOPHONES else b['nl'] if b['region'] == '02000' else b['fr']
     nom = b['fr'] if (pop[nis] >= 30000 or nis in CHEFS_LIEUX) else officiel
     lignes.append({'code': k, 'nom': nom, 'departement': b['prov'], 'population': pop[nis], 'latitude': b['lat'], 'longitude': b['lon'],
-                   'tier': tier(rang), 'rang': rang, 'nom_officiel': officiel, 'nom_fr': b['fr'], 'nom_nl': b['nl'], 'nom_de': b['de']})
+                   'tier': tier(rang), 'rang': rang, 'nom_officiel': officiel, 'nom_fr': b['fr'], 'nom_nl': b['nl'], 'nom_de': b['de'],
+                   'wikidata': (wd.get(k) or {}).get('wikidata', ''), 'article_fr': (wd.get(k) or {}).get('article_fr', ''), 'photo': photo(k)})
 os.makedirs(os.path.join(ICI, '..', 'jeu'), exist_ok=True)
 with open(os.path.join(ICI, '..', 'jeu', 'communes-belgique.csv'), 'w', newline='', encoding='utf-8') as fh:
     w = csv.DictWriter(fh, fieldnames=list(lignes[0].keys())); w.writeheader(); w.writerows(sorted(lignes, key=lambda l: l['code']))
@@ -35,3 +42,4 @@ print('légendaires :', ', '.join(l['nom'] for l in lignes if l['tier'] == 'lege
 print('épiques :', ', '.join(l['nom'] for l in lignes if l['tier'] == 'epique'))
 print('seuils de population : ' + ', '.join('%s ≥ %d' % (t, min(l['population'] for l in lignes if l['tier'] == t)) for t, _ in PARTS + [('commun', 0)]))
 print('noms français ≠ officiels :', sum(1 for l in lignes if l['nom'] != l['nom_officiel']))
+print('photos : %d sur %d ; articles : %d' % (sum(1 for l in lignes if l['photo']), len(lignes), sum(1 for l in lignes if l['article_fr'])))

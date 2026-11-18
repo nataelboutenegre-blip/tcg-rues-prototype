@@ -1,0 +1,714 @@
+nis,wikidata,nom_fr,nom_nl,nom_de,lat,lon,article_fr
+11001,Q303246,Aartselaar,Aartselaar,Aartselaar,51.133333333,4.386944444,Aartselaar
+11002,Q12892,Anvers,Antwerpen,Antwerpen,51.221111111,4.399722222,Anvers
+11002,Q12892,Anvers,Antwerpen,Antwerpen,51.221111111,4.399722222,Anvers
+11004,Q723822,Boechout,Boechout,Boechout,51.163611111,4.496388888,Boechout
+11005,Q723972,Boom,Boom,Boom,51.0875,4.366666666,Boom (Belgique)
+11008,Q693513,Brasschaat,Brasschaat,Brasschaat,51.293055555,4.489444444,Brasschaat
+11009,Q724131,Brecht,Brecht,Brecht,51.349444444,4.639444444,Brecht (Belgique)
+11013,Q724238,Edegem,Edegem,Edegem,51.154722222,4.445833333,Edegem
+11016,Q724283,Essen,Essen,Essen,51.467777777,4.47,Essen (Belgique)
+11018,Q724448,Hemiksem,Hemiksem,Hemiksem,51.143055555,4.341111111,Hemiksem
+11021,Q649982,Hove,Hove,Hove,51.148611111,4.4775,Hove (Belgique)
+11022,Q724777,Kalmthout,Kalmthout,Kalmthout,51.383333333,4.476388888,Kalmthout
+11023,Q724942,Kapellen,Kapellen,Kapellen,51.315,4.429444444,Kapellen (Anvers)
+11024,Q725074,Kontich,Kontich,Kontich,51.134444444,4.445555555,Kontich
+11025,Q725268,Lint,Lint,Lint,51.127828,4.494343,Lint (Belgique)
+11029,Q688781,Mortsel,Mortsel,Mortsel,51.170277777,4.456666666,Mortsel
+11029,Q688781,Mortsel,Mortsel,Mortsel,51.170277777,4.456666666,Mortsel
+11030,Q912054,Niel,Niel,Niel,51.11,4.330277777,Niel (Belgique)
+11035,Q501748,Ranst,Ranst,Ranst,51.1896,4.5634,Ranst
+11037,Q943446,Rumst,Rumst,Rumst,51.0769,4.4233,Rumst
+11038,Q911968,Schelle,Schelle,Schelle,51.133333333,4.333333333,Schelle (Belgique)
+11039,Q263177,Schilde,Schilde,Schilde,51.2389,4.5815,Schilde (Belgique)
+11040,Q655203,Schoten,Schoten,Schoten,51.25,4.5,Schoten (Belgique)
+11044,Q595654,Stabroek,Stabroek,Stabroek,51.333333333,4.366666666,Stabroek (Belgique)
+11050,Q527808,Wijnegem,Wijnegem,Wijnegem,51.2278,4.5156,Wijnegem
+11052,Q839037,Wommelghem,Wommelgem,Wommelgem,51.2036,4.5219,Wommelgem
+11053,Q912045,Wuustwezel,Wuustwezel,Wuustwezel,51.3922,4.5942,Wuustwezel
+11054,Q146656,Zandhoven,Zandhoven,Zandhoven,51.2136,4.66,Zandhoven
+11055,Q218253,Zoersel,Zoersel,Zoersel,51.2689,4.7125,Zoersel
+11057,Q917591,Malle,Malle,Malle,51.298888888,4.690833333,Malle (Belgique)
+12002,Q723774,Berlaar,Berlaar,Berlaar,51.117777777,4.6575,Berlaar
+12005,Q528222,Bonheiden,Bonheiden,Bonheiden,51.025277777,4.548333333,Bonheiden
+12007,Q724025,,,,51.095277777,4.234166666,Bornem
+12009,Q615109,Duffel,Duffel,Duffel,51.095833333,4.506111111,Duffel
+12014,Q257979,Heist-op-den-Berg,Heist-op-den-Berg,Heist-op-den-Berg,51.075833333,4.728611111,Heist-op-den-Berg
+12021,Q12460,Lierre,Lier,Lier,51.131111111,4.569722222,Lierre (Belgique)
+12021,Q12460,Lierre,Lier,Lier,51.131111111,4.569722222,Lierre (Belgique)
+12025,Q162022,Malines,Mechelen,Mechelen,51.028055555,4.480277777,Malines
+12025,Q162022,Malines,Mechelen,Mechelen,51.028055555,4.480277777,Malines
+12026,Q912084,Nylen,Nijlen,Nijlen,51.161111111,4.670277777,Nijlen
+12029,Q929397,Putte,Putte,Putte,51.0542,4.6294,Putte (Pallieterland)
+12035,Q696578,Wavre-Sainte-Catherine,Sint-Katelijne-Waver,Sint-Katelijne-Waver,51.066666666,4.533333333,Wavre-Sainte-Catherine
+12040,Q695278,Willebroeck,Willebroek,Willebroek,51.0597,4.3581,Willebroeck
+12041,Q45202943,Puers-Saint-Amand,Puurs-Sint-Amands,Puurs-Sint-Amands,51.076127132,4.277620654,Puers-Saint-Amand
+13001,Q641905,Arendonk,Arendonk,Arendonk,51.320277777,5.086388888,Arendonk
+13002,Q244959,Baerle-Duc,Baarle-Hertog,Baarle-Hertog,51.438333333,4.931666666,Baerle-Duc
+13003,Q723651,Balen,Balen,Balen,51.170833333,5.169722222,Balen
+13004,Q723728,Beerse,Beerse,Beerse,51.319166666,4.856388888,Beerse
+13006,Q386732,Dessel,Dessel,Dessel,51.239444444,5.113333333,Dessel
+13008,Q464454,Geel,Geel,Geel,51.161111111,4.990277777,Geel
+13008,Q464454,Geel,Geel,Geel,51.161111111,4.990277777,Geel
+13010,Q724389,Grobbendonk,Grobbendonk,Grobbendonk,51.191944444,4.738611111,Grobbendonk
+13011,Q383723,Herentals,Herentals,Herentals,51.176666666,4.836388888,Herentals
+13011,Q383723,Herentals,Herentals,Herentals,51.176666666,4.836388888,Herentals
+13012,Q724534,Herenthout,Herenthout,Herenthout,51.139166666,4.754444444,Herenthout
+13013,Q280182,Herselt,Herselt,Herselt,51.053611111,4.883333333,Herselt
+13014,Q724638,Hogstrate,Hoogstraten,Hoogstraten,51.400833333,4.761111111,Hoogstraten
+13014,Q724638,Hogstrate,Hoogstraten,Hoogstraten,51.400833333,4.761111111,Hoogstraten
+13016,Q518758,Hulshout,Hulshout,Hulshout,51.075277777,4.788611111,Hulshout
+13017,Q725029,Kasterlee,Kasterlee,Kasterlee,51.240833333,4.967777777,Kasterlee
+13019,Q725235,Lille,Lille,Lille,51.238333333,4.824166666,Lille (Belgique)
+13021,Q846207,Meerhout,Meerhout,Meerhout,51.131666666,5.077222222,Meerhout
+13023,Q532277,Merksplas,Merksplas,Merksplas,51.358055555,4.862777777,Merksplas
+13025,Q465710,Mol,Mol,Mol,51.184166666,5.115555555,Mol (Belgique)
+13029,Q839044,Olen,Olen,Olen,51.143888888,4.859722222,Olen
+13031,Q943555,Vieux-Turnhout,Oud-Turnhout,Oud-Turnhout,51.317777777,4.981666666,Vieux-Turnhout
+13035,Q839119,Ravels,Ravels,Ravels,51.3703,4.9936,Ravels
+13036,Q912062,Réthy,Retie,Retie,51.2658,5.0828,Réthy
+13037,Q929459,Rijkevorsel,Rijkevorsel,Rijkevorsel,51.3489,4.7597,Rijkevorsel
+13040,Q271783,Turnhout,Turnhout,Turnhout,51.316666666,4.933333333,Turnhout
+13040,Q271783,Turnhout,Turnhout,Turnhout,51.316666666,4.933333333,Turnhout
+13044,Q909914,Vorselaar,Vorselaar,Vorselaar,51.2019,4.7717,Vorselaar
+13046,Q929485,Vosselaar,Vosselaar,Vosselaar,51.3081,4.8883,Vosselaar
+13049,Q475931,Westerlo,Westerlo,Westerlo,51.0897,4.9153,Westerlo
+13053,Q725122,Laakdal,Laakdal,Laakdal,51.080555555,5.02,Laakdal
+21001,Q12886,Anderlecht,Anderlecht,Anderlecht,50.839166666,4.329722222,Anderlecht
+21002,Q272228,Auderghem,Oudergem,Auderghem/Oudergem,50.817222222,4.426944444,Auderghem
+21003,Q272272,Berchem-Sainte-Agathe,Sint-Agatha-Berchem,Berchem-Sainte-Agathe/Sint-Agatha-Berchem,50.865,4.294722222,Berchem-Sainte-Agathe
+21004,Q239,Bruxelles,Brussel,Brüssel,50.846666666,4.351666666,Ville de Bruxelles
+21005,Q192859,Etterbeek,Etterbeek,Etterbeek,50.836111111,4.386111111,Etterbeek
+21006,Q321718,Evere,Evere,Evere,50.871944444,4.403333333,Evere
+21007,Q72946,Forest,Vorst,Forest/Vorst,50.811666666,4.318055555,Forest (Bruxelles)
+21008,Q366552,Ganshoren,Ganshoren,Ganshoren,50.870277777,4.307777777,Ganshoren
+21009,Q208713,Ixelles,Elsene,,50.833055555,4.366944444,Ixelles
+21010,Q241918,Jette,Jette,Jette,50.875833333,4.324444444,Jette
+21011,Q219244,,,,50.860555555,4.331666666,Koekelberg
+21012,Q180775,Molenbeek-Saint-Jean,Sint-Jans-Molenbeek,,50.854722222,4.338611111,Molenbeek-Saint-Jean
+21013,Q237674,Saint-Gilles,Sint-Gillis,Saint-Gilles/Sint-Gillis,50.826666666,4.345555555,Saint-Gilles (Bruxelles)
+21014,Q272243,Saint-Josse-ten-Noode,Sint-Joost-ten-Node,Sint-Joost-ten-Node,50.850833333,4.369166666,Saint-Josse-ten-Noode
+21015,Q12887,Schaerbeek,Schaarbeek,,50.8675,4.373611111,Schaerbeek
+21016,Q203312,Uccle,Ukkel,Uccle/Ukkel,50.803611111,4.333888888,Uccle
+21017,Q272262,Watermael-Boitsfort,Watermaal-Bosvoorde,Watermael-Boitsfort/Watermaal-Bosvoorde,50.798055555,4.417777777,Watermael-Boitsfort
+21018,Q211764,Woluwe-Saint-Lambert,Sint-Lambrechts-Woluwe,Woluwe-Saint-Lambert/Sint-Lambrechts-Woluwe,50.843721984,4.426008559,Woluwe-Saint-Lambert
+21019,Q242393,Woluwe-Saint-Pierre,Sint-Pieters-Woluwe,Woluwe-Saint-Pierre/Sint-Pieters-Woluwe,50.836944444,4.4275,Woluwe-Saint-Pierre
+23002,Q515710,Asse,Asse,Asse,50.9,4.2,Asse (Belgique)
+23003,Q692168,Beersel,Beersel,Beersel,50.7631,4.3086,Beersel
+23009,Q839017,Biévène,Bever,Bever,50.716666666,3.933333333,Biévène
+23009,Q839017,Biévène,Bever,Bever,50.716666666,3.933333333,Biévène
+23016,Q641134,Dilbeek,Dilbeek,Dilbeek,50.845,4.265,Dilbeek
+23025,Q633063,Grimbergen,Grimbergen,Grimbergen,50.933333333,4.383333333,Grimbergen
+23027,Q210003,Hal,Halle,Halle,50.736111111,4.237222222,Hal (Belgique)
+23027,Q210003,Hal,Halle,Halle,50.736111111,4.237222222,Hal (Belgique)
+23033,Q641278,Hoeilaert,Hoeilaart,Hoeilaart,50.766666666,4.466666666,Hoeilaart
+23038,Q492453,Kampenhout,Kampenhout,Kampenhout,50.94131,4.54958,Kampenhout
+23039,Q911995,Capelle-au-Bois,Kapelle-op-den-Bos,Kapelle-op-den-Bos,51.016666666,4.366666666,Kapelle-op-den-Bos
+23044,Q818621,Liedekerke,Liedekerke,Liedekerke,50.866666666,4.083333333,Liedekerke
+23045,Q587819,Londerzeel,Londerzeel,Londerzeel,51.0,4.3,Londerzeel
+23047,Q752115,Machelen,Machelen,Machelen,50.9103,4.4367,Machelen (Brabant flamand)
+23050,Q922260,Meise,Meise,Meise,50.933333333,4.333333333,Meise
+23052,Q912106,Merchtem,Merchtem,Merchtem,50.966666666,4.233333333,Merchtem
+23060,Q930292,Opwijk,Opwijk,Opwijk,50.966666666,4.183333333,Opwijk
+23062,Q599127,Overijse,Overijse,Overijse,50.783333333,4.533333333,Overijse
+23064,Q646037,Pepingen,Pepingen,Pepingen,50.75,4.15,Pepingen
+23077,Q688790,Leeuw-Saint-Pierre,Sint-Pieters-Leeuw,Sint-Pieters-Leeuw,50.783333333,4.25,Leeuw-Saint-Pierre
+23081,Q984888,Steenokkerzeel,Steenokkerzeel,Steenokkerzeel,50.9189,4.5083,Steenokkerzeel
+23086,Q930249,Ternat,Ternat,Ternat,50.866666666,4.183333333,Ternat (Belgique)
+23088,Q318418,Vilvorde,Vilvoorde,Vilvoorde,50.928138888,4.424488888,Vilvorde
+23088,Q318418,Vilvorde,Vilvoorde,Vilvoorde,50.928138888,4.424488888,Vilvorde
+23094,Q28898,Zaventem,Zaventem,Zaventem,50.883333333,4.466666666,Zaventem
+23096,Q179249,Zemst,Zemst,Zemst,50.9828,4.4611,Zemst
+23097,Q936660,Roosdaal,Roosdaal,Roosdaal,50.8439,4.0745,Roosdaal
+23098,Q688377,Drogenbos,Drogenbos,Drogenbos,50.783333333,4.316666666,Drogenbos
+23098,Q688377,Drogenbos,Drogenbos,Drogenbos,50.783333333,4.316666666,Drogenbos
+23099,Q839023,Kraainem,Kraainem,Kraainem,50.842026705,4.468709492,Kraainem
+23099,Q839023,Kraainem,Kraainem,Kraainem,50.842026705,4.468709492,Kraainem
+23100,Q631639,Linkebeek,Linkebeek,Linkebeek,50.766666666,4.333333333,Linkebeek
+23100,Q631639,Linkebeek,Linkebeek,Linkebeek,50.766666666,4.333333333,Linkebeek
+23101,Q841597,Rhode-Saint-Genèse,Sint-Genesius-Rode,Sint-Genesius-Rode,50.745,4.3464,Rhode-Saint-Genèse
+23101,Q841597,Rhode-Saint-Genèse,Sint-Genesius-Rode,Sint-Genesius-Rode,50.745,4.3464,Rhode-Saint-Genèse
+23102,Q913195,Wemmel,Wemmel,Wemmel,50.9087,4.3029,Wemmel
+23102,Q913195,Wemmel,Wemmel,Wemmel,50.9087,4.3029,Wemmel
+23103,Q912091,Wezembeek-Oppem,Wezembeek-Oppem,Wezembeek-Oppem,50.833333333,4.5,Wezembeek-Oppem
+23103,Q912091,Wezembeek-Oppem,Wezembeek-Oppem,Wezembeek-Oppem,50.833333333,4.5,Wezembeek-Oppem
+23104,Q912022,Lennik,Lennik,Lennik,50.8,4.15,Lennik
+23105,Q382860,Afflighem,Affligem,Affligem,50.9033,4.1176,Affligem
+23106,Q123848537,Pajottegem,Pajottegem,Pajottegem,50.7355,4.0202,Pajottegem
+24001,Q273442,Aerschot,Aarschot,Aarschot,50.9842,4.8333,Aarschot
+24001,Q273442,Aerschot,Aarschot,Aarschot,50.9842,4.8333,Aarschot
+24007,Q432610,Begijnendijk,Begijnendijk,Begijnendijk,51.0186,4.785,Begijnendijk
+24008,Q815054,Bekkevoort,Bekkevoort,Bekkevoort,50.95,4.966666666,Bekkevoort
+24009,Q827665,Bertem,Bertem,Bertem,50.85,4.616666666,Bertem
+24011,Q729929,Bierbeek,Bierbeek,Bierbeek,50.833333333,4.766666666,Bierbeek
+24014,Q746078,Boortmeerbeek,Boortmeerbeek,Boortmeerbeek,50.983333333,4.566666666,Boortmeerbeek
+24016,Q895293,Boutersem,Boutersem,Boutersem,50.85,4.833333333,Boutersem
+24020,Q743236,Diest,Diest,Diest,50.9847,5.0514,Diest
+24020,Q743236,Diest,Diest,Diest,50.9847,5.0514,Diest
+24028,Q984874,Geetbets,Geetbets,Geetbets,50.883333333,5.116666666,Geetbets
+24033,Q950129,Haecht,Haacht,Haacht,50.9767,4.6372,Haecht
+24038,Q930269,Herent,Herent,Herent,50.9081,4.6706,Herent
+24041,Q818787,Hoegaarden,Hoegaarden,Hoegaarden,50.77415,4.88703,Hoegaarden
+24043,Q676893,Holsbeek,Holsbeek,Holsbeek,50.916666666,4.766666666,Holsbeek
+24045,Q943472,Huldenberg,Huldenberg,Huldenberg,50.783333333,4.583333333,Huldenberg
+24048,Q984894,Keerbergen,Keerbergen,Keerbergen,51.0031,4.6311,Keerbergen
+24054,Q984877,Kortenaken,Kortenaken,Kortenaken,50.9,5.066666666,Kortenaken
+24055,Q929474,Cortenbergh,Kortenberg,Kortenberg,50.883333333,4.533333333,Cortenbergh
+24059,Q943502,Landen,Landen,Landen,50.7547,5.0814,Landen
+24059,Q943502,Landen,Landen,Landen,50.7547,5.0814,Landen
+24062,Q118958,Louvain,Leuven,Löwen,50.8775,4.704444,Louvain
+24062,Q118958,Louvain,Leuven,Löwen,50.8775,4.704444,Louvain
+24066,Q929447,Lubbeek,Lubbeek,Lubbeek,50.881666666,4.841388888,Lubbeek
+24086,Q746641,Oud-Heverlee,Oud-Heverlee,Oud-Heverlee,50.833333333,4.666666666,Oud-Heverlee
+24094,Q926139,Rotselaer,Rotselaar,Rotselaar,50.9511,4.7108,Rotselaar
+24104,Q456544,Tervuren,Tervuren,Tervuren,50.816666666,4.5,Tervuren
+24107,Q456550,Tirlemont,Tienen,Tienen,50.80748,4.93717,Tirlemont
+24107,Q456550,Tirlemont,Tienen,Tienen,50.80748,4.93717,Tirlemont
+24109,Q926110,Tremelo,Tremelo,Tremelo,50.9911,4.7044,Tremelo
+24130,Q227070,Léau,Zoutleeuw,Zoutleeuw,50.8333,5.1036,Léau
+24130,Q227070,Léau,Zoutleeuw,Zoutleeuw,50.8333,5.1036,Léau
+24133,Q984881,Linter,Linter,Linter,50.8,5.05,Linter
+24134,Q932020,Montaigu-Zichem,Scherpenheuvel-Zichem,Scherpenheuvel-Zichem,50.9802,4.974,Montaigu-Zichem
+24134,Q932020,Montaigu-Zichem,Scherpenheuvel-Zichem,Scherpenheuvel-Zichem,50.9802,4.974,Montaigu-Zichem
+24135,Q984892,Tielt-Winge,Tielt-Winge,Tielt-Winge,50.93601,4.90955,Tielt-Winge
+24137,Q984868,Glabbeek,Glabbeek,Glabbeek,50.866666666,4.95,Glabbeek
+25005,Q276266,Beauvechain,Bevekom,Beauvechain,50.783333333,4.766666666,Beauvechain
+25014,Q497572,Braine-l'Alleud,Eigenbrakel,Braine-l'Alleud,50.6806,4.3717,Braine-l'Alleud
+25015,Q497558,Braine-le-Château,Kasteelbrakel,Braine-le-Château,50.683333333,4.266666666,Braine-le-Château
+25018,Q670141,Chaumont-Gistoux,Chaumont-Gistoux,Chaumont-Gistoux,50.683861111,4.694725,Chaumont-Gistoux
+25023,Q670210,Court-Saint-Étienne,Court-Saint-Étienne,Court-Saint-Etienne,50.633333333,4.566666666,Court-Saint-Étienne
+25031,Q517899,Genappe,Genepiën,Genappe,50.6103,4.4497,Genappe
+25031,Q517899,Genappe,Genepiën,Genappe,50.6103,4.4497,Genappe
+25037,Q670310,Grez-Doiceau,Graven,Grez-Doiceau,50.733333333,4.7,Grez-Doiceau
+25043,Q670455,Incourt,Incourt,Incourt,50.7,4.783333333,Incourt (Belgique)
+25044,Q281080,Ittre,Itter,Ittre,50.65,4.266666666,Ittre
+25048,Q670500,Jodoigne,Geldenaken,Jodoigne,50.716666666,4.866666666,Jodoigne
+25048,Q670500,Jodoigne,Geldenaken,Jodoigne,50.716666666,4.866666666,Jodoigne
+25050,Q670407,La Hulpe,Terhulpen,La Hulpe,50.733333333,4.483333333,La Hulpe
+25068,Q650152,Mont-Saint-Guibert,Mont-Saint-Guibert,Mont-Saint-Guibert,50.633333333,4.616666666,Mont-Saint-Guibert
+25072,Q319463,Nivelles,Nijvel,Nivelles,50.5964,4.3236,Nivelles
+25072,Q319463,Nivelles,Nijvel,Nivelles,50.5964,4.3236,Nivelles
+25084,Q678458,Perwez,Perwijs,Perwez,50.62414393,4.814955526,Perwez
+25091,Q630478,Rixensart,Rixensart,Rixensart,50.716666666,4.533333333,Rixensart
+25105,Q497549,Tubize,Tubeke,Tubize,50.692833333,4.205,Tubize
+25105,Q497549,Tubize,Tubeke,Tubize,50.692833333,4.205,Tubize
+25107,Q678612,Villers-la-Ville,Villers-la-Ville,Villers-la-Ville,50.583333333,4.533333333,Villers-la-Ville (Belgique)
+25110,Q179034,Waterloo,Waterloo,Waterloo,50.716666666,4.383333333,Waterloo
+25112,Q181314,Wavre,Waver,Wavre,50.716666666,4.6,Wavre
+25112,Q181314,Wavre,Waver,Wavre,50.716666666,4.6,Wavre
+25117,Q618054,Chastre,Chastre,Chastre,50.6,4.633333333,Chastre
+25118,Q670355,Hélécine,Heilissem,Hélécine,50.75,4.983333333,Hélécine
+25119,Q678158,Lasne,Lasne,Lasne,50.683333333,4.483333333,Lasne
+25120,Q678218,Orp-Jauche,Orp-Jauche,Orp-Jauche,50.683333333,4.95,Orp-Jauche
+25121,Q329642,Ottignies-Louvain-la-Neuve,Ottignies-Louvain-la-Neuve,Ottignies-Louvain-la-Neuve,50.666961111,4.589247222,Ottignies-Louvain-la-Neuve
+25121,Q329642,Ottignies-Louvain-la-Neuve,Ottignies-Louvain-la-Neuve,Ottignies-Louvain-la-Neuve,50.666961111,4.589247222,Ottignies-Louvain-la-Neuve
+25122,Q531456,Ramillies,Ramillies,Ramillies,50.636666666,4.914722222,Ramillies (Belgique)
+25123,Q374861,Rebecq,Roosbeek,Rebecq,50.65,4.133333333,Rebecq
+25124,Q650216,Walhain,Walhain,Walhain,50.641111111,4.668055555,Walhain
+31003,Q687921,Beernem,Beernem,Beernem,51.1428,3.3408,Beernem
+31004,Q328104,Blanckenberghe,Blankenberge,Blankenberge,51.3112,3.1324,Blankenberge
+31004,Q328104,Blanckenberghe,Blankenberge,Blankenberge,51.3112,3.1324,Blankenberge
+31005,Q12994,Bruges,Brugge,Brügge,51.208888888,3.224166666,Bruges
+31005,Q12994,Bruges,Brugge,Brügge,51.208888888,3.224166666,Bruges
+31006,Q323408,Damme,Damme,Damme,51.25,3.283333333,Damme (Belgique)
+31006,Q323408,Damme,Damme,Damme,51.25,3.283333333,Damme (Belgique)
+31012,Q465973,Jabbeke,Jabbeke,Jabbeke,51.183333333,3.1,Jabbeke
+31022,Q742892,Oostkamp,Oostkamp,Oostkamp,51.1544,3.2353,Oostkamp
+31033,Q270633,Thourout,Torhout,Torhout,51.066124481,3.101369767,Thourout
+31033,Q270633,Thourout,Torhout,Torhout,51.066124481,3.101369767,Thourout
+31040,Q184287,Zedelghem,Zedelgem,Zedelgem,51.1431,3.1361,Zedelghem
+31042,Q228685,Zuyenkerque,Zuienkerke,Zuienkerke,51.265,3.1564,Zuienkerke
+31043,Q12988,Knocke-Heyst,Knokke-Heist,Knokke-Heist,51.341388888,3.286944444,Knokke-Heist
+32003,Q215244,Dixmude,Diksmuide,Diksmuide,51.033333333,2.865,Dixmude
+32003,Q215244,Dixmude,Diksmuide,Diksmuide,51.033333333,2.865,Dixmude
+32006,Q696942,Houthulst,Houthulst,Houthulst,50.9783,2.9506,Houthulst
+32010,Q822795,Koekelare,Koekelare,Koekelare,51.0906,2.9803,Koekelare
+32011,Q822763,Kortemark,Kortemark,Kortemark,51.0286,3.0444,Kortemark
+32030,Q822790,Lo-Reninge,Lo-Reninge,Lo-Reninge,50.983333333,2.75,Lo-Reninge
+32030,Q822790,Lo-Reninge,Lo-Reninge,Lo-Reninge,50.983333333,2.75,Lo-Reninge
+33011,Q102728,Ypres,Ieper,Ypern,50.850833333,2.885,Ypres
+33011,Q102728,Ypres,Ieper,Ypern,50.850833333,2.885,Ypres
+33016,Q737077,Messines,Mesen,Mesen,50.766666666,2.9,Messines
+33016,Q737077,Messines,Mesen,Mesen,50.766666666,2.9,Messines
+33021,Q499588,Poperinge,Poperinge,Poperinge,50.8547,2.7256,Poperinge
+33021,Q499588,Poperinge,Poperinge,Poperinge,50.8547,2.7256,Poperinge
+33029,Q318532,Wervicq,Wervik,Wervik,50.7797,3.04,Wervik
+33029,Q318532,Wervicq,Wervik,Wervik,50.7797,3.04,Wervik
+33037,Q214154,Zonnebeke,Zonnebeke,Zonnebeke,50.866666666,2.983333333,Zonnebeke
+33039,Q822755,Heuvelland,Heuvelland,Heuvelland,50.766666666,2.816666666,Heuvelland (commune)
+33040,Q735865,Langemark-Poelkapelle,Langemark-Poelkapelle,Langemark-Poelkapelle,50.9133,2.9181,Langemark-Poelkapelle
+33041,Q735813,Vleteren,Vleteren,Vleteren,50.9139,2.7414,Vleteren
+34002,Q614274,Anseghem,Anzegem,Anzegem,50.8336,3.4783,Anzegem
+34003,Q177133,Avelghem,Avelgem,Avelgem,50.7753,3.4442,Avelgem
+34009,Q822771,Deerlijk,Deerlijk,Deerlijk,50.8533,3.3533,Deerlijk
+34013,Q478797,Harelbeke,Harelbeke,Harelbeke,50.8567,3.3131,Harelbeke
+34013,Q478797,Harelbeke,Harelbeke,Harelbeke,50.8567,3.3131,Harelbeke
+34022,Q12995,Courtrai,Kortrijk,Kortrijk,50.8275,3.265833333,Courtrai
+34022,Q12995,Courtrai,Kortrijk,Kortrijk,50.8275,3.265833333,Courtrai
+34023,Q731501,Cuerne,Kuurne,Kuurne,50.8519,3.2861,Kuurne
+34025,Q696887,Lendelede,Lendelede,Lendelede,50.8858,3.2372,Lendelede
+34027,Q213224,Menin,Menen,Menen,50.795555555,3.121666666,Menin
+34027,Q213224,Menin,Menen,Menen,50.795555555,3.121666666,Menin
+34040,Q204547,Waregem,Waregem,Waregem,50.881078333,3.400099444,Waregem
+34040,Q204547,Waregem,Waregem,Waregem,50.881078333,3.400099444,Waregem
+34041,Q392343,Wevelgem,Wevelgem,Wevelgem,50.8081,3.1839,Wevelgem
+34042,Q244513,Zwevegem,Zwevegem,Zwevegem,50.8,3.333333333,Zwevegem
+34043,Q846212,Espierres-Helchin,Spiere-Helkijn,Spiere-Helkijn,50.7269,3.3669,Espierres-Helchin
+35002,Q742920,Bredene,Bredene,Bredene,51.2336,2.9756,Bredene
+35005,Q815948,Ghistelles,,,51.1561,2.9672,Gistel
+35005,Q815948,Ghistelles,,,51.1561,2.9672,Gistel
+35006,Q281181,Ichteghem,Ichtegem,Ichtegem,51.1,3.0,Ichtegem
+35011,Q492369,Middelkerke,Middelkerke,Middelkerke,51.1847,2.8192,Middelkerke
+35013,Q12996,Ostende,Oostende,Ostende,51.225833333,2.919444444,Ostende
+35013,Q12996,Ostende,Oostende,Ostende,51.225833333,2.919444444,Ostende
+35014,Q835128,Audembourg,Oudenburg,Oudenburg,51.183333333,3.0,Oudenburg
+35014,Q835128,Audembourg,Oudenburg,Oudenburg,51.183333333,3.0,Oudenburg
+35029,Q492351,Le Coq,De Haan,De Haan,51.2731,3.0336,Le Coq
+36006,Q696907,Hooglede,Hooglede,Hooglede,50.9781,3.0817,Hooglede
+36007,Q822748,Ingelmunster,Ingelmunster,Ingelmunster,50.9208,3.2533,Ingelmunster
+36008,Q392337,Iseghem,Izegem,Izegem,50.9172,3.215,Iseghem
+36008,Q392337,Iseghem,Izegem,Izegem,50.9172,3.215,Iseghem
+36010,Q735842,Ledeghem,Ledegem,Ledegem,50.8531,3.1267,Ledeghem
+36011,Q696871,Lichtervelde,Lichtervelde,Lichtervelde,51.033333333,3.133333333,Lichtervelde
+36012,Q628733,Moorslede,Moorslede,Moorslede,50.8906,3.0628,Moorslede
+36015,Q211037,Roulers,Roeselare,Roeselare,50.944722222,3.123333333,Roulers
+36015,Q211037,Roulers,Roeselare,Roeselare,50.944722222,3.123333333,Roulers
+36019,Q742876,Staden,Staden,Staden,50.975,3.0147,Staden
+37002,Q742906,Denterghem,Dentergem,Dentergem,50.9636,3.4153,Dentergem
+37010,Q822777,Oostrozebeke,Oostrozebeke,Oostrozebeke,50.916666666,3.333333333,Oostrozebeke
+37011,Q651724,Pittem,Pittem,Pittem,50.983333333,3.266666666,Pittem
+37017,Q339395,Wielsbeke,Wielsbeke,Wielsbeke,50.9089,3.3697,Wielsbeke
+37020,Q639974,Ardoye,Ardooie,Ardooie,50.966666666,3.183333333,Ardoye
+37021,Q735797,Wingene,Wingene,Wingene,51.05,3.266666666,Wingene
+37022,Q651811,Tielt,Tielt,Tielt,50.9989,3.3258,Tielt
+37022,Q651811,Tielt,Tielt,Tielt,50.9989,3.3258,Tielt
+38002,Q448840,Alveringem,Alveringem,Alveringem,51.0111,2.7108,Alveringem
+38008,Q674954,La Panne,De Panne,De Panne,51.1019,2.5917,La Panne
+38014,Q465545,Coxyde,Koksijde,Koksijde,51.1,2.65,Coxyde
+38016,Q623310,Nieuport,Nieuwpoort,Nieuwpoort,51.129444444,2.751388888,Nieuport (Belgique)
+38016,Q623310,Nieuport,Nieuwpoort,Nieuwpoort,51.129444444,2.751388888,Nieuport (Belgique)
+38025,Q506707,Furnes,Veurne,Veurne,51.0722,2.6622,Furnes
+38025,Q506707,Furnes,Veurne,Veurne,51.0722,2.6622,Furnes
+41002,Q13121,Alost,Aalst,Aalst,50.938333333,4.039166666,Alost
+41002,Q13121,Alost,Aalst,Aalst,50.938333333,4.039166666,Alost
+41011,Q696825,Denderleeuw,Denderleeuw,Denderleeuw,50.883333333,4.083333333,Denderleeuw
+41018,Q499532,Grammont,Geraardsbergen,Geraardsbergen,50.766666666,3.866666666,Grammont (Belgique)
+41018,Q499532,Grammont,Geraardsbergen,Geraardsbergen,50.766666666,3.866666666,Grammont (Belgique)
+41024,Q911974,Haaltert,Haaltert,Haaltert,50.9,4.0,Haaltert
+41027,Q587979,Herzele,Herzele,Herzele,50.883333333,3.883333333,Herzele
+41034,Q912113,Lede,Lede,Lede,50.9658,3.9778,Lede
+41048,Q385026,Ninove,Ninove,Ninove,50.833333333,4.016666666,Ninove
+41048,Q385026,Ninove,Ninove,Ninove,50.833333333,4.016666666,Ninove
+41063,Q817372,Hautem-Saint-Liévin,Sint-Lievens-Houtem,Sint-Lievens-Houtem,50.916666666,3.866666666,Hautem-Saint-Liévin
+41081,Q226941,,,,50.866666666,3.816666666,Zottegem
+41081,Q226941,,,,50.866666666,3.816666666,Zottegem
+41082,Q817458,Erpe-Mere,Erpe-Mere,Erpe-Mere,50.933333333,3.966666666,Erpe-Mere
+42003,Q793584,Berlare,Berlare,Berlare,51.025,4.0025,Berlare
+42004,Q202309,Buggenhout,Buggenhout,Buggenhout,51.01526,4.20226,Buggenhout
+42006,Q13122,Termonde,Dendermonde,Dendermonde,51.03123,4.0981,Termonde
+42006,Q13122,Termonde,Dendermonde,Dendermonde,51.03123,4.0981,Termonde
+42008,Q391294,Hamme,Hamme,Hamme,51.0919,4.1356,Hamme (Flandre-Orientale)
+42010,Q730696,Laerne,Laarne,Laarne,51.0292,3.8519,Laerne
+42011,Q504653,Lebbeke,Lebbeke,Lebbeke,51.0,4.116666666,Lebbeke
+42023,Q587906,Waesmunster,Waasmunster,Waasmunster,51.109772651,4.084357286,Waesmunster
+42025,Q643980,Wetteren,Wetteren,Wetteren,51.0,3.883333333,Wetteren
+42026,Q730801,Wichelen,Wichelen,Wichelen,51.0042,3.9725,Wichelen
+42028,Q388115,Zele,Zele,Zele,51.066666666,4.033333333,Zele
+43002,Q12901,Assenede,Assenede,Assenede,51.233333333,3.75,Assenede
+43005,Q12440,Eeklo,Eeklo,Eeklo,51.1858,3.5639,Eeklo
+43005,Q12440,Eeklo,Eeklo,Eeklo,51.1858,3.5639,Eeklo
+43007,Q12437,Kaprijke,Kaprijke,Kaprijke,51.216666666,3.6,Kaprijke
+43010,Q12896,Maldeghem,Maldegem,Maldegem,51.2089,3.4464,Maldeghem
+43014,Q13126,Saint-Laurent,Sint-Laureins,Sint-Laureins,51.233333333,3.533333333,Saint-Laurent (Belgique)
+43018,Q14062,Zelzate,Zelzate,Zelzate,51.1975,3.8139,Zelzate
+44013,Q3177595,Destelbergen,Destelbergen,Destelbergen,51.05,3.8,Destelbergen
+44019,Q12997,Everghem,Evergem,Evergem,51.1086,3.7075,Everghem
+44020,Q690611,Gavre,Gavere,Gavere,50.9283,3.6611,Gavre
+44021,Q1296,Gand,Gent,Gent,51.053611111,3.725277777,Gand
+44021,Q1296,Gand,Gent,Gent,51.053611111,3.725277777,Gand
+44052,Q842477,Oosterzele,Oosterzele,Oosterzele,50.9458,3.8042,Oosterzele
+44064,Q737538,Laethem-Saint-Martin,Sint-Martens-Latem,Sint-Martens-Latem,51.018611111,3.637777777,Laethem-Saint-Martin
+44081,Q228863,Zulte,Zulte,Zulte,50.914444444,3.4425,Zulte
+44083,Q499313,Deinze,Deinze,Deinze,50.983333333,3.527222222,Deinze
+44083,Q499313,Deinze,Deinze,Deinze,50.983333333,3.527222222,Deinze
+44084,Q300970,Aalter,Aalter,Aalter,51.083333333,3.45,Aalter
+44085,Q46865167,Lievegem,Lievegem,Lievegem,51.130352777,3.593252777,Lievegem
+44086,Q125550409,Nazareth-La Pinte,Nazareth-De Pinte,,50.983965076,3.632176321,Nazareth-La Pinte
+44087,Q735827,Lochristi,Lochristi,Lochristi,51.0953,3.8325,Lochristi
+44088,Q124477893,Merelbeke-Melle,Merelbeke-Melle,Merelbeke-Melle,50.987712459,3.77886648,Merelbeke-Melle
+45035,Q12992,Audenarde,Oudenaarde,Oudenaarde,50.85,3.6,Audenarde
+45035,Q12992,Audenarde,Oudenaarde,Oudenaarde,50.85,3.6,Audenarde
+45041,Q268219,Renaix,Ronse,Ronse,50.75,3.6,Renaix
+45041,Q268219,Renaix,Ronse,Ronse,50.75,3.6,Renaix
+45059,Q845980,Brakel,Brakel,Brakel,50.7979,3.7627,Brakel (Belgique)
+45060,Q840517,Kluisbergen,Kluisbergen,Kluisbergen,50.78874,3.51355,Kluisbergen
+45061,Q840935,Wortegem-Petegem,Wortegem-Petegem,Wortegem-Petegem,50.8536,3.5183,Wortegem-Petegem
+45062,Q912076,Horebeke,Horebeke,Horebeke,50.833333333,3.683333333,Horebeke
+45063,Q648509,Lierde,Lierde,Lierde,50.816666666,3.85,Lierde
+45064,Q912099,Markedal,Maarkedal,Maarkedal,50.8,3.616666666,Markedal
+45065,Q231568,Zwalin,Zwalm,Zwalm,50.8769,3.7256,Zwalin
+45068,Q46865464,Kruisem,Kruisem,Kruisem,50.90855,3.56489,Kruisem
+46020,Q430510,Saint-Gilles-Waes,Sint-Gillis-Waas,Sint-Gillis-Waas,51.2186,4.1236,Saint-Gilles-Waes
+46021,Q13127,Saint-Nicolas,Sint-Niklaas,Sint-Niklaas,51.164444444,4.139166666,Saint-Nicolas (Flandre-Orientale)
+46021,Q13127,Saint-Nicolas,Sint-Niklaas,Sint-Niklaas,51.164444444,4.139166666,Saint-Nicolas (Flandre-Orientale)
+46024,Q735851,Stekene,Stekene,Stekene,51.2061,4.04,Stekene
+46025,Q823623,Tamise,Temse,Temse,51.126111111,4.213333333,Tamise (Belgique)
+46029,Q12910,Lokeren,Lokeren,Lokeren,51.1,3.983333333,Lokeren
+46029,Q12910,Lokeren,Lokeren,Lokeren,51.1,3.983333333,Lokeren
+46030,Q130298413,,Beveren-Kruibeke-Zwijndrecht,,51.197448428,4.286735559,Beveren-Kruibeke-Zwijndrecht
+51004,Q95096,Ath,Aat,Ath,50.631139,3.776941,Ath
+51004,Q95096,Ath,Aat,Ath,50.631139,3.776941,Ath
+51008,Q95105,Belœil,Belle,Belœil,50.533333333,3.716666666,Belœil (Belgique)
+51009,Q95112,Bernissart,Bernissart,Bernissart,50.483333333,3.65,Bernissart
+51012,Q95130,Brugelette,Brugelette,Brugelette,50.6,3.85,Brugelette
+51014,Q95318,Chièvres,Chièvres,Chièvres,50.583333333,3.8,Chièvres
+51014,Q95318,Chièvres,Chièvres,Chièvres,50.583333333,3.8,Chièvres
+51017,Q665992,Ellezelles,Elzele,Ellezelles,50.733333333,3.683333333,Ellezelles
+51019,Q666559,Flobecq,Vloesberg,Flobecq,50.733333333,3.733333333,Flobecq
+51065,Q666813,Frasnes-lez-Anvaing,Frasnes-lez-Anvaing,Frasnes-lez-Anvaing,50.666666666,3.616666666,Frasnes-lez-Anvaing
+51067,Q666238,Enghien,Edingen,Enghien,50.695555555,4.041111111,Enghien
+51067,Q666238,Enghien,Edingen,Enghien,50.695555555,4.041111111,Enghien
+51067,Q666238,Enghien,Edingen,Enghien,50.695555555,4.041111111,Enghien
+51068,Q669088,Silly,Opzullik,Silly,50.65,3.916666666,Silly (Belgique)
+51069,Q667790,Lessines,Lessen,Lessines,50.7117,3.83,Lessines
+51069,Q667790,Lessines,Lessen,Lessines,50.7117,3.83,Lessines
+52010,Q95140,Chapelle-lez-Herlaimont,Chapelle-lez-Herlaimont,Chapelle-lez-Herlaimont,50.466666666,4.283333333,Chapelle-lez-Herlaimont
+52011,Q81046,,,,50.416666666,4.444166666,Charleroi
+52011,Q81046,,,,50.416666666,4.444166666,Charleroi
+52012,Q95144,Châtelet,Châtelet,Châtelet,50.403888888,4.525277777,Châtelet (Belgique)
+52012,Q95144,Châtelet,Châtelet,Châtelet,50.403888888,4.525277777,Châtelet (Belgique)
+52015,Q665860,Courcelles,Courcelles,Courcelles,50.4578,4.37562,Courcelles (Belgique)
+52018,Q666503,Farciennes,Farciennes,Farciennes,50.431388888,4.5475,Farciennes
+52021,Q314922,Fleurus,Fleurus,Fleurus,50.483333333,4.533333333,Fleurus
+52021,Q314922,Fleurus,Fleurus,Fleurus,50.483333333,4.533333333,Fleurus
+52022,Q666696,Fontaine-l'Évêque,Fontaine-l'Évêque,Fontaine-l’Évêque,50.416666666,4.316666666,Fontaine-l'Évêque
+52022,Q666696,Fontaine-l'Évêque,Fontaine-l'Évêque,Fontaine-l’Évêque,50.416666666,4.316666666,Fontaine-l'Évêque
+52025,Q666902,Gerpinnes,Gerpinnes,Gerpinnes,50.3369,4.5283,Gerpinnes
+52048,Q668437,Montigny-le-Tilleul,Montigny-le-Tilleul,Montigny-le-Tilleul,50.38,4.38,Montigny-le-Tilleul
+52055,Q607182,Pont-à-Celles,Pont-à-Celles,Pont-à-Celles,50.51,4.363333333,Pont-à-Celles
+52074,Q95004,Aiseau-Presles,Aiseau-Presles,Aiseau-Presles,50.416666666,4.566666666,Aiseau-Presles
+52075,Q95123,Les Bons Villers,Les Bons Villers,Les Bons Villers,50.536666666,4.45,Les Bons Villers
+53014,Q95126,Boussu,Boussu,Boussu,50.4331253,3.7960902,Boussu
+53020,Q665938,Dour,Dour,Dour,50.3978815,3.7806897,Dour
+53028,Q666751,Frameries,Frameries,Frameries,50.4087571,3.8905656,Frameries
+53039,Q666983,Hensies,Hensies,Hensies,50.4328388,3.6847215,Hensies
+53044,Q377152,Jurbise,Jurbeke,Jurbise,50.533333333,3.933333333,Jurbise
+53046,Q667158,Lens,Lens,Lens,50.55,3.9,Lens (Belgique)
+53053,Q83407,Mons,Bergen,Mons,50.454722222,3.9525,Mons
+53053,Q83407,Mons,Bergen,Mons,50.454722222,3.9525,Mons
+53065,Q538735,Quaregnon,Quaregnon,Quaregnon,50.433333333,3.866666666,Quaregnon
+53068,Q668815,Quiévrain,Quiévrain,Quiévrain,50.4048739,3.6829049,Quiévrain
+53070,Q668950,,,,50.45,3.816666666,Saint-Ghislain
+53070,Q668950,,,,50.45,3.816666666,Saint-Ghislain
+53082,Q665573,Colfontaine,Colfontaine,Colfontaine,50.4056635,3.8513958,Colfontaine
+53083,Q667091,Honnelles,Honnelles,Honnelles,50.352089,3.731019,Honnelles
+53084,Q668702,Quévy,Quévy,Quévy,50.3667226,3.9439033,Quévy
+55004,Q95129,Braine-le-Comte,'s-Gravenbrakel,Braine-le-Comte,50.609722222,4.136111111,Braine-le-Comte
+55004,Q95129,Braine-le-Comte,'s-Gravenbrakel,Braine-le-Comte,50.609722222,4.136111111,Braine-le-Comte
+55035,Q668861,Le Rœulx,Le Rœulx,Le Rœulx,50.5,4.1,Le Rœulx
+55035,Q668861,Le Rœulx,Le Rœulx,Le Rœulx,50.5,4.1,Le Rœulx
+55040,Q462985,Soignies,Zinnik,Soignies,50.566666666,4.066666666,Soignies
+55040,Q462985,Soignies,Zinnik,Soignies,50.566666666,4.066666666,Soignies
+55050,Q273316,Écaussinnes,Écaussinnes,Écaussinnes,50.566666666,4.183333333,Écaussinnes
+55085,Q669051,Seneffe,Seneffe,Seneffe,50.533333333,4.25,Seneffe
+55086,Q667987,Manage,Manage,Manage,50.5,4.233333333,Manage
+56001,Q95005,Anderlues,Anderlues,Anderlues,50.4079969,4.2696102,Anderlues
+56005,Q95100,Beaumont,Beaumont,Beaumont,50.2355294,4.2383115,Beaumont (Hainaut)
+56005,Q95100,Beaumont,Beaumont,Beaumont,50.2355294,4.2383115,Beaumont (Hainaut)
+56016,Q95380,Chimay,Chimay,,50.0479266,4.3173338,Chimay
+56016,Q95380,Chimay,Chimay,,50.0479266,4.3173338,Chimay
+56022,Q666335,Erquelinnes,Erquelinnes,Erquelinnes,50.3101002,4.1218718,Erquelinnes
+56029,Q666853,Froidchapelle,Froidchapelle,Froidchapelle,50.150143,4.328302,Froidchapelle
+56044,Q667936,Lobbes,Lobbes,Lobbes,50.3460194,4.2654874,Lobbes
+56049,Q668139,Merbes-le-Château,Merbes-le-Château,Merbes-le-Château,50.3234035,4.1644816,Merbes-le-Château
+56051,Q668187,Momignies,Momignies,Momignies,50.029444,4.166667,Momignies
+56078,Q669186,Thuin,Thuin,Thuin,50.3397445,4.2870475,Thuin
+56078,Q669186,Thuin,Thuin,Thuin,50.3397445,4.2870475,Thuin
+56086,Q666952,Ham-sur-Heure-Nalinnes,Ham-sur-Heure-Nalinnes,Ham-sur-Heure-Nalinnes,50.3171621,4.3803219,Ham-sur-Heure-Nalinnes
+56088,Q669136,Sivry-Rance,Sivry-Rance,Sivry-Rance,50.167781,4.180831,Sivry-Rance
+57003,Q95011,Antoing,Antoing,Antoing,50.5669,3.4494,Antoing
+57003,Q95011,Antoing,Antoing,Antoing,50.5669,3.4494,Antoing
+57018,Q95136,Celles,Celles,Celles,50.7117,3.4569,Celles (Hainaut)
+57027,Q666393,Estaimpuis,Estaimpuis,Estaimpuis,50.7063,3.2639,Estaimpuis
+57062,Q668540,Pecq,Pecq,Pecq,50.685789,3.3351804,Pecq
+57064,Q668630,Péruwelz,Péruwelz,Péruwelz,50.5117549,3.5889334,Péruwelz
+57064,Q668630,Péruwelz,Péruwelz,Péruwelz,50.5117549,3.5889334,Péruwelz
+57072,Q668903,Rumes,Rumes,Rumes,50.5561,3.3039,Rumes
+57081,Q173219,Tournai,Doornik,Tournai,50.605555555,3.388055555,Tournai
+57081,Q173219,Tournai,Doornik,Tournai,50.605555555,3.388055555,Tournai
+57093,Q95132,Brunehaut,Brunehaut,Brunehaut,50.516666666,3.416666666,Brunehaut (Belgique)
+57094,Q667862,Leuze-en-Hainaut,Leuze-en-Hainaut,Leuze-en-Hainaut,50.6,3.616666666,Leuze-en-Hainaut
+57094,Q667862,Leuze-en-Hainaut,Leuze-en-Hainaut,Leuze-en-Hainaut,50.6,3.616666666,Leuze-en-Hainaut
+57095,Q668295,Mont-de-l'Enclus,Mont-de-l'Enclus,Mont-de-l’Enclus,50.7369,3.5039,Mont-de-l'Enclus
+57096,Q220145,Mouscron,Moeskroen,Mouscron,50.7444,3.2156,Mouscron
+57096,Q220145,Mouscron,Moeskroen,Mouscron,50.7444,3.2156,Mouscron
+57096,Q220145,Mouscron,Moeskroen,Mouscron,50.7444,3.2156,Mouscron
+57097,Q665761,Comines-Warneton,Komen-Waasten,Comines-Warneton,50.766666666,3.0,Comines-Warneton
+57097,Q665761,Comines-Warneton,Komen-Waasten,Comines-Warneton,50.766666666,3.0,Comines-Warneton
+58001,Q211572,La Louvière,La Louvière,La Louvière,50.477777777,4.188055555,La Louvière
+58001,Q211572,La Louvière,La Louvière,La Louvière,50.477777777,4.188055555,La Louvière
+58002,Q95121,Binche,Binche,Binche,50.4103004,4.165163,Binche
+58002,Q95121,Binche,Binche,Binche,50.4103004,4.165163,Binche
+58003,Q666446,Estinnes,Estinnes,Estinnes,50.3976702,4.0975758,Estinnes
+58004,Q668493,Morlanwelz,Morlanwelz,Morlanwelz,50.45,4.233333333,Morlanwelz
+61003,Q455969,Amay,Amay,Amay,50.5478,5.3192,Amay
+61010,Q681368,Burdinne,Burdinne,Burdinne,50.583333333,5.066666666,Burdinne
+61012,Q681854,Clavier,Clavier,Clavier,50.416666666,5.366666666,Clavier (Liège)
+61019,Q682570,Ferrières,Ferrières,Ferrières,50.400277777,5.606944444,Ferrières (Belgique)
+61024,Q683083,Hamoir,Hamoir,Hamoir,50.433333333,5.533333333,Hamoir
+61028,Q683321,Héron,Héron,Héron,50.55,5.083333333,Héron (commune)
+61031,Q207095,Huy,Hoei,Huy,50.516666666,5.233333333,Huy
+61031,Q207095,Huy,Hoei,Huy,50.516666666,5.233333333,Huy
+61039,Q710190,Marchin,Marchin,Marchin,50.466666666,5.233333333,Marchin
+61041,Q710237,Modave,Modave,Modave,50.442257551,5.300581454,Modave
+61043,Q710280,Nandrin,Nandrin,Nandrin,50.5,5.416666666,Nandrin
+61048,Q222233,Ouffet,Ouffet,Ouffet,50.433333333,5.466666666,Ouffet
+61063,Q711292,Verlaine,Verlaine,Verlaine,50.6,5.316666666,Verlaine (Liège)
+61068,Q711373,Villers-le-Bouillet,Villers-le-Bouillet,Villers-le-Bouillet,50.583333333,5.266666666,Villers-le-Bouillet
+61072,Q711443,Wanze,Wanze,Wanze,50.5353,5.2133,Wanze
+61079,Q572472,Anthisnes,Anthisnes,Anthisnes,50.4814,5.5217,Anthisnes
+61080,Q682223,Engis,Engis,Engis,50.583333333,5.416666666,Engis
+61081,Q711152,Tinlot,Tinlot,Tinlot,50.483333333,5.366666666,Tinlot
+62003,Q499594,Ans,Ans,Ans,50.6625,5.52,Ans
+62003,Q499594,Ans,Ans,Ans,50.6625,5.52,Ans
+62006,Q680564,Awans,Awans,Awans,50.6669,5.4633,Awans
+62009,Q793396,Aywaille,Aywaille,Aywaille,50.4733,5.6739,Aywaille
+62011,Q680918,Bassenge,Bitsingen,Bassenge,50.7586,5.6086,Bassenge (Belgique)
+62015,Q681039,Beyne-Heusay,Beyne-Heusay,Beyne-Heusay,50.616666666,5.65,Beyne-Heusay
+62022,Q503363,Chaudfontaine,Chaudfontaine,Chaudfontaine,50.583333333,5.633333333,Chaudfontaine
+62026,Q681909,Comblain-au-Pont,Comblain-au-Pont,Comblain-au-Pont,50.466666666,5.583333333,Comblain-au-Pont
+62027,Q846182,Dalhem,Dalhem,Dalhem,50.716666666,5.716666666,Dalhem
+62032,Q682271,Esneux,Esneux,Esneux,50.533333333,5.566666666,Esneux
+62038,Q682811,Fléron,Fléron,Fléron,50.616666666,5.683333333,Fléron
+62051,Q211033,Herstal,Herstal,Herstal,50.6644,5.63,Herstal
+62051,Q211033,Herstal,Herstal,Herstal,50.6644,5.63,Herstal
+62060,Q914102,Juprelle,Juprelle,Juprelle,50.716666666,5.533333333,Juprelle
+62063,Q3992,Liège,Luik,Lüttich,50.639722222,5.570555555,Liège
+62063,Q3992,Liège,Luik,Lüttich,50.639722222,5.570555555,Liège
+62079,Q286215,Oupeye,Oupeye,Oupeye,50.7083,5.6431,Oupeye
+62093,Q65062,Saint-Nicolas,Saint-Nicolas,Saint-Nicolas,50.633333333,5.533333333,Saint-Nicolas (Liège)
+62096,Q194037,Seraing,Seraing,Seraing,50.5986,5.5122,Seraing
+62096,Q194037,Seraing,Seraing,Seraing,50.5986,5.5122,Seraing
+62099,Q696099,Soumagne,Soumagne,Soumagne,50.616666666,5.75,Soumagne
+62100,Q696110,Sprimont,Sprimont,Sprimont,50.5,5.666666666,Sprimont
+62108,Q49743,Visé,Wezet,Wesent,50.733333333,5.683333333,Visé
+62108,Q49743,Visé,Wezet,Wesent,50.733333333,5.683333333,Visé
+62118,Q683034,Grâce-Hollogne,Grâce-Hollogne,Grâce-Hollogne,50.6325,5.476944444,Grâce-Hollogne
+62119,Q681109,Blegny,Blegny,Blegny,50.666666666,5.733333333,Blegny
+62120,Q175322,Flémalle,Flémalle,Flémalle,50.6011,5.4628,Flémalle
+62121,Q710316,Neupré,Neupré,Neupré,50.533333333,5.483333333,Neupré
+62122,Q711205,Trooz,Trooz,Trooz,50.573611111,5.687222222,Trooz
+63001,Q159868,Amblève,Amel,Amel,50.3539,6.1692,Amblève (commune)
+63003,Q678920,Aubel,Aubel,Aubel,50.7019,5.8583,Aubel
+63004,Q680845,Baelen,Baelen,Baelen,50.63,5.9714,Baelen
+63012,Q152737,Bullange,Büllingen,Büllingen,50.4,6.25,Bullange
+63013,Q160005,Butgenbach,Bütgenbach,Bütgenbach,50.4262,6.2041,Butgenbach
+63020,Q682105,Dison,Dison,Dison,50.616666666,5.85,Dison
+63023,Q151831,Eupen,Eupen,Eupen,50.633333333,6.033333333,Eupen
+63023,Q151831,Eupen,Eupen,Eupen,50.633333333,6.033333333,Eupen
+63035,Q683465,Herve,Herve,Herve,50.633333333,5.8,Herve
+63035,Q683465,Herve,Herve,Herve,50.633333333,5.8,Herve
+63038,Q683634,Jalhay,Jalhay,Jalhay,50.5572,5.9642,Jalhay
+63040,Q159864,La Calamine,Kelmis,Kelmis,50.7,6.0,La Calamine
+63045,Q710022,Lierneux,Lierneux,Lierneux,50.285,5.7925,Lierneux
+63046,Q506739,Limbourg,Limburg,Limbourg,50.6122,5.9403,Limbourg (ville)
+63046,Q506739,Limbourg,Limburg,Limbourg,50.6122,5.9403,Limbourg (ville)
+63048,Q159958,Lontzen,Lontzen,Lontzen,50.683333333,6.0,Lontzen
+63049,Q159838,Malmedy,Malmedy,Malmedy,50.423888888,6.025833333,Malmedy
+63049,Q159838,Malmedy,Malmedy,Malmedy,50.423888888,6.025833333,Malmedy
+63049,Q159838,Malmedy,Malmedy,Malmedy,50.423888888,6.025833333,Malmedy
+63057,Q710358,Olne,Olne,Olne,50.583333333,5.75,Olne
+63058,Q710522,Pepinster,Pepinster,Pepinster,50.566666666,5.816666666,Pepinster
+63061,Q152734,Raeren,Raeren,Raeren,50.683333333,6.116666666,Raeren
+63067,Q152748,Saint-Vith,Sankt Vith,Sankt Vith,50.283333333,6.133333333,Saint-Vith
+63067,Q152748,Saint-Vith,Sankt Vith,Sankt Vith,50.283333333,6.133333333,Saint-Vith
+63072,Q39865,Spa,Spa,Spa,50.492277196,5.862210536,Spa (ville)
+63072,Q39865,Spa,Spa,Spa,50.492277196,5.862210536,Spa (ville)
+63073,Q468920,Stavelot,Stavelot,Stablo,50.394444444,5.931111111,Stavelot
+63073,Q468920,Stavelot,Stavelot,Stablo,50.394444444,5.931111111,Stavelot
+63075,Q711046,Stoumont,Stoumont,Stoumont,50.4081,5.8078,Stoumont
+63076,Q711079,Theux,Theux,Theux,50.53494,5.81342,Theux
+63079,Q202954,Verviers,Verviers,Verviers,50.583333333,5.85,Verviers
+63079,Q202954,Verviers,Verviers,Verviers,50.583333333,5.85,Verviers
+63080,Q159961,Waimes,Weismes,Weismes,50.416666666,6.116666666,Waimes
+63080,Q159961,Waimes,Weismes,Weismes,50.416666666,6.116666666,Waimes
+63084,Q152743,Welkenraedt,Welkenraedt,Welkenraedt,50.6606,5.9714,Welkenraedt
+63086,Q711183,Trois-Ponts,Trois-Ponts,Trois-Ponts,50.3717,5.8706,Trois-Ponts
+63087,Q159981,Burg-Reuland,Burg-Reuland,Burg-Reuland,50.1964,6.1344,Burg-Reuland
+63088,Q710606,Plombières,Plombières,Plombières,50.733333333,5.95,Plombières (Liège)
+63089,Q711115,Thimister-Clermont,Thimister-Clermont,Thimister-Clermont,50.65,5.85,Thimister-Clermont
+64008,Q680978,Berloz,Berloz,Berloz,50.6978,5.2114,Berloz
+64015,Q681153,Braives,Braives,Braives,50.633333333,5.15,Braives
+64021,Q929415,Crisnée,Crisnée,Crisnée,50.716666666,5.4,Crisnée
+64023,Q682163,Donceel,Donceel,Donceel,50.65,5.316666666,Donceel
+64025,Q379113,Fexhe-le-Haut-Clocher,Fexhe-le-Haut-Clocher,Fexhe-le-Haut-Clocher,50.666666666,5.4,Fexhe-le-Haut-Clocher
+64029,Q682982,Geer,Geer,Geer,50.666666666,5.166666666,Geer (commune)
+64034,Q683141,Hannut,Hannuit,Hannut,50.67247,5.078,Hannut
+64034,Q683141,Hannut,Hannuit,Hannut,50.67247,5.078,Hannut
+64047,Q509457,Lincent,Lijsem,Lincent,50.716666666,5.033333333,Lincent
+64056,Q710409,Oreye,Oerle,Oreye,50.733333333,5.366666666,Oreye
+64063,Q710690,Remicourt,Remicourt,Remicourt,50.683333333,5.333333333,Remicourt (Belgique)
+64065,Q710718,Saint-Georges-sur-Meuse,Saint-Georges-sur-Meuse,Saint-Georges-sur-Meuse,50.6,5.35,Saint-Georges-sur-Meuse
+64074,Q711474,Waremme,Borgworm,Waremme,50.7,5.25,Waremme
+64074,Q711474,Waremme,Borgworm,Waremme,50.7,5.25,Waremme
+64075,Q711502,Wasseiges,Wasseiges,Wasseiges,50.616666666,5.0,Wasseiges
+64076,Q682441,Faimes,Faimes,Faimes,50.666666666,5.266666666,Faimes
+71002,Q696591,As,As,As,51.0,5.583333333,As (Belgique)
+71004,Q242407,Béringue,Beringen,Beringen,51.033333333,5.216666666,Beringen
+71004,Q242407,Béringue,Beringen,Beringen,51.033333333,5.216666666,Beringen
+71011,Q651826,Diepenbeek,Diepenbeek,Diepenbeek,50.9072,5.4175,Diepenbeek
+71016,Q189692,Genk,Genk,Genk,50.966249172,5.502096313,Genk
+71017,Q651837,Gingelom,Gingelom,Gingelom,50.7492,5.1328,Gingelom
+71020,Q461436,Halen,Halen,Halen,50.948055555,5.114444444,Halen (Belgique)
+71020,Q461436,Halen,Halen,Halen,50.948055555,5.114444444,Halen (Belgique)
+71022C,Q1976577,Herck-Saint-Lambert,Sint-Lambrechts-Herk,,50.8994,5.3083,Herck-Saint-Lambert
+71024,Q696585,Herck-la-Ville,Herk-de-Stad,Herk-de-Stad,50.9406,5.1672,Herck-la-Ville
+71024,Q696585,Herck-la-Ville,Herk-de-Stad,Herk-de-Stad,50.9406,5.1672,Herck-la-Ville
+71034,Q736120,Bourg-Léopold,Leopoldsburg,Leopoldsburg,51.1169,5.2558,Bourg-Léopold
+71037,Q329628,Lummen,Lummen,Lummen,50.983333333,5.2,Lummen
+71045,Q696740,Nieuwerkerken,Nieuwerkerken,Nieuwerkerken,50.866666666,5.2,Nieuwerkerken (Limbourg)
+71053,Q37792,Saint-Trond,Sint-Truiden,Sint-Truiden,50.816666666,5.183333333,Saint-Trond
+71053,Q37792,Saint-Trond,Sint-Truiden,Sint-Truiden,50.816666666,5.183333333,Saint-Trond
+71066,Q133769,Zonhoven,Zonhoven,Zonhoven,50.985277777,5.364722222,Zonhoven
+71067,Q231090,Zutendaal,Zutendaal,Zutendaal,50.933333333,5.566666666,Zutendaal
+71070,Q319792,Heusden-Zolder,Heusden-Zolder,Heusden-Zolder,51.05,5.283333333,Heusden-Zolder
+71071,Q130298677,Tessenderlo-Ham,Tessenderlo-Ham,Tessenderlo-Ham,51.078021999,5.124267625,Tessenderlo-Ham
+71072,Q58780,Hasselt,Hasselt,Hasselt,50.930480555,5.338497222,Hasselt
+71072,Q58780,Hasselt,Hasselt,Hasselt,50.930480555,5.338497222,Hasselt
+72003,Q889044,Bocholt,Bocholt,Bocholt,51.1722,5.5794,Bocholt (Belgique)
+72004,Q275863,Brée,Bree,Bree,51.133333333,5.583333333,Brée (Belgique)
+72004,Q275863,Brée,Bree,Bree,51.133333333,5.583333333,Brée (Belgique)
+72018,Q819133,Kinrooi,Kinrooi,Kinrooi,51.145,5.7403,Kinrooi
+72020,Q194366,Lommel,Lommel,Lommel,51.233333333,5.316666666,Lommel
+72020,Q194366,Lommel,Lommel,Lommel,51.233333333,5.316666666,Lommel
+72021,Q110989,Maseyk,Maaseik,Maaseik,51.101944444,5.785555555,Maaseik
+72021,Q110989,Maseyk,Maaseik,Maaseik,51.101944444,5.785555555,Maaseik
+72030,Q736085,Peer,Peer,Peer,51.1328,5.4536,Peer
+72030,Q736085,Peer,Peer,Peer,51.1328,5.4536,Peer
+72037,Q499599,Hamont-Achel,Hamont-Achel,Hamont-Achel,51.25,5.533333333,Hamont-Achel
+72037,Q499599,Hamont-Achel,Hamont-Achel,Hamont-Achel,51.25,5.533333333,Hamont-Achel
+72038,Q819164,Hechtel-Eksel,Hechtel-Eksel,Hechtel-Eksel,51.1411,5.3761,Hechtel-Eksel
+72039,Q478795,Houthalen-Helchteren,Houthalen-Helchteren,Houthalen-Helchteren,51.033333333,5.383333333,Houthalen-Helchteren
+72041,Q581246,Dilsen-Stockem,Dilsen-Stokkem,Dilsen-Stockheim,51.0314,5.7178,Dilsen-Stokkem
+72041,Q581246,Dilsen-Stockem,Dilsen-Stokkem,Dilsen-Stockheim,51.0314,5.7178,Dilsen-Stokkem
+72042,Q41795471,Oudsbergen,Oudsbergen,Oudsbergen,51.05,5.6,Oudsbergen
+72043,Q42878311,Pelt,Pelt,Pelt,51.21666667,5.41666667,Pelt (Belgique)
+73001,Q499604,Alken,Alken,Alken,50.876111111,5.307777777,Alken (Belgique)
+73022,Q819162,Heers,Heers,Heers,50.7511,5.3014,Heers
+73028,Q499584,Herstappe,Herstappe,Herstappe,50.726518486,5.426144468,Herstappe
+73042,Q695315,Lanaken,Lanaken,Lanaken,50.8925,5.6497,Lanaken
+73066,Q736097,Riemst,Riemst,Riemst,50.8089,5.6019,Riemst
+73083P,Q603919,Pirange,Piringen,Piringen,50.7856,5.4203,Pirange
+73098,Q119331,Wellen,Wellen,Wellen,50.8394,5.3394,Wellen
+73107,Q329633,Maasmechelen,Maasmechelen,Maasmechelen,50.9967,5.7025,Maasmechelen
+73109,Q460479,Fourons,Voeren,Voeren,50.75,5.783333333,Fourons
+73109,Q460479,Fourons,Voeren,Voeren,50.75,5.783333333,Fourons
+73110,Q125522830,Bilzen-Hoeselt,Bilzen-Hoeselt,Bilzen-Hoeselt,50.860545666,5.501570704,Bilzen-Hoeselt
+73111,Q125378487,Tongres-Looz,Tongeren-Borgloon,Tongern-Borgloon,50.793744704,5.404460843,Tongres-Looz
+81001,Q675960,Arlon,Aarlen,Arlon,49.683611111,5.816666666,Arlon
+81001,Q675960,Arlon,Aarlen,Arlon,49.683611111,5.816666666,Arlon
+81003,Q690926,Attert,Attert,Attert,49.75,5.786666944,Attert (commune)
+81004,Q713088,Aubange,Aubange,Ibingen,49.566666666,5.805,Aubange
+81004,Q713088,Aubange,Aubange,Ibingen,49.566666666,5.805,Aubange
+81013,Q713498,Martelange,Martelange,Martelange,49.831111111,5.737222222,Martelange
+81015,Q692243,Messancy,Messancy,Messancy,49.595,5.818333333,Messancy
+82003,Q34021,Bastogne,Bastenaken,Bastogne,50.004166666,5.72,Bastogne
+82003,Q34021,Bastogne,Bastenaken,Bastogne,50.004166666,5.72,Bastogne
+82009,Q713282,Fauvillers,Fauvillers,Fauvillers,49.85107,5.66564,Fauvillers
+82014,Q650274,Houffalize,Houffalize,Houffalize,50.13202,5.78936,Houffalize
+82014,Q650274,Houffalize,Houffalize,Houffalize,50.13202,5.78936,Houffalize
+82032,Q650172,Vielsalm,Vielsalm,Vielsalm,50.286111111,5.918055555,Vielsalm
+82036,Q713864,Vaux-sur-Sûre,Vaux-sur-Sûre,Vaux-sur-Sûre,49.91093,5.56629,Vaux-sur-Sûre
+82037,Q713319,Gouvy,Gouvy,Geilich,50.18737,5.94489,Gouvy (Belgique)
+82038,Q713708,Sainte-Ode,Sainte-Ode,Sainte-Ode,50.02696,5.52387,Sainte-Ode
+82039,Q34021,Bastogne,Bastenaken,Bastogne,50.004166666,5.72,Bastogne
+82039,Q34021,Bastogne,Bastenaken,Bastogne,50.004166666,5.72,Bastogne
+83012,Q497697,Durbuy,Durbuy,Durbuy,50.3522,5.4564,Durbuy
+83012,Q497697,Durbuy,Durbuy,Durbuy,50.3522,5.4564,Durbuy
+83013,Q287813,Érezée,Érezée,Érezée,50.291666666,5.558333333,Érezée
+83028,Q160709,Hotton,Hotton,Hotton,50.268333333,5.446666666,Hotton
+83031,Q159974,La Roche-en-Ardenne,La Roche-en-Ardenne,La Roche-en-Ardenne,50.181666666,5.575,La Roche-en-Ardenne
+83031,Q159974,La Roche-en-Ardenne,La Roche-en-Ardenne,La Roche-en-Ardenne,50.181666666,5.575,La Roche-en-Ardenne
+83034,Q269908,Marche-en-Famenne,Marche-en-Famenne,Marche-en-Famenne,50.2275,5.344444444,Marche-en-Famenne
+83034,Q269908,Marche-en-Famenne,Marche-en-Famenne,Marche-en-Famenne,50.2275,5.344444444,Marche-en-Famenne
+83040,Q429794,Nassogne,Nassogne,Nassogne,50.128611111,5.341944444,Nassogne
+83044,Q713615,Rendeux,Rendeux,Rendeux,50.234166666,5.503888888,Rendeux
+83049,Q511239,Tenneville,Tenneville,Tenneville,50.091944444,5.524444444,Tenneville
+83055,Q713458,Manhay,Manhay,Manhay,50.291388888,5.659166666,Manhay
+84009,Q713135,Bertrix,Bertrix,Bertrix,49.854166666,5.253333333,Bertrix
+84010,Q217216,,,,49.795555555,5.068055555,Bouillon (Belgique)
+84010,Q217216,,,,49.795555555,5.068055555,Bouillon (Belgique)
+84016,Q713189,Daverdisse,Daverdisse,Daverdisse,50.021666666,5.118055555,Daverdisse
+84029,Q713353,Herbeumont,Herbeumont,Herbeumont,49.780833333,5.2375,Herbeumont
+84033,Q713404,Léglise,Léglise,Léglise,49.8,5.5375,Léglise
+84035,Q713433,Libin,Libin,Libin,49.982777777,5.257777777,Libin
+84043,Q650135,Neufchâteau,Neufchâteau,Neufchâteau,49.841111111,5.435277777,Neufchâteau (Belgique)
+84043,Q650135,Neufchâteau,Neufchâteau,Neufchâteau,49.841111111,5.435277777,Neufchâteau (Belgique)
+84050,Q696127,Paliseul,Paliseul,Paliseul,49.904166666,5.135555555,Paliseul
+84059,Q713740,Saint-Hubert,Saint-Hubert,Saint-Hubert,50.025555555,5.374166666,Saint-Hubert (Belgique)
+84059,Q713740,Saint-Hubert,Saint-Hubert,Saint-Hubert,50.025555555,5.374166666,Saint-Hubert (Belgique)
+84068,Q713812,Tellin,Tellin,Tellin,50.081666666,5.218333333,Tellin
+84075,Q713911,Wellin,Wellin,Wellin,50.081666666,5.113333333,Wellin
+84077,Q612267,Libramont-Chevigny,Libramont-Chevigny,Libramont-Chevigny,49.918055555,5.376111111,Libramont-Chevigny
+85007,Q713170,Chiny,Chiny,Chiny,49.738333333,5.343333333,Chiny
+85007,Q713170,Chiny,Chiny,Chiny,49.738333333,5.343333333,Chiny
+85009,Q288872,Étalle,Étalle,Étalle,49.673888888,5.601944444,Étalle (Belgique)
+85011,Q713300,Florenville,Florenville,Florenville,49.698333333,5.31,Florenville
+85011,Q713300,Florenville,Florenville,Florenville,49.698333333,5.31,Florenville
+85024,Q669134,Meix-devant-Virton,Meix-devant-Virton,Meix-devant-Virton,49.605,5.48,Meix-devant-Virton
+85026,Q713538,Musson,Musson,Musson,49.558333333,5.705,Musson
+85034,Q713786,Saint-Léger,Saint-Léger,Saint-Léger,49.612777777,5.657222222,Saint-Léger (Gaume)
+85039,Q713845,Tintigny,Tintigny,Tintigny,49.682777777,5.514444444,Tintigny
+85045,Q456495,Virton,Virton,Virton,49.5675,5.5325,Virton
+85045,Q456495,Virton,Virton,Virton,49.5675,5.5325,Virton
+85046,Q713334,Habay,Habay,Habay,49.730277777,5.646388888,Habay
+85047,Q713677,Rouvroy,Rouvroy,Rouvroy,49.538333333,5.490833333,Rouvroy (Belgique)
+91005,Q545889,Anhée,Anhée,Anhée,50.30984,4.87715,Anhée
+91013,Q329621,Beauraing,Beauraing,Beauraing,50.1089,4.9561,Beauraing
+91013,Q329621,Beauraing,Beauraing,Beauraing,50.1089,4.9561,Beauraing
+91015,Q715371,Bièvre,Bièvre,Bièvre,49.941111111,5.016388888,Bièvre (Belgique)
+91030,Q456490,Ciney,Ciney,Ciney,50.2964,5.1003,Ciney
+91030,Q456490,Ciney,Ciney,Ciney,50.2964,5.1003,Ciney
+91034,Q108247,Dinant,Dinant,Dinant,50.256388888,4.913611111,Dinant
+91034,Q108247,Dinant,Dinant,Dinant,50.256388888,4.913611111,Dinant
+91054,Q241069,Gedinne,Gedinne,Gedinne,49.980555555,4.936944444,Gedinne
+91059,Q696133,Hamois,Hamois,Hamois,50.333333333,5.133333333,Hamois
+91064,Q720709,Havelange,Havelange,Havelange,50.383333333,5.25,Havelange
+91072,Q695390,Houyet,Houyet,Houyet,50.1844,5.0086,Houyet
+91103,Q695349,Onhaye,Onhaye,Onhaye,50.25,4.833333333,Onhaye
+91114,Q497764,Rochefort,Rochefort,Rochefort,50.159044,5.22185,Rochefort (Belgique)
+91114,Q497764,Rochefort,Rochefort,Rochefort,50.159044,5.22185,Rochefort (Belgique)
+91120,Q721342,Somme-Leuze,Somme-Leuze,Somme-Leuze,50.333333333,5.366666666,Somme-Leuze
+91141,Q650163,Yvoir,Yvoir,Yvoir,50.3258,4.8779,Yvoir
+91142,Q514641,Hastière,Hastière,Hastière,50.216666666,4.833333333,Hastière
+91143,Q650206,Vresse-sur-Semois,Vresse-sur-Semois,Vresse-sur-Semois,49.872166666,4.931666666,Vresse-sur-Semois
+92003,Q333466,Andenne,Andenne,Andenne,50.483333333,5.1,Andenne
+92003,Q333466,Andenne,Andenne,Andenne,50.483333333,5.1,Andenne
+92006,Q715246,Assesse,Assesse,Assesse,50.3711,5.0231,Assesse
+92035,Q274522,Éghezée,Éghezée,Éghezée,50.583333333,4.916666666,Éghezée
+92045,Q578583,Floreffe,Floreffe,Floreffe,50.436666666,4.76,Floreffe
+92048,Q720478,Fosses-la-Ville,Fosses-la-Ville,Fosses-la-Ville,50.4,4.7,Fosses-la-Ville
+92048,Q720478,Fosses-la-Ville,Fosses-la-Ville,Fosses-la-Ville,50.4,4.7,Fosses-la-Ville
+92054,Q388879,Gesves,Gesves,Gesves,50.4017,5.0767,Gesves
+92087,Q118769,Mettet,Mettet,Mettet,50.3192,4.6569,Mettet
+92094,Q134121,Namur,Namen,Namur,50.466666666,4.866666666,Namur
+92094,Q134121,Namur,Namen,Namur,50.466666666,4.866666666,Namur
+92097,Q721090,Ohey,Ohey,Ohey,50.4353,5.1217,Ohey
+92101,Q696940,Profondeville,Profondeville,Profondeville,50.3769,4.87,Profondeville
+92114,Q650226,Sombreffe,Sombreffe,Sombreffe,50.516666666,4.6,Sombreffe
+92137,Q650185,Sambreville,Sambreville,Sambreville,50.45,4.6,Sambreville
+92138,Q696104,Fernelmont,Fernelmont,Fernelmont,50.5536,4.9856,Fernelmont
+92140,Q720791,Jemeppe-sur-Sambre,Jemeppe-sur-Sambre,Jemeppe-sur-Sambre,50.466666666,4.666666666,Jemeppe-sur-Sambre
+92141,Q715422,La Bruyère,La Bruyère,La Bruyère,50.5,4.8,La Bruyère (Namur)
+92142,Q223927,Gembloux,Gembloers,Gembloux,50.5594,4.6922,Gembloux
+92142,Q223927,Gembloux,Gembloers,Gembloux,50.5594,4.6922,Gembloux
+93010,Q715474,Cerfontaine,Cerfontaine,Cerfontaine,50.166666666,4.416666666,Cerfontaine (Belgique)
+93014,Q326771,Couvin,Couvin,Couvin,50.0519,4.4961,Couvin
+93014,Q326771,Couvin,Couvin,Couvin,50.0519,4.4961,Couvin
+93018,Q720275,Doische,Doische,Doische,50.133333333,4.75,Doische
+93022,Q720429,Florennes,Florennes,Florennes,50.2514,4.6044,Florennes
+93056,Q650239,Philippeville,Philippeville,Philippeville,50.1958,4.5431,Philippeville
+93056,Q650239,Philippeville,Philippeville,Philippeville,50.1958,4.5431,Philippeville
+93088,Q497565,Walcourt,Walcourt,Walcourt,50.2519,4.4322,Walcourt
+93088,Q497565,Walcourt,Walcourt,Walcourt,50.2519,4.4322,Walcourt
+93090,Q650261,Viroinval,Viroinval,Viroinval,50.073888888,4.553888888,Viroinval

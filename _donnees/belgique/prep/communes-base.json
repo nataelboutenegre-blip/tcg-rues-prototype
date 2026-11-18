@@ -1,0 +1,5087 @@
+{
+"BE11001": {
+"lat": 51.1314,
+"lon": 4.3868,
+"fr": "Aartselaar",
+"nl": "Aartselaar",
+"de": "Aartselaar",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11002": {
+"lat": 51.2279,
+"lon": 4.4043,
+"fr": "Anvers",
+"nl": "Antwerpen",
+"de": "Antwerpen",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11004": {
+"lat": 51.1641,
+"lon": 4.5049,
+"fr": "Boechout",
+"nl": "Boechout",
+"de": "Boechout",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11005": {
+"lat": 51.0948,
+"lon": 4.365,
+"fr": "Boom",
+"nl": "Boom",
+"de": "Boom",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11008": {
+"lat": 51.3143,
+"lon": 4.5058,
+"fr": "Brasschaat",
+"nl": "Brasschaat",
+"de": "Brasschaat",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11009": {
+"lat": 51.3325,
+"lon": 4.6107,
+"fr": "Brecht",
+"nl": "Brecht",
+"de": "Brecht",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11013": {
+"lat": 51.16,
+"lon": 4.4329,
+"fr": "Edegem",
+"nl": "Edegem",
+"de": "Edegem",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11016": {
+"lat": 51.4436,
+"lon": 4.4633,
+"fr": "Essen",
+"nl": "Essen",
+"de": "Essen",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11018": {
+"lat": 51.1443,
+"lon": 4.3408,
+"fr": "Hemiksem",
+"nl": "Hemiksem",
+"de": "Hemiksem",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11021": {
+"lat": 51.1521,
+"lon": 4.4749,
+"fr": "Hove",
+"nl": "Hove",
+"de": "Hove",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11022": {
+"lat": 51.3856,
+"lon": 4.4774,
+"fr": "Kalmthout",
+"nl": "Kalmthout",
+"de": "Kalmthout",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11023": {
+"lat": 51.3308,
+"lon": 4.4361,
+"fr": "Kapellen",
+"nl": "Kapellen",
+"de": "Kapellen",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11024": {
+"lat": 51.1225,
+"lon": 4.4565,
+"fr": "Kontich",
+"nl": "Kontich",
+"de": "Kontich",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11025": {
+"lat": 51.1242,
+"lon": 4.4913,
+"fr": "Lint",
+"nl": "Lint",
+"de": "Lint",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11029": {
+"lat": 51.1749,
+"lon": 4.4651,
+"fr": "Mortsel",
+"nl": "Mortsel",
+"de": "Mortsel",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11030": {
+"lat": 51.1053,
+"lon": 4.3404,
+"fr": "Niel",
+"nl": "Niel",
+"de": "Niel",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11035": {
+"lat": 51.1907,
+"lon": 4.5909,
+"fr": "Ranst",
+"nl": "Ranst",
+"de": "Ranst",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11037": {
+"lat": 51.0962,
+"lon": 4.4161,
+"fr": "Rumst",
+"nl": "Rumst",
+"de": "Rumst",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11038": {
+"lat": 51.1238,
+"lon": 4.3558,
+"fr": "Schelle",
+"nl": "Schelle",
+"de": "Schelle",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11039": {
+"lat": 51.2531,
+"lon": 4.5762,
+"fr": "Schilde",
+"nl": "Schilde",
+"de": "Schilde",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11040": {
+"lat": 51.2633,
+"lon": 4.516,
+"fr": "Schoten",
+"nl": "Schoten",
+"de": "Schoten",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11044": {
+"lat": 51.3325,
+"lon": 4.3697,
+"fr": "Stabroek",
+"nl": "Stabroek",
+"de": "Stabroek",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11050": {
+"lat": 51.2314,
+"lon": 4.5258,
+"fr": "Wijnegem",
+"nl": "Wijnegem",
+"de": "Wijnegem",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11052": {
+"lat": 51.2062,
+"lon": 4.5218,
+"fr": "Wommelgem",
+"nl": "Wommelgem",
+"de": "Wommelgem",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11053": {
+"lat": 51.3912,
+"lon": 4.5511,
+"fr": "Wuustwezel",
+"nl": "Wuustwezel",
+"de": "Wuustwezel",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11054": {
+"lat": 51.2129,
+"lon": 4.6735,
+"fr": "Zandhoven",
+"nl": "Zandhoven",
+"de": "Zandhoven",
+"prov": "VAN",
+"region": "02000"
+},
+"BE11055": {
+"lat": 51.2509,
+"lon": 4.6401,
+"fr": "Zoersel",
+"nl": "Zoersel",
+"de": "Zoersel",
+"prov": "VAN",
+"region": "02000"
+},
+"BE46030": {
+"lat": 51.2613,
+"lon": 4.2306,
+"fr": "Beveren-Kruibeke-Zwijndrecht",
+"nl": "Beveren-Kruibeke-Zwijndrecht",
+"de": "Beveren-Kruibeke-Zwijndrecht",
+"prov": "VOV",
+"region": "02000"
+},
+"BE11057": {
+"lat": 51.2948,
+"lon": 4.7445,
+"fr": "Malle",
+"nl": "Malle",
+"de": "Malle",
+"prov": "VAN",
+"region": "02000"
+},
+"BE12002": {
+"lat": 51.1055,
+"lon": 4.6544,
+"fr": "Berlaar",
+"nl": "Berlaar",
+"de": "Berlaar",
+"prov": "VAN",
+"region": "02000"
+},
+"BE12005": {
+"lat": 51.0164,
+"lon": 4.5711,
+"fr": "Bonheiden",
+"nl": "Bonheiden",
+"de": "Bonheiden",
+"prov": "VAN",
+"region": "02000"
+},
+"BE12007": {
+"lat": 51.0896,
+"lon": 4.214,
+"fr": "Bornem",
+"nl": "Bornem",
+"de": "Bornem",
+"prov": "VAN",
+"region": "02000"
+},
+"BE12009": {
+"lat": 51.0933,
+"lon": 4.4928,
+"fr": "Duffel",
+"nl": "Duffel",
+"de": "Duffel",
+"prov": "VAN",
+"region": "02000"
+},
+"BE12014": {
+"lat": 51.0682,
+"lon": 4.7276,
+"fr": "Heist-op-den-Berg",
+"nl": "Heist-op-den-Berg",
+"de": "Heist-op-den-Berg",
+"prov": "VAN",
+"region": "02000"
+},
+"BE12021": {
+"lat": 51.1247,
+"lon": 4.5843,
+"fr": "Lierre",
+"nl": "Lier",
+"de": "Lier",
+"prov": "VAN",
+"region": "02000"
+},
+"BE12025": {
+"lat": 51.0347,
+"lon": 4.4388,
+"fr": "Malines",
+"nl": "Mechelen",
+"de": "Mechelen",
+"prov": "VAN",
+"region": "02000"
+},
+"BE12026": {
+"lat": 51.1512,
+"lon": 4.689,
+"fr": "Nijlen",
+"nl": "Nijlen",
+"de": "Nijlen",
+"prov": "VAN",
+"region": "02000"
+},
+"BE12029": {
+"lat": 51.0503,
+"lon": 4.6398,
+"fr": "Putte",
+"nl": "Putte",
+"de": "Putte",
+"prov": "VAN",
+"region": "02000"
+},
+"BE12041": {
+"lat": 51.0622,
+"lon": 4.3121,
+"fr": "Puurs-Sint-Amands",
+"nl": "Puurs-Sint-Amands",
+"de": "Puurs-Sint-Amands",
+"prov": "VAN",
+"region": "02000"
+},
+"BE12035": {
+"lat": 51.0671,
+"lon": 4.5318,
+"fr": "Sint-Katelijne-Waver",
+"nl": "Sint-Katelijne-Waver",
+"de": "Sint-Katelijne-Waver",
+"prov": "VAN",
+"region": "02000"
+},
+"BE12040": {
+"lat": 51.0599,
+"lon": 4.3659,
+"fr": "Willebroek",
+"nl": "Willebroek",
+"de": "Willebroek",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13001": {
+"lat": 51.3368,
+"lon": 5.0811,
+"fr": "Arendonk",
+"nl": "Arendonk",
+"de": "Arendonk",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13002": {
+"lat": 51.408,
+"lon": 4.8862,
+"fr": "Baerle-Duc",
+"nl": "Baarle-Hertog",
+"de": "Baarle-Hertog",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13003": {
+"lat": 51.1547,
+"lon": 5.1733,
+"fr": "Balen",
+"nl": "Balen",
+"de": "Balen",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13004": {
+"lat": 51.3147,
+"lon": 4.8168,
+"fr": "Beerse",
+"nl": "Beerse",
+"de": "Beerse",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13006": {
+"lat": 51.2451,
+"lon": 5.1474,
+"fr": "Dessel",
+"nl": "Dessel",
+"de": "Dessel",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13008": {
+"lat": 51.1722,
+"lon": 4.9739,
+"fr": "Geel",
+"nl": "Geel",
+"de": "Geel",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13010": {
+"lat": 51.1799,
+"lon": 4.7356,
+"fr": "Grobbendonk",
+"nl": "Grobbendonk",
+"de": "Grobbendonk",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13011": {
+"lat": 51.1778,
+"lon": 4.8266,
+"fr": "Herentals",
+"nl": "Herentals",
+"de": "Herentals",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13012": {
+"lat": 51.1353,
+"lon": 4.7457,
+"fr": "Herenthout",
+"nl": "Herenthout",
+"de": "Herenthout",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13013": {
+"lat": 51.0509,
+"lon": 4.8914,
+"fr": "Herselt",
+"nl": "Herselt",
+"de": "Herselt",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13014": {
+"lat": 51.4378,
+"lon": 4.7342,
+"fr": "Hoogstraten",
+"nl": "Hoogstraten",
+"de": "Hoogstraten",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13016": {
+"lat": 51.0638,
+"lon": 4.808,
+"fr": "Hulshout",
+"nl": "Hulshout",
+"de": "Hulshout",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13017": {
+"lat": 51.2383,
+"lon": 4.9132,
+"fr": "Kasterlee",
+"nl": "Kasterlee",
+"de": "Kasterlee",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13019": {
+"lat": 51.2511,
+"lon": 4.8258,
+"fr": "Lille",
+"nl": "Lille",
+"de": "Lille",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13021": {
+"lat": 51.1237,
+"lon": 5.0501,
+"fr": "Meerhout",
+"nl": "Meerhout",
+"de": "Meerhout",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13023": {
+"lat": 51.373,
+"lon": 4.8631,
+"fr": "Merksplas",
+"nl": "Merksplas",
+"de": "Merksplas",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13025": {
+"lat": 51.2834,
+"lon": 5.193,
+"fr": "Mol",
+"nl": "Mol",
+"de": "Mol",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13029": {
+"lat": 51.1684,
+"lon": 4.8924,
+"fr": "Olen",
+"nl": "Olen",
+"de": "Olen",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13031": {
+"lat": 51.3211,
+"lon": 4.9995,
+"fr": "Oud-Turnhout",
+"nl": "Oud-Turnhout",
+"de": "Oud-Turnhout",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13035": {
+"lat": 51.4015,
+"lon": 5.0205,
+"fr": "Ravels",
+"nl": "Ravels",
+"de": "Ravels",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13036": {
+"lat": 51.269,
+"lon": 5.0592,
+"fr": "Retie",
+"nl": "Retie",
+"de": "Retie",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13037": {
+"lat": 51.3529,
+"lon": 4.7614,
+"fr": "Rijkevorsel",
+"nl": "Rijkevorsel",
+"de": "Rijkevorsel",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13040": {
+"lat": 51.3202,
+"lon": 4.9398,
+"fr": "Turnhout",
+"nl": "Turnhout",
+"de": "Turnhout",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13044": {
+"lat": 51.2185,
+"lon": 4.7718,
+"fr": "Vorselaar",
+"nl": "Vorselaar",
+"de": "Vorselaar",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13046": {
+"lat": 51.308,
+"lon": 4.8864,
+"fr": "Vosselaar",
+"nl": "Vosselaar",
+"de": "Vosselaar",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13049": {
+"lat": 51.1118,
+"lon": 4.8934,
+"fr": "Westerlo",
+"nl": "Westerlo",
+"de": "Westerlo",
+"prov": "VAN",
+"region": "02000"
+},
+"BE13053": {
+"lat": 51.0718,
+"lon": 4.9818,
+"fr": "Laakdal",
+"nl": "Laakdal",
+"de": "Laakdal",
+"prov": "VAN",
+"region": "02000"
+},
+"BE21001": {
+"lat": 50.8308,
+"lon": 4.2983,
+"fr": "Anderlecht",
+"nl": "Anderlecht",
+"de": "Anderlecht",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21002": {
+"lat": 50.8114,
+"lon": 4.4379,
+"fr": "Auderghem",
+"nl": "Oudergem",
+"de": "Auderghem",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21003": {
+"lat": 50.8652,
+"lon": 4.2927,
+"fr": "Berchem-Sainte-Agathe",
+"nl": "Sint-Agatha-Berchem",
+"de": "Berchem-Sainte-Agathe",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21004": {
+"lat": 50.8846,
+"lon": 4.3551,
+"fr": "Bruxelles",
+"nl": "Brussel",
+"de": "Brüssel",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21005": {
+"lat": 50.8343,
+"lon": 4.4002,
+"fr": "Etterbeek",
+"nl": "Etterbeek",
+"de": "Etterbeek",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21006": {
+"lat": 50.8665,
+"lon": 4.4112,
+"fr": "Evere",
+"nl": "Evere",
+"de": "Evere",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21007": {
+"lat": 50.8169,
+"lon": 4.3273,
+"fr": "Forest",
+"nl": "Vorst",
+"de": "Forest",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21008": {
+"lat": 50.8741,
+"lon": 4.3134,
+"fr": "Ganshoren",
+"nl": "Ganshoren",
+"de": "Ganshoren",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21009": {
+"lat": 50.8155,
+"lon": 4.3912,
+"fr": "Ixelles",
+"nl": "Elsene",
+"de": "Ixelles",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21010": {
+"lat": 50.8759,
+"lon": 4.3298,
+"fr": "Jette",
+"nl": "Jette",
+"de": "Jette",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21011": {
+"lat": 50.8643,
+"lon": 4.3158,
+"fr": "Koekelberg",
+"nl": "Koekelberg",
+"de": "Koekelberg",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21012": {
+"lat": 50.8544,
+"lon": 4.3287,
+"fr": "Molenbeek-Saint-Jean",
+"nl": "Sint-Jans-Molenbeek",
+"de": "Molenbeek-Saint-Jean",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21013": {
+"lat": 50.8276,
+"lon": 4.3495,
+"fr": "Saint-Gilles",
+"nl": "Sint-Gillis",
+"de": "Saint-Gilles",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21014": {
+"lat": 50.8518,
+"lon": 4.3744,
+"fr": "Saint-Josse-ten-Noode",
+"nl": "Sint-Joost-ten-Node",
+"de": "Saint-Josse-ten-Noode",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21015": {
+"lat": 50.8654,
+"lon": 4.3838,
+"fr": "Schaerbeek",
+"nl": "Schaarbeek",
+"de": "Schaerbeek",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21016": {
+"lat": 50.7943,
+"lon": 4.3554,
+"fr": "Uccle",
+"nl": "Ukkel",
+"de": "Uccle",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21017": {
+"lat": 50.7909,
+"lon": 4.4183,
+"fr": "Watermael-Boitsfort",
+"nl": "Watermaal-Bosvoorde",
+"de": "Watermael-Boitsfort",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21018": {
+"lat": 50.8505,
+"lon": 4.4308,
+"fr": "Woluwe-Saint-Lambert",
+"nl": "Sint-Lambrechts-Woluwe",
+"de": "Woluwe-Saint-Lambert",
+"prov": "BRU",
+"region": "04000"
+},
+"BE21019": {
+"lat": 50.8294,
+"lon": 4.4567,
+"fr": "Woluwe-Saint-Pierre",
+"nl": "Sint-Pieters-Woluwe",
+"de": "Woluwe-Saint-Pierre",
+"prov": "BRU",
+"region": "04000"
+},
+"BE23002": {
+"lat": 50.912,
+"lon": 4.1853,
+"fr": "Asse",
+"nl": "Asse",
+"de": "Asse",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23003": {
+"lat": 50.7482,
+"lon": 4.2995,
+"fr": "Beersel",
+"nl": "Beersel",
+"de": "Beersel",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23009": {
+"lat": 50.7122,
+"lon": 3.9301,
+"fr": "Biévène",
+"nl": "Bever",
+"de": "Bever",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23016": {
+"lat": 50.8533,
+"lon": 4.2339,
+"fr": "Dilbeek",
+"nl": "Dilbeek",
+"de": "Dilbeek",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23106": {
+"lat": 50.7386,
+"lon": 4.0358,
+"fr": "Pajottegem",
+"nl": "Pajottegem",
+"de": "Pajottegem",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23025": {
+"lat": 50.9505,
+"lon": 4.3823,
+"fr": "Grimbergen",
+"nl": "Grimbergen",
+"de": "Grimbergen",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23027": {
+"lat": 50.7247,
+"lon": 4.2433,
+"fr": "Hal",
+"nl": "Halle",
+"de": "Halle",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23033": {
+"lat": 50.7611,
+"lon": 4.4401,
+"fr": "Hoeilaart",
+"nl": "Hoeilaart",
+"de": "Hoeilaart",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23038": {
+"lat": 50.9407,
+"lon": 4.548,
+"fr": "Kampenhout",
+"nl": "Kampenhout",
+"de": "Kampenhout",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23039": {
+"lat": 51.0005,
+"lon": 4.354,
+"fr": "Kapelle-op-den-Bos",
+"nl": "Kapelle-op-den-Bos",
+"de": "Kapelle-op-den-Bos",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23044": {
+"lat": 50.8682,
+"lon": 4.0953,
+"fr": "Liedekerke",
+"nl": "Liedekerke",
+"de": "Liedekerke",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23045": {
+"lat": 51.0072,
+"lon": 4.2643,
+"fr": "Londerzeel",
+"nl": "Londerzeel",
+"de": "Londerzeel",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23047": {
+"lat": 50.9051,
+"lon": 4.4434,
+"fr": "Machelen",
+"nl": "Machelen",
+"de": "Machelen",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23050": {
+"lat": 50.963,
+"lon": 4.3156,
+"fr": "Meise",
+"nl": "Meise",
+"de": "Meise",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23052": {
+"lat": 50.9503,
+"lon": 4.251,
+"fr": "Merchtem",
+"nl": "Merchtem",
+"de": "Merchtem",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23060": {
+"lat": 50.9634,
+"lon": 4.1766,
+"fr": "Opwijk",
+"nl": "Opwijk",
+"de": "Opwijk",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23062": {
+"lat": 50.77,
+"lon": 4.538,
+"fr": "Overijse",
+"nl": "Overijse",
+"de": "Overijse",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23064": {
+"lat": 50.7628,
+"lon": 4.1662,
+"fr": "Pepingen",
+"nl": "Pepingen",
+"de": "Pepingen",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23077": {
+"lat": 50.7893,
+"lon": 4.2373,
+"fr": "Sint-Pieters-Leeuw",
+"nl": "Sint-Pieters-Leeuw",
+"de": "Sint-Pieters-Leeuw",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23081": {
+"lat": 50.9207,
+"lon": 4.4981,
+"fr": "Steenokkerzeel",
+"nl": "Steenokkerzeel",
+"de": "Steenokkerzeel",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23086": {
+"lat": 50.8654,
+"lon": 4.1723,
+"fr": "Ternat",
+"nl": "Ternat",
+"de": "Ternat",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23088": {
+"lat": 50.9371,
+"lon": 4.4458,
+"fr": "Vilvorde",
+"nl": "Vilvoorde",
+"de": "Vilvoorde",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23094": {
+"lat": 50.882,
+"lon": 4.4826,
+"fr": "Zaventem",
+"nl": "Zaventem",
+"de": "Zaventem",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23096": {
+"lat": 50.9782,
+"lon": 4.4451,
+"fr": "Zemst",
+"nl": "Zemst",
+"de": "Zemst",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23097": {
+"lat": 50.8351,
+"lon": 4.0883,
+"fr": "Roosdaal",
+"nl": "Roosdaal",
+"de": "Roosdaal",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23098": {
+"lat": 50.7886,
+"lon": 4.3127,
+"fr": "Drogenbos",
+"nl": "Drogenbos",
+"de": "Drogenbos",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23099": {
+"lat": 50.8559,
+"lon": 4.469,
+"fr": "Kraainem",
+"nl": "Kraainem",
+"de": "Kraainem",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23100": {
+"lat": 50.7653,
+"lon": 4.3532,
+"fr": "Linkebeek",
+"nl": "Linkebeek",
+"de": "Linkebeek",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23101": {
+"lat": 50.7478,
+"lon": 4.3756,
+"fr": "Rhode-Saint-Genèse",
+"nl": "Sint-Genesius-Rode",
+"de": "Sint-Genesius-Rode",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23102": {
+"lat": 50.9078,
+"lon": 4.3047,
+"fr": "Wemmel",
+"nl": "Wemmel",
+"de": "Wemmel",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23103": {
+"lat": 50.8453,
+"lon": 4.4908,
+"fr": "Wezembeek-Oppem",
+"nl": "Wezembeek-Oppem",
+"de": "Wezembeek-Oppem",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23104": {
+"lat": 50.8124,
+"lon": 4.1616,
+"fr": "Lennik",
+"nl": "Lennik",
+"de": "Lennik",
+"prov": "VBR",
+"region": "02000"
+},
+"BE23105": {
+"lat": 50.9043,
+"lon": 4.1199,
+"fr": "Affligem",
+"nl": "Affligem",
+"de": "Affligem",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24001": {
+"lat": 50.989,
+"lon": 4.8714,
+"fr": "Aarschot",
+"nl": "Aarschot",
+"de": "Aarschot",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24007": {
+"lat": 51.0156,
+"lon": 4.7861,
+"fr": "Begijnendijk",
+"nl": "Begijnendijk",
+"de": "Begijnendijk",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24008": {
+"lat": 50.9395,
+"lon": 4.9719,
+"fr": "Bekkevoort",
+"nl": "Bekkevoort",
+"de": "Bekkevoort",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24009": {
+"lat": 50.8528,
+"lon": 4.6198,
+"fr": "Bertem",
+"nl": "Bertem",
+"de": "Bertem",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24011": {
+"lat": 50.834,
+"lon": 4.7735,
+"fr": "Bierbeek",
+"nl": "Bierbeek",
+"de": "Bierbeek",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24014": {
+"lat": 50.9851,
+"lon": 4.5494,
+"fr": "Boortmeerbeek",
+"nl": "Boortmeerbeek",
+"de": "Boortmeerbeek",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24016": {
+"lat": 50.8317,
+"lon": 4.8303,
+"fr": "Boutersem",
+"nl": "Boutersem",
+"de": "Boutersem",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24020": {
+"lat": 50.9867,
+"lon": 5.049,
+"fr": "Diest",
+"nl": "Diest",
+"de": "Diest",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24028": {
+"lat": 50.8913,
+"lon": 5.1357,
+"fr": "Geetbets",
+"nl": "Geetbets",
+"de": "Geetbets",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24033": {
+"lat": 50.9643,
+"lon": 4.6486,
+"fr": "Haacht",
+"nl": "Haacht",
+"de": "Haacht",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24038": {
+"lat": 50.904,
+"lon": 4.6585,
+"fr": "Herent",
+"nl": "Herent",
+"de": "Herent",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24041": {
+"lat": 50.7857,
+"lon": 4.8686,
+"fr": "Hoegaarden",
+"nl": "Hoegaarden",
+"de": "Hoegaarden",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24043": {
+"lat": 50.9333,
+"lon": 4.8206,
+"fr": "Holsbeek",
+"nl": "Holsbeek",
+"de": "Holsbeek",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24045": {
+"lat": 50.8,
+"lon": 4.6072,
+"fr": "Huldenberg",
+"nl": "Huldenberg",
+"de": "Huldenberg",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24048": {
+"lat": 51.0042,
+"lon": 4.6452,
+"fr": "Keerbergen",
+"nl": "Keerbergen",
+"de": "Keerbergen",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24054": {
+"lat": 50.8916,
+"lon": 5.01,
+"fr": "Kortenaken",
+"nl": "Kortenaken",
+"de": "Kortenaken",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24055": {
+"lat": 50.8862,
+"lon": 4.5603,
+"fr": "Kortenberg",
+"nl": "Kortenberg",
+"de": "Kortenberg",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24059": {
+"lat": 50.7534,
+"lon": 5.0742,
+"fr": "Landen",
+"nl": "Landen",
+"de": "Landen",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24062": {
+"lat": 50.8789,
+"lon": 4.7139,
+"fr": "Louvain",
+"nl": "Leuven",
+"de": "Löwen",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24066": {
+"lat": 50.8815,
+"lon": 4.8254,
+"fr": "Lubbeek",
+"nl": "Lubbeek",
+"de": "Lubbeek",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24086": {
+"lat": 50.8134,
+"lon": 4.6659,
+"fr": "Oud-Heverlee",
+"nl": "Oud-Heverlee",
+"de": "Oud-Heverlee",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24094": {
+"lat": 50.9589,
+"lon": 4.7564,
+"fr": "Rotselaar",
+"nl": "Rotselaar",
+"de": "Rotselaar",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24104": {
+"lat": 50.8257,
+"lon": 4.5475,
+"fr": "Tervuren",
+"nl": "Tervuren",
+"de": "Tervuren",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24107": {
+"lat": 50.7992,
+"lon": 4.9542,
+"fr": "Tirlemont",
+"nl": "Tienen",
+"de": "Tienen",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24109": {
+"lat": 51.0026,
+"lon": 4.7417,
+"fr": "Tremelo",
+"nl": "Tremelo",
+"de": "Tremelo",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24130": {
+"lat": 50.8394,
+"lon": 5.1047,
+"fr": "Léau",
+"nl": "Zoutleeuw",
+"de": "Zoutleeuw",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24133": {
+"lat": 50.8157,
+"lon": 5.0448,
+"fr": "Linter",
+"nl": "Linter",
+"de": "Linter",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24134": {
+"lat": 50.9977,
+"lon": 4.9616,
+"fr": "Montaigu-Zichem",
+"nl": "Scherpenheuvel-Zichem",
+"de": "Scherpenheuvel-Zichem",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24135": {
+"lat": 50.9236,
+"lon": 4.8882,
+"fr": "Tielt-Winge",
+"nl": "Tielt-Winge",
+"de": "Tielt-Winge",
+"prov": "VBR",
+"region": "02000"
+},
+"BE24137": {
+"lat": 50.8676,
+"lon": 4.9487,
+"fr": "Glabbeek",
+"nl": "Glabbeek",
+"de": "Glabbeek",
+"prov": "VBR",
+"region": "02000"
+},
+"BE25005": {
+"lat": 50.7773,
+"lon": 4.76,
+"fr": "Beauvechain",
+"nl": "Bevekom",
+"de": "Beauvechain",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25014": {
+"lat": 50.6622,
+"lon": 4.3609,
+"fr": "Braine-l’Alleud",
+"nl": "Eigenbrakel",
+"de": "Braine-l’Alleud",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25015": {
+"lat": 50.6808,
+"lon": 4.2668,
+"fr": "Braine-le-Château",
+"nl": "Kasteelbrakel",
+"de": "Braine-le-Château",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25018": {
+"lat": 50.6813,
+"lon": 4.6722,
+"fr": "Chaumont-Gistoux",
+"nl": "Chaumont-Gistoux",
+"de": "Chaumont-Gistoux",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25023": {
+"lat": 50.6263,
+"lon": 4.5656,
+"fr": "Court-Saint-Etienne",
+"nl": "Court-Saint-Etienne",
+"de": "Court-Saint-Etienne",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25031": {
+"lat": 50.6099,
+"lon": 4.4429,
+"fr": "Genappe",
+"nl": "Genepiën",
+"de": "Genappe",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25037": {
+"lat": 50.7492,
+"lon": 4.6879,
+"fr": "Grez-Doiceau",
+"nl": "Graven",
+"de": "Grez-Doiceau",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25043": {
+"lat": 50.6914,
+"lon": 4.7866,
+"fr": "Incourt",
+"nl": "Incourt",
+"de": "Incourt",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25044": {
+"lat": 50.6371,
+"lon": 4.2601,
+"fr": "Ittre",
+"nl": "Itter",
+"de": "Ittre",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25048": {
+"lat": 50.7276,
+"lon": 4.8434,
+"fr": "Jodoigne",
+"nl": "Geldenaken",
+"de": "Jodoigne",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25050": {
+"lat": 50.7369,
+"lon": 4.4646,
+"fr": "La Hulpe",
+"nl": "Terhulpen",
+"de": "La Hulpe",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25068": {
+"lat": 50.6267,
+"lon": 4.6129,
+"fr": "Mont-Saint-Guibert",
+"nl": "Mont-Saint-Guibert",
+"de": "Mont-Saint-Guibert",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25072": {
+"lat": 50.5964,
+"lon": 4.3489,
+"fr": "Nivelles",
+"nl": "Nijvel",
+"de": "Nivelles",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25084": {
+"lat": 50.6388,
+"lon": 4.7947,
+"fr": "Perwez",
+"nl": "Perwijs",
+"de": "Perwez",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25091": {
+"lat": 50.7123,
+"lon": 4.5264,
+"fr": "Rixensart",
+"nl": "Rixensart",
+"de": "Rixensart",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25105": {
+"lat": 50.6812,
+"lon": 4.2017,
+"fr": "Tubize",
+"nl": "Tubeke",
+"de": "Tubize",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25107": {
+"lat": 50.5647,
+"lon": 4.543,
+"fr": "Villers-la-Ville",
+"nl": "Villers-la-Ville",
+"de": "Villers-la-Ville",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25110": {
+"lat": 50.7159,
+"lon": 4.4074,
+"fr": "Waterloo",
+"nl": "Waterloo",
+"de": "Waterloo",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25112": {
+"lat": 50.7167,
+"lon": 4.5876,
+"fr": "Wavre",
+"nl": "Waver",
+"de": "Wavre",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25117": {
+"lat": 50.5885,
+"lon": 4.6344,
+"fr": "Chastre",
+"nl": "Chastre",
+"de": "Chastre",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25118": {
+"lat": 50.75,
+"lon": 4.9954,
+"fr": "Hélécine",
+"nl": "Hélécine",
+"de": "Hélécine",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25119": {
+"lat": 50.6865,
+"lon": 4.4689,
+"fr": "Lasne",
+"nl": "Lasne",
+"de": "Lasne",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25120": {
+"lat": 50.6893,
+"lon": 4.9629,
+"fr": "Orp-Jauche",
+"nl": "Orp-Jauche",
+"de": "Orp-Jauche",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25121": {
+"lat": 50.6733,
+"lon": 4.5336,
+"fr": "Ottignies-Louvain-la-Neuve",
+"nl": "Ottignies-Louvain-la-Neuve",
+"de": "Ottignies-Louvain-la-Neuve",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25122": {
+"lat": 50.6616,
+"lon": 4.8907,
+"fr": "Ramillies",
+"nl": "Ramillies",
+"de": "Ramillies",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25123": {
+"lat": 50.6666,
+"lon": 4.1315,
+"fr": "Rebecq",
+"nl": "Rebecq",
+"de": "Rebecq",
+"prov": "WBR",
+"region": "03000"
+},
+"BE25124": {
+"lat": 50.6276,
+"lon": 4.6934,
+"fr": "Walhain",
+"nl": "Walhain",
+"de": "Walhain",
+"prov": "WBR",
+"region": "03000"
+},
+"BE31003": {
+"lat": 51.1511,
+"lon": 3.3379,
+"fr": "Beernem",
+"nl": "Beernem",
+"de": "Beernem",
+"prov": "VWV",
+"region": "02000"
+},
+"BE31004": {
+"lat": 51.3025,
+"lon": 3.142,
+"fr": "Blankenberge",
+"nl": "Blankenberge",
+"de": "Blankenberge",
+"prov": "VWV",
+"region": "02000"
+},
+"BE31005": {
+"lat": 51.2182,
+"lon": 3.2198,
+"fr": "Bruges",
+"nl": "Brugge",
+"de": "Brügge",
+"prov": "VWV",
+"region": "02000"
+},
+"BE31006": {
+"lat": 51.2569,
+"lon": 3.3356,
+"fr": "Damme",
+"nl": "Damme",
+"de": "Damme",
+"prov": "VWV",
+"region": "02000"
+},
+"BE31012": {
+"lat": 51.1812,
+"lon": 3.0884,
+"fr": "Jabbeke",
+"nl": "Jabbeke",
+"de": "Jabbeke",
+"prov": "VWV",
+"region": "02000"
+},
+"BE31022": {
+"lat": 51.1215,
+"lon": 3.2349,
+"fr": "Oostkamp",
+"nl": "Oostkamp",
+"de": "Oostkamp",
+"prov": "VWV",
+"region": "02000"
+},
+"BE31033": {
+"lat": 51.0581,
+"lon": 3.089,
+"fr": "Torhout",
+"nl": "Torhout",
+"de": "Torhout",
+"prov": "VWV",
+"region": "02000"
+},
+"BE31040": {
+"lat": 51.1259,
+"lon": 3.1469,
+"fr": "Zedelgem",
+"nl": "Zedelgem",
+"de": "Zedelgem",
+"prov": "VWV",
+"region": "02000"
+},
+"BE31042": {
+"lat": 51.2477,
+"lon": 3.1176,
+"fr": "Zuienkerke",
+"nl": "Zuienkerke",
+"de": "Zuienkerke",
+"prov": "VWV",
+"region": "02000"
+},
+"BE31043": {
+"lat": 51.3318,
+"lon": 3.3137,
+"fr": "Knokke-Heist",
+"nl": "Knokke-Heist",
+"de": "Knokke-Heist",
+"prov": "VWV",
+"region": "02000"
+},
+"BE32003": {
+"lat": 51.0398,
+"lon": 2.8483,
+"fr": "Dixmude",
+"nl": "Diksmuide",
+"de": "Diksmuide",
+"prov": "VWV",
+"region": "02000"
+},
+"BE32006": {
+"lat": 50.9704,
+"lon": 2.9019,
+"fr": "Houthulst",
+"nl": "Houthulst",
+"de": "Houthulst",
+"prov": "VWV",
+"region": "02000"
+},
+"BE32010": {
+"lat": 51.0919,
+"lon": 2.9683,
+"fr": "Koekelare",
+"nl": "Koekelare",
+"de": "Koekelare",
+"prov": "VWV",
+"region": "02000"
+},
+"BE32011": {
+"lat": 51.0242,
+"lon": 2.9953,
+"fr": "Kortemark",
+"nl": "Kortemark",
+"de": "Kortemark",
+"prov": "VWV",
+"region": "02000"
+},
+"BE32030": {
+"lat": 50.9505,
+"lon": 2.7875,
+"fr": "Lo-Reninge",
+"nl": "Lo-Reninge",
+"de": "Lo-Reninge",
+"prov": "VWV",
+"region": "02000"
+},
+"BE33011": {
+"lat": 50.8569,
+"lon": 2.8698,
+"fr": "Ypres",
+"nl": "Ieper",
+"de": "Ypern",
+"prov": "VWV",
+"region": "02000"
+},
+"BE33016": {
+"lat": 50.7603,
+"lon": 2.9019,
+"fr": "Messines",
+"nl": "Mesen",
+"de": "Mesen",
+"prov": "VWV",
+"region": "02000"
+},
+"BE33021": {
+"lat": 50.863,
+"lon": 2.6607,
+"fr": "Poperinge",
+"nl": "Poperinge",
+"de": "Poperinge",
+"prov": "VWV",
+"region": "02000"
+},
+"BE33029": {
+"lat": 50.8079,
+"lon": 3.0532,
+"fr": "Wervik",
+"nl": "Wervik",
+"de": "Wervik",
+"prov": "VWV",
+"region": "02000"
+},
+"BE33037": {
+"lat": 50.8575,
+"lon": 3.0051,
+"fr": "Zonnebeke",
+"nl": "Zonnebeke",
+"de": "Zonnebeke",
+"prov": "VWV",
+"region": "02000"
+},
+"BE33039": {
+"lat": 50.7647,
+"lon": 2.8099,
+"fr": "Heuvelland",
+"nl": "Heuvelland",
+"de": "Heuvelland",
+"prov": "VWV",
+"region": "02000"
+},
+"BE33040": {
+"lat": 50.915,
+"lon": 2.9369,
+"fr": "Langemark-Poelkapelle",
+"nl": "Langemark-Poelkapelle",
+"de": "Langemark-Poelkapelle",
+"prov": "VWV",
+"region": "02000"
+},
+"BE33041": {
+"lat": 50.9141,
+"lon": 2.7356,
+"fr": "Vleteren",
+"nl": "Vleteren",
+"de": "Vleteren",
+"prov": "VWV",
+"region": "02000"
+},
+"BE34002": {
+"lat": 50.8362,
+"lon": 3.4474,
+"fr": "Anzegem",
+"nl": "Anzegem",
+"de": "Anzegem",
+"prov": "VWV",
+"region": "02000"
+},
+"BE34003": {
+"lat": 50.7763,
+"lon": 3.4452,
+"fr": "Avelgem",
+"nl": "Avelgem",
+"de": "Avelgem",
+"prov": "VWV",
+"region": "02000"
+},
+"BE34009": {
+"lat": 50.8446,
+"lon": 3.3651,
+"fr": "Deerlijk",
+"nl": "Deerlijk",
+"de": "Deerlijk",
+"prov": "VWV",
+"region": "02000"
+},
+"BE34013": {
+"lat": 50.8849,
+"lon": 3.2973,
+"fr": "Harelbeke",
+"nl": "Harelbeke",
+"de": "Harelbeke",
+"prov": "VWV",
+"region": "02000"
+},
+"BE34022": {
+"lat": 50.7994,
+"lon": 3.2626,
+"fr": "Courtrai",
+"nl": "Kortrijk",
+"de": "Kortrijk",
+"prov": "VWV",
+"region": "02000"
+},
+"BE34023": {
+"lat": 50.8595,
+"lon": 3.2699,
+"fr": "Kuurne",
+"nl": "Kuurne",
+"de": "Kuurne",
+"prov": "VWV",
+"region": "02000"
+},
+"BE34025": {
+"lat": 50.8853,
+"lon": 3.2371,
+"fr": "Lendelede",
+"nl": "Lendelede",
+"de": "Lendelede",
+"prov": "VWV",
+"region": "02000"
+},
+"BE34027": {
+"lat": 50.7796,
+"lon": 3.1818,
+"fr": "Menin",
+"nl": "Menen",
+"de": "Menen",
+"prov": "VWV",
+"region": "02000"
+},
+"BE34040": {
+"lat": 50.8768,
+"lon": 3.4125,
+"fr": "Waregem",
+"nl": "Waregem",
+"de": "Waregem",
+"prov": "VWV",
+"region": "02000"
+},
+"BE34041": {
+"lat": 50.8286,
+"lon": 3.1782,
+"fr": "Wevelgem",
+"nl": "Wevelgem",
+"de": "Wevelgem",
+"prov": "VWV",
+"region": "02000"
+},
+"BE34042": {
+"lat": 50.7787,
+"lon": 3.3651,
+"fr": "Zwevegem",
+"nl": "Zwevegem",
+"de": "Zwevegem",
+"prov": "VWV",
+"region": "02000"
+},
+"BE34043": {
+"lat": 50.725,
+"lon": 3.3535,
+"fr": "Espierres-Helchin",
+"nl": "Spiere-Helkijn",
+"de": "Spiere-Helkijn",
+"prov": "VWV",
+"region": "02000"
+},
+"BE35002": {
+"lat": 51.2409,
+"lon": 2.9787,
+"fr": "Bredene",
+"nl": "Bredene",
+"de": "Bredene",
+"prov": "VWV",
+"region": "02000"
+},
+"BE35005": {
+"lat": 51.1485,
+"lon": 2.9508,
+"fr": "Gistel",
+"nl": "Gistel",
+"de": "Gistel",
+"prov": "VWV",
+"region": "02000"
+},
+"BE35006": {
+"lat": 51.1211,
+"lon": 3.0271,
+"fr": "Ichtegem",
+"nl": "Ichtegem",
+"de": "Ichtegem",
+"prov": "VWV",
+"region": "02000"
+},
+"BE35011": {
+"lat": 51.156,
+"lon": 2.8386,
+"fr": "Middelkerke",
+"nl": "Middelkerke",
+"de": "Middelkerke",
+"prov": "VWV",
+"region": "02000"
+},
+"BE35013": {
+"lat": 51.2195,
+"lon": 2.933,
+"fr": "Ostende",
+"nl": "Oostende",
+"de": "Ostende",
+"prov": "VWV",
+"region": "02000"
+},
+"BE35014": {
+"lat": 51.1832,
+"lon": 3.0138,
+"fr": "Oudenburg",
+"nl": "Oudenburg",
+"de": "Oudenburg",
+"prov": "VWV",
+"region": "02000"
+},
+"BE35029": {
+"lat": 51.2534,
+"lon": 3.0385,
+"fr": "De Haan",
+"nl": "De Haan",
+"de": "De Haan",
+"prov": "VWV",
+"region": "02000"
+},
+"BE36006": {
+"lat": 50.9879,
+"lon": 3.0817,
+"fr": "Hooglede",
+"nl": "Hooglede",
+"de": "Hooglede",
+"prov": "VWV",
+"region": "02000"
+},
+"BE36007": {
+"lat": 50.9212,
+"lon": 3.2608,
+"fr": "Ingelmunster",
+"nl": "Ingelmunster",
+"de": "Ingelmunster",
+"prov": "VWV",
+"region": "02000"
+},
+"BE36008": {
+"lat": 50.9211,
+"lon": 3.2122,
+"fr": "Izegem",
+"nl": "Izegem",
+"de": "Izegem",
+"prov": "VWV",
+"region": "02000"
+},
+"BE36010": {
+"lat": 50.8689,
+"lon": 3.1328,
+"fr": "Ledegem",
+"nl": "Ledegem",
+"de": "Ledegem",
+"prov": "VWV",
+"region": "02000"
+},
+"BE36011": {
+"lat": 51.0315,
+"lon": 3.1433,
+"fr": "Lichtervelde",
+"nl": "Lichtervelde",
+"de": "Lichtervelde",
+"prov": "VWV",
+"region": "02000"
+},
+"BE36012": {
+"lat": 50.8864,
+"lon": 3.0703,
+"fr": "Moorslede",
+"nl": "Moorslede",
+"de": "Moorslede",
+"prov": "VWV",
+"region": "02000"
+},
+"BE36015": {
+"lat": 50.9361,
+"lon": 3.132,
+"fr": "Roulers",
+"nl": "Roeselare",
+"de": "Roeselare",
+"prov": "VWV",
+"region": "02000"
+},
+"BE36019": {
+"lat": 50.9584,
+"lon": 3.0049,
+"fr": "Staden",
+"nl": "Staden",
+"de": "Staden",
+"prov": "VWV",
+"region": "02000"
+},
+"BE37002": {
+"lat": 50.9601,
+"lon": 3.3958,
+"fr": "Dentergem",
+"nl": "Dentergem",
+"de": "Dentergem",
+"prov": "VWV",
+"region": "02000"
+},
+"BE37022": {
+"lat": 51.0016,
+"lon": 3.3448,
+"fr": "Tielt",
+"nl": "Tielt",
+"de": "Tielt",
+"prov": "VWV",
+"region": "02000"
+},
+"BE37010": {
+"lat": 50.9252,
+"lon": 3.3346,
+"fr": "Oostrozebeke",
+"nl": "Oostrozebeke",
+"de": "Oostrozebeke",
+"prov": "VWV",
+"region": "02000"
+},
+"BE37011": {
+"lat": 51.0059,
+"lon": 3.2582,
+"fr": "Pittem",
+"nl": "Pittem",
+"de": "Pittem",
+"prov": "VWV",
+"region": "02000"
+},
+"BE37021": {
+"lat": 51.0684,
+"lon": 3.2975,
+"fr": "Wingene",
+"nl": "Wingene",
+"de": "Wingene",
+"prov": "VWV",
+"region": "02000"
+},
+"BE37017": {
+"lat": 50.9188,
+"lon": 3.3762,
+"fr": "Wielsbeke",
+"nl": "Wielsbeke",
+"de": "Wielsbeke",
+"prov": "VWV",
+"region": "02000"
+},
+"BE37020": {
+"lat": 50.9766,
+"lon": 3.2018,
+"fr": "Ardooie",
+"nl": "Ardooie",
+"de": "Ardooie",
+"prov": "VWV",
+"region": "02000"
+},
+"BE38002": {
+"lat": 50.9688,
+"lon": 2.663,
+"fr": "Alveringem",
+"nl": "Alveringem",
+"de": "Alveringem",
+"prov": "VWV",
+"region": "02000"
+},
+"BE38008": {
+"lat": 51.0827,
+"lon": 2.5914,
+"fr": "La Panne",
+"nl": "De Panne",
+"de": "De Panne",
+"prov": "VWV",
+"region": "02000"
+},
+"BE38014": {
+"lat": 51.1175,
+"lon": 2.691,
+"fr": "Koksijde",
+"nl": "Koksijde",
+"de": "Koksijde",
+"prov": "VWV",
+"region": "02000"
+},
+"BE38016": {
+"lat": 51.1167,
+"lon": 2.7803,
+"fr": "Nieuport",
+"nl": "Nieuwpoort",
+"de": "Nieuwpoort",
+"prov": "VWV",
+"region": "02000"
+},
+"BE38025": {
+"lat": 51.0419,
+"lon": 2.6574,
+"fr": "Furnes",
+"nl": "Veurne",
+"de": "Veurne",
+"prov": "VWV",
+"region": "02000"
+},
+"BE41002": {
+"lat": 50.9489,
+"lon": 4.0502,
+"fr": "Alost",
+"nl": "Aalst",
+"de": "Aalst",
+"prov": "VOV",
+"region": "02000"
+},
+"BE41011": {
+"lat": 50.8881,
+"lon": 4.0587,
+"fr": "Denderleeuw",
+"nl": "Denderleeuw",
+"de": "Denderleeuw",
+"prov": "VOV",
+"region": "02000"
+},
+"BE41018": {
+"lat": 50.7856,
+"lon": 3.9059,
+"fr": "Grammont",
+"nl": "Geraardsbergen",
+"de": "Geraardsbergen",
+"prov": "VOV",
+"region": "02000"
+},
+"BE41024": {
+"lat": 50.8874,
+"lon": 4.0003,
+"fr": "Haaltert",
+"nl": "Haaltert",
+"de": "Haaltert",
+"prov": "VOV",
+"region": "02000"
+},
+"BE41027": {
+"lat": 50.8617,
+"lon": 3.8928,
+"fr": "Herzele",
+"nl": "Herzele",
+"de": "Herzele",
+"prov": "VOV",
+"region": "02000"
+},
+"BE41034": {
+"lat": 50.9651,
+"lon": 3.9055,
+"fr": "Lede",
+"nl": "Lede",
+"de": "Lede",
+"prov": "VOV",
+"region": "02000"
+},
+"BE41048": {
+"lat": 50.8236,
+"lon": 4.0098,
+"fr": "Ninove",
+"nl": "Ninove",
+"de": "Ninove",
+"prov": "VOV",
+"region": "02000"
+},
+"BE41063": {
+"lat": 50.9341,
+"lon": 3.8698,
+"fr": "Sint-Lievens-Houtem",
+"nl": "Sint-Lievens-Houtem",
+"de": "Sint-Lievens-Houtem",
+"prov": "VOV",
+"region": "02000"
+},
+"BE41081": {
+"lat": 50.8598,
+"lon": 3.8081,
+"fr": "Zottegem",
+"nl": "Zottegem",
+"de": "Zottegem",
+"prov": "VOV",
+"region": "02000"
+},
+"BE41082": {
+"lat": 50.9275,
+"lon": 3.957,
+"fr": "Erpe-Mere",
+"nl": "Erpe-Mere",
+"de": "Erpe-Mere",
+"prov": "VOV",
+"region": "02000"
+},
+"BE42003": {
+"lat": 51.0493,
+"lon": 3.9576,
+"fr": "Berlare",
+"nl": "Berlare",
+"de": "Berlare",
+"prov": "VOV",
+"region": "02000"
+},
+"BE42004": {
+"lat": 51.0067,
+"lon": 4.1939,
+"fr": "Buggenhout",
+"nl": "Buggenhout",
+"de": "Buggenhout",
+"prov": "VOV",
+"region": "02000"
+},
+"BE42006": {
+"lat": 51.0367,
+"lon": 4.1071,
+"fr": "Termonde",
+"nl": "Dendermonde",
+"de": "Dendermonde",
+"prov": "VOV",
+"region": "02000"
+},
+"BE42008": {
+"lat": 51.0817,
+"lon": 4.1494,
+"fr": "Hamme",
+"nl": "Hamme",
+"de": "Hamme",
+"prov": "VOV",
+"region": "02000"
+},
+"BE42010": {
+"lat": 51.0439,
+"lon": 3.9094,
+"fr": "Laarne",
+"nl": "Laarne",
+"de": "Laarne",
+"prov": "VOV",
+"region": "02000"
+},
+"BE42011": {
+"lat": 50.9894,
+"lon": 4.1207,
+"fr": "Lebbeke",
+"nl": "Lebbeke",
+"de": "Lebbeke",
+"prov": "VOV",
+"region": "02000"
+},
+"BE42023": {
+"lat": 51.1169,
+"lon": 4.0444,
+"fr": "Waasmunster",
+"nl": "Waasmunster",
+"de": "Waasmunster",
+"prov": "VOV",
+"region": "02000"
+},
+"BE42025": {
+"lat": 50.9924,
+"lon": 3.864,
+"fr": "Wetteren",
+"nl": "Wetteren",
+"de": "Wetteren",
+"prov": "VOV",
+"region": "02000"
+},
+"BE42026": {
+"lat": 50.9945,
+"lon": 3.9335,
+"fr": "Wichelen",
+"nl": "Wichelen",
+"de": "Wichelen",
+"prov": "VOV",
+"region": "02000"
+},
+"BE42028": {
+"lat": 51.0665,
+"lon": 4.037,
+"fr": "Zele",
+"nl": "Zele",
+"de": "Zele",
+"prov": "VOV",
+"region": "02000"
+},
+"BE43002": {
+"lat": 51.2303,
+"lon": 3.7125,
+"fr": "Assenede",
+"nl": "Assenede",
+"de": "Assenede",
+"prov": "VOV",
+"region": "02000"
+},
+"BE43005": {
+"lat": 51.1924,
+"lon": 3.555,
+"fr": "Eeklo",
+"nl": "Eeklo",
+"de": "Eeklo",
+"prov": "VOV",
+"region": "02000"
+},
+"BE43007": {
+"lat": 51.2014,
+"lon": 3.633,
+"fr": "Kaprijke",
+"nl": "Kaprijke",
+"de": "Kaprijke",
+"prov": "VOV",
+"region": "02000"
+},
+"BE43010": {
+"lat": 51.1978,
+"lon": 3.4407,
+"fr": "Maldegem",
+"nl": "Maldegem",
+"de": "Maldegem",
+"prov": "VOV",
+"region": "02000"
+},
+"BE43014": {
+"lat": 51.2549,
+"lon": 3.5623,
+"fr": "Sint-Laureins",
+"nl": "Sint-Laureins",
+"de": "Sint-Laureins",
+"prov": "VOV",
+"region": "02000"
+},
+"BE43018": {
+"lat": 51.198,
+"lon": 3.8122,
+"fr": "Zelzate",
+"nl": "Zelzate",
+"de": "Zelzate",
+"prov": "VOV",
+"region": "02000"
+},
+"BE44084": {
+"lat": 51.1,
+"lon": 3.4597,
+"fr": "Aalter",
+"nl": "Aalter",
+"de": "Aalter",
+"prov": "VOV",
+"region": "02000"
+},
+"BE44083": {
+"lat": 51.0052,
+"lon": 3.5429,
+"fr": "Deinze",
+"nl": "Deinze",
+"de": "Deinze",
+"prov": "VOV",
+"region": "02000"
+},
+"BE44086": {
+"lat": 50.9821,
+"lon": 3.6613,
+"fr": "Nazareth-De Pinte",
+"nl": "Nazareth-De Pinte",
+"de": "Nazareth-De Pinte",
+"prov": "VOV",
+"region": "02000"
+},
+"BE44013": {
+"lat": 51.052,
+"lon": 3.8116,
+"fr": "Destelbergen",
+"nl": "Destelbergen",
+"de": "Destelbergen",
+"prov": "VOV",
+"region": "02000"
+},
+"BE44019": {
+"lat": 51.1315,
+"lon": 3.6834,
+"fr": "Evergem",
+"nl": "Evergem",
+"de": "Evergem",
+"prov": "VOV",
+"region": "02000"
+},
+"BE44020": {
+"lat": 50.9316,
+"lon": 3.6863,
+"fr": "Gavere",
+"nl": "Gavere",
+"de": "Gavere",
+"prov": "VOV",
+"region": "02000"
+},
+"BE44021": {
+"lat": 51.0472,
+"lon": 3.7026,
+"fr": "Gand",
+"nl": "Gent",
+"de": "Gent",
+"prov": "VOV",
+"region": "02000"
+},
+"BE44087": {
+"lat": 51.1129,
+"lon": 3.8635,
+"fr": "Lochristi",
+"nl": "Lochristi",
+"de": "Lochristi",
+"prov": "VOV",
+"region": "02000"
+},
+"BE44085": {
+"lat": 51.133,
+"lon": 3.6072,
+"fr": "Lievegem",
+"nl": "Lievegem",
+"de": "Lievegem",
+"prov": "VOV",
+"region": "02000"
+},
+"BE44088": {
+"lat": 50.9967,
+"lon": 3.7716,
+"fr": "Merelbeke-Melle",
+"nl": "Merelbeke-Melle",
+"de": "Merelbeke-Melle",
+"prov": "VOV",
+"region": "02000"
+},
+"BE46029": {
+"lat": 51.1191,
+"lon": 3.949,
+"fr": "Lokeren",
+"nl": "Lokeren",
+"de": "Lokeren",
+"prov": "VOV",
+"region": "02000"
+},
+"BE44052": {
+"lat": 50.9416,
+"lon": 3.7965,
+"fr": "Oosterzele",
+"nl": "Oosterzele",
+"de": "Oosterzele",
+"prov": "VOV",
+"region": "02000"
+},
+"BE44064": {
+"lat": 51.0131,
+"lon": 3.6257,
+"fr": "Sint-Martens-Latem",
+"nl": "Sint-Martens-Latem",
+"de": "Sint-Martens-Latem",
+"prov": "VOV",
+"region": "02000"
+},
+"BE44081": {
+"lat": 50.9381,
+"lon": 3.4801,
+"fr": "Zulte",
+"nl": "Zulte",
+"de": "Zulte",
+"prov": "VOV",
+"region": "02000"
+},
+"BE45068": {
+"lat": 50.916,
+"lon": 3.531,
+"fr": "Kruisem",
+"nl": "Kruisem",
+"de": "Kruisem",
+"prov": "VOV",
+"region": "02000"
+},
+"BE45035": {
+"lat": 50.8611,
+"lon": 3.6195,
+"fr": "Audenarde",
+"nl": "Oudenaarde",
+"de": "Oudenaarde",
+"prov": "VOV",
+"region": "02000"
+},
+"BE45041": {
+"lat": 50.747,
+"lon": 3.6245,
+"fr": "Renaix",
+"nl": "Ronse",
+"de": "Ronse",
+"prov": "VOV",
+"region": "02000"
+},
+"BE45059": {
+"lat": 50.81,
+"lon": 3.7485,
+"fr": "Brakel",
+"nl": "Brakel",
+"de": "Brakel",
+"prov": "VOV",
+"region": "02000"
+},
+"BE45060": {
+"lat": 50.7866,
+"lon": 3.5375,
+"fr": "Kluisbergen",
+"nl": "Kluisbergen",
+"de": "Kluisbergen",
+"prov": "VOV",
+"region": "02000"
+},
+"BE45061": {
+"lat": 50.8483,
+"lon": 3.5392,
+"fr": "Wortegem-Petegem",
+"nl": "Wortegem-Petegem",
+"de": "Wortegem-Petegem",
+"prov": "VOV",
+"region": "02000"
+},
+"BE45062": {
+"lat": 50.841,
+"lon": 3.699,
+"fr": "Horebeke",
+"nl": "Horebeke",
+"de": "Horebeke",
+"prov": "VOV",
+"region": "02000"
+},
+"BE45063": {
+"lat": 50.8008,
+"lon": 3.8409,
+"fr": "Lierde",
+"nl": "Lierde",
+"de": "Lierde",
+"prov": "VOV",
+"region": "02000"
+},
+"BE45064": {
+"lat": 50.7934,
+"lon": 3.6214,
+"fr": "Maarkedal",
+"nl": "Maarkedal",
+"de": "Maarkedal",
+"prov": "VOV",
+"region": "02000"
+},
+"BE45065": {
+"lat": 50.8751,
+"lon": 3.7242,
+"fr": "Zwalin",
+"nl": "Zwalm",
+"de": "Zwalm",
+"prov": "VOV",
+"region": "02000"
+},
+"BE46020": {
+"lat": 51.2337,
+"lon": 4.1224,
+"fr": "Sint-Gillis-Waas",
+"nl": "Sint-Gillis-Waas",
+"de": "Sint-Gillis-Waas",
+"prov": "VOV",
+"region": "02000"
+},
+"BE46021": {
+"lat": 51.1695,
+"lon": 4.1622,
+"fr": "Saint-Nicolas",
+"nl": "Sint-Niklaas",
+"de": "Sint-Niklaas",
+"prov": "VOV",
+"region": "02000"
+},
+"BE46024": {
+"lat": 51.2149,
+"lon": 4.0235,
+"fr": "Stekene",
+"nl": "Stekene",
+"de": "Stekene",
+"prov": "VOV",
+"region": "02000"
+},
+"BE46025": {
+"lat": 51.1453,
+"lon": 4.2189,
+"fr": "Tamise",
+"nl": "Temse",
+"de": "Temse",
+"prov": "VOV",
+"region": "02000"
+},
+"BE51004": {
+"lat": 50.6444,
+"lon": 3.76,
+"fr": "Ath",
+"nl": "Aat",
+"de": "Ath",
+"prov": "WHT",
+"region": "03000"
+},
+"BE51008": {
+"lat": 50.5412,
+"lon": 3.6857,
+"fr": "Beloeil",
+"nl": "Beloeil",
+"de": "Beloeil",
+"prov": "WHT",
+"region": "03000"
+},
+"BE51009": {
+"lat": 50.4883,
+"lon": 3.6549,
+"fr": "Bernissart",
+"nl": "Bernissart",
+"de": "Bernissart",
+"prov": "WHT",
+"region": "03000"
+},
+"BE51012": {
+"lat": 50.6054,
+"lon": 3.8612,
+"fr": "Brugelette",
+"nl": "Brugelette",
+"de": "Brugelette",
+"prov": "WHT",
+"region": "03000"
+},
+"BE51014": {
+"lat": 50.5735,
+"lon": 3.7907,
+"fr": "Chièvres",
+"nl": "Chièvres",
+"de": "Chièvres",
+"prov": "WHT",
+"region": "03000"
+},
+"BE51017": {
+"lat": 50.7287,
+"lon": 3.6763,
+"fr": "Ellezelles",
+"nl": "Elzele",
+"de": "Ellezelles",
+"prov": "WHT",
+"region": "03000"
+},
+"BE51019": {
+"lat": 50.7527,
+"lon": 3.7421,
+"fr": "Flobecq",
+"nl": "Vloesberg",
+"de": "Flobecq",
+"prov": "WHT",
+"region": "03000"
+},
+"BE51065": {
+"lat": 50.6826,
+"lon": 3.583,
+"fr": "Frasnes-lez-Anvaing",
+"nl": "Frasnes-lez-Anvaing",
+"de": "Frasnes-lez-Anvaing",
+"prov": "WHT",
+"region": "03000"
+},
+"BE52010": {
+"lat": 50.4784,
+"lon": 4.2828,
+"fr": "Chapelle-lez-Herlaimont",
+"nl": "Chapelle-lez-Herlaimont",
+"de": "Chapelle-lez-Herlaimont",
+"prov": "WHT",
+"region": "03000"
+},
+"BE52011": {
+"lat": 50.4215,
+"lon": 4.4374,
+"fr": "Charleroi",
+"nl": "Charleroi",
+"de": "Charleroi",
+"prov": "WHT",
+"region": "03000"
+},
+"BE52012": {
+"lat": 50.3922,
+"lon": 4.5215,
+"fr": "Châtelet",
+"nl": "Châtelet",
+"de": "Châtelet",
+"prov": "WHT",
+"region": "03000"
+},
+"BE52015": {
+"lat": 50.4704,
+"lon": 4.3397,
+"fr": "Courcelles",
+"nl": "Courcelles",
+"de": "Courcelles",
+"prov": "WHT",
+"region": "03000"
+},
+"BE52018": {
+"lat": 50.4361,
+"lon": 4.5403,
+"fr": "Farciennes",
+"nl": "Farciennes",
+"de": "Farciennes",
+"prov": "WHT",
+"region": "03000"
+},
+"BE52021": {
+"lat": 50.4799,
+"lon": 4.5345,
+"fr": "Fleurus",
+"nl": "Fleurus",
+"de": "Fleurus",
+"prov": "WHT",
+"region": "03000"
+},
+"BE52022": {
+"lat": 50.4127,
+"lon": 4.3222,
+"fr": "Fontaine-l’Evêque",
+"nl": "Fontaine-l’Evêque",
+"de": "Fontaine-l’Evêque",
+"prov": "WHT",
+"region": "03000"
+},
+"BE52025": {
+"lat": 50.3427,
+"lon": 4.5293,
+"fr": "Gerpinnes",
+"nl": "Gerpinnes",
+"de": "Gerpinnes",
+"prov": "WHT",
+"region": "03000"
+},
+"BE55086": {
+"lat": 50.4952,
+"lon": 4.2368,
+"fr": "Manage",
+"nl": "Manage",
+"de": "Manage",
+"prov": "WHT",
+"region": "03000"
+},
+"BE52048": {
+"lat": 50.3749,
+"lon": 4.3738,
+"fr": "Montigny-le-Tilleul",
+"nl": "Montigny-le-Tilleul",
+"de": "Montigny-le-Tilleul",
+"prov": "WHT",
+"region": "03000"
+},
+"BE52055": {
+"lat": 50.5243,
+"lon": 4.3583,
+"fr": "Pont-à-Celles",
+"nl": "Pont-à-Celles",
+"de": "Pont-à-Celles",
+"prov": "WHT",
+"region": "03000"
+},
+"BE55085": {
+"lat": 50.5514,
+"lon": 4.2655,
+"fr": "Seneffe",
+"nl": "Seneffe",
+"de": "Seneffe",
+"prov": "WHT",
+"region": "03000"
+},
+"BE52074": {
+"lat": 50.4163,
+"lon": 4.5841,
+"fr": "Aiseau-Presles",
+"nl": "Aiseau-Presles",
+"de": "Aiseau-Presles",
+"prov": "WHT",
+"region": "03000"
+},
+"BE52075": {
+"lat": 50.5132,
+"lon": 4.4726,
+"fr": "Les Bons Villers",
+"nl": "Les Bons Villers",
+"de": "Les Bons Villers",
+"prov": "WHT",
+"region": "03000"
+},
+"BE53014": {
+"lat": 50.4255,
+"lon": 3.7988,
+"fr": "Boussu",
+"nl": "Boussu",
+"de": "Boussu",
+"prov": "WHT",
+"region": "03000"
+},
+"BE53020": {
+"lat": 50.3963,
+"lon": 3.7544,
+"fr": "Dour",
+"nl": "Dour",
+"de": "Dour",
+"prov": "WHT",
+"region": "03000"
+},
+"BE53028": {
+"lat": 50.3868,
+"lon": 3.8812,
+"fr": "Frameries",
+"nl": "Frameries",
+"de": "Frameries",
+"prov": "WHT",
+"region": "03000"
+},
+"BE53039": {
+"lat": 50.4391,
+"lon": 3.6863,
+"fr": "Hensies",
+"nl": "Hensies",
+"de": "Hensies",
+"prov": "WHT",
+"region": "03000"
+},
+"BE53044": {
+"lat": 50.5242,
+"lon": 3.9259,
+"fr": "Jurbise",
+"nl": "Jurbeke",
+"de": "Jurbise",
+"prov": "WHT",
+"region": "03000"
+},
+"BE53046": {
+"lat": 50.5762,
+"lon": 3.9335,
+"fr": "Lens",
+"nl": "Lens",
+"de": "Lens",
+"prov": "WHT",
+"region": "03000"
+},
+"BE53053": {
+"lat": 50.4479,
+"lon": 3.9981,
+"fr": "Mons",
+"nl": "Bergen",
+"de": "Mons",
+"prov": "WHT",
+"region": "03000"
+},
+"BE53065": {
+"lat": 50.4408,
+"lon": 3.8588,
+"fr": "Quaregnon",
+"nl": "Quaregnon",
+"de": "Quaregnon",
+"prov": "WHT",
+"region": "03000"
+},
+"BE53068": {
+"lat": 50.3995,
+"lon": 3.697,
+"fr": "Quiévrain",
+"nl": "Quiévrain",
+"de": "Quiévrain",
+"prov": "WHT",
+"region": "03000"
+},
+"BE53070": {
+"lat": 50.4917,
+"lon": 3.7915,
+"fr": "Saint-Ghislain",
+"nl": "Saint-Ghislain",
+"de": "Saint-Ghislain",
+"prov": "WHT",
+"region": "03000"
+},
+"BE53082": {
+"lat": 50.4,
+"lon": 3.8457,
+"fr": "Colfontaine",
+"nl": "Colfontaine",
+"de": "Colfontaine",
+"prov": "WHT",
+"region": "03000"
+},
+"BE53083": {
+"lat": 50.3433,
+"lon": 3.7071,
+"fr": "Honnelles",
+"nl": "Honnelles",
+"de": "Honnelles",
+"prov": "WHT",
+"region": "03000"
+},
+"BE53084": {
+"lat": 50.3654,
+"lon": 3.9246,
+"fr": "Quévy",
+"nl": "Quévy",
+"de": "Quévy",
+"prov": "WHT",
+"region": "03000"
+},
+"BE57096": {
+"lat": 50.7379,
+"lon": 3.2246,
+"fr": "Mouscron",
+"nl": "Moeskroen",
+"de": "Mouscron",
+"prov": "WHT",
+"region": "03000"
+},
+"BE57097": {
+"lat": 50.7271,
+"lon": 2.9015,
+"fr": "Comines-Warneton",
+"nl": "Komen-Waasten",
+"de": "Comines-Warneton",
+"prov": "WHT",
+"region": "03000"
+},
+"BE55004": {
+"lat": 50.6013,
+"lon": 4.1211,
+"fr": "Braine-le-Comte",
+"nl": "’s Gravenbrakel",
+"de": "Braine-le-Comte",
+"prov": "WHT",
+"region": "03000"
+},
+"BE51067": {
+"lat": 50.6677,
+"lon": 3.9925,
+"fr": "Enghien",
+"nl": "Edingen",
+"de": "Enghien",
+"prov": "WHT",
+"region": "03000"
+},
+"BE58001": {
+"lat": 50.4807,
+"lon": 4.1646,
+"fr": "La Louvière",
+"nl": "La Louvière",
+"de": "La Louvière",
+"prov": "WHT",
+"region": "03000"
+},
+"BE51069": {
+"lat": 50.7097,
+"lon": 3.8538,
+"fr": "Lessines",
+"nl": "Lessen",
+"de": "Lessines",
+"prov": "WHT",
+"region": "03000"
+},
+"BE55035": {
+"lat": 50.4908,
+"lon": 4.0865,
+"fr": "Le Roeulx",
+"nl": "Le Roeulx",
+"de": "Le Roeulx",
+"prov": "WHT",
+"region": "03000"
+},
+"BE51068": {
+"lat": 50.6618,
+"lon": 3.9356,
+"fr": "Silly",
+"nl": "Opzullik",
+"de": "Silly",
+"prov": "WHT",
+"region": "03000"
+},
+"BE55040": {
+"lat": 50.5632,
+"lon": 4.0354,
+"fr": "Soignies",
+"nl": "Zinnik",
+"de": "Soignies",
+"prov": "WHT",
+"region": "03000"
+},
+"BE55050": {
+"lat": 50.5625,
+"lon": 4.1789,
+"fr": "Ecaussinnes",
+"nl": "Ecaussinnes",
+"de": "Ecaussinnes",
+"prov": "WHT",
+"region": "03000"
+},
+"BE56001": {
+"lat": 50.4048,
+"lon": 4.2657,
+"fr": "Anderlues",
+"nl": "Anderlues",
+"de": "Anderlues",
+"prov": "WHT",
+"region": "03000"
+},
+"BE56005": {
+"lat": 50.2257,
+"lon": 4.2539,
+"fr": "Beaumont",
+"nl": "Beaumont",
+"de": "Beaumont",
+"prov": "WHT",
+"region": "03000"
+},
+"BE58002": {
+"lat": 50.404,
+"lon": 4.2019,
+"fr": "Binche",
+"nl": "Binche",
+"de": "Binche",
+"prov": "WHT",
+"region": "03000"
+},
+"BE56016": {
+"lat": 50.0654,
+"lon": 4.2953,
+"fr": "Chimay",
+"nl": "Chimay",
+"de": "Chimay",
+"prov": "WHT",
+"region": "03000"
+},
+"BE56022": {
+"lat": 50.3014,
+"lon": 4.1434,
+"fr": "Erquelinnes",
+"nl": "Erquelinnes",
+"de": "Erquelinnes",
+"prov": "WHT",
+"region": "03000"
+},
+"BE56029": {
+"lat": 50.154,
+"lon": 4.3324,
+"fr": "Froidchapelle",
+"nl": "Froidchapelle",
+"de": "Froidchapelle",
+"prov": "WHT",
+"region": "03000"
+},
+"BE56044": {
+"lat": 50.3586,
+"lon": 4.2485,
+"fr": "Lobbes",
+"nl": "Lobbes",
+"de": "Lobbes",
+"prov": "WHT",
+"region": "03000"
+},
+"BE56049": {
+"lat": 50.3013,
+"lon": 4.2206,
+"fr": "Merbes-le-Château",
+"nl": "Merbes-le-Château",
+"de": "Merbes-le-Château",
+"prov": "WHT",
+"region": "03000"
+},
+"BE56051": {
+"lat": 50.0065,
+"lon": 4.1997,
+"fr": "Momignies",
+"nl": "Momignies",
+"de": "Momignies",
+"prov": "WHT",
+"region": "03000"
+},
+"BE56078": {
+"lat": 50.3268,
+"lon": 4.3094,
+"fr": "Thuin",
+"nl": "Thuin",
+"de": "Thuin",
+"prov": "WHT",
+"region": "03000"
+},
+"BE58003": {
+"lat": 50.3887,
+"lon": 4.0892,
+"fr": "Estinnes",
+"nl": "Estinnes",
+"de": "Estinnes",
+"prov": "WHT",
+"region": "03000"
+},
+"BE56086": {
+"lat": 50.3335,
+"lon": 4.418,
+"fr": "Ham-sur-Heure-Nalinnes",
+"nl": "Ham-sur-Heure-Nalinnes",
+"de": "Ham-sur-Heure-Nalinnes",
+"prov": "WHT",
+"region": "03000"
+},
+"BE58004": {
+"lat": 50.4479,
+"lon": 4.2464,
+"fr": "Morlanwelz",
+"nl": "Morlanwelz",
+"de": "Morlanwelz",
+"prov": "WHT",
+"region": "03000"
+},
+"BE56088": {
+"lat": 50.1673,
+"lon": 4.1883,
+"fr": "Sivry-Rance",
+"nl": "Sivry-Rance",
+"de": "Sivry-Rance",
+"prov": "WHT",
+"region": "03000"
+},
+"BE57003": {
+"lat": 50.562,
+"lon": 3.4577,
+"fr": "Antoing",
+"nl": "Antoing",
+"de": "Antoing",
+"prov": "WHT",
+"region": "03000"
+},
+"BE57018": {
+"lat": 50.7157,
+"lon": 3.4329,
+"fr": "Celles",
+"nl": "Celles",
+"de": "Celles",
+"prov": "WHT",
+"region": "03000"
+},
+"BE57027": {
+"lat": 50.6961,
+"lon": 3.2826,
+"fr": "Estaimpuis",
+"nl": "Estaimpuis",
+"de": "Estaimpuis",
+"prov": "WHT",
+"region": "03000"
+},
+"BE57062": {
+"lat": 50.6824,
+"lon": 3.3585,
+"fr": "Pecq",
+"nl": "Pecq",
+"de": "Pecq",
+"prov": "WHT",
+"region": "03000"
+},
+"BE57064": {
+"lat": 50.5339,
+"lon": 3.5701,
+"fr": "Péruwelz",
+"nl": "Péruwelz",
+"de": "Péruwelz",
+"prov": "WHT",
+"region": "03000"
+},
+"BE57072": {
+"lat": 50.5418,
+"lon": 3.3088,
+"fr": "Rumes",
+"nl": "Rumes",
+"de": "Rumes",
+"prov": "WHT",
+"region": "03000"
+},
+"BE57081": {
+"lat": 50.6059,
+"lon": 3.3797,
+"fr": "Tournai",
+"nl": "Doornik",
+"de": "Tournai",
+"prov": "WHT",
+"region": "03000"
+},
+"BE57093": {
+"lat": 50.5308,
+"lon": 3.3988,
+"fr": "Brunehaut",
+"nl": "Brunehaut",
+"de": "Brunehaut",
+"prov": "WHT",
+"region": "03000"
+},
+"BE57094": {
+"lat": 50.5955,
+"lon": 3.6405,
+"fr": "Leuze-en-Hainaut",
+"nl": "Leuze-en-Hainaut",
+"de": "Leuze-en-Hainaut",
+"prov": "WHT",
+"region": "03000"
+},
+"BE57095": {
+"lat": 50.7355,
+"lon": 3.5122,
+"fr": "Mont-de-l’Enclus",
+"nl": "Mont-de-l’Enclus",
+"de": "Mont-de-l’Enclus",
+"prov": "WHT",
+"region": "03000"
+},
+"BE61003": {
+"lat": 50.5543,
+"lon": 5.31,
+"fr": "Amay",
+"nl": "Amay",
+"de": "Amay",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61010": {
+"lat": 50.585,
+"lon": 5.1372,
+"fr": "Burdinne",
+"nl": "Burdinne",
+"de": "Burdinne",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61012": {
+"lat": 50.42,
+"lon": 5.3608,
+"fr": "Clavier",
+"nl": "Clavier",
+"de": "Clavier",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61019": {
+"lat": 50.4082,
+"lon": 5.6218,
+"fr": "Ferrières",
+"nl": "Ferrières",
+"de": "Ferrières",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61024": {
+"lat": 50.4334,
+"lon": 5.5496,
+"fr": "Hamoir",
+"nl": "Hamoir",
+"de": "Hamoir",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61028": {
+"lat": 50.5427,
+"lon": 5.1118,
+"fr": "Héron",
+"nl": "Héron",
+"de": "Héron",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61031": {
+"lat": 50.4934,
+"lon": 5.1693,
+"fr": "Huy",
+"nl": "Hoei",
+"de": "Huy",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61039": {
+"lat": 50.4691,
+"lon": 5.2376,
+"fr": "Marchin",
+"nl": "Marchin",
+"de": "Marchin",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61041": {
+"lat": 50.4811,
+"lon": 5.2909,
+"fr": "Modave",
+"nl": "Modave",
+"de": "Modave",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61043": {
+"lat": 50.5152,
+"lon": 5.4124,
+"fr": "Nandrin",
+"nl": "Nandrin",
+"de": "Nandrin",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61048": {
+"lat": 50.4394,
+"lon": 5.4679,
+"fr": "Ouffet",
+"nl": "Ouffet",
+"de": "Ouffet",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61063": {
+"lat": 50.6054,
+"lon": 5.3109,
+"fr": "Verlaine",
+"nl": "Verlaine",
+"de": "Verlaine",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61068": {
+"lat": 50.6004,
+"lon": 5.2255,
+"fr": "Villers-Le-Bouillet",
+"nl": "Villers-Le-Bouillet",
+"de": "Villers-Le-Bouillet",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61072": {
+"lat": 50.5474,
+"lon": 5.1927,
+"fr": "Wanze",
+"nl": "Wanze",
+"de": "Wanze",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61079": {
+"lat": 50.494,
+"lon": 5.4856,
+"fr": "Anthisnes",
+"nl": "Anthisnes",
+"de": "Anthisnes",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61080": {
+"lat": 50.5625,
+"lon": 5.4007,
+"fr": "Engis",
+"nl": "Engis",
+"de": "Engis",
+"prov": "WLG",
+"region": "03000"
+},
+"BE61081": {
+"lat": 50.4789,
+"lon": 5.3813,
+"fr": "Tinlot",
+"nl": "Tinlot",
+"de": "Tinlot",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62003": {
+"lat": 50.6665,
+"lon": 5.5175,
+"fr": "Ans",
+"nl": "Ans",
+"de": "Ans",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62006": {
+"lat": 50.6803,
+"lon": 5.4551,
+"fr": "Awans",
+"nl": "Awans",
+"de": "Awans",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62009": {
+"lat": 50.4447,
+"lon": 5.6785,
+"fr": "Aywaille",
+"nl": "Aywaille",
+"de": "Aywaille",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62011": {
+"lat": 50.7657,
+"lon": 5.6355,
+"fr": "Bassenge",
+"nl": "Bitsingen",
+"de": "Bassenge",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62015": {
+"lat": 50.6216,
+"lon": 5.6514,
+"fr": "Beyne-Heusay",
+"nl": "Beyne-Heusay",
+"de": "Beyne-Heusay",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62022": {
+"lat": 50.5864,
+"lon": 5.63,
+"fr": "Chaudfontaine",
+"nl": "Chaudfontaine",
+"de": "Chaudfontaine",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62026": {
+"lat": 50.4784,
+"lon": 5.567,
+"fr": "Comblain-au-Pont",
+"nl": "Comblain-au-Pont",
+"de": "Comblain-au-Pont",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62027": {
+"lat": 50.724,
+"lon": 5.7687,
+"fr": "Dalhem",
+"nl": "Dalhem",
+"de": "Dalhem",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62032": {
+"lat": 50.5432,
+"lon": 5.576,
+"fr": "Esneux",
+"nl": "Esneux",
+"de": "Esneux",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62038": {
+"lat": 50.619,
+"lon": 5.6864,
+"fr": "Fléron",
+"nl": "Fléron",
+"de": "Fléron",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62051": {
+"lat": 50.6795,
+"lon": 5.6247,
+"fr": "Herstal",
+"nl": "Herstal",
+"de": "Herstal",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62060": {
+"lat": 50.72,
+"lon": 5.5633,
+"fr": "Juprelle",
+"nl": "Juprelle",
+"de": "Juprelle",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62063": {
+"lat": 50.6325,
+"lon": 5.5828,
+"fr": "Liège",
+"nl": "Luik",
+"de": "Lüttich",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62079": {
+"lat": 50.7207,
+"lon": 5.6509,
+"fr": "Oupeye",
+"nl": "Oupeye",
+"de": "Oupeye",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62093": {
+"lat": 50.638,
+"lon": 5.5205,
+"fr": "Saint-Nicolas",
+"nl": "Saint-Nicolas",
+"de": "Saint-Nicolas",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62096": {
+"lat": 50.5863,
+"lon": 5.5171,
+"fr": "Seraing",
+"nl": "Seraing",
+"de": "Seraing",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62099": {
+"lat": 50.6342,
+"lon": 5.7373,
+"fr": "Soumagne",
+"nl": "Soumagne",
+"de": "Soumagne",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62100": {
+"lat": 50.5164,
+"lon": 5.6542,
+"fr": "Sprimont",
+"nl": "Sprimont",
+"de": "Sprimont",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62108": {
+"lat": 50.7373,
+"lon": 5.7036,
+"fr": "Visé",
+"nl": "Wezet",
+"de": "Visé",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62118": {
+"lat": 50.6421,
+"lon": 5.4752,
+"fr": "Grâce-Hollogne",
+"nl": "Grâce-Hollogne",
+"de": "Grâce-Hollogne",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62119": {
+"lat": 50.6863,
+"lon": 5.7254,
+"fr": "Blegny",
+"nl": "Blegny",
+"de": "Blegny",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62120": {
+"lat": 50.5973,
+"lon": 5.443,
+"fr": "Flémalle",
+"nl": "Flémalle",
+"de": "Flémalle",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62121": {
+"lat": 50.5436,
+"lon": 5.4765,
+"fr": "Neupré",
+"nl": "Neupré",
+"de": "Neupré",
+"prov": "WLG",
+"region": "03000"
+},
+"BE62122": {
+"lat": 50.5713,
+"lon": 5.6812,
+"fr": "Trooz",
+"nl": "Trooz",
+"de": "Trooz",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63001": {
+"lat": 50.3496,
+"lon": 6.1939,
+"fr": "Amblève",
+"nl": "Amel",
+"de": "Amel",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63003": {
+"lat": 50.7003,
+"lon": 5.8406,
+"fr": "Aubel",
+"nl": "Aubel",
+"de": "Aubel",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63004": {
+"lat": 50.5609,
+"lon": 6.0851,
+"fr": "Baelen",
+"nl": "Baelen",
+"de": "Baelen",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63012": {
+"lat": 50.4094,
+"lon": 6.2998,
+"fr": "Bullange",
+"nl": "Büllingen",
+"de": "Büllingen",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63013": {
+"lat": 50.4594,
+"lon": 6.2008,
+"fr": "Butgenbach",
+"nl": "Bütgenbach",
+"de": "Bütgenbach",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63020": {
+"lat": 50.6172,
+"lon": 5.8817,
+"fr": "Dison",
+"nl": "Dison",
+"de": "Dison",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63023": {
+"lat": 50.594,
+"lon": 6.1806,
+"fr": "Eupen",
+"nl": "Eupen",
+"de": "Eupen",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63035": {
+"lat": 50.6471,
+"lon": 5.799,
+"fr": "Herve",
+"nl": "Herve",
+"de": "Herve",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63038": {
+"lat": 50.5352,
+"lon": 5.9713,
+"fr": "Jalhay",
+"nl": "Jalhay",
+"de": "Jalhay",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63040": {
+"lat": 50.716,
+"lon": 6.0201,
+"fr": "La Calamine",
+"nl": "Kelmis",
+"de": "Kelmis",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63045": {
+"lat": 50.3025,
+"lon": 5.7865,
+"fr": "Lierneux",
+"nl": "Lierneux",
+"de": "Lierneux",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63046": {
+"lat": 50.6013,
+"lon": 5.9423,
+"fr": "Limbourg",
+"nl": "Limburg",
+"de": "Limbourg",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63048": {
+"lat": 50.6731,
+"lon": 6.0009,
+"fr": "Lontzen",
+"nl": "Lontzen",
+"de": "Lontzen",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63049": {
+"lat": 50.4112,
+"lon": 6.0332,
+"fr": "Malmedy",
+"nl": "Malmedy",
+"de": "Malmedy",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63057": {
+"lat": 50.5869,
+"lon": 5.7246,
+"fr": "Olne",
+"nl": "Olne",
+"de": "Olne",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63058": {
+"lat": 50.5752,
+"lon": 5.7943,
+"fr": "Pepinster",
+"nl": "Pepinster",
+"de": "Pepinster",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63061": {
+"lat": 50.6742,
+"lon": 6.1081,
+"fr": "Raeren",
+"nl": "Raeren",
+"de": "Raeren",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63067": {
+"lat": 50.3015,
+"lon": 6.0554,
+"fr": "Saint-Vith",
+"nl": "Sankt Vith",
+"de": "Sankt Vith",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63072": {
+"lat": 50.4772,
+"lon": 5.8809,
+"fr": "Spa",
+"nl": "Spa",
+"de": "Spa",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63073": {
+"lat": 50.4064,
+"lon": 5.9489,
+"fr": "Stavelot",
+"nl": "Stavelot",
+"de": "Stavelot",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63075": {
+"lat": 50.4017,
+"lon": 5.7473,
+"fr": "Stoumont",
+"nl": "Stoumont",
+"de": "Stoumont",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63076": {
+"lat": 50.5125,
+"lon": 5.802,
+"fr": "Theux",
+"nl": "Theux",
+"de": "Theux",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63079": {
+"lat": 50.5784,
+"lon": 5.8787,
+"fr": "Verviers",
+"nl": "Verviers",
+"de": "Verviers",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63080": {
+"lat": 50.4174,
+"lon": 6.1194,
+"fr": "Waimes",
+"nl": "Weismes",
+"de": "Weismes",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63084": {
+"lat": 50.6694,
+"lon": 5.9423,
+"fr": "Welkenraedt",
+"nl": "Welkenraedt",
+"de": "Welkenraedt",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63086": {
+"lat": 50.3657,
+"lon": 5.8497,
+"fr": "Trois-Ponts",
+"nl": "Trois-Ponts",
+"de": "Trois-Ponts",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63087": {
+"lat": 50.2075,
+"lon": 6.0717,
+"fr": "Burg-Reuland",
+"nl": "Burg-Reuland",
+"de": "Burg-Reuland",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63088": {
+"lat": 50.7274,
+"lon": 5.9453,
+"fr": "Plombières",
+"nl": "Plombières",
+"de": "Plombières",
+"prov": "WLG",
+"region": "03000"
+},
+"BE63089": {
+"lat": 50.6594,
+"lon": 5.8694,
+"fr": "Thimister-Clermont",
+"nl": "Thimister-Clermont",
+"de": "Thimister-Clermont",
+"prov": "WLG",
+"region": "03000"
+},
+"BE64008": {
+"lat": 50.7039,
+"lon": 5.2138,
+"fr": "Berloz",
+"nl": "Berloz",
+"de": "Berloz",
+"prov": "WLG",
+"region": "03000"
+},
+"BE64015": {
+"lat": 50.6212,
+"lon": 5.1656,
+"fr": "Braives",
+"nl": "Braives",
+"de": "Braives",
+"prov": "WLG",
+"region": "03000"
+},
+"BE64021": {
+"lat": 50.7128,
+"lon": 5.3911,
+"fr": "Crisnée",
+"nl": "Crisnée",
+"de": "Crisnée",
+"prov": "WLG",
+"region": "03000"
+},
+"BE64023": {
+"lat": 50.6486,
+"lon": 5.3152,
+"fr": "Donceel",
+"nl": "Donceel",
+"de": "Donceel",
+"prov": "WLG",
+"region": "03000"
+},
+"BE64025": {
+"lat": 50.6641,
+"lon": 5.4053,
+"fr": "Fexhe-le-Haut-Clocher",
+"nl": "Fexhe-le-Haut-Clocher",
+"de": "Fexhe-le-Haut-Clocher",
+"prov": "WLG",
+"region": "03000"
+},
+"BE64029": {
+"lat": 50.6691,
+"lon": 5.1833,
+"fr": "Geer",
+"nl": "Geer",
+"de": "Geer",
+"prov": "WLG",
+"region": "03000"
+},
+"BE64034": {
+"lat": 50.6705,
+"lon": 5.0794,
+"fr": "Hannut",
+"nl": "Hannuit",
+"de": "Hannut",
+"prov": "WLG",
+"region": "03000"
+},
+"BE64047": {
+"lat": 50.7181,
+"lon": 5.0287,
+"fr": "Lincent",
+"nl": "Lijsem",
+"de": "Lincent",
+"prov": "WLG",
+"region": "03000"
+},
+"BE64056": {
+"lat": 50.7214,
+"lon": 5.3487,
+"fr": "Oreye",
+"nl": "Oerle",
+"de": "Oreye",
+"prov": "WLG",
+"region": "03000"
+},
+"BE64063": {
+"lat": 50.6846,
+"lon": 5.3342,
+"fr": "Remicourt",
+"nl": "Remicourt",
+"de": "Remicourt",
+"prov": "WLG",
+"region": "03000"
+},
+"BE64065": {
+"lat": 50.5983,
+"lon": 5.3613,
+"fr": "Saint-Georges-sur-Meuse",
+"nl": "Saint-Georges-sur-Meuse",
+"de": "Saint-Georges-sur-Meuse",
+"prov": "WLG",
+"region": "03000"
+},
+"BE64074": {
+"lat": 50.6925,
+"lon": 5.2705,
+"fr": "Waremme",
+"nl": "Borgworm",
+"de": "Waremme",
+"prov": "WLG",
+"region": "03000"
+},
+"BE64075": {
+"lat": 50.6143,
+"lon": 5.026,
+"fr": "Wasseiges",
+"nl": "Wasseiges",
+"de": "Wasseiges",
+"prov": "WLG",
+"region": "03000"
+},
+"BE64076": {
+"lat": 50.649,
+"lon": 5.2393,
+"fr": "Faimes",
+"nl": "Faimes",
+"de": "Faimes",
+"prov": "WLG",
+"region": "03000"
+},
+"BE71002": {
+"lat": 51.0024,
+"lon": 5.5785,
+"fr": "As",
+"nl": "As",
+"de": "As",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71004": {
+"lat": 51.0664,
+"lon": 5.2213,
+"fr": "Beringen",
+"nl": "Beringen",
+"de": "Beringen",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71011": {
+"lat": 50.9102,
+"lon": 5.4176,
+"fr": "Diepenbeek",
+"nl": "Diepenbeek",
+"de": "Diepenbeek",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71016": {
+"lat": 50.9674,
+"lon": 5.5006,
+"fr": "Genk",
+"nl": "Genk",
+"de": "Genk",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71017": {
+"lat": 50.7365,
+"lon": 5.1488,
+"fr": "Gingelom",
+"nl": "Gingelom",
+"de": "Gingelom",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71020": {
+"lat": 50.9404,
+"lon": 5.0945,
+"fr": "Halen",
+"nl": "Halen",
+"de": "Halen",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71072": {
+"lat": 50.937,
+"lon": 5.3062,
+"fr": "Hasselt",
+"nl": "Hasselt",
+"de": "Hasselt",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71024": {
+"lat": 50.9401,
+"lon": 5.185,
+"fr": "Herck-la-Ville",
+"nl": "Herk-de-Stad",
+"de": "Herk-de-Stad",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71034": {
+"lat": 51.1215,
+"lon": 5.2585,
+"fr": "Bourg-Léopold",
+"nl": "Leopoldsburg",
+"de": "Leopoldsburg",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71037": {
+"lat": 50.9993,
+"lon": 5.2005,
+"fr": "Lummen",
+"nl": "Lummen",
+"de": "Lummen",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71045": {
+"lat": 50.8705,
+"lon": 5.1923,
+"fr": "Nieuwerkerken",
+"nl": "Nieuwerkerken",
+"de": "Nieuwerkerken",
+"prov": "VLI",
+"region": "02000"
+},
+"BE72042": {
+"lat": 51.0765,
+"lon": 5.5329,
+"fr": "Oudsbergen",
+"nl": "Oudsbergen",
+"de": "Oudsbergen",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71053": {
+"lat": 50.8103,
+"lon": 5.192,
+"fr": "Saint-Trond",
+"nl": "Sint-Truiden",
+"de": "Sint-Truiden",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71071": {
+"lat": 51.0874,
+"lon": 5.1474,
+"fr": "Tessenderlo-Ham",
+"nl": "Tessenderlo-Ham",
+"de": "Tessenderlo-Ham",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71066": {
+"lat": 50.9893,
+"lon": 5.3457,
+"fr": "Zonhoven",
+"nl": "Zonhoven",
+"de": "Zonhoven",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71067": {
+"lat": 50.9373,
+"lon": 5.5746,
+"fr": "Zutendaal",
+"nl": "Zutendaal",
+"de": "Zutendaal",
+"prov": "VLI",
+"region": "02000"
+},
+"BE71070": {
+"lat": 51.0185,
+"lon": 5.2818,
+"fr": "Heusden-Zolder",
+"nl": "Heusden-Zolder",
+"de": "Heusden-Zolder",
+"prov": "VLI",
+"region": "02000"
+},
+"BE72003": {
+"lat": 51.1888,
+"lon": 5.5621,
+"fr": "Bocholt",
+"nl": "Bocholt",
+"de": "Bocholt",
+"prov": "VLI",
+"region": "02000"
+},
+"BE72004": {
+"lat": 51.1439,
+"lon": 5.6426,
+"fr": "Bree",
+"nl": "Bree",
+"de": "Bree",
+"prov": "VLI",
+"region": "02000"
+},
+"BE72018": {
+"lat": 51.1581,
+"lon": 5.7431,
+"fr": "Kinrooi",
+"nl": "Kinrooi",
+"de": "Kinrooi",
+"prov": "VLI",
+"region": "02000"
+},
+"BE72020": {
+"lat": 51.2163,
+"lon": 5.2916,
+"fr": "Lommel",
+"nl": "Lommel",
+"de": "Lommel",
+"prov": "VLI",
+"region": "02000"
+},
+"BE72021": {
+"lat": 51.1009,
+"lon": 5.7001,
+"fr": "Maaseik",
+"nl": "Maaseik",
+"de": "Maaseik",
+"prov": "VLI",
+"region": "02000"
+},
+"BE72043": {
+"lat": 51.2228,
+"lon": 5.4317,
+"fr": "Pelt",
+"nl": "Pelt",
+"de": "Pelt",
+"prov": "VLI",
+"region": "02000"
+},
+"BE72030": {
+"lat": 51.1162,
+"lon": 5.4392,
+"fr": "Peer",
+"nl": "Peer",
+"de": "Peer",
+"prov": "VLI",
+"region": "02000"
+},
+"BE72037": {
+"lat": 51.2713,
+"lon": 5.4939,
+"fr": "Hamont-Achel",
+"nl": "Hamont-Achel",
+"de": "Hamont-Achel",
+"prov": "VLI",
+"region": "02000"
+},
+"BE72038": {
+"lat": 51.137,
+"lon": 5.3536,
+"fr": "Hechtel-Eksel",
+"nl": "Hechtel-Eksel",
+"de": "Hechtel-Eksel",
+"prov": "VLI",
+"region": "02000"
+},
+"BE72039": {
+"lat": 51.0508,
+"lon": 5.3951,
+"fr": "Houthalen-Helchteren",
+"nl": "Houthalen-Helchteren",
+"de": "Houthalen-Helchteren",
+"prov": "VLI",
+"region": "02000"
+},
+"BE72041": {
+"lat": 51.039,
+"lon": 5.7234,
+"fr": "Dilsen-Stokkem",
+"nl": "Dilsen-Stokkem",
+"de": "Dilsen-Stokkem",
+"prov": "VLI",
+"region": "02000"
+},
+"BE73001": {
+"lat": 50.8771,
+"lon": 5.2818,
+"fr": "Alken",
+"nl": "Alken",
+"de": "Alken",
+"prov": "VLI",
+"region": "02000"
+},
+"BE73110": {
+"lat": 50.866,
+"lon": 5.4962,
+"fr": "Bilzen-Hoeselt",
+"nl": "Bilzen-Hoeselt",
+"de": "Bilzen-Hoeselt",
+"prov": "VLI",
+"region": "02000"
+},
+"BE73111": {
+"lat": 50.7756,
+"lon": 5.4426,
+"fr": "Tongres-Looz",
+"nl": "Tongeren-Borgloon",
+"de": "Tongeren-Borgloon",
+"prov": "VLI",
+"region": "02000"
+},
+"BE73022": {
+"lat": 50.7537,
+"lon": 5.3006,
+"fr": "Heers",
+"nl": "Heers",
+"de": "Heers",
+"prov": "VLI",
+"region": "02000"
+},
+"BE73028": {
+"lat": 50.7261,
+"lon": 5.4264,
+"fr": "Herstappe",
+"nl": "Herstappe",
+"de": "Herstappe",
+"prov": "VLI",
+"region": "02000"
+},
+"BE73042": {
+"lat": 50.9075,
+"lon": 5.6456,
+"fr": "Lanaken",
+"nl": "Lanaken",
+"de": "Lanaken",
+"prov": "VLI",
+"region": "02000"
+},
+"BE73066": {
+"lat": 50.8092,
+"lon": 5.5967,
+"fr": "Riemst",
+"nl": "Riemst",
+"de": "Riemst",
+"prov": "VLI",
+"region": "02000"
+},
+"BE73098": {
+"lat": 50.8436,
+"lon": 5.3386,
+"fr": "Wellen",
+"nl": "Wellen",
+"de": "Wellen",
+"prov": "VLI",
+"region": "02000"
+},
+"BE73107": {
+"lat": 50.9687,
+"lon": 5.6825,
+"fr": "Maasmechelen",
+"nl": "Maasmechelen",
+"de": "Maasmechelen",
+"prov": "VLI",
+"region": "02000"
+},
+"BE73109": {
+"lat": 50.7398,
+"lon": 5.8701,
+"fr": "Fourons",
+"nl": "Voeren",
+"de": "Voeren",
+"prov": "VLI",
+"region": "02000"
+},
+"BE81001": {
+"lat": 49.6713,
+"lon": 5.7601,
+"fr": "Arlon",
+"nl": "Aarlen",
+"de": "Arlon",
+"prov": "WLX",
+"region": "03000"
+},
+"BE81003": {
+"lat": 49.756,
+"lon": 5.7731,
+"fr": "Attert",
+"nl": "Attert",
+"de": "Attert",
+"prov": "WLX",
+"region": "03000"
+},
+"BE81004": {
+"lat": 49.5784,
+"lon": 5.7525,
+"fr": "Aubange",
+"nl": "Aubange",
+"de": "Aubange",
+"prov": "WLX",
+"region": "03000"
+},
+"BE81013": {
+"lat": 49.8,
+"lon": 5.7275,
+"fr": "Martelange",
+"nl": "Martelange",
+"de": "Martelange",
+"prov": "WLX",
+"region": "03000"
+},
+"BE81015": {
+"lat": 49.6117,
+"lon": 5.8191,
+"fr": "Messancy",
+"nl": "Messancy",
+"de": "Messancy",
+"prov": "WLX",
+"region": "03000"
+},
+"BE82039": {
+"lat": 50.0197,
+"lon": 5.7431,
+"fr": "Bastogne",
+"nl": "Bastenaken",
+"de": "Bastnach",
+"prov": "WLX",
+"region": "03000"
+},
+"BE82009": {
+"lat": 49.8713,
+"lon": 5.6838,
+"fr": "Fauvillers",
+"nl": "Fauvillers",
+"de": "Fauvillers",
+"prov": "WLX",
+"region": "03000"
+},
+"BE82014": {
+"lat": 50.1401,
+"lon": 5.7352,
+"fr": "Houffalize",
+"nl": "Houffalize",
+"de": "Houffalize",
+"prov": "WLX",
+"region": "03000"
+},
+"BE82032": {
+"lat": 50.2953,
+"lon": 5.9089,
+"fr": "Vielsalm",
+"nl": "Vielsalm",
+"de": "Vielsalm",
+"prov": "WLX",
+"region": "03000"
+},
+"BE82036": {
+"lat": 49.9457,
+"lon": 5.6277,
+"fr": "Vaux-sur-Sûre",
+"nl": "Vaux-sur-Sûre",
+"de": "Vaux-sur-Sûre",
+"prov": "WLX",
+"region": "03000"
+},
+"BE82037": {
+"lat": 50.182,
+"lon": 5.9051,
+"fr": "Gouvy",
+"nl": "Gouvy",
+"de": "Gouvy",
+"prov": "WLX",
+"region": "03000"
+},
+"BE82038": {
+"lat": 50.0184,
+"lon": 5.5475,
+"fr": "Sainte-Ode",
+"nl": "Sainte-Ode",
+"de": "Sainte-Ode",
+"prov": "WLX",
+"region": "03000"
+},
+"BE83012": {
+"lat": 50.3693,
+"lon": 5.4894,
+"fr": "Durbuy",
+"nl": "Durbuy",
+"de": "Durbuy",
+"prov": "WLX",
+"region": "03000"
+},
+"BE83013": {
+"lat": 50.2939,
+"lon": 5.5776,
+"fr": "Erezée",
+"nl": "Erezée",
+"de": "Erezée",
+"prov": "WLX",
+"region": "03000"
+},
+"BE83028": {
+"lat": 50.2669,
+"lon": 5.431,
+"fr": "Hotton",
+"nl": "Hotton",
+"de": "Hotton",
+"prov": "WLX",
+"region": "03000"
+},
+"BE83031": {
+"lat": 50.1626,
+"lon": 5.6098,
+"fr": "La Roche-en-Ardenne",
+"nl": "La Roche-en-Ardenne",
+"de": "La Roche-en-Ardenne",
+"prov": "WLX",
+"region": "03000"
+},
+"BE83034": {
+"lat": 50.199,
+"lon": 5.2923,
+"fr": "Marche-en-Famenne",
+"nl": "Marche-en-Famenne",
+"de": "Marche-en-Famenne",
+"prov": "WLX",
+"region": "03000"
+},
+"BE83040": {
+"lat": 50.1388,
+"lon": 5.3567,
+"fr": "Nassogne",
+"nl": "Nassogne",
+"de": "Nassogne",
+"prov": "WLX",
+"region": "03000"
+},
+"BE83044": {
+"lat": 50.2192,
+"lon": 5.5117,
+"fr": "Rendeux",
+"nl": "Rendeux",
+"de": "Rendeux",
+"prov": "WLX",
+"region": "03000"
+},
+"BE83049": {
+"lat": 50.1087,
+"lon": 5.5083,
+"fr": "Tenneville",
+"nl": "Tenneville",
+"de": "Tenneville",
+"prov": "WLX",
+"region": "03000"
+},
+"BE83055": {
+"lat": 50.2733,
+"lon": 5.6705,
+"fr": "Manhay",
+"nl": "Manhay",
+"de": "Manhay",
+"prov": "WLX",
+"region": "03000"
+},
+"BE84009": {
+"lat": 49.8604,
+"lon": 5.2434,
+"fr": "Bertrix",
+"nl": "Bertrix",
+"de": "Bertrix",
+"prov": "WLX",
+"region": "03000"
+},
+"BE84010": {
+"lat": 49.8219,
+"lon": 5.055,
+"fr": "Bouillon",
+"nl": "Bouillon",
+"de": "Bouillon",
+"prov": "WLX",
+"region": "03000"
+},
+"BE84016": {
+"lat": 49.9914,
+"lon": 5.0871,
+"fr": "Daverdisse",
+"nl": "Daverdisse",
+"de": "Daverdisse",
+"prov": "WLX",
+"region": "03000"
+},
+"BE84029": {
+"lat": 49.7867,
+"lon": 5.2675,
+"fr": "Herbeumont",
+"nl": "Herbeumont",
+"de": "Herbeumont",
+"prov": "WLX",
+"region": "03000"
+},
+"BE84033": {
+"lat": 49.8222,
+"lon": 5.5874,
+"fr": "Léglise",
+"nl": "Léglise",
+"de": "Léglise",
+"prov": "WLX",
+"region": "03000"
+},
+"BE84035": {
+"lat": 49.9723,
+"lon": 5.2453,
+"fr": "Libin",
+"nl": "Libin",
+"de": "Libin",
+"prov": "WLX",
+"region": "03000"
+},
+"BE84043": {
+"lat": 49.8452,
+"lon": 5.4203,
+"fr": "Neufchâteau",
+"nl": "Neufchâteau",
+"de": "Neufchâteau",
+"prov": "WLX",
+"region": "03000"
+},
+"BE84050": {
+"lat": 49.8867,
+"lon": 5.1319,
+"fr": "Paliseul",
+"nl": "Paliseul",
+"de": "Paliseul",
+"prov": "WLX",
+"region": "03000"
+},
+"BE84059": {
+"lat": 50.0417,
+"lon": 5.3425,
+"fr": "Saint-Hubert",
+"nl": "Saint-Hubert",
+"de": "Saint-Hubert",
+"prov": "WLX",
+"region": "03000"
+},
+"BE84068": {
+"lat": 50.0673,
+"lon": 5.2123,
+"fr": "Tellin",
+"nl": "Tellin",
+"de": "Tellin",
+"prov": "WLX",
+"region": "03000"
+},
+"BE84075": {
+"lat": 50.059,
+"lon": 5.0902,
+"fr": "Wellin",
+"nl": "Wellin",
+"de": "Wellin",
+"prov": "WLX",
+"region": "03000"
+},
+"BE84077": {
+"lat": 49.9549,
+"lon": 5.4616,
+"fr": "Libramont-Chevigny",
+"nl": "Libramont-Chevigny",
+"de": "Libramont-Chevigny",
+"prov": "WLX",
+"region": "03000"
+},
+"BE85007": {
+"lat": 49.7197,
+"lon": 5.4017,
+"fr": "Chiny",
+"nl": "Chiny",
+"de": "Chiny",
+"prov": "WLX",
+"region": "03000"
+},
+"BE85009": {
+"lat": 49.6605,
+"lon": 5.6142,
+"fr": "Etalle",
+"nl": "Etalle",
+"de": "Etalle",
+"prov": "WLX",
+"region": "03000"
+},
+"BE85011": {
+"lat": 49.731,
+"lon": 5.2255,
+"fr": "Florenville",
+"nl": "Florenville",
+"de": "Florenville",
+"prov": "WLX",
+"region": "03000"
+},
+"BE85024": {
+"lat": 49.5999,
+"lon": 5.4609,
+"fr": "Meix-devant-Virton",
+"nl": "Meix-devant-Virton",
+"de": "Meix-devant-Virton",
+"prov": "WLX",
+"region": "03000"
+},
+"BE85026": {
+"lat": 49.5691,
+"lon": 5.6865,
+"fr": "Musson",
+"nl": "Musson",
+"de": "Musson",
+"prov": "WLX",
+"region": "03000"
+},
+"BE85034": {
+"lat": 49.6134,
+"lon": 5.6601,
+"fr": "Saint-Léger",
+"nl": "Saint-Léger",
+"de": "Saint-Léger",
+"prov": "WLX",
+"region": "03000"
+},
+"BE85039": {
+"lat": 49.6714,
+"lon": 5.4992,
+"fr": "Tintigny",
+"nl": "Tintigny",
+"de": "Tintigny",
+"prov": "WLX",
+"region": "03000"
+},
+"BE85045": {
+"lat": 49.5734,
+"lon": 5.5782,
+"fr": "Virton",
+"nl": "Virton",
+"de": "Virton",
+"prov": "WLX",
+"region": "03000"
+},
+"BE85046": {
+"lat": 49.7326,
+"lon": 5.6292,
+"fr": "Habay",
+"nl": "Habay",
+"de": "Habay",
+"prov": "WLX",
+"region": "03000"
+},
+"BE85047": {
+"lat": 49.5299,
+"lon": 5.4895,
+"fr": "Rouvroy",
+"nl": "Rouvroy",
+"de": "Rouvroy",
+"prov": "WLX",
+"region": "03000"
+},
+"BE91005": {
+"lat": 50.325,
+"lon": 4.8308,
+"fr": "Anhée",
+"nl": "Anhée",
+"de": "Anhée",
+"prov": "WNA",
+"region": "03000"
+},
+"BE91013": {
+"lat": 50.0962,
+"lon": 4.9861,
+"fr": "Beauraing",
+"nl": "Beauraing",
+"de": "Beauraing",
+"prov": "WNA",
+"region": "03000"
+},
+"BE91015": {
+"lat": 49.9369,
+"lon": 5.0342,
+"fr": "Bièvre",
+"nl": "Bièvre",
+"de": "Bièvre",
+"prov": "WNA",
+"region": "03000"
+},
+"BE91030": {
+"lat": 50.2634,
+"lon": 5.1114,
+"fr": "Ciney",
+"nl": "Ciney",
+"de": "Ciney",
+"prov": "WNA",
+"region": "03000"
+},
+"BE91034": {
+"lat": 50.2619,
+"lon": 4.9494,
+"fr": "Dinant",
+"nl": "Dinant",
+"de": "Dinant",
+"prov": "WNA",
+"region": "03000"
+},
+"BE91054": {
+"lat": 49.9817,
+"lon": 4.8916,
+"fr": "Gedinne",
+"nl": "Gedinne",
+"de": "Gedinne",
+"prov": "WNA",
+"region": "03000"
+},
+"BE91059": {
+"lat": 50.3449,
+"lon": 5.125,
+"fr": "Hamois",
+"nl": "Hamois",
+"de": "Hamois",
+"prov": "WNA",
+"region": "03000"
+},
+"BE91064": {
+"lat": 50.3529,
+"lon": 5.2516,
+"fr": "Havelange",
+"nl": "Havelange",
+"de": "Havelange",
+"prov": "WNA",
+"region": "03000"
+},
+"BE91072": {
+"lat": 50.1936,
+"lon": 5.0207,
+"fr": "Houyet",
+"nl": "Houyet",
+"de": "Houyet",
+"prov": "WNA",
+"region": "03000"
+},
+"BE91103": {
+"lat": 50.2541,
+"lon": 4.8318,
+"fr": "Onhaye",
+"nl": "Onhaye",
+"de": "Onhaye",
+"prov": "WNA",
+"region": "03000"
+},
+"BE91114": {
+"lat": 50.1621,
+"lon": 5.1792,
+"fr": "Rochefort",
+"nl": "Rochefort",
+"de": "Rochefort",
+"prov": "WNA",
+"region": "03000"
+},
+"BE91120": {
+"lat": 50.2764,
+"lon": 5.2999,
+"fr": "Somme-Leuze",
+"nl": "Somme-Leuze",
+"de": "Somme-Leuze",
+"prov": "WNA",
+"region": "03000"
+},
+"BE91141": {
+"lat": 50.3179,
+"lon": 4.9136,
+"fr": "Yvoir",
+"nl": "Yvoir",
+"de": "Yvoir",
+"prov": "WNA",
+"region": "03000"
+},
+"BE91142": {
+"lat": 50.1925,
+"lon": 4.8256,
+"fr": "Hastière",
+"nl": "Hastière",
+"de": "Hastière",
+"prov": "WNA",
+"region": "03000"
+},
+"BE91143": {
+"lat": 49.8376,
+"lon": 4.9193,
+"fr": "Vresse-sur-Semois",
+"nl": "Vresse-sur-Semois",
+"de": "Vresse-sur-Semois",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92003": {
+"lat": 50.4947,
+"lon": 5.0557,
+"fr": "Andenne",
+"nl": "Andenne",
+"de": "Andenne",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92006": {
+"lat": 50.3778,
+"lon": 4.9686,
+"fr": "Assesse",
+"nl": "Assesse",
+"de": "Assesse",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92035": {
+"lat": 50.5804,
+"lon": 4.8953,
+"fr": "Eghezée",
+"nl": "Eghezée",
+"de": "Eghezée",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92045": {
+"lat": 50.4394,
+"lon": 4.7591,
+"fr": "Floreffe",
+"nl": "Floreffe",
+"de": "Floreffe",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92048": {
+"lat": 50.3982,
+"lon": 4.6948,
+"fr": "Fosses-la-Ville",
+"nl": "Fosses-la-Ville",
+"de": "Fosses-la-Ville",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92054": {
+"lat": 50.4288,
+"lon": 5.0477,
+"fr": "Gesves",
+"nl": "Gesves",
+"de": "Gesves",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92087": {
+"lat": 50.3151,
+"lon": 4.6689,
+"fr": "Mettet",
+"nl": "Mettet",
+"de": "Mettet",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92094": {
+"lat": 50.4579,
+"lon": 4.8891,
+"fr": "Namur",
+"nl": "Namen",
+"de": "Namur",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92097": {
+"lat": 50.4384,
+"lon": 5.1845,
+"fr": "Ohey",
+"nl": "Ohey",
+"de": "Ohey",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92101": {
+"lat": 50.3831,
+"lon": 4.8264,
+"fr": "Profondeville",
+"nl": "Profondeville",
+"de": "Profondeville",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92114": {
+"lat": 50.5326,
+"lon": 4.6073,
+"fr": "Sombreffe",
+"nl": "Sombreffe",
+"de": "Sombreffe",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92137": {
+"lat": 50.4504,
+"lon": 4.613,
+"fr": "Sambreville",
+"nl": "Sambreville",
+"de": "Sambreville",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92138": {
+"lat": 50.5545,
+"lon": 4.9977,
+"fr": "Fernelmont",
+"nl": "Fernelmont",
+"de": "Fernelmont",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92140": {
+"lat": 50.4671,
+"lon": 4.6786,
+"fr": "Jemeppe-sur-Sambre",
+"nl": "Jemeppe-sur-Sambre",
+"de": "Jemeppe-sur-Sambre",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92141": {
+"lat": 50.5286,
+"lon": 4.7982,
+"fr": "La Bruyère",
+"nl": "La Bruyère",
+"de": "La Bruyère",
+"prov": "WNA",
+"region": "03000"
+},
+"BE92142": {
+"lat": 50.5468,
+"lon": 4.7079,
+"fr": "Gembloux",
+"nl": "Gembloux",
+"de": "Gembloux",
+"prov": "WNA",
+"region": "03000"
+},
+"BE93010": {
+"lat": 50.1801,
+"lon": 4.443,
+"fr": "Cerfontaine",
+"nl": "Cerfontaine",
+"de": "Cerfontaine",
+"prov": "WNA",
+"region": "03000"
+},
+"BE93014": {
+"lat": 50.0206,
+"lon": 4.4815,
+"fr": "Couvin",
+"nl": "Couvin",
+"de": "Couvin",
+"prov": "WNA",
+"region": "03000"
+},
+"BE93018": {
+"lat": 50.1252,
+"lon": 4.6292,
+"fr": "Doische",
+"nl": "Doische",
+"de": "Doische",
+"prov": "WNA",
+"region": "03000"
+},
+"BE93022": {
+"lat": 50.2493,
+"lon": 4.5779,
+"fr": "Florennes",
+"nl": "Florennes",
+"de": "Florennes",
+"prov": "WNA",
+"region": "03000"
+},
+"BE93056": {
+"lat": 50.1621,
+"lon": 4.5559,
+"fr": "Philippeville",
+"nl": "Philippeville",
+"de": "Philippeville",
+"prov": "WNA",
+"region": "03000"
+},
+"BE93088": {
+"lat": 50.2669,
+"lon": 4.4744,
+"fr": "Walcourt",
+"nl": "Walcourt",
+"de": "Walcourt",
+"prov": "WNA",
+"region": "03000"
+},
+"BE93090": {
+"lat": 50.0478,
+"lon": 4.6384,
+"fr": "Viroinval",
+"nl": "Viroinval",
+"de": "Viroinval",
+"prov": "WNA",
+"region": "03000"
+}
+}

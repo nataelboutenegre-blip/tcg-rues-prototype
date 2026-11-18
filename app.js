@@ -2318,17 +2318,17 @@ let BATIMENTS = null;              // mes_batiments() ; null = bâtiments fermé
 let BATIMENTS_CARTE = new Map();   // code -> { fonderie: { moi, pret }, forteresse: { moi, pret } }
 // patch397 : bâtiments et garnison sur les cartes ; GN_VUES = communes vues en garnison (Combat)
 const GN_VUES = new Set();
-const MBT_NOM = { forteresse: 'Forteresse', fonderie: 'Fonderie', banque: 'Banque', centre: 'Centre de recherche', radar: 'Radar' };
+const MBT_NOM = { forteresse: 'Forteresse', fonderie: 'Fonderie', banque: 'Banque', centre: 'Centre de recherche', radar: 'Radar', artillerie: 'Artillerie', centrale: 'Centrale de clan' };   // patch456
 function btPucesHtml(code){
   code = String(code);
   const bt = BATIMENTS_CARTE.get(code) || {}, out = [];
   const g = typeof garnisonsMoi !== 'undefined' ? garnisonsMoi.get(code) : null;
   if(g) out.push(`<span class="mbt mbt-g" title="Ta garnison : ${Number(g.energie) || 0} / 10">${ICONE_BOUCLIER}<b>Garnison ${Number(g.energie) || 0}/10</b></span>`);
   else if(GN_VUES.has(code)) out.push(`<span class="mbt mbt-g" title="En garnison : une victoire sur deux annulée">${ICONE_BOUCLIER}<b>Garnison</b></span>`);
-  const ico = { forteresse: ICONE_FORTERESSE, fonderie: ICONE_FONDERIE, banque: ICONE_BANQUE, centre: ICONE_CENTRE, radar: ICONE_RADAR };
-  for(const t of ['forteresse', 'fonderie', 'banque', 'centre', 'radar']){
+  const ico = { forteresse: ICONE_FORTERESSE, fonderie: ICONE_FONDERIE, banque: ICONE_BANQUE, centre: ICONE_CENTRE, radar: ICONE_RADAR, artillerie: ICONE_ARTILLERIE, centrale: ICONE_CENTRALE };   // patch456
+  for(const t of ['forteresse', 'fonderie', 'banque', 'centre', 'radar', 'artillerie', 'centrale']){
     if(!bt[t]) continue;
-    out.push(`<span class="mbt${bt[t].moi ? ' moi' : ''}${bt[t].pret ? '' : ' chantier'}" title="${MBT_NOM[t]}${bt[t].moi ? ' (à toi)' : ''}${bt[t].pret ? '' : ', en construction'}">${ico[t]}<b>${t === 'centre' ? 'Centre' : MBT_NOM[t]}</b></span>`);
+    out.push(`<span class="mbt${bt[t].moi ? ' moi' : ''}${bt[t].pret ? '' : ' chantier'}" title="${MBT_NOM[t]}${bt[t].moi ? ' (à toi)' : ''}${bt[t].pret ? '' : ', en construction'}">${ico[t]}<b>${t === 'centre' ? 'Centre' : t === 'centrale' ? 'Centrale' : MBT_NOM[t]}</b></span>`);
   }
   return out.join('');
 }
@@ -2994,6 +2994,7 @@ function dessinerTerritoiresCanvas(ctx, trait, k){
   if(SAISON2 && CALQUES.batiments && BATIMENTS_CARTE.size) dessinerBatimentsCanvas(ctx, liste);   // patch243-244
   if(SAISON2 && CALQUES.batiments && garnisonsMoi.size) dessinerGarnisonsCanvas(ctx, liste);   // patch395
   if(typeof SIEGE !== 'undefined' && SIEGE && (sgMes.length || sgMenaces.length)) dessinerSiegesCanvas(ctx, liste);   // patch435
+  if(typeof s3DessinerOrdres === 'function') s3DessinerOrdres(ctx, liste);   // patch456 : les cibles du clan
   majLegendeSiBesoin(joueurs);
 }
 
@@ -4044,6 +4045,8 @@ function ouvrirPanneau(code, xCss, yCss){
       if(bt.radar) t.push(bt.radar.pret ? 'Radar' : 'Radar en construction');   // patch371
       if(bt.centre) t.push(bt.centre.radar ? 'Centre de recherche (vu par ton Radar)' : 'Centre de recherche dévoilé');
       if(bt.banque) t.push(bt.banque.pret ? 'Banque (vue par ton Radar)' : 'Banque en chantier (vue par ton Radar)');   // patch375
+      if(bt.artillerie) t.push(bt.artillerie.pret ? 'Artillerie' : 'Artillerie en construction');   // patch456
+      if(bt.centrale) t.push(bt.centrale.pret ? 'Centrale de clan' : 'Centrale de clan en construction');
       if(t.length) lignes.push(['Bâtiment', t.join(' + ')]);
     }
   }
@@ -4134,14 +4137,14 @@ function ouvrirPanneau(code, xCss, yCss){
     </div>
     ${eccBlocFiche(code, c, !!mienne)}
     ${allie && clanP ? `<p class="pc-allie-bandeau">${blasonHtml(clanP.tag, clanP.couleur, true)}<span>Commune de ton clan</span></p>` : ''}
-    ${alerte}
-    ${gnBloc}${btEtat}
+    ${alerte}${typeof s3OrdreFiche === 'function' ? s3OrdreFiche(code, c, !!mienne, !!allie) : ''}
+    ${gnBloc}${btEtat}${typeof s3EtatFiche === 'function' ? s3EtatFiche(code, c, !!mienne) : ''}
     ${propose ? `<p class="pc-propose">${ICONES_PC.echange}<span>${echapperHtml(propose)}</span></p>` : ''}
     <div class="pc-lignes">${lignes.map(([a, b]) => `<div class="pc-ligne"><span>${a}</span><b>${b}</b></div>`).join('')}</div>
     ${bombeNoteFiche(code, c, !!mienne)}
     ${echClan}${note ? `<p class="pc-note">${note}</p>` : ''}
     ${actions.length ? `<div class="pc-actions">${actions.map(([cl, ic, txt, titre]) =>
-      `<button class="pc-action ${cl}" data-pc="${ic}" title="${echapperHtml(titre)}">${ICONES_PC[ic]}${txt}</button>`).join('')}</div>` : ''}${echInter}${btActions}${libBloc}`;
+      `<button class="pc-action ${cl}" data-pc="${ic}" title="${echapperHtml(titre)}">${ICONES_PC[ic]}${txt}</button>`).join('')}</div>` : ''}${echInter}${btActions}${typeof s3ActionsFiche === 'function' ? s3ActionsFiche(code, c, !!mienne, !!allie) : ''}${libBloc}`;
 
   el.classList.toggle('pc-allie', allie && !!clanP);   // patch268 : liseré aux couleurs du clan
   if(allie && clanP) el.style.setProperty('--clan', clanP.couleur || '#4C9BE8'); else el.style.removeProperty('--clan');
@@ -4331,7 +4334,7 @@ function omfBombesBatiments(ctx, contours, P, larg, haut, grand){
   for(const code in contours){
     const bt = BATIMENTS_CARTE.get(String(code));
     if(!bt) continue;
-    const types = ['fonderie', 'forteresse', 'centre', 'banque', 'radar'].filter(t => bt[t] && BT_TRACES[t]);
+    const types = ['fonderie', 'forteresse', 'centre', 'banque', 'radar', 'artillerie', 'centrale'].filter(t => bt[t] && BT_TRACES[t]);   // patch456
     if(!types.length) continue;
     let anneau = contours[code][0];
     for(const a of contours[code]) if(a.length > anneau.length) anneau = a;
@@ -4343,10 +4346,10 @@ function omfBombesBatiments(ctx, contours, P, larg, haut, grand){
       ctx.save();
       ctx.globalAlpha = bt[t].pret ? 1 : 0.65;
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.shadowColor = t === 'centre' ? 'rgba(255,90,82,.7)' : t === 'radar' ? 'rgba(110,195,240,.75)' : 'rgba(255,150,60,.75)'; ctx.shadowBlur = 8;
+      ctx.shadowColor = t === 'centre' ? 'rgba(255,90,82,.7)' : t === 'radar' ? 'rgba(110,195,240,.75)' : t === 'centrale' ? 'rgba(95,211,157,.75)' : 'rgba(255,150,60,.75)'; ctx.shadowBlur = 8;
       ctx.fillStyle = '#3A220F'; ctx.fill(); ctx.shadowBlur = 0;
       ctx.lineWidth = grand ? 2.2 : 1.8;
-      ctx.strokeStyle = bt[t].moi ? '#F0B429' : t === 'centre' ? '#FF6B63' : t === 'radar' ? '#6EC3F0' : '#FFB347';
+      ctx.strokeStyle = bt[t].moi ? '#F0B429' : t === 'centre' ? '#FF6B63' : t === 'radar' ? '#6EC3F0' : t === 'centrale' ? '#5FD39D' : '#FFB347';
       if(!bt[t].pret) ctx.setLineDash([2.2, 1.6]);
       ctx.stroke(); ctx.setLineDash([]);
       const k = r / 14;
@@ -4819,6 +4822,7 @@ document.getElementById('mapPanneau').addEventListener('click', (e) => {
     batimentConstruire(code, t);
     return;
   }
+  if(typeof s3ClicPanneau === 'function' && s3ClicPanneau(quoi, code, b)) return;   // patch456
   if(libClicPanneau(quoi, code)) return;   // patch273
   if(quoi === 'ech-clan'){ const o = othersMap.get(code); if(o && o.joueurId) eccDemarrer(o, code); return; }   // patch316, lot 8/11 : sans quitter la carte
   if(quoi === 'ech-inter'){ const o = othersMap.get(code); if(o && o.joueurId) eccDemarrer(o, code, true); return; }   // patch398
@@ -11587,6 +11591,7 @@ async function chargerBatiments(){
     renderBatimentsBloc();
     if(typeof mfoRendre === 'function') mfoRendre();   // patch366
     if(btEcranOuvert() && BTE.vue === 'miens') btEcranRendre();
+    if(typeof s3Charger === 'function') s3Charger();   // patch456
     if(!document.querySelector('#mapCalques [data-calque="batiments"]') && typeof rendreCalques === 'function') rendreCalques();   // patch244
     legendeSignature = '';
     if(typeof demanderDessin === 'function' && canvasActif()){ CV.donneesSignature = null; demanderDessin(); }
@@ -11633,7 +11638,7 @@ function btRembourse(type, code){
   return 0;
 }
 const btSousAssaut = (code) => typeof serieMienne === 'function' && serieMienne(code) > 0;
-const btNom = (type) => type === 'fonderie' ? 'Fonderie' : type === 'centre' ? 'Centre de recherche' : type === 'banque' ? 'Banque' : type === 'radar' ? 'Radar' : 'Forteresse';   // patch354, patch371
+const btNom = (type) => type === 'fonderie' ? 'Fonderie' : type === 'centre' ? 'Centre de recherche' : type === 'banque' ? 'Banque' : type === 'radar' ? 'Radar' : type === 'artillerie' ? 'Artillerie' : type === 'centrale' ? 'Centrale de clan' : 'Forteresse';   // patch456   // patch354, patch371
 function btAnnulerHtml(code, type){
   if(btSousAssaut(code)) return '<button type="button" class="bt-annuler" disabled>Annulation impossible pendant l’assaut</button>';
   const r = btRembourse(type, code), a = btArme === code + '|annuler-' + type, le = type === 'centre' || type === 'radar' ? 'le' : 'la';   // patch371
@@ -11790,6 +11795,7 @@ function blocBatimentsActions(code, c){
     const bloque = btSousAssaut(B.centre.code) ? 'Ton Centre est attaqué : pas de déménagement pendant l’assaut' : nl < net ? `Il te faut ${net} lingots (tu en as ${nl})` : '';
     boutons.push(`<button class="pc-action bt-action${arme('demenager') ? ' arme' : ''}" data-pc="bt-demenager" ${bloque ? 'disabled' : ''}>${ICONE_CENTRE}<span>${arme('demenager') ? `Confirmer : déménager le Centre de ${echapperHtml(B.centre.nom)} ici` : 'Déménager le Centre ici'}<small>${bloque || `Prêt dans ${h} h · ${B.preparation ? 'ta bombe suit, en pause pendant le chantier · ' : ''}<b class="bt-plus">${n ? n + ' Radar' + (n > 1 ? 's' : '') + ' le verrai' + (n > 1 ? 'ent' : 't') + ' ici' : 'aucun Radar ne le voit ici'}</b>`}</small></span><span class="prix">${net} ${ICONE_LINGOT}</span></button>`);
   }
+  if(typeof s3BoutonsBt === 'function') boutons.push(...s3BoutonsBt(code, c));   // patch456
   return boutons.length ? `<p class="pc-titre-bt">Bâtiments</p><div class="pc-actions pc-actions-bt">${boutons.join('')}</div>` : '';
 }
 // patch371 : déménager son Centre (s2-115) : l'ancien rend 20, le nouveau coûte 40
@@ -11875,6 +11881,7 @@ function renderBatimentsBloc(){
         : `<p class="gl-vide">Prochaine forteresse : ${prix} lingots (tu en as ${n}).</p>`) : ''}
     ${centreHtml()}
     ${radarHtml()}
+    ${typeof s3ArtillerieHtml === 'function' ? s3ArtillerieHtml() : ''}
     ${B.banques_ouvertes ? `<div class="btl-titre">Banque <em>${B.banque ? 1 : 0} / 1</em></div>${B.banque && bqEpargne() ? banqueGestionHtml() : B.banque   /* patch364 */
       ? `<div class="btl banque"><span class="btl-ic">${ICONE_BANQUE}</span><span class="btl-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(B.banque.code)}">${echapperTexte(B.banque.nom)} (${echapperTexte(B.banque.dept)})</button><small>${btPretDans(B.banque) <= 0 ? `${Math.min(Number(bqReglage('reserve', 60)), Number(B.banque.contenu) || 0)} / ${bqReglage('reserve', 60)} lingots à l’abri · secrète` : 'En construction · secrète'}</small></span>${btPretDans(B.banque) <= 0 ? '<span class="btl-etat ok">Active</span>' : `<span class="btl-etat cours">prête dans ${formatDuree(btPretDans(B.banque))}</span>`}</div>`
       : `<p class="gl-vide">${bqReglage('prix', 20)} lingots, une Fonderie demandée : ${bqEpargne() ? `une épargne jusqu’à ${bqReglage('reserve', 60)} lingots, +${bqReglage('interet', 10)} % par nuit, à l’abri du pillage des Fonderies` : `+${bqReglage('reserve', 60)} lingots de réserve, à l’abri du pillage des Fonderies`}. Ouvre une de tes communes sur la carte et choisis « Construire la Banque ici ». Elle est secrète.</p>`}` : ''}
@@ -12903,16 +12910,16 @@ function dessinerBatimentsCanvas(ctx, liste){
     if(!bt) continue;
     const x = c.x, y = c.y;
     if(x < vue[0] || x > vue[2] || y < vue[1] || y > vue[3]) continue;
-    const types = ['fonderie', 'forteresse', 'centre', 'banque', 'radar'].filter(t => bt[t] && BT_TRACES[t]);   // patch260, patch354, patch371
+    const types = ['fonderie', 'forteresse', 'centre', 'banque', 'radar', 'artillerie', 'centrale'].filter(t => bt[t] && BT_TRACES[t]);   // patch456   // patch260, patch354, patch371
     types.forEach((t, i) => {
       const r = 10 * e;   // patch294 : plus grands (7 avant)
       // patch244 : à droite du point et de son étoile (rayon 7 au plus), côte à côte s'il y en a deux
       const cx = x + 9 * e + r + i * (2 * r + 2 * e), cy = y;
       ctx.globalAlpha = bt[t].pret ? 1 : 0.65;
       ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.save(); ctx.shadowColor = t === 'centre' ? 'rgba(255,90,82,.7)' : t === 'radar' ? 'rgba(110,195,240,.75)' : 'rgba(255,150,60,.75)'; ctx.shadowBlur = 10;   // patch294 : un léger halo
+      ctx.save(); ctx.shadowColor = t === 'centre' ? 'rgba(255,90,82,.7)' : t === 'radar' ? 'rgba(110,195,240,.75)' : t === 'centrale' ? 'rgba(95,211,157,.75)' : 'rgba(255,150,60,.75)'; ctx.shadowBlur = 10;   // patch294 : un léger halo
       ctx.fillStyle = '#3A220F'; ctx.fill(); ctx.restore();
-      ctx.lineWidth = 2.6 * e; ctx.strokeStyle = bt[t].moi ? '#F0B429' : t === 'centre' ? '#FF6B63' : t === 'radar' ? '#6EC3F0' : '#FFB347';   // patch371
+      ctx.lineWidth = 2.6 * e; ctx.strokeStyle = bt[t].moi ? '#F0B429' : t === 'centre' ? '#FF6B63' : t === 'radar' ? '#6EC3F0' : t === 'centrale' ? '#5FD39D' : '#FFB347';   // patch371
       if(!bt[t].pret) ctx.setLineDash([2.2 * e, 1.6 * e]);
       ctx.stroke(); ctx.setLineDash([]);
       ctx.save();
@@ -21017,6 +21024,7 @@ function renderClan(){
       <div class="puces"><span class="puce">Communes en Front <b>${nbClan(total)}</b></span><span class="puce">Moyenne par membre${actifs ? ' actif' : ''} <b>${nbClan(moyenne)}</b></span>${actifs ? `<span class="puce">Actifs <b>${actifs.length}</b> sur ${n}</span>` : ''}${rang >= 0 ? `<span class="puce">Rang <b>${rang + 1}</b> sur ${classement.length}</span>` : ''}</div>
       ${bandeauDiscordClan(c)}   <!-- patch401 -->
       ${blocJour}
+      ${typeof s3ClanBlocs === 'function' ? s3ClanBlocs() : ''}
       ${candGererHtml(c)}   <!-- patch307 -->
       ${tchatHtml(c)}   <!-- patch258 -->
       <h2>Membres</h2>${membres}
@@ -27971,8 +27979,8 @@ document.getElementById('objBandeau')?.addEventListener('click', objOuvrirFeuill
 // Une case dans Mon front, un écran Bâtiments (les miens / ceux des autres),
 // la fiche d'un bâtiment et le choix du style à la construction. Les Banques
 // n'apparaissent jamais chez les autres ; un Centre seulement une fois dévoilé.
-var BT_STYLES_DEFAUT = { fonderie: ['brique', 'acier'], forteresse: ['chateau', 'bastion', 'tour'], banque: ['classique', 'coffre'], centre: ['labo', 'bunker'], radar: ['parabole', 'dome', 'pylone'] };   // patch371
-var BT_STYLE_NOMS = { brique: 'Brique', acier: 'Acier', chateau: 'Château fort', bastion: 'Bastion', tour: 'Tour de guet', classique: 'Classique', coffre: 'Coffre-fort', labo: 'Laboratoire', bunker: 'Bunker', parabole: 'Parabole', dome: 'Radôme', pylone: 'Pylône' };
+var BT_STYLES_DEFAUT = { fonderie: ['brique', 'acier'], forteresse: ['chateau', 'bastion', 'tour'], banque: ['classique', 'coffre'], centre: ['labo', 'bunker'], radar: ['parabole', 'dome', 'pylone'], artillerie: ['canon'], centrale: ['turbine'] };   // patch456   // patch371
+var BT_STYLE_NOMS = { canon: 'Canon', turbine: 'Turbine', brique: 'Brique', acier: 'Acier', chateau: 'Château fort', bastion: 'Bastion', tour: 'Tour de guet', classique: 'Classique', coffre: 'Coffre-fort', labo: 'Laboratoire', bunker: 'Bunker', parabole: 'Parabole', dome: 'Radôme', pylone: 'Pylône' };
 var BTE = { vue: 'miens', type: '', region: '', tri: 'recents', q: '', lignes: [], total: null, totalSansFiltre: null, decalage: 0, charge: false, erreur: '', req: 0, minuteur: 0 };
 var BTS = { code: null, type: null, style: null };
 function btStyles(type){
@@ -27993,6 +28001,7 @@ function btMiens(){
   if(BATIMENTS.banque) l.push(Object.assign({}, BATIMENTS.banque, { type: 'banque' }));
   if(BATIMENTS.centre) l.push(Object.assign({}, BATIMENTS.centre, { type: 'centre' }));
   if(BATIMENTS.radar) l.push(Object.assign({}, BATIMENTS.radar, { type: 'radar' }));   // patch371
+  if(BATIMENTS.artillerie && BATIMENTS.artilleries_ouvertes) l.push(Object.assign({}, BATIMENTS.artillerie, { type: 'artillerie' }));   // patch456
   return l;
 }
 function btEffetTexte(type, moi){
@@ -28000,6 +28009,8 @@ function btEffetTexte(type, moi){
   if(type === 'forteresse') return `−${btReglage('forteresse_defense', 15)} % aux chances de ceux qui l’attaquent, +${btReglage('forteresse_appui', 5)} % aux attaques autour`;
   if(type === 'banque') return moi ? `Une épargne : jusqu’à ${bqReglage('reserve', 60)} lingots, +${bqReglage('interet', 10)} % par nuit. Secrète, sauf pour les Radars` : 'Son épargne. Prendre sa commune pille la moitié de son contenu';   // patch375
   if(type === 'radar') return `Voit les Centres de recherche et les Banques à moins de ${rdReglage('portee_km', 50)} km, même secrets`;   // patch371, patch375
+  if(type === 'artillerie') return `Supprime le malus de distance des sièges à ${s3ArtR('portee_km', 50)} km. Secrète tant qu’elle ne tire pas`;   // patch456
+  if(type === 'centrale') return `${(S3C.centrale && S3C.centrale.part) || 8} énergie par jour pour chaque membre de son clan`;
   return 'Il prépare une bombe. Le prendre fait perdre la bombe à son propriétaire';
 }
 function btEtatMien(b){
@@ -28007,6 +28018,7 @@ function btEtatMien(b){
   if(b.type === 'fonderie') return { t: `+${(BATIMENTS && BATIMENTS.production) || 10} lingots par jour`, c: 'ok' };
   if(b.type === 'forteresse') return { t: `−${btReglage('forteresse_defense', 15)} % aux attaquants`, c: 'ok' };
   if(b.type === 'banque') return bqReperee().length ? { t: `Repérée par un Radar · ${Math.floor(Number(b.contenu) || 0)} lingots`, c: 'rouge' } : { t: `Secrète · ${Math.floor(Number(b.contenu) || 0)} lingots`, c: 'or' };   // patch375
+  if(b.type === 'artillerie') return b.devoilee ? { t: 'Visible : elle a tiré', c: 'rouge' } : { t: 'Secrète', c: 'or' };   // patch456
   if(b.type === 'radar'){ const n = (b.voit || []).length + (b.voit_banques || []).length; return n ? { t: `${n} bâtiment${n > 1 ? 's' : ''} en vue`, c: 'rouge' } : { t: 'Rien en vue', c: 'ok' }; }   // patch371, patch375
   return b.devoile ? { t: 'Dévoilé : bombe en préparation', c: 'rouge' }
     : (BATIMENTS && (BATIMENTS.repere_par || []).length) ? { t: 'Repéré par un Radar', c: 'rouge' } : { t: 'Secret', c: 'or' };   // patch371
@@ -28093,7 +28105,7 @@ function btMiensHtml(){
 }
 function btAutresHtml(){
   const regions = [...new Set(Object.values(DEP_REGION))].sort((a, b) => a.localeCompare(b, 'fr'));
-  const types = [['', 'Tous'], ['fonderie', 'Fonderies'], ['forteresse', 'Forteresses'], ['radar', 'Radars'], ['centre', 'Centres'], ['banque', 'Banques']];   // patch371, patch375
+  const types = [['', 'Tous'], ['fonderie', 'Fonderies'], ['forteresse', 'Forteresses'], ['radar', 'Radars'], ['centre', 'Centres'], ['banque', 'Banques'], ['artillerie', 'Artilleries'], ['centrale', 'Centrales']];   // patch456   // patch371, patch375
   return `<div class="bte-outils">
     <div class="bte-recherche"><label class="bte-sr" for="bteRecherche">Rechercher un joueur ou une commune</label>
       <svg class="bte-loupe" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
@@ -28346,7 +28358,7 @@ function mfoRendre(){
     }
     blocEnergie = `<div class="mfo-t"><div class="mfo-h"><span>${E} Énergie</span><button type="button" class="mfo-lien" data-mfo="aide">Comment en gagner ›</button></div>
       <div class="mfo-e"><b>${e} <small>/ ${max}</small></b><em>${e >= max ? 'Réserve pleine' : `+1 dans ${pm} min · pleine dans ${duree(plein)}`}</em></div>
-      <div class="mfo-jauge">${Array.from({ length: max }, (_, i) => `<i class="${i < e ? 'p' : ''}"></i>`).join('')}</div>${rc}</div>`;
+      <div class="mfo-jauge">${Array.from({ length: max }, (_, i) => `<i class="${i < e ? 'p' : ''}"></i>`).join('')}</div>${rc}${typeof s3MfoCentrale === 'function' ? s3MfoCentrale() : ''}</div>`;   // patch456
   }
   // 3. mes attaques en cours
   const att = MFO.attaques;
@@ -28380,7 +28392,7 @@ function mfoRendre(){
   // 5. les quêtes du jour : le même bandeau que dans le Tirage
   const ob = document.getElementById('objBandeau');
   const blocQ = ob && !ob.hidden && ob.innerHTML ? `<button type="button" class="${ob.className} mfo-quetes" data-mfo="quetes" aria-label="${echapperTexte(ob.getAttribute('aria-label') || 'Quêtes du jour')}">${ob.innerHTML}</button>` : '';
-  z.innerHTML = blocDanger + blocEnergie + blocAtt + mfoBatimentsHtml() + blocCom + blocQ;   // patch366
+  z.innerHTML = blocDanger + (typeof s3MfoOrdres === 'function' ? s3MfoOrdres() : '') + blocEnergie + blocAtt + mfoBatimentsHtml() + blocCom + blocQ;   // patch366, patch456
 }
 // patch379 : la galerie depuis le volet Bâtiments
 document.getElementById('panel-batiments')?.addEventListener('click', (e) => {
@@ -31163,6 +31175,7 @@ function sgRendre(){
   }
   const lignes = `<div class="sg-lignes">
       <div class="sg-l"><span>Tes communes proches</span><span>${procheTxt} · ${multTxt}</span></div>
+      ${typeof s3SiegeLigne === 'function' ? s3SiegeLigne(a) : ''}
       <div class="sg-l"><span>Garnison</span><span>${bcl > 0 ? `bouclier de <b>${sgNb(bcl)}</b> points` : 'aucune'}</span></div>
       <div class="sg-l"><span>Bâtiment</span><span>${a.forteresse ? 'Forteresse : <b>résistance × 1,5</b>' : 'aucun'}</span></div>
       ${long ? '' : `<div class="sg-l"><span>S'il renforce</span><span>siège long : <b>${sgDuree(dureeLong)}</b> au plus tôt</span></div>`}
@@ -31429,6 +31442,7 @@ function sgCalcHtml(a){
     <ul>
       <li><b>Chaque énergie</b> fait 10 points sur la jauge, au hasard entre 8 et 12.</li>
       <li><b>Tes dégâts</b> dépendent de tes communes à moins de 20 km (aucune : −20 %, une : normal, deux ou plus : +10 %). Zone bombardée +15 %, ta Forteresse à côté +10 %, débutant +50 % sur les communes jusqu'à rare sans garnison. Ici : <b>${multTxt}</b>.</li>
+      ${typeof s3SiegeCalc === 'function' ? s3SiegeCalc() : ''}
       <li><b>Résistance</b> : commune et peu commune 55, rare 65, épique 125, légendaire 250. Forteresse sur place × 1,5. Une rébellion que tu finances la baisse.</li>
       <li><b>Garnison</b> : chaque énergie en garnison fait un bouclier de 10 points, à casser avant la jauge.</li>
       <li><b>Siège long</b> (garnison, bâtiment, renfort, ou légendaire) : 10 % de la résistance peut partir tout de suite, le reste suit le temps (commune 1 h, peu commune 1 h 30, rare 2 h, épique 6 h, légendaire 15 h). L'énergie en trop attend et part toute seule toutes les 5 minutes.</li>
@@ -32241,6 +32255,8 @@ function pertesTexte(infos){
     if(x.t === 'banque') return '<b>ta Banque</b>' + (x.contenu > 0 ? ` et ses ${nbL(x.contenu)}${x.pille > 0 ? ` (dont ${nb(x.pille)} pillés)` : ''}` : '');
     if(x.t === 'forteresse') return '<b>ta Forteresse</b>';
     if(x.t === 'radar') return '<b>ton Radar</b>';
+    if(x.t === 'artillerie') return '<b>ton Artillerie</b>';   // patch456
+    if(x.t === 'centrale') return '<b>la Centrale de ton clan</b>';
     if(x.t === 'centre') return '<b>ton Centre de recherche</b>' + (x.bombe ? ' et <b>ta bombe en préparation</b>' : '');
     return '';
   }).filter(Boolean);
@@ -32710,4 +32726,320 @@ function messRationAjouter(g){
   MESS.ration.energie_jour = (Number(MESS.ration.energie_jour) || 0) + (Number(g.energie) || 0);
   MESS.ration.lingots_jour = (Number(MESS.ration.lingots_jour) || 0) + (Number(g.lingots) || 0);
   if(messFen) messFenMaj();
+}
+
+// ---------- patch456 : saison 3 — l'Artillerie, la Centrale de clan, les ordres du chef (s3-27) ----------
+// Tout dépend du serveur : tant que s3-27 n'est pas lancé, ou que ses interrupteurs sont éteints
+// (config_jeu 'batiments'.artilleries_ouvertes, 'centrale_clan'.ouverte, 'ordres_chef'.ouverts), rien ne s'affiche.
+var S3C = { centrale: null, ordres: null, lu: 0, charge: null, arme: null };
+var ICONE_ARTILLERIE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" d="M3.6 13.8 16.4 7l1.8 3.2L5.4 17M18.8 8l2.2-1.2M10.5 18.5h9.5"/><circle cx="7.6" cy="18" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+var ICONE_CENTRALE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" d="M4.5 21c1.4-3.6 1.4-8.4 0-12h7c-1.4 3.6-1.4 8.4 0 12zM14 21v-8h6.5v8M2.5 21h19M6 6c0-1.6 1.2-2.6 2.6-2.4.6-1.2 2.6-1.2 3 .3"/><path fill="currentColor" d="M18.4 13.8l-2.6 3.7h1.7l-1 2.6 2.9-3.9h-1.7z"/></svg>';
+var ICONE_CIBLE = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.6" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="4.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><path stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 1.5v3.2M12 19.3v3.2M1.5 12h3.2M19.3 12h3.2"/></svg>';
+if(typeof BT_TRACES !== 'undefined' && BT_TRACES){
+  BT_TRACES.artillerie = [new Path2D('M3.6 13.8 16.4 7l1.8 3.2L5.4 17M18.8 8l2.2-1.2M10.5 18.5h9.5M10.6 18a3 3 0 1 1-6 0a3 3 0 1 1 6 0')];
+  BT_TRACES.centrale = [new Path2D('M4.5 21c1.4-3.6 1.4-8.4 0-12h7c-1.4 3.6-1.4 8.4 0 12zM14 21v-8h6.5v8M2.5 21h19'), new Path2D('M18.4 13.8l-2.6 3.7h1.7l-1 2.6 2.9-3.9h-1.7z')];
+}
+function s3Art(){ return !!(BATIMENTS && BATIMENTS.artilleries_ouvertes); }
+function s3ArtR(k, d){ const R = BATIMENTS && BATIMENTS.artillerie_reglages; return R && R[k] != null ? R[k] : d; }
+function s3CentraleOk(){ const c = S3C.centrale; return !!(c && c.ouverte && c.clan); }
+function s3OrdresOk(){ const o = S3C.ordres; return !!(o && o.ouverts && o.clan); }
+function s3Ordre(code){ return s3OrdresOk() ? (S3C.ordres.ordres || []).find(o => String(o.code) === String(code)) || null : null; }
+const s3Km = (x) => String(x).replace('.', ',');
+
+// ---- chargement : l'état de la Centrale et des ordres de mon clan
+async function s3Charger(force){
+  if(!SAISON2 || !CLANS) return;
+  if(S3C.charge) return S3C.charge;
+  if(!force && Date.now() - S3C.lu < 60e3) return;
+  S3C.charge = (async () => {
+    try{
+      const [c, o] = await Promise.all([sb.rpc('clan_centrale_etat'), sb.rpc('clan_ordres_etat')]);
+      S3C.centrale = c && !c.error ? c.data : null;
+      S3C.ordres = o && !o.error ? o.data : null;
+      S3C.lu = Date.now();
+      s3Rendre(false);
+    }catch(e){}
+    finally{ S3C.charge = null; }
+  })();
+  return S3C.charge;
+}
+setInterval(() => { if(document.visibilityState === 'visible') s3Charger(); }, 120e3);
+function s3Rendre(fiche){
+  const ce = S3C.centrale && S3C.centrale.centrale;   // la Centrale de mon clan compte comme « à moi » sur la carte
+  if(ce && BATIMENTS_CARTE){ const e = BATIMENTS_CARTE.get(String(ce.code)); if(e && e.centrale) e.centrale.moi = true; }
+  try{ if(typeof mfoRendre === 'function') mfoRendre(); }catch(e){}
+  s3MajClan();
+  try{ if(typeof demanderDessin === 'function' && canvasActif()){ CV.donneesSignature = null; demanderDessin(); } }catch(e){}
+  if(fiche && panneauCommune){ const a = panneauAncre; try{ ouvrirPanneau(panneauCommune, a ? a.x : 40, a ? a.y : 40); }catch(e){} }
+}
+
+// ---- les ordres du chef : une ligne (Mon front et l'onglet Clan)
+function s3OrdreLigne(o, O){
+  const reste = Math.max(0, new Date(o.fin).getTime() - Date.now());
+  const t = TIERS.find(x => x.id === o.tier);
+  const n = Number(o.membres_siege) || 0;
+  const sous = o.prise ? '<b class="s3o-prise">Prise par ton clan ✓</b>'
+    : `${o.proprio ? 'tenue par ' + echapperHtml(o.proprio) : ''}${n ? ` · <b>${n}</b> du clan ${n > 1 ? 'l’assiègent' : 'l’assiège'}` : ' · personne du clan dessus'}`;
+  const act = o.prise || o.a_moi ? '' : `<button type="button" class="mfo-btn mfo-rouge s3o-go" data-sg-ouvrir="${echapperTexte(o.code)}">${o.mon_siege ? 'Continuer' : 'Assiéger'}</button>`;
+  const ar = S3C.arme === 'retirer-' + o.id;
+  const chef = O.je_gere ? `<div class="s3o-chef">${o.prise ? '' : `<button type="button" class="s3o-mini" data-s3="appel" data-id="${o.id}" ${o.appel_dans > 0 ? 'disabled' : ''}>📯 ${o.appel_dans > 0 ? 'Nouvel appel dans ' + formatDuree(o.appel_dans * 1000) : 'Appel à l’assaut'}</button>`}<button type="button" class="s3o-mini sec${ar ? ' arme' : ''}" data-s3="retirer" data-id="${o.id}">${ar ? 'Confirmer : retirer' : 'Retirer'}</button></div>` : '';
+  return `<div class="s3o-l${o.prise ? ' prise' : ''}"><span class="s3o-ic">${ICONE_CIBLE}</span><div class="s3o-t"><div class="s3o-tl"><button type="button" class="s3o-nom" data-voir-carte="${echapperTexte(o.code)}">${echapperHtml(o.nom)} <small>(${echapperHtml(o.dept)})</small></button>${t ? `<span class="s3o-tier ${o.tier}">${t.label}</span>` : ''}</div>
+      <small>${sous}</small><small class="s3o-fin">posée par ${echapperHtml(o.pose_par || 'le chef')} · encore ${formatDuree(reste)}</small></div>${act}${chef}</div>`;
+}
+function s3MfoOrdres(){
+  if(!s3OrdresOk()) return '';
+  const O = S3C.ordres, L = O.ordres || [];
+  if(!L.length && !O.je_gere) return '';
+  return `<div class="mfo-t s3o-bloc"><div class="mfo-h"><span>${ICONE_CIBLE}Ordres du chef</span><span class="s3o-n">${L.length} / ${O.max}</span></div>
+    ${L.map(o => s3OrdreLigne(o, O)).join('') || '<p class="mfo-p">Aucune cible. Touche une commune ennemie sur la carte, puis « Cible du clan » : tout ton clan la verra ici et sur sa carte.</p>'}</div>`;
+}
+// ---- la Centrale dans Mon front (sous l'énergie, comme la récolte)
+function s3MfoCentrale(){
+  if(!s3CentraleOk()) return '';
+  const C = S3C.centrale, ce = C.centrale, I = `<span class="s3c-ic">${ICONE_CENTRALE}</span>`;
+  if(!ce) return `<div class="mfo-rc s3c-rc"><span>${I}Centrale du clan : caisse ${C.caisse} / ${C.prix} ${ICONE_LINGOT}</span><button type="button" class="mfo-btn mfo-sec" data-s3="vers-clan">Donner ›</button></div>`;
+  if(!ce.pret) return `<div class="mfo-rc s3c-rc"><span>${I}Centrale du clan : prête dans ${formatDuree(new Date(ce.pret_le).getTime() - Date.now())}</span></div>`;
+  if(C.ramasse) return `<div class="mfo-rc s3c-rc"><span>${I}Centrale : +${C.ramasse_energie} ramassée aujourd’hui</span><span class="mfo-ok">✓ demain</span></div>`;
+  if(C.ancien_dans > 0) return `<div class="mfo-rc s3c-rc"><span>${I}Centrale : ta part dans ${formatDuree(C.ancien_dans * 1000)}</span></div>`;
+  return `<div class="mfo-rc s3c-rc"><span>${I}Centrale du clan</span><button type="button" class="mfo-btn mfo-or" data-s3="ramasser">Ramasser +${C.part} ⚡</button></div>`;
+}
+// ---- l'onglet Clan
+function s3ClanBlocs(){ return `<div data-s3-clan>${s3ClanHtml()}</div>`; }
+function s3MajClan(){ const el = document.querySelector('[data-s3-clan]'); if(el) el.innerHTML = s3ClanHtml(); }
+function s3ClanHtml(){
+  let h = '';
+  if(s3CentraleOk()) h += s3CentraleHtml();
+  if(s3OrdresOk()){
+    const O = S3C.ordres, L = O.ordres || [];
+    h += `<div class="s3-carte"><h3>${ICONE_CIBLE}Ordres du chef <small>${L.length} / ${O.max} cibles · ${O.duree_h} h chacune</small></h3>
+      ${L.map(o => s3OrdreLigne(o, O)).join('') || `<p class="clan-note">${O.je_gere ? 'Aucune cible. Touche une commune ennemie sur la carte, puis « Cible du clan » : ton clan la verra sur sa carte et dans Mon front. Un appel à l’assaut prévient tout le monde.' : 'Aucune cible pour l’instant : le chef et les bras droits les posent sur la carte.'}</p>`}
+      <p class="clan-note">Aucun bonus de combat : c’est pour s’organiser. Le premier qui remplit sa jauge prend la commune.</p></div>`;
+  }
+  return h;
+}
+function s3CentraleHtml(){
+  const C = S3C.centrale, ce = C.centrale;
+  let corps;
+  if(ce){
+    const reste = new Date(ce.pret_le).getTime() - Date.now();
+    const action = !ce.pret ? `<p class="s3c-p">En construction : prête dans <b>${formatDuree(reste)}</b>.</p>`
+      : C.ramasse ? `<p class="s3c-p s3c-ok">✓ Ta part est ramassée aujourd’hui (+${C.ramasse_energie} ⚡). La prochaine à minuit.</p>`
+      : C.ancien_dans > 0 ? `<p class="s3c-p">Ta part arrive ${C.anciennete_h} h après ton entrée dans le clan : dans <b>${formatDuree(C.ancien_dans * 1000)}</b>.</p>`
+      : `<button type="button" class="bq-btn s3c-ramasser" data-s3="ramasser">Ramasser ma part · +${C.part} ⚡</button>`;
+    corps = `<p class="s3c-p">À <button type="button" class="btl-nom" data-voir-carte="${echapperTexte(ce.code)}">${echapperHtml(ce.nom)} (${echapperHtml(ce.dept)})</button>, posée par ${echapperHtml(ce.poseur || 'le chef')}. Chaque membre y ramasse <b>${C.part} ⚡ par jour</b>.</p>${action}
+      <p class="clan-note">Visible de tous sur la carte. Si sa commune est prise ou bombardée, ou si ${echapperHtml(ce.poseur || 'celui qui l’a posée')} quitte le clan, elle est détruite.</p>`;
+  } else {
+    const pct = Math.min(100, Math.round(100 * C.caisse / Math.max(1, C.prix)));
+    const manque = Math.max(0, C.prix - C.caisse), moi = Number(C.mes_lingots) || 0;
+    const arme = S3C.arme && S3C.arme.startsWith('donner-') ? Number(S3C.arme.slice(7)) : 0;
+    const bt = (n, txt, cl) => `<button type="button" class="s3c-don${cl ? ' ' + cl : ''}${arme === n ? ' arme' : ''}" data-s3="donner" data-n="${n}" ${moi < n || n < 1 ? 'disabled' : ''}>${arme === n ? `Confirmer : ${n}` : txt}</button>`;
+    const dons = [5, 10].filter(n => n < manque).map(n => bt(n, '+' + n)).join('') + (manque > 0 ? bt(Math.min(manque, moi), moi >= manque ? `Compléter · ${manque}` : `Tout donner · ${moi}`, 'plein') : '');
+    corps = `<p class="s3c-p">Chaque membre y ramassera <b>${C.part} ⚡ par jour</b>, chacun sa part. Prix : ${C.prix_actif} ${ICONE_LINGOT} par membre actif, payés par les dons du clan.</p>
+      <div class="s3c-caisse"><div class="s3c-barre"><i style="width:${pct}%"></i></div><b>${C.caisse} / ${C.prix}</b>${ICONE_LINGOT}</div>
+      ${manque > 0 ? `<div class="s3c-dons"><span>Donner <small>(tu as ${moi})</small></span>${dons}</div>${arme ? '<p class="s3c-p s3c-arme">Touche encore pour confirmer : les lingots donnés ne reviennent pas.</p>' : ''}`
+        : `<p class="s3c-p s3c-ok">✓ La caisse est pleine. ${C.je_gere ? 'Ouvre une de tes communes sur la carte et choisis « Poser la Centrale du clan ici ».' : 'Le chef ou un bras droit peut maintenant la poser.'}</p>`}
+      ${C.actifs < C.actifs_min ? `<p class="clan-note">Il faut ${C.actifs_min} membres actifs (joué dans les 7 derniers jours) pour la poser : ${C.actifs} aujourd’hui.</p>` : ''}
+      ${(C.dons || []).length ? `<p class="clan-note">Derniers dons : ${(C.dons || []).slice(0, 5).map(d => `${echapperHtml(d.pseudo || '?')} <b>${d.lingots}</b>`).join(' · ')}</p>` : ''}`;
+  }
+  return `<div class="s3-carte s3c"><div class="s3c-tete"><span class="s3c-img">${btImg('centrale', 'turbine', 56)}</span><div><h3>Centrale du clan</h3><small>${ce ? (ce.pret ? 'En marche' : 'En construction') : 'À financer'}</small></div></div>${corps}</div>`;
+}
+
+// ---- la fiche d'une commune
+function s3OrdreFiche(code, c, mienne, allie){
+  const o = s3Ordre(code);
+  if(!o || mienne) return '';
+  const n = Number(o.membres_siege) || 0;
+  return `<p class="s3o-bandeau">${ICONE_CIBLE}<span><b>Cible du clan</b> · posée par ${echapperHtml(o.pose_par || 'le chef')} · encore ${formatDuree(new Date(o.fin).getTime() - Date.now())}${n ? ` · ${n} du clan dessus` : ''}</span></p>`;
+}
+function s3ActionsFiche(code, c, mienne, allie){
+  const out = [];
+  const O = S3C.ordres;
+  if(s3OrdresOk() && O.je_gere && !mienne && !allie && c.joueurId){
+    const o = s3Ordre(code);
+    if(o){
+      const ar = S3C.arme === 'retirer-' + o.id;
+      out.push(`<button class="pc-action s3o-pc" data-pc="s3-appel" data-id="${o.id}" ${o.appel_dans > 0 ? 'disabled' : ''}><span aria-hidden="true">📯</span>${o.appel_dans > 0 ? 'Nouvel appel dans ' + formatDuree(o.appel_dans * 1000) : 'Appel à l’assaut'}</button>`);
+      out.push(`<button class="pc-action s3o-pc sec${ar ? ' arme' : ''}" data-pc="s3-retirer" data-id="${o.id}">${ICONE_CIBLE}${ar ? 'Confirmer : retirer la cible' : 'Retirer la cible'}</button>`);
+    } else {
+      const plein = (O.ordres || []).length >= O.max;
+      out.push(`<button class="pc-action s3o-pc" data-pc="s3-ordre" ${plein ? 'disabled' : ''}>${ICONE_CIBLE}<span>Cible du clan<small>${plein ? `Déjà ${O.max} cibles : retires-en une` : `Ton clan la voit sur sa carte et dans Mon front · ${O.duree_h} h`}</small></span></button>`);
+    }
+  }
+  const C = S3C.centrale;
+  if(mienne && s3CentraleOk() && C.je_gere && !C.centrale && C.caisse >= C.prix && C.actifs >= C.actifs_min){
+    const a = btArme === code + '|centrale';
+    out.push(`<button class="pc-action bt-action s3c-pc${a ? ' arme' : ''}" data-pc="s3-centrale">${ICONE_CENTRALE}<span>${a ? `Confirmer : la Centrale à ${echapperHtml(c.nom)}` : 'Poser la Centrale du clan ici'}<small>Prête dans ${C.construction_h} h · ${C.prix} lingots de la caisse · visible de tous</small></span></button>`);
+  }
+  return out.length ? `<div class="pc-actions s3-pc">${out.join('')}</div>` : '';
+}
+function s3EtatFiche(code, c, mienne){
+  let h = '';
+  const A = BATIMENTS && BATIMENTS.artillerie;
+  if(mienne && s3Art() && A && A.code === code){
+    const pret = btPretDans(A) <= 0;
+    const vis = A.devoilee ? `<b class="bt-rouge">Visible</b> jusqu’à ${new Date(A.devoile_jusqua).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} : elle a tiré` : 'Secrète tant qu’elle ne tire pas';
+    h += `<div class="bt bt-artillerie"><div class="bt-haut">${ICONE_ARTILLERIE}Artillerie <b>${pret ? `portée ${s3ArtR('portee_km', 50)} km` : (A.deplacee ? 'en route · ' : '') + 'prête dans ' + formatDuree(btPretDans(A))}</b></div>
+      <p class="bt-txt">Tes sièges à moins de ${s3ArtR('portee_km', 50)} km d’ici n’ont plus le malus de distance (× ${s3Km(s3ArtR('malus', 0.8))}), contre ${s3ArtR('cout', 10)} % d’énergie en plus par vague. ${vis}. Si on te prend ${echapperHtml(c.nom)} ou qu’une bombe tombe ici, elle est détruite.</p>
+      ${pret || A.deplacee ? '' : btAnnulerHtml(code, 'artillerie')}</div>`;
+  }
+  const ce = S3C.centrale && S3C.centrale.centrale;
+  if(ce && ce.code === code){
+    h += `<div class="bt bt-centrale"><div class="bt-haut">${ICONE_CENTRALE}Centrale du clan <b>${ce.pret ? `+${S3C.centrale.part} ⚡ par membre et par jour` : 'prête dans ' + formatDuree(new Date(ce.pret_le).getTime() - Date.now())}</b></div>
+      <p class="bt-txt">Payée par la caisse du clan. Visible de tous : si on te prend ${echapperHtml(c.nom)} ou qu’une bombe tombe ici, elle est détruite.</p></div>`;
+  }
+  return h;
+}
+// dans « Bâtiments » de la fiche : construire ou déplacer l'Artillerie
+function s3BoutonsBt(code, c){
+  if(!s3Art()) return [];
+  const A = BATIMENTS.artillerie, h = btReglage('construction_h', 6), nl = lingotsActuels();
+  if(!A){
+    const prix = s3ArtR('prix', 20), a = btArme === code + '|artillerie';
+    const bloque = !mesFonderies().length ? 'Il te faut d’abord une Fonderie' : nl < prix ? `Il te faut ${prix} lingots (tu en as ${nl})` : '';
+    return [`<button class="pc-action bt-action${a ? ' arme' : ''}" data-pc="bt-construire" data-bt="artillerie" ${bloque ? 'disabled' : ''}>${ICONE_ARTILLERIE}<span>${a ? `Confirmer : ${prix} lingots` : 'Construire l’Artillerie ici'}<small>${bloque || `Prête dans ${h} h · une seule · <b class="bt-plus">sièges sans malus de distance à ${s3ArtR('portee_km', 50)} km</b>`}</small></span><span class="prix">${prix} ${ICONE_LINGOT}</span></button>`];
+  }
+  if(A.code !== code && btPretDans(A) <= 0){
+    const pd = s3ArtR('deplacer_prix', 10), a = btArme === code + '|artdep';
+    const bloque = nl < pd ? `Il te faut ${pd} lingots (tu en as ${nl})` : '';
+    return [`<button class="pc-action bt-action${a ? ' arme' : ''}" data-pc="s3-art-dep" ${bloque ? 'disabled' : ''}>${ICONE_ARTILLERIE}<span>${a ? `Confirmer : l’Artillerie de ${echapperHtml(A.nom)} vient ici` : 'Déplacer l’Artillerie ici'}<small>${bloque || `Prête dans ${h} h · sans effet pendant le chantier · ne s’annule pas`}</small></span><span class="prix">${pd} ${ICONE_LINGOT}</span></button>`];
+  }
+  return [];
+}
+function s3ClicPanneau(quoi, code, b){
+  const rouvrir = () => { const a = panneauAncre; ouvrirPanneau(code, a ? a.x : 40, a ? a.y : 40); };
+  if(quoi === 's3-ordre'){ b.disabled = true; s3Action('clan_ordre_poser', { p_code: code }, () => notifier({ type: 'succes', titre: 'Cible du clan', texte: 'Ton clan la voit sur sa carte et dans Mon front. Lance un appel à l’assaut pour prévenir tout le monde.' }), true); return true; }
+  if(quoi === 's3-appel'){ b.disabled = true; s3Action('clan_ordre_appel', { p_id: Number(b.dataset.id) }, s3AppelFait, true); return true; }
+  if(quoi === 's3-retirer'){
+    const id = Number(b.dataset.id);
+    if(S3C.arme !== 'retirer-' + id){ S3C.arme = 'retirer-' + id; rouvrir(); return true; }
+    S3C.arme = null; b.disabled = true; s3Action('clan_ordre_retirer', { p_id: id }, null, true); return true;
+  }
+  if(quoi === 's3-centrale'){
+    if(btArme !== code + '|centrale'){ btArme = code + '|centrale'; rouvrir(); return true; }
+    btArme = null; b.disabled = true;
+    s3Action('clan_centrale_construire', { p_code: code }, () => { notifier({ type: 'succes', titre: 'Centrale du clan en construction', texte: `Prête dans ${btReglage('construction_h', 6)} h : chaque membre pourra y ramasser sa part.` }); chargerBatiments(); }, true);
+    return true;
+  }
+  if(quoi === 's3-art-dep'){
+    if(btArme !== code + '|artdep'){ btArme = code + '|artdep'; rouvrir(); return true; }
+    btArme = null; b.disabled = true;
+    const A = BATIMENTS && BATIMENTS.artillerie;
+    if(!A){ rouvrir(); return true; }
+    sb.rpc('artillerie_deplacer', { p_depuis: A.code, p_vers: code }).then(async ({ error }) => {
+      if(error) notifier({ type: 'erreur', titre: 'Artillerie', texte: messageLisible(error.message) });
+      else notifier({ type: 'succes', titre: 'Artillerie en route', texte: `Prête dans ${btReglage('construction_h', 6)} h.` });
+      await chargerBatiments();
+      if(panneauCommune === code) rouvrir();
+    });
+    return true;
+  }
+  return false;
+}
+function s3AppelFait(d){
+  const n = Number(d && d.prevenus) || 0;
+  notifier({ type: 'succes', titre: 'Appel à l’assaut', texte: n ? `${n} membre${n > 1 ? 's' : ''} prévenu${n > 1 ? 's' : ''} sur ${n > 1 ? 'leur' : 'son'} téléphone.` : 'Aucun membre n’a les notifications : préviens-les sur le Discord.' });
+}
+async function s3Action(fn, args, ok, fiche){
+  const { data, error } = await sb.rpc(fn, args);
+  if(error){ notifier({ type: 'erreur', titre: fn.includes('ordre') ? 'Ordres du chef' : 'Centrale du clan', texte: messageLisible(error.message) }); s3Rendre(fiche); return null; }
+  if(data && typeof data === 'object'){ if(fn.startsWith('clan_centrale')) S3C.centrale = data; else S3C.ordres = data; }
+  S3C.lu = Date.now();
+  if(ok) ok(data);
+  s3Rendre(fiche);
+  return data;
+}
+document.addEventListener('click', (ev) => {
+  const b = ev.target.closest('[data-s3]');
+  if(!b || b.disabled) return;
+  const q = b.dataset.s3, id = Number(b.dataset.id) || 0;
+  if(q === 'vers-clan'){ const t = document.querySelector('.tab[data-tab="clan"]'); if(t) t.click(); return; }
+  if(q === 'ramasser'){
+    b.disabled = true;
+    s3Action('clan_centrale_ramasser', {}, (d) => {
+      notifier({ type: 'succes', titre: 'Centrale du clan', texte: d.gagne < d.part ? `+${d.gagne} ⚡ (réserve au maximum, ${d.plafond})` : `+${d.gagne} ⚡ ramassées. Ta part revient demain.` });
+      if(typeof majEnergie === 'function') majEnergie();
+    });
+    return;
+  }
+  if(q === 'donner'){
+    const n = Number(b.dataset.n) || 0;
+    if(S3C.arme !== 'donner-' + n){ S3C.arme = 'donner-' + n; s3MajClan(); return; }
+    S3C.arme = null; b.disabled = true;
+    s3Action('clan_centrale_donner', { p_lingots: n }, (d) => {
+      notifier({ type: 'succes', titre: 'Centrale du clan', texte: `${d.donne} lingot${d.donne > 1 ? 's' : ''} dans la caisse : ${d.caisse} / ${d.prix}.` });
+      chargerBatiments();
+    });
+    return;
+  }
+  if(q === 'appel'){ b.disabled = true; s3Action('clan_ordre_appel', { p_id: id }, s3AppelFait); return; }
+  if(q === 'retirer'){
+    if(S3C.arme !== 'retirer-' + id){ S3C.arme = 'retirer-' + id; s3Rendre(false); return; }
+    S3C.arme = null; b.disabled = true; s3Action('clan_ordre_retirer', { p_id: id }); return;
+  }
+});
+
+// ---- QG › Bâtiments : le bloc de l'Artillerie
+function s3ArtillerieHtml(){
+  if(!s3Art()) return '';
+  const A = BATIMENTS.artillerie, prix = s3ArtR('prix', 20), po = s3ArtR('portee_km', 50);
+  let corps;
+  if(!A) corps = `<p class="gl-vide">${prix} lingots, une Fonderie demandée. Ouvre une de tes communes sur la carte et choisis « Construire l’Artillerie ici ». Tes sièges à moins de ${po} km n’ont plus le malus de distance (× ${s3Km(s3ArtR('malus', 0.8))} quand tu n’as aucune commune à moins de 20 km), contre ${s3ArtR('cout', 10)} % d’énergie en plus par vague. Secrète tant qu’elle ne tire pas.</p>`;
+  else {
+    const pret = btPretDans(A) <= 0, a = btArme === A.code + '|annuler-artillerie';
+    const fin = pret ? (A.devoilee ? '<span class="btl-etat rouge">Visible</span>' : '<span class="btl-etat ok">Secrète</span>')
+      : A.deplacee ? `<span class="btl-etat cours">en route · ${formatDuree(btPretDans(A))}</span>`
+      : `<button type="button" class="gl-r bt-ann${a ? ' arme' : ''}" data-bt-annuler="${echapperTexte(A.code)}" data-bt-type="artillerie">${a ? 'Confirmer ?' : 'Annuler'}</button>`;
+    const sous = pret ? `Portée ${po} km · ${A.devoilee ? `visible jusqu’à ${new Date(A.devoile_jusqua).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} (elle a tiré)` : 'secrète tant qu’elle ne tire pas'}` : `Prête dans ${formatDuree(btPretDans(A))}${A.deplacee ? '' : ` · ${prix} lingots rendus si tu annules`}`;
+    corps = `<div class="btl"><span class="btl-ic">${ICONE_ARTILLERIE}</span><span class="btl-t"><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(A.code)}">${echapperTexte(A.nom)} (${echapperTexte(A.dept)})</button><small>${sous}</small></span>${fin}</div>
+      ${pret ? `<p class="gl-vide">Pour la déplacer (${s3ArtR('deplacer_prix', 10)} lingots) : ouvre une autre de tes communes sur la carte et choisis « Déplacer l’Artillerie ici ».</p>` : ''}`;
+  }
+  return `<div class="btl-titre">Artillerie <em>${A ? 1 : 0} / 1</em></div>${corps}`;
+}
+
+// ---- la feuille de siège : ce que fait l'Artillerie
+function s3SiegeLigne(a){
+  if(!s3Art()) return '';
+  const proches = Number(a.proches) || 0;
+  if(a.artillerie){
+    const x = a.artillerie;
+    return `<div class="sg-l s3-sg"><span>${ICONE_ARTILLERIE}Artillerie</span><span>${echapperHtml(x.nom)} à ${s3Km(x.km)} km : <b class="sg-plus">malus supprimé</b>, ${x.cout} % d’énergie en plus</span></div>`;
+  }
+  if(proches <= 0 && !(BATIMENTS && BATIMENTS.artillerie)) return `<div class="sg-l s3-sg"><span>${ICONE_ARTILLERIE}Artillerie</span><span>une Artillerie à moins de ${s3ArtR('portee_km', 50)} km supprimerait ce malus</span></div>`;
+  if(proches <= 0) return `<div class="sg-l s3-sg"><span>${ICONE_ARTILLERIE}Artillerie</span><span>la tienne est trop loin (plus de ${s3ArtR('portee_km', 50)} km)</span></div>`;
+  return '';
+}
+function s3SiegeCalc(){
+  if(!s3Art()) return '';
+  return `<li><b>Artillerie</b> : à moins de ${s3ArtR('portee_km', 50)} km de la cible, elle supprime le malus « aucune commune à moins de 20 km », contre ${s3ArtR('cout', 10)} % d’énergie en plus (dégâts × ${s3Km((1 / (1 + s3ArtR('cout', 10) / 100)).toFixed(2))} au lieu de × ${s3Km(s3ArtR('malus', 0.8))}). Elle se montre sur la carte 24 h après chaque vague qui s’en sert.</li>`;
+}
+
+// ---- la carte : les cibles du clan
+function s3DessinerOrdres(ctx, liste){
+  if(!s3OrdresOk()) return;
+  const L = (S3C.ordres.ordres || []).filter(o => !o.prise);
+  if(!L.length) return;
+  const codes = new Set(L.map(o => String(o.code)));
+  const vue = vueCarteUnites(30);
+  const u = 1 / (echelleCarte() * mapZoom);
+  const px = mapZoom < 2 ? 7 : mapZoom < 12 ? 10 : 15;
+  const r = px * u, t = (Date.now() / 1400) % 1;
+  for(const c of liste){
+    if(!codes.has(String(c.code))) continue;
+    if(c.x < vue[0] || c.x > vue[2] || c.y < vue[1] || c.y > vue[3]) continue;
+    ctx.save();
+    ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(7,17,31,.85)'; ctx.lineWidth = 4.4 * u; ctx.stroke();
+    ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+    ctx.shadowColor = '#FF5A52'; ctx.shadowBlur = 8;
+    ctx.strokeStyle = '#FF6B63'; ctx.lineWidth = 2.2 * u; ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#FFE08A'; ctx.lineWidth = 1.8 * u;
+    for(const [dx, dy] of [[0, -1], [0, 1], [-1, 0], [1, 0]]){
+      ctx.beginPath(); ctx.moveTo(c.x + dx * r * 0.55, c.y + dy * r * 0.55); ctx.lineTo(c.x + dx * r * 1.45, c.y + dy * r * 1.45); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.arc(c.x, c.y, r * (1.2 + t * 0.9), 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(255,107,99,${(1 - t) * 0.55})`; ctx.lineWidth = 1.6 * u; ctx.stroke();
+    ctx.restore();
+  }
 }

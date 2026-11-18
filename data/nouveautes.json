@@ -1,7 +1,9 @@
 [
   {
     "date": "2026-11-18",
-    "nouveautes": [],
+    "nouveautes": [
+      "Quêtes du Front : elles changent chaque jour ! 7 par jour, les mêmes pour tout le monde : la Commune du jour et une conquête tous les jours, plus 5 tirées dans une réserve d'une trentaine (combat, mini-jeux, économie, Mess ou clan). +10 énergie chacune, +15 pour les plus dures, et un bonus de +15 énergie et 1 lingot quand les 7 sont faites. Le plafond passe à 100 énergie de quêtes par jour. Les quêtes Terra piochent maintenant dans 16 quêtes. Merci pour l'idée !"
+    ],
     "correctifs": [
       "Boutique : le paquet du département a maintenant un prix selon le département. Paris et la petite couronne sont pleins de légendaires : un paquet y rapportait bien plus qu'il ne coûtait. Paris passe à 3 700 TP, les Hauts-de-Seine et la Seine-Saint-Denis à 3 100, le Val-de-Marne à 2 600, les Bouches-du-Rhône à 1 500 ; tous les autres restent à 800. Le prix s'affiche dans la liste et sur le bouton.",
       "Règles, « La saison » : à la fin de la saison 2, ta collection Terra reçoit tes 5 communes gardées (★), mais plus les communes des départements tenus à plus de 45 %. Une saison dure de 3 à 4 semaines (la saison 3 en dure 3)."

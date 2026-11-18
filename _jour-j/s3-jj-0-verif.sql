@@ -19,6 +19,6 @@ select
   (select coalesce((valeur::jsonb->>'actif')::int, 0) from config_jeu where cle = 'siege') = 0  as siege_eteint,
   (select coalesce((valeur::jsonb->>'ouvert')::int, 0) from config_jeu where cle = 'zone_depart') = 0 as zone_fermee,
   (select coalesce((valeur::jsonb->>'actif')::int, 0) from config_jeu where cle = 'mess') = 0   as mess_eteint,
-  (select coalesce((valeur::jsonb->>'ouvert')::int, 0) from config_jeu where cle = 'reserve_accueil') = 1 as reserve_accueil_encore_ouverte,
+  (select coalesce((valeur::jsonb->>'ouvert')::int, 0) from config_jeu where cle = 'reserve_accueil') = 0 as reserve_accueil_deja_coupee,   -- 19/11 : coupée avant le 22 (état voulu, décision du 16/11) ; l'étape 4 la remet à 0 de toute façon
   (select debut is null from pass_saisons where saison = 'saison-3')                            as pass_s3_ferme,
   exists (select 1 from cron.job where jobname = 'siege-tick')                                 as tache_siege;

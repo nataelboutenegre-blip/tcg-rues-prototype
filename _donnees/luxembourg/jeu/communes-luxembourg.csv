@@ -1,0 +1,101 @@
+code,nom,departement,population,latitude,longitude,tier,rang,nom_officiel,nom_lb,nom_de,wikidata,article_fr,photo
+LU0101,Dippach,LCA,4789,49.5831,5.9848,peucommun,41,Dippach,Dippech,Dippach,Q426998,Dippach,ViFassGem.JPG
+LU0102,Garnich,LCA,2522,49.6141,5.947,commun,66,Garnich,Garnech,Garnich,Q985388,Garnich,Garnich church.jpg
+LU0103,Habscht,LCA,5340,49.6933,5.8994,peucommun,33,Habscht,Habscht,Habscht,Q958682,Habscht,"Habscht, Simmerschmelz (101).jpg"
+LU0104,Käerjeng,LCA,11443,49.5836,5.8988,rare,11,Käerjeng,Käerjeng,Käerjeng,Q776642,Käerjeng,Bascharage.JPG
+LU0105,Kehlen,LCA,7681,49.6747,6.0302,peucommun,20,Kehlen,Kielen,Kehlen,Q432495,Kehlen,Kehlen Luxembourg rue d Olm 02.jpg
+LU0106,Koerich,LCA,2798,49.6694,5.9683,commun,61,Koerich,Käerch,Koerich,Q985471,Koerich,"Koerich, Townhall.jpg"
+LU0107,Kopstal,LCA,4729,49.6583,6.0878,peucommun,42,Kopstal,Koplescht,Kopstal,Q985477,Kopstal,Koplescht Gemeng 2.JPG
+LU0108,Mamer,LCA,11855,49.6319,6.0179,rare,9,Mamer,Mamer,Mamer,Q921291,Mamer,Mamer kasteel 2023.jpg
+LU0110,Steinfort,LCA,6179,49.6516,5.9186,peucommun,27,Steinfort,Stengefort,Steinfort,Q985478,Steinfort,GeSteng12.JPG
+LU0201,Bettembourg,LES,11718,49.5248,6.0819,rare,10,Bettembourg,Beetebuerg,Bettemburg,Q832342,Bettembourg,Collart Schlass--w.jpg
+LU0202,Differdange,LES,31424,49.5214,5.8856,epique,3,Differdange,Déifferdeng,Differdingen,Q16012,Differdange,Differdange (101).jpg
+LU0203,Dudelange,LES,22460,49.4834,6.0819,epique,4,Dudelange,Diddeleng,Düdelingen,Q16014,Dudelange,Düdelingen Rathaus.jpg
+LU0204,Esch-sur-Alzette,LES,38305,49.4993,5.9813,epique,2,Esch-sur-Alzette,Esch-Uelzecht,Esch an der Alzette,Q16010,Esch-sur-Alzette,View of Esch-sur-Alzette 2025-04 --2 (cropped).jpg
+LU0205,Frisange,LES,5068,49.5197,6.2126,peucommun,38,Frisange,Fréiseng,Frisingen,Q1017402,Frisange,"Frisange, mairie 2023 (101).jpg"
+LU0206,Kayl,LES,10007,49.4847,6.0382,peucommun,15,Kayl,Keel,Kayl,Q939625,Kayl,Gemeng Käl um Widdem.jpg
+LU0207,Leudelange,LES,2748,49.5684,6.0647,commun,64,Leudelange,Leideleng,Leudelingen,Q985382,Leudelange,Mairie de Leudelange 01.jpg
+LU0208,Mondercange,LES,7331,49.5303,5.9902,peucommun,22,Mondercange,Monnerech,Monnerich,Q939598,Mondercange,Monnerich1010668www.jpg
+LU0209,Pétange,LES,21396,49.552,5.8599,rare,5,Pétange,Péiteng,Petingen,Q602441,Pétange,Stadhaus Péiteng 01.jpg
+LU0210,Reckange-sur-Mess,LES,3044,49.5587,6.017,commun,58,Reckange-sur-Mess,Reckeng op der Mess,Reckingen,Q783026,Reckange-sur-Mess,"Märei, Reckeng-101.jpg"
+LU0211,Roeser,LES,7244,49.5341,6.1359,peucommun,23,Roeser,Réiser,Roeser,Q683922,Roeser,Roeser - Town hall 1.jpg
+LU0212,Rumelange,LES,5731,49.4622,6.009,peucommun,30,Rumelange,Rëmeleng,Rümelingen,Q914847,Rumelange,"Rumelange, Grand-Rue 99 (102).jpg"
+LU0213,Sanem,LES,19778,49.5258,5.9348,rare,6,Sanem,Suessem,Sassenheim,Q677804,Sanem,Gemengenhaus zu Bieles.jpg
+LU0214,Schifflange,LES,11860,49.5075,6.0129,rare,8,Schifflange,Schëffleng,Schifflingen,Q669155,Schifflange,Schifflange (101).jpg
+LU0301,Bertrange,LLU,9834,49.6025,6.0465,peucommun,16,Bertrange,Bartreng,Bartringen,Q809603,Bertrange (Luxembourg),Mairie Bertrange 01.jpg
+LU0302,Contern,LLU,5084,49.5869,6.2424,peucommun,37,Contern,Conter,Contern,Q596040,Contern,"Contern, Mairie.jpg"
+LU0303,Hesperange,LLU,17392,49.5822,6.1754,rare,7,Hesperange,Hesper,Hesperingen,Q921321,Hesperange,Hesper Gemeng 2.JPG
+LU0304,Luxembourg,LLU,138818,49.6177,6.1328,legendaire,1,Luxembourg,Lëtzebuerg,Luxemburg,Q1842,Luxembourg (ville),Luxembourg City Hall (54540726309).jpg
+LU0305,Niederanven,LLU,7143,49.6548,6.2248,peucommun,24,Niederanven,Nidderaanwen,Niederanven,Q985402,Niederanven,"Oberanven, mairie de Niederanven (101).jpg"
+LU0306,Sandweiler,LLU,3867,49.6137,6.2143,peucommun,47,Sandweiler,Sandweiler,Sandweiler,Q985476,Sandweiler,"Sandweiler, mairie (101).jpg"
+LU0307,Schuttrange,LLU,4453,49.6236,6.2696,peucommun,44,Schuttrange,Schëtter,Schüttringen,Q956489,Schuttrange,GemSch1.JPG
+LU0308,Steinsel,LLU,6352,49.6749,6.1122,peucommun,26,Steinsel,Steesel,Steinsel,Q985149,Steinsel,Luxembourg Steinsel townhall 2014.jpg
+LU0309,Strassen,LLU,11093,49.6332,6.059,rare,12,Strassen,Stroossen,Strassen,Q986400,Strassen (Luxembourg),На улице Арлон (Route d'Arlon) около Макдональдса - panoramio.jpg
+LU0310,Walferdange,LLU,9415,49.6592,6.1341,peucommun,17,Walferdange,Walfer,Walferdingen,Q917508,Walferdange,Ge Wal4.JPG
+LU0311,Weiler-la-Tour,LLU,2517,49.5482,6.205,commun,67,Weiler-la-Tour,Weiler zum Tuer,Weiler zum Turm,Q985390,Weiler-la-Tour,Mairie Weiler-la-Tour 01.jpg
+LU0401,Colmar-Berg,LME,2523,49.8111,6.0791,commun,65,Colmar-Berg,Colmer-Bierg,Colmar-Berg,Q676957,Colmar-Berg,Colmar Berg 02 town hall Luxembourg.jpg
+LU0402,Bissen,LME,3591,49.7867,6.0523,peucommun,50,Bissen,Biissen,Bissen,Q866692,Bissen,Maison communale Bissen (2013).jpg
+LU0403,Helperknapp,LME,5379,49.7183,6.0263,peucommun,32,Helperknapp,Helperknapp,Helperknapp,Q25583657,Helperknapp,"Mairie Tuntange, 2 rue de Hollenfels.jpg"
+LU0404,Fischbach,LME,1358,49.7425,6.1978,commun,97,Fischbach,Fëschbech,Fischbach,Q1016233,Fischbach (Mersch),"Fischbach (Mersch), Mairie, 1 Rue de l'Église (101).jpg"
+LU0405,Heffingen,LME,1623,49.7629,6.2468,commun,90,Heffingen,Hiefenech,Heffingen,Q742927,Heffingen,Hiefenech nei Märei-001.jpg
+LU0406,Larochette,LME,2228,49.7792,6.1977,commun,79,Larochette,Fiels,Fels,Q985397,Larochette,Larochette 01.jpg
+LU0407,Lintgen,LME,3479,49.7272,6.1556,peucommun,51,Lintgen,Lëntgen,Lintgen,Q985395,Lintgen,Märei Lëntgen-101.jpg
+LU0408,Lorentzweiler,LME,4790,49.6979,6.1566,peucommun,40,Lorentzweiler,Luerenzweiler,Lorentzweiler,Q256978,Lorentzweiler,"Lorentzweiler, mairie (101).jpg"
+LU0409,Mersch,LME,10947,49.762,6.1208,rare,13,Mersch,Miersch,Mersch,Q284855,Mersch,"Mersch, castle (102).jpg"
+LU0410,Nommern,LME,1506,49.799,6.1532,commun,93,Nommern,Noumer,Nommern,Q985393,Nommern,D'Märei zu Noumer-101.jpg
+LU0501,Clervaux,LCL,6384,50.0784,6.0839,peucommun,25,Clervaux,Clierf,Clerf,Q836075,Clervaux,Clervaux Castle 6.JPG
+LU0502,Wincrange,LCL,5029,50.0772,5.9315,peucommun,39,Wincrange,Wëntger,Wintger,Q985404,Wincrange,"Wincrange, Wëntger (103).jpg"
+LU0503,Parc Hosingen,LCL,4492,50.0134,6.0928,peucommun,43,Parc Hosingen,Parc Housen,Park Hosingen,Q743393,Parc Hosingen,"Hosingen, mairie de Parc Housen (101).jpg"
+LU0504,Troisvierges,LCL,3753,50.1448,5.996,peucommun,49,Troisvierges,Ëlwen,Ulflingen,Q24454,Troisvierges,"Troisvierges, stadhuis foto2 2011-06-03 13.17.JPG"
+LU0505,Weiswampach,LCL,2765,50.1253,6.0589,commun,63,Weiswampach,Wäiswampech,Weiswampach,Q377847,Weiswampach,"Weiswampach, mairie (101).jpg"
+LU0601,Bettendorf,LDI,3074,49.8714,6.2224,commun,57,Bettendorf,Bettenduerf,Bettendorf,Q832382,Bettendorf (Luxembourg),View to Gilsdref from Seitert.jpg
+LU0602,Bourscheid,LDI,1794,49.9038,6.053,commun,87,Bourscheid,Buerschent,Burscheid,Q641381,Bourscheid (Luxembourg),"Bourscheid, mairie (101).jpg"
+LU0603,Diekirch,LDI,7422,49.8701,6.1527,peucommun,21,Diekirch,Dikrech,Diekirch,Q16050,Diekirch,"Diekirch, Hôtel de ville (101).jpg"
+LU0604,Erpeldange-sur-Sûre,LDI,2775,49.8646,6.1174,commun,62,Erpeldange-sur-Sûre,Ierpeldeng-Sauer,Erpeldingen an der Sauer,Q986403,Erpeldange-sur-Sûre,Erpeldange Castle 01.jpg
+LU0605,Ettelbruck,LDI,10099,49.8522,6.0867,rare,14,Ettelbruck,Ettelbréck,Ettelbrück,Q659351,Ettelbruck,Hotel de ville Ettelbruck Luxembourg.jpg
+LU0606,Feulen,LDI,2447,49.8579,6.0389,commun,68,Feulen,Feelen,Feulen,Q1143707,Feulen,Niederfeulen Mairie 01.jpg
+LU0607,Mertzig,LDI,2421,49.8342,5.9968,commun,69,Mertzig,Mäerzeg,Mertzig,Q685611,Mertzig,"Mertzig, mairie (101).jpg"
+LU0608,Reisdorf,LDI,1462,49.8625,6.2798,commun,94,Reisdorf,Reisduerf,Reisdorf,Q985196,Reisdorf,ReisdorfTownHall2189.jpg
+LU0609,Schieren,LDI,2237,49.8296,6.1214,commun,78,Schieren,Schieren,Schieren,Q371757,Schieren (Luxembourg),Mairie de Schieren 90 route de Luxembourg.jpg
+LU0610,Vallée de l'Ernz,LDI,2939,49.8217,6.2198,commun,59,Vallée de l'Ernz,Ärenzdallgemeng,Ernztalgemeinde,Q1313580,Vallée de l'Ernz,"Medernach, mairie Äerenzdallgemeng (101).jpg"
+LU0701,Beckerich,LRE,2938,49.7285,5.9167,commun,60,Beckerich,Biekerech,Beckerich,Q813727,Beckerich,"Beckerich, mairie (102).jpg"
+LU0702,Préizerdaul,LRE,1809,49.7984,5.9395,commun,86,Préizerdaul,Préizerdaul,Préizerdaul,Q1134542,Préizerdaul,"Reimberg, 9 rue Dr. Lucius 01.jpg"
+LU0703,Ell,LRE,1706,49.7628,5.842,commun,88,Ell,Ell,Ell,Q145727,Ell (Luxembourg),"Ell, mairie (102).jpg"
+LU0704,Rambrouch,LRE,5128,49.8393,5.7896,peucommun,36,Rambrouch,Rammerech,Rambruch,Q986396,Rambrouch,Rambrouch town hall 2015-05.JPG
+LU0706,Redange/Attert,LRE,3160,49.7721,5.8938,commun,56,Redange/Attert,Réiden op der Atert,Redingen an der Attert,Q687100,Redange-sur-Attert,"Redange-sur-Attert, mairie (101).jpg"
+LU0707,Saeul,LRE,1073,49.7367,5.9753,commun,100,Saeul,Sëll,Saeul,Q1017421,Saeul,"Sëll, Märei-101.jpg"
+LU0708,Useldange,LRE,2191,49.7735,5.9766,commun,80,Useldange,Useldeng,Useldingen,Q985333,Useldange,"Useldange, château (115).jpg"
+LU0709,Vichten,LRE,1432,49.8046,6.004,commun,95,Vichten,Viichten,Vichten,Q985473,Vichten,Vichten town hall 01.jpg
+LU0711,Groussbus-Wal,LRE,2375,49.8419,5.9443,commun,73,Groussbus-Wal,Groussbus-Wal,Groussbus-Wal,Q116453518,Groussbus-Wal,Grosbous former school house 2013-08.JPG
+LU0801,Boulaide,LWI,1561,49.8955,5.8013,commun,92,Boulaide,Bauschelt,Bauschleiden,Q811880,Boulaide,Mairie Boulaide 01.jpg
+LU0802,Esch-sur-Sûre,LWI,3438,49.8914,5.9306,commun,52,Esch-sur-Sûre,Esch-Sauer,Esch-Sauer,Q986392,Esch-sur-Sûre,Town hall Esch-sur-Sûre 2012-07.JPG
+LU0804,Goesdorf,LWI,1677,49.9334,5.9757,commun,89,Goesdorf,Géisdref,Goesdorf,Q985392,Goesdorf,Märei Géisdref-101.jpg
+LU0805,Kiischpelt,LWI,1317,49.9822,5.9978,commun,98,Kiischpelt,Kiischpelt,Kiischpelt,Q1143742,Kiischpelt,Wilwerwiltz maison communale Kiischpelt 01.jpg
+LU0806,Lac de la Haute-Sûre,LWI,2402,49.9401,5.7955,commun,70,Lac de la Haute-Sûre,Stauséigemeng,Stauseegemeinde,Q1133688,Lac de la Haute-Sûre (commune),"Commune de Lac-Haute-Sûre, Harlange (107).jpg"
+LU0807,Wiltz,LWI,8609,49.9903,5.9421,peucommun,19,Wiltz,Wolz,Wiltz,Q741589,Wiltz,"Wiltz, Hôtel de Ville.jpg"
+LU0808,Winseler,LWI,1619,49.9661,5.8539,commun,91,Winseler,Wanseler,Winseler,Q985385,Winseler,"Winseler, mairie (101).jpg"
+LU0901,Tandel,LVI,2380,49.9089,6.1681,commun,72,Tandel,Tandel,Tandel,Q1365356,Tandel,"Tandel, Bastendorf, ancienne mairie.jpg"
+LU0902,Putscheid,LVI,1201,49.954,6.1171,commun,99,Putscheid,Pëtschent,Putscheid,Q513740,Putscheid,"Putscheid, mairie (101).jpg"
+LU0903,Vianden,LVI,2275,49.9389,6.2062,commun,75,Vianden,Veianen,Vianden,Q836082,Vianden,Vianden town hall 2011-11.jpg
+LU1001,Beaufort,LEC,3162,49.8356,6.301,commun,55,Beaufort,Beefort,Befort,Q18693153,Beaufort (Luxembourg),GemengBeefo.JPG
+LU1002,Bech,LEC,1381,49.7484,6.3363,commun,96,Bech,Bech,Bech,Q813593,Bech (Luxembourg),D'Gemeng vu Bech (2006).jpg
+LU1003,Berdorf,LEC,2266,49.8241,6.3561,commun,77,Berdorf,Bäerdref,Berdorf,Q818891,Berdorf,Berdorf town hall 2012-08.JPG
+LU1004,Consdorf,LEC,2089,49.7806,6.3494,commun,82,Consdorf,Konsdref,Consdorf,Q660217,Consdorf,"Town hall Consdorf, Luxembourg.JPG"
+LU1005,Echternach,LEC,6016,49.8014,6.4033,peucommun,28,Echternach,Iechternach,Echternach,Q204317,Echternach,Echternach mairie.jpg
+LU1006,Rosport-Mompach,LEC,3826,49.7696,6.4791,peucommun,48,Rosport-Mompach,Rouspert-Mompech,Rosport-Mompach,Q31734921,Rosport-Mompach,Henri Tudor house Rosport Luxembourg.jpg
+LU1008,Waldbillig,LEC,1996,49.7957,6.2798,commun,84,Waldbillig,Waldbëlleg,Waldbillig,Q1017412,Waldbillig,Town hall Waldbillig (Luxembourg).jpg
+LU1101,Betzdorf,LGR,4216,49.6578,6.3003,peucommun,45,Betzdorf,Betzder,Betzdorf,Q850734,Betzdorf (Luxembourg),Betzdorf (L) town hall.jpg
+LU1102,Biwer,LGR,1910,49.7178,6.3359,commun,85,Biwer,Biwer,Biwer,Q376454,Biwer,Gemeng Biwer Luxembourg 2012-08.JPG
+LU1103,Flaxweiler,LGR,2272,49.6579,6.3409,commun,76,Flaxweiler,Fluessweiler,Flaxweiler,Q1017425,Flaxweiler,GemeFlu1.JPG
+LU1104,Grevenmacher,LGR,5318,49.6724,6.409,peucommun,34,Grevenmacher,Gréiwemaacher,Grevenmacher,Q215826,Grevenmacher,GrevenmacherNeuesRathaus.JPG
+LU1105,Junglinster,LGR,9307,49.7152,6.2444,peucommun,18,Junglinster,Jonglënster,Junglinster,Q1017404,Junglinster,Town Hall Junglinster.JPG
+LU1106,Manternach,LGR,2311,49.7141,6.4192,commun,74,Manternach,Manternach,Manternach,Q985479,Manternach,Märei Manternach-102.jpg
+LU1107,Mertert,LGR,5838,49.7181,6.4733,peucommun,29,Mertert,Mäertert,Mertert,Q985387,Mertert,"Wasserbillig, ancienne gare PH (105).jpg"
+LU1108,Wormeldange,LGR,3289,49.6145,6.3899,commun,54,Wormeldange,Wuermer,Wormeldingen,Q985399,Wormeldange,Mairie Wormeldange 01.jpg
+LU1202,Dalheim,LRM,2388,49.5478,6.2489,commun,71,Dalheim,Duelem,Dalheim,Q986412,Dalheim (Luxembourg),Duelem Gemeng.JPG
+LU1203,Lenningen,LRM,2091,49.6092,6.3135,commun,81,Lenningen,Lenneng,Lenningen,Q1017410,Lenningen (Luxembourg),Lennenger Märei zu Kanech-102.jpg
+LU1204,Mondorf-les-Bains,LRM,5583,49.5172,6.2706,peucommun,31,Mondorf-les-Bains,Munneref,Bad-Mondorf,Q798747,Mondorf-les-Bains,"Mondorf-les-Bains, mairie (101).jpg"
+LU1205,Remich,LRM,4174,49.5468,6.3584,peucommun,46,Remich,Réimech,Remich,Q734284,Remich,Vue op Réimech vum Bech-Maacher «Mäsgewan»-101.jpg
+LU1206,Schengen,LRM,5251,49.4991,6.3386,peucommun,35,Schengen,Schengen,Schengen,Q183841,Schengen,"Gemeng Schengen, Rëmerschen-101.jpg"
+LU1207,Stadtbredimus,LRM,2005,49.5828,6.3538,commun,83,Stadtbredimus,Stadbriedemes,Stadtbredimus,Q1017400,Stadtbredimus,Town hall Stadtbredimus 01.jpg
+LU1209,Bous-Waldbredimus,LRM,3352,49.56,6.3104,commun,53,Bous-Waldbredimus,Bous-Waldbriedemes,Bous-Waldbredimus,Q116460013,Bous-Waldbredimus,"Waldbredimus, centre culturel Jos Rennel (101).jpg"

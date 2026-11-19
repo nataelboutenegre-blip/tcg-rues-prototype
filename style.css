@@ -9718,6 +9718,19 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 body.belgique-on .tp-pays{ gap:2px; }
 body.belgique-on .tp-pays button{ padding:9px 12px; gap:6px; }
 @media (max-width: 400px){ body.belgique-on .tp-pays button{ padding:8px 9px; font-size:.82rem; } body.belgique-on .tp-pays small{ display:none; } }
+/* patch467 : le Luxembourg */
+.tp-pays button.tp-b-lu.on{ background:rgba(0,163,224,.18); color:#fff; box-shadow:inset 0 0 0 1px rgba(0,163,224,.65); }
+.tp-pays .tp-court{ display:none; }
+body.luxembourg-on .tp-pays button{ padding:9px 10px; gap:5px; }
+@media (max-width: 440px){ body.luxembourg-on .tp-pays button{ padding:8px 8px; font-size:.8rem; } body.luxembourg-on .tp-pays .tp-long{ display:none; } body.luxembourg-on .tp-pays .tp-court{ display:inline; } }
+.paquet.paquet-lu .paquet-etiquette .tp-drap{ width:30px; height:20px; }
+.paquet.paquet-lu .paquet-titre{ font-size:2.05rem; }
+.paquet.paquet-lu .paquet-bande{ font-size:1.02rem; }
+.lu-badge{ background:#00A3E0; color:#fff; }
+.lu-badge svg{ width:15px; height:10px; border-radius:2px; box-shadow:0 0 0 1px rgba(255,255,255,.35); }
+.card.luxembourg .carte-lisere span:nth-child(1), .mini.luxembourg .mini-lisere span:nth-child(1){ background:#EF3340; }
+.card.luxembourg .carte-lisere span:nth-child(2), .mini.luxembourg .mini-lisere span:nth-child(2){ background:#fff; }
+.card.luxembourg .carte-lisere span:nth-child(3), .mini.luxembourg .mini-lisere span:nth-child(3){ background:#00A3E0; }
 
 /* ---------- patch410 : les points d'une bombe sous chaque niveau ---------- */
 .cr-niv .cr-pts{ display:block; font-style:normal; font-size:.66rem; font-weight:700; color:#FFD36B; margin-top:2px; }
@@ -9809,7 +9822,7 @@ body.belgique-on .tp-pays button{ padding:9px 12px; gap:6px; }
 
 /* patch418 : règles de la saison 3, chacune visible quand sa nouveauté s'allume */
 #panel-regles [data-s3]{ display:none !important; }
-body.siege-on #panel-regles [data-s3="siege"], body.suisse-on #panel-regles [data-s3="suisse"], body.belgique-on #panel-regles [data-s3="belgique"],
+body.siege-on #panel-regles [data-s3="siege"], body.suisse-on #panel-regles [data-s3="suisse"], body.belgique-on #panel-regles [data-s3="belgique"], body.luxembourg-on #panel-regles [data-s3="luxembourg"],
 body.zone-on #panel-regles [data-s3="zone"]{ display:revert !important; }
 body.siege-on #panel-regles [data-s2="des"]{ display:none !important; }
 #panel-regles .rg-lien{ color:#FFB27A; font-weight:700; }

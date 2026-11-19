@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'aabe0406dff3';
+const VERSION_JEU = '077c70824211';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -24468,6 +24468,7 @@ vec3 face(vec2 q,vec2 uv,float t){
 
   // ------------------------------------------------------------------ OR FONDU
   orfondu: SKIN_PRE2 + `
+float smin(float a,float b,float k){ float h=clamp(.5+.5*(b-a)/k,0.,1.); return mix(b,a,h)-k*h*(1.-h); }
 vec3 face(vec2 q,vec2 uv,float t){
   float b=3.; vec4 R=photoRect(b); float ii=interior(q,b); float ip=inR(q,R);
   float an=atan(q.y-H*.5,q.x-W*.5);
@@ -24492,22 +24493,31 @@ vec3 face(vec2 q,vec2 uv,float t){
   inner+=vec3(.9,.58,.13)*nappe*(.1+.26*glint(uv,u_tilt,5.))*smoothstep(30.,80.,q.y-R.w);
   inner+=vec3(1.,.9,.55)*pow(nappe,5.)*.1*smoothstep(30.,80.,q.y-R.w);
   float rg=lineU(ringDist(ringsF(q,0.,0.)),.35); inner+=vec3(1.,.8,.4)*rg*.07;
-  // des gouttes d'or perlent sous la photo
+  // l'or coule du bord de la photo : un filet, et des gouttes qui s'en détachent (patch470)
   float cw=15.; float ci=floor(q.x/cw); float ch=h21(vec2(ci,3.));
-  float xc=(ci+.5)*cw+(h21(vec2(ci,5.))-.5)*8.; float lg=(1.5+5.5*ch)*(.8+.2*sin(t*.4+ch*20.))+lev*30.;
-  float yb=R.w-1.+lg; float larg=1.7+1.1*ch;
-  float dg=q.y<yb?abs(q.x-xc)-larg*(.55+.45*smoothstep(R.w-4.,yb,q.y)):length(q-vec2(xc,yb))-larg;
-  float goutte=(1.-smoothstep(-.4,.4,dg))*step(R.w-6.,q.y)*step(.3,ch);
-  vec3 og=mix(vec3(.5,.3,.06),vec3(1.,.86,.45),clamp(.5-(q.x-xc)/larg*.5+u_tilt.x*.6,0.,1.))+vec3(1.,.97,.8)*exp(-pow((q.x-xc+larg*.35)/.4,2.))*.5;
-  inner=mix(inner,og,goutte);
-  float joint=exp(-pow((q.y-R.w+1.)/2.2,2.));
+  float xc=(ci+.5)*cw+(h21(vec2(ci,5.))-.5)*6.;
+  float y0=R.w-.5; float lg=(2.+5.5*ch)*(.85+.15*sin(t*.4+ch*20.))+lev*30.;
+  float yb=y0+lg; float larg=1.35+.9*ch;
+  float tt=clamp((q.y-y0)/max(lg,.1),0.,1.);
+  float rr=larg*(1.05-.5*smoothstep(0.,.8,tt));
+  float dSeg=length(vec2(q.x-xc,q.y-clamp(q.y,y0,yb)))-rr;
+  float dBul=length((q-vec2(xc,yb+larg*.25))*vec2(1.,.92))-larg*1.18;
+  float dG=smin(dSeg,dBul,1.6)+1e3*step(ch,.3);
+  float dJ=abs(q.y-y0)-1.25;
+  float dOr=smin(dG,dJ,3.2);
+  float oD=1.-smoothstep(-.45,.45,dOr);
+  float cote=clamp(.5-(q.x-xc)/larg*.5+u_tilt.x*.6,0.,1.);
+  vec3 og=mix(vec3(.5,.3,.06),vec3(1.,.86,.45),mix(.55+.3*glint(uv,u_tilt,7.),cote,smoothstep(0.,1.,(q.y-y0)/2.5)*step(dG,dJ+1.)));
+  og+=vec3(1.,.97,.8)*exp(-pow((q.x-xc+larg*.35)/.45,2.))*.5*step(dG,0.)*step(y0+1.,q.y);
+  og+=vec3(1.,.95,.75)*exp(-dot(q-vec2(xc-larg*.4,yb),q-vec2(xc-larg*.4,yb))/.6)*.7*step(.3,ch);
+  float ombre=(1.-smoothstep(0.,2.2,dOr))*step(y0,q.y)*.55;
   // poussière d'or
   vec2 pi=floor(q*1.9); float pd=h21(pi);
   float sc=step(.985,pd)*(.3+.7*pow(max(0.,sin(pd*90.+u_tilt.x*9.+u_tilt.y*7.+t*.5)),5.));
   inner+=vec3(1.,.84,.42)*sc*.8;
   vec3 col=mix(inner,ph,ip);
-  col=mix(col,vec3(.95,.72,.25)*(.7+.5*glint(uv,u_tilt,7.)),joint*.75);
-  col=mix(col,og,goutte*step(R.w-1.,q.y));
+  col*=1.-ombre;
+  col=mix(col,og,oD*step(R.w-3.,q.y));
   col=mix(frame,col,ii);
   return col; }`,
 

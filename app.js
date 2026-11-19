@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1d4b9f5c8dda';
+const VERSION_JEU = 'b67f732489e3';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9088,6 +9088,7 @@ let packStatusCache = null;
 let packStatusFetchedAt = 0;
 let packStatusInterval = null;
 let dispoPrecedente = null;   // pour reperer le moment ou un jeton se recharge
+let roueToursPrecedents = null;   // patch472 : idem pour les tours de roue (la roue a ses propres jetons)
 
 // La perforation : 36 dents fines, de gauche a droite. Le trait dore du
 // survol et de la dechirure suit exactement ces points.
@@ -9170,11 +9171,14 @@ function renderPackStatus(){
     : packStatusCache.solde < 200 ? 'Solde insuffisant' : null);   // patch156
 
   // un jeton vient de se recharger pendant que le joueur est sur le jeu
-  if(dispoPrecedente !== null && dispo > dispoPrecedente && !paquetEnCours && roueRemplace() && !roueTourne && ROUE.tours_jour < ROUE.par_jour){   // patch343, patch445
+  // patch472 : on compte les tours de roue eux-mêmes, pas les paquets gratuits (qui ne se dépensent plus quand la roue les remplace)
+  const toursRoue = roueRemplace() ? Math.floor(roueJetons()) + Math.max(0, Number(ROUE.offerts) || 0) + roueSoirReste() : null;
+  const roueJouable = toursRoue !== null && (roueSoirReste() > 0 || Number(ROUE.offerts) > 0 || Number(ROUE.tours_jour) < Number(ROUE.par_jour));
+  if(toursRoue !== null && roueToursPrecedents !== null && toursRoue > roueToursPrecedents && !paquetEnCours && !roueTourne && roueJouable){   // patch343, patch445, patch472
     notifier({
       type: 'succes',
       titre: 'Un tour de roue t\'attend',
-      texte: dispo > 1 ? `Tu en as ${dispo} en réserve. Touche ici pour tourner la roue du Front.` : 'Touche ici pour tourner la roue du Front.',
+      texte: toursRoue > 1 ? `Tu en as ${toursRoue} en réserve. Touche ici pour tourner la roue du Front.` : 'Touche ici pour tourner la roue du Front.',
       aller: () => { ncAller('front', 'tirage'); window.scrollTo({ top: 0 }); }
     });
   } else if(dispoPrecedente !== null && dispo > dispoPrecedente && !paquetEnCours && !raBloque() && !roueRemplace()){   // patch322, patch445
@@ -9186,6 +9190,7 @@ function renderPackStatus(){
     });
   }
   dispoPrecedente = dispo;
+  roueToursPrecedents = toursRoue;   // patch472
   majPaquetPret(dispo);
   // patch123 : le paquet affiche est le bouton ; pas deux facons de faire la meme chose
   const bouton = document.getElementById('openFreeBtn');
@@ -13267,6 +13272,7 @@ function appliquerMode(){
     const zoneP = document.getElementById('packZone');
     if(zoneP) zoneP.innerHTML = '';
     dispoPrecedente = null;   // pas de fausse notification « paquet gratuit »
+    roueToursPrecedents = null;   // patch472
   }
   // patch90 : le statut des paquets et la collection suivent le mode
   loadPackStatus();

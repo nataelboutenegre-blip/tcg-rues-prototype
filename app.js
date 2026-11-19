@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '77e096e71ed8';
+const VERSION_JEU = '9ec531f80595';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8454,7 +8454,7 @@ function makeCardEl(draw, onFlip){
               <span class="carte-rarete">${draw.tier.label}</span>
               <span class="carte-num">${draw.rank.toLocaleString('fr-FR')} / ${draw.tierSize.toLocaleString('fr-FR')}</span>
             </div>
-            <div class="carte-art">${estOutremerCode(draw.code) ? OM_BADGE : estSuisseCode(draw.code) ? chBadge(false) : estBelgeCode(draw.code) ? beBadge(false) : ''}${carteArtSvg(draw.code, draw.tier.id)}${bxg.art}${atg.art}${hng.art}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
+            <div class="carte-art">${estOutremerCode(draw.code) ? OM_BADGE : estSuisseCode(draw.code) ? chBadge(false) : estBelgeCode(draw.code) ? beBadge(false) : ''}${carteArtSvg(draw.code, draw.tier.id)}${draw.aurore ? '' : `<img class="cv2-photo" src="${echapperTexte(urlPhoto(draw.code + '.jpg'))}" alt="" loading="lazy" decoding="async" data-onfail="1">`}${bxg.art}${atg.art}${hng.art}<span class="carte-dept">${draw.dept}</span>${mon ? `<span class="carte-monument" title="Monument de la commune">${ICONE_MONUMENT}<b>${echapperTexte(mon.nom)}</b></span>` : ''}</div>
             <div class="carte-infos">
               <p class="carte-nom ${draw.nom.length > 26 ? 'tres-long' : draw.nom.length > 16 ? 'long' : ''}" title="${echapperTexte(draw.nom)}">${draw.nom}</p>
               <p class="carte-departement">${DEPT_NAMES[draw.dept] ? `<span class="dep-nom">${DEPT_NAMES[draw.dept]}</span> <span class="dep-num">(${draw.dept})</span>` : `<span class="dep-num">${draw.dept}</span>`}</p>
@@ -25362,6 +25362,7 @@ function ifaceCharger(){
       document.documentElement.classList.toggle('sans-sachet', o.sachet !== undefined && o.sachet !== null && Number(o.sachet) === 0);   // patch436
       document.documentElement.classList.toggle('sans-revelation', o.revelation !== undefined && o.revelation !== null && Number(o.revelation) === 0);   // patch437
       document.documentElement.classList.toggle('sans-vitrine', o.vitrine !== undefined && o.vitrine !== null && Number(o.vitrine) === 0);   // patch438
+      document.documentElement.classList.toggle('sans-cartes', o.cartes !== undefined && o.cartes !== null && Number(o.cartes) === 0);   // patch465 : les cartes v2
     }catch(e){}
     IFACE.lu = true;
     ifaceAppliquer();

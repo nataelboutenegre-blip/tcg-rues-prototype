@@ -17,3 +17,8 @@ _donnees/suisse/brut/
 _prochain-patch/aurore-suisse/
 _prochain-patch/aurore-suisse-villes/
 _donnees/belgique/brut/
+
+# Luxembourg et Espagne : fichiers bruts téléchargés
+_donnees/luxembourg/brut/
+_donnees/espagne/brut/
+_donnees/__pycache__/

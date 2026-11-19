@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '3c1c47d5ed5f';
+const VERSION_JEU = 'aabe0406dff3';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -23131,18 +23131,20 @@ function bqxUneEuros(arts){
         <span class="bqx-une-prix">${bqePrixHtml(a)}</span>
       </div></button>`;
 }
-// patch454 : les cinq skins de la saison 3 arrivent en boutique le 22/11 (lignes euros_articles du jour J).
-// Avant, sur l'appareil où ?topo=test est posé, la boutique les montre déjà, en aperçu seul (pas d'achat).
-const SKINS_S3_APERCU = [
-  { id: 'skin-givre', nom: 'Skin Givre', description: 'Le gel prend sur les bords, la photo se voit à travers une vitre givrée', prix_centimes: 399 },
-  { id: 'skin-aquarelle', nom: 'Skin Aquarelle', description: 'La photo repeinte à l\'aquarelle sur papier à grain, avec sa palette', prix_centimes: 399 },
-  { id: 'skin-topo', nom: 'Skin Topo', description: 'La photo en carte d\'état-major : deux encres et des courbes de niveau dorées', prix_centimes: 499 },
-  { id: 'skin-vitrail', nom: 'Skin Vitrail', description: 'La photo devient un vitrail, sa lumière colorée tombe sur la carte', prix_centimes: 499 },
-  { id: 'skin-kintsugi', nom: 'Skin Kintsugi', description: 'La carte brisée puis réparée à l\'or, à la japonaise', prix_centimes: 599 }];
+// patch454, patch469 : les cinq thèmes de la saison 3 arrivent en boutique le 22/11, en collections (le skin et son dos
+// assorti, lignes euros_articles du jour J). Avant, sur l'appareil où ?topo=test est posé, la boutique les montre déjà,
+// en aperçu seul (pas d'achat).
+const COLLECTIONS_S3_APERCU = [
+  { id: 'pack-topo', nom: 'Collection Topo', description: 'Le dos et le skin Topo', prix_centimes: 649, contenu: ['dos-topo', 'skin-topo'] },
+  { id: 'pack-givre', nom: 'Collection Givre', description: 'Le dos et le skin Givre', prix_centimes: 599, contenu: ['dos-givre', 'skin-givre'] },
+  { id: 'pack-kintsugi', nom: 'Collection Kintsugi', description: 'Le dos et le skin Kintsugi', prix_centimes: 699, contenu: ['dos-kintsugi', 'skin-kintsugi'] },
+  { id: 'pack-vitrail', nom: 'Collection Vitrail', description: 'Le dos et le skin Vitrail', prix_centimes: 649, contenu: ['dos-vitrail', 'skin-vitrail'] },
+  { id: 'pack-aquarelle', nom: 'Collection Aquarelle', description: 'Le dos et le skin Aquarelle', prix_centimes: 599, contenu: ['dos-aquarelle', 'skin-aquarelle'] }];
 function bqeApercusS3(cat){
   let test = false; try{ test = localStorage.getItem('tf-topo') === '1'; }catch(e){}
   if(!test || !cat || !Array.isArray(cat.articles)) return;
-  for(const a of SKINS_S3_APERCU) if(!cat.articles.some(x => x.id === a.id)) cat.articles.push({ ...a, type: 'skin', actif: true, reserve_og: false, apercu: true });
+  const manque = COLLECTIONS_S3_APERCU.filter(a => !cat.articles.some(x => x.id === a.id));
+  cat.articles.unshift(...manque.map(a => ({ ...a, type: 'collection', prix_moi: a.prix_centimes, actif: true, reserve_og: false, apercu: true })));
 }
 function renderBoutiqueEuros(){
   const corps = document.getElementById('bqeCorps');

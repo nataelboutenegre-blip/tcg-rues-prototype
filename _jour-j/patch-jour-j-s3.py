@@ -3,7 +3,7 @@
 #  - direct.js?v=5 -> v=6 (sinon les navigateurs gardent l'ancien fichier) ;
 #  - patch415 : « © swisstopo » dans les mentions légales ;
 #  - la cloche : l'entrée du 22/11.
-# Avant : _jour-j/s3-jj-4b-skins.sql (les cinq nouveaux skins en boutique ; leurs dessins sont dans le jeu depuis patch454).
+# Avant : _jour-j/s3-jj-4b-skins.sql (les cinq collections de la saison 3 en boutique, skin + dos ; dessins dans le jeu depuis patch454 et patch468).
 # Ensuite : python3 maj-version.py, puis commit de app.js + index.html + version.json
 # + direct/ + mentions-legales.html + data/nouveautes.json, puis push.
 # L'habillage Topo, le sachet, la révélation et la vitrine s'allument seuls le 22/11
@@ -52,7 +52,7 @@ if not any(x.get('date') == '2026-11-22' for x in d):
         "🏰 Classement des clans : il additionne maintenant les points des 5 meilleurs membres actifs (idée d'Oshannir). Une recrue ne fait jamais baisser son clan.",
         "🃏 Nouvelles cartes : la photo prend toute la place, le nom est posé dessus, le département en plaque, et le cadre change de matière selon la rareté (métal, reflet irisé, or). Les cartes à skin, Aurore, brillantes et de l'atelier gardent leur look.",
         "📊 Classement du Front : les bonus de département et de région varient selon leur population (× 0,6 pour les moins peuplés, jusqu'à × 1,6 pour les plus peuplés) ; une légendaire vaut 45 points. Viser une zone dense devient une vraie stratégie.",
-        "✨ Cinq nouveaux skins en boutique : Givre, Aquarelle, Topo, Vitrail et Kintsugi. Et les onze skins existants ont été redessinés : ils jouent maintenant avec la photo de ta carte. Si tu en as déjà un, il change tout seul, sans rien payer.",
+        "✨ Cinq nouvelles collections en boutique, le skin et son dos assorti : Topo, Givre, Kintsugi, Vitrail et Aquarelle. Et les onze skins existants ont été redessinés : ils jouent maintenant avec la photo de ta carte. Si tu en as déjà un, il change tout seul, sans rien payer.",
         "🏆 Les récompenses de la saison 2 sont dans les profils : médailles du podium, titres, seigneuries, clan champion, et un paquet Terra offert à tous les pionniers du Front."],
         'correctifs': []})
     s = json.dumps(d, indent=2, ensure_ascii=False)
@@ -60,5 +60,5 @@ if not any(x.get('date') == '2026-11-22' for x in d):
     open(p, 'w', encoding='utf-8').write(s + '\n'); print('cloche du 22/11 : ok')
 else:
     print('cloche du 22/11 : déjà là')
-print('Skins : _jour-j/s3-jj-4b-skins.sql a-t-il été lancé ? (5 nouveaux skins en boutique)')
+print('Skins : _jour-j/s3-jj-4b-skins.sql a-t-il été lancé ? (5 collections S3 en boutique)')
 print('Ensuite : python3 maj-version.py, vérifier VERSION_JEU = version.json, commit, push.')

@@ -19,6 +19,10 @@ select
   (select count(*) from belgique_communes_attente) = 565                                       as reserve_belge,          -- ajout du 19/11
   (select count(*) from communes where code like 'BE%') = 0                                     as belgique_pas_encore_entree,
   to_regprocedure('public.est_province_be(text)') is not null                                  as s3_31_passe,
+  (select count(*) from luxembourg_communes_attente) = 100                                      as reserve_lux,            -- ajout du 19/11 (Luxembourg)
+  (select count(*) from luxembourg_communes_attente where photo is not null) >= 95              as photos_lux,
+  (select count(*) from communes where code ~ '^LU[0-9]') = 0                                   as luxembourg_pas_encore_entre,
+  to_regprocedure('public.est_canton_lu(text)') is not null                                    as s3_34_passe,
   (select coalesce((valeur::jsonb->>'actif')::int, 0) from config_jeu where cle = 'siege') = 0  as siege_eteint,
   (select coalesce((valeur::jsonb->>'ouvert')::int, 0) from config_jeu where cle = 'zone_depart') = 0 as zone_fermee,
   (select coalesce((valeur::jsonb->>'actif')::int, 0) from config_jeu where cle = 'mess') = 0   as mess_eteint,

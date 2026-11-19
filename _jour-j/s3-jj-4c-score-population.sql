@@ -2,7 +2,7 @@
 -- Département et région × 0,6 à × 1,6 selon la population ; légendaire 45 au lieu de 60 au classement du Front.
 -- Pour éteindre : la même ligne avec 0.
 update public.config_jeu set valeur = ((valeur::jsonb) || '{"pop_actif": 1}'::jsonb)::text where cle = 'score_s2';
-select public.score_pop_calculer() as departements_et_cantons;   -- 133 (96 départements + 26 cantons + 11 provinces belges, s3-32 passé à l'étape 3 bis)
+select public.score_pop_calculer() as departements_et_cantons;   -- 145 (96 départements + 26 cantons + 11 provinces belges + 12 cantons luxembourgeois, s3-32 et s3-35 passés aux étapes 3 bis et 3 ter)
 select public.classement_cache_maj();
 -- Contrôle : 1 · 0.6 · 1.6 · 45
 select score_reglage('pop_actif') as actif, score_coef_dep('48') as lozere, score_coef_dep('59') as nord, points_front('legendaire') as legendaire;

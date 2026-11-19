@@ -24,6 +24,9 @@ rep('direct/tiktok.html', 'direct.js?v=5', 'direct.js?v=6')
 # (ajout du 19/11) la Belgique ouvre aussi le 22 : BELGIQUE_OUVERTE, AURORE_V 2, direct.js?v+1, « Source : Statbel »
 # (À lancer APRÈS _sql/s3-32-belgique-entree.sql, étape 3 bis.)
 subprocess.run([sys.executable, os.path.join(R, '_jour-j', 'patch-ouverture-belgique.py'), R, '--sans-direct-v'], check=True, cwd=R)
+# (ajout du 19/11, 11 h 32) le Luxembourg ouvre aussi le 22 : LUXEMBOURG_OUVERT, sources ACT et RNPP dans les mentions légales
+# (À lancer APRÈS _sql/s3-35-luxembourg-entree.sql, étape 3 ter.)
+subprocess.run([sys.executable, os.path.join(R, '_jour-j', 'patch-ouverture-luxembourg.py'), R, '--sans-direct-v'], check=True, cwd=R)
 
 if 'swisstopo' not in open(os.path.join(R, 'mentions-legales.html'), encoding='utf-8').read():
     subprocess.run([sys.executable, os.path.join(R, '_patchs', 'patch415.py'), R], check=True, cwd=R)
@@ -39,8 +42,9 @@ if not any(x.get('date') == '2026-11-22' for x in d):
         "🏰 Le siège remplace les dés : pose un siège (2 ⚡), envoie des vagues d'énergie et remplis la jauge de la commune avant que son propriétaire la défende. Renforcer, garnison-bouclier, course entre assiégeants : tout est dans Règles › Le siège.",
         "🇨🇭 La Suisse rejoint la carte : 2 110 communes, 26 cantons qui comptent comme des départements, la région Suisse, et des cartes Aurore suisses.",
         "🇧🇪 La Belgique aussi : 565 communes, 11 provinces qui comptent comme des départements (dont Bruxelles-Capitale), la région Belgique, et 51 cartes Aurore belges.",
-        "🧭 Zone de départ : avant ton premier paquet du Front, choisis une région, la Suisse ou la Belgique ; tes 3 premiers paquets y tombent.",
-        "🃏 Paquets Terra suisse et belge : au Tirage, choisis France, Suisse ou Belgique, mêmes jetons et même prix.",
+        "🇱🇺 Et le Luxembourg : 100 communes, 12 cantons qui comptent comme des départements, la région Luxembourg. Une seule légendaire : Luxembourg-Ville.",
+        "🧭 Zone de départ : avant ton premier paquet du Front, choisis une région, la Suisse, la Belgique ou le Luxembourg ; tes 3 premiers paquets y tombent.",
+        "🃏 Paquets Terra suisse, belge et luxembourgeois : au Tirage, choisis France, Suisse, Belgique ou Luxembourg, mêmes jetons et même prix.",
         "🎡 La roue du Front reste ouverte toute la saison, en plus de tes paquets : elle a ses propres jetons (1 toutes les 20 min, 3 en réserve), jusqu'à 50 tours par jour, et la soirée de 21 h à 23 h.",
         "🎖️ Le pass de la saison 3 est ouvert (Arcade › Pass de saison) : 20 niveaux jusqu'au 13 décembre, des paquets, des lingots et des titres.",
         "🍺 Le Mess ouvre ses portes à l'Arcade : la Machine à chiffrer, le Recensement et le 421, avec des tickets gagnés en duel classé.",

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '077c70824211';
+const VERSION_JEU = '1d4b9f5c8dda';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -152,6 +152,8 @@ function couleurFoncee(hex){
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Meme texte = meme nombre, donc meme commune = meme dessin a chaque fois
+// patch471 : un nom à mettre en petit sur une petite carte (trop long, ou un mot trop long pour une ligne)
+function nomLong(n){ n = String(n || ''); return n.length > 14 || n.split(/[\s\-'’]/).some(m => m.length >= 11); }
 function hashTexte(str){
   let h = 2166136261;
   for(const ch of str){ h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); }
@@ -6355,7 +6357,7 @@ function carteDefile(tier, nom, dept, pop, gagnante, graine){
     <div class="mini-int">
       <div class="mini-art">${miniArtSvg(graine || (nom + dept), tier)}<span class="mini-dept">${echapperTexte(dept || '')}</span></div>
       <div class="mini-infos">
-        <p class="mini-nom ${(nom || '').length > 14 ? 'long' : ''}">${echapperTexte(nom || '')}</p>
+        <p class="mini-nom ${nomLong(nom) ? 'long' : ''}">${echapperTexte(nom || '')}</p>
         <span class="mini-rarete">${t.label}</span>
       </div>
     </div>
@@ -7143,7 +7145,7 @@ function renderCollection(){
         ${entry.perdue ? '<span class="mini-perdue">PERDUE</span>' : ''}${favorisSet.has(entry.code) ? '<span class="mini-fav" title="Gardée à la fin de la saison">★</span>' : ''}
         <div class="mini-art">${estSuisseCode(entry.code) ? chBadge(true) : estBelgeCode(entry.code) ? beBadge(true) : estLuxCode(entry.code) ? luBadge(true) : ''}${artCommune(entry, entry.tier.id)}${hntParts(entry.code, 'front').art}<span class="mini-dept">${entry.dept}</span>${entry.bouclierJusqua > Date.now() ? `<span class="mini-bouclier" title="Protégée par un bouclier">${ICONE_BOUCLIER}</span>` : ''}${badgeSiege}${monumentsNoms.has(entry.code) ? `<span class="mini-monument" title="Monument : ${echapperTexte(monumentsNoms.get(entry.code))}">${ICONE_MONUMENT}</span>` : ''}${entry.etiquette ? `<span class="mini-etiq" title="Ton étiquette">${echapperTexte(entry.etiquette)}</span>` : ''}</div>
         <div class="mini-infos">
-          <p class="mini-nom ${entry.nom.length > 14 ? 'long' : ''}">${entry.nom}</p>
+          <p class="mini-nom ${nomLong(entry.nom) ? 'long' : ''}">${entry.nom}</p>
           ${entry.rank ? `<span class="mini-num">n° ${Number(entry.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(entry.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
           <span class="mini-rarete">${entry.tier.label}</span>
         </div>
@@ -13302,7 +13304,7 @@ function miniTerra(e){
       ${e.exemplaires > 1 ? `<span class="mini-ex">×${e.exemplaires}</span>` : ''}
       <div class="mini-art">${estOutremerCode(e.code) ? OM_BADGE_MINI : estSuisseCode(e.code) ? chBadge(true) : estBelgeCode(e.code) ? beBadge(true) : estLuxCode(e.code) ? luBadge(true) : ''}${e.photo ? artCommune(e, e.tier.id, 'mini') : miniArtSvg(e.code, e.tier.id)}${bx.art}${at.art}${hn.art}<span class="mini-dept">${echapperTexte(e.dept)}</span></div>
       <div class="mini-infos">
-        <p class="mini-nom ${e.nom.length > 14 ? 'long' : ''}">${nom}</p>
+        <p class="mini-nom ${nomLong(e.nom) ? 'long' : ''}">${nom}</p>
         ${e.rank ? `<span class="mini-num">n° ${Number(e.rank).toLocaleString('fr-FR')}<span class="mini-total"> / ${Number(e.tierSize).toLocaleString('fr-FR')}</span></span>` : ''}
         ${e.bt ? `<div class="mini-bt" data-bt="${echapperTexte(e.code)}">${btPucesHtml(e.code)}</div>` : ''}
         <span class="mini-rarete">${e.tier.label}${e.auroreS1 ? '<span class="mini-origine" title="Aurore gagnée dans le Front, saison 1">Front S1</span>' : ''}</span>

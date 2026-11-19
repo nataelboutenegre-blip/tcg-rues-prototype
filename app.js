@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '9ec531f80595';
+const VERSION_JEU = '1cc7a471d701';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2038,7 +2038,7 @@ function clCalcRendre(legende, quoi){
   const bouton = '<span class="cl-calc-btns">'   // patch417 : « Mes points » et « Comment c'est calculé ? » ensemble
     + (quoi === 'front' && classementDonnees.some(l => l.est_moi) ? '<button type="button" class="cl-calc-btn" data-mp-ouvrir>Mes points</button>' : '')
     + `<button type="button" class="cl-calc-btn" data-cl-calc aria-expanded="${clCalcOuvert}">${clCalcOuvert ? 'Masquer le calcul' : 'Comment c’est calculé ?'}</button></span>`;
-  legende.innerHTML = (quoi === 'clans' ? (CL_TOP5 ? 'Communes des 5 meilleurs membres actifs' : 'Moyenne par membre actif')
+  legende.innerHTML = (quoi === 'clans' ? (CL_TOP5 ? 'Points des 5 meilleurs membres actifs' : 'Moyenne par membre actif')
     : '<i class="sc-pt c"></i>cartes <i class="sc-pt co"></i>combats <i class="sc-pt t"></i>territoires <i class="sc-pt b"></i>bâtiments') + bouton;   // patch354
   legende.hidden = false;
   panneau.hidden = !clCalcOuvert;
@@ -21096,7 +21096,7 @@ function renderClan(){
         <span><b>${nbClan(somme('defenses'))}</b> défenses</span><span><b>${nbClan(somme('energie'))}</b> énergie</span></div>` : '';
     gauche = `<div class="clan-carte">
       <div class="clan-tete">${blasonHtml(c.tag, c.couleur)}<div><div class="clan-nom">${echapperTexte(c.nom)}</div><small>${n} membre${n > 1 ? 's' : ''} sur 8${n < 3 ? ' · classé à partir de 3' : ''}</small></div>${c.chef || (c.droits || {}).modifier ? '<button type="button" class="bq-btn secondaire bl-modifier" data-bl-ouvrir>Modifier le clan</button>' : ''}</div>
-      <div class="puces"><span class="puce">Communes en Front <b>${nbClan(total)}</b></span><span class="puce">${CL_TOP5 ? 'Score (5 meilleurs)' : `Moyenne par membre${actifs ? ' actif' : ''}`} <b>${nbClan(CL_TOP5 ? clScoreClan(c.membres, act) : moyenne)}</b></span>${actifs ? `<span class="puce">Actifs <b>${actifs.length}</b> sur ${n}</span>` : ''}${rang >= 0 ? `<span class="puce">Rang <b>${rang + 1}</b> sur ${classement.length}</span>` : ''}</div>
+      <div class="puces"><span class="puce">Communes en Front <b>${nbClan(total)}</b></span><span class="puce">${CL_TOP5 ? 'Score (5 meilleurs)' : `Moyenne par membre${actifs ? ' actif' : ''}`} <b>${CL_TOP5 ? clScoreServeur(c) : nbClan(moyenne)}</b></span>${actifs ? `<span class="puce">Actifs <b>${actifs.length}</b> sur ${n}</span>` : ''}${rang >= 0 ? `<span class="puce">Rang <b>${rang + 1}</b> sur ${classement.length}</span>` : ''}</div>
       ${bandeauDiscordClan(c)}   <!-- patch401 -->
       ${blocJour}
       ${typeof s3ClanBlocs === 'function' ? s3ClanBlocs() : ''}
@@ -33153,10 +33153,14 @@ function clModeMaj(rows){
 function clScoreUnite(){ return CL_TOP5 ? 'points' : '/ membre'; }
 function clScoreUniteLong(actifs){ return CL_TOP5 ? 'points' : (actifs ? 'par membre actif' : 'par membre'); }
 function clNoteClassement(){
-  return CL_TOP5 ? 'Les communes du Front des 5 meilleurs membres actifs (jeu ouvert dans les 7 derniers jours), additionnées : une recrue ne fait jamais baisser son clan.'
+  return CL_TOP5 ? 'Les points du classement du Front des 5 meilleurs membres actifs (jeu ouvert dans les 7 derniers jours), additionnés : une recrue ne fait jamais baisser son clan.'
     : 'Moyenne de communes du Front par membre actif (jeu ouvert dans les 7 derniers jours) : un gros clan n\'a pas d\'avantage.';
 }
-const CL_CALC_CLANS_TOP5 = `<p class="cl-calc-txt">On additionne les communes du Front des <b>5 meilleurs membres actifs</b> du clan (jeu ouvert dans les 7 derniers jours). Une recrue ne fait jamais baisser le score : au pire elle ne compte pas, au mieux elle prend la place du 5e. Un membre absent ne compte pas. Un clan est classé à partir de <b>3 membres</b>.</p>`;
+const CL_CALC_CLANS_TOP5 = `<p class="cl-calc-txt">On additionne les <b>points du classement du Front</b> (cartes, combats, territoires, bâtiments) des <b>5 meilleurs membres actifs</b> du clan (jeu ouvert dans les 7 derniers jours). Une recrue ne fait jamais baisser le score : au pire elle ne compte pas, au mieux elle prend la place du 5e. Un membre absent ne compte pas. Un clan est classé à partir de <b>3 membres</b>.</p>`;
+function clScoreServeur(c){   // patch466 : les points viennent du serveur (clans_classement), pas d'un recomptage
+  const r = (clanCache && clanCache.classement || []).find(x => c && x.clan_id === c.id);
+  return r ? nbClan(r.moyenne) : '—';
+}
 function clScoreClan(membres, act){
   return (membres || []).filter(m => !act || membreActif(act.get(m.id))).map(m => Number(m.communes) || 0)
     .sort((a, b) => b - a).slice(0, 5).reduce((s, n) => s + n, 0);

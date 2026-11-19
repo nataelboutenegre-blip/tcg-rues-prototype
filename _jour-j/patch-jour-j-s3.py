@@ -27,6 +27,8 @@ subprocess.run([sys.executable, os.path.join(R, '_jour-j', 'patch-ouverture-belg
 # (ajout du 19/11, 11 h 32) le Luxembourg ouvre aussi le 22 : LUXEMBOURG_OUVERT, sources ACT et RNPP dans les mentions légales
 # (À lancer APRÈS _sql/s3-35-luxembourg-entree.sql, étape 3 ter.)
 subprocess.run([sys.executable, os.path.join(R, '_jour-j', 'patch-ouverture-luxembourg.py'), R, '--sans-direct-v'], check=True, cwd=R)
+# (ajout du 19/11, 13 h 30) le skin et le dos d'un thème ne se vendent plus qu'ensemble (s3-jj-4b) : la boutique ne dit plus « moins cher »
+rep('app.js', "section('Collections', 'le dos et le skin ensemble, moins cher', cols)", "section('Collections', 'le skin et son dos assorti, vendus ensemble', cols)")
 
 if 'swisstopo' not in open(os.path.join(R, 'mentions-legales.html'), encoding='utf-8').read():
     subprocess.run([sys.executable, os.path.join(R, '_patchs', 'patch415.py'), R], check=True, cwd=R)
@@ -52,7 +54,7 @@ if not any(x.get('date') == '2026-11-22' for x in d):
         "🏰 Classement des clans : il additionne maintenant les points des 5 meilleurs membres actifs (idée d'Oshannir). Une recrue ne fait jamais baisser son clan.",
         "🃏 Nouvelles cartes : la photo prend toute la place, le nom est posé dessus, le département en plaque, et le cadre change de matière selon la rareté (métal, reflet irisé, or). Les cartes à skin, Aurore, brillantes et de l'atelier gardent leur look.",
         "📊 Classement du Front : les bonus de département et de région varient selon leur population (× 0,6 pour les moins peuplés, jusqu'à × 1,6 pour les plus peuplés) ; une légendaire vaut 45 points. Viser une zone dense devient une vraie stratégie.",
-        "✨ Cinq nouvelles collections en boutique, le skin et son dos assorti : Topo, Givre, Kintsugi, Vitrail et Aquarelle. Et les onze skins existants ont été redessinés : ils jouent maintenant avec la photo de ta carte. Si tu en as déjà un, il change tout seul, sans rien payer.",
+        "✨ Cinq nouvelles collections en boutique, le skin et son dos assorti : Topo, Givre, Kintsugi, Vitrail et Aquarelle. Dans toute la boutique, le skin et le dos d'un thème se vendent maintenant ensemble ; si tu as déjà l'un des deux, tu ne paies que ce qui te manque. Et les onze skins existants ont été redessinés : ils jouent maintenant avec la photo de ta carte. Si tu en as déjà un, il change tout seul, sans rien payer.",
         "🏆 Les récompenses de la saison 2 sont dans les profils : médailles du podium, titres, seigneuries, clan champion, et un paquet Terra offert à tous les pionniers du Front."],
         'correctifs': []})
     s = json.dumps(d, indent=2, ensure_ascii=False)

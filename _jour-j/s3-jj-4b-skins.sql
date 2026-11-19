@@ -2,7 +2,8 @@
 -- Sans risque pour le reste : si ce fichier échoue, la saison est ouverte quand même, seules les collections manquent.
 --  1. cinq collections en boutique (skin + dos : Topo, Givre, Kintsugi, Vitrail, Aquarelle). Décision de Nataël du 19/11 :
 --     le recto et le verso se vendent ensemble, ces cinq thèmes ne se vendent pas à l'unité (dessins : patch454 et patch468) ;
---  2. nouvelles descriptions des neuf skins repris (leur dessin change le 22/11 à 10 h 01 avec l'habillage Topo).
+--  2. nouvelles descriptions des neuf skins repris (leur dessin change le 22/11 à 10 h 01 avec l'habillage Topo) ;
+--  3. les neuf anciens thèmes ne se vendent plus qu'en collection (plus de skin ni de dos à l'unité).
 -- On peut le relancer : il ne crée pas de doublon. (Les articles existent depuis _sql/s3-36, non visibles ; ce fichier les recrée au besoin.)
 begin;
 
@@ -41,10 +42,20 @@ from (values
   ('skin-orage',   'La pluie ruisselle sur la vitre, l''éclair éclaire le ciel de la photo')
 ) as v(id, d) where a.id = v.id;
 
+-- 3. (décision de Nataël, 19/11, 13 h 30) le recto et le verso ne se vendent plus séparément : les neuf anciens thèmes
+--    ne gardent que leur collection. Les skins et les dos déjà achetés restent à leurs propriétaires ; qui a déjà une
+--    moitié ne paie que l'autre dans la collection (euros_catalogue.prix_moi, euros_preparer_commande). Les dos OG restent.
+update public.euros_articles set actif = false
+ where id in ('skin-comete', 'skin-juillet', 'skin-maree', 'skin-feu', 'skin-prisme', 'skin-orfondu', 'skin-neon', 'skin-gravure', 'skin-orage',
+              'dos-comete',  'dos-juillet',  'dos-maree',  'dos-feu',  'dos-prisme',  'dos-orfondu',  'dos-neon',  'dos-gravure',  'dos-orage');
+
 commit;
 
--- Contrôle : 14 collections en vente, les cinq nouvelles en tête · 9 skins en vente à l'unité · 0 skin ou dos S3 à l'unité
+-- Contrôle : 14 collections en vente, les cinq nouvelles en tête · 0 skin à l'unité · 0 dos à l'unité (hors OG) · 14 collections complètes
 select id, nom, prix_centimes, actif, ordre, contenu from public.euros_articles where type = 'collection' and actif order by ordre;
 select (select count(*) from public.euros_articles where type = 'collection' and actif) as collections_en_vente,
        (select count(*) from public.euros_articles where type = 'skin' and actif) as skins_a_l_unite,
-       (select count(*) from public.euros_articles where id ~ '^(dos|skin)-(givre|aquarelle|topo|vitrail|kintsugi)$' and actif) as s3_a_l_unite;
+       (select count(*) from public.euros_articles where type = 'dos' and actif and not reserve_og) as dos_a_l_unite,
+       (select count(*) from public.euros_articles a where a.type = 'collection' and a.actif
+           and (select count(*) from public.euros_articles b where b.id = any(a.contenu)) = 2) as collections_completes;
+-- Retour en arrière (vente à l'unité des neuf anciens thèmes) : la même liste avec actif = true.

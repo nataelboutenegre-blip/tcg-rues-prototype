@@ -10918,3 +10918,25 @@ html.topo:not(.sans-cartes) .card:not(.skin):not(.aurore):not(.atl):not(.bri):no
   html.topo:not(.sans-cartes) .card:not(.skin):not(.aurore):not(.atl):not(.bri):not(.ecl):not(.hnt) .carte-dept{ font-size:1rem; }
   html.topo:not(.sans-cartes) .card:not(.skin):not(.aurore):not(.atl):not(.bri):not(.ecl):not(.hnt) .carte-nom{ bottom:calc(38% + 22px); }
 }
+
+/* ---------- patch468 : cinq dos assortis aux skins du 22/11 : couleurs du liseré, des coins et de l'épingle (même forme que patch199) */
+body[data-dos="givre"], .bq-dos-apercu[data-dos="givre"]{
+  --dos-fond: radial-gradient(circle at 50% 42%, #1E5C86 0%, #0B2A4A 55%, #041428 100%);
+  --dos-liseret: rgba(216,240,255,.6); --dos-or: #D8F0FF; --dos-embleme: #06203A; --dos-anneau: rgba(6,32,58,.92); --dos-halo: rgba(150,215,255,.4);
+}
+body[data-dos="vitrail"], .bq-dos-apercu[data-dos="vitrail"]{
+  --dos-fond: radial-gradient(circle at 50% 42%, #2A2F8A 0%, #1A1650 55%, #0C0A1E 100%);
+  --dos-liseret: rgba(243,199,102,.7); --dos-or: #F3C766; --dos-embleme: #120C0A; --dos-anneau: rgba(18,12,10,.94); --dos-halo: rgba(255,170,60,.45);
+}
+body[data-dos="topo"], .bq-dos-apercu[data-dos="topo"]{
+  --dos-fond: radial-gradient(circle at 50% 42%, #1C4577 0%, #0E2547 55%, #07101F 100%);
+  --dos-liseret: rgba(246,239,217,.5); --dos-or: #F0B429; --dos-embleme: #071224; --dos-anneau: rgba(7,18,36,.92); --dos-halo: rgba(240,180,41,.25);
+}
+body[data-dos="aquarelle"], .bq-dos-apercu[data-dos="aquarelle"]{
+  --dos-fond: radial-gradient(circle at 50% 42%, #F8F4EA 0%, #EFE9DA 100%);
+  --dos-liseret: rgba(42,43,58,.38); --dos-or: #2A2B3A; --dos-embleme: #F8F4EA; --dos-anneau: rgba(248,244,234,.95); --dos-halo: rgba(91,107,138,.3);
+}
+body[data-dos="kintsugi"], .bq-dos-apercu[data-dos="kintsugi"]{
+  --dos-fond: radial-gradient(circle at 50% 42%, #1A1722 0%, #100E17 55%, #07060B 100%);
+  --dos-liseret: rgba(232,197,102,.6); --dos-or: #E8C566; --dos-embleme: #0B0A10; --dos-anneau: rgba(11,10,16,.94); --dos-halo: rgba(232,197,102,.38);
+}

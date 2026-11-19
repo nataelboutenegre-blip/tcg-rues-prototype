@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b67f732489e3';
+const VERSION_JEU = '5be8751fc3bc';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11520,6 +11520,13 @@ function initModes(){
     <button class="front" data-mode="front" role="tab"><span class="mb-nom">Front</span><span class="mb-res">${ICONE_ENERGIE}<b id="mbEnergie">—</b>/ <span id="mbMax">50</span><span class="mb-u"> énergie</span></span></button>`;   // patch433 : « énergie » à part
   const entete = document.querySelector('.content .entete-mobile');
   entete.insertAdjacentElement('afterend', el);
+  // patch474 : un repère en haut de la page ; quand il passe sous le haut de l'écran, le sélecteur est « collé »
+  if('IntersectionObserver' in window){
+    const repere = document.createElement('div'); repere.className = 'mb-repere'; repere.setAttribute('aria-hidden', 'true');
+    repere.style.cssText = 'position:absolute;left:0;top:0;width:1px;height:6px;pointer-events:none;visibility:hidden';
+    entete.before(repere);
+    new IntersectionObserver(([e]) => el.classList.toggle('colle', !e.isIntersecting && e.boundingClientRect.top < 0)).observe(repere);
+  }
   el.addEventListener('click', (e) => {
     const b = e.target.closest('[data-mode]');
     if(!b || b.dataset.mode === modeJeu) return;

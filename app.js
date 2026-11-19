@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '611ae7174488';
+const VERSION_JEU = '77e096e71ed8';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10792,7 +10792,9 @@ async function chargerSkinsFront(){
   }catch(e){}
 }
 
+let loadCombatNo = 0;   // patch464 : le dernier appel gagne
 async function loadCombat(){
+  const monNo = ++loadCombatNo;
   if(SIEGE) sgChargerMes();   // patch405
   const { data: userData } = await sb.auth.getUser();
   const uid = userData.user.id;
@@ -10807,11 +10809,12 @@ async function loadCombat(){
   const skinsCharges = chargerSkinsFront();   // patch231
   // Sans pagination, l'API s'arrete a 1 000 lignes et des cibles disparaissent
   // sans message. Meme precaution que pour les possessions des autres joueurs.
+  const tiersDemandes = tiersCombat();   // patch464
   let { data: cibles, error } = await toutesLesLignes(() => sb
     .from('possessions')
     .select('commune_code, joueur_id, acquired_at, bouclier_jusqua, ' + champsCible)
     .neq('joueur_id', uid)
-    .in('communes.tier', tiersCombat()));
+    .in('communes.tier', tiersDemandes));
   if(error){
     ({ data: cibles, error } = await toutesLesLignes(() => sb
       .from('possessions').select('commune_code, joueur_id, acquired_at, ' + champsCible)
@@ -10828,17 +10831,26 @@ async function loadCombat(){
       ? sb.from('sieges').select('commune_code, victoires_consecutives, dernier_round').eq('attacker_id', uid)
       : r);
 
-  combatCibles = cibles || [];
+  // patch464 : la liste se construit à part, sans doublon, puis remplace l'ancienne d'un coup
+  const parCode = new Map();
+  for(const c of (cibles || [])) parCode.set(c.commune_code, c);
   // un combat en cours sur une commune ou une peu commune doit rester visible
   // meme si son palier n'est pas charge
   const horsListe = (mesSieges || []).map(s => s.commune_code)
-    .filter(code => !combatCibles.some(c => c.commune_code === code));
+    .filter(code => !parCode.has(code));
   if(horsListe.length){
     const { data: enPlus } = await sb.from('possessions')
       .select('commune_code, joueur_id, acquired_at, bouclier_jusqua, ' + champsCible)
       .neq('joueur_id', uid).in('commune_code', horsListe.slice(0, 200));
-    if(enPlus) combatCibles = combatCibles.concat(enPlus);
+    for(const c of (enPlus || [])) if(!parCode.has(c.commune_code)) parCode.set(c.commune_code, c);
   }
+  if(monNo !== loadCombatNo) return;   // un appel plus récent s'en occupe
+  // les communes / peu communes chargées entre-temps par assurerCiblesBas (pas demandées ici) restent
+  for(const c of combatCibles){
+    const tr = c.communes && c.communes.tier;
+    if(!parCode.has(c.commune_code) && !tiersDemandes.includes(tr) && combatBasCharges.has(tr)) parCode.set(c.commune_code, c);
+  }
+  combatCibles = [...parCode.values()];
   calculerDistancesCibles();
   loadMenaces();
   combatSieges = new Map((mesSieges || []).map(s => [s.commune_code, s]));

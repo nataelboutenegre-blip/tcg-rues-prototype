@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '902155740982';
+const VERSION_JEU = '883b45d4b3a6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -5491,6 +5491,7 @@ async function carteToutCharger(uid){
   }
   othersMap = m;
   CARTE.id = Number(data.id) || 0; CARTE.uid = uid; CARTE.dispo = true;
+  CARTE.toutLe = Date.now();   // patch479
   return true;
 }
 function carteMesPlusTard(){
@@ -5529,7 +5530,9 @@ async function carteDelta(rendre){
 }
 function carteActualiser(uid, rendre){
   if(CARTE.enCours) return CARTE.enCours;
-  const p = (CARTE.id != null && CARTE.uid === uid) ? carteDelta(rendre) : carteToutCharger(uid);
+  // patch479 : tout recharger au moins toutes les 15 minutes, au cas où un changement aurait été manqué
+  const p = (CARTE.id != null && CARTE.uid === uid && Date.now() - (CARTE.toutLe || 0) < 15 * 60000) ? carteDelta(rendre)
+    : carteToutCharger(uid).then(ok => { if(ok && rendre && CARTE.id != null){ renderMapOverlay(); majBlasonsJournal(); carteMesPlusTard(); } return ok; });
   CARTE.enCours = p.catch((e) => { console.error(e); return false; }).finally(() => { CARTE.enCours = null; });
   return CARTE.enCours;
 }

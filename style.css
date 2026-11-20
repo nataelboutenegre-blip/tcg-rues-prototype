@@ -4450,6 +4450,7 @@ svg.rd-zoom .cdj-fr{ fill:#172D4C; }
 .as-jauge{ position:relative; width:min(330px, 100%); margin:0 auto; }
 .as-cadran{ position:relative; height:15px; border-radius:999px; overflow:hidden; background: rgba(240,86,106,.35); border:1px solid rgba(255,255,255,.18); }
 .as-zone{ position:absolute; left:0; top:0; bottom:0; background: linear-gradient(90deg, rgba(43,212,139,.75), rgba(43,212,139,.45)); }
+.as-zone-garn{ position:absolute; top:0; bottom:0; background: repeating-linear-gradient(-45deg, rgba(240,180,41,.55) 0 5px, rgba(240,180,41,.22) 5px 10px); }   /* patch478 */
 .as-aiguille{ position:absolute; top:-7px; left:0; width:3px; height:29px; margin-left:-1.5px; background:#fff; border-radius:2px; box-shadow:0 0 10px rgba(255,255,255,.9); }
 .as-jleg{ display:flex; justify-content:space-between; font-size:.74rem; color: var(--brume); margin-top:8px; }
 .as-jleg b{ color:#2BD48B; } .as-jleg b.blanc{ color:#fff; }

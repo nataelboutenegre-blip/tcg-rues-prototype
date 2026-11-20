@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '883b45d4b3a6';
+const VERSION_JEU = 'cfbe6e61770c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -528,7 +528,9 @@ function mettreEnSceneAssaut(cible, r, enGarnison){   // patch393 : enGarnison =
   if(SAISON2) setTimeout(majEnergie, 300);
   // ou l'aiguille s'arrete : dans le vert si gagne, dans le rouge sinon
   const arret = res === 'ko' && !parGarnison ? chances + (100 - chances) * (0.25 + Math.random() * 0.6)   // patch393
-                             : chances * (0.15 + Math.random() * 0.7);
+                             : !garn ? chances * (0.15 + Math.random() * 0.7)
+                             : parGarnison ? chances * (0.58 + Math.random() * 0.34)   // patch478 : dans le hachuré
+                             : chances * (0.08 + Math.random() * 0.34);   // patch478 : dans le vert plein
   const nomCible = echapperTexte(cible.nom);
   const bonus = r.conquise ? Math.floor((PRIX_RACHAT[tierId] || 0) * BONUS_CONQUETE_PART) : 0;
   const mon = r.conquise && typeof monumentDe === 'function' ? monumentDe(cible.code) : null;
@@ -551,7 +553,7 @@ function mettreEnSceneAssaut(cible, r, enGarnison){   // patch393 : enGarnison =
           <div class="as-onde" aria-hidden="true"></div>
         </div>
       </div>
-      <div class="as-jauge"><div class="as-cadran"><div class="as-zone" style="width:${chances}%"></div><div class="as-aiguille"></div></div>
+      <div class="as-jauge"><div class="as-cadran">${garn ? `<div class="as-zone-garn" style="left:${chances / 2}%;width:${chances / 2}%"></div><div class="as-zone" style="width:${chances / 2}%"></div>` : `<div class="as-zone" style="width:${chances}%"></div>`}<div class="as-aiguille"></div></div>
         <div class="as-jleg"><span>Tes chances : <b>${garn ? Math.round(chances / 2) : chances} %</b></span>${r.cout ? `<span>Coût : <b class="blanc">${coutTexte(r.cout)}</b></span>` : ''}</div>${garn ? `<p class="as-jgarn">${chances} % aux dés, la garnison en annule une sur deux</p>` : ''}</div>
       <h2 class="as-verdict" id="asVerdict"></h2>
       <p class="as-detail"></p>

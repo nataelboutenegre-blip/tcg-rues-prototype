@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '5be8751fc3bc';
+const VERSION_JEU = '76e19e1260af';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9000,7 +9000,7 @@ function renderPot(){
     ? `La fin de saison s'enclenche à ${seuil.toLocaleString('fr-FR')}` : '';
   let pct = total > seuil ? Math.max(0, Math.min(100, (total - libres) / (total - seuil) * 100)) : 100;
   // patch106 : saison a duree fixe (saison 2) : la date de fin, et le temps qui passe
-  if(s.fin_prevue && s.etat === 'en_cours'){
+  if(s.fin_prevue && (s.etat === 'en_cours' || s.etat === 'compte_a_rebours')){   // patch475 : aussi pendant le compte à rebours
     const fin = new Date(s.fin_prevue).getTime();
     const jours = Math.max(0, Math.ceil((fin - Date.now()) / 86400000));
     const date = new Date(fin).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });

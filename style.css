@@ -8575,7 +8575,7 @@ body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ p
 .cl-calc-l .sc-pt{ margin:5px 0 0; }
 .cl-calc-l b{ color:#fff; }
 .cl-calc-l > div > b{ display:block; font-size:.84rem; margin-bottom:2px; }
-.cl-calc-l span{ display:block; font-size:.76rem; color:#C9D3E3; line-height:1.45; }
+.cl-calc-l > div > span{ display:block; font-size:.76rem; color:#C9D3E3; line-height:1.45; }   /* patch475 : pas les span dedans */
 .cl-calc-pied, .cl-calc-txt{ font-size:.74rem; color:#A9BCD4; margin:6px 0 0; line-height:1.45; }
 .cl-calc-txt{ margin:0; color:#C9D3E3; }
 .cl-calc-txt b{ color:#fff; }
@@ -10705,6 +10705,8 @@ html.topo .rdf{ align-self:stretch; }   /* le panneau Tirage est en colonne flex
 
 /* patch455 : noms de la saison 3 dans les textes fixes (Combat → QG, QG → Arcade), avec l'habillage Topo */
 .nom-s3{ display: none; }
+/* patch475 : pas de zoom au double toucher sur téléphone (toucher vite la roue zoomait la page) ; le pincement reste */
+:where(html, button, a, [role="button"], input, label){ touch-action: manipulation; }
 html.topo .nom-s3{ display: inline; }
 html.topo .nom-s2{ display: none; }
 

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '76e19e1260af';
+const VERSION_JEU = '83c67a315858';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -14321,6 +14321,24 @@ function renderJaugeEnergie(){
   mfoRendre();   // patch288
 }
 
+// patch476 : garder la bande Terra / Front en haut (choix sur l'appareil, oui par défaut)
+function basculeColleVoulue(){ try{ return localStorage.getItem('tf-bascule-colle') !== '0'; }catch(e){ return true; } }
+function basculeColleAppliquer(){ document.documentElement.classList.toggle('sans-colle', !basculeColleVoulue()); }
+basculeColleAppliquer();
+function basculeColleHtml(){
+  if(!document.documentElement.classList.contains('topo') || !surTelephone()) return '';
+  const on = basculeColleVoulue();
+  return `<button class="fp-item fp-inter" data-bascule-colle role="switch" aria-checked="${on}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.5 2.5l6 6-2.1.7-3.6 3.6.5 4.6-1.6 1.6-4.2-4.2L5 20.3 3.7 19l5.5-5.5L5 9.3l1.6-1.6 4.6.5 3.6-3.6z"/></svg><span>Garder Terra / Front en haut</span><i class="fp-switch${on ? ' on' : ''}"></i></button>`;
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-bascule-colle]'); if(!b) return;
+  e.stopPropagation();
+  const on = !basculeColleVoulue();
+  try{ localStorage.setItem('tf-bascule-colle', on ? '1' : '0'); }catch(err){}
+  basculeColleAppliquer();
+  b.setAttribute('aria-checked', String(on)); b.querySelector('.fp-switch').classList.toggle('on', on);
+}, true);
+
 function construireMenuPlus(){
   const liste = document.getElementById('feuilleListe');
   if(!liste) return;
@@ -14347,7 +14365,7 @@ function construireMenuPlus(){
     entrees = ONGLETS_MENU.map(entree).join('');
   }
   liste.innerHTML = entrees + `
-    <div class="fp-sep"></div>
+    <div class="fp-sep"></div>${basculeColleHtml()}
     <button class="fp-item" data-aller="regles">${ICONE_REGLES}Règles du jeu</button>
     <a class="fp-item fp-lien" href="${LIEN_DISCORD}" target="_blank" rel="noopener">${ICONE_DISCORD}Rejoindre le Discord</a>
     <button class="fp-item sortie" data-deconnexion>${ICONE_SORTIE}Se déconnecter</button>`;

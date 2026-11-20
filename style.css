@@ -9088,6 +9088,11 @@ body.mode-terra #roueFront{ display:none !important; }
 .dg-nc .nc-txt small{ display:block; color:#A9BCD4; font-size:.74rem; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .dg-nc .nc-action{ flex:none; }
 .tab-badge.dg-badge{ background:#4C9BFF; box-shadow:0 0 6px rgba(76,155,255,.8); }
+.fp-item.fp-inter span{ flex:1; }   /* patch476 : l'interrupteur du menu Plus */
+.fp-switch{ position:relative; flex:none; width:40px; height:24px; border-radius:12px; background:rgba(169,188,212,.25); transition:background .2s; }
+.fp-switch::after{ content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .2s; box-shadow:0 1px 3px rgba(0,0,0,.35); }
+.fp-switch.on{ background:var(--t-or, #F0B429); }
+.fp-switch.on::after{ transform:translateX(16px); }
 .fp-badge.dg-point{ min-width:10px; width:10px; height:10px; padding:0; background:#4C9BFF; box-shadow:0 0 0 2px #1B2D4A, 0 0 8px rgba(76,155,255,.8); }
 
 /* patch345 : les pseudos proposés après @ */
@@ -10116,6 +10121,8 @@ html.topo .mode-bascule{ background: var(--t-surface); border-color: var(--t-tra
   /* l'énergie « 34 / 40 énergie » tient en « 34 / 40 » */
   html.topo .mode-bascule .mb-u{ display:none; }
   html.topo .mode-bascule button.terra{ min-width:0; }
+  /* patch476 : la bande ne reste pas en haut si le joueur l'a choisi (menu Plus) */
+  html.topo.sans-colle .mode-bascule.colle{ position:absolute; top:14px; box-shadow:none; background:var(--t-surface); -webkit-backdrop-filter:none; backdrop-filter:none; }
   /* patch474 : collé en haut quand on fait défiler (même place, l'en-tête part avec la page) */
   html.topo .mode-bascule.colle{ position:fixed; top:calc(8px + env(safe-area-inset-top, 0px)); z-index:40;
     box-shadow:0 10px 26px rgba(0,0,0,.5); background:rgba(23,34,54,.88); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px); }

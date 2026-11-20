@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '83c67a315858';
+const VERSION_JEU = '902155740982';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4726,6 +4726,8 @@ async function lancerAssaut(code){
     }
     pcApresAssaut(code, r);   // patch336
     chancesPerimer(code, r.conquise);   // patch446 : le % de la grille suit
+    combatChargeLe = 0;   // patch477 : Combat se relira en y allant
+    if(!r.conquise) combatRafraichirPlusTard(false);
     if((r.gagne || r.conquise) && PREMIERS_PAS && !PREMIERS_PAS.attaque) ppRelire(800);   // patch306
     if(r.conquise){
       // patch145 : la commune change de couleur tout de suite ; le
@@ -14584,7 +14586,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'combat'){
       // patch135 : la liste connue s'affiche tout de suite ; rechargee si elle a plus d'une minute
       if(combatCibles.length) renderCombatGrid();
-      if(!combatRafraichTimer && Date.now() - combatChargeLe > 60000) loadCombat();
+      if(combatChargeLe === 0 || (!combatRafraichTimer && Date.now() - combatChargeLe > 60000)) loadCombat();   // patch477
     }
     if(tab.dataset.tab === 'succes') loadSucces();
     if(tab.dataset.tab === 'monuments'){ vuesMonuments(); loadMonuments(); chantiersOuvrir(); }   // patch191   // patch311

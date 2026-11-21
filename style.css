@@ -4450,6 +4450,12 @@ svg.rd-zoom .cdj-fr{ fill:#172D4C; }
 .as-jauge{ position:relative; width:min(330px, 100%); margin:0 auto; }
 .as-cadran{ position:relative; height:15px; border-radius:999px; overflow:hidden; background: rgba(240,86,106,.35); border:1px solid rgba(255,255,255,.18); }
 .as-zone{ position:absolute; left:0; top:0; bottom:0; background: linear-gradient(90deg, rgba(43,212,139,.75), rgba(43,212,139,.45)); }
+.psx-or{ position:relative; display:block; width:46px; height:66px; margin:auto; border-radius:6px; overflow:hidden;   /* patch480 : la finition Or dans le pass */
+  background:linear-gradient(140deg, #8A5A10, #F0B429 40%, #FFF1B8 55%, #C9952A 70%, #8A5A10); box-shadow:0 4px 10px rgba(0,0,0,.4), inset 0 0 0 1.5px rgba(255,241,184,.55); }
+.psx-or i{ position:absolute; inset:0; background:linear-gradient(115deg, transparent 35%, rgba(255,250,220,.8) 50%, transparent 65%); background-size:300% 100%; animation:psxOr 3.2s ease-in-out infinite; }
+.psx-or b{ position:absolute; left:0; right:0; bottom:6px; text-align:center; font:900 13px/1 "Big Shoulders Display", Impact, sans-serif; letter-spacing:.06em; color:#5A3A06; text-shadow:0 1px 0 rgba(255,241,184,.6); }
+@keyframes psxOr{ 0%{ background-position:100% 0; } 60%,100%{ background-position:0 0; } }
+@media (prefers-reduced-motion: reduce){ .psx-or i{ animation:none; } }
 .as-zone-garn{ position:absolute; top:0; bottom:0; background: repeating-linear-gradient(-45deg, rgba(240,180,41,.55) 0 5px, rgba(240,180,41,.22) 5px 10px); }   /* patch478 */
 .as-aiguille{ position:absolute; top:-7px; left:0; width:3px; height:29px; margin-left:-1.5px; background:#fff; border-radius:2px; box-shadow:0 0 10px rgba(255,255,255,.9); }
 .as-jleg{ display:flex; justify-content:space-between; font-size:.74rem; color: var(--brume); margin-top:8px; }

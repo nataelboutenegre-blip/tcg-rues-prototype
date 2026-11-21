@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'cfbe6e61770c';
+const VERSION_JEU = '455a6b4203ee';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -18104,7 +18104,8 @@ const PS_ICO = {
   habillage: '<svg viewBox="0 0 56 56" aria-hidden="true"><path d="M12 14h32v34a3 3 0 0 1-3 3H15a3 3 0 0 1-3-3z" fill="#8E2C48" stroke="#0B1830" stroke-width="2"/><path d="M12 14l4-7h24l4 7z" fill="#D97B3A" stroke="#0B1830" stroke-width="2" stroke-linejoin="round"/><path d="M22 30c3-5 9-5 12 0c-3 5-9 5-12 0z" fill="#D97B3A"/></svg>',
   skin: '<svg viewBox="0 0 56 56" aria-hidden="true"><rect x="13" y="6" width="30" height="44" rx="4" fill="#EEF1F5" stroke="#0B1830" stroke-width="2"/><rect x="16" y="9" width="24" height="20" rx="2" fill="#5E7A8C"/><path d="M16 24c5-6 10 2 14-3s7 0 10-2v10H16z" fill="#C8D3DC" opacity=".85"/><rect x="17" y="33" width="16" height="3" rx="1.5" fill="#0B1830"/><rect x="17" y="39" width="10" height="2.5" rx="1.2" fill="#8E9AAF"/></svg>',
 };
-const PS_TYPE = { tp: 'TerraPoints', energie: 'Énergie', titre: 'Titre', dos: 'Dos de carte', habillage: 'Habillage de paquet', skin: 'Skin de carte', paquet: '5 communes', lingots: 'Lingots' };
+const PS_TYPE = { tp: 'TerraPoints', energie: 'Énergie', titre: 'Titre', dos: 'Dos de carte', habillage: 'Habillage de paquet', skin: 'Skin de carte', paquet: '5 communes', lingots: 'Lingots', atelier: 'Finition de l’atelier' };   // patch480 : atelier
+PS_ICO.atelier = '<svg viewBox="0 0 56 56" aria-hidden="true"><defs><linearGradient id="psOr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8A5A10"/><stop offset=".45" stop-color="#F0B429"/><stop offset=".58" stop-color="#FFF1B8"/><stop offset="1" stop-color="#8A5A10"/></linearGradient></defs><rect x="13" y="6" width="30" height="44" rx="4" fill="url(#psOr)" stroke="#0B1830" stroke-width="2"/><path d="M18 16c4-3 8 3 12 0s7 1 9-1" stroke="rgba(255,248,220,.75)" stroke-width="1.6" fill="none"/><path d="M18 23c4-3 8 3 12 0s7 1 9-1" stroke="rgba(255,248,220,.6)" stroke-width="1.4" fill="none"/></svg>';
 const PS_CADENAS = '<svg class="ps-cadenas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 function passFeuilles(n){
   const f = [];
@@ -18142,7 +18143,7 @@ function renderPassQG(){
     <div class="qg-actions"><button type="button" class="qg-btn plein" id="qgPassBtn">Voir le pass</button><span class="qg-petit">Tes quêtes du jour font avancer le pass.</span></div>`;
 }
 // ---------- patch439 : le pass en vitrine ----------
-const PSX_TYPE = { tp: 'TerraPoints', energie: 'Énergie', titre: 'Titre de profil', dos: 'Dos de carte', habillage: 'Habillage de paquet', skin: 'Skin de carte', paquet: '5 communes', lingots: 'Lingots' };
+const PSX_TYPE = { tp: 'TerraPoints', energie: 'Énergie', titre: 'Titre de profil', dos: 'Dos de carte', habillage: 'Habillage de paquet', skin: 'Skin de carte', paquet: '5 communes', lingots: 'Lingots', atelier: 'Finition de l’atelier, sur toutes tes cartes Terra' };   // patch480
 const PSX_LINGOT = '<svg viewBox="0 0 56 56" aria-hidden="true"><path d="M17 20h22l9 18H8z" fill="#F0B429" stroke="#7A5410" stroke-width="2.2" stroke-linejoin="round"/><path d="M17 20h22l3 6H14z" fill="#FFE08A"/></svg>';
 function psxSachet(id){
   const p = makePackEl('achete');
@@ -18158,6 +18159,7 @@ function psxVisuel(r){
   if(t === 'skin') return skinVignetteHtml(skinCle(r.valeur));
   if(t === 'habillage') return habVignette(habCle(r.valeur));
   if(t === 'paquet') return psxSachet(r.valeur);
+  if(t === 'atelier') return `<span class="psx-or" aria-hidden="true"><i></i><b>Or</b></span>`;   // patch480 : la finition Or
   if(t === 'titre') return `<span class="psx-titre">${echapperTexte(String(r.nom || '').replace(/^Titre\s*/, '').replace(/[«»]/g, '').trim())}</span>`;
   if(t === 'lingots') return `<span class="psx-qte">${PSX_LINGOT}<b>${Number(r.quantite)}</b></span>`;
   return `<span class="psx-qte">${PS_ICO[t] || ''}<b>${t === 'energie' ? '+' : ''}${Number(r.quantite)}</b></span>`;
@@ -18330,7 +18332,7 @@ async function passReclamer(niveau, bouton){
   const n = Number(data.reclamees || 0);
   const r = niveau != null && avant ? avant.recompenses.find(x => x.niveau === Number(niveau)) : null;
   notifier({ type: 'succes', titre: n > 1 ? `${n} récompenses récupérées` : 'Récompense récupérée',
-             texte: (r ? r.nom + (r.type === 'titre' ? ' : choisis-le dans ton profil.' : r.type === 'dos' || r.type === 'habillage' || r.type === 'skin' ? ' : dans Profil › Personnaliser.' : '') : '')
+             texte: (r ? r.nom + (r.type === 'titre' ? ' : choisis-le dans ton profil.' : r.type === 'dos' || r.type === 'habillage' || r.type === 'skin' ? ' : dans Profil › Personnaliser.' : r.type === 'atelier' ? ' : dans Profil › Personnaliser › L’atelier.' : '') : '')
                + (Number(data.tp_repli) > 0 ? ` Réserve de lingots pleine : ${Number(data.tp_repli)} TP à la place.` : '') });   // patch439
   renderPassQG(); renderPass();
   if(typeof loadPackStatus === 'function') loadPackStatus();   // solde et énergie
@@ -26999,7 +27001,7 @@ const ATL_FINITIONS = [
   { id: 'encre', nom: 'Encre', src: 'gagner', comment: '50 quêtes du jour' },
   { id: 'chrome', nom: 'Chrome', src: 'boutique', article: 'atelier-chrome', prix: 299 },
   { id: 'cristal', nom: 'Cristal', src: 'boutique', article: 'atelier-cristal', prix: 299 },
-  { id: 'or', nom: 'Or', src: 'pass', comment: 'Pass de saison · bientôt' }
+  { id: 'or', nom: 'Or', src: 'pass', comment: 'Pass de saison 3 · niveau 20' }   // patch480
 ];
 const ATL_HALOS = [
   { id: 'aucun', nom: 'Aucun', src: 'inclus' },

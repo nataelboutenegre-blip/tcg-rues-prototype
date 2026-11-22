@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'f1ede41b3955';
+const VERSION_JEU = '8bf7fc057b1e';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -28031,7 +28031,7 @@ function motRendreFormes(){
   const packs = [...new Set(fs.map(f => f.pack).filter(Boolean))];
   pk.innerHTML = packs.length ? packs.map(p => motPossede({ pack: p }) ? `<b>${MOT_PACKS[p]}</b> : à toi` : `<b>${MOT_PACKS[p]} · ${motPrixPack(p)}</b>`).join(' · ')
       + (fs.some(f => !f.pack) ? ' · le reste est gratuit' : '') + (packs.some(p => !motPossede({ pack: p })) ? '. Tu peux tout essayer avant d’acheter.' : '.')
-    : 'Gratuit pour tous.' + (ME.cat === 'Animaux' ? ' <small class="mot-credit">Dessins : game-icons.net (Lorc, Delapouite et autres), licence CC BY 3.0.</small>' : '');   // patch505
+    : 'Gratuit pour tous.' + (ME.cat === 'Animaux' ? ' <small class="mot-credit">Dessins : game-icons.net (Lorc, Delapouite et autres), licence CC BY 3.0. Lion dressé : gravure de 1862 (A. Hall), domaine public.</small>' : '');   // patch505
   g.innerHTML = `<div class="mot-grille">${fs.map(f => `<button type="button" data-f="${f.id}"><canvas></canvas><span>${echapperTexte(f.nom)}</span>${motPossede(f) ? '' : '<em>🔒</em>'}</button>`).join('')}</div>`;
   g.querySelectorAll('[data-f]').forEach(b => {
     motVignette(b.querySelector('canvas'), (x, s) => motVignetteCalque(x, s, { forme: b.dataset.f, couleur: '#F2E6C8', r: 0, a: 1, t: 100, x: 50, y: 50, e: 'aucun' }));

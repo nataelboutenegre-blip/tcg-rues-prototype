@@ -1,0 +1,99 @@
+/* ---------- patch492 : le motif de territoire ---------- */
+.mot-bande{ display:block; width:100%; height:64px; border-radius:12px; border:1px solid rgba(169,188,212,.2); margin:2px 0 4px; }
+.mot-atb .atb-btn{ margin-top:12px; }
+.mot-alerte{ color:#FFB3B8; }
+.mot-sig{ display:grid; grid-template-columns:84px 1fr auto auto; gap:8px; align-items:center; padding:8px 0; border-top:1px solid rgba(169,188,212,.12); }
+.mot-sig .mot-bande{ height:44px; margin:0; }
+.mot-sig small{ display:block; color:#A9BCD4; font-size:.8rem; }
+.mot-mini{ font:inherit; font-size:.82rem; font-weight:700; border-radius:10px; border:1px solid rgba(169,188,212,.25); background:#1B2A47; color:#EAF1F8; padding:7px 10px; cursor:pointer; }
+.mot-mini.rouge{ background:#7A1F2B; border-color:transparent; }
+.pr-motif{ height:54px; margin:10px 0 0; }
+.mot-pack-apercu{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; padding:14px; width:100%; box-sizing:border-box; }
+.mot-pack-apercu figure{ margin:0; background:#0E1A2E; border:1px solid rgba(169,188,212,.16); border-radius:12px; padding:8px 4px 6px; text-align:center; }
+.mot-pack-apercu svg{ width:100%; aspect-ratio:1; display:block; fill:#F2E6C8; }
+.mot-pack-apercu figcaption{ font-size:.68rem; color:#A9BCD4; margin-top:4px; line-height:1.15; }
+
+html.mot-ouvert{ overflow:hidden; }
+.mot-ecran{ position:fixed; inset:0; z-index:48; display:flex; flex-direction:column; background:#0B1424; color:#E8EEF7;
+  --mt:rgba(169,188,212,.16); --ms:#14213A; --ms2:#1B2A47; --md:#9FB0C8; --mor:#F0B429; opacity:0; transition:opacity .18s; touch-action:manipulation; }
+.mot-ecran.visible{ opacity:1; }
+.mot-ecran[hidden]{ display:none; }
+.mot-ecran button{ font:inherit; color:inherit; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.mot-tete{ display:flex; align-items:center; gap:8px; padding:calc(10px + env(safe-area-inset-top, 0px)) 14px 10px; border-bottom:1px solid var(--mt); }
+.mot-tete h2{ flex:1; margin:0; font-family:var(--titre, 'Big Shoulders Display'), Impact, sans-serif; font-weight:900; font-size:1.6rem; line-height:1; }
+.mot-retour{ width:38px; height:38px; border-radius:11px; border:1px solid var(--mt); background:var(--ms); font-size:1.5rem; line-height:1; }
+.mot-pt{ border:1px solid var(--mt); background:var(--ms); border-radius:12px; padding:9px 12px; font-weight:600; font-size:.85rem; white-space:nowrap; }
+.mot-corps{ flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px 14px 18px; width:100%; max-width:580px; margin:0 auto; box-sizing:border-box; }
+.mot-carte{ position:relative; border-radius:16px; overflow:hidden; border:1px solid var(--mt); background:#0E1A2E; height:min(34vh, 290px); touch-action:none; }
+.mot-carte canvas{ display:block; width:100%; height:100%; }
+.mot-zoom{ position:absolute; right:8px; top:8px; display:flex; flex-direction:column; gap:6px; }
+.mot-zoom button{ width:34px; height:34px; border-radius:10px; border:1px solid var(--mt); background:rgba(20,33,58,.9); font-size:18px; font-weight:700; }
+.mot-leg{ position:absolute; left:8px; bottom:8px; right:52px; font-size:.72rem; color:var(--md); background:rgba(11,20,36,.78); border-radius:9px; padding:5px 8px; line-height:1.35; }
+.mot-leg b{ color:#E8EEF7; }
+.mot-edit{ display:grid; grid-template-columns:auto 1fr; gap:12px; margin-top:12px; align-items:start; }
+.mot-tuile{ position:relative; width:min(46vw, 210px); aspect-ratio:1; border-radius:14px; overflow:hidden; border:1px solid var(--mt); touch-action:none; background:#000; }
+.mot-tuile canvas{ width:100%; height:100%; display:block; }
+.mot-aide{ position:absolute; left:0; right:0; bottom:0; font-size:.66rem; text-align:center; padding:3px; background:rgba(0,0,0,.45); color:#fff; pointer-events:none; }
+.mot-calques h3, .mot-bloc h3{ margin:0 0 6px; font-size:.75rem; letter-spacing:.08em; text-transform:uppercase; color:var(--md); font-weight:700; }
+.mot-liste{ display:flex; flex-direction:column; gap:5px; max-height:min(46vw, 210px); overflow-y:auto; }
+.mot-cq{ display:flex; align-items:center; gap:8px; border:1.5px solid transparent; background:var(--ms); border-radius:10px; padding:5px 7px; text-align:left; }
+.mot-cq.on{ border-color:var(--mor); }
+.mot-cq canvas{ width:28px; height:28px; border-radius:6px; flex:none; }
+.mot-cq span{ flex:1; font-size:.82rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mot-cq i{ font-style:normal; font-size:.62rem; color:var(--mor); }
+.mot-ajout{ border:1.5px dashed rgba(240,180,41,.55); background:transparent; color:var(--mor) !important; border-radius:10px; padding:8px; font-weight:700; font-size:.82rem; }
+.mot-ajout:disabled{ opacity:.35; }
+.mot-bloc{ margin-top:14px; background:var(--ms); border:1px solid var(--mt); border-radius:16px; padding:12px; }
+.mot-ligne{ display:flex; align-items:center; gap:10px; margin:9px 0; }
+.mot-ligne label{ width:92px; flex:none; font-size:.82rem; color:var(--md); }
+.mot-ligne input[type=range]{ flex:1; min-width:0; accent-color:var(--mor); height:26px; }
+.mot-ligne output{ width:44px; text-align:right; font-family:var(--titre, 'Big Shoulders Display'), Impact, sans-serif; font-weight:700; font-size:1rem; }
+.mot-couleurs{ display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
+.mot-couleurs button{ width:30px; height:30px; border-radius:50%; border:2px solid rgba(255,255,255,.15); padding:0; }
+.mot-couleurs button.on{ outline:2.5px solid #fff; outline-offset:2px; }
+.mot-outils{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.mot-outils button{ flex:1 1 auto; border:1px solid var(--mt); background:var(--ms2); border-radius:10px; padding:8px 9px; font-size:.8rem; font-weight:600; }
+.mot-outils button.sup{ color:#FF9AA1; }
+.mot-forme-btn{ display:flex; align-items:center; gap:10px; width:100%; border:1px solid var(--mt); background:var(--ms2); border-radius:12px; padding:7px 10px; text-align:left; }
+.mot-forme-btn canvas{ width:40px; height:40px; border-radius:8px; flex:none; }
+.mot-forme-btn span{ flex:1; font-weight:600; }
+.mot-forme-btn small{ color:var(--md); font-size:.78rem; }
+.mot-bascule{ display:flex; align-items:center; justify-content:space-between; margin:9px 0; font-size:.82rem; color:var(--md); }
+.mot-sw{ position:relative; width:42px; height:24px; border-radius:12px; background:rgba(169,188,212,.25); border:0; flex:none; }
+.mot-sw::after{ content:''; position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:transform .2s; }
+.mot-sw.on{ background:var(--mor); } .mot-sw.on::after{ transform:translateX(18px); }
+.mot-note{ font-size:.76rem; color:var(--md); line-height:1.45; margin:8px 0 0; }
+.mot-note b{ color:#E8EEF7; }
+.mot-pied{ display:flex; gap:10px; padding:10px 14px calc(10px + env(safe-area-inset-bottom, 0px)); border-top:1px solid var(--mt); background:#0B1424; width:100%; max-width:580px; margin:0 auto; box-sizing:border-box; }
+.mot-ok{ flex:1; border:0; background:var(--mor); color:#1B1300 !important; border-radius:12px; padding:12px 14px; font-weight:800; font-size:.95rem; }
+.mot-sec{ border:1px solid var(--mt); background:var(--ms); border-radius:12px; padding:12px 12px; font-weight:600; font-size:.85rem; color:var(--md) !important; }
+.mot-sec.confirmer{ color:#FF9AA1 !important; border-color:#FF9AA1; }
+.mot-sec.large{ width:100%; margin-top:12px; }
+.mot-voile{ position:absolute; inset:0; background:rgba(5,10,20,.6); z-index:2; display:flex; align-items:flex-end; justify-content:center; }
+.mot-voile[hidden]{ display:none; }
+.mot-feuille{ background:var(--ms); width:100%; max-width:580px; max-height:82%; overflow-y:auto; border-radius:18px 18px 0 0; padding:14px 14px calc(18px + env(safe-area-inset-bottom, 0px)); box-sizing:border-box; }
+.mot-t{ display:flex; align-items:center; margin-bottom:8px; }
+.mot-t h2{ margin:0; flex:1; font-family:var(--titre, 'Big Shoulders Display'), Impact, sans-serif; font-weight:900; font-size:1.4rem; }
+.mot-x{ width:34px; height:34px; border-radius:10px; border:0; background:var(--ms2); font-size:18px; }
+.mot-cats{ display:flex; gap:6px; overflow-x:auto; margin-bottom:10px; scrollbar-width:none; }
+.mot-cats button{ flex:none; border:1px solid var(--mt); background:var(--ms2); border-radius:999px; padding:6px 12px; font-size:.82rem; font-weight:600; }
+.mot-cats button.on{ background:var(--mor); color:#1B1300 !important; border-color:transparent; }
+.mot-pack{ font-size:.76rem; color:var(--md); margin:-2px 0 10px; }
+.mot-pack b{ color:var(--mor); }
+.mot-grille{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+.mot-grille button{ position:relative; border-radius:12px; border:1px solid var(--mt); background:#0E1A2E; padding:6px 4px 7px; display:flex; flex-direction:column; align-items:center; gap:5px; }
+.mot-grille button canvas{ width:100%; aspect-ratio:1; display:block; border-radius:8px; }
+.mot-grille button span{ font-size:.68rem; font-weight:600; color:var(--md); line-height:1.15; text-align:center; }
+.mot-grille button em, .mot-modeles button em{ position:absolute; right:5px; top:5px; font-size:.62rem; font-style:normal; }
+.mot-seg{ display:flex; background:var(--ms2); border-radius:10px; padding:3px; gap:3px; flex:1; min-width:0; }
+.mot-seg button{ flex:1; border:0; background:transparent; border-radius:8px; padding:7px 2px; font-size:.76rem; font-weight:600; color:var(--md) !important; }
+.mot-seg button.on{ background:var(--mor); color:#1B1300 !important; }
+.mot-lettres{ display:grid; grid-template-columns:repeat(9, 1fr); gap:5px; }
+.mot-lettres button{ aspect-ratio:1; border-radius:8px; border:1px solid var(--mt); background:#0E1A2E; font-family:var(--titre, 'Big Shoulders Display'), Impact, sans-serif; font-weight:900; font-size:1.1rem; padding:0; }
+.mot-modeles{ display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+.mot-modeles button{ position:relative; border:1px solid var(--mt); background:#0E1A2E; border-radius:12px; padding:5px 5px 7px; font-size:.7rem; font-weight:600; }
+.mot-modeles canvas{ width:100%; aspect-ratio:1; border-radius:9px; display:block; margin-bottom:5px; }
+.mot-packl{ display:flex; align-items:center; gap:10px; padding:10px 0; border-top:1px solid var(--mt); }
+.mot-packl > div{ flex:1; } .mot-packl small{ display:block; color:var(--md); font-size:.78rem; }
+.mot-packl .mot-ok{ flex:none; }
+.mot-ok:disabled{ opacity:.45; cursor:default; }

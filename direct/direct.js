@@ -12,11 +12,11 @@ const DEPT_NAMES = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-P
 const TIERS = ['commun', 'peucommun', 'rare', 'epique', 'legendaire'];
 const MER = '#0A1628', LIBRE = '#1E3A60', SEUL = '#3A5378';
 // patch414 : la Suisse (saison 3), même interrupteur que le jeu : SUISSE_OUVERTE le jour J, ?suisse=test pour essayer
-const SUISSE_OUVERTE = false;
+const SUISSE_OUVERTE = true;
 // patch462 : la Belgique, même interrupteur que le jeu (BELGIQUE_OUVERTE, ?belgique=test)
-const BELGIQUE_OUVERTE = false;
+const BELGIQUE_OUVERTE = true;
 // patch467 : le Luxembourg, même interrupteur que le jeu (LUXEMBOURG_OUVERT, ?luxembourg=test)
-const LUXEMBOURG_OUVERT = false;
+const LUXEMBOURG_OUVERT = true;
 const LUXEMBOURG = LUXEMBOURG_OUVERT || /[?&]luxembourg=test\b/.test(location.search);
 const BELGIQUE = BELGIQUE_OUVERTE || LUXEMBOURG || /[?&]belgique=test\b/.test(location.search);
 const SUISSE = SUISSE_OUVERTE || BELGIQUE || /[?&]suisse=test\b/.test(location.search);

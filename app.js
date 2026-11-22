@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '455a6b4203ee';
+const VERSION_JEU = 'b11c4b7dfa84';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -26,11 +26,11 @@ const METRO_DEPT_RE = /^(0[1-9]|[1-8][0-9]|9[0-5]|2A|2B)$/;
 // patch330 : la Suisse (saison 3). Éteinte tant que SUISSE_OUVERTE vaut false ;
 // ?suisse=test l'allume dans cet onglet pour essayer. Les cantons tiennent le
 // rôle des départements (code à deux lettres, région « Suisse »).
-const SUISSE_OUVERTE = false;
+const SUISSE_OUVERTE = true;
 // patch462 : la Belgique (pendant la saison 3), même principe : BELGIQUE_OUVERTE le jour de son
 // ouverture, ?belgique=test pour essayer (allume aussi la Suisse et le fond de la saison 3).
 // Les 11 provinces tiennent le rôle des départements (code à trois lettres, région « Belgique »).
-const BELGIQUE_OUVERTE = false;
+const BELGIQUE_OUVERTE = true;
 // patch467 : ?luxembourg=test allume aussi la Belgique (lu avant LUXEMBOURG, qui est défini plus bas)
 function LUXEMBOURG_TEST_TOT(){
   try { return /[?&]luxembourg=test\b/.test(location.search) || sessionStorage.getItem('tf-luxembourg-test') === '1'; }
@@ -45,7 +45,7 @@ const BELGIQUE = BELGIQUE_OUVERTE || LUXEMBOURG_TEST_TOT() || (() => {
 // patch467 : le Luxembourg, même principe : LUXEMBOURG_OUVERT le jour de son ouverture, ?luxembourg=test pour essayer
 // (allume aussi la Belgique, la Suisse et le fond de la saison 3). Ses 12 cantons tiennent le rôle des départements
 // (code à trois lettres « L.. » : LU, VD, GR… à deux lettres sont des cantons suisses), région « Luxembourg ».
-const LUXEMBOURG_OUVERT = false;
+const LUXEMBOURG_OUVERT = true;
 const LUXEMBOURG = LUXEMBOURG_OUVERT || (() => {
   try {
     if(/[?&]luxembourg=test\b/.test(location.search)) sessionStorage.setItem('tf-luxembourg-test', '1');
@@ -21326,7 +21326,7 @@ document.getElementById('panel-clan').addEventListener('input', (e) => {
 // La liste qui fait foi pour le tirage est cote serveur (aurore_communes).
 // data/aurore.json ne porte que les credits des photos, et sert de liste
 // pour l'affichage en Front.
-const AURORE_V = '1';
+const AURORE_V = '2';
 let AURORE = null;   // { code: { a: auteur, l: licence, s: page Commons } }
 async function chargerAurore(){
   try{
@@ -23206,7 +23206,7 @@ function renderBoutiqueEuros(){
   corps.innerHTML = (L ? bqxUneEuros(arts) : '') + bqeBandeauHtml()
     + (cat.ouverte ? '' : '<p class="bqe-test">Mode test : la boutique n\'est visible que des comptes testeurs. Paie avec une carte de test Stripe.</p>')
     + (cat.og ? section('Réservé aux OG', 'pour les joueurs de la saison 1', og, true) : '')
-    + section('Collections', 'le dos et le skin ensemble, moins cher', cols)
+    + section('Collections', 'le skin et son dos assorti, vendus ensemble', cols)
     + section('Habillages de paquet', 'l\'emballage de tes paquets', hab)
     + section('Dos de cartes', '', dos)
     + section('Skins de carte', 'à poser sur les cartes de ton choix', skins)

@@ -1,5 +1,28 @@
 [
   {
+    "date": "2026-11-22",
+    "nouveautes": [
+      "⚔️ La saison 3 est lancée ! Le Front repart de zéro, tes 5 communes ★ sont toujours à toi, et tes TP aussi.",
+      "🧭 Les onglets changent de nom : Combat devient le QG (attaquer, défendre, bâtiments), et l'ancien QG des mini-jeux devient l'Arcade (Commune du jour, Radar, Rafale, le Mess et le pass). Les icônes ne bougent pas.",
+      "🏰 Le siège remplace les dés : pose un siège (2 ⚡), envoie des vagues d'énergie et remplis la jauge de la commune avant que son propriétaire la défende. Renforcer, garnison-bouclier, course entre assiégeants : tout est dans Règles › Le siège.",
+      "🇨🇭 La Suisse rejoint la carte : 2 110 communes, 26 cantons qui comptent comme des départements, la région Suisse, et des cartes Aurore suisses.",
+      "🇧🇪 La Belgique aussi : 565 communes, 11 provinces qui comptent comme des départements (dont Bruxelles-Capitale), la région Belgique, et 51 cartes Aurore belges.",
+      "🇱🇺 Et le Luxembourg : 100 communes, 12 cantons qui comptent comme des départements, la région Luxembourg. Une seule légendaire : Luxembourg-Ville.",
+      "🧭 Zone de départ : avant ton premier paquet du Front, choisis une région, la Suisse, la Belgique ou le Luxembourg ; tes 3 premiers paquets y tombent.",
+      "🃏 Paquets Terra suisse, belge et luxembourgeois : au Tirage, choisis France, Suisse, Belgique ou Luxembourg, mêmes jetons et même prix.",
+      "🎡 La roue du Front reste ouverte toute la saison, en plus de tes paquets : elle a ses propres jetons (1 toutes les 20 min, 3 en réserve), jusqu'à 50 tours par jour, et la soirée de 21 h à 23 h.",
+      "🎖️ Le pass de la saison 3 est ouvert (Arcade › Pass de saison) : 20 niveaux jusqu'au 13 décembre, des paquets, des lingots et des titres.",
+      "🍺 Le Mess ouvre ses portes à l'Arcade : la Machine à chiffrer, le Recensement et le 421, avec des tickets gagnés en duel classé.",
+      "🎨 Nouveau look : la carte, les paquets, l'ouverture des cartes et la boutique ont été refaits.",
+      "🏰 Classement des clans : il additionne maintenant les points des 5 meilleurs membres actifs (idée d'Oshannir). Une recrue ne fait jamais baisser son clan.",
+      "🃏 Nouvelles cartes : la photo prend toute la place, le nom est posé dessus, le département en plaque, et le cadre change de matière selon la rareté (métal, reflet irisé, or). Les cartes à skin, Aurore, brillantes et de l'atelier gardent leur look.",
+      "📊 Classement du Front : les bonus de département et de région varient selon leur population (× 0,6 pour les moins peuplés, jusqu'à × 1,6 pour les plus peuplés) ; une légendaire vaut 45 points. Viser une zone dense devient une vraie stratégie.",
+      "✨ Cinq nouvelles collections en boutique, le skin et son dos assorti : Topo, Givre, Kintsugi, Vitrail et Aquarelle. Dans toute la boutique, le skin et le dos d'un thème se vendent maintenant ensemble ; si tu as déjà l'un des deux, tu ne paies que ce qui te manque. Et les onze skins existants ont été redessinés : ils jouent maintenant avec la photo de ta carte. Si tu en as déjà un, il change tout seul, sans rien payer.",
+      "🏆 Les récompenses de la saison 2 sont dans les profils : médailles du podium, titres, seigneuries, clan champion, et un paquet Terra offert à tous les pionniers du Front."
+    ],
+    "correctifs": []
+  },
+  {
     "date": "2026-11-18",
     "nouveautes": [
       "Roue du Front : quand ta réserve de lingots est pleine, les lingots gagnés à la roue ne sont plus perdus. Ils deviennent des TerraPoints, 5 TP par lingot (une case Lingots = +10 TP).",

@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bilan de la saison 2 — TerraFront</title>
+<meta name="description" content="Le bilan de la saison 2 de TerraFront : classements, courbes de chacun et tes propres stats.">
+<meta name="theme-color" content="#0F1F38">
+<link rel="icon" type="image/png" href="favicon.png?v=2">
+<link rel="stylesheet" href="__POLICES__">
+<style>
+:root{
+  --nuit:#0F1F38; --nuit2:#162C4B; --nuit3:#1F3860; --trait:rgba(169,188,212,.18);
+  --texte:#F1F5F9; --texte2:#A9BCD4; --texte3:#7F93AE; --or:#F0B429;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
+  --f-titre:'Big Shoulders Display', Impact, sans-serif;
+  --f-texte:'Instrument Sans', system-ui, -apple-system, sans-serif;
+}
+*{ box-sizing:border-box; }
+html{ -webkit-text-size-adjust:100%; }
+body{ margin:0; background:var(--nuit); color:var(--texte); font-family:var(--f-texte); font-size:16px; line-height:1.5; }
+a{ color:var(--or); }
+.tete{ border-bottom:1px solid var(--trait); background:rgba(11,24,48,.6); }
+.tete-int, main, .pied-int{ max-width:820px; margin:0 auto; padding:0 18px; }
+.tete-int{ padding-top:14px; padding-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.marque{ font-family:var(--f-titre); font-weight:800; font-size:26px; color:#fff; text-decoration:none; }
+.marque span{ color:var(--or); }
+.jouer{ background:var(--or); color:#1A1404; font-weight:700; text-decoration:none; padding:8px 14px; border-radius:10px; font-size:14px; }
+main{ padding-top:26px; padding-bottom:40px; }
+.sur{ color:var(--or); font-weight:600; font-size:14px; margin:0 0 4px; }
+h1{ font-family:var(--f-titre); font-weight:900; font-size:clamp(40px, 10vw, 60px); line-height:.95; margin:0 0 8px; text-transform:uppercase; }
+.dates{ color:var(--texte2); margin:0 0 22px; font-size:15px; }
+h2{ font-family:var(--f-titre); font-weight:800; font-size:28px; line-height:1.1; margin:40px 0 6px; }
+.h2-sous{ color:var(--texte2); font-size:14px; margin:0 0 14px; }
+.bloc{ background:var(--nuit2); border:1px solid var(--trait); border-radius:16px; padding:16px; }
+
+/* recherche */
+.cherche{ border-left:4px solid var(--or); }
+.cherche label{ display:block; font-weight:700; font-size:17px; margin-bottom:8px; }
+.cherche-ligne{ display:flex; gap:8px; }
+.cherche input{ flex:1; min-width:0; font:inherit; font-size:16px; color:var(--texte); background:var(--nuit); border:1px solid rgba(169,188,212,.35); border-radius:12px; padding:11px 13px; }
+.cherche input:focus{ outline:2px solid var(--or); outline-offset:1px; border-color:transparent; }
+.cherche button, .btn{ font:inherit; font-weight:700; font-size:15px; background:var(--or); color:#1A1404; border:0; border-radius:12px; padding:0 16px; cursor:pointer; }
+.raccourcis{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.raccourcis button{ font:inherit; font-size:13px; color:var(--texte2); background:transparent; border:1px solid var(--trait); border-radius:999px; padding:4px 10px; cursor:pointer; }
+.introuvable{ color:#FF9A94; font-size:14px; margin:8px 0 0; }
+
+/* fiche joueur */
+#fiche{ margin-top:14px; }
+.fj-tete{ display:flex; align-items:center; gap:14px; }
+.fj-rang{ flex:none; width:64px; height:64px; border-radius:14px; background:var(--nuit); border:1px solid var(--trait); display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.fj-rang b{ font-family:var(--f-titre); font-weight:900; font-size:30px; line-height:1; color:var(--or); }
+.fj-rang small{ font-size:11px; color:var(--texte2); }
+.fj-nom{ font-family:var(--f-titre); font-weight:800; font-size:32px; line-height:1; word-break:break-word; }
+.fj-pts{ color:var(--texte2); font-size:14px; margin-top:4px; }
+.fj-pts b{ color:var(--texte); }
+.distinctions{ display:flex; flex-wrap:wrap; gap:6px; margin:14px 0 4px; }
+.dist{ font-size:12.5px; font-weight:600; background:rgba(240,180,41,.12); color:#FCE38A; border:1px solid rgba(240,180,41,.35); border-radius:999px; padding:3px 9px; }
+.tuiles{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; margin-top:14px; }
+.tuile{ background:var(--nuit); border:1px solid var(--trait); border-radius:12px; padding:10px 12px; }
+.tuile .t-l{ font-size:12.5px; color:var(--texte2); }
+.tuile .t-v{ font-family:var(--f-titre); font-weight:800; font-size:28px; line-height:1.1; font-variant-numeric:tabular-nums; }
+.tuile .t-r{ font-size:12px; color:var(--texte3); }
+.tuile .t-r b{ color:var(--or); font-weight:700; }
+.duo{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+.duo .tuile .t-v{ font-size:22px; word-break:break-word; }
+.fj-actions{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+.btn.sec{ background:transparent; color:var(--texte); border:1px solid rgba(169,188,212,.35); padding:9px 14px; }
+.copie-ok{ color:#8EE3B8; font-size:13px; align-self:center; }
+
+/* chiffres de la saison */
+.chiffres{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:8px; }
+.chiffre{ background:var(--nuit2); border:1px solid var(--trait); border-radius:14px; padding:12px 14px; }
+.chiffre b{ display:block; font-family:var(--f-titre); font-weight:900; font-size:34px; line-height:1; font-variant-numeric:tabular-nums; }
+.chiffre span{ display:block; margin-top:4px; font-size:13px; line-height:1.35; color:var(--texte2); }
+
+/* graphique */
+.legende{ display:flex; flex-wrap:wrap; gap:6px 14px; font-size:13px; color:var(--texte2); margin:0 0 8px; }
+.legende i{ display:inline-block; width:14px; height:3px; border-radius:2px; vertical-align:middle; margin-right:6px; }
+.graphe{ position:relative; }
+.graphe svg{ display:block; width:100%; height:auto; touch-action:pan-y; }
+.infobulle{ position:absolute; pointer-events:none; background:#0B1830; border:1px solid rgba(169,188,212,.35); border-radius:10px; padding:8px 10px; font-size:12.5px; line-height:1.45; min-width:150px; box-shadow:0 8px 24px rgba(0,0,0,.35); display:none; z-index:2; }
+.infobulle .ib-d{ color:var(--texte2); margin-bottom:3px; }
+.infobulle .ib-l{ display:flex; justify-content:space-between; gap:12px; }
+.infobulle .ib-l i{ display:inline-block; width:10px; height:3px; border-radius:2px; vertical-align:middle; margin-right:5px; }
+.infobulle .ib-l b{ font-variant-numeric:tabular-nums; }
+
+/* classements */
+.cats{ display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; margin-bottom:8px; scrollbar-width:thin; }
+.cats button{ flex:none; font:inherit; font-size:13.5px; font-weight:600; color:var(--texte2); background:var(--nuit2); border:1px solid var(--trait); border-radius:999px; padding:6px 12px; cursor:pointer; }
+.cats button[aria-pressed="true"]{ background:var(--or); color:#1A1404; border-color:var(--or); }
+.cat-note{ font-size:13px; color:var(--texte2); margin:0 0 10px; }
+.liste{ list-style:none; margin:0; padding:0; }
+.liste li{ display:grid; grid-template-columns:30px 1fr auto; gap:4px 10px; align-items:center; padding:7px 4px; border-bottom:1px solid rgba(169,188,212,.1); cursor:pointer; }
+.liste li:hover{ background:rgba(169,188,212,.05); }
+.liste li.moi{ background:rgba(240,180,41,.1); }
+.liste .l-r{ font-family:var(--f-titre); font-weight:800; font-size:20px; color:var(--texte3); text-align:center; }
+.liste li:nth-child(-n+3) .l-r{ color:var(--or); }
+.liste .l-n{ font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.liste .l-v{ font-weight:700; font-variant-numeric:tabular-nums; }
+.liste .l-b{ grid-column:2 / 4; height:6px; background:rgba(169,188,212,.08); border-radius:4px; overflow:hidden; }
+.liste .l-b span{ display:block; height:100%; background:var(--or); border-radius:4px; }
+.ta-place{ font-size:13.5px; color:var(--texte2); margin:10px 0 0; }
+.ta-place b{ color:var(--or); }
+
+/* rivalités */
+.rivalites{ display:grid; gap:8px; }
+.riv{ display:grid; grid-template-columns:72px 1fr; align-items:center; gap:12px; background:var(--nuit2); border:1px solid var(--trait); border-radius:14px; padding:12px 14px; }
+.riv .r-n{ font-family:var(--f-titre); font-weight:900; font-size:32px; line-height:1; text-align:center; font-variant-numeric:tabular-nums; }
+.riv .r-t{ font-size:15px; color:var(--texte2); line-height:1.35; word-break:break-word; }
+.riv .r-t b{ color:var(--texte); }
+.riv .r-s{ font-size:13px; color:var(--texte3); margin-top:2px; }
+
+.notes{ font-size:13px; color:var(--texte3); margin-top:34px; border-top:1px solid var(--trait); padding-top:14px; }
+.notes p{ margin:0 0 6px; }
+.pied{ border-top:1px solid var(--trait); }
+.pied-int{ padding-top:16px; padding-bottom:28px; font-size:14px; color:var(--texte2); display:flex; gap:8px 18px; flex-wrap:wrap; }
+.pied a{ color:var(--texte2); }
+@media (max-width:420px){
+  .fj-nom{ font-size:27px; }
+  .chiffre b{ font-size:28px; }
+  .tuile .t-v{ font-size:24px; }
+  .tuiles{ grid-template-columns:1fr 1fr; }
+  .chiffres{ grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<header class="tete"><div class="tete-int">
+  <a class="marque" href="./">Terra<span>Front</span></a>
+  <a class="jouer" href="./">Jouer à la saison 3</a>
+</div></header>
+
+<main>
+  <p class="sur">Saison 2 · terminée</p>
+  <h1>Le bilan de la saison</h1>
+  <p class="dates">Du 25 octobre au 22 novembre 2026 · 101 joueurs au palmarès</p>
+
+  <section class="bloc cherche" aria-labelledby="t-cherche">
+    <label id="t-cherche" for="q">Tes stats de la saison</label>
+    <form class="cherche-ligne" id="f-cherche" autocomplete="off">
+      <input id="q" list="pseudos" placeholder="Ton pseudo" enterkeyhint="search">
+      <button type="submit">Voir</button>
+    </form>
+    <datalist id="pseudos"></datalist>
+    <div class="raccourcis" id="raccourcis"></div>
+    <p class="introuvable" id="introuvable" hidden></p>
+    <div id="fiche" hidden></div>
+  </section>
+
+  <h2>La saison en chiffres</h2>
+  <div class="chiffres" id="chiffres"></div>
+
+  <h2>La course aux communes</h2>
+  <p class="h2-sous">Les communes de chaque joueur, jour après jour. Touche la courbe pour voir les chiffres d'un jour.</p>
+  <div class="bloc">
+    <div class="legende" id="legende"></div>
+    <div class="graphe" id="graphe"></div>
+  </div>
+
+  <h2>Les classements</h2>
+  <p class="h2-sous">Touche un nom pour voir ses stats.</p>
+  <div class="cats" id="cats" role="toolbar" aria-label="Catégorie"></div>
+  <div class="bloc">
+    <p class="cat-note" id="cat-note"></p>
+    <ol class="liste" id="liste"></ol>
+    <p class="ta-place" id="ta-place" hidden></p>
+  </div>
+
+  <h2>Les plus grandes rivalités</h2>
+  <p class="h2-sous">Qui a pris le plus de communes à qui.</p>
+  <div class="rivalites" id="rivalites"></div>
+
+  <div class="notes">
+    <p>Chiffres arrêtés à la clôture, le 22 novembre à 10 h 03. Ne sont classés que les joueurs du palmarès.</p>
+    <p>Les assauts et l'énergie ne sont comptés que depuis le 3 novembre : avant, le jeu ne les enregistrait pas.</p>
+    <p>« Communes prises » et « communes perdues » : celles prises à un autre joueur, ou perdues face à un autre joueur. Les paquets et les pertes par inactivité ne comptent pas.</p>
+  </div>
+</main>
+
+<footer class="pied"><div class="pied-int">
+  <a href="./">Jouer</a><a href="mentions-legales.html">Mentions légales</a><a href="confidentialite.html">Confidentialité</a>
+</div></footer>
+
+<script>
+const DATA = __DATA__;
+const J = DATA.joueurs;
+const N = J.length;
+const COUL = ['#3987e5', '#d95926', '#199e70'];   // podium (palette validée sur la surface #162C4B)
+const MOI_COUL = '#FFFFFF';
+const fmt = n => n.toLocaleString('fr-FR');
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// dates des 29 points : fin des journées du 25/10 au 21/11, puis la clôture
+const JOURS = [];
+for(let i = 0; i < 28; i++){ const d = new Date(Date.UTC(2026, 9, 25 + i)); JOURS.push(d.getUTCDate() + '/' + (d.getUTCMonth() + 1)); }
+JOURS.push('22/11');
+const jourLong = i => i === 28 ? 'Clôture, 22/11 à 10 h 03' : 'Fin du ' + JOURS[i];
+
+for(const j of J){
+  j.pic = Math.max(...j.k); j.picI = j.k.indexOf(j.pic);
+  j.en = j.ea + j.ed;
+  j.taux = j.as >= 500 ? Math.round(1000 * j.asg / j.as) / 10 : 0;
+  j.bilan = j.pr - j.pe;
+}
+
+const DEP = {"01":"Ain","02":"Aisne","03":"Allier","04":"Alpes-de-Haute-Provence","05":"Hautes-Alpes","06":"Alpes-Maritimes","07":"Ardèche","08":"Ardennes","09":"Ariège","10":"Aube","11":"Aude","12":"Aveyron","13":"Bouches-du-Rhône","14":"Calvados","15":"Cantal","16":"Charente","17":"Charente-Maritime","18":"Cher","19":"Corrèze","21":"Côte-d'Or","22":"Côtes-d'Armor","23":"Creuse","24":"Dordogne","25":"Doubs","26":"Drôme","27":"Eure","28":"Eure-et-Loir","29":"Finistère","2A":"Corse-du-Sud","2B":"Haute-Corse","30":"Gard","31":"Haute-Garonne","32":"Gers","33":"Gironde","34":"Hérault","35":"Ille-et-Vilaine","36":"Indre","37":"Indre-et-Loire","38":"Isère","39":"Jura","40":"Landes","41":"Loir-et-Cher","42":"Loire","43":"Haute-Loire","44":"Loire-Atlantique","45":"Loiret","46":"Lot","47":"Lot-et-Garonne","48":"Lozère","49":"Maine-et-Loire","50":"Manche","51":"Marne","52":"Haute-Marne","53":"Mayenne","54":"Meurthe-et-Moselle","55":"Meuse","56":"Morbihan","57":"Moselle","58":"Nièvre","59":"Nord","60":"Oise","61":"Orne","62":"Pas-de-Calais","63":"Puy-de-Dôme","64":"Pyrénées-Atlantiques","65":"Hautes-Pyrénées","66":"Pyrénées-Orientales","67":"Bas-Rhin","68":"Haut-Rhin","69":"Rhône","70":"Haute-Saône","71":"Saône-et-Loire","72":"Sarthe","73":"Savoie","74":"Haute-Savoie","75":"Paris","76":"Seine-Maritime","77":"Seine-et-Marne","78":"Yvelines","79":"Deux-Sèvres","80":"Somme","81":"Tarn","82":"Tarn-et-Garonne","83":"Var","84":"Vaucluse","85":"Vendée","86":"Vienne","87":"Haute-Vienne","88":"Vosges","89":"Yonne","90":"Territoire de Belfort","91":"Essonne","92":"Hauts-de-Seine","93":"Seine-Saint-Denis","94":"Val-de-Marne","95":"Val-d'Oise","971":"Guadeloupe","972":"Martinique","973":"Guyane","974":"La Réunion","976":"Mayotte"};
+const REG = {'bretagne':'Bretagne','hauts-de-france':'Hauts-de-France','pays-de-la-loire':'Pays de la Loire','ile-de-france':'Île-de-France','bourgogne-franche-comte':'Bourgogne-Franche-Comté','grand-est':'Grand Est','nouvelle-aquitaine':'Nouvelle-Aquitaine','provence-alpes-cote-d-azur':"Provence-Alpes-Côte d'Azur"};
+const DIST = {'podium-1':'🥇 1er de la saison','podium-2':'🥈 2e de la saison','podium-3':'🥉 3e de la saison','top10':'Top 10','clan-champion':'🏆 Clan champion',
+  'collectionneur':'Collectionneur','rebelle':'Rebelle','artificier':'Artificier','conquerant':'Conquérant','gardien':'Gardien','diplomate':'Diplomate',
+  'geographe':'Géographe','cible':'Cible','flair':'Flair','eclair':'Éclair','batisseur':'Bâtisseur','navigateur':'Navigateur','rempart':'Rempart'};
+function distLabel(d){
+  if(DIST[d]) return DIST[d];
+  if(d.startsWith('seigneur-')){ const c = d.slice(9); return 'Seigneur · ' + (DEP[c] || c); }
+  if(d.startsWith('maitre-')){ const r = d.slice(7); return 'Maître · ' + (REG[r] || r); }
+  return d;
+}
+function distOrdre(d){ return d.startsWith('podium') ? 0 : d === 'top10' ? 1 : d === 'clan-champion' ? 2 : DIST[d] ? 3 : d.startsWith('maitre') ? 4 : 5; }
+
+// catégories de classement
+const CATS = [
+  {k:'pts', l:'Points', u:'points', note:'Le classement final du Front.'},
+  {k:'pic', l:'Pic de communes', u:'communes', note:'Le plus de communes tenues en même temps (compté en fin de journée).'},
+  {k:'pr', l:'Communes prises', u:'prises', note:'Communes prises à un autre joueur.'},
+  {k:'pe', l:'Communes perdues', u:'perdues', note:'Communes perdues face à un autre joueur.'},
+  {k:'bilan', l:'Bilan prises − pertes', u:'', note:'Communes prises moins communes perdues face aux autres joueurs.', signe:true},
+  {k:'as', l:'Assauts', u:'assauts', note:'Assauts lancés depuis le 3 novembre.'},
+  {k:'taux', l:'Réussite', u:'%', note:'Part des assauts gagnés, pour les joueurs qui en ont lancé au moins 500.', dec:true},
+  {k:'en', l:'Énergie', u:'⚡', note:"Énergie dépensée en assauts et en défenses, depuis le 3 novembre."},
+  {k:'deg', l:'Défenses', u:'réussies', note:'Défenses réussies.'},
+  {k:'bo', l:'Bombes', u:'bombes', note:'Bombes larguées.'},
+  {k:'boc', l:'Communes bombardées', u:'communes', note:'Communes dans les zones de leurs bombes.'},
+  {k:'re', l:'Rébellions', u:'rébellions', note:'Rébellions financées.'},
+  {k:'ec', l:'Échanges', u:'échanges', note:'Échanges de communes conclus (dans le clan et entre clans).'},
+  {k:'ba', l:'Bâtiments', u:'bâtiments', note:'Bâtiments construits.'},
+  {k:'leg', l:'Légendaires', u:'légendaires', note:'Communes légendaires tenues à la clôture.'},
+  {k:'dep', l:'Départements', u:'départements', note:'Départements où ils tenaient au moins une commune à la clôture.'},
+];
+const valTxt = (c, v) => c.dec ? v.toLocaleString('fr-FR', {minimumFractionDigits:1, maximumFractionDigits:1}) + ' %' : (c.signe && v > 0 ? '+' : '') + fmt(v);
+
+// rang « à égalité » dans une catégorie
+const RANGS = {};
+for(const c of CATS){
+  const tri = J.filter(j => j[c.k] > 0 || (c.signe && j[c.k] !== 0)).sort((a, b) => b[c.k] - a[c.k]);
+  const m = new Map(); let prec = null, rang = 0;
+  tri.forEach((j, i) => { if(j[c.k] !== prec){ rang = i + 1; prec = j[c.k]; } m.set(j.p, rang); });
+  RANGS[c.k] = {m, n: tri.length};
+}
+
+let moi = null;
+let catActive = 'pr';
+
+// ---------- recherche ----------
+const dl = document.getElementById('pseudos');
+dl.innerHTML = J.map(j => `<option value="${esc(j.p)}">`).join('');
+document.getElementById('raccourcis').innerHTML = J.slice(0, 3).map(j => `<button type="button" data-p="${esc(j.p)}">${esc(j.p)}</button>`).join('');
+document.getElementById('raccourcis').addEventListener('click', e => { const b = e.target.closest('button'); if(b) choisir(b.dataset.p, true); });
+document.getElementById('f-cherche').addEventListener('submit', e => { e.preventDefault(); choisir(document.getElementById('q').value, true); });
+document.getElementById('q').addEventListener('change', e => { const v = e.target.value.trim(); if(J.some(j => j.p === v)) choisir(v, true); });
+
+function trouver(q){
+  q = q.trim().toLowerCase(); if(!q) return null;
+  return J.find(j => j.p.toLowerCase() === q) || J.find(j => j.p.toLowerCase().startsWith(q)) || J.find(j => j.p.toLowerCase().includes(q)) || null;
+}
+function choisir(q, defiler){
+  const j = trouver(q); const err = document.getElementById('introuvable');
+  if(!j){ err.textContent = `Aucun joueur du palmarès ne s'appelle « ${q} ». Seuls les joueurs classés à la clôture apparaissent.`; err.hidden = !q.trim(); return; }
+  err.hidden = true; moi = j;
+  document.getElementById('q').value = j.p;
+  history.replaceState(null, '', '#' + encodeURIComponent(j.p));
+  rendreFiche(); rendreGraphe(); rendreListe();
+  if(defiler) document.getElementById('t-cherche').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function tuile(l, v, k, extra){
+  const r = k && RANGS[k].m.get(moi.p);
+  const rang = r ? `<div class="t-r"><b>${r === 1 ? '1er' : r + 'e'}</b> sur ${RANGS[k].n}</div>` : (k ? '<div class="t-r">—</div>' : '');
+  return `<div class="tuile"><div class="t-l">${l}</div><div class="t-v">${v}</div>${extra ? `<div class="t-r">${extra}</div>` : ''}${rang}</div>`;
+}
+function rendreFiche(){
+  const j = moi, f = document.getElementById('fiche');
+  const dist = j.dist.slice().sort((a, b) => distOrdre(a) - distOrdre(b) || a.localeCompare(b)).map(d => `<span class="dist">${esc(distLabel(d))}</span>`).join('');
+  const taux = j.as ? Math.round(100 * j.asg / j.as) : 0;
+  f.innerHTML = `
+    <div class="fj-tete">
+      <div class="fj-rang"><b>${j.r}</b><small>${j.r === 1 ? 'er' : 'e'} / ${N}</small></div>
+      <div><div class="fj-nom">${esc(j.p)}</div><div class="fj-pts"><b>${fmt(j.pts)}</b> points · <b>${fmt(j.c)}</b> communes à la fin</div></div>
+    </div>
+    ${dist ? `<div class="distinctions">${dist}</div>` : ''}
+    <div class="tuiles">
+      ${tuile('Pic de communes', fmt(j.pic), 'pic', j.pic ? jourLong(j.picI).replace('Fin du', 'le') : '')}
+      ${tuile('Communes prises', fmt(j.pr), 'pr')}
+      ${tuile('Communes perdues', fmt(j.pe), 'pe')}
+      ${tuile('Assauts', fmt(j.as), 'as', j.as ? taux + ' % gagnés' : '')}
+      ${tuile('Énergie dépensée', fmt(j.en) + ' ⚡', 'en')}
+      ${tuile('Défenses réussies', fmt(j.deg), 'deg', j.de ? 'sur ' + fmt(j.de) : '')}
+      ${tuile('Bombes', fmt(j.bo), 'bo', j.boc ? fmt(j.boc) + ' communes touchées' : '')}
+      ${tuile('Rébellions', fmt(j.re), 're')}
+      ${tuile('Échanges', fmt(j.ec), 'ec')}
+      ${tuile('Bâtiments', fmt(j.ba), 'ba')}
+      ${tuile('Légendaires', fmt(j.leg), 'leg')}
+      ${tuile('Jours joués', j.jj + ' / 29', null)}
+    </div>
+    <div class="duo">
+      <div class="tuile"><div class="t-l">Ta cible préférée</div><div class="t-v">${j.ci ? esc(j.ci) : '—'}</div>${j.cin ? `<div class="t-r">${fmt(j.cin)} communes prises</div>` : ''}</div>
+      <div class="tuile"><div class="t-l">Celui qui t'en a pris le plus</div><div class="t-v">${j.bou ? esc(j.bou) : (j.boun ? 'un joueur parti' : '—')}</div>${j.boun ? `<div class="t-r">${fmt(j.boun)} communes perdues</div>` : ''}</div>
+    </div>
+    <div class="fj-actions">
+      <button class="btn sec" type="button" id="b-courbe">Voir ma courbe</button>
+      <button class="btn sec" type="button" id="b-lien">Copier le lien</button>
+      <span class="copie-ok" id="copie-ok" hidden>Lien copié</span>
+    </div>`;
+  f.hidden = false;
+  document.getElementById('b-courbe').onclick = () => document.getElementById('graphe').scrollIntoView({behavior:'smooth', block:'center'});
+  document.getElementById('b-lien').onclick = async () => {
+    const url = location.href.split('#')[0] + '#' + encodeURIComponent(j.p);
+    try{ await navigator.clipboard.writeText(url); }catch(e){ prompt('Copie ce lien :', url); return; }
+    const ok = document.getElementById('copie-ok'); ok.hidden = false; setTimeout(() => ok.hidden = true, 1800);
+  };
+}
+
+// ---------- chiffres de la saison ----------
+(function(){
+  const s = k => J.reduce((t, j) => t + j[k], 0);
+  const items = [
+    [fmt(s('pr')), 'communes prises à d\'autres joueurs'],
+    [fmt(s('as')), 'assauts lancés (depuis le 3/11)'],
+    [fmt(s('en')), 'énergie dépensée (depuis le 3/11)'],
+    [fmt(s('deg')), 'défenses réussies'],
+    [fmt(s('bo')), 'bombes larguées'],
+    [fmt(s('re')), 'rébellions financées'],
+    [fmt(Math.round(s('ec') / 2)), 'échanges de communes'],
+    [fmt(s('ba')), 'bâtiments construits'],
+  ];
+  document.getElementById('chiffres').innerHTML = items.map(([v, l]) => `<div class="chiffre"><b>${v}</b><span>${l}</span></div>`).join('');
+})();
+
+// ---------- graphique ----------
+const SVGNS = 'http://www.w3.org/2000/svg';
+function rendreGraphe(){
+  const box = document.getElementById('graphe');
+  const W = Math.max(300, Math.round(box.clientWidth)), H = W < 520 ? 280 : 360, m = {l:40, r: W < 520 ? 76 : 92, t:12, b:26};
+  const iw = W - m.l - m.r, ih = H - m.t - m.b;
+  const maxV = Math.max(...J.map(j => j.pic));
+  const yMax = Math.ceil(maxV / 500) * 500;
+  const x = i => m.l + iw * i / 28;
+  const y = v => m.t + ih - ih * v / yMax;
+  const chemin = k => k.map((v, i) => (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join('');
+  const podium = J.slice(0, 3);
+  const enAvant = podium.map((j, i) => ({j, c: COUL[i], w: 2}));
+  if(moi && !podium.includes(moi)) enAvant.push({j: moi, c: MOI_COUL, w: 2.5});
+  let h = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="Communes de chaque joueur, jour après jour">`;
+  for(let v = 0; v <= yMax; v += 500){
+    h += `<line x1="${m.l}" x2="${W - m.r}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(169,188,212,.12)" stroke-width="1"/>`;
+    h += `<text x="${m.l - 8}" y="${y(v) + 4}" text-anchor="end" font-size="11" fill="#7F93AE">${fmt(v)}</text>`;
+  }
+  [0, 7, 14, 21, 28].forEach(i => { h += `<text x="${x(i)}" y="${H - 8}" text-anchor="${i === 28 ? 'end' : i === 0 ? 'start' : 'middle'}" font-size="11" fill="#7F93AE">${JOURS[i]}</text>`; });
+  for(const j of J){ if(enAvant.some(e => e.j === j)) continue;
+    h += `<path d="${chemin(j.k)}" fill="none" stroke="rgba(169,188,212,.22)" stroke-width="1" stroke-linejoin="round"/>`; }
+  for(const e of enAvant){
+    h += `<path d="${chemin(e.j.k)}" fill="none" stroke="#162C4B" stroke-width="${e.w + 3}" stroke-linejoin="round"/>`;
+    h += `<path d="${chemin(e.j.k)}" fill="none" stroke="${e.c}" stroke-width="${e.w}" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }
+  // étiquettes en bout de courbe, écartées si elles se chevauchent
+  const etiq = enAvant.map(e => ({e, yy: y(e.j.k[28])})).sort((a, b) => a.yy - b.yy);
+  for(let i = 1; i < etiq.length; i++) if(etiq[i].yy - etiq[i - 1].yy < 14) etiq[i].yy = etiq[i - 1].yy + 14;
+  for(const t of etiq){
+    const lim = W < 520 ? 10 : 12; const nom = t.e.j.p.length > lim ? t.e.j.p.slice(0, lim - 1) + '…' : t.e.j.p;
+    h += `<text x="${W - m.r + 8}" y="${t.yy + 4}" font-size="12" font-weight="600" fill="#F1F5F9">${esc(nom)}</text>`;
+  }
+  h += `<line id="g-croix" x1="0" x2="0" y1="${m.t}" y2="${m.t + ih}" stroke="rgba(241,245,249,.5)" stroke-width="1" visibility="hidden"/>`;
+  h += `<g id="g-points"></g>`;
+  h += `<rect id="g-zone" x="${m.l}" y="${m.t}" width="${iw}" height="${ih}" fill="transparent"/>`;
+  h += `</svg><div class="infobulle" id="g-ib"></div>`;
+  box.innerHTML = h;
+
+  const leg = enAvant.map(e => `<span><i style="background:${e.c}"></i>${esc(e.j.p)}${e.j === moi ? ' (toi)' : ''}</span>`).join('') + `<span><i style="background:rgba(169,188,212,.45)"></i>les autres joueurs</span>`;
+  document.getElementById('legende').innerHTML = leg;
+
+  const svg = box.querySelector('svg'), croix = box.querySelector('#g-croix'), pts = box.querySelector('#g-points'), ib = box.querySelector('#g-ib');
+  function montrer(ev){
+    const r = svg.getBoundingClientRect();
+    const sx = (ev.clientX - r.left) * W / r.width;
+    const i = Math.max(0, Math.min(28, Math.round((sx - m.l) / iw * 28)));
+    croix.setAttribute('x1', x(i)); croix.setAttribute('x2', x(i)); croix.setAttribute('visibility', 'visible');
+    pts.innerHTML = enAvant.map(e => `<circle cx="${x(i)}" cy="${y(e.j.k[i])}" r="4.5" fill="${e.c}" stroke="#162C4B" stroke-width="2"/>`).join('');
+    const lignes = enAvant.slice().sort((a, b) => b.j.k[i] - a.j.k[i]).map(e => `<div class="ib-l"><span><i style="background:${e.c}"></i>${esc(e.j.p)}</span><b>${fmt(e.j.k[i])}</b></div>`).join('');
+    ib.innerHTML = `<div class="ib-d">${jourLong(i)}</div>${lignes}`;
+    ib.style.display = 'block';
+    const px = x(i) * r.width / W, bw = ib.offsetWidth;
+    ib.style.left = Math.max(0, Math.min(r.width - bw, px + (px > r.width / 2 ? -bw - 12 : 12))) + 'px';
+    ib.style.top = '8px';
+  }
+  const zone = box.querySelector('#g-zone');
+  zone.addEventListener('pointermove', montrer);
+  zone.addEventListener('pointerdown', montrer);
+  zone.addEventListener('pointerleave', () => { croix.setAttribute('visibility', 'hidden'); pts.innerHTML = ''; ib.style.display = 'none'; });
+}
+
+// ---------- classements ----------
+const catsEl = document.getElementById('cats');
+catsEl.innerHTML = CATS.map(c => `<button type="button" data-k="${c.k}" aria-pressed="${c.k === catActive}">${c.l}</button>`).join('');
+catsEl.addEventListener('click', e => { const b = e.target.closest('button'); if(!b) return; catActive = b.dataset.k;
+  catsEl.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x.dataset.k === catActive)); rendreListe(); });
+document.getElementById('liste').addEventListener('click', e => { const li = e.target.closest('li'); if(li) choisir(li.dataset.p, true); });
+function rendreListe(){
+  const c = CATS.find(x => x.k === catActive);
+  const tri = J.filter(j => c.signe ? true : j[c.k] > 0).sort((a, b) => b[c.k] - a[c.k] || a.r - b.r).slice(0, 10);
+  const max = Math.max(...tri.map(j => Math.abs(j[c.k]))) || 1;
+  document.getElementById('cat-note').textContent = c.note;
+  document.getElementById('liste').innerHTML = tri.map(j => {
+    const r = RANGS[c.k].m.get(j.p) || '—';
+    return `<li data-p="${esc(j.p)}" class="${j === moi ? 'moi' : ''}"><span class="l-r">${r}</span><span class="l-n">${esc(j.p)}</span><span class="l-v">${valTxt(c, j[c.k])}</span><span class="l-b"><span style="width:${Math.max(2, 100 * Math.max(0, j[c.k]) / max)}%"></span></span></li>`;
+  }).join('');
+  const tp = document.getElementById('ta-place');
+  if(moi && !tri.includes(moi)){
+    const r = RANGS[c.k].m.get(moi.p);
+    tp.innerHTML = r ? `${esc(moi.p)} : <b>${r}e</b> sur ${RANGS[c.k].n} (${valTxt(c, moi[c.k])})` : `${esc(moi.p)} : pas classé dans cette catégorie.`;
+    tp.hidden = false;
+  } else tp.hidden = true;
+}
+
+// ---------- rivalités ----------
+(function(){
+  const par = new Map(J.map(j => [j.p, j]));
+  const vus = new Set(), out = [];
+  const paires = J.filter(j => j.ci && j.cin).map(j => ({a: j.p, b: j.ci, n: j.cin})).sort((x, y) => y.n - x.n);
+  for(const p of paires){
+    const cle = [p.a, p.b].sort().join('|'); if(vus.has(cle)) continue; vus.add(cle);
+    const b = par.get(p.b);
+    const A = par.get(p.a);
+    const retour = b && b.ci === p.a ? b.cin : (A && A.bou === p.b ? A.boun : null);
+    out.push({...p, retour}); if(out.length === 6) break;
+  }
+  document.getElementById('rivalites').innerHTML = out.map(p => `
+    <div class="riv">
+      <div class="r-n">${fmt(p.n)}</div>
+      <div><div class="r-t">communes prises par <b>${esc(p.a)}</b> à <b>${esc(p.b)}</b></div>${p.retour ? `<div class="r-s">${esc(p.b)} lui en a repris ${fmt(p.retour)}</div>` : ''}</div>
+    </div>`).join('');
+})();
+
+rendreListe();
+const h0 = decodeURIComponent(location.hash.slice(1));
+if(h0) choisir(h0, false); else rendreGraphe();
+let largeurG = document.getElementById('graphe').clientWidth;
+addEventListener('resize', () => { const w = document.getElementById('graphe').clientWidth; if(Math.abs(w - largeurG) > 8){ largeurG = w; rendreGraphe(); } });
+</script>
+</body>
+</html>

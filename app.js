@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '221df84a384b';
+const VERSION_JEU = 'f35e1d63a0fa';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -25664,7 +25664,7 @@ function terraVoirSurCarte(code){
 // l'appareil. Les réglages (s2-38) valent pour le compte, et pour le
 // téléphone aussi (seuil de rareté, communes en sourdine).
 const NC_DEFAUT = { jeu: { attaque: true, perdue: true, defense: true, echange: true, alerte: true, quete: true, recolte: true, clan: true, paquet: false },
-                    tel: { attaque: true, paquet: true }, seuil: 'commun', sourdine: [], sourdine_dep: [], alerte_dep: [] };
+                    tel: { attaque: true, paquet: true, defense: true, clan: true }, seuil: 'commun', sourdine: [], sourdine_dep: [], alerte_dep: [] };
 const NC = { prefs: null, prefsDispo: true, d: {}, items: [], ouvert: false, vue: 'liste', demarre: false };
 const NC_ORDRE = ['commun', 'peucommun', 'rare', 'epique', 'legendaire'];
 const NC_CLOCHE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>';
@@ -25737,7 +25737,7 @@ function ncDemarrer(){
 async function ncCharger(){
   const rpc = async (n, a) => { try{ const { data, error } = await sb.rpc(n, a); return error ? undefined : data; }catch(e){ return undefined; } };
   const vusP = CV_VUS.attente ? vusCompteCharger() : vusCompteAttendre();   // patch482
-  const [prefs, journal, sieges, ech, clanE, alertes, quetes, recolte, clan, effaces, diplo, merv, siegeAl] = await Promise.all([
+  const [prefs, journal, sieges, ech, clanE, alertes, quetes, recolte, clan, effaces, diplo, merv, siegeAl, sieges3] = await Promise.all([
     NC.prefs ? null : rpc('mes_notif_preferences'),
     rpc('journal', { p_mode: 'moi', p_limite: 40 }),
     rpc('sieges_contre_moi'),
@@ -25751,12 +25751,13 @@ async function ncCharger(){
     SAISON2 && CLANS ? rpc('clan_diplo_etat') : null,   // patch400
     SAISON2 ? rpc('merveille_ouverture') : null,   // patch431
     SAISON2 ? rpc('mes_alertes_siege') : null,   // patch485
+    SAISON2 ? rpc('sieges_contre_moi_v2') : null,   // patch504 : les sièges de la saison 3
   ]);
   if(!NC.prefs){
     if(prefs === undefined) NC.prefsDispo = false;
     else { NC.prefsDispo = true; NC.prefs = ncPrefsDepuis(prefs); }
   }
-  NC.d = { journal, sieges, ech, clanE, alertes, quetes, recolte: Array.isArray(recolte) ? recolte[0] : recolte, clan, effaces, diplo, merv, siegeAl };
+  NC.d = { journal, sieges, ech, clanE, alertes, quetes, recolte: Array.isArray(recolte) ? recolte[0] : recolte, clan, effaces, diplo, merv, siegeAl, sieges3 };   // patch504
   if(diplo !== undefined && diplo !== null){ clanDiplo.etat = diplo; majBadgeClanTotal(); }   // patch400
   NC.charge = Date.now();   // patch262
   await vusP;   // patch482
@@ -25794,6 +25795,21 @@ function ncConstruire(){
   const sousSeuil = (code) => { const t = tierDe(code); return t && NC_ORDRE.indexOf(t) < NC_ORDRE.indexOf(p.seuil || 'commun'); };
 
   // --- À faire ---
+  if(p.jeu.attaque && Array.isArray(d.sieges3)){   // patch504 : les sièges de la saison 3
+    const laisses = typeof sgLaisses === 'function' ? sgLaisses() : new Set();
+    for(const m of d.sieges3){
+      const code = String(m.commune || ''), depM = ncDepDe(code);
+      if(!code || laisses.has(m.id) || p.sourdine.includes(code) || p.sourdine_dep.includes(depM)) continue;
+      if(!p.alerte_dep.includes(depM) && sousSeuil(code)) continue;
+      const res = nb(m.resistance), deg = Math.floor(nb(m.degats)), pc = res ? Math.min(100, Math.floor(100 * deg / res)) : 0;
+      const palier = pc >= 66 ? 2 : pc >= 33 ? 1 : 0;
+      const tombe = m.tombe_le ? new Date(m.tombe_le).getTime() - Date.now() : 0;
+      items.push({ cle: `sg3|${m.id}|${palier}`, sec: 'afaire', c: 'danger', i: '⚔️', mode: 'front',
+        t: `<b>${echapperTexte(m.attaquant_pseudo || 'Un joueur')}</b> assiège <button type="button" class="nc-lien" data-nc-voir="${echapperTexte(code)}" title="Voir sur la carte">${echapperTexte(m.nom || nomDe(code))}</button> ${badgeDept(m.dept || depDuCode(code))}`,
+        s: `Jauge ${deg} / ${res} · ${pc} %${m.long ? ' · siège long' : ''}${tombe > 0 ? ` · sans nouvelle vague, son siège s’arrête dans ${formatDuree(tombe)}` : ''}`,
+        a: 'Renforcer', rouge: palier === 2, sourdine: code, aller: () => ncAller('front', 'defense') });
+    }
+  }
   if(p.jeu.attaque && Array.isArray(d.sieges)){
     for(const m of d.sieges){
       const depM = ncDepDe(m.commune_code);   // patch224
@@ -25909,7 +25925,7 @@ function ncConstruire(){
       if(new Date(x.le).getTime() < limite) continue;
       items.push({ cle: `se|${x.commune_code}|${x.le}`, sec: 'histo', c: 'histo', i: '💨', mode: 'front',
         t: `<b>${echapperTexte(x.par_pseudo || 'Un joueur')}</b> a pris <b>${echapperTexte(x.commune_nom || x.commune_code)}</b> ${badgeDept(depDuCode(x.commune_code))} avant toi`,
-        s: `Ton siège est effacé : tu en étais à ${nb(x.victoires)} / 3 · ${ilYA(x.le)}` });
+        s: `Ton siège est effacé : ${x.pct != null ? `ta jauge était à ${nb(x.pct)} %` : `tu en étais à ${nb(x.victoires)} / 3`} · ${ilYA(x.le)}` });   // patch504
     }
   }
   for(const e of Array.isArray(d.journal) ? d.journal : []){
@@ -25926,7 +25942,7 @@ function ncConstruire(){
   }
 
   // patch485 : l'attaquant apprend qu'on l'a défendu, ou que son siège est tombé (idée d'ASMFCB)
-  if(Array.isArray(d.siegeAl)){
+  if(p.jeu.defense && Array.isArray(d.siegeAl)){   // patch504 : « Mes sièges »
     const fr = (x) => Number(x || 0).toLocaleString('fr-FR');
     for(const a of d.siegeAl){
       const nomA = `<b>${echapperTexte(a.nom || a.commune_code)}</b>`;
@@ -26322,14 +26338,14 @@ function ncRendre(){
 }
 
 const NC_LIGNES = [
-  ['attaque', 'On t’attaque', 'Une série en cours contre une de tes communes', true],
+  ['attaque', 'On assiège ta commune', 'Un siège commence, puis quand sa jauge monte', true],   // patch504
   ['perdue', 'Commune perdue', 'Un joueur t’a pris une commune', false],
-  ['defense', 'Défenses', 'Tes défenses réussies', false],
+  ['defense', 'Mes sièges', 'On t’a défendu, il te manque de l’énergie, ou ton siège est tombé', true],   // patch504
   ['echange', 'Échanges', 'Propositions reçues, échanges conclus', false],
   ['alerte', 'Alertes d’échange', 'Une commune que tu cherches est disponible', false],
   ['quete', 'Quêtes à réclamer', 'Rappel avant minuit', false],
   ['recolte', 'Récolte des légendaires', 'L’énergie est prête', false],
-  ['clan', 'Clan', 'Invitations, échanges de clan', false],
+  ['clan', 'Clan', 'Invitations, échanges, ordres du chef, appels à l’aide', true],   // patch504
   ['paquet', 'Paquet gratuit prêt', 'Ta réserve de paquets est pleine', true],
 ];
 function ncRendreReglages(el){

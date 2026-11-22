@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b11c4b7dfa84';
+const VERSION_JEU = '2bf7e88f37e8';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3169,7 +3169,7 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
           if(!parJoueur.has(c.joueur)) parJoueur.set(c.joueur, new Path2D());
           parJoueur.get(c.joueur).addPath(p);
           if(parJT){ const kt = c.joueur + '|' + c.tier; if(!parJT.has(kt)) parJT.set(kt, new Path2D()); parJT.get(kt).addPath(p); }   // patch294
-          if(eccHors && c.joueur === ID_MOI) (c.tier === echCarte.tier ? eccOk : eccHors).addPath(p);   // patch411
+          if(eccHors && c.joueur === ID_MOI) (c.tier === echCarte.tier && !(echCarte.bloquees && echCarte.bloquees.has(code)) ? eccOk : eccHors).addPath(p);   // patch411, patch481
           const jc = parClan && joueurs.get(c.joueur);   // patch212
           if(jc && jc.clan){
             if(!parClan.has(jc.clan)) parClan.set(jc.clan, { couleur: jc.clanCouleur, chemin: new Path2D() });
@@ -31418,6 +31418,20 @@ function eccDemarrer(o, code, inter){
   try{ fermerPanneau(); }catch(e){}
   eccBandeau();
   renderMapOverlay(); demanderDessin();
+  eccChargerBloquees(echCarte);   // patch481
+}
+// patch481 : mes communes qui ne peuvent pas partir pour l'instant (et pourquoi)
+async function eccChargerBloquees(ec){
+  try{
+    if(!monUidClan){ const { data: u } = await sb.auth.getUser(); monUidClan = u && u.user ? u.user.id : null; }
+    if(!monUidClan) return;
+    const l = await ceCommunesDe(monUidClan);
+    if(!l || echCarte !== ec) return;
+    ec.bloquees = new Map(l.filter(c => c.raison).map(c => [c.code, c.raison]));
+    eccBandeau();
+    if(typeof CV !== 'undefined') CV.donneesSignature = '';
+    renderMapOverlay(); demanderDessin();
+  }catch(e){}
 }
 function eccFinir(){
   if(!echCarte) return;
@@ -31433,13 +31447,15 @@ function eccBandeau(){
   if(!echCarte){ if(el) el.remove(); return; }
   if(!el){ el = document.createElement('div'); el.id = 'eccBandeau'; el.className = 'ecc-bandeau'; wrap.appendChild(el); }
   const t = echCarte.tier;
-  el.innerHTML = `<span class="ecc-ic">🤝</span><div class="ecc-txt">${echCarte.inter ? 'Échange entre clans' : 'Échange'} avec <b>${echapperHtml(echCarte.pseudo)}</b> : tu reçois <b>${echapperHtml(echCarte.nom)}</b> (${eccLibelle(t)}).<br><span>Seules tes communes <b class="rarete ${t}">${eccLibelle(t)}s</b> ressortent, entourées de jaune : touches-en une pour la proposer.${echCarte.inter ? ' Un échange entre clans par jour.' : ''}</span></div>
+  el.innerHTML = `<span class="ecc-ic">🤝</span><div class="ecc-txt">${echCarte.inter ? 'Échange entre clans' : 'Échange'} avec <b>${echapperHtml(echCarte.pseudo)}</b> : tu reçois <b>${echapperHtml(echCarte.nom)}</b> (${eccLibelle(t)}).<br><span>Seules tes communes <b class="rarete ${t}">${eccLibelle(t)}s</b> ressortent, entourées de jaune : touches-en une pour la proposer.${echCarte.bloquees && echCarte.bloquees.size ? ' Les autres sont grisées : en garnison, prises il y a moins de 24 h ou échangées il y a moins de 48 h.' : ''}${echCarte.inter ? ' Un échange entre clans par jour.' : ''}</span></div>
     <div class="ecc-btns">${echCarte.inter ? '' : '<button type="button" data-ecc="clan">Onglet Clan</button>'}<button type="button" data-ecc="annuler">Annuler</button></div>`;   // patch398
 }
 function eccBlocFiche(code, c, mienne){
   if(!echCarte || !mienne) return '';
   if(eccTier(c) !== echCarte.tier)
     return `<p class="pc-note ecc-non">🤝 Pour l’échange avec ${echapperHtml(echCarte.pseudo)}, choisis une commune <b>${eccLibelle(echCarte.tier)}</b>, de la même rareté que ${echapperHtml(echCarte.nom)}.</p>`;
+  if(echCarte.bloquees && echCarte.bloquees.has(code))   // patch481
+    return `<p class="pc-note ecc-non">🤝 ${echapperHtml(c.nom || 'Cette commune')} ne peut pas être échangée pour l’instant : ${echapperHtml(echCarte.bloquees.get(code))}.</p>`;
   return `<div class="ecc-fiche"><p>🤝 Proposer à <b>${echapperHtml(echCarte.pseudo)}</b> :<br>ta <b>${echapperHtml(c.nom)}</b> contre sa <b>${echapperHtml(echCarte.nom)}</b></p>
     <button class="pc-action ecc-go" data-pc="ecc-proposer">Proposer l’échange</button></div>`;
 }

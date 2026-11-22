@@ -11272,3 +11272,30 @@ html.topo:not(.sans-cartes) .mini.skin.peucommun .mini-rarete::before{ backgroun
 html.topo:not(.sans-cartes) .mini.skin.rare .mini-rarete::before{ background:var(--c-rare); }
 html.topo:not(.sans-cartes) .mini.skin.epique .mini-rarete::before{ background:var(--c-epique); }
 html.topo:not(.sans-cartes) .mini.skin.legendaire .mini-rarete::before{ background:var(--c-legendaire); }
+
+/* ---------- patch500 : la roue des paquets Terra ---------- */
+.tpr-btn{ display:flex; align-items:center; gap:8px; margin:-4px 0 10px; padding:8px 14px; border-radius:999px; border:1px dashed rgba(240,180,41,.5); background:rgba(240,180,41,.06); color:#FFE3A3; font:inherit; font-size:.88rem; cursor:pointer; max-width:100%; }
+.tpr-btn b{ font-weight:800; }
+.tpr-btn span{ font-size:.74rem; color:var(--brume); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.tpr-btn.on{ border-style:solid; background:rgba(240,180,41,.18); box-shadow:inset 0 0 0 1px rgba(240,180,41,.55); color:#fff; }
+.tpr-btn.on span{ color:#FFE3A3; }
+.tp-pays:has(+ .tpr-btn.on) button.on{ background:none; box-shadow:none; color:var(--brume); }
+.tpr{ display:flex; flex-direction:column; align-items:center; gap:14px; padding:26px 0 18px; }
+.tpr-t{ margin:0; font-weight:800; font-size:1.05rem; color:#FFE3A3; }
+.tpr-fen{ position:relative; width:min(300px, 86vw); height:96px; overflow:hidden; border-radius:16px; background:#0E1A2E; border:1px solid rgba(240,180,41,.4); box-shadow:inset 0 0 18px rgba(0,0,0,.6); }
+.tpr-fen::before, .tpr-fen::after{ content:''; position:absolute; top:0; bottom:0; width:60px; z-index:2; pointer-events:none; }
+.tpr-fen::before{ left:0; background:linear-gradient(90deg, #0E1A2E, transparent); }
+.tpr-fen::after{ right:0; background:linear-gradient(270deg, #0E1A2E, transparent); }
+.tpr-bande{ display:flex; height:100%; will-change:transform; }
+.tpr-i{ flex:0 0 96px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; font-size:.72rem; color:var(--brume); }
+.tpr-i .tp-drap{ width:42px; height:28px; border-radius:4px; }
+.tpr-i .tp-drap.tp-drap-ch{ width:30px; height:30px; }
+.tpr-i.gagne{ color:#fff; }
+.tpr-i.gagne b{ color:#FFD36B; }
+.tpr-curseur{ position:absolute; left:50%; top:0; bottom:0; width:96px; transform:translateX(-50%); border-left:2px solid rgba(240,180,41,.7); border-right:2px solid rgba(240,180,41,.7); z-index:3; pointer-events:none; }
+.tpr-r{ margin:0; min-height:1.6em; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:8px; font-size:1.05rem; }
+.tpr-r .tp-drap{ width:24px; height:16px; }
+.tpr-r .tp-drap.tp-drap-ch{ width:18px; height:18px; }
+.tpr-bonus{ flex-basis:100%; text-align:center; font-weight:800; color:#8EE3B8; }
+.paquet.paquet-roue .paquet-bande{ background:linear-gradient(90deg, #2B5BD7, #DA291C 40%, #FDDA24 70%, #00A3E0); color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.5); }
+.paquet .tpr-emb{ font-size:1.3rem; line-height:1; }

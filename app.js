@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '77a5054df854';
+const VERSION_JEU = '1e8b2dfd19b6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -9283,6 +9283,16 @@ async function payerPaquet(type){
     viderBilanTerra();
     return error;
   }
+  if(enTerra() && tpChoix() === 'ROUE'){   // patch500 : la roue tire le pays
+    const { data, error } = await sb.rpc('terra_roue', { p_paye: type === 'achete' });
+    if(!error && data && Array.isArray(data.cartes)){
+      terraPaquet = data.cartes; tpPaquetPaye = data.pays || 'FR'; TPR = { pays: tpPaquetPaye, bonus: !!data.bonus };
+      terraPaquetBloque = type === 'achete';
+      viderBilanTerra();
+      return null;
+    }
+    if(error && !fonctionAbsente(error)){ terraPaquet = null; return error; }
+  }
   if(enTerra()){
     // Terra : le serveur paie et tire les 5 cartes en un seul appel
     const { data, error } = await briRpcPaquet('terra_ouvrir_paquet', tpArgs({ p_paye: type === 'achete' }));   // patch269, patch407 : le pays
@@ -9597,6 +9607,30 @@ function tirerPaquetTerra(){
   return draws;
 }
 
+// patch500 : la bande de drapeaux qui défile et s'arrête sur le pays tiré
+function tprAnimer(zone, r, suite){
+  const ps = tpPaysOuverts(), N = 26, CIBLE = 22, L = 96;
+  const items = Array.from({ length: N }, (_, i) => i === CIBLE ? r.pays : ps[Math.floor(Math.random() * ps.length)]);
+  zone.innerHTML = `<div class="tpr"><p class="tpr-t">🎡 La roue tourne…</p>
+    <div class="tpr-fen"><div class="tpr-bande">${items.map(p => `<span class="tpr-i">${tpDrapeau(p)}<b>${TP_NOMS[p]}</b></span>`).join('')}</div><i class="tpr-curseur" aria-hidden="true"></i></div>
+    <p class="tpr-r" role="status"></p></div>`;
+  const bande = zone.querySelector('.tpr-bande'), fen = zone.querySelector('.tpr-fen');
+  const rapide = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const fin = () => {
+    const res = zone.querySelector('.tpr-r'), t = zone.querySelector('.tpr-t');
+    if(t) t.textContent = '🎡 La roue a choisi';
+    if(res) res.innerHTML = `${tpDrapeau(r.pays)}<b>Paquet ${TP_NOMS[r.pays]} !</b>${r.bonus ? '<span class="tpr-bonus">🎁 Et un paquet gratuit en plus</span>' : ''}`;
+    const it = bande && bande.children[CIBLE]; if(it) it.classList.add('gagne');
+    if(r.bonus){ notifier({ type: 'succes', titre: '🎁 Paquet offert', texte: 'La roue t’a donné un paquet gratuit en plus.' }); try{ loadPackStatus(); }catch(e){} }
+    setTimeout(suite, r.bonus ? 1700 : 1100);
+  };
+  requestAnimationFrame(() => {
+    const w = fen ? fen.clientWidth : 288;
+    bande.style.transition = `transform ${rapide ? 0.25 : 2.3}s cubic-bezier(.12,.62,.1,1)`;
+    bande.style.transform = `translateX(${Math.round(w / 2 - (CIBLE + 0.5) * L)}px)`;
+    setTimeout(fin, rapide ? 300 : 2400);
+  });
+}
 function paquetSansCarte(zone){
   if(zone) zone.innerHTML = '';
   paquetEnCours = false;
@@ -9606,6 +9640,7 @@ function paquetSansCarte(zone){
 function afficherPaquetATirer(type, nbCartes){
   const zone = document.getElementById('packZone');
   zone.innerHTML = '';
+  if(enTerra() && TPR){ const r = TPR; TPR = null; tprAnimer(zone, r, () => afficherPaquetATirer(type, nbCartes)); return; }   // patch500 : d'abord la roue
   const pack = makePackEl(type);
   if(enTerra()) tpHabiller(pack, tpPaquetPaye);   // patch407
   sceneOuverture(zone).echelle.appendChild(pack);
@@ -9628,7 +9663,7 @@ function afficherPaquetPret(type){
   zone.innerHTML = '';
   const pack = makePackEl(type);
   pack.dataset.pret = '1';
-  if(enTerra()) tpHabiller(pack, tpPays());   // patch407
+  if(enTerra()) tpHabiller(pack, tpChoix());   // patch407 ; patch500 : le paquet surprise
   if(type === 'gratuit') pack.dataset.hwGratuit = '1';   // patch265
   pack.setAttribute('aria-label', 'Ouvrir un paquet gratuit');
   appelerPaquet(pack);
@@ -32454,7 +32489,8 @@ async function sgChargerActif(){
 const sgNb = (x) => Math.round(Number(x) || 0).toLocaleString('fr-FR');
 const sgTier = (id) => TIERS.find(t => t.id === id) || TIERS[TIERS.length - 1];
 // patch495 : un siège éclair de rare ou d'épique a une durée minimale (s3-49 : rare 20 min, épique 1 h)
-function sgEclairTxt(tier){ return tier === 'rare' ? 'elle peut tomber 20 min après le début' : tier === 'epique' ? 'elle peut tomber 1 h après le début' : 'elle peut tomber d\'un coup'; }
+const SG_ECLAIR_MIN = { commun: 5, peucommun: 10, rare: 20, epique: 60 };   // patch501 (s3-54)
+function sgEclairTxt(tier){ const m = SG_ECLAIR_MIN[tier]; return m ? 'elle peut tomber ' + sgDuree(m) + ' après le début' : 'elle peut tomber d\'un coup'; }
 function sgDuree(min){
   const m = Math.round(Number(min) || 0);
   if(m < 60) return m + ' min';
@@ -32983,6 +33019,18 @@ function tpLire(cle){ try{ return localStorage.getItem(cle); }catch(e){ return n
 function tpEcrire(cle, v){ try{ localStorage.setItem(cle, v); }catch(e){} }
 function tpPays(){ return SUISSE ? tpPaysValide(tpLire('tf-terra-pays')) : 'FR'; }   // patch462 : FR, CH ou BE
 function tcPays(){ return SUISSE ? tpPaysValide(tpLire('tf-coll-pays')) : 'FR'; }
+// patch500 : la roue des paquets (s3-53)
+var TPR_CFG = null, TPR = null, TPR_LECTURE = null;
+function tprOuverte(){ return !!(TPR_CFG && Number(TPR_CFG.ouverte) === 1 && SUISSE); }
+function tpChoix(){ return tprOuverte() && tpLire('tf-terra-pays') === 'ROUE' ? 'ROUE' : tpPays(); }
+function tprCharger(){
+  if(TPR_CFG || TPR_LECTURE) return;
+  TPR_LECTURE = sb.rpc('terra_roue_reglages').then(({ data, error }) => { TPR_CFG = error ? { ouverte: 0 } : (data || { ouverte: 0 }); TPR_LECTURE = null; const z = document.getElementById('tpPays'); if(z) z.dataset.etat = ''; tpRendre(); }).catch(() => { TPR_LECTURE = null; });
+}
+function tprPoidsTexte(){
+  const P = (TPR_CFG && TPR_CFG.poids) || {}, ps = tpPaysOuverts().filter(p => Number(P[p]) > 0), tot = ps.reduce((s, p) => s + Number(P[p]), 0) || 1;
+  return ps.map(p => `${TP_NOMS[p]} ${Math.round(100 * Number(P[p]) / tot)} %`).join(', ');
+}
 function tpNouveauVu(p){ return tpLire(p === 'BE' ? 'tf-terra-be-vu' : p === 'LU' ? 'tf-terra-lu-vu' : 'tf-terra-ch-vu') === '1'; }
 // les arguments de terra_ouvrir_paquet : p_pays seulement pour la Suisse (un serveur sans s3-8 reste servi pour la France)
 function tpArgs(args){
@@ -32993,6 +33041,12 @@ function tpArgs(args){
   return Object.assign({}, args, { p_pays: p });
 }
 function tpHabiller(pack, pays){
+  if(pack && pays === 'ROUE'){   // patch500 : le paquet de la roue, avant le tirage
+    pack.classList.add('paquet-roue');
+    const et = pack.querySelector('.paquet-etiquette'); if(et) et.innerHTML = '<span class="tpr-emb" aria-hidden="true">🎡</span><span class="paquet-titre">Paquet surprise</span>';
+    const bd = pack.querySelector('.paquet-bande'); if(bd) bd.textContent = 'Pays au hasard';
+    return;
+  }
   if(!pack || !SUISSE || (pays !== 'CH' && pays !== 'BE' && pays !== 'LU')) return;
   pack.classList.add('paquet-' + pays.toLowerCase());   // patch462, patch467
   const et = pack.querySelector('.paquet-etiquette');
@@ -33024,16 +33078,19 @@ function tpRendre(){
   const btns = panel.querySelector('.pack-buttons');
   if(!btns) return;
   if(!z){ z = document.createElement('div'); z.id = 'tpPays'; btns.parentNode.insertBefore(z, btns); }
-  const p = tpPays(), etat = p + (tpNouveauVu('CH') ? 'v' : '') + (tpNouveauVu('BE') ? 'b' : '') + (tpNouveauVu('LU') ? 'l' : '');
+  tprCharger();   // patch500
+  const p = tpPays(), etat = tpChoix() + (tprOuverte() ? 'r' : '') + (tpNouveauVu('CH') ? 'v' : '') + (tpNouveauVu('BE') ? 'b' : '') + (tpNouveauVu('LU') ? 'l' : '');
   if(z.dataset.etat === etat) return;
   z.dataset.etat = etat;
-  z.innerHTML = tpSelecteurHtml(p, false)
-    + `<p class="tp-note">${p === 'CH' ? '5 vraies communes suisses. ' : p === 'BE' ? '5 vraies communes belges. ' : p === 'LU' ? '5 vraies communes luxembourgeoises. ' : ''}Mêmes jetons et même prix pour ${LUXEMBOURG ? 'les quatre paquets' : BELGIQUE ? 'les trois paquets' : 'les deux paquets'} ; les raretés tombent aussi souvent dans ${LUXEMBOURG ? 'les quatre' : BELGIQUE ? 'les trois' : 'les deux'}.</p>`;
+  z.innerHTML = tpSelecteurHtml(tpChoix() === 'ROUE' ? 'ROUE' : p, false)
+    + (tprOuverte() ? `<button type="button" class="tpr-btn${tpChoix() === 'ROUE' ? ' on' : ''}" data-tpp="ROUE" aria-pressed="${tpChoix() === 'ROUE'}">🎡 <b>Au hasard</b><span>un paquet offert 1 fois sur ${Math.max(1, Math.round(100 / (Number(TPR_CFG.bonus_pct) || 10)))}</span></button>` : '')   // patch500
+    + (tpChoix() === 'ROUE' ? `<p class="tp-note">La roue choisit le pays : ${tprPoidsTexte()}. Même jeton, même prix. Une fois sur ${Math.max(1, Math.round(100 / (Number(TPR_CFG.bonus_pct) || 10)))}, un paquet gratuit en plus.</p>` :   // patch500
+    `<p class="tp-note">${p === 'CH' ? '5 vraies communes suisses. ' : p === 'BE' ? '5 vraies communes belges. ' : p === 'LU' ? '5 vraies communes luxembourgeoises. ' : ''}Mêmes jetons et même prix pour ${LUXEMBOURG ? 'les quatre paquets' : BELGIQUE ? 'les trois paquets' : 'les deux paquets'} ; les raretés tombent aussi souvent dans ${LUXEMBOURG ? 'les quatre' : BELGIQUE ? 'les trois' : 'les deux'}.</p>`);
 }
 document.addEventListener('click', (ev) => {
   const b = ev.target.closest('[data-tpp]');
   if(!b) return;
-  tpEcrire('tf-terra-pays', tpPaysValide(b.dataset.tpp));
+  tpEcrire('tf-terra-pays', b.dataset.tpp === 'ROUE' && tprOuverte() ? 'ROUE' : tpPaysValide(b.dataset.tpp));   // patch500
   tpRendre();
   const zone = document.getElementById('packZone');
   if(zone && !paquetEnCours && zone.querySelector('.paquet[data-pret]')){ afficherPaquetPret('gratuit'); renderPackStatus(); }

@@ -8,7 +8,7 @@ const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const nb = (n) => Number(n || 0).toLocaleString('fr-FR');
-const T = { donnees: null, pseudos: {}, enLigne: [], canal: null };
+const T = { donnees: null, pseudos: {}, enLigne: [], canal: null, front: null, frontLu: 0 };
 
 function lien(etat, txt){ $('lien').className = 'lien ' + etat; $('lienTxt').textContent = txt; }
 function message(html){ document.querySelectorAll('.vue').forEach(v => v.hidden = true); $('msg').innerHTML = html; $('msg').hidden = false; }
@@ -27,6 +27,7 @@ function montrerVue(v){
   document.querySelectorAll('.onglet').forEach(b => b.classList.toggle('actif', b.dataset.vue === v));
   document.querySelectorAll('.vue').forEach(x => { x.hidden = x.id !== 'vue-' + v; });
   // la régie et la carte ne se chargent qu'à la première visite de leur onglet
+  if(v === 'front' && Date.now() - T.frontLu > 25000) chargerFront();   // s3-47
   if(v === 'regie' && !$('vue-regie').firstChild) $('vue-regie').innerHTML = '<iframe src="regie.html" title="Régie du direct"></iframe>';
   if(v === 'carte' && !$('vue-carte').firstChild) $('vue-carte').innerHTML = '<iframe src="index.html" title="Carte en direct"></iframe>';
   try{ localStorage.setItem('tf-tableau-vue', v); }catch(e){}
@@ -53,7 +54,7 @@ function suivrePresence(uid){
 
 // ---------- les graphiques : une série, des barres, une bulle au survol ou au toucher ----------
 function graphique(el, jours, idx, libelle){
-  const vals = jours.map(j => Number(j[idx]) || 0), max = Math.max(1, ...vals), der = vals.length - 1;
+  const vals = jours.map(j => Math.round(Number(j[idx]) || 0)), max = Math.max(1, ...vals), der = vals.length - 1;
   const iMax = vals.indexOf(Math.max(...vals));
   el.innerHTML = `<div class="graph">${vals.map((v, i) => {
       const h = Math.max(1.5, v / max * 100);
@@ -134,6 +135,90 @@ async function charger(){
   }catch(e){ lien('ko', 'Hors ligne'); return false; }
 }
 
+// ---------- s3-47 : l'onglet Front (sièges en cours, coût d'une conquête, énergie) ----------
+const RARETES = { commun: 'Commune', peucommun: 'Peu commune', rare: 'Rare', epique: 'Épique', legendaire: 'Légendaire' };
+const heure = (t) => new Date(t).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+function dans(t){
+  const m = Math.round((new Date(t).getTime() - Date.now()) / 60000);
+  if(m <= 0) return 'maintenant';
+  if(m < 60) return `dans ${m} min`;
+  const h = Math.floor(m / 60), r = m % 60;
+  return `dans ${h} h${r ? ' ' + String(r).padStart(2, '0') : ''}`;
+}
+function quand(t){
+  const d = new Date(t), auj = new Date();
+  const jour = d.toDateString() === auj.toDateString() ? '' : (d.getTime() - auj.getTime() < 2 * 86400000 ? 'demain ' : d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }) + ' ');
+  return jour + heure(t);
+}
+function rendreFront(){
+  const F = T.front; if(!F) return;
+  const R = F.reglages || {}, max = Number(R.max) || 120, sg = F.en_cours || [], fins = F.fins || {}, jours = F.jours || [], auj = jours[jours.length - 1] || [];
+  const longs = sg.filter(s => s[8]).length, defendus = sg.filter(s => s[9]).length, att = new Set(sg.map(s => s[4])).size;
+  $('fEnCours').textContent = nb(sg.length);
+  $('fEnCoursS').innerHTML = sg.length ? `<b>${nb(longs)}</b> longs · <b>${nb(defendus)}</b> défendus · <b>${nb(att)}</b> attaquants` : 'aucun en ce moment';
+  $('fConq').textContent = nb(fins.conquise);
+  const autres = Object.entries(fins).filter(([k]) => k !== 'conquise' && k !== 'en_cours').reduce((a, [, v]) => a + Number(v), 0);
+  $('fConqS').innerHTML = `depuis le début de la saison · <b>${nb(autres)}</b> sans prise`;
+  $('fDep').textContent = nb(auj[1]);
+  $('fDepS').innerHTML = `aujourd’hui · <b>${nb(auj[2])}</b> joueurs · médiane <b>${nb(Math.round(auj[4] || 0))}</b>`;
+  const st = F.stock || {};
+  $('fStock').innerHTML = `${nb(st.moyenne)}<small style="font-size:18px;color:var(--brume)"> / ${nb(max)}</small>`;
+  $('fStockS').innerHTML = `en moyenne, actifs du jour · <b>${nb(st.pleins)}</b> au plein · <b>${nb(st.bas)}</b> sous 20`;
+  $('fMaj').textContent = 'mis à jour à ' + heure(F.le);
+  // les sièges en cours : [id, code, nom, tier, attaquant, défenseur, dégâts, résistance, long, défendu, mise, défense, créé, dernière vague, tombe le, au plus tôt, garnison]
+  $('fSieges').innerHTML = sg.length ? sg.map(s => {
+    const p = s[7] ? Math.min(100, Math.round(s[6] / s[7] * 100)) : 0;
+    const tot = s[15] && new Date(s[15]).getTime() > Date.now() ? `<b>au plus tôt ${quand(s[15])}</b>` : (s[8] ? '<b>peut tomber maintenant</b>' : '');
+    return `<div class="sg">
+      <div class="sg-nom"><b>${esc(s[2] || s[1])}</b><span class="rar ${esc(s[3])}">${esc(RARETES[s[3]] || s[3])}</span>${s[8] ? '<span class="tag long">long</span>' : ''}${s[9] ? '<span class="tag def">défendu</span>' : ''}${s[16] ? '<span class="tag gar">garnison</span>' : ''}
+        <small>commencé à ${heure(s[12])} · dernière vague ${ilYa(s[13])}</small></div>
+      <div class="sg-qui">${esc(s[4] || '?')} <span>→</span> ${esc(s[5] || 'libre')}<small>⚡ ${nb(s[10])} mise${s[11] ? ` · 🛡 ${nb(s[11])} en défense` : ''}</small></div>
+      <div class="avance"><span class="jauge"><i class="${p >= 100 ? 'plein' : ''}" style="width:${p}%"></i></span><b>${nb(s[6])} / ${nb(s[7])}</b></div>
+      <div class="sg-fin">${tot}<small>tombe ${dans(s[14])} sans vague</small></div></div>`;
+  }).join('') : '<span class="vide">Aucun siège en cours.</span>';
+  // le coût d'une conquête : [rareté, sièges, conquises, en cours, autres fins, moyenne, médiane, min, max, minutes médianes, défense moyenne]
+  const res = R.resistance || {};
+  $('fDepuis').textContent = F.debut ? 'depuis le ' + new Date(F.debut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) + ' à ' + heure(F.debut) : '';
+  const duree = (m) => m == null ? '—' : m < 1 ? 'aussitôt' : m < 60 ? `${Math.round(m)} min` : `${Math.floor(m / 60)} h ${String(Math.round(m % 60)).padStart(2, '0')}`;
+  const pr = F.par_rarete || [];
+  $('fCout').innerHTML = pr.length ? `<table><thead><tr><th>Rareté</th><th class="n cache-tel">Résistance</th><th class="n">Conquises</th><th class="n">Énergie moy.</th><th class="n cache-tel">Médiane · écart</th><th class="n">Durée</th><th class="n cache-tel">En cours</th></tr></thead><tbody>${
+    pr.map(x => `<tr><td><span class="rar ${esc(x[0])}" style="margin-left:0">${esc(RARETES[x[0]] || x[0])}</span></td><td class="n cache-tel">${nb(res[x[0]])}</td><td class="n">${nb(x[2])}<span class="muet"> / ${nb(x[1])}</span></td>
+      <td class="n">${x[5] == null ? '<span class="muet">pas encore</span>' : `<b>⚡ ${String(x[5]).replace('.', ',')}</b>`}</td>
+      <td class="n cache-tel">${x[6] == null ? '' : `${nb(x[6])} <span class="muet">· ${nb(x[7])} à ${nb(x[8])}</span>`}</td><td class="n">${duree(x[9])}</td><td class="n cache-tel">${nb(x[3])}</td></tr>`).join('')}</tbody></table>`
+    : '<span class="vide">Pas encore de siège.</span>';
+  // 14 jours : [jour, dépensée, joueurs, moyenne, médiane, vagues, conquêtes]
+  graphique($('gfDep'), jours, 1, 'énergie dépensée');
+  graphique($('gfMoy'), jours, 3, 'énergie par joueur');
+  graphique($('gfVag'), jours, 5, 'vagues de siège');
+  // les gains du jour, par source
+  const G = F.gains || {};
+  const NOMS = [['quetes', 'Quêtes'], ['roue', 'Roue'], ['recolte', 'Récolte'], ['centrale', 'Centrale du clan'], ['objectif', 'Objectif du clan'], ['mess', 'Mess'], ['sieges_rendue', 'Rendue (sièges)'], ['parrainage', 'Parrainage'], ['remboursements', 'Remboursements']];
+  const lignes = NOMS.map(([k, l]) => [l, Number(G[k]) || 0]).sort((a, b) => b[1] - a[1]);
+  const gmax = Math.max(1, ...lignes.map(x => x[1])), total = lignes.reduce((a, x) => a + x[1], 0);
+  $('fGainsT').textContent = nb(total) + ' en tout';
+  $('fGains').innerHTML = `<div class="gains">${lignes.map(([l, v]) => `<div class="gl"><span>${l}</span><span class="jauge"><i style="width:${v / gmax * 100}%"></i></span><b>${v ? nb(v) : '<span class="muet">0</span>'}</b></div>`).join('')}</div>`;
+  const parJour = Math.round(86400 / (Number(R.recharge_s) || 420));
+  $('fRecharge').innerHTML = `En plus, la <b>recharge</b> : 1 toutes les ${Math.round((Number(R.recharge_s) || 420) / 60)} min, soit ${nb(parJour)} par jour au plus. Elle s’arrête à ${nb(max)} : un joueur au plein ne recharge plus (les gains peuvent monter jusqu’à ${nb(R.plafond)}).`;
+  // les joueurs du jour : [pseudo, dépensée, vagues, conquêtes, réserve, sièges en cours, garnisons]
+  const js = F.joueurs || [];
+  $('fJoueurs').innerHTML = js.length ? `<table><thead><tr><th>Joueur</th><th class="n">Dépensée</th><th class="n">Vagues</th><th class="n cache-tel">Sièges</th><th class="n">Réserve</th></tr></thead><tbody>${
+    js.map(j => { const e = Number(j[4]) || 0, cl = e >= max ? 'plein' : e < 20 ? 'bas' : '';
+      return `<tr><td>${esc(j[0])}</td><td class="n">${nb(j[1])}</td><td class="n">${nb(j[2])}</td><td class="n cache-tel">${j[5] ? nb(j[5]) : '<span class="muet">–</span>'}</td>
+        <td class="n"><div class="res"><span class="jauge"><i class="${cl}" style="width:${Math.min(100, e / max * 100)}%"></i></span><b>${nb(e)}</b></div></td></tr>`; }).join('')}</tbody></table>`
+    : '<span class="vide">Personne n’a joué aujourd’hui.</span>';
+}
+async function chargerFront(){
+  try{
+    const { data, error } = await sb.rpc('tableau_front');
+    if(error || !data){
+      $('fSieges').innerHTML = `<span class="vide">${error && /function|fonction/i.test(error.message) ? 'L’onglet Front attend le script s3-47.' : 'Indisponible pour le moment.'}</span>`;
+      return;
+    }
+    T.front = data; T.frontLu = Date.now();
+    rendreFront();
+  }catch(e){}
+}
+
 // ---------- départ ----------
 (async function demarrer(){
   document.querySelector('.onglets').addEventListener('click', (e) => { const b = e.target.closest('[data-vue]'); if(b) montrerVue(b.dataset.vue); });
@@ -149,10 +234,11 @@ async function charger(){
   const { data: ok, error } = await sb.rpc('direct_regie_ok');
   if(error || ok !== true){ lien('ko', 'Accès refusé'); message('Cette page est réservée à l’administration du jeu.'); return; }
   let vue = 'stats'; try{ vue = localStorage.getItem('tf-tableau-vue') || 'stats'; }catch(e){}
-  montrerVue(['stats', 'regie', 'carte'].includes(vue) ? vue : 'stats');
+  montrerVue(['stats', 'front', 'regie', 'carte'].includes(vue) ? vue : 'stats');
   lien('', 'Chargement…');
   await charger();
   suivrePresence(s.session.user.id);
   setInterval(() => { if(!document.hidden) charger(); }, 60000);
-  document.addEventListener('visibilitychange', () => { if(!document.hidden) charger(); });
+  setInterval(() => { if(!document.hidden && !$('vue-front').hidden) chargerFront(); }, 30000);   // s3-47
+  document.addEventListener('visibilitychange', () => { if(!document.hidden){ charger(); if(!$('vue-front').hidden) chargerFront(); } });
 })();

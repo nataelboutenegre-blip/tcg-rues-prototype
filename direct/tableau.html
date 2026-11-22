@@ -85,6 +85,35 @@ td .muet{ color:var(--muet); }
 .taux small{ color:var(--muet); white-space:nowrap; }
 .ok-obj{ color:var(--vert); font-size:11.5px; font-weight:700; white-space:nowrap; }
 .ko-obj{ color:#FFB27A; font-size:11.5px; font-weight:700; white-space:nowrap; }
+.sg{ display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1.3fr) minmax(0,1fr) auto; gap:4px 14px; align-items:center; padding:10px 0; border-top:1px solid rgba(40,66,104,.7); }
+.sg:first-child{ border-top:0; padding-top:2px; }
+.sg-nom b{ font-weight:700; }
+.sg-nom small, .sg-qui small, .sg-fin small{ display:block; font-size:11.5px; color:var(--muet); margin-top:1px; }
+.sg-qui{ font-size:13.5px; } .sg-qui span{ color:var(--muet); }
+.rar{ display:inline-block; font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:2px 7px; border-radius:999px; margin-left:6px; vertical-align:1px; background:var(--bloc2); color:var(--brume); }
+.rar.peucommun{ color:#9ED8A8; } .rar.rare{ color:#7FB6FF; } .rar.epique{ color:#C9A2FF; } .rar.legendaire{ color:#FFD36B; }
+.tag{ display:inline-block; font-size:10.5px; font-weight:700; padding:2px 7px; border-radius:6px; margin-left:4px; vertical-align:1px; }
+.tag.long{ background:rgba(240,180,41,.14); color:var(--or); } .tag.def{ background:rgba(95,211,157,.14); color:var(--vert); } .tag.gar{ background:rgba(229,72,77,.14); color:#FF9A9D; }
+.avance{ display:flex; align-items:center; gap:8px; } .avance .jauge{ flex:1; height:8px; border-radius:4px; background:var(--bloc2); overflow:hidden; position:relative; min-width:50px; }
+.avance .jauge i{ position:absolute; left:0; top:0; bottom:0; background:var(--or); border-radius:4px; } .avance .jauge i.plein{ background:var(--vert); }
+.avance b{ font-variant-numeric:tabular-nums; font-size:13px; min-width:62px; text-align:right; white-space:nowrap; }
+.sg-fin{ text-align:right; font-size:13px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.gains .gl{ display:grid; grid-template-columns:110px 1fr 54px; gap:10px; align-items:center; padding:5px 0; font-size:13.5px; }
+.gains .gl .jauge{ height:8px; border-radius:4px; background:var(--bloc2); overflow:hidden; } .gains .gl .jauge i{ display:block; height:100%; background:var(--vert); border-radius:4px; }
+.gains .gl b{ text-align:right; font-variant-numeric:tabular-nums; }
+.res{ display:flex; align-items:center; gap:7px; justify-content:flex-end; } .res .jauge{ width:46px; height:6px; border-radius:3px; background:var(--bloc2); overflow:hidden; flex:none; }
+.res .jauge i{ display:block; height:100%; border-radius:3px; background:var(--or); } .res .jauge i.plein{ background:var(--vert); } .res .jauge i.bas{ background:var(--rouge); }
+.res b{ min-width:28px; text-align:right; }
+@media (max-width:760px){
+  .sg{ grid-template-columns:minmax(0,1fr); gap:6px; }
+  .sg-fin{ text-align:left; white-space:normal; }
+  .sg-fin small{ display:inline; } .sg-fin b + small{ margin-left:6px; }
+  .large table{ font-size:13px; } .large th{ font-size:10px; letter-spacing:.04em; } .large td, .large th{ padding-right:4px; }
+  .large{ overflow-x:auto; }
+  .cache-tel{ display:none; }
+  .res .jauge{ display:none; }
+  .gains .gl{ grid-template-columns:96px 1fr 46px; }
+}
 @media (max-width:760px){ .taux .jauge{ display:none; } .taux small{ display:block; } .taux{ flex-direction:column; align-items:flex-end; gap:0; } }
 @media (max-width:760px){
   .haut h1{ font-size:22px; }
@@ -95,13 +124,14 @@ td .muet{ color:var(--muet); }
 }
 </style>
 <script defer src="../lib/supabase-js-2.117.2.umd.js"></script>
-<script defer src="tableau.js?v=2"></script>
+<script defer src="tableau.js?v=3"></script>
 </head>
 <body>
 <div class="haut">
   <div class="ligne1"><h1>Terra<span>Front</span> · tableau de bord</h1><span class="lien" id="lien"><i></i><span id="lienTxt">Connexion…</span></span></div>
   <nav class="onglets" role="tablist">
     <button class="onglet actif" data-vue="stats" role="tab">Stats</button>
+    <button class="onglet" data-vue="front" role="tab">Front</button>
     <button class="onglet" data-vue="regie" role="tab">Régie</button>
     <button class="onglet" data-vue="carte" role="tab">Carte en direct</button>
   </nav>
@@ -128,6 +158,29 @@ td .muet{ color:var(--muet); }
     <div class="bloc"><h2>Derniers inscrits</h2><div id="derniers"></div></div>
   </section>
   <p class="pied">Les chiffres se mettent à jour toutes les minutes ; « en ligne » en direct. Journées à l’heure de Paris.</p>
+</main>
+<main class="vue" id="vue-front" hidden>
+  <section class="tuiles">
+    <div class="tuile"><div class="t">Sièges en cours</div><div class="n" id="fEnCours">—</div><div class="s" id="fEnCoursS"></div></div>
+    <div class="tuile"><div class="t">Conquêtes par siège</div><div class="n" id="fConq">—</div><div class="s" id="fConqS"></div></div>
+    <div class="tuile"><div class="t">Énergie dépensée</div><div class="n" id="fDep">—</div><div class="s" id="fDepS"></div></div>
+    <div class="tuile"><div class="t">Réserve des joueurs</div><div class="n" id="fStock">—</div><div class="s" id="fStockS"></div></div>
+  </section>
+  <section class="bloc"><h2>Sièges en cours <small id="fMaj"></small></h2><div id="fSieges"></div>
+    <p class="note"><b>Avancement</b> : dégâts / résistance de la commune. Un siège <b>long</b> (épiques, légendaires, ou défendu) ne peut pas aller plus vite que son rythme : <b>« au plus tôt »</b> est l’heure où il pourra tomber si l’attaquant envoie assez. Sans nouvelle vague, un siège tombe 24 h après la dernière.</p></section>
+  <section class="bloc"><h2>Ce que coûte une conquête <small id="fDepuis"></small></h2><div id="fCout" class="large"></div>
+    <p class="note">Énergie mise par l’attaquant dans les sièges qui ont pris la commune. 1 énergie = 10 points de dégâts avant les bonus (proximité, appui, débutant…).</p></section>
+  <section class="trois">
+    <div class="bloc"><h2>Énergie dépensée <small>14 jours</small></h2><div id="gfDep"></div></div>
+    <div class="bloc"><h2>Par joueur actif <small>moyenne, 14 jours</small></h2><div id="gfMoy"></div></div>
+    <div class="bloc"><h2>Vagues de siège <small>14 jours</small></h2><div id="gfVag"></div></div>
+  </section>
+  <section class="deux">
+    <div class="bloc"><h2>Énergie gagnée aujourd’hui <small id="fGainsT"></small></h2><div id="fGains"></div>
+      <p class="note" id="fRecharge"></p></div>
+    <div class="bloc"><h2>Joueurs du jour <small>dépense et réserve</small></h2><div id="fJoueurs" class="large"></div></div>
+  </section>
+  <p class="pied">Mis à jour toutes les 30 secondes. Énergie dépensée : toutes les dépenses du Front (vagues, renforts, garnisons, défenses ; le 22/11 avant 10 h, les attaques de la saison 2). Journées à l’heure de Paris.</p>
 </main>
 <div class="vue cadre" id="vue-regie" hidden></div>
 <div class="vue cadre" id="vue-carte" hidden></div>

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '3fbc80ffaadc';
+const VERSION_JEU = 'b292ce114b5f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -12298,22 +12298,28 @@ async function bombePreparer(){
   await chargerBatiments();
 }
 // les annonces en bandeau, comme les grandes conquêtes
-let bombesVues = null;
+let bombesVues = null, bombesAttente = false;
 function bombesAnnoncer(){
+  if(!CV_VUS.pret){   // patch482 : on attend la mémoire du compte avant d'annoncer
+    if(!bombesAttente){ bombesAttente = true; vusCompteAttendre().then(() => { bombesAttente = false; bombesAnnoncer(); }); }
+    return;
+  }
   const L = BOMBES_ALERTES || [];
   const cle = (a) => (a.type === 'bombe' ? 'b' : 'p') + a.id;
   let vues = bombesVues;
   if(vues === null){
     try{ vues = JSON.parse(localStorage.getItem('tf-bombes-vues') || 'null'); }catch(e){ vues = null; }
   }
-  const premier = !Array.isArray(vues);
-  const deja = new Set(premier ? [] : vues);
+  const duCompte = [...CV_VUS.set].filter(c => c.startsWith('bo:')).map(c => c.slice(3));   // patch482
+  const premier = !Array.isArray(vues) && !duCompte.length;
+  const deja = new Set(premier ? [] : (vues || []).concat(duCompte));
   const neuves = L.filter(a => !deja.has(cle(a)) && !a.moi
     && (a.type === 'bombe' || a.etat === 'en_cours')
     && (!premier || (a.type === 'bombe' && (a.mes_garnisons || a.mes_forteresses))))
     .sort((x, y) => new Date(x.le) - new Date(y.le));
-  bombesVues = L.map(cle).concat(premier ? [] : vues).slice(0, 80);
+  bombesVues = L.map(cle).concat(premier ? [] : (vues || [])).slice(0, 80);
   try{ localStorage.setItem('tf-bombes-vues', JSON.stringify(bombesVues)); }catch(e){}
+  vusCompteMarquer(L.map(a => 'bo:' + cle(a)));   // patch482
   neuves.slice(-3).forEach((a, i) => setTimeout(() => afficherAlerteBombe(a), i * 6500));
 }
 function afficherAlerteBombe(a){
@@ -25451,11 +25457,40 @@ const NC_CLOCHE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const NC_REGLER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>';
 
 function ncPrefs(){ return NC.prefs || NC_DEFAUT; }
-function ncVus(){ try{ return new Set(JSON.parse(localStorage.getItem('tf-nc-vus') || '[]')); }catch(e){ return new Set(); } }
+// patch482 : ce qui a été lu est aussi retenu sur le compte (s3-41), pour ne pas revoir sur le téléphone
+// ce qu'on a déjà vu sur le PC. Clés « nc:… » (la cloche) et « bo:… » (les bombes), gardées 30 jours.
+var CV_VUS = { set: new Set(), depuis: null, pret: false, envoi: new Set(), minuteur: null, attente: null };
+async function vusCompteCharger(){
+  try{
+    const { data, error } = await sb.rpc('vus_lire', { p_depuis: CV_VUS.depuis });
+    if(!error && Array.isArray(data))
+      for(const r of data){ CV_VUS.set.add(r.cle); if(!CV_VUS.depuis || r.le > CV_VUS.depuis) CV_VUS.depuis = r.le; }
+  }catch(e){}
+  CV_VUS.pret = true;
+}
+function vusCompteAttendre(){ if(!CV_VUS.attente) CV_VUS.attente = vusCompteCharger(); return CV_VUS.attente; }
+function vusCompteMarquer(cles){
+  for(const c of cles){ if(!c || CV_VUS.set.has(c)) continue; CV_VUS.set.add(c); CV_VUS.envoi.add(c); }
+  if(!CV_VUS.envoi.size || CV_VUS.minuteur) return;
+  CV_VUS.minuteur = setTimeout(async () => {
+    CV_VUS.minuteur = null;
+    const l = [...CV_VUS.envoi].slice(0, 300);
+    l.forEach(c => CV_VUS.envoi.delete(c));
+    try{ const { error } = await sb.rpc('vus_marquer', { p_cles: l }); if(error) throw error; }
+    catch(e){ return; }   // pas de réseau : le localStorage garde quand même la trace sur cet appareil
+    if(CV_VUS.envoi.size) vusCompteMarquer([]);
+  }, 1500);
+}
+function ncVus(){
+  let s; try{ s = new Set(JSON.parse(localStorage.getItem('tf-nc-vus') || '[]')); }catch(e){ s = new Set(); }
+  for(const c of CV_VUS.set) if(c.startsWith('nc:')) s.add(c.slice(3));   // patch482
+  return s;
+}
 function ncMarquerVus(cles){
-  const v = ncVus();
+  let v; try{ v = new Set(JSON.parse(localStorage.getItem('tf-nc-vus') || '[]')); }catch(e){ v = new Set(); }
   for(const c of cles) v.add(c);
   try{ localStorage.setItem('tf-nc-vus', JSON.stringify([...v].slice(-500))); }catch(e){}
+  vusCompteMarquer(cles.map(c => 'nc:' + c));   // patch482
 }
 function ncPrefsDepuis(p){
   if(!p || typeof p !== 'object') return null;
@@ -25487,6 +25522,7 @@ function ncDemarrer(){
 
 async function ncCharger(){
   const rpc = async (n, a) => { try{ const { data, error } = await sb.rpc(n, a); return error ? undefined : data; }catch(e){ return undefined; } };
+  const vusP = CV_VUS.attente ? vusCompteCharger() : vusCompteAttendre();   // patch482
   const [prefs, journal, sieges, ech, clanE, alertes, quetes, recolte, clan, effaces, diplo, merv] = await Promise.all([
     NC.prefs ? null : rpc('mes_notif_preferences'),
     rpc('journal', { p_mode: 'moi', p_limite: 40 }),
@@ -25508,6 +25544,7 @@ async function ncCharger(){
   NC.d = { journal, sieges, ech, clanE, alertes, quetes, recolte: Array.isArray(recolte) ? recolte[0] : recolte, clan, effaces, diplo, merv };
   if(diplo !== undefined && diplo !== null){ clanDiplo.etat = diplo; majBadgeClanTotal(); }   // patch400
   NC.charge = Date.now();   // patch262
+  await vusP;   // patch482
   ncConstruire();
 }
 

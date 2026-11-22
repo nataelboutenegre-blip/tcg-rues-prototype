@@ -11305,3 +11305,6 @@ html.topo:not(.sans-cartes) .mini.skin.legendaire .mini-rarete::before{ backgrou
   html.topo:has(#bqrMobile:not([hidden])) #reglesBtnMobile{ display:none; }
   html.topo:has(#bqrMobile:not([hidden])) .mode-bascule{ right:112px; }
 }
+
+/* patch505 : le crédit des animaux */
+.mot-credit{ display:block; margin-top:4px; font-size:.72rem; opacity:.7; }

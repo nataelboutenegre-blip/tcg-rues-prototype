@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'f35e1d63a0fa';
+const VERSION_JEU = 'f1ede41b3955';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -27515,7 +27515,7 @@ async function atlVitrine(id, cartes){
 const MOT_MAX = 8, MOT_MAX_LETTRES = 3, MOT_BROUILLON = 'tf-motif-brouillon';
 const MOT_VIS_DEBUT = 3, MOT_VIS_PLEIN = 8;   // en pixels par kilomètre : en dessous le motif est caché, au-dessus il est entier
 const MOT_PACKS = { heraldique: 'Formes Héraldique', nature: 'Formes Nature', cartographe: 'Formes Cartographe', tissus: 'Trames Tissus' };
-const MOT_CATS = ['Formes', 'Lignes', 'Symboles', 'Héraldique', 'Nature', 'Cartographe', 'Lettres'];
+const MOT_CATS = ['Formes', 'Lignes', 'Symboles', 'Animaux', 'Héraldique', 'Nature', 'Cartographe', 'Lettres'];   // patch505 : Animaux
 const MOT_COULEURS = ['#FFFFFF', '#E8E2D4', '#FFE08A', '#F0B429', '#FF8A3D', '#F0505A', '#9E2B45', '#E85DA8', '#A06CFF', '#7FD4FF', '#3D8BFF', '#2456C8', '#2EC4C4', '#3FCF8E', '#2F7D55', '#0B1424'];
 const motLum = (h) => { const n = parseInt(String(h).slice(1), 16), r = (n >> 16) / 255, g = (n >> 8 & 255) / 255, b = (n & 255) / 255; return .2126 * r + .7152 * g + .0722 * b; };
 const motType = (c) => c.forme === 'lettre' ? 'forme' : (MTF.FORME[c.forme] || {}).type || 'forme';
@@ -28031,7 +28031,7 @@ function motRendreFormes(){
   const packs = [...new Set(fs.map(f => f.pack).filter(Boolean))];
   pk.innerHTML = packs.length ? packs.map(p => motPossede({ pack: p }) ? `<b>${MOT_PACKS[p]}</b> : à toi` : `<b>${MOT_PACKS[p]} · ${motPrixPack(p)}</b>`).join(' · ')
       + (fs.some(f => !f.pack) ? ' · le reste est gratuit' : '') + (packs.some(p => !motPossede({ pack: p })) ? '. Tu peux tout essayer avant d’acheter.' : '.')
-    : 'Gratuit pour tous.';
+    : 'Gratuit pour tous.' + (ME.cat === 'Animaux' ? ' <small class="mot-credit">Dessins : game-icons.net (Lorc, Delapouite et autres), licence CC BY 3.0.</small>' : '');   // patch505
   g.innerHTML = `<div class="mot-grille">${fs.map(f => `<button type="button" data-f="${f.id}"><canvas></canvas><span>${echapperTexte(f.nom)}</span>${motPossede(f) ? '' : '<em>🔒</em>'}</button>`).join('')}</div>`;
   g.querySelectorAll('[data-f]').forEach(b => {
     motVignette(b.querySelector('canvas'), (x, s) => motVignetteCalque(x, s, { forme: b.dataset.f, couleur: '#F2E6C8', r: 0, a: 1, t: 100, x: 50, y: 50, e: 'aucun' }));

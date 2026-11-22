@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b292ce114b5f';
+const VERSION_JEU = '34ddedee7a4a';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10760,7 +10760,7 @@ const tiersCombat = () => ['rare', 'epique', 'legendaire'].concat([...combatBasC
 const combatTiersChoisis = () => combatFilterTier === 'tous' ? null : new Set(combatFilterTier.split(','));
 function combatBasVoulus(){
   { const ch = combatTiersChoisis(); if(ch) return COMBAT_TIERS_BAS.filter(t => ch.has(t)); }   // patch361
-  if(combatProximite && combatFilterTier === 'tous') return COMBAT_TIERS_BAS.slice();
+  if((combatProximite || combatAutour) && combatFilterTier === 'tous') return COMBAT_TIERS_BAS.slice();   // patch483
   // patch125 : une recherche reduit la liste, on peut tout charger
   // (patch149 : des exclusions seules ne reduisent rien, comme un champ vide)
   const champ = document.getElementById('combatSearch');
@@ -10796,6 +10796,8 @@ async function assurerCiblesBas(){
 }
 let combatEnCours = false;
 let combatRayonKm = 20;
+// patch483 : « Autour de… » (idée d'Oshannir) : les cibles autour d'une commune choisie, pas de mon territoire
+let combatAutour = null, combatAutourKm = 20;   // { code, nom, dep, lat, lon }
 
 // Distance a vol d'oiseau entre deux points GPS, en km
 function distanceKm(lat1, lon1, lat2, lon2){
@@ -11095,6 +11097,62 @@ function majAideCombat(searchText){
   aide.hidden = !texte;
 }
 
+// patch483 : « Autour de… » — les propositions sous la recherche, ou le bandeau quand c'est choisi
+let combatCatEnCours = false;
+function combatAutourSuggestions(t){
+  if(!t || t.length < 3 || /[,;]/.test(t) || /^(\d{2,3}|2a|2b)$/i.test(t)) return [];
+  if(!CARTE.cat){   // la carte n'a pas encore chargé son catalogue : on le demande, puis on revient
+    if(!combatCatEnCours){ combatCatEnCours = true; carteCatalogue(CARTE.catVersion || null).then(() => { combatCatEnCours = false; if(CARTE.cat) renderCombatGrid(); }); }
+    return [];
+  }
+  const out = [];
+  for(const r of CARTE.cat.values()){
+    if(r[4] == null || r[5] == null) continue;
+    if(sansAccents(String(r[1])).includes(t)) out.push(r);
+  }
+  const n = (r) => sansAccents(String(r[1]));
+  out.sort((a, b) => (n(b) === t) - (n(a) === t) || n(b).startsWith(t) - n(a).startsWith(t) || (Number(b[3]) || 0) - (Number(a[3]) || 0));
+  return out.slice(0, 3);
+}
+function combatAutourUI(searchText){
+  const s = document.getElementById('combatSearch');
+  if(!s) return;
+  let box = document.getElementById('combatAutourBox');
+  if(!box){ box = document.createElement('div'); box.id = 'combatAutourBox'; s.insertAdjacentElement('afterend', box); }
+  if(combatAutour){
+    const A = combatAutour;
+    s.style.display = 'none';
+    box.innerHTML = `<div class="aut-ban"><b>📍 Autour ${echapperTexte(deCommune(A.nom))} (${echapperTexte(A.dep)})<small>Les communes que tu peux attaquer, de la plus proche à la plus loin</small></b>`
+      + [10, 20, 50].map(k => `<button type="button" class="filter-pill${k === combatAutourKm ? ' active' : ''}" data-autour-km="${k}">${k} km</button>`).join('')
+      + `<button type="button" class="aut-x" data-autour-x>✕ Fermer</button></div>`;
+    return;
+  }
+  s.style.display = '';
+  const sugg = combatAutourSuggestions(searchText);
+  box.innerHTML = sugg.length ? `<div class="aut-sugg"><span>Ou chercher autour d’une commune :</span>${sugg.map(r =>
+    `<button type="button" class="aut-chip" data-autour="${echapperTexte(String(r[0]))}">📍 Autour ${echapperTexte(deCommune(String(r[1])))} (${echapperTexte(String(r[2]))})</button>`).join('')}</div>` : '';
+}
+document.addEventListener('click', (e) => {
+  const ch = e.target.closest('[data-autour]');
+  if(ch){
+    const r = CARTE.cat && CARTE.cat.get(ch.dataset.autour);
+    if(!r) return;
+    combatAutour = { code: String(r[0]), nom: String(r[1]), dep: String(r[2]), lat: r[4], lon: r[5] };
+    const s = document.getElementById('combatSearch'); if(s) s.value = '';
+    if(combatProximite){   // un seul centre à la fois
+      combatProximite = false;
+      const btn = document.getElementById('combatProxToggle');
+      if(btn){ btn.classList.remove('active'); btn.setAttribute('aria-pressed', 'false'); }
+      const ry = document.getElementById('combatRayons'); if(ry) ry.hidden = true;
+    }
+    renderCombatGrid(); assurerCiblesBas();
+    const g = document.getElementById('combatAutourBox'); if(g && g.scrollIntoView) g.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  const km = e.target.closest('[data-autour-km]');
+  if(km){ combatAutourKm = Number(km.dataset.autourKm) || 20; renderCombatGrid(); return; }
+  if(e.target.closest('[data-autour-x]')){ combatAutour = null; renderCombatGrid(); }
+});
 function renderCombatGrid(){
   if(rendreALOuverture('combat', renderCombatGrid)) return;
   renderIntensite();
@@ -11103,6 +11161,7 @@ function renderCombatGrid(){
   const { recherche: rechercheCombat, exclus: exclusCombat } = separerExclusions(searchEl ? searchEl.value : '');
   const searchText = sansAccents(rechercheCombat);
   majAideCombat(searchText);
+  combatAutourUI(searchText);   // patch483
 
   if(combatBasChargement && combatBasVoulus().some(t => !combatBasCharges.has(t))){
     grid.innerHTML = '<p class="collection-empty">Chargement des communes et peu communes…</p>';
@@ -11142,6 +11201,15 @@ function renderCombatGrid(){
       .filter(c => c._distKm !== null && c._distKm <= combatRayonKm)
       .sort((a, b) => a._distKm - b._distKm);
   }
+  if(combatAutour){   // patch483
+    const A = combatAutour;
+    for(const c of cibles){
+      const la = c.communes.latitude, lo = c.communes.longitude;
+      c._distAutour = la == null || lo == null ? null : distanceKm(la, lo, A.lat, A.lon);
+    }
+    cibles = cibles.filter(c => c._distAutour !== null && c._distAutour <= combatAutourKm)
+      .sort((a, b) => a._distAutour - b._distAutour);
+  }
 
   // Combats en cours : cibles ou j'ai deja 1 ou 2 victoires d'affilee
   const victoiresDe = (c) => { const s = combatSieges.get(c.commune_code); return s ? s.victoires_consecutives : 0; };
@@ -11174,6 +11242,7 @@ function renderCombatGrid(){
     } else if(combatProximite){
       msg = `Aucune cible à moins de ${combatRayonKm} km de ton territoire.`;
     }
+    if(combatAutour && !combatEnCours) msg = `Aucune cible à moins de ${combatAutourKm} km ${deCommune(combatAutour.nom)}.`;   // patch483
     grid.innerHTML = `<p class="collection-empty">${msg}</p>`;
     return;
   }
@@ -11220,8 +11289,9 @@ function renderCombatGrid(){
       noteAlerte = true;
     }
     const ronds = [0, 1, 2].map(i => `<i class="${i < victoires ? 'plein' : ''}"></i>`).join('');
-    const distance = c._distKm !== null
-      ? `<p class="cible-distance">À ${c._distKm < 10 ? c._distKm.toFixed(1).replace('.', ',') : Math.round(c._distKm)} km ${deCommune(c._procheDe)}</p>` : '';
+    const dAff = combatAutour ? c._distAutour : c._distKm, deAff = combatAutour ? combatAutour.nom : c._procheDe;   // patch483
+    const distance = dAff != null
+      ? `<p class="cible-distance">À ${dAff < 10 ? dAff.toFixed(1).replace('.', ',') : Math.round(dAff)} km ${deCommune(deAff)}</p>` : '';
 
     // patch231 : la vraie carte (photo, Aurore, skin), l'action en dessous
     const au = auroreFront(c.commune_code);
@@ -11241,8 +11311,8 @@ function renderCombatGrid(){
         : `Prochain round dans ${formatDuree(prochainRound - now)}`;
       bouton = `<button class="cible-attaquer ca-att off" data-action="attaquer" data-code="${c.commune_code}" disabled>${texte}</button>`;
     }
-    const km = c._distKm !== null ? (c._distKm < 10 ? c._distKm.toFixed(1).replace('.', ',') : Math.round(c._distKm)) + ' km' : '';
-    const titreKm = km ? ` title="À ${km} ${echapperTexte(deCommune(c._procheDe))}"` : '';
+    const km = dAff != null ? (dAff < 10 ? dAff.toFixed(1).replace('.', ',') : Math.round(dAff)) + ' km' : '';   // patch483
+    const titreKm = km ? ` title="À ${km} ${echapperTexte(deCommune(deAff))}"` : '';
     const serie = [0, 1, 2].map(i => `<i class="${i < victoires ? 'plein' : ''}"></i>`).join('');
     return `<article class="ca-cible">${carte}
       <p class="ca-qui"${titreKm}><i style="background:${colorForPlayer(c.joueur_id)}"></i><b>${echapperTexte(pseudo)}</b>${km ? `<span>· ${km}</span>` : ''}<span class="ca-serie" title="Ta série : ${victoires} / 3">${serie}</span></p>
@@ -11251,7 +11321,7 @@ function renderCombatGrid(){
 
   // patch293 : les meilleures chances d'abord (tri choisi, ou « Près de mon territoire »)
   triMajBoutons(false);
-  if(!combatEnCours && (triChances || combatProximite) && cibles.length){
+  if(!combatEnCours && !combatAutour && (triChances || combatProximite) && cibles.length){   // patch483 : autour d'une commune, on garde l'ordre des distances
     let codes = cibles.map(c => c.commune_code);
     let reste = [];   // patch409 : trop de cibles, on trie les plus proches, le reste suit par distance
     if(codes.length > TRI_MAX && triChances){
@@ -11283,7 +11353,8 @@ function renderCombatGrid(){
 
   // la signature dit si c'est un nouveau filtrage ou un simple rafraichissement
   const signature = [combatFilterTier, searchText, combatProximite,
-                     combatRayonKm, combatEnCours, cibles.length, triChances ? 'tri' : ''].join('|');   // patch293
+                     combatRayonKm, combatEnCours, cibles.length, triChances ? 'tri' : '',
+                     combatAutour ? combatAutour.code + '@' + combatAutourKm : ''].join('|');   // patch293, patch483
   combatAffichees = cibles;
   afficherParLots(grid, cibles, carteCible, signature);
   demanderChances();
@@ -25400,6 +25471,7 @@ async function ouvrirCarteTerra(code){
       <div class="fc-corps">
         <h2 id="ftNom" class="fc-nom ${e.nom.length > 22 ? 'long' : ''}">${echapperTexte(e.nom)}</h2>
         <p class="fc-dep">${DEPT_NAMES[e.dept] ? echapperTexte(DEPT_NAMES[e.dept]) + ' (' + echapperTexte(e.dept) + ')' : echapperTexte(e.dept)}</p>
+        <p class="fc-voir-l"><button type="button" class="fc-voir" data-ft="carte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Voir sur la carte</button></p>
         ${gentile ? `<p class="fc-gent">les ${echapperTexte(gentile)}</p>` : ''}
         <div class="fc-chiffres">
           <div class="fc-ch"><b>${nb(e.pop)}</b><span>habitants</span></div>
@@ -25427,6 +25499,7 @@ async function ouvrirCarteTerra(code){
       const b = ev.target.closest('[data-ft]');
       if(!b) return;
       if(b.dataset.ft === 'fermer'){ fermer(null); return; }
+      if(b.dataset.ft === 'carte'){ fermer(null); terraVoirSurCarte(code); return; }   // patch483
       if(b.dataset.ft === 'echange'){ fermer(null); const t = document.querySelector('.tab[data-tab="echange"]'); if(t) t.click(); return; }
       if(b.dataset.ft === 'eclat'){ briFaireEclat(boite, code, b); return; }   // patch269
       if(b.dataset.ft === 'vitrine'){ b.disabled = true; const vt = await chargerVitrine(window.__monId); fermer(null); setTimeout(() => ouvrirChoixVitrine(vt, 'panneau'), 200); }
@@ -25441,6 +25514,26 @@ async function ouvrirCarteTerra(code){
   const tmp = document.createElement('div'); tmp.innerHTML = rendre(d);
   const neuf = tmp.querySelector('.fc-corps'), vieux = ouverte.querySelector('.fc-corps');
   if(neuf && vieux) vieux.replaceWith(neuf);
+}
+
+// patch483 : « Voir sur la carte » depuis une carte Terra (idée d'Arkhannou). La carte est dans le Front :
+// on y passe, puis on centre la commune (l'anneau de visée la montre quelques secondes).
+function terraVoirSurCarte(code){
+  const aller = (lat, lon) => {
+    if(SAISON2 && typeof modeJeu !== 'undefined' && modeJeu !== 'front'){
+      const b = document.querySelector('#modeBascule [data-mode="front"]');
+      if(b) b.click();
+    }
+    setTimeout(() => voirCommuneSurCarte({ code, lat, lon }), 260);
+  };
+  const e = terraCollection.get(code);
+  if(e && e.lat != null && e.lon != null) return aller(e.lat, e.lon);
+  const c = collectionMap.get(code) || othersMap.get(code);
+  if(c && c.lat != null) return aller(c.lat, c.lon);
+  const r = CARTE.cat && CARTE.cat.get(String(code));
+  if(r && r[4] != null) return aller(r[4], r[5]);
+  sb.from('communes').select('latitude, longitude').eq('code', code).maybeSingle()
+    .then(({ data }) => aller(data && data.latitude, data && data.longitude));
 }
 
 // ---------- patch222 : le centre de notifications ----------

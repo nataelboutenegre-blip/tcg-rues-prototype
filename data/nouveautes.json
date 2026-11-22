@@ -2,6 +2,7 @@
   {
     "date": "2026-11-22",
     "nouveautes": [
+      "⏱️ Siège : un minuteur sous la jauge dit quand la commune peut tomber, ou quand ton énergie en attente aura fini de partir et ce qu'il manquera (idée d'Oshannir). La jauge n'affiche plus « 65 / 65 » quand il manque une fraction de point.",
       "🔔 Siège : si une défense fait que ton énergie en attente ne suffit plus pour finir, tu reçois une notification (« il manque ≈ N ⚡ »), et la cloche le garde (question de Cairnan217).",
       "⏱️ Siège : une rare demande maintenant au moins 20 min, même si personne ne défend (comme l'épique, 1 h). Le propriétaire prévenu a le temps de renforcer. Tu envoies ta vague une fois, l'énergie part toute seule. Commune et peu commune : inchangées. On regarde vos retours.",
       "🎨 Nouveau : ton motif de territoire. Dans Boutique › Atelier › Mon territoire, compose ton motif (formes, lignes, symboles, lettres, jusqu'à 8 calques) : il se répète sur ton territoire, par-dessus ta couleur, et tout le monde le voit en zoomant sur la carte. Le calque « Motifs » permet de les cacher.",

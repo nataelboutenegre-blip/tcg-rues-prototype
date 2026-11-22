@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '3dec4c22cc63';
+const VERSION_JEU = 'a702bf9ea195';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -32474,7 +32474,8 @@ async function ouvrirSiege(code){
     document.body.appendChild(v);
   }
   if(typeof fermerPanneau === 'function') try{ fermerPanneau(); }catch(e){}
-  SG = { code, ap: null, n: 5, envoi: false, dernier: null, err: '', anim: null, calc: SG.calc || false };   // patch406 : anim, calc
+  if(SG && SG.tic) clearInterval(SG.tic);   // patch497
+  SG = { code, ap: null, n: 5, envoi: false, dernier: null, err: '', anim: null, calc: SG.calc || false, tic: 0 };   // patch406 : anim, calc
   sgRendre();
   v.hidden = false;
   requestAnimationFrame(() => v.classList.add('ouvert'));
@@ -32493,7 +32494,7 @@ async function sgCharger(choisirN){
   const { data, error } = await sb.rpc('siege_apercu', { p_code: code });
   if(SG.code !== code) return;
   if(error){ SG.err = messageLisible(error.message); sgRendre(); return; }
-  SG.ap = data || null; SG.err = '';
+  SG.ap = data || null; SG.err = ''; SG.apLe = Date.now();   // patch497 : l'heure de lecture, pour le plafond qui monte
   if(choisirN && SG.ap) SG.n = sgSuggestion();
   sgRendre();
 }
@@ -32523,7 +32524,7 @@ function sgRepartition(n){
   const att = sgAttente(), besoin = Math.ceil(Math.max(0, res - deg + bcl) / pts);
   const long = s ? !!s.long : !!a.long;
   let plafond = null, envoyes = 0;
-  if(s && s.plafond != null){ plafond = Number(s.plafond); envoyes = Number(s.envoyes_long) || 0; }
+  if(s && s.plafond != null){ plafond = sgPlafondMaintenant(); envoyes = Number(s.envoyes_long) || 0; }   // patch497
   else if(!s && (long || a.eclair_min)) plafond = res * 0.1;   // 10 % part tout de suite
   const duree = long ? Number(a.duree_long_min) : Number(a.eclair_min);
   const rythme = plafond != null && duree > 0 ? res * 60 / duree : null;   // points par heure
@@ -32535,6 +32536,59 @@ function sgRepartition(n){
   const total = Math.min(att + n, besoin);
   const minutes = rythme ? Math.max(0, (envoyes + total * pts - plafond) / rythme * 60) : 0;
   return { maintenant, attend: utile - maintenant, trop, att, besoin, finit: att + n >= besoin, minutes };
+}
+// patch497 : le plafond du siège monte avec le temps ; le serveur l'a donné au moment de la lecture
+function sgRythmeMin(){   // points par minute, ou null si la jauge n'a pas de rythme (éclair sans durée minimale)
+  const a = SG.ap; if(!a) return null;
+  const s = a.siege && !a.siege.resultat ? a.siege : null;
+  const res = Number(s ? s.resistance : a.resistance) || 0, long = s ? !!s.long : !!a.long;
+  const duree = long ? Number(a.duree_long_min) : Number(a.eclair_min);
+  return res > 0 && duree > 0 ? res / duree : null;
+}
+function sgPlafondMaintenant(){
+  const s = SG.ap && SG.ap.siege; if(!s || s.plafond == null) return null;
+  const r = sgRythmeMin();
+  return Number(s.plafond) + (r ? r * Math.max(0, Date.now() - (SG.apLe || Date.now())) / 60000 : 0);
+}
+// patch497 : le minuteur sous la jauge
+function sgMinuteurInfo(){
+  const a = SG.ap; if(!a) return null;
+  const s = a.siege && !a.siege.resultat ? a.siege : null; if(!s) return null;
+  const pts = 10 * (Number(a.mult) || 1), res = Number(s.resistance) || 0, deg = Number(s.degats) || 0, bcl = Number(s.bouclier) || 0;
+  const att = Number(s.attente) || 0, resteP = Math.max(0, res - deg + bcl);
+  if(resteP <= 0) return null;
+  const besoin = Math.max(1, Math.ceil(resteP / pts));
+  if(att <= 0) return { texte: `Il manque ≈ <b>${besoin} ⚡</b> pour finir : rien n'attend dans ton siège, envoie une vague.` };
+  const plafond = sgPlafondMaintenant(), r = sgRythmeMin();
+  let min = 0;
+  const suffit = att >= besoin;
+  if(plafond != null && r){
+    const cible = (Number(s.envoyes_long) || 0) + (suffit ? resteP : att * pts);
+    min = Math.max(0, (cible - plafond) / r);
+  }
+  return { fin: Date.now() + min * 60000, suffit, manque: besoin - att };
+}
+function sgMinuteurTexte(i){
+  const ms = i.fin - Date.now();
+  const t = ms <= 0 ? 'au prochain passage (toutes les 5 min)' : 'dans <b class="sg-chrono">' + sgChrono(ms) + '</b>';
+  return i.suffit ? `⏱️ Elle peut tomber ${t}, si personne ne renforce.`
+    : `⏱️ Ton énergie en attente aura fini de partir ${t}. Il manquera ensuite ≈ <b>${i.manque} ⚡</b>.`;
+}
+function sgChrono(ms){
+  const s = Math.ceil(ms / 1000), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = s % 60;
+  return h ? `${h} h ${String(m).padStart(2, '0')}` : `${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}`;
+}
+function sgMinuteurHtml(){
+  const i = sgMinuteurInfo(); if(!i) return '';
+  if(i.fin == null) return `<p class="sg-minuteur">${i.texte}</p>`;
+  return `<p class="sg-minuteur" data-sg-fin="${Math.round(i.fin)}" data-sg-suffit="${i.suffit ? 1 : 0}" data-sg-manque="${i.manque}">${sgMinuteurTexte(i)}</p>`;
+}
+function sgTic(){
+  const el = document.querySelector('#sgBoite [data-sg-fin]');
+  if(!el){ clearInterval(SG.tic); SG.tic = 0; return; }
+  const i = { fin: Number(el.dataset.sgFin), suffit: el.dataset.sgSuffit === '1', manque: Number(el.dataset.sgManque) || 0 };
+  el.innerHTML = sgMinuteurTexte(i);
+  if(Date.now() > i.fin + 60000 && !SG.relu){ SG.relu = true; sgCharger(false).then(() => { SG.relu = false; }); }   // une minute après : on relit
 }
 function sgRepartitionHtml(n){
   const r = sgRepartition(n); if(!r) return '';
@@ -32593,8 +32647,9 @@ function sgRendre(){
         ${bcl > 0 ? `<div class="sg-bcl"><span>Bouclier de la garnison</span><b>${sgNb(bcl)} points à casser d'abord</b></div>` : ''}
         ${sgBarre(Number(s.degats) || 0, res)}
         <div class="sg-jl"><span><b>${sgNb(s.degats)}</b> / ${sgNb(res)}</span><span>${att > 0 ? `<b>${att} ⚡</b> en attente, elles partent toutes seules` : s.defendu ? `${proprio} a renforcé` : 'pas encore défendue'}</span></div>
+        ${sgMinuteurHtml()}
         ${tombe > 0 ? `<p class="sg-tombe">Sans nouvelle vague, le siège tombe dans ${formatDuree(tombe)}.</p>` : ''}
-      </div>`;
+      </div>`;   // patch497 : le minuteur
   }
   const lignes = `<div class="sg-lignes">
       <div class="sg-l"><span>Tes communes proches</span><span>${procheTxt} · ${multTxt}</span></div>
@@ -32623,6 +32678,7 @@ function sgRendre(){
   const sec = `<div class="pc-sec">${s ? '<button type="button" data-sg="abandon">Abandonner le siège</button>' : '<span></span>'}<button type="button" data-sg="fermer">Fermer</button></div>`;
   b.innerHTML = tete + chiffres + jauge + retour + lignes + avert + autres + choix + bouton + places + (SG.err ? `<p class="sg-err">${echapperTexte(SG.err)}</p>` : '') + sgCalcHtml(a) + sec;
   sgAnimerVague(b);   // patch406
+  if(!SG.tic && b.querySelector('[data-sg-fin]')) SG.tic = setInterval(sgTic, 1000);   // patch497
 }
 async function sgClic(ev){
   const v = sgVoileEl();

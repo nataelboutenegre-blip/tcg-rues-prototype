@@ -11255,3 +11255,8 @@ html.mot-ouvert{ overflow:hidden; }
 .sg-repart{ margin:-4px 0 12px; padding:9px 12px; border-radius:10px; background:rgba(143,193,255,.10); border:1px solid rgba(143,193,255,.28); color:#CFE3FF; font-size:.84rem; line-height:1.45; }
 .sg-repart b{ color:#fff; }
 .sg-repart.ok{ background:rgba(95,211,157,.10); border-color:rgba(95,211,157,.32); color:#C9F2DD; }
+
+/* ---------- patch497 : le minuteur du siège ---------- */
+.sg-minuteur{ margin:9px 0 0; padding:8px 10px; border-radius:10px; background:rgba(240,180,41,.10); border:1px solid rgba(240,180,41,.28); color:#FFE3A3; font-size:.8rem; line-height:1.4; }
+.sg-minuteur b{ color:#fff; }
+.sg-minuteur .sg-chrono{ font-family:var(--titre, 'Big Shoulders Display'), Impact, sans-serif; font-weight:800; font-size:1.05rem; letter-spacing:.02em; font-variant-numeric:tabular-nums; color:#FFD36B; }

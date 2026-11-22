@@ -11299,3 +11299,9 @@ html.topo:not(.sans-cartes) .mini.skin.legendaire .mini-rarete::before{ backgrou
 .tpr-bonus{ flex-basis:100%; text-align:center; font-weight:800; color:#8EE3B8; }
 .paquet.paquet-roue .paquet-bande{ background:linear-gradient(90deg, #2B5BD7, #DA291C 40%, #FDDA24 70%, #00A3E0); color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.5); }
 .paquet .tpr-emb{ font-size:1.3rem; line-height:1; }
+
+/* patch503 : la cloche ne passe plus sous le sélecteur quand le sac de la boutique est là */
+@media (max-width: 720px){
+  html.topo:has(#bqrMobile:not([hidden])) #reglesBtnMobile{ display:none; }
+  html.topo:has(#bqrMobile:not([hidden])) .mode-bascule{ right:112px; }
+}

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '0e31841827f6';
+const VERSION_JEU = '221df84a384b';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base

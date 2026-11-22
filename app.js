@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '02c0613a00d4';
+const VERSION_JEU = 'e85d09cf851d';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -23255,8 +23255,8 @@ function bqeCarte(a){
   const bas = a.possede ? '<span class="bqe-etat ok">Dans ta garde-robe</span>'
     : attente ? `<span class="bqe-etat">Arrive le ${dateLongue(a.livraison_le)}</span>`
     : `<span class="bq-btn bqe-prix">${bqePrixHtml(a)}</span>`;
-  return `<button type="button" class="bq-article bqe-article bqe-t-${a.type}" data-bqe="${echapperTexte(a.id)}">
-      ${bqxEcrin(bqeVignette(a))}
+  return `<button type="button" class="bq-article bqe-article bqe-t-${a.type}${bqePromo(a) && !a.possede ? ' bqe-en-promo' : ''}" data-bqe="${echapperTexte(a.id)}">
+      ${bqePromoBadge(a)}${bqxEcrin(bqeVignette(a))}
       <b>${echapperTexte(bqeNomCourt(a))}</b>
       <p>${echapperTexte(a.description)}</p>
       ${bas}
@@ -23281,17 +23281,18 @@ function bqeCommandeHtml(c){
 function bqxUneEuros(arts){
   const libres = arts.filter(a => !a.possede && !a.livraison_le && !a.reserve_og && a.type !== 'effet');
   const cols = libres.filter(a => a.type === 'collection');
-  const liste = cols.length ? cols : libres;
+  const promos = libres.filter(a => bqePromo(a));   // patch487 : le week-end, une collection en promo
+  const liste = promos.length ? promos : cols.length ? cols : libres;
   if(!liste.length) return '';
   const a = liste[Math.floor(Date.now() / 86400000) % liste.length];
   const genre = { collection: 'Collection', habillage: 'Habillage de paquet', dos: 'Dos de carte', skin: 'Skin de carte' }[a.type] || '';
   return `<button type="button" class="bqx-une bqx-une-eu bqe-t-${a.type}" data-bqe="${echapperTexte(a.id)}">
       <div class="bqx-une-vis">${bqeVignette(a)}</div>
       <div class="bqx-une-txt">
-        <span class="bqx-sur">À la une · ${genre}</span>
+        <span class="bqx-sur">${bqePromo(a) ? `Promo du week-end · −${bqePromo(a).remise} %` : 'À la une · ' + genre}</span>
         <b class="bqx-une-nom">${echapperTexte(bqeNomCourt(a))}</b>
         <span class="bqx-une-dept">${echapperTexte(a.description || '')}</span>
-        <span class="bqx-une-prix">${bqePrixHtml(a)}</span>
+        <span class="bqx-une-prix">${bqePrixHtml(a)}</span>${bqePromo(a) ? `<span class="bqx-une-promo">${bqePromoFin(bqePromo(a))}</span>` : ''}
       </div></button>`;
 }
 // patch454, patch469 : les cinq thèmes de la saison 3 arrivent en boutique le 22/11, en collections (le skin et son dos
@@ -23394,7 +23395,7 @@ function bqeOuvrirFiche(id, retour){   // patch270 : retour = 'atelier'
   const quoi = a.type === 'pass' ? `<b>le ${echapperTexte(nom)}</b> : ses 10 récompenses, dont tout de suite celles des niveaux que tu as déjà atteints`   // patch254
     : a.type === 'habillage' ? `<b>l'habillage ${echapperTexte(nom)}</b> sur tous tes paquets`
     : a.type === 'skin' ? `<b>le skin ${echapperTexte(nom)}</b>, à poser sur autant de tes cartes que tu veux (Terra et Front)`
-    : a.type === 'collection' ? `<b>le dos et le skin ${echapperTexte(nom)}</b>${bqePrixMoi(a) < Number(a.prix_centimes) ? ' (tu en as déjà une partie : tu ne paies que ce qui te manque)' : ''}`
+    : a.type === 'collection' ? `<b>le dos et le skin ${echapperTexte(nom)}</b>${bqePrixMoi(a) < Number(bqePromo(a) ? bqePromo(a).prix : a.prix_centimes) ? ' (tu en as déjà une partie : tu ne paies que ce qui te manque)' : ''}`
     : a.type === 'effet' ? atlQuoiAchat(a, nom)   // patch270
     : `<b>le dos ${echapperTexte(nom)}</b> sur toutes tes cartes`;
   const fem = a.type === 'effet' && ['finition', 'bordure'].includes(atlFamilleArticle(a.id));   // patch270 : la finition
@@ -23407,7 +23408,8 @@ function bqeOuvrirFiche(id, retour){   // patch270 : retour = 'atelier'
       <div class="bqe-apercu">${grand}</div>
       <div class="bqe-tete">
         <div><small>${{ dos: 'Dos de carte', skin: 'Skin de carte', collection: 'Collection · dos + skin', pass: 'Pass de saison', effet: atlLibelleArticle(a.id) }[a.type] || 'Habillage de paquet'}${a.reserve_og ? ' · réservé aux OG' : ''}</small>
-          <h2 id="bqeNom">${echapperTexte(nom)}</h2><b class="bqe-gros-prix">${prix}</b></div></div>
+          <h2 id="bqeNom">${echapperTexte(nom)}</h2><b class="bqe-gros-prix">${bqePromo(a) ? `<s>${euros(bqePromo(a).barre)}</s> ` : ''}${prix}</b></div></div>
+      ${bqePromo(a) ? `<p class="bqe-info bqe-promo-info">−${bqePromo(a).remise} % ${bqePromoFin(bqePromo(a))} (fin le ${new Date(new Date(bqePromo(a).fin).getTime() - 60000).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} à minuit). Le prix barré est le prix le plus bas des 30 jours avant la promo.</p>` : ''}
       <p class="bqe-recoit">Tu reçois ${quoi}, ${fem ? 'gardée' : 'gardé'} à vie et ${fem ? 'associée' : 'associé'} à ton compte. Ça ne change ni le contenu des paquets ni tes chances. ${fem ? 'Elle' : 'Il'} ne s'échange pas et ne se revend pas.</p>
       <fieldset class="bqe-liv"><legend>Quand veux-tu le recevoir ?</legend>
         <label><input type="radio" name="bqeLiv" value="immediate" checked><b>Tout de suite</b><span>Tu renonces au délai de rétractation.</span></label>
@@ -25275,7 +25277,20 @@ function skinVignetteHtml(k){
   return `<div class="sk-vig" aria-hidden="true"><div class="sk-vig-echelle">${miniTerra({ ...carteExemple(), skin: k, exemplaires: 1, aurore: 0 })}</div></div>`;
 }
 const bqePrixMoi = (a) => a.prix_moi != null ? Number(a.prix_moi) : Number(a.prix_centimes);
+// patch487 : la promo du week-end (s3-44) ; le prix barré est le prix de référence du serveur
+const bqePromo = (a) => a && a.promo && a.promo.fin && new Date(a.promo.fin).getTime() > Date.now() ? a.promo : null;
+function bqePromoFin(p){
+  const f = new Date(new Date(p.fin).getTime() - 60000);   // la promo finit à minuit : « jusqu'à dimanche »
+  const j = Math.floor((new Date(f.toDateString()) - new Date(new Date().toDateString())) / 86400000);
+  return j <= 0 ? 'jusqu’à ce soir minuit' : j === 1 ? 'jusqu’à demain soir' : 'jusqu’à ' + f.toLocaleDateString('fr-FR', { weekday: 'long' });
+}
+function bqePromoBadge(a){
+  const p = bqePromo(a);
+  return p && !a.possede ? `<span class="bqe-promo">−${p.remise} % · ${bqePromoFin(p)}</span>` : '';
+}
 function bqePrixHtml(a){
+  const p = bqePromo(a);
+  if(p) return `<s>${euros(p.barre)}</s> ` + euros(bqePrixMoi(a));   // patch487
   const moi = bqePrixMoi(a), plein = Number(a.prix_centimes);
   return (moi < plein ? `<s>${euros(plein)}</s> ` : '') + euros(moi);
 }

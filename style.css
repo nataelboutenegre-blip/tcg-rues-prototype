@@ -3556,6 +3556,13 @@
 }
 .fiche .fc-nom.long{ font-size: 1.35rem; }
 .fiche .fc-dep{ margin: 0; text-align: center; font-size: .82rem; color: #A9BCD4; }
+/* patch487 : la promo du week-end */
+.bqe-article.bqe-en-promo{ position:relative; }
+.bqe-promo{ position:absolute; top:8px; left:8px; z-index:3; font-size:.72rem; font-weight:800; letter-spacing:.01em; color:#1A1404;
+  background:#F0B429; border-radius:8px; padding:3px 7px; box-shadow:0 2px 8px rgba(0,0,0,.35); }
+.bqe-prix s, .bqx-une-prix s, .bqe-gros-prix s{ opacity:.6; font-weight:500; margin-right:2px; }
+.bqx-une-promo{ display:inline-block; margin-left:8px; font-size:.78rem; font-weight:700; color:#F0B429; }
+.bqe-promo-info{ border-left:3px solid #F0B429; padding:6px 10px; text-align:left; font-size:.88rem; }
 /* patch486 : l'onglet Atelier de la boutique */
 .atb-seg{ display:flex; width:100%; box-sizing:border-box; background:rgba(23,44,75,.9); border-radius:14px; padding:4px; gap:4px; margin:12px 0 14px; }
 .atb-seg button{ flex:1 1 0; white-space:nowrap; font:inherit; font-weight:600; font-size:.95rem; color:#A9BCD4; background:none; border:0; border-radius:10px; padding:9px 6px; cursor:pointer; }

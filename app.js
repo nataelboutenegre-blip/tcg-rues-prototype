@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '907492acba82';
+const VERSION_JEU = '3c5df3c96720';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -32450,6 +32450,8 @@ async function sgChargerActif(){
 }
 const sgNb = (x) => Math.round(Number(x) || 0).toLocaleString('fr-FR');
 const sgTier = (id) => TIERS.find(t => t.id === id) || TIERS[TIERS.length - 1];
+// patch495 : un siège éclair de rare ou d'épique a une durée minimale (s3-49 : rare 20 min, épique 1 h)
+function sgEclairTxt(tier){ return tier === 'rare' ? 'elle peut tomber 20 min après le début' : tier === 'epique' ? 'elle peut tomber 1 h après le début' : 'elle peut tomber d\'un coup'; }
 function sgDuree(min){
   const m = Math.round(Number(min) || 0);
   if(m < 60) return m + ' min';
@@ -32699,7 +32701,7 @@ function renderMenacesSiege(){
     const tombe = m.tombe_le ? new Date(m.tombe_le).getTime() - Date.now() : 0;
     const laisse = laisses.has(m.id);
     const p = res ? Math.round(100 * deg / res) : 0;
-    const etat = m.long ? `<b class="sg-long">Siège long</b> · au plus ${sgNb(m.rythme_h)} points par heure` : `<b class="sg-eclair">Siège éclair</b> · elle peut tomber d'un coup`;
+    const etat = m.long ? `<b class="sg-long">Siège long</b> · au plus ${sgNb(m.rythme_h)} points par heure` : `<b class="sg-eclair">Siège éclair</b> · ${sgEclairTxt(m.tier)}`;   // patch495
     return `<div class="sg-def${laisse ? ' laisse' : ''}${p >= 66 ? ' chaud' : ''}">
       <div class="sg-def-h"><i class="sg-rar" style="--c:${tier.color}"></i><button type="button" class="sg-def-nom" data-voir-carte="${echapperTexte(m.commune)}">${echapperTexte(m.nom)}</button>${badgeDept(m.dept)}<span class="sg-def-qui">assiégée par <b>${echapperTexte(m.attaquant_pseudo || 'un joueur')}</b></span></div>
       ${Number(m.bouclier) > 0 ? `<div class="sg-bcl"><span>Ta garnison</span><b>${sgNb(m.bouclier)} points de bouclier</b></div>` : ''}
@@ -32868,7 +32870,7 @@ function sgCalcHtml(a){
       <li><b>Résistance</b> : commune et peu commune 55, rare 65, épique 125, légendaire 250. Forteresse sur place × 1,5. Une rébellion que tu finances la baisse.</li>
       <li><b>Garnison</b> : chaque énergie en garnison fait un bouclier de 10 points, à casser avant la jauge.</li>
       <li><b>Siège long</b> (garnison, bâtiment, renfort, ou légendaire) : 10 % de la résistance peut partir tout de suite, le reste suit le temps (commune 1 h, peu commune 1 h 30, rare 2 h, épique 6 h, légendaire 15 h). L'énergie en trop attend et part toute seule toutes les 5 minutes.</li>
-      <li><b>Épique en éclair</b> : au moins 1 h, même sans défense.</li>
+      <li><b>Rare et épique en éclair</b> : au moins 20 min pour une rare, 1 h pour une épique, même sans défense (10 % tout de suite, le reste suit le temps).</li>
       <li><b>Renfort</b> : chaque énergie du propriétaire fait reculer ta jauge de 12 points en moyenne, et rend le siège long.</li>
       <li><b>24 h sans vague</b> : le siège tombe. L'énergie déjà envoyée est perdue, celle en attente te revient.</li>
     </ul></details>`;
@@ -34565,7 +34567,7 @@ function sgaRendre(){
     + SGA.liste.map(m => {
       const tier = sgTier(m.tier), res = Number(m.resistance) || 0, deg = Number(m.degats) || 0;
       const p = res ? Math.round(100 * deg / res) : 0, reste = sgaReste(m), mon = Number(m.mon_renfort) || 0, tous = Number(m.allies) || 0;
-      const etat = m.long ? `<b class="sg-long">Siège long</b>` : `<b class="sg-eclair">Siège éclair</b> · elle peut tomber d'un coup`;
+      const etat = m.long ? `<b class="sg-long">Siège long</b>` : `<b class="sg-eclair">Siège éclair</b> · ${sgEclairTxt(m.tier)}`;   // patch495
       const vals = [5, 10, 20].filter(x => x <= reste);
       if(reste > 0 && !vals.includes(reste) && reste < 20) vals.push(reste);
       return `<div class="sg-def sga-c${p >= 66 ? ' chaud' : ''}">

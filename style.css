@@ -11134,3 +11134,19 @@ html.topo:not(.sans-cartes) .c3d .mini:is(.bri, .ecl):is(.suisse, .belgique, .lu
 html.topo:not(.sans-cartes) .c3d .mini:is(.bri, .ecl):is(.suisse, .belgique, .luxembourg, .outremer):not(.skin):not(.aurore):not(.hnt) .bx-sceau + .bx-sceau{ left:3px; top:40px; }
 html.topo:not(.sans-cartes) .card:is(.bri, .ecl):is(.suisse, .belgique, .luxembourg, .outremer):not(.skin):not(.aurore):not(.hnt) .bx-sceau{ top:36px; }
 html.topo:not(.sans-cartes) .card:is(.bri, .ecl):is(.suisse, .belgique, .luxembourg, .outremer):not(.skin):not(.aurore):not(.hnt) .bx-sceau + .bx-sceau{ top:59px; }
+
+/* ---------- patch490 : cartes v2, le monument ne recouvre plus le nom ---------- */
+html.topo:not(.sans-cartes) .card.a-monument:not(.skin):not(.aurore):not(.atl):not(.bri):not(.ecl):not(.hnt) .carte-monument{ left:9px; right:9px; bottom:8px; z-index:3; }
+html.topo:not(.sans-cartes) .card.a-monument:not(.skin):not(.aurore):not(.atl):not(.bri):not(.ecl):not(.hnt) .carte-nom{ bottom:calc(38% + 25px + 30px); }
+html.topo:not(.sans-cartes) .card.a-monument:not(.skin):not(.aurore):not(.atl):not(.bri):not(.ecl):not(.hnt) .carte-departement{ bottom:calc(38% + 9px + 30px); }
+html.topo:not(.sans-cartes) .card.a-monument:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-monument{ left:9px; right:9px; bottom:8px; z-index:3; }
+html.topo:not(.sans-cartes) .card.a-monument:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-nom{ bottom:calc(38% + 25px + 30px); }
+html.topo:not(.sans-cartes) .card.a-monument:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-departement{ bottom:calc(38% + 9px + 30px); }
+@media (max-width: 760px){
+  html.topo:not(.sans-cartes) .card.a-monument:not(.skin):not(.aurore):not(.atl):not(.bri):not(.ecl):not(.hnt) .carte-monument{ left:7px; right:7px; bottom:6px; }
+  html.topo:not(.sans-cartes) .card.a-monument:not(.skin):not(.aurore):not(.atl):not(.bri):not(.ecl):not(.hnt) .carte-nom{ bottom:calc(38% + 22px + 26px); }
+  html.topo:not(.sans-cartes) .card.a-monument:not(.skin):not(.aurore):not(.atl):not(.bri):not(.ecl):not(.hnt) .carte-departement{ bottom:calc(38% + 9px + 26px); }
+  html.topo:not(.sans-cartes) .card.a-monument:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-monument{ left:7px; right:7px; bottom:6px; }
+  html.topo:not(.sans-cartes) .card.a-monument:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-nom{ bottom:calc(38% + 22px + 26px); }
+  html.topo:not(.sans-cartes) .card.a-monument:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-departement{ bottom:calc(38% + 9px + 26px); }
+}

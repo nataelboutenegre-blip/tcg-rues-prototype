@@ -11031,3 +11031,106 @@ body[data-dos="kintsugi"], .bq-dos-apercu[data-dos="kintsugi"]{
   --dos-fond: radial-gradient(circle at 50% 42%, #1A1722 0%, #100E17 55%, #07060B 100%);
   --dos-liseret: rgba(232,197,102,.6); --dos-or: #E8C566; --dos-embleme: #0B0A10; --dos-anneau: rgba(11,10,16,.94); --dos-halo: rgba(232,197,102,.38);
 }
+
+/* ---------- patch488 : brillantes et éclats en cartes v2 ---------- */
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).commun{ background:#AEB7C5; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).peucommun{ background:#22A06B; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).rare{ background:linear-gradient(135deg, #A9CBFF, #2F7CF6 32%, #1B4FB0 58%, #8FB8FF 82%, #2F7CF6); }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).epique{ background:linear-gradient(135deg, #D3BBFF, #9B5CF6 26%, #5CC2F6 50%, #F2A6E4 72%, #9B5CF6); }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).legendaire{ background:linear-gradient(135deg, #FFF1B8, #F0B429 32%, #B7791F 58%, #FCE38A 82%, #F0B429); }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt){ padding:3px; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).commun, html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).peucommun{ padding:2px; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-int{ position:relative; border-radius:8px; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-art{ aspect-ratio:auto; flex:0 0 auto; height:64%; margin:0; border-radius:0; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-art::after{ content:''; position:absolute; inset:0; z-index:2; pointer-events:none; background:linear-gradient(180deg, rgba(9,18,34,0) 40%, rgba(9,18,34,.84) 100%); }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .art-voile{ display:none; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-dept{ top:4px; right:4px; bottom:auto; padding:2px 4px 1px; border-radius:4px; background:var(--papier); color:var(--encre); text-shadow:none; font-size:.74rem; line-height:1; box-shadow:0 1px 4px rgba(0,0,0,.3); }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-int:has(> .mini-ex, > .mini-perdue) .mini-dept, html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-art:has(.mini-siege) .mini-dept{ top:26px; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-nom{ position:absolute; left:6px; right:6px; bottom:calc(36% + 4px); z-index:3; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.45); -webkit-hyphens:auto; hyphens:auto; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).legendaire .mini-nom{ color:#FCE38A; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-infos{ padding:5px 6px 4px; justify-content:center; gap:3px; background:repeating-radial-gradient(ellipse at 88% 130%, transparent 0 11px, rgba(19,35,59,.055) 11px 12px); }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-rarete{ order:-1; margin-top:0; display:flex; align-items:center; gap:4px; color:var(--encre); font-size:.6rem; font-weight:600; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-rarete::before{ content:''; width:6px; height:6px; border-radius:50%; flex:none; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).commun .mini-rarete::before{ background:var(--c-commun); }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).peucommun .mini-rarete::before{ background:var(--c-peucommun); }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).rare .mini-rarete::before{ background:var(--c-rare); }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).epique .mini-rarete::before{ background:var(--c-epique); }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).legendaire .mini-rarete::before{ background:var(--c-legendaire); }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-num{ margin-top:0; color:#55606E; }
+html.topo:not(.sans-cartes) .c3d .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-total{ display:inline; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-bt{ margin-top:0; padding-top:1px; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-bt:not(:empty) + .mini-rarete{ margin-top:0; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).commun .carte-cadre{ background:#AEB7C5; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).peucommun .carte-cadre{ background:#22A06B; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).rare .carte-cadre{ background:linear-gradient(135deg, #A9CBFF, #2F7CF6 32%, #1B4FB0 58%, #8FB8FF 82%, #2F7CF6); }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).epique .carte-cadre{ background:linear-gradient(135deg, #D3BBFF, #9B5CF6 26%, #5CC2F6 50%, #F2A6E4 72%, #9B5CF6); }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).legendaire .carte-cadre{ background:linear-gradient(135deg, #FFF1B8, #F0B429 32%, #B7791F 58%, #FCE38A 82%, #F0B429); }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-cadre{ padding:5px; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).commun .carte-cadre, html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).peucommun .carte-cadre{ padding:4px; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).legendaire .carte-cadre{ padding:6px; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-int{ position:relative; border-radius:10px; background:repeating-radial-gradient(ellipse at 88% 130%, transparent 0 11px, rgba(19,35,59,.055) 11px 12px), var(--papier); }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-art{ height:62%; margin:0; border-radius:0; flex:none; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-art::after{ content:''; position:absolute; inset:0; z-index:2; pointer-events:none; background:linear-gradient(180deg, rgba(9,18,34,0) 40%, rgba(9,18,34,.84) 100%); }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .art-voile{ display:none; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-art > .cv2-photo{ display:block; position:absolute; inset:0; width:100%; height:100%; object-fit:cover; border:0; z-index:1; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-dept{ top:8px; right:8px; bottom:auto; padding:4px 7px 3px; border-radius:6px; background:var(--papier); color:var(--encre); text-shadow:none; font-size:1.15rem; line-height:1; box-shadow:0 2px 6px rgba(0,0,0,.3); }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-nom{ position:absolute; left:11px; right:11px; bottom:calc(38% + 25px); z-index:3; color:#fff; text-shadow:0 1px 4px rgba(0,0,0,.45); -webkit-hyphens:auto; hyphens:auto; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).legendaire .carte-nom{ color:#FCE38A; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-departement{ position:absolute; left:11px; right:11px; bottom:calc(38% + 9px); z-index:3; margin:0; color:#E3EAF3; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-infos{ padding:10px 11px 0; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-stats{ margin:0; border-top:0; padding-top:0; gap:18px; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-stats span{ color:#55606E; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-stats b{ font-size:1.3rem; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-haut{ order:4; padding:0 11px 8px; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-lisere{ order:5; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-num{ display:none; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-rarete{ display:flex; align-items:center; gap:5px; padding:0; background:none !important; color:var(--encre) !important; text-transform:uppercase; letter-spacing:.1em; font-size:.62rem; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-rarete::before{ content:''; width:8px; height:8px; border-radius:50%; flex:none; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).commun .carte-rarete::before{ background:var(--c-commun); }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).peucommun .carte-rarete::before{ background:var(--c-peucommun); }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).rare .carte-rarete::before{ background:var(--c-rare); }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).epique .carte-rarete::before{ background:var(--c-epique); }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt).legendaire .carte-rarete::before{ background:var(--c-legendaire); }
+@media (max-width: 600px){
+  html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-rarete{ font-size:.54rem; gap:3px; }
+  html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .mini-rarete::before{ width:5px; height:5px; }
+  html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-stats b{ font-size:1.1rem; }
+  html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-dept{ font-size:1rem; }
+  html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .carte-nom{ bottom:calc(38% + 22px); }
+}
+/* --- la brillante : le film holographique suit la photo, le papier du bas est nacré --- */
+html.topo:not(.sans-cartes) .mini.bri:not(.skin):not(.aurore):not(.hnt){ --ep:3px; } html.topo:not(.sans-cartes) .mini.bri:not(.skin):not(.aurore):not(.hnt).commun, html.topo:not(.sans-cartes) .mini.bri:not(.skin):not(.aurore):not(.hnt).peucommun{ --ep:2px; }
+html.topo:not(.sans-cartes) .card.bri:not(.skin):not(.aurore):not(.hnt) .carte-cadre{ --ep:5px; } html.topo:not(.sans-cartes) .card.bri:not(.skin):not(.aurore):not(.hnt).commun .carte-cadre, html.topo:not(.sans-cartes) .card.bri:not(.skin):not(.aurore):not(.hnt).peucommun .carte-cadre{ --ep:4px; } html.topo:not(.sans-cartes) .card.bri:not(.skin):not(.aurore):not(.hnt).legendaire .carte-cadre{ --ep:6px; }
+html.topo:not(.sans-cartes) .mini.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-art, html.topo:not(.sans-cartes) .card.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-art{ z-index:1; mix-blend-mode:color; opacity:.5; background-size:300% 300%; }
+html.topo:not(.sans-cartes) .mini.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-art::after, html.topo:not(.sans-cartes) .card.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-art::after{ mix-blend-mode:overlay; opacity:.55; }
+html.topo:not(.sans-cartes) .mini.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-art::before, html.topo:not(.sans-cartes) .card.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-art::before{ content:""; position:absolute; inset:0; mix-blend-mode:soft-light;
+  background: linear-gradient(118deg, transparent 30%, rgba(255,255,255,.85) 46%, rgba(255,255,255,.2) 54%, transparent 68%);
+  background-size:260% 260%; background-position: calc(var(--bx-px) * 1%) calc(var(--bx-py) * 1%); }
+html.topo:not(.sans-cartes) .mini.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-paillettes, html.topo:not(.sans-cartes) .card.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-paillettes{ z-index:1; opacity:.9; }
+html.topo:not(.sans-cartes) .mini.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-voile, html.topo:not(.sans-cartes) .mini.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-courbes{ top:64%; }
+html.topo:not(.sans-cartes) .card.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-voile, html.topo:not(.sans-cartes) .card.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-courbes{ top:62%; }
+html.topo:not(.sans-cartes) .mini.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-voile, html.topo:not(.sans-cartes) .card.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-voile{ opacity:.5; }
+html.topo:not(.sans-cartes) .mini.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-courbes, html.topo:not(.sans-cartes) .card.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-courbes{ opacity:.4; -webkit-mask-size:100% 280%; mask-size:100% 280%; -webkit-mask-position:center bottom; mask-position:center bottom; }
+html.topo:not(.sans-cartes) .mini.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-reflet, html.topo:not(.sans-cartes) .card.bri:not(.skin):not(.aurore):not(.hnt) .bx-b-reflet{ opacity:.5; }
+html.topo:not(.sans-cartes) .mini.bri:not(.skin):not(.aurore):not(.hnt) .mini-infos, html.topo:not(.sans-cartes) .card.bri:not(.skin):not(.aurore):not(.hnt) .carte-int{ background-image:none; }
+/* --- l'éclat : une lumière dorée en haut de la photo, la carte réchauffée --- */
+html.topo:not(.sans-cartes) .mini.ecl:not(.skin):not(.aurore):not(.hnt) .bx-e-rayons, html.topo:not(.sans-cartes) .mini.ecl:not(.skin):not(.aurore):not(.hnt) .bx-e-noyau{ --pin-x:50% !important; --pin-y:30% !important; z-index:1; }
+html.topo:not(.sans-cartes) .card.ecl:not(.skin):not(.aurore):not(.hnt) .bx-e-rayons, html.topo:not(.sans-cartes) .card.ecl:not(.skin):not(.aurore):not(.hnt) .bx-e-noyau{ --pin-x:50% !important; --pin-y:30% !important; z-index:1; }
+html.topo:not(.sans-cartes) .mini.ecl:not(.skin):not(.aurore):not(.hnt) .mini-art::after, html.topo:not(.sans-cartes) .card.ecl:not(.skin):not(.aurore):not(.hnt) .carte-art::after{ background: radial-gradient(120% 90% at 50% 28%, rgba(255,214,120,.34) 0%, rgba(255,170,60,.12) 46%, transparent 72%),
+  linear-gradient(180deg, rgba(60,30,0,0) 40%, rgba(46,24,2,.86) 100%); }
+html.topo:not(.sans-cartes) .mini.ecl:not(.skin):not(.aurore):not(.hnt) .mini-nom, html.topo:not(.sans-cartes) .card.ecl:not(.skin):not(.aurore):not(.hnt) .carte-nom{ color:#FFE9A8; text-shadow:0 1px 3px rgba(40,20,0,.6); }
+html.topo:not(.sans-cartes) .card.ecl:not(.skin):not(.aurore):not(.hnt) .carte-departement{ color:#F6E3B4; }
+html.topo:not(.sans-cartes) .mini.ecl:not(.skin):not(.aurore):not(.hnt):not(.bri) .mini-infos{ background: repeating-radial-gradient(ellipse at 88% 130%, transparent 0 11px, rgba(176,120,16,.11) 11px 12px), linear-gradient(180deg, #FFF9EA, #FBEDC6); }
+html.topo:not(.sans-cartes) .card.ecl:not(.skin):not(.aurore):not(.hnt):not(.bri) .carte-int{ background: repeating-radial-gradient(ellipse at 88% 130%, transparent 0 11px, rgba(176,120,16,.11) 11px 12px), linear-gradient(180deg, #FFF9EA, #FBEDC6); }
+html.topo:not(.sans-cartes) .mini.ecl:not(.skin):not(.aurore):not(.hnt) > .bx-e-aura, html.topo:not(.sans-cartes) .card.ecl:not(.skin):not(.aurore):not(.hnt) .bx-e-aura{ inset:0; border-radius:var(--r); }
+/* --- les sceaux, sur la photo --- */
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .bx-sceau{ z-index:4; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .bx-sceau{ z-index:4; left:8px; top:8px; height:19px; padding:0 9px 0 7px; font-size:8.4px; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .bx-sceau b{ font-size:9.6px; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):not(.skin):not(.aurore):not(.hnt) .bx-sceau + .bx-sceau{ top:31px; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):is(.suisse, .belgique, .luxembourg, .outremer):not(.skin):not(.aurore):not(.hnt) .bx-sceau{ left:25px; }
+html.topo:not(.sans-cartes) .mini:is(.bri, .ecl):is(.suisse, .belgique, .luxembourg, .outremer):not(.skin):not(.aurore):not(.hnt) .bx-sceau + .bx-sceau{ left:42px; }
+html.topo:not(.sans-cartes) .c3d .mini:is(.bri, .ecl):is(.suisse, .belgique, .luxembourg, .outremer):not(.skin):not(.aurore):not(.hnt) .bx-sceau{ left:3px; top:24px; }
+html.topo:not(.sans-cartes) .c3d .mini:is(.bri, .ecl):is(.suisse, .belgique, .luxembourg, .outremer):not(.skin):not(.aurore):not(.hnt) .bx-sceau + .bx-sceau{ left:3px; top:40px; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):is(.suisse, .belgique, .luxembourg, .outremer):not(.skin):not(.aurore):not(.hnt) .bx-sceau{ top:36px; }
+html.topo:not(.sans-cartes) .card:is(.bri, .ecl):is(.suisse, .belgique, .luxembourg, .outremer):not(.skin):not(.aurore):not(.hnt) .bx-sceau + .bx-sceau{ top:59px; }

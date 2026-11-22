@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '76f285a5d268';
+const VERSION_JEU = '77a5054df854';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -23840,6 +23840,9 @@ async function ouvrirChoixDosCartes(){
 // rareté reste. Animé sur la carte en grand, image figée ailleurs (grilles,
 // vitrines) : une seule image par carte, gardée en mémoire. Rendu WebGL 2,
 // mêmes outils que les dos premium (DOS_GLSL_COMMUN), au format de .mini-int.
+// patch499 : avec les cartes v2, la photo du skin prend 64 % de la hauteur (182 sur 285), comme les autres cartes
+function skinCommun(){ const h = document.documentElement.classList; return h.contains('topo') && !h.contains('sans-cartes')
+  ? SKIN_GLSL_COMMUN.replace('vec4 photoRect(float b){ return vec4(5.2,5.2,W-5.2,116.); }', 'vec4 photoRect(float b){ return vec4(5.2,5.2,W-5.2,182.); }') : SKIN_GLSL_COMMUN; }
 const SKIN_GLSL_COMMUN = DOS_GLSL_COMMUN.replace('H=263.', 'H=285.')
   .replace('vec4 photoRect(float b){ return vec4(b,b,W-b,b+(H-2.*b)*.6); }', 'vec4 photoRect(float b){ return vec4(5.2,5.2,W-5.2,116.); }')
   // patch209 : la photo a les coins arrondis d'une carte normale et se fond dans le bas de la carte ;
@@ -25007,7 +25010,7 @@ const skinGl = (() => {
       if(compilees >= 1) return null;
       compilees++;
       const fs = gl.createShader(gl.FRAGMENT_SHADER);
-      gl.shaderSource(fs, SKIN_GLSL_COMMUN + (v2 ? SKIN_GLSL_V2[k] : SKIN_GLSL[k]) + SKIN_GLSL_FIN); gl.compileShader(fs);
+      gl.shaderSource(fs, skinCommun() + (v2 ? SKIN_GLSL_V2[k] : SKIN_GLSL[k]) + SKIN_GLSL_FIN);   // patch499 gl.compileShader(fs);
       const p = gl.createProgram(); gl.attachShader(p, vs); gl.attachShader(p, fs);
       gl.bindAttribLocation(p, 0, 'p'); gl.linkProgram(p);
       e = { p, fs, u: {}, pret: false, v2 };

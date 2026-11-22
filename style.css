@@ -11250,3 +11250,8 @@ html.mot-ouvert{ overflow:hidden; }
 .mot-packl > div{ flex:1; } .mot-packl small{ display:block; color:var(--md); font-size:.78rem; }
 .mot-packl .mot-ok{ flex:none; }
 .mot-ok:disabled{ opacity:.45; cursor:default; }
+
+/* ---------- patch494 : ce que devient une vague ---------- */
+.sg-repart{ margin:-4px 0 12px; padding:9px 12px; border-radius:10px; background:rgba(143,193,255,.10); border:1px solid rgba(143,193,255,.28); color:#CFE3FF; font-size:.84rem; line-height:1.45; }
+.sg-repart b{ color:#fff; }
+.sg-repart.ok{ background:rgba(95,211,157,.10); border-color:rgba(95,211,157,.32); color:#C9F2DD; }

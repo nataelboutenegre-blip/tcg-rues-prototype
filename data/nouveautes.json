@@ -36,6 +36,7 @@
       "🏆 Les récompenses de la saison 2 sont dans les profils : médailles du podium, titres, seigneuries, clan champion, et un paquet Terra offert à tous les pionniers du Front."
     ],
     "correctifs": [
+      "Attaquer se met à jour après une prise par siège, même quand la commune tombe toute seule avec l'énergie en attente (signalé par Oshannir).",
       "Siège : la fiche dit ce que devient ta vague (ce qui part tout de suite, ce qui attend son tour et combien de temps, ce qui est de trop). L'énergie déjà en attente compte dans « Juste assez » (question d'ASMFCB).",
       "Sur les nouvelles cartes, le bandeau du monument ne recouvre plus le nom de la commune. Après un duel classé, le jeu annonce les tickets du Mess gagnés."
     ]

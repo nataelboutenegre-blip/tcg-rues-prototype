@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'a702bf9ea195';
+const VERSION_JEU = '76f285a5d268';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -32713,6 +32713,8 @@ async function sgEnvoyer(){
   majEnergie();
   sgChargerMes();
   if(s.resultat === 'conquise'){
+    combatChargeLe = 0;   // patch498 : Combat se relira
+    { const act = document.querySelector('.tab-panel.active'); if(act && act.id === 'panel-combat') setTimeout(loadCombat, 400); }
     sgFermer();
     const o = othersMap.get(code);
     notifier({ type: 'succes', titre: `${o ? o.nom : 'La commune'} est à toi !`, texte: 'Ton siège a rempli la jauge.' });
@@ -32803,11 +32805,28 @@ document.addEventListener('click', async (ev) => {
 });
 
 // Attaquer : mes sièges en cours
+// patch498 : Combat, la carte et ma collection se relisent quand un de mes sièges a fini
+function sgApresFin(){
+  combatChargeLe = 0;
+  const actif = document.querySelector('.tab-panel.active');
+  if(actif && actif.id === 'panel-combat') loadCombat();
+  Promise.all([loadMyCollection(), loadOthersPossessions()]).then(() => { try{ renderMapOverlay(); }catch(e){} }).catch(() => {});
+}
+function sgSuivreMes(){
+  clearTimeout(SG_SUIVI);
+  if(!SIEGE || !sgMes.length) return;
+  SG_SUIVI = setTimeout(() => { if(document.hidden) sgSuivreMes(); else sgChargerMes(); }, 120000);
+}
+var SG_SUIVI = 0;
 async function sgChargerMes(){
   if(!SIEGE) return;
   const { data, error } = await sb.rpc('mes_sieges');
   if(error) return;
+  const avant = new Set((sgMes || []).map(s => String(s.commune)));
   sgMes = Array.isArray(data) ? data : [];
+  const maintenant = new Set(sgMes.map(s => String(s.commune)));
+  if([...avant].some(c => !maintenant.has(c))) sgApresFin();   // patch498 : un siège a disparu (pris, tombé, abandonné)
+  sgSuivreMes();
   if(typeof canvasActif === 'function' && canvasActif()) demanderDessin();   // patch435
   renderMesSieges();
   if(typeof mfoRendre === 'function') mfoRendre();

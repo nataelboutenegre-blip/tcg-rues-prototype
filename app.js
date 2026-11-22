@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1e8b2dfd19b6';
+const VERSION_JEU = '0e31841827f6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -957,6 +957,7 @@ async function showGame(session_){
   onbMarque('jeu', onbAppareil());   // patch324
   demarrerPresence(session_.user.id);   // patch127
   chargerAnnonce();   // patch137
+  chargerPass();   // patch502 : la pastille du pass dès l'arrivée
   verifierTiragesEnAttente();
   loadMenaces();
   renderNotifications();
@@ -11525,9 +11526,9 @@ function appliquerNomsS3(){
   aria('#panel-combat > .volets, #panel-batiments > .volets, #panel-defense > .volets', 'Combat', 'QG');
 }
 appliquerNomsS3();
-const ONGLETS_FUSIONNES = ['defense', 'batiments', 'succes', 'cdj', 'radar', 'rafale', 'boutiqueeuros', 'atelierbq', 'personnaliser', 'monuments', 'pass', 'bourse', 'echange'];   // patch298 : bourse, echange   // patch254 : pass   // patch191 : monuments
+const ONGLETS_FUSIONNES = ['defense', 'batiments', 'succes', 'cdj', 'radar', 'rafale', 'boutiqueeuros', 'atelierbq', 'personnaliser', 'monuments', 'bourse', 'echange'];   // patch502 : le pass n'est plus fusionné   // patch298 : bourse, echange   // patch254 : pass   // patch191 : monuments
 // l'onglet qui s'allume quand on ouvre un volet fusionne
-const ONGLET_PARENT = { defense: 'combat', batiments: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg', boutiqueeuros: 'boutique', atelierbq: 'boutique', personnaliser: 'profil', monuments: 'collection', pass: 'qg', bourse: 'contrat', echange: 'contrat' };   // patch298
+const ONGLET_PARENT = { defense: 'combat', batiments: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg', boutiqueeuros: 'boutique', atelierbq: 'boutique', personnaliser: 'profil', monuments: 'collection', bourse: 'contrat', echange: 'contrat' };   // patch298
 
 // ---------- patch89 : saison 2, deux modes ----------
 // SAISON2 = false : la saison 1 tourne comme avant, rien de ce bloc ne
@@ -11540,13 +11541,13 @@ const ONGLETS_MODE = {
   front: { nom: 'Front', barre: ['tirage', 'territoire', 'combat', 'qg'],
            propres: ['tirage', 'territoire', 'qg', 'combat', 'collection', 'boutique'] },   // patch178 : boutique sans paquets
 };
-const ONGLETS_COMMUNS = CLANS ? ['profil', 'communaute', 'clan'] : ['profil', 'communaute'];
+const ONGLETS_COMMUNS = CLANS ? ['profil', 'pass', 'communaute', 'clan'] : ['profil', 'pass', 'communaute'];   // patch502
 // patch191 : les onglets ranges en groupes (rail PC et menu Plus)
 const ONGLETS_GROUPES = {
   terra: [['Jouer', ['tirage', 'collection', 'qg']], ['Marché', ['contrat', 'boutique']],   // patch298
-          ['Joueurs', ['communaute', 'clan']], ['Moi', ['profil']]],
+          ['Joueurs', ['communaute', 'clan']], ['Moi', ['profil', 'pass']]],   // patch502
   front: [['Jouer', ['tirage', 'territoire', 'combat', 'qg']], ['Mes cartes', ['collection', 'boutique']],
-          ['Joueurs', ['communaute', 'clan']], ['Moi', ['profil']]],
+          ['Joueurs', ['communaute', 'clan']], ['Moi', ['profil', 'pass']]],   // patch502
 };
 function groupesDuMode(){
   return ONGLETS_GROUPES[modeJeu].map(([t, ids]) => [t, ids.filter(id => CLANS || id !== 'clan')]);
@@ -14757,6 +14758,7 @@ async function loadQuetes(){
   if(error){ if(bloc) bloc.hidden = true; return; }
   quetesTout = (data || []).map(q => nomsS3() && q.detail ? { ...q, detail: String(q.detail).replace('Dans le QG', 'Dans l’Arcade').replace('dans le QG', 'dans l’Arcade') } : q);   // patch455
   renderObjectifs();
+  if(passEtat) chargerPass();   // patch502 : une quête finie fait avancer le pass
   invCharger();   // patch350
 }
 
@@ -18264,9 +18266,12 @@ function renderPassQG(){
   const el = document.getElementById('qgPass');
   if(!el) return;
   const e = passEtat;
-  if(!e || !e.recompenses){ el.hidden = true; return; }
-  el.hidden = false;
-  const prets = e.recompenses.filter(r => psEtatRecompense(r, e) === 'pret').length;
+  // patch502 : plus d'encart dans l'Arcade ; la pastille de l'onglet compte ce qu'il y a à réclamer
+  const pb = document.getElementById('passBadge');
+  const nPrets = e && e.recompenses ? e.recompenses.filter(r => psEtatRecompense(r, e) === 'pret').length : 0;
+  if(pb){ pb.hidden = !nPrets; pb.textContent = nPrets ? String(nPrets) : ''; try{ majBadgePlus(); }catch(err){} }
+  el.hidden = true; return;
+  const prets = nPrets;
   const pct = e.niveau >= e.niveaux ? 100 : Math.round(100 * e.dans_niveau / e.xp_niveau);
   el.innerHTML = `<div class="qg-tete">
       <span class="ps-qg-n">${e.niveau}</span>

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '3c5df3c96720';
+const VERSION_JEU = '3dec4c22cc63';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -25891,7 +25891,7 @@ function ncConstruire(){
         const jauge = a.resistance ? ` (${fr(a.degats)} / ${fr(a.resistance)})` : '';
         items.push({ cle: `sd|${a.siege_id}|${a.n}`, sec: a.ouvert ? 'afaire' : 'histo', c: 'defense', i: '🛡️', mode: 'front',
           t: `<b>${echapperTexte(a.defenseur_pseudo || 'Le défenseur')}</b> a défendu ${nomA}`,
-          s: `−${fr(a.recul)} sur ta jauge${jauge}${a.devient_long ? ' · le siège devient long' : ''} · ${ilYA(a.le)}`,
+          s: `−${fr(a.recul)} sur ta jauge${jauge}${a.devient_long ? ' · le siège devient long' : ''}${a.manque && a.ouvert ? ` · <b>il manquait ≈ ${fr(a.manque)} ⚡</b> pour finir` : ''} · ${ilYA(a.le)}`,   // patch496
           a: a.ouvert ? 'Relancer' : null, aller: () => { ncFermer(); ouvrirSiege(a.commune_code); } });
       } else if(a.type === 'tombee'){
         items.push({ cle: `st|${a.siege_id}`, sec: 'histo', c: 'defense', i: '⌛', mode: 'front',

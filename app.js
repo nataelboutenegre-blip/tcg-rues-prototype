@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '2bf7e88f37e8';
+const VERSION_JEU = '3fbc80ffaadc';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -30065,11 +30065,14 @@ function roueActive(){
 function roueRemplace(){   // patch445 : la roue prend la place des paquets (pot vide, réserve d'accueil)
   return roueActive() && !ROUE.avec_paquets;
 }
+function roueReserve(){   // patch473 : tours gardés en réserve (s3-37 : 5)
+  return Math.max(3, Number(ROUE && ROUE.reserve) || 3);
+}
 function roueJetons(){
   if(!ROUE) return 0;
-  const j = Number(ROUE.jetons) || 0;
-  if(j >= 3) return j;   // un cadeau au-dessus de 3 est gardé
-  return Math.min(3, j + (Date.now() - roueLu) / 1200000);
+  const j = Number(ROUE.jetons) || 0, cap = roueReserve();
+  if(j >= cap) return j;   // un cadeau au-dessus de la réserve est gardé
+  return Math.min(cap, j + (Date.now() - roueLu) / 1200000);
 }
 function roueCases(){
   return (ROUE && Array.isArray(ROUE.cases) ? ROUE.cases : []).filter(k => Number(k.poids) > 0);
@@ -30275,12 +30278,12 @@ function renderRoueInfos(){
   if(sb2){ sb2.hidden = !sh; sb2.classList.toggle('actif', soir > 0); roueEcrire('rdfSoir', sh); }
   const offr = Math.max(0, Number(ROUE.offerts) || 0);   // patch389 : tours offerts en réserve
   const par = Number(ROUE.par_jour) || 15, faits = Number(ROUE.tours_jour) || 0, fini = faits >= par && soir < 1 && offr < 1, reste = Math.max(0, par - faits);
-  const prochain = live >= 3 ? 0 : (1 - (live % 1)) * 1200;
+  const prochain = live >= roueReserve() ? 0 : (1 - (live % 1)) * 1200;   // patch473
   const slot = (plein) => `<span class="rdf-slot${plein ? '' : ' vide'}"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="${ROUE_BOLT}"/></svg></span>`;
-  roueEcrire('rdfSlots', [0, 1, 2].map(i => slot(i < dispo)).join(''));
+  roueEcrire('rdfSlots', Array.from({ length: roueReserve() }, (_, i) => slot(i < dispo)).join(''));   // patch473
   roueEcrire('rdfDispo', fini ? 'Fini pour aujourd’hui' : `${dispo} tour${dispo > 1 ? 's' : ''} dispo`);
   roueEcrire('rdfProchain', fini ? 'La roue revient demain, tes tours restent en réserve'
-    : dispo >= 3 ? 'Réserve pleine : tourne avant d’en perdre !'
+    : dispo >= roueReserve() ? 'Réserve pleine : tourne avant d’en perdre !'
     : dispo === 0 ? 'Un tour revient toutes les <em>20 min</em>'
     : `Prochain tour dans <em>${roueMmss(prochain)}</em>`);
   roueEcrire('rdfJour', soir > 0 ? `Les tours du soir ne comptent pas dans tes ${par} tours du jour`   // patch388

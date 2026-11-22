@@ -8929,6 +8929,11 @@ body.mode-terra #roueFront{ display:none !important; }
 .rdf-slot{ width:30px; height:30px; border-radius:9px; display:grid; place-items:center; border:1.5px solid rgba(240,180,41,.55); background:rgba(240,180,41,.16); color:#FFD35A; box-sizing:border-box; }
 .rdf-slot svg{ width:17px; height:17px; }
 .rdf-slot.vide{ border:1.5px dashed rgba(169,188,212,.35); background:transparent; color:rgba(169,188,212,.35); }
+@media (max-width:360px){   /* patch473 : 5 cases sur un petit écran */
+  .rdf-slots:has(.rdf-slot:nth-child(4)){ gap:4px; }
+  .rdf-slots:has(.rdf-slot:nth-child(4)) .rdf-slot{ width:25px; height:25px; border-radius:8px; }
+  .rdf-slots:has(.rdf-slot:nth-child(4)) .rdf-slot svg{ width:14px; height:14px; }
+}
 .rdf-dispo{ text-align:left; line-height:1.2; min-width:0; }
 .rdf-dispo b{ display:block; font:900 1.25rem/1 var(--titre); color:#fff; letter-spacing:.02em; }
 .rdf-dispo span{ font-size:.76rem; color:#A9BCD4; }

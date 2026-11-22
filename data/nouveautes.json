@@ -2,6 +2,7 @@
   {
     "date": "2026-11-22",
     "nouveautes": [
+      "⚖️ Classement : le bonus de région est maintenant au prorata pour les régions de moins de 500 communes (Luxembourg × 0,2, Corse × 0,7). Avec ses 100 communes, le Luxembourg donnait un bonus de région entier dès les premiers paquets.",
       "🎨 La boutique a un 3e onglet, l'Atelier : tes effets de cartes (ce qui est à toi, ce qui se gagne en jouant avec ta progression, ce qui est en vente) et la couleur de ton territoire. Dans la fiche d'une carte, l'atelier de la carte se replie sur une ligne.",
       "📍 « Voir sur la carte » sur la fiche d'une carte Terra (idée d'Arkhannou).",
       "🔎 Attaquer : tape le nom d'une commune et choisis « Autour de… » pour voir les cibles autour d'elle, de la plus proche à la plus loin (idée d'Oshannir).",
@@ -29,7 +30,9 @@
       "✨ Cinq nouvelles collections en boutique, le skin et son dos assorti : Topo, Givre, Kintsugi, Vitrail et Aquarelle. Dans toute la boutique, le skin et le dos d'un thème se vendent maintenant ensemble ; si tu as déjà l'un des deux, tu ne paies que ce qui te manque. Et les onze skins existants ont été redessinés : ils jouent maintenant avec la photo de ta carte. Si tu en as déjà un, il change tout seul, sans rien payer.",
       "🏆 Les récompenses de la saison 2 sont dans les profils : médailles du podium, titres, seigneuries, clan champion, et un paquet Terra offert à tous les pionniers du Front."
     ],
-    "correctifs": []
+    "correctifs": [
+      "Sur les nouvelles cartes, le bandeau du monument ne recouvre plus le nom de la commune. Après un duel classé, le jeu annonce les tickets du Mess gagnés."
+    ]
   },
   {
     "date": "2026-11-18",

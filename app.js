@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '40baa60782e0';
+const VERSION_JEU = 'd6eab1ef60d5';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2051,7 +2051,7 @@ function renderClassementClans(podium, liste, plus){
 let clCalcOuvert = (() => { try{ return localStorage.getItem('tf-cl-calcul') === '1'; }catch(e){ return false; } })();
 const CL_CALC_FRONT = `<div class="cl-calc-l"><i class="sc-pt c"></i><div><b>Cartes</b><span>Chaque commune que tu tiens : commune <b>1</b> · peu commune <b>3</b> · rare <b>12</b> · épique <b>25</b> · légendaire <b><span class="nom-s2">60</span><span class="nom-s3">45</span></b>.</span></div></div>
   <div class="cl-calc-l"><i class="sc-pt co"></i><div><b>Combats</b><span><b>+10</b> par victoire : conquête, défense, garnison qui repousse. 10 par jour au plus, 2 par jour contre un même joueur. Acquis même si tu reperds la commune.</span></div></div>
-  <div class="cl-calc-l"><i class="sc-pt t"></i><div><b>Territoires</b><span>Par département, ton meilleur palier : 5 % <b>+100</b> · 10 % <b>+200</b> · 25 % <b>+300</b> (seul en tête) · 50 % <b>+600</b> · 75 % <b>+900</b> · 100 % <b>+1&nbsp;400</b>. Région : <b>+1&nbsp;200</b> si tu es seul en tête avec 10 % ou plus dans plus de la moitié de ses départements.<span class="nom-s3"> Ces bonus sont multipliés selon la population du département ou de la région : <b>× 0,6</b> à <b>× 1,6</b>.</span></span></div></div>
+  <div class="cl-calc-l"><i class="sc-pt t"></i><div><b>Territoires</b><span>Par département, ton meilleur palier : 5 % <b>+100</b> · 10 % <b>+200</b> · 25 % <b>+300</b> (seul en tête) · 50 % <b>+600</b> · 75 % <b>+900</b> · 100 % <b>+1&nbsp;400</b>. Région : <b>+1&nbsp;200</b> si tu es seul en tête avec 10 % ou plus dans plus de la moitié de ses départements (au prorata pour une région de moins de 500 communes : Luxembourg, Corse).<span class="nom-s3"> Ces bonus sont multipliés selon la population du département ou de la région : <b>× 0,6</b> à <b>× 1,6</b>.</span></span></div></div>
   <div class="cl-calc-l"><i class="sc-pt b"></i><div><b>Bâtiments</b><span>Chaque bâtiment terminé : Fonderie <b>+50</b> · Forteresse <b>+80</b> · Centre de recherche <b>+150</b> · Banque <b>+80</b> · Radar <b>+80</b>. Acquis même s’il est détruit, jusqu’au maximum de chaque type (2 Fonderies, 5 Forteresses, 1 Centre, 1 Banque, 1 Radar : <b>810</b> au plus).<br>Bombe lancée, selon son niveau : <b>+150</b> · <b>+300</b> · <b>+500</b>. Rébellion financée ou étouffée : <b>+2</b> par lingot, 60 par jour au plus.</span></div></div>
   <p class="cl-calc-pied">Cartes et territoires se comptent en direct : perdre une commune fait baisser ton score. Les combats et les bâtiments restent acquis.</p>`;   // patch354
 const CL_CALC_CLANS = `<p class="cl-calc-txt">Le nombre de communes du Front de chaque membre <b>actif</b> (jeu ouvert dans les 7 derniers jours), divisé par le nombre de membres actifs. Jamais le total : un gros clan n’a pas d’avantage, et un membre absent ne fait pas baisser son clan. Un clan est classé à partir de <b>3 membres</b>.</p>`;
@@ -32611,7 +32611,7 @@ function mpHtml(d, moi){
   const autres = (t.deps || []).length > MP_DEPS_VUS
     ? `<button type="button" class="mp-autres" data-mp="autres">Voir les ${(t.deps.length - MP_DEPS_VUS)} autres départements</button>` : '';
   const regions = (t.regions || []).filter(r => r.gagnee).map(r => ligne(
-    `Région ${e(r.region)}`, plus(r.pts), `${r.n} départements sur ${r.total} à 10 % ou plus${r.coef != null && Number(r.coef) !== 1 ? ` · population × ${String(Number(r.coef).toFixed(2)).replace('.', ',')}` : ''}`)).join('');   // patch460
+    `Région ${e(r.region)}`, plus(r.pts), `${r.n} départements sur ${r.total} à 10 % ou plus${r.coef != null && Number(r.coef) !== 1 ? ` · population × ${String(Number(r.coef).toFixed(2)).replace('.', ',')}` : ''}${r.prorata != null && Number(r.prorata) < 1 ? ` · petite région × ${String(Number(r.prorata).toFixed(2)).replace('.', ',')}` : ''}`)).join('');   // patch460, patch491
   const presque = (t.regions || []).filter(r => !r.gagnee).sort((a, b) => (b.n / b.total) - (a.n / a.total))[0];
   const presqueHtml = presque ? `<p class="mp-note">Région la plus proche : <b>${e(presque.region)}</b>, ${presque.n} département${presque.n > 1 ? 's' : ''} sur ${presque.total} à 10 % ou plus ; il en faut ${Math.floor(presque.total / 2) + 1} pour +${nb(t.region_pts)}.</p>` : '';
   const sans = t.sans > 0 ? `<p class="mp-note">Et ${nb(t.sans)} département${t.sans > 1 ? 's' : ''} où tu as des communes sans bonus (en dessous de 50 %, il faut être seul en tête).</p>` : '';

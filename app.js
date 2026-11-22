@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '083001b079e1';
+const VERSION_JEU = '2249fa830930';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -17973,6 +17973,7 @@ async function rafaleTerminer(){
   const { data, error } = await sb.rpc('rafale_terminer', { p_id: p.id });
   if(error){ notifier({ type: 'erreur', titre: 'Rafale', texte: messageLisible(error.message) }); rafaleAuQG(); return; }
   rafaleAfficherFin(data, true);
+  messApresDuel();   // patch489
 }
 
 // ----- l'entrainement : rien sur le serveur -----
@@ -19121,6 +19122,7 @@ function renderPomDuelFin(){
     </div>`;
   if(d.gain) loadPackStatus();
   chargerPomDuelEtat();
+  if(d.resultat) messApresDuel();   // patch489
 }
 document.getElementById('qgPomDuel').addEventListener('click', () => ouvrirPomDuel());
 document.getElementById('qgPomEntr').addEventListener('click', () => ouvrirPomEntr());
@@ -19651,6 +19653,7 @@ function radarKm(c){
 function radarAfficherResume(p, fin){
   radarMontrer('rdFin');
   const rejouerDuel = !!fin && !p.entr && !p.amical && !p.cible;   // patch381 : un duel classé qui vient de finir
+  if(fin && !p.entr) messApresDuel();   // patch489
   radarRes = p; radarResSel = -1;
   const fmt = (n) => Number(n).toLocaleString('fr-FR');
   const adv = p.adversaire && p.resultat ? p.adversaire : null;
@@ -33100,12 +33103,36 @@ function messSpriteUrl(nom){
 }
 const messSp = (nom, cls) => `<img class="${cls || 'mess-sp'}" src="${messSpriteUrl(nom)}" alt="${nom}" draggable="false">`;
 function messVisible(){ return !!(MESS && (MESS.actif || (MESS_TEST && MESS.ouvert))); }
+// patch489 : les tickets gagnés aujourd'hui (mess_etat().jour) ont monté depuis la dernière lecture : on le dit.
+// Le dernier chiffre vu est gardé sur l'appareil, pour un duel réglé plus tard (l'adversaire joue après moi).
+function messTicketsGagnes(){
+  if(!MESS || !messVisible()) return;
+  const jour = new Date().toLocaleDateString('fr-CA'), n = Number(MESS.jour) || 0;
+  let vu = null;
+  try{ const s = (localStorage.getItem('tf-mess-jour') || '').split('|'); if(s[0] === jour) vu = Number(s[1]) || 0; }catch(e){}
+  try{ localStorage.setItem('tf-mess-jour', jour + '|' + n); }catch(e){}
+  if(vu === null){ if(!messDuelFini) return; vu = 0; }   // première lecture du jour : on ne dit rien, sauf juste après un duel
+  messDuelFini = false;
+  if(n <= vu) return;
+  const g = n - vu, max = Number(MESS.regles && MESS.regles.par_jour) || 30;
+  notifier({ type: 'succes', titre: `🎟 +${g} ticket${g > 1 ? 's' : ''} pour le Mess`,
+    texte: `Tu en as ${Number(MESS.tickets) || 0}${n >= max ? ` · maximum du jour atteint (${max})` : ` · ${n} / ${max} gagnés aujourd’hui`}. Touche ici pour aller au Mess.`,
+    aller: () => { const t = document.querySelector('.tab[data-tab="qg"]'); if(t) t.click(); setTimeout(() => { const c = document.getElementById('qgMess'); if(c && c.scrollIntoView) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 300); } });
+}
+var messDuelFini = false;
+// un duel classé vient de finir : on relit le Mess (le serveur donne les tickets au moment où le duel se règle)
+function messApresDuel(){
+  if(!SAISON2) return;
+  messDuelFini = true;
+  setTimeout(() => { try{ messCharger(); }catch(e){} }, 600);
+}
 async function messCharger(){
   messLu = true;
   try{
     const { data, error } = await sb.rpc('mess_etat');
     MESS = !error && data ? data : null;
   }catch(e){ MESS = null; }
+  messTicketsGagnes();   // patch489
   document.body.classList.toggle('mess-on', messVisible());
   messCarteRendre();
   messFenMaj();

@@ -22,3 +22,6 @@ _donnees/belgique/brut/
 _donnees/luxembourg/brut/
 _donnees/espagne/brut/
 _donnees/__pycache__/
+
+# Discord : salons lus par _discord/lire-salon.py (messages des joueurs, jamais sur GitHub)
+_discord/lectures/

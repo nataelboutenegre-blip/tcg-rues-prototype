@@ -3556,6 +3556,45 @@
 }
 .fiche .fc-nom.long{ font-size: 1.35rem; }
 .fiche .fc-dep{ margin: 0; text-align: center; font-size: .82rem; color: #A9BCD4; }
+/* patch486 : l'onglet Atelier de la boutique */
+.atb-seg{ display:flex; width:100%; box-sizing:border-box; background:rgba(23,44,75,.9); border-radius:14px; padding:4px; gap:4px; margin:12px 0 14px; }
+.atb-seg button{ flex:1 1 0; white-space:nowrap; font:inherit; font-weight:600; font-size:.95rem; color:#A9BCD4; background:none; border:0; border-radius:10px; padding:9px 6px; cursor:pointer; }
+.atb-seg button.on{ background:#F1F5F9; color:#0F1F38; }
+.atb-bloc{ background:rgba(23,44,75,.9); border:1px solid #284268; border-radius:16px; padding:14px; margin-bottom:12px; }
+.atb-tete{ display:flex; gap:14px; align-items:center; }
+.atb-mini{ flex:none; width:84px; } .atb-mini .mini{ width:84px; }
+.atb-tete p{ margin:0 0 10px; color:#A9BCD4; font-size:.92rem; line-height:1.4; } .atb-tete p b{ color:#F1F5F9; }
+.atb-btn{ font:inherit; font-weight:700; font-size:.95rem; background:#F0B429; color:#1A1404; border:0; border-radius:12px; padding:10px 16px; cursor:pointer; }
+.atb-h{ display:flex; justify-content:space-between; align-items:baseline; margin:0 0 10px; font-weight:700; }
+.atb-h small{ font-weight:500; color:#A9BCD4; font-size:.82rem; }
+.atb-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.atb-chip{ font-size:.85rem; font-weight:600; background:rgba(74,222,128,.1); color:#8EE3B8; border:1px solid rgba(74,222,128,.3); border-radius:999px; padding:4px 10px; }
+.atb-l{ display:grid; grid-template-columns:1fr auto; gap:2px 10px; padding:10px 0; border-top:1px solid rgba(169,188,212,.12); align-items:center; }
+.atb-h + .atb-l{ border-top:0; padding-top:2px; }
+.atb-l > b{ grid-column:1; } .atb-l > small{ grid-column:1; color:#A9BCD4; font-size:.82rem; }
+.atb-l .atb-v{ grid-row:1 / 4; grid-column:2; font-size:.85rem; font-weight:700; color:#F0B429; text-align:right; }
+.atb-l .atb-v.pass{ color:#C4B5FD; } .atb-l .atb-v.proche{ color:#8EE3B8; }
+.atb-barre{ grid-column:1; height:5px; border-radius:3px; background:rgba(169,188,212,.15); overflow:hidden; margin-top:4px; }
+.atb-barre i{ display:block; height:100%; background:#8EE3B8; border-radius:3px; }
+.atb-acheter{ font:inherit; font-size:.85rem; font-weight:700; color:#1A1404; background:#F0B429; border:0; border-radius:10px; padding:7px 12px; cursor:pointer; }
+.atb-note{ font-size:.82rem; color:#A9BCD4; margin:10px 0 0; line-height:1.45; }
+.atb-terr .pf-bloc{ background:none; border:0; padding:0; margin:0; }
+/* la fiche d'une carte : l'atelier replié sur une ligne */
+.atl-fc .dc-tete{ cursor:pointer; }
+.atl-fc.replie > :not(.dc-tete){ display:none !important; }
+.atl-fc .dc-tete::after{ content:'›'; margin-left:8px; color:#A9BCD4; transition:transform .15s; display:inline-block; }
+.atl-fc:not(.replie) .dc-tete::after{ transform:rotate(90deg); }
+/* patch484 : passer le flambeau */
+.flb-sep{ height: 1px; background: rgba(169,188,212,.15); margin: 10px 0; }
+.fenetre.flb-f{ max-width: 460px; text-align: left; }
+.fenetre.flb-f h2{ margin: 0 0 8px; font-size: 1.2rem; }
+.fenetre.flb-f p{ margin: 0 0 10px; color: #A9BCD4; line-height: 1.45; } .fenetre.flb-f p b, .fenetre.flb-f li b{ color: #F1F5F9; }
+.fenetre.flb-f ul{ margin: 0 0 16px; padding-left: 18px; color: #A9BCD4; line-height: 1.5; font-size: .93rem; }
+.flb-act{ display: flex; gap: 8px; }
+.flb-act button{ flex: 1; font: inherit; font-weight: 700; border-radius: 12px; padding: 12px; cursor: pointer; }
+.flb-ok{ background: #F0B429; color: #1A1404; border: 0; }
+.flb-ok:disabled{ opacity: .6; }
+.flb-non{ background: transparent; color: #F1F5F9; border: 1px solid rgba(169,188,212,.35); }
 /* patch483 : « Autour de… » dans Attaquer */
 .aut-sugg{ display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 12px; }
 .aut-sugg > span{ width: 100%; font-size: .82rem; color: #A9BCD4; }
@@ -6878,6 +6917,11 @@ body[data-dos="braises"], .bq-dos-apercu[data-dos="braises"]{
 .bt-bombe .bt-bombe-ic{ font-size:.95rem; }
 .grande-conquete.gc-bombe{ background:linear-gradient(90deg,#4a1a1d,#13284A 50%); border-color:rgba(229,72,77,.7); box-shadow:0 14px 40px rgba(0,0,0,.5), 0 0 30px rgba(229,72,77,.3); }
 .grande-conquete.gc-bombe .gc-tx b em{ color:#FF9C95; }
+/* patch485 : la défense, en bleu */
+.grande-conquete.gc-defense{ background:linear-gradient(90deg,#0E2A4A,#13284A 60%); border-color:#3898EC; box-shadow:0 14px 40px rgba(0,0,0,.5), 0 0 30px rgba(56,152,236,.3); cursor:pointer; }
+.grande-conquete.gc-defense .gc-tx small{ color:#A9C8EC; }
+.nc-ico.defense{ background:rgba(56,152,236,.22); }
+.nc-item:has(.nc-ico.defense){ box-shadow: inset 3px 0 0 #3898EC; }
 .leg-bt.leg-centre{ border-color:#9CC2FF; color:#9CC2FF; }
 
 /* la mallette de frappe : plein écran */

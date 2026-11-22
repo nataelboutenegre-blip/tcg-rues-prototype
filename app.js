@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '34ddedee7a4a';
+const VERSION_JEU = '02c0613a00d4';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -8141,6 +8141,13 @@ function rendreProfilPanneau(){
 
 // Le bouton ouvre la fiche, ou les deux actions existent deja. Les
 // dupliquer ici ferait deux chemins pour une meme chose.
+// patch486 : l'atelier d'une carte s'ouvre en touchant sa ligne
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('.atl-fc .dc-tete');
+  if(!t) return;
+  const b = t.closest('.atl-fc');
+  b.classList.toggle('replie');
+});
 document.getElementById('pfCorps').addEventListener('click', (e) => {
   if(e.target.closest('[data-pf="editer"]')) ouvrirProfil(window.__monId || null);
   if(e.target.closest('[data-pf="supprimer"]')) ouvrirSuppressionCompte();
@@ -11470,9 +11477,9 @@ function appliquerNomsS3(){
   aria('#panel-combat > .volets, #panel-batiments > .volets, #panel-defense > .volets', 'Combat', 'QG');
 }
 appliquerNomsS3();
-const ONGLETS_FUSIONNES = ['defense', 'batiments', 'succes', 'cdj', 'radar', 'rafale', 'boutiqueeuros', 'personnaliser', 'monuments', 'pass', 'bourse', 'echange'];   // patch298 : bourse, echange   // patch254 : pass   // patch191 : monuments
+const ONGLETS_FUSIONNES = ['defense', 'batiments', 'succes', 'cdj', 'radar', 'rafale', 'boutiqueeuros', 'atelierbq', 'personnaliser', 'monuments', 'pass', 'bourse', 'echange'];   // patch298 : bourse, echange   // patch254 : pass   // patch191 : monuments
 // l'onglet qui s'allume quand on ouvre un volet fusionne
-const ONGLET_PARENT = { defense: 'combat', batiments: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg', boutiqueeuros: 'boutique', personnaliser: 'profil', monuments: 'collection', pass: 'qg', bourse: 'contrat', echange: 'contrat' };   // patch298
+const ONGLET_PARENT = { defense: 'combat', batiments: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg', boutiqueeuros: 'boutique', atelierbq: 'boutique', personnaliser: 'profil', monuments: 'collection', pass: 'qg', bourse: 'contrat', echange: 'contrat' };   // patch298
 
 // ---------- patch89 : saison 2, deux modes ----------
 // SAISON2 = false : la saison 1 tourne comme avant, rien de ce bloc ne
@@ -14656,6 +14663,7 @@ document.querySelectorAll('.tab[data-tab]').forEach(tab => {
     if(tab.dataset.tab === 'bourse') loadBourse();
     if(tab.dataset.tab === 'boutique') loadBoutique();
     if(tab.dataset.tab === 'boutiqueeuros') loadBoutiqueEuros();   // patch175
+    if(tab.dataset.tab === 'atelierbq') atbOuvrir();   // patch486
     if(tab.dataset.tab === 'personnaliser') loadGardeRobe();
     if(tab.dataset.tab === 'clan'){ loadClan(); setTimeout(tchatMajBadge, 0); }
     if(tab.dataset.tab === 'tirage'){ loadPackStatus(); loadObjectifs(); ppRelire(300); }   // patch306
@@ -21232,6 +21240,11 @@ function renderClan(){
              <div class="clan-gere-l"><button type="button" class="bq-btn secondaire" data-clan-bras="${m.id}" data-actif="0">Retirer le rôle</button>${exclure}</div>`
           : nbBras >= 2 ? `<p class="clan-note">Tu as déjà 2 bras droits : retire le rôle à l'un d'eux pour nommer ce membre.</p><div class="clan-gere-l">${exclure}</div>`
           : `<div class="clan-gere-l"><button type="button" class="bq-btn" data-clan-bras="${m.id}" data-actif="1">Nommer bras droit</button>${exclure}</div><p class="clan-note">Un bras droit peut inviter ; tu choisis ensuite s'il peut aussi exclure ou modifier le clan.</p>`}
+        ${(() => {   // patch484 : passer le flambeau
+          const autres = (c.membres || []).filter(x => x.bras_droit && x.id !== m.id).length;
+          return `<div class="flb-sep"></div><div class="clan-gere-l"><button type="button" class="bq-btn secondaire" data-clan-flambeau="${m.id}">🔥 Lui passer le flambeau</button></div>
+            <p class="clan-note">${echapperTexte(m.pseudo)} devient chef du clan. Toi, tu restes dans le clan ${autres >= 2 ? 'comme simple membre (il y a déjà 2 bras droits)' : 'comme bras droit, avec tous les droits'}.</p>`;
+        })()}
       </div>`;
     };
     const membres = (c.membres || []).map(m => `<div class="clan-membre"><span class="av" style="--clan:${c.couleur}">${echapperTexte((m.pseudo || '?')[0].toUpperCase())}</span>
@@ -21270,6 +21283,35 @@ function renderClan(){
   zone.innerHTML = `<div class="clan-grille">${gauche}${blocClassement}</div>`;
   tchatApresRendu();   // patch258
   if(document.getElementById('ceDonne')) ceChargerCommunes();   // patch194
+}
+// patch484 : la confirmation avant de passer le flambeau
+function clanFlambeauConfirmer(id){
+  const c = (clanCache.moi && clanCache.moi.clan) || {};
+  const m = (c.membres || []).find(x => x.id === id);
+  if(!m) return;
+  const autres = (c.membres || []).filter(x => x.bras_droit && x.id !== id).length;
+  const nom = echapperTexte(m.pseudo || 'ce membre');
+  const fermer = ouvrirFenetre(`
+    <div class="fenetre flb-f" role="dialog" aria-modal="true" aria-labelledby="flbT">
+      <h2 id="flbT">🔥 Passer le flambeau à ${nom} ?</h2>
+      <p><b>${nom}</b> devient le chef de <b>${echapperTexte(c.nom || 'ton clan')}</b>.</p>
+      <ul>
+        <li>${autres >= 2 ? 'Tu restes dans le clan comme <b>simple membre</b> : il y a déjà 2 bras droits.' : 'Tu restes dans le clan comme <b>bras droit</b>, avec tous les droits (inviter, exclure, modifier le clan).'}</li>
+        <li>Seul ${nom} pourra te rendre le titre.</li>
+        <li>Le clan est prévenu dans son tchat.</li>
+      </ul>
+      <div class="flb-act"><button type="button" class="flb-non" data-flb="non">Annuler</button><button type="button" class="flb-ok" data-flb="oui">Passer le flambeau</button></div>
+    </div>`);
+  const boite = document.querySelector('#fenetre .flb-f');
+  if(!boite) return;
+  boite.addEventListener('click', async (e) => {
+    const b = e.target.closest('[data-flb]');
+    if(!b) return;
+    if(b.dataset.flb === 'non'){ fermer(null); return; }
+    b.disabled = true;
+    const ok = await actionClan('clan_passer_flambeau', { p_joueur: id }, `${m.pseudo || 'Ce membre'} est le nouveau chef`);
+    if(ok){ clanGere = null; fermer(true); renderClan(); } else b.disabled = false;
+  });
 }
 async function actionClan(nom, args, succes){
   const { data, error } = await sb.rpc(nom, args || {});
@@ -21367,6 +21409,7 @@ document.getElementById('panel-clan').addEventListener('click', (e) => {
     }
   }
   if(b.dataset.clanGerer){ clanGere = clanGere === b.dataset.clanGerer ? null : b.dataset.clanGerer; renderClan(); return; }   // patch252
+  if(b.dataset.clanFlambeau) return clanFlambeauConfirmer(b.dataset.clanFlambeau);   // patch484
   if(b.dataset.clanBras) return actionClan('clan_role', { p_joueur: b.dataset.clanBras, p_bras_droit: b.dataset.actif === '1', p_inviter: true, p_exclure: false, p_modifier: false },
                                            b.dataset.actif === '1' ? 'Bras droit nommé' : 'Rôle retiré');
   if(b.dataset.clanDroit){
@@ -23126,7 +23169,8 @@ async function bqeVerifierAcces(){
     }catch(e){ bqeAcces = false; }
   }
   const v = document.getElementById('bqVolets');
-  if(v) v.hidden = !bqeAcces;
+  if(v) v.hidden = !bqeAcces && !(ATL.lu && ATL.ouvert);   // patch486 : l'atelier suffit à montrer les volets
+  atbMajVolets();
   majPastilleBoutique();   // patch205
 }
 
@@ -23644,7 +23688,7 @@ function armerDosFiche(boite, source, code){
   if(!SAISON2 || !boite) return;
   const c3d = boite.querySelector('.c3d');
   chargerMesDosCartes().then(() => { if(c3d && c3d.isConnected) majDosC3d(c3d, dosDeMaCarte(source, code), false); });
-  remplirChoixDos(boite.querySelector('.dc-choix'), (cle) => majDosC3d(c3d, cle, true));
+  remplirChoixDos(boite.querySelector('.dc-choix[data-dc-src]'), (cle) => majDosC3d(c3d, cle, true));   // patch486
 }
 
 // la grande vitrine : les cartes arrivent de dos et se retournent une par une
@@ -25616,7 +25660,7 @@ function ncDemarrer(){
 async function ncCharger(){
   const rpc = async (n, a) => { try{ const { data, error } = await sb.rpc(n, a); return error ? undefined : data; }catch(e){ return undefined; } };
   const vusP = CV_VUS.attente ? vusCompteCharger() : vusCompteAttendre();   // patch482
-  const [prefs, journal, sieges, ech, clanE, alertes, quetes, recolte, clan, effaces, diplo, merv] = await Promise.all([
+  const [prefs, journal, sieges, ech, clanE, alertes, quetes, recolte, clan, effaces, diplo, merv, siegeAl] = await Promise.all([
     NC.prefs ? null : rpc('mes_notif_preferences'),
     rpc('journal', { p_mode: 'moi', p_limite: 40 }),
     rpc('sieges_contre_moi'),
@@ -25629,16 +25673,39 @@ async function ncCharger(){
     SAISON2 ? rpc('mes_sieges_effaces') : null,   // patch326
     SAISON2 && CLANS ? rpc('clan_diplo_etat') : null,   // patch400
     SAISON2 ? rpc('merveille_ouverture') : null,   // patch431
+    SAISON2 ? rpc('mes_alertes_siege') : null,   // patch485
   ]);
   if(!NC.prefs){
     if(prefs === undefined) NC.prefsDispo = false;
     else { NC.prefsDispo = true; NC.prefs = ncPrefsDepuis(prefs); }
   }
-  NC.d = { journal, sieges, ech, clanE, alertes, quetes, recolte: Array.isArray(recolte) ? recolte[0] : recolte, clan, effaces, diplo, merv };
+  NC.d = { journal, sieges, ech, clanE, alertes, quetes, recolte: Array.isArray(recolte) ? recolte[0] : recolte, clan, effaces, diplo, merv, siegeAl };
   if(diplo !== undefined && diplo !== null){ clanDiplo.etat = diplo; majBadgeClanTotal(); }   // patch400
   NC.charge = Date.now();   // patch262
   await vusP;   // patch482
   ncConstruire();
+  ncDefenseBandeau();   // patch485
+}
+
+function siegeExpirationH(){ return 24; }   // patch485 : config_jeu 'siege'.expiration_h (le jeu ne le lit pas encore)
+// patch485 : la première fois qu'on apprend une défense, un bandeau bleu (une fois par appareil et par compte)
+var NC_DEF_VUS = new Set();
+function ncDefenseBandeau(){
+  const vus = ncVus();
+  const neufs = NC.items.filter(x => x.c === 'defense' && x.sec === 'afaire' && !vus.has(x.cle)
+    && !NC_DEF_VUS.has(x.cle) && !CV_VUS.set.has('bd:' + x.cle));
+  if(!neufs.length) return;
+  neufs.forEach(x => NC_DEF_VUS.add(x.cle));
+  vusCompteMarquer(neufs.map(x => 'bd:' + x.cle));
+  const it = neufs[0];
+  const el = document.createElement('div');
+  el.className = 'grande-conquete gc-defense';
+  el.setAttribute('role', 'status');
+  el.innerHTML = `<span class="gc-ico">🛡️</span><span class="gc-tx"><b>${it.t.replace(/<\/?b>/g, '')}</b><small>${it.s}</small></span>`;
+  el.addEventListener('click', () => { el.remove(); if(it.aller) it.aller(); });
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('visible'));
+  setTimeout(() => { el.classList.remove('visible'); setTimeout(() => el.remove(), 400); }, 7000);
 }
 
 function ncConstruire(){
@@ -25781,6 +25848,24 @@ function ncConstruire(){
       items.push({ cle: `j|${e.id}`, sec: 'histo', c: 'histo', i: '🤝', t: `Échange conclu avec <b>${echapperTexte((e.je_suis_acteur ? e.cible_pseudo : e.acteur_pseudo) || 'un joueur')}</b> · ${nom}`, s: ilYA(e.cree_le) });
   }
 
+  // patch485 : l'attaquant apprend qu'on l'a défendu, ou que son siège est tombé (idée d'ASMFCB)
+  if(Array.isArray(d.siegeAl)){
+    const fr = (x) => Number(x || 0).toLocaleString('fr-FR');
+    for(const a of d.siegeAl){
+      const nomA = `<b>${echapperTexte(a.nom || a.commune_code)}</b>`;
+      if(a.type === 'defendu'){
+        const jauge = a.resistance ? ` (${fr(a.degats)} / ${fr(a.resistance)})` : '';
+        items.push({ cle: `sd|${a.siege_id}|${a.n}`, sec: a.ouvert ? 'afaire' : 'histo', c: 'defense', i: '🛡️', mode: 'front',
+          t: `<b>${echapperTexte(a.defenseur_pseudo || 'Le défenseur')}</b> a défendu ${nomA}`,
+          s: `−${fr(a.recul)} sur ta jauge${jauge}${a.devient_long ? ' · le siège devient long' : ''} · ${ilYA(a.le)}`,
+          a: a.ouvert ? 'Relancer' : null, aller: () => { ncFermer(); ouvrirSiege(a.commune_code); } });
+      } else if(a.type === 'tombee'){
+        items.push({ cle: `st|${a.siege_id}`, sec: 'histo', c: 'defense', i: '⌛', mode: 'front',
+          t: `Ton siège de ${nomA} est tombé`,
+          s: `${siegeExpirationH()} h sans vague${a.energie_rendue ? ` · ${fr(a.energie_rendue)} ⚡ rendus` : ''} · ${ilYA(a.le)}` });
+      }
+    }
+  }
   // patch344 : on me cite dans la discussion
   if(typeof DG !== 'undefined' && DG && DG.etat && Array.isArray(DG.etat.citations))
     for(const m of DG.etat.citations.slice(0, 5))
@@ -27222,6 +27307,7 @@ function atlCharger(){
       }catch(e){ return; }
     }
     try{ if(gardeRobe && document.getElementById('grCorps')) renderGardeRobe(); }catch(e){}
+    atbMajVolets();   // patch486
   })();
   return ATL.pret;
 }
@@ -27329,6 +27415,94 @@ async function atlVitrine(id, cartes){
   }catch(e){}
   return cartes;
 }
+
+// ---------- patch486 : l'onglet Atelier de la boutique ----------
+let atbVue = 'cartes';
+function atbMajVolets(){
+  const ok = !!(ATL.lu && ATL.ouvert);
+  document.querySelectorAll('.vol-atelier').forEach(b => { b.hidden = !ok; });
+  const v = document.getElementById('bqVolets');
+  if(v && ok) v.hidden = false;
+}
+async function atbOuvrir(){
+  try{ if(ATL.pret) await ATL.pret; }catch(e){}
+  try{ if(bqeAcces === null) await bqeVerifierAcces(); }catch(e){}
+  atbRendre();
+}
+function atbBarre(v, total){
+  const p = total ? Math.max(0, Math.min(100, Math.round(100 * v / total))) : 0;
+  return `<div class="atb-barre"><i style="width:${p}%"></i></div>`;
+}
+function atbRendre(){
+  const corps = document.getElementById('atbCorps');
+  if(!corps) return;
+  document.querySelectorAll('[data-atb-vue]').forEach(b => { const on = b.dataset.atbVue === atbVue; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
+  if(atbVue === 'territoire'){
+    corps.innerHTML = `<div class="atb-bloc atb-terr">${blocCouleur()}
+      <p class="atb-note">Bientôt ici : <b>ton motif de territoire</b>, à composer toi-même (formes, lignes, symboles, couleurs).</p></div>`;
+    return;
+  }
+  if(!ATL.lu || !ATL.ouvert){ corps.innerHTML = '<p class="collection-empty">L’atelier n’est pas encore ouvert.</p>'; return; }
+  const P = ATL.progres || {}, S = ATL.seuils || {};
+  const toutes = ATL_TOUTES_FAMILLES.flatMap(f => f.options.map(o => ({ ...o, fam: f.lib }))).filter(o => o.src !== 'inclus');
+  const amoi = toutes.filter(o => atlPossede(o.id));
+  const gagner = toutes.filter(o => !atlPossede(o.id) && (o.src === 'gagner' || o.src === 'pass'));
+  const vente = toutes.filter(o => !atlPossede(o.id) && o.src === 'boutique');
+  const progres = (o) => {
+    if(o.id === 'encre') return [P.quetes, S.encre || 50, 'quêtes du jour réclamées'];
+    if(o.id === 'lueur') return [P.serie, S.lueur || 7, 'jours de suite'];
+    if(o.id === 'nuit') return [P.serie, S.nuit || 14, 'jours de suite'];
+    if(o.id === 'postale') return [P.communes, S.postale || 200, 'communes Terra'];
+    if(o.id === 'etat') return [P.departements, S.etat || 1, 'département fini'];
+    if(o.id === 'tricolore') return [P.departements, S.tricolore || 3, 'départements finis'];
+    return null;
+  };
+  const carte = (() => {
+    try{
+      const e = atlCartesEssai().slice().sort((a, b) => TIERS.findIndex(t => t.id === b.tier.id) - TIERS.findIndex(t => t.id === a.tier.id))[0];
+      return e ? miniTerra({ ...e, exemplaires: 1, atelier: atlMienne(1) }) : '';
+    }catch(x){ return ''; }
+  })();
+  const ligneGagner = (o) => {
+    if(o.src === 'pass') return `<div class="atb-l"><b>${o.nom}</b><small>${echapperTexte(o.comment || 'Pass de saison')}, pass complet</small><span class="atb-v pass">Pass</span></div>`;
+    const pr = progres(o);
+    const fait = pr && pr[0] != null ? Math.min(pr[0], pr[1]) : null;
+    return `<div class="atb-l"><b>${o.nom}</b><small>${echapperTexte(o.comment || '')}${fait != null ? ` · ${fmtNombre(fait)} / ${fmtNombre(pr[1])}` : ''}</small>`
+      + (fait != null ? atbBarre(fait, pr[1]) : '') + `${fait != null && pr[1] - fait <= Math.max(1, Math.ceil(pr[1] * 0.2)) ? '<span class="atb-v proche">Bientôt</span>' : ''}</div>`;
+  };
+  corps.innerHTML = `
+    <div class="atb-bloc atb-tete"><div class="atb-mini">${carte}</div><div>
+      <p>Ta composition : <b>${echapperTexte(atlVide(ATL.moi) ? 'aucun effet' : atlResume(ATL.moi))}</b>${ATL.moi && ATL.moi.mode === 'choisies' ? ', sur les cartes que tu as choisies.' : ', sur toutes tes cartes Terra.'}</p>
+      <button type="button" class="atb-btn" data-atb="ouvrir">Ouvrir l’atelier</button></div></div>
+    <div class="atb-bloc"><div class="atb-h">À toi <small>${amoi.length} sur ${toutes.length}</small></div>
+      ${amoi.length ? `<div class="atb-chips">${amoi.map(o => `<span class="atb-chip">${o.nom}</span>`).join('')}</div>` : '<p class="atb-note">Rien encore : joue pour gagner tes premiers éléments.</p>'}</div>
+    ${gagner.length ? `<div class="atb-bloc"><div class="atb-h">À gagner en jouant</div>${gagner.map(ligneGagner).join('')}</div>` : ''}
+    ${vente.length ? `<div class="atb-bloc"><div class="atb-h">En vente</div>${vente.map(o => `<div class="atb-l"><b>${o.nom}</b><small>${echapperTexte(o.fam)}</small>
+      <span class="atb-v"><button type="button" class="atb-acheter" data-atb-acheter="${echapperTexte(o.id)}">${atlPrix(o)}</button></span></div>`).join('')}</div>` : ''}
+    <p class="atb-note">Chaque élément s’obtient une seule fois et sert ensuite sur toutes tes cartes Terra. Jamais sur le Front.</p>`;
+}
+document.getElementById('panel-atelierbq').addEventListener('click', async (e) => {
+  const vue = e.target.closest('[data-atb-vue]');
+  if(vue){ atbVue = vue.dataset.atbVue; atbRendre(); return; }
+  if(e.target.closest('[data-atb="ouvrir"]')){ atlOuvrir(); return; }
+  const ach = e.target.closest('[data-atb-acheter]');
+  if(ach){
+    const o = ATL_TOUTES_FAMILLES.flatMap(f => f.options).find(x => x.id === ach.dataset.atbAcheter);
+    try{ await bqeVerifierAcces(); }catch(err){}
+    const art = o && atlArticle(o);
+    if(!bqeAcces || !art){ notifier({ type: 'erreur', titre: 'Indisponible', texte: 'Cet élément n’est pas en vente pour le moment.' }); return; }
+    bqeOuvrirFiche(art.id, 'atelier');
+    return;
+  }
+  const pc = e.target.closest('[data-pf="couleur"]');   // ma couleur, comme dans le profil
+  if(pc){ await choisirCouleur(pc.dataset.couleur); atbRendre(); return; }
+  const dr = e.target.closest('[data-pf="dore"]');
+  if(dr){
+    try{ localStorage.setItem(CLE_DORE, dr.checked ? '1' : '0'); }catch(err){}
+    appliquerCouleurMoi();
+    try{ renderMapOverlay(); }catch(err){}
+  }
+});
 
 // ---------- l'écran de l'atelier ----------
 const AS = { ...ATL_BASE, mode: 'toutes', carte: 0, cartes: [], onglet: 'finition', achats: {}, eclat: false, enCours: false, minuteur: 0, pk: null };
@@ -27744,7 +27918,7 @@ function atlVoirEclat(){
 let atlFicheMinuteur = 0;
 function atlFicheHtml(code){
   if(!ATL.lu || !ATL.ouvert || !ATL.v2) return '';
-  return `<div class="dc-choix atl-fc" data-atl-fc="${echapperTexte(code)}">${atlFicheInterieur(code)}</div>`;
+  return `<div class="dc-choix atl-fc replie" data-atl-fc="${echapperTexte(code)}">${atlFicheInterieur(code)}</div>`;   // patch486 : replié
 }
 function atlFicheInterieur(code){
   const e = terraCollection.get(code);

@@ -28,7 +28,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
 <script src="topo.js?v=1"></script><!-- patch433 : habillage Topo -->
-<link rel="stylesheet" href="style.css?v=34ddedee7a4a">
+<link rel="stylesheet" href="style.css?v=02c0613a00d4">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -491,6 +491,7 @@
         Succès
       </div>
       <div class="tab onglet-fusionne" data-tab="boutiqueeuros" aria-hidden="true"><div class="icon"></div>Boutique</div>
+      <div class="tab onglet-fusionne" data-tab="atelierbq" aria-hidden="true"><div class="icon"></div>Atelier</div>
       <div class="tab onglet-fusionne" data-tab="personnaliser" aria-hidden="true"><div class="icon"></div>Personnaliser</div>
       <button class="tab tab-plus" id="btnPlus" aria-expanded="false" aria-haspopup="true">
         <span class="icon"><span class="points"><i></i><i></i><i></i></span></span>
@@ -943,7 +944,8 @@
       <h1>Boutique</h1>
       <div class="volets" id="bqVolets" role="tablist" aria-label="Boutique" hidden>
         <button type="button" class="volet actif" data-volet="boutique" role="tab" aria-selected="true">Avec mes TP</button>
-        <button type="button" class="volet" data-volet="boutiqueeuros" role="tab" aria-selected="false">Objets TerraFront</button>
+        <button type="button" class="volet" data-volet="boutiqueeuros" role="tab" aria-selected="false">Objets</button>
+        <button type="button" class="volet vol-atelier" data-volet="atelierbq" role="tab" aria-selected="false" hidden>Atelier</button>
       </div>
       <div class="sub">Dépense tes TerraPoints : paquets spéciaux et dos de cartes.</div>
       <div class="puces" id="bqStatut"><span class="puce">Chargement…</span></div>
@@ -971,10 +973,25 @@
       <h1>Boutique</h1>
       <div class="volets" role="tablist" aria-label="Boutique">
         <button type="button" class="volet" data-volet="boutique" role="tab" aria-selected="false">Avec mes TP</button>
-        <button type="button" class="volet actif" data-volet="boutiqueeuros" role="tab" aria-selected="true">Objets TerraFront</button>
+        <button type="button" class="volet actif" data-volet="boutiqueeuros" role="tab" aria-selected="true">Objets</button>
+        <button type="button" class="volet vol-atelier" data-volet="atelierbq" role="tab" aria-selected="false" hidden>Atelier</button>
       </div>
       <div class="sub">Des objets d'apparence, payés en euros. Ils ne changent jamais le contenu des paquets ni tes chances, et restent associés à ton compte.</div>
       <div id="bqeCorps"><p class="collection-empty">Chargement…</p></div>
+    </section>
+
+    <section class="tab-panel" id="panel-atelierbq"><!-- patch486 -->
+      <h1>Boutique</h1>
+      <div class="volets" role="tablist" aria-label="Boutique">
+        <button type="button" class="volet" data-volet="boutique" role="tab" aria-selected="false">Avec mes TP</button>
+        <button type="button" class="volet" data-volet="boutiqueeuros" role="tab" aria-selected="false">Objets</button>
+        <button type="button" class="volet actif vol-atelier" data-volet="atelierbq" role="tab" aria-selected="true">Atelier</button>
+      </div>
+      <div class="atb-seg" role="tablist" aria-label="Atelier">
+        <button type="button" class="on" data-atb-vue="cartes" role="tab" aria-selected="true">Mes cartes</button>
+        <button type="button" data-atb-vue="territoire" role="tab" aria-selected="false">Mon territoire</button>
+      </div>
+      <div id="atbCorps"><p class="collection-empty">Chargement…</p></div>
     </section>
 
     <section class="tab-panel" id="panel-bourse">
@@ -1840,6 +1857,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=34ddedee7a4a"></script>
+<script defer src="app.js?v=02c0613a00d4"></script>
 </body>
 </html>

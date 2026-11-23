@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-11-23",
+    "nouveautes": [
+      "🌙 Front : le Front dort la nuit. Entre 0 h et 7 h (heure de Paris), pas de nouveau siège ni de vague, aucune commune ne tombe ; l'énergie déjà en attente part toute seule à 7 h. Renforcer reste possible.",
+      "🏰 Front : une commune entourée par son propriétaire résiste mieux (rempart : +5 % par commune à lui à moins de 10 km au-delà de 3, jusqu'à +50 %). Et le bonus de proximité est plus progressif : une ou deux communes à toi autour de la cible ×0,9, trois à cinq ×1, six ou plus ×1,1."
+    ]
+  },
+  {
     "date": "2026-11-22",
     "nouveautes": [
       "🤝 Échanges de clan : la recherche accepte plusieurs départements à la fois (« 25, 90, 70, 39 »), un nom de département ou une région. Idée d'Arkhannou.",

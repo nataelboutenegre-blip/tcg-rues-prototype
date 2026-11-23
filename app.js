@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1544ce1a5cda';
+const VERSION_JEU = '6750704d4231';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -32626,11 +32626,20 @@ function sgMinuteurInfo(){
     const cible = (Number(s.envoyes_long) || 0) + (suffit ? resteP : att * pts);
     min = Math.max(0, (cible - plafond) / r);
   }
-  return { fin: Date.now() + min * 60000, suffit, manque: besoin - att };
+  const nuit = suffit && sgNuit();   // patch510 : la nuit, elle ne tombe pas avant 7 h
+  return { fin: nuit ? Math.max(Date.now() + min * 60000, Date.now() + sgFinNuitMs()) : Date.now() + min * 60000, suffit, manque: besoin - att, nuit };
+}
+function sgFinNuitMs(){   // patch510 : temps avant 7 h, heure de Paris
+  try {
+    const p = new Intl.DateTimeFormat('fr-FR', { hour: 'numeric', minute: 'numeric', second: 'numeric', hourCycle: 'h23', timeZone: 'Europe/Paris' }).formatToParts(new Date());
+    const v = k => Number((p.find(x => x.type === k) || {}).value) || 0;
+    return Math.max(0, ((7 - v('hour')) * 3600 - v('minute') * 60 - v('second')) * 1000);
+  } catch(e){ return 0; }
 }
 function sgMinuteurTexte(i){
   const ms = i.fin - Date.now();
   const t = ms <= 0 ? 'au prochain passage (toutes les 5 min)' : 'dans <b class="sg-chrono">' + sgChrono(ms) + '</b>';
+  if(i.suffit && i.nuit) return `🌙 Elle peut tomber à 7 h (${ms <= 0 ? 'au prochain passage' : 'dans <b class="sg-chrono">' + sgChrono(ms) + '</b>'}), si personne ne renforce.`;   // patch510
   return i.suffit ? `⏱️ Elle peut tomber ${t}, si personne ne renforce.`
     : `⏱️ Ton énergie en attente aura fini de partir ${t}. Il manquera ensuite ≈ <b>${i.manque} ⚡</b>.`;
 }
@@ -32641,12 +32650,12 @@ function sgChrono(ms){
 function sgMinuteurHtml(){
   const i = sgMinuteurInfo(); if(!i) return '';
   if(i.fin == null) return `<p class="sg-minuteur">${i.texte}</p>`;
-  return `<p class="sg-minuteur" data-sg-fin="${Math.round(i.fin)}" data-sg-suffit="${i.suffit ? 1 : 0}" data-sg-manque="${i.manque}">${sgMinuteurTexte(i)}</p>`;
+  return `<p class="sg-minuteur" data-sg-fin="${Math.round(i.fin)}" data-sg-suffit="${i.suffit ? 1 : 0}" data-sg-nuit="${i.nuit ? 1 : 0}" data-sg-manque="${i.manque}">${sgMinuteurTexte(i)}</p>`;
 }
 function sgTic(){
   const el = document.querySelector('#sgBoite [data-sg-fin]');
   if(!el){ clearInterval(SG.tic); SG.tic = 0; return; }
-  const i = { fin: Number(el.dataset.sgFin), suffit: el.dataset.sgSuffit === '1', manque: Number(el.dataset.sgManque) || 0 };
+  const i = { fin: Number(el.dataset.sgFin), suffit: el.dataset.sgSuffit === '1', nuit: el.dataset.sgNuit === '1', manque: Number(el.dataset.sgManque) || 0 };
   el.innerHTML = sgMinuteurTexte(i);
   if(Date.now() > i.fin + 60000 && !SG.relu){ SG.relu = true; sgCharger(false).then(() => { SG.relu = false; }); }   // une minute après : on relit
 }
@@ -32654,7 +32663,7 @@ function sgRepartitionHtml(n){
   const r = sgRepartition(n); if(!r) return '';
   if(r.att > 0 && r.besoin <= r.att) return `<p class="sg-repart ok">Tes <b>${r.att} ⚡</b> en attente suffisent pour finir : pas besoin d'en renvoyer. Ce qui sera de trop te reviendra à la fin.</p>`;
   if(!r.attend && !r.trop) return '';
-  const quand = r.minutes >= 1 ? (r.finit ? `elle peut tomber dans ≈ <b>${sgDuree(r.minutes)}</b> si personne ne renforce` : `≈ <b>${sgDuree(r.minutes)}</b> pour qu'elles partent toutes`) : '';
+  const quand = r.minutes >= 1 ? (r.finit ? (sgNuit() ? 'elle pourra tomber à 7 h au plus tôt' : `elle peut tomber dans ≈ <b>${sgDuree(r.minutes)}</b> si personne ne renforce`) : `≈ <b>${sgDuree(r.minutes)}</b> pour qu'elles partent toutes`) : '';
   const debut = r.maintenant ? `<b>${r.maintenant}</b> part${r.maintenant > 1 ? 'ent' : ''} tout de suite` : 'aucune ne part tout de suite';
   return `<p class="sg-repart">⏳ Sur ces ${n} ⚡ : ${debut}${r.attend ? `, <b>${r.attend}</b> attendront leur tour et partiront toutes seules` : ''}${quand ? ` (${quand})` : ''}.`
     + `${r.trop ? ` <b>${r.trop}</b> de trop${r.att ? ' avec ce qui attend déjà' : ''} : elles te reviendront à la fin du siège.` : ''}</p>`;
@@ -32725,7 +32734,8 @@ function sgRendre(){
       <div class="sg-vite">${[5, 10, 20].map(x => `<button type="button" data-sg-v="${x}"${x === n ? ' class="on"' : ''}>${x}</button>`).join('')}<button type="button" data-sg-v="fin"${n === Math.max(1, sgResteNet()) ? ' class="on"' : ''}>Juste assez</button></div>
       ${e !== null ? `<small>Tu as <b>${e} ⚡</b></small>` : ''}
     </div>${sgRepartitionHtml(n)}`;   // patch494
-  const bloque = a.bouclier_jusqua ? `Protégée par un bouclier · ${formatDuree(new Date(a.bouclier_jusqua).getTime() - Date.now())}`
+  const bloque = sgNuit() ? '🌙 Le Front dort jusqu\'à 7 h'   // patch510
+    : a.bouclier_jusqua ? `Protégée par un bouclier · ${formatDuree(new Date(a.bouclier_jusqua).getTime() - Date.now())}`
     : (!s && a.immunite_jusqua) ? `Vient de changer de main · ${formatDuree(new Date(a.immunite_jusqua).getTime() - Date.now())}`
     : (!s && long && Number(a.longs) >= Number(a.places)) ? `Tes ${a.places} sièges longs sont pris`
     : '';
@@ -32736,7 +32746,7 @@ function sgRendre(){
   const places = `<p class="sg-places">Sièges longs : <b>${sgNb(a.longs)} / ${sgNb(a.places)}</b> · les sièges éclair ne comptent pas</p>`;
   const retour = SG.dernier ? `<p class="sg-retour" role="status">${SG.dernier}</p>` : '';
   const sec = `<div class="pc-sec">${s ? '<button type="button" data-sg="abandon">Abandonner le siège</button>' : '<span></span>'}<button type="button" data-sg="fermer">Fermer</button></div>`;
-  b.innerHTML = tete + chiffres + jauge + retour + lignes + avert + autres + choix + bouton + places + (SG.err ? `<p class="sg-err">${echapperTexte(SG.err)}</p>` : '') + sgCalcHtml(a) + sec;
+  b.innerHTML = tete + chiffres + jauge + retour + sgNuitHtml() + lignes + avert + autres + choix + bouton + places + (SG.err ? `<p class="sg-err">${echapperTexte(SG.err)}</p>` : '') + sgCalcHtml(a) + sec;
   sgAnimerVague(b);   // patch406
   if(!SG.tic && b.querySelector('[data-sg-fin]')) SG.tic = setInterval(sgTic, 1000);   // patch497
 }
@@ -32993,6 +33003,14 @@ function sgAnimerVague(b){
   j.classList.add(an.bcl ? 'sg-choc-bcl' : 'sg-choc');
   setTimeout(() => j.classList.remove('sg-choc', 'sg-choc-bcl'), 900);
 }
+// patch510 (s3-58) : la nuit (0 h – 7 h, heure de Paris), aucune commune ne tombe
+function sgNuit(){
+  try { const h = Number(new Intl.DateTimeFormat('fr-FR', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Europe/Paris' }).format(new Date())); return h >= 0 && h < 7; }
+  catch(e){ return false; }
+}
+function sgNuitHtml(){
+  return sgNuit() ? '<p class="sg-note sg-nuit"><span class="sg-lune" aria-hidden="true">🌙</span><span><b>Le Front dort</b> : entre 0 h et 7 h, pas de nouveau siège ni de vague, et aucune commune ne tombe. L\'énergie déjà en attente part toute seule à 7 h. Renforcer reste possible.</span></p>' : '';
+}
 // « Comment c'est calculé » (les chiffres viennent de config_jeu 'siege', s3-7)
 function sgCalcHtml(a){
   const mult = Number(a.mult) || 1;
@@ -33000,9 +33018,10 @@ function sgCalcHtml(a){
   return `<details class="sg-calc"${SG.calc ? ' open' : ''}><summary data-sg="calc">Comment c'est calculé ?</summary>
     <ul>
       <li><b>Chaque énergie</b> fait 10 points sur la jauge, au hasard entre 8 et 12.</li>
-      <li><b>Tes dégâts</b> dépendent de tes communes à moins de 20 km (aucune : −20 %, une : normal, deux ou plus : +10 %). Zone bombardée +15 %, ta Forteresse à côté +10 %, débutant +50 % sur les communes jusqu'à rare sans garnison. Ici : <b>${multTxt}</b>.</li>
+      <li><b>Tes dégâts</b> dépendent de tes communes à moins de 20 km (aucune : −20 %, une ou deux : −10 %, trois à cinq : normal, six ou plus : +10 %). Zone bombardée +15 %, ta Forteresse à côté +10 %, débutant +50 % sur les communes jusqu'à rare sans garnison. Ici : <b>${multTxt}</b>.</li>
       ${typeof s3SiegeCalc === 'function' ? s3SiegeCalc() : ''}
-      <li><b>Résistance</b> : commune et peu commune 55, rare 65, épique 125, légendaire 250. Forteresse sur place × 1,5. Une rébellion que tu finances la baisse.</li>
+      <li><b>Résistance</b> : commune et peu commune 55, rare 65, épique 125, légendaire 250. Forteresse sur place × 1,5. <b>Rempart</b> : +5 % par commune du propriétaire à moins de 10 km au-delà de 3 (+50 % au plus). Une rébellion que tu finances la baisse.</li>
+      <li><b>La nuit</b> (0 h – 7 h) : le Front dort. Pas de nouveau siège ni de vague ; l'énergie en attente part à 7 h.</li>
       <li><b>Garnison</b> : chaque énergie en garnison fait un bouclier de 10 points, à casser avant la jauge.</li>
       <li><b>Siège long</b> (garnison, bâtiment, renfort, ou légendaire) : 10 % de la résistance peut partir tout de suite, le reste suit le temps (commune 1 h, peu commune 1 h 30, rare 2 h, épique 6 h, légendaire 15 h). L'énergie en trop attend et part toute seule toutes les 5 minutes.</li>
       <li><b>Rare et épique en éclair</b> : au moins 20 min pour une rare, 1 h pour une épique, même sans défense (10 % tout de suite, le reste suit le temps).</li>

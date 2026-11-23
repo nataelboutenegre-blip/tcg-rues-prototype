@@ -86,20 +86,21 @@ function rendre(){
   $('tNouveauxS').innerHTML = `aujourd’hui · <b>${nb(J.nouveaux_7j)}</b> sur 7 jours`;
   $('tActifs').textContent = nb(J.actifs_jour);
   $('tActifsS').innerHTML = `<b>${nb(J.actifs_7j)}</b> sur 7 jours · <b>${nb(J.actifs_30j)}</b> sur 30`;
-  const jeux = (Number(A.radar) || 0) + (Number(A.rafale) || 0) + (Number(A.pom) || 0);
+  const jeux = ['radar', 'rafale', 'pom', 'mess421', 'recensement'].reduce((s, k) => s + (Number(A[k]) || 0), 0);
+  const s3 = A.sieges !== undefined;   // s3-61 : la saison 3 (sièges) ; sinon l'ancien tableau (dés)
   const cases = [
-    [A.rounds, 'rounds d’attaque', ''],
+    s3 ? [A.sieges, 'sièges lancés', `${nb(A.sieges_energie)} ⚡ engagés · ${nb(A.sieges_cours)} en cours`] : [A.rounds, 'rounds d’attaque', ''],
     [A.conquetes, 'conquêtes', ''],
-    [A.defenses, 'défenses', `${nb(A.defenses_reussies)} réussies`],
+    s3 ? [A.renforts, 'renforts en défense', `${nb(A.repousses)} sièges repoussés`] : [A.defenses, 'défenses', `${nb(A.defenses_reussies)} réussies`],
     [(Number(A.messages) || 0) + (Number(A.messages_clans) || 0), 'messages', `${nb(A.messages)} discussion · ${nb(A.messages_clans)} clans`],
-    [jeux, 'parties de mini-jeux', `Radar ${nb(A.radar)} · Rafale ${nb(A.rafale)} · ± ${nb(A.pom)}`],
+    [jeux, 'parties de mini-jeux', `Radar ${nb(A.radar)} · Rafale ${nb(A.rafale)} · ± ${nb(A.pom)}${s3 ? ` · 421 ${nb(A.mess421)} · Recensement ${nb(A.recensement)}` : ''}`],
     [A.echanges, 'échanges proposés', ''],
     [A.achats, 'achats en boutique', ''],
     [A.batiments, 'bâtiments lancés', ''],
   ];
   $('activite').innerHTML = cases.map(([v, l, s]) => `<div class="act"><b>${nb(v)}</b><span>${l}</span>${s ? `<small>${s}</small>` : ''}</div>`).join('');
   $('maj').textContent = 'mis à jour à ' + new Date(D.le).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-  // jours = [jour, inscrits, actifs, rounds, conquêtes, défenses, messages]
+  // jours = [jour, inscrits, actifs, sièges (rounds en S2), conquêtes, renforts (défenses en S2), messages]
   graphique($('gActifs'), jours, 2, 'joueurs actifs');
   graphique($('gInscrits'), jours, 1, 'inscrits');
   graphique($('gConquetes'), jours, 4, 'conquêtes');
@@ -116,9 +117,9 @@ function rendre(){
     co.slice().reverse().map(c => `<tr><td>${semaine(c[0])}</td><td class="n">${nb(c[1])}</td><td class="n">${taux(c[3], c[2])}</td><td class="n">${taux(c[5], c[4], 20)}</td><td class="n">${nb(c[6])}</td></tr>`).join('')}</tbody></table>`
     : '<span class="vide">Pas encore de données.</span>';
   const top = D.top_jour || [];
-  $('top').innerHTML = top.length ? `<table><thead><tr><th>Joueur</th><th class="n">Rounds</th><th class="n">Conquêtes</th></tr></thead><tbody>${
+  $('top').innerHTML = top.length ? `<table><thead><tr><th>Joueur</th><th class="n">${s3 ? 'Sièges' : 'Rounds'}</th><th class="n">Conquêtes</th></tr></thead><tbody>${
     top.map(t => `<tr><td>${esc(t[1])}</td><td class="n">${nb(t[2])}</td><td class="n">${nb(t[3])}</td></tr>`).join('')}</tbody></table>`
-    : '<span class="vide">Pas encore d’attaque aujourd’hui.</span>';
+    : '<span class="vide">Pas encore de siège aujourd’hui.</span>';
   const der = D.derniers || [];
   $('derniers').innerHTML = der.length ? `<table><thead><tr><th>Joueur</th><th>Il y a</th><th class="n">Jours joués</th><th class="n">Communes</th></tr></thead><tbody>${
     der.map(d => `<tr><td>${esc(d[1])}</td><td><span class="muet">${ilYa(d[2])}</span></td><td class="n">${nb(d[3])}</td><td class="n">${nb(d[4])}</td></tr>`).join('')}</tbody></table>`

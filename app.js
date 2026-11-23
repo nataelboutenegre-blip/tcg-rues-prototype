@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'fc45fc82a6b5';
+const VERSION_JEU = '1544ce1a5cda';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -20903,7 +20903,7 @@ function ceDans(iso){
 function ceListeHtml(liste, cle, choisi, filtre){
   if(!liste) return '<p class="ce-attente">Chargement…</p>';
   const f = sansAccents((filtre || '').toLowerCase());
-  const l = liste.filter(c => !f || sansAccents(c.nom.toLowerCase()).includes(f) || String(c.departement).toLowerCase() === f);
+  const l = liste.filter(c => !f || correspondUnTerme(c.nom, c.departement, f));   // patch509 : « 25, 90, 70 »
   if(!l.length) return '<p class="ce-attente">Aucune commune.</p>';
   return l.slice(0, 80).map(c => `<button type="button" class="ce-choix" data-${cle}="${echapperTexte(c.code)}" aria-pressed="${c.code === choisi}"${c.raison ? ' disabled' : ''}>${ceCommune(c)}${c.raison ? `<span class="ce-raison">${echapperTexte(c.raison)}</span>` : ''}</button>`).join('');
 }
@@ -20953,8 +20953,8 @@ function blocEchangesClan(){
     : `<div class="ce-etape"><div class="ce-attente">1. Avec qui</div>
         <div class="ce-membres">${membres.map(m => `<button type="button" class="ce-membre" data-ce-qui="${echapperTexte(m.id)}" aria-pressed="${m.id === clanEch.qui}"${parMembre && !resteAvec(m) ? ' disabled' : ''}><span class="av" style="--clan:${(clanCache && clanCache.moi && clanCache.moi.clan || {}).couleur || '#E07A2E'}">${echapperTexte((m.pseudo || '?')[0].toUpperCase())}</span>${echapperTexte(m.pseudo)}${parMembre ? `<span class="ce-reste">· ${resteAvec(m) ? 'encore ' + resteAvec(m) : 'demain'}</span>` : ''}</button>`).join('')}</div></div>
       <div class="ce-deux">
-        <div><div class="ce-attente">2. Tu donnes</div><input type="search" class="ce-recherche" id="ceR1" placeholder="Une de tes communes…" aria-label="Chercher une de tes communes" value="${echapperTexte(clanEch.r1)}"><div class="ce-liste" id="ceDonne"></div></div>
-        <div><div class="ce-attente" id="ceT3">3. Tu reçois · même rareté</div><input type="search" class="ce-recherche" id="ceR2" placeholder="Une commune de ton coéquipier…" aria-label="Chercher une commune du coéquipier" value="${echapperTexte(clanEch.r2)}"><div class="ce-liste" id="ceRecoit"></div></div>
+        <div><div class="ce-attente">2. Tu donnes</div><input type="search" class="ce-recherche" id="ceR1" placeholder="Commune ou départements : 25, 90…" aria-label="Chercher une de tes communes" value="${echapperTexte(clanEch.r1)}"><div class="ce-liste" id="ceDonne"></div></div>
+        <div><div class="ce-attente" id="ceT3">3. Tu reçois · même rareté</div><input type="search" class="ce-recherche" id="ceR2" placeholder="Commune ou départements : 2A, 2B…" aria-label="Chercher une commune du coéquipier" value="${echapperTexte(clanEch.r2)}"><div class="ce-liste" id="ceRecoit"></div></div>
       </div>
       <div class="ce-recap" id="ceRecap"></div>`;
   return `<div class="ce-bloc"><div class="ce-tete"><h2>Échanges du clan</h2><span class="puce">${parMembre ? `<b>${maxEch}</b> par jour avec chaque coéquipier` : restant ? `<b>${restant}</b> échange${restant > 1 ? 's' : ''} possible${restant > 1 ? 's' : ''} aujourd'hui` : 'plus d\'échange aujourd\'hui'}</span></div>

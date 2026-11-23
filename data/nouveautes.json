@@ -14,6 +14,7 @@
       "🏰 Front : une commune entourée par son propriétaire résiste mieux (rempart : +5 % par commune à lui à moins de 10 km au-delà de 3, jusqu'à +50 %). Et le bonus de proximité est plus progressif : une ou deux communes à toi autour de la cible ×0,9, trois à cinq ×1, six ou plus ×1,1."
     ],
     "correctifs": [
+      "Défendre : un siège long affiche sa durée (« se remplit en 15 h au plus vite ») au lieu de points par heure, qui faisaient croire qu'une Forteresse accélérait le siège (signalé par Cairnan217).",
       "Défendre : la liste de tes communes assiégées ne disparaît plus toutes les 30 secondes (signalé par Bonjean).",
       "Motifs : ils ne s'effacent plus quand on dézoome la carte (signalé par ASMFCB)."
     ]

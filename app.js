@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '7ee9a7332d94';
+const VERSION_JEU = '2b700007163f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -32982,7 +32982,7 @@ function renderMenacesSiege(){
     const tombe = m.tombe_le ? new Date(m.tombe_le).getTime() - Date.now() : 0;
     const laisse = laisses.has(m.id);
     const p = res ? Math.round(100 * deg / res) : 0;
-    const etat = m.long ? `<b class="sg-long">Siège long</b> · au plus ${sgNb(m.rythme_h)} points par heure` : `<b class="sg-eclair">Siège éclair</b> · ${sgEclairTxt(m.tier)}`;   // patch495
+    const etat = m.long ? `<b class="sg-long">Siège long</b> · ${Number(m.rythme_h) > 0 && res > 0 ? `se remplit en ${sgDuree(Math.round(res / Number(m.rythme_h) * 60))} au plus vite` : 'se remplit lentement'}` : `<b class="sg-eclair">Siège éclair</b> · ${sgEclairTxt(m.tier)}`;   // patch495
     return `<div class="sg-def${laisse ? ' laisse' : ''}${p >= 66 ? ' chaud' : ''}">
       <div class="sg-def-h"><i class="sg-rar" style="--c:${tier.color}"></i><button type="button" class="sg-def-nom" data-voir-carte="${echapperTexte(m.commune)}">${echapperTexte(m.nom)}</button>${badgeDept(m.dept)}<span class="sg-def-qui">assiégée par <b>${echapperTexte(m.attaquant_pseudo || 'un joueur')}</b></span></div>
       ${Number(m.bouclier) > 0 ? `<div class="sg-bcl"><span>Ta garnison</span><b>${sgNb(m.bouclier)} points de bouclier</b></div>` : ''}

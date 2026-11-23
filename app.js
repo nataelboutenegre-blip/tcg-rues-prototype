@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '7daca50c4808';
+const VERSION_JEU = 'f013c76b1f66';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1582,7 +1582,7 @@ function signalerMouvementCarte(){
     if(couche) couche.style.transform =
       `translate(${mapPanX}px, ${mapPanY}px) scale(${mapZoom})`;
     // apres un deplacement, de nouveaux departements peuvent etre entres dans l'ecran
-    if(mapZoom >= SEUIL_CONTOURS) renderMapOverlay();
+    if(!zoomDepts()) renderMapOverlay();   // patch514
   }, 200);
 }
 
@@ -3038,7 +3038,7 @@ function territoiresVisibles(){
   MASQUEES_PAR_ZOOM.peucommun = 0;
   for(const e of othersMap.values()){
     if(!estZoneCarte(e.dept) || e.lat == null) continue;   // patch330
-    const visible = mapZoom < SEUIL_CONTOURS || mapZoom >= (ZOOM_MINI[e.tier.id] || 1);
+    const visible = zoomDepts() || mapZoom >= (ZOOM_MINI[e.tier.id] || 1);   // patch514
     if(showOthers && !visible && MASQUEES_PAR_ZOOM[e.tier.id] !== undefined) MASQUEES_PAR_ZOOM[e.tier.id]++;
     if(!joueurs.has(e.joueurId)){
       const couleur = colorForPlayer(e.joueurId);
@@ -3088,10 +3088,10 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
   const ordre = (ids) => ids.slice().sort((a, b) => (a === ID_MOI ? 1 : 0) - (b === ID_MOI ? 1 : 0));
 
   if(liste.length === 0) return 'vide';
-  if(!CALQUES.communes) return mapZoom < SEUIL_CONTOURS ? 'depts' : 'contours';
+  if(!CALQUES.communes) return zoomDepts() ? 'depts' : 'contours';   // patch514
 
   // ---- de loin : la France par departements ----
-  if(mapZoom < SEUIL_CONTOURS){
+  if(zoomDepts()){   // patch514
     if(!CONTOURS_DEPTS) chargerDepartements();
     if(CONTOURS_DEPTS && CONTOURS_DEPTS !== 'erreur' && CONTOURS_DEPTS !== 'attente'){
       const chef = new Map();   // departement -> { joueur, force }
@@ -3131,7 +3131,7 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
   }
 
   // ---- de pres : les vraies limites communales ----
-  if(mapZoom >= SEUIL_CONTOURS){
+  if(!zoomDepts()){   // patch514
     const deps = departementsVisibles(liste);
     let pretes = 0;
     for(const dep of deps){
@@ -3414,7 +3414,7 @@ function dessinerEtoileAurore(ctx, x, y, r){
 function dessinerMarqueursCanvas(ctx, liste, joueurs, k, legendairesSeules){
   const e = 1 / Math.max(1, mapZoom);
   const vue = vueCarteUnites(12);   // patch145
-  const rarCouleur = SAISON2 && CALQUES.couleur === 'raretes' && mapZoom >= SEUIL_CONTOURS;   // patch294
+  const rarCouleur = SAISON2 && CALQUES.couleur === 'raretes' && !zoomDepts();   // patch294, patch514
   for(const c of liste){
     const au = auroreFront(c.code);   // patch228
     if(rarCouleur && !au) continue;   // patch294
@@ -3496,7 +3496,7 @@ const CALQUES = (() => {
   // « passage » est eteint au depart : il demande un chargement de plus et
   // n'a de sens que pour un joueur qui a deja perdu des communes
   const defaut = { regions: true, depts: true, communes: true, noms: true,
-                   raretes: true, passage: false, clans: false, batiments: true, motifs: true, couleur: 'joueurs', clanVue: 'contour' };   // patch294 : couleur ; patch413 : clanVue
+                   raretes: true, passage: false, clans: false, batiments: true, motifs: true, figer: false, couleur: 'joueurs', clanVue: 'contour' };   // patch514 : figer   // patch294 : couleur ; patch413 : clanVue
   try {
     const v = JSON.parse(localStorage.getItem(CLE_CALQUES) || '{}');
     return Object.assign(defaut, v);
@@ -3504,6 +3504,8 @@ const CALQUES = (() => {
 })();
 
 // patch413 : calque Clans en « Plein » (pas avec les couleurs de rareté)
+// patch514 : la carte par départements, dézoomée ou figée par le calque « Vue départements »
+function zoomDepts(){ return mapZoom < SEUIL_CONTOURS || CALQUES.figer === true; }
 function clanPlein(){
   return CLANS && CALQUES.clans && CALQUES.clanVue === 'plein' && CALQUES.couleur !== 'raretes';
 }
@@ -3656,6 +3658,9 @@ function rendreCalques(){
     ICONES.motifs = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="m8 6.2.9 1.9 2.1.3-1.5 1.5.4 2.1L8 11l-1.9 1 .4-2.1L5 8.4l2.1-.3zM16 12.2l.9 1.9 2.1.3-1.5 1.5.4 2.1-1.9-1-1.9 1 .4-2.1-1.5-1.5 2.1-.3z"/></svg>';
     ordre.push('motifs');
   }
+  NOMS.figer = 'Vue départements';   // patch514
+  ICONES.figer = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M3 4h7v7H3zM3 14h7v7H3zM14 4h7v7h-7z"/><rect x="14" y="15.5" width="7" height="5.5" rx="1"/><path d="M15.6 15.5v-1.6a1.9 1.9 0 0 1 3.8 0v1.6"/></svg>';
+  ordre.push('figer');
   zone.innerHTML = ordre.map(id =>
     `<button data-calque="${id}" class="${CALQUES[id] ? 'actif' : ''}" aria-pressed="${!!CALQUES[id]}">${ICONES[id]}${NOMS[id]}</button>`
   ).join('');
@@ -3744,7 +3749,7 @@ if(LUXEMBOURG) 'LCA:9,LCL:5,LDI:10,LEC:7,LES:14,LGR:8,LLU:11,LME:10,LRE:9,LRM:7,
   .split(',').forEach(x => { const [d, n] = x.split(':'); COMMUNES_PAR_DEPT[d] = Number(n); });
 
 function vueDepartements(){
-  return mapZoom < SEUIL_CONTOURS && CONTOURS_DEPTS && typeof CONTOURS_DEPTS === 'object';
+  return zoomDepts() && CONTOURS_DEPTS && typeof CONTOURS_DEPTS === 'object';   // patch514
 }
 
 // ---------- patch373 : cartouche « Paris et petite couronne » (idée d'Arkhannou) ----------
@@ -3831,7 +3836,7 @@ function idfSurligner(){
 function idfVisibilite(){
   const el = document.getElementById('mapIdf');
   if(!el) return;
-  const voir = !!(el.dataset.pret && vueDepartements());
+  const voir = !!(el.dataset.pret && vueDepartements() && mapZoom < SEUIL_CONTOURS);   // patch514 : pas en vue figée de près
   if(el.hidden === voir) el.hidden = !voir;
 }
 function idfMaj(){
@@ -5102,7 +5107,7 @@ function dessinerTerritoires(){
   MASQUEES_PAR_ZOOM.peucommun = 0;
   for(const e of othersMap.values()){
     if(!estZoneCarte(e.dept) || e.lat == null) continue;   // patch330
-    const visibleAuZoom = mapZoom < SEUIL_CONTOURS || mapZoom >= (ZOOM_MINI[e.tier.id] || 1);
+    const visibleAuZoom = zoomDepts() || mapZoom >= (ZOOM_MINI[e.tier.id] || 1);   // patch514
     if(showOthers && !visibleAuZoom && MASQUEES_PAR_ZOOM[e.tier.id] !== undefined) MASQUEES_PAR_ZOOM[e.tier.id]++;
     if(!joueurs.has(e.joueurId)){
       const couleur = colorForPlayer(e.joueurId);
@@ -5113,14 +5118,14 @@ function dessinerTerritoires(){
   }
 
   // De loin : la France par departements. De pres : les vraies communes.
-  if(mapZoom < SEUIL_CONTOURS && liste.length > 0){
+  if(zoomDepts() && liste.length > 0){   // patch514
     if(!CONTOURS_DEPTS) chargerDepartements();
     else if(CONTOURS_DEPTS !== 'erreur' && CONTOURS_DEPTS !== 'attente'){
       dessinerDepartements(liste, joueurs);
       return;
     }
   }
-  const avecContours = mapZoom >= SEUIL_CONTOURS && liste.length > 0;
+  const avecContours = !zoomDepts() && liste.length > 0;   // patch514
   if(avecContours){
     const deps = departementsVisibles(liste);
     let pretes = 0;

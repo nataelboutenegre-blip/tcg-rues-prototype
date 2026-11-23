@@ -18,7 +18,8 @@ Trie le forum des idées du Discord de TerraFront (23 novembre 2026).
    "✅ C'est en ligne, merci pour l'idée !"). Sans l'option, rien n'est posté.
 
 Option pour les deux modes : --salon <morceau du nom> (par défaut : « idée »).
-Le bot doit avoir la permission « Gérer les fils » (et « Gérer les salons » pour créer l'étiquette).
+Le bot doit avoir la permission « Gérer les fils » sur le forum (sinon Discord répond 403 « Missing Access »),
+et « Gérer les salons » seulement s'il doit créer l'étiquette. Relancer ne poste pas deux fois le même message.
 Le jeton du bot se lit dans ~/.terrafront-bot, comme pour lire-salon.py. Il ne sort pas du Mac.
 Le dossier _discord/lectures est ignoré par git : rien ne part sur GitHub.
 """
@@ -137,8 +138,15 @@ elif MODE == 'fait':
         print(u'  %s « %s »%s%s' % ('→' if GO else '·', t.get('name'), '' if deja else ' → 🎉 Faite', '' if archivee and deja else ' + archivée'))
         if not GO: continue
         if archivee: appel('PATCH', '/channels/%s' % i, {'archived': False})
-        if MESSAGE: appel('POST', '/channels/%s/messages' % i, {'content': MESSAGE, 'allowed_mentions': {'parse': []}})
-        appel('PATCH', '/channels/%s' % i, {'applied_tags': tags, 'archived': True})
+        appel('PATCH', '/channels/%s' % i, {'applied_tags': tags})   # d'abord l'étiquette : si le bot n'a pas le droit, on s'arrête avant de poster
+        if MESSAGE:
+            moi = (appel('GET', '/users/@me') or {}).get('id')
+            derniers = appel('GET', '/channels/%s/messages?limit=20' % i, fatal=False) or []
+            if any((m.get('author') or {}).get('id') == moi and m.get('content') == MESSAGE for m in derniers):
+                print(u'    (message déjà posté, pas de doublon)')
+            else:
+                appel('POST', '/channels/%s/messages' % i, {'content': MESSAGE, 'allowed_mentions': {'parse': []}})
+        appel('PATCH', '/channels/%s' % i, {'archived': True})
     print(u'Fait.' if GO else u'Rien n\'a été changé. Ajoute --go à la fin pour le faire.')
 else:
     sys.exit(u'Mode inconnu : « %s ». Utilise « liste » (par défaut) ou « fait ».' % MODE)

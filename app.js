@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '931c0fd2de28';
+const VERSION_JEU = '1e60c866be27';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -3119,6 +3119,7 @@ function dessinerFondsCanvas(ctx, trait, k, liste, joueurs){
         const cd = cheminDeptCanvas(dep, CONTOURS_DEPTS[dep]);
         ctx.fill(cd);
         ctx.globalAlpha = 1;
+        if(!pleinD) motPeindreDept(ctx, info.joueur, cd, k, info.force);   // patch512 : le motif du joueur en tête
         if(CLANS && CALQUES.clans && j.clan && !pleinD){   // patch212 ; patch416 : pas en « Plein »
           ctx.save(); ctx.clip(cd);
           ctx.strokeStyle = j.clanCouleur; ctx.lineWidth = trait(7); ctx.stroke(cd);
@@ -27661,6 +27662,21 @@ function motPeindre(ctx, id, chemin, k){
   if(!e.pat) return;
   if(e.pat.setTransform) e.pat.setTransform(new DOMMatrix().scale(1 / k));   // la tuile garde sa taille à l'écran
   ctx.globalAlpha = opaciteJoueur(id, vis * (m.intensite || 80) / 100);
+  ctx.fillStyle = e.pat; ctx.fill(chemin);
+  ctx.globalAlpha = 1;
+}
+
+// patch512 : de loin, le motif sur le département du joueur en tête (idée d'Arkhannou)
+function motPeindreDept(ctx, id, chemin, k, force){
+  if(CALQUES.motifs === false || !MTF.formes) return;
+  const m = id === ID_MOI ? MTF.moi : MOTIFS.get(id);
+  if(!m) return;
+  const px = Math.max(8, Math.round((m.densite || 42) * CV.dpr));
+  let e = MTF.pats.get(id);
+  if(!e || e.m !== m || e.px !== px){ e = { m, px, pat: ctx.createPattern(motTuile(m, px), 'repeat') }; MTF.pats.set(id, e); }
+  if(!e.pat) return;
+  if(e.pat.setTransform) e.pat.setTransform(new DOMMatrix().scale(1 / k));
+  ctx.globalAlpha = opaciteJoueur(id, Math.min(1, (force || 0.6) / 0.85) * (m.intensite || 80) / 100);
   ctx.fillStyle = e.pat; ctx.fill(chemin);
   ctx.globalAlpha = 1;
 }

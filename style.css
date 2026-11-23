@@ -11308,3 +11308,6 @@ html.topo:not(.sans-cartes) .mini.skin.legendaire .mini-rarete::before{ backgrou
 
 /* patch505 : le crédit des animaux */
 .mot-credit{ display:block; margin-top:4px; font-size:.72rem; opacity:.7; }
+
+/* patch508 : viewport-fit=cover, les côtés en paysage (encoche) */
+@media (orientation: landscape){ body{ padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); } }

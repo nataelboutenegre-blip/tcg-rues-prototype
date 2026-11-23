@@ -9707,7 +9707,7 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .rdf-jour .rdf-offerts{ color:#C9C2FF; font-weight:700; }
 
 /* ---------- patch405 : le siège (saison 3) ---------- */
-.siege-on .intensite-bloc, .siege-on #combatTri, .siege-on #reveilDefense{ display:none; }
+.siege-on .intensite-bloc, .siege-on #reveilDefense{ display:none; }   /* patch522 : le tri revient (Moins d'énergie) */
 .sg-boite{ border-color:rgba(255,138,142,.45); }
 .sg-k{ display:flex; align-items:center; gap:7px; font-size:.78rem; font-weight:700; color:var(--brume); }
 .sg-rar{ width:9px; height:9px; border-radius:50%; background:var(--c, #7E8BA0); flex:none; display:inline-block; }

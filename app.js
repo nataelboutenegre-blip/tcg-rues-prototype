@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '2b700007163f';
+const VERSION_JEU = 'd1550bb9a40c';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11423,24 +11423,25 @@ function renderCombatGrid(){
   if(!combatEnCours && !combatAutour && (triChances || combatProximite) && cibles.length){   // patch483 : autour d'une commune, on garde l'ordre des distances
     let codes = cibles.map(c => c.commune_code);
     let reste = [];   // patch409 : trop de cibles, on trie les plus proches, le reste suit par distance
-    if(codes.length > TRI_MAX && triChances){
+    if(codes.length > triMaxActif() && triChances){   // patch522
       const dk = (c) => (c._distKm == null ? 1e9 : c._distKm);
       const parDist = cibles.slice().sort((a, b) => dk(a) - dk(b));
-      reste = parDist.slice(TRI_MAX);
-      cibles = parDist.slice(0, TRI_MAX);
+      reste = parDist.slice(triMaxActif());
+      cibles = parDist.slice(0, triMaxActif());
       codes = cibles.map(c => c.commune_code);
       triMajBoutons(true, codes.length + reste.length);
     }
-    if(codes.length > TRI_MAX){
+    if(codes.length > triMaxActif()){
       if(triChances) triMajBoutons(true);
     } else {
-      const pret = chancesPour === intensiteChoisie && codes.every(k => chancesCibles.has(k) || chancesInconnues.has(k));
+      const pret = SIEGE ? codes.every(k => sgEstLu(k)) : chancesPour === intensiteChoisie && codes.every(k => chancesCibles.has(k) || chancesInconnues.has(k));   // patch522
       if(!pret){
-        grid.innerHTML = `<p class="collection-empty" id="triProgres">Calcul des chances… 0 / ${codes.length.toLocaleString('fr-FR')}</p>`;
-        chargerChancesListe(codes);
+        grid.innerHTML = `<p class="collection-empty" id="triProgres">${SIEGE ? 'Calcul de l’énergie' : 'Calcul des chances'}… 0 / ${codes.length.toLocaleString('fr-FR')}</p>`;
+        if(SIEGE) sgEstListe(codes); else chargerChancesListe(codes);
         return;
       }
-      const ch = (c) => { const v = chancesCibles.get(c.commune_code); return v ? v.chances : -1; };
+      const ch = SIEGE ? (c) => { const v = sgEstLu(c.commune_code); return v && v.e < 9999 ? -v.e : -1e6; }   // patch522 : les moins chères d'abord
+        : (c) => { const v = chancesCibles.get(c.commune_code); return v ? v.chances : -1; };
       const rang = (c) => TIERS.findIndex(t => t.id === c.communes.tier);
       const dist = (c) => (c._distKm == null ? 1e9 : c._distKm);
       cibles = cibles.slice().sort((a, b) => ch(b) - ch(a)
@@ -30168,14 +30169,40 @@ const TRI_MAX = 4000;
 let triChances = (() => { try{ return localStorage.getItem('tf-tri-chances') === '1'; }catch(e){ return false; } })();
 let chancesInconnues = new Set();   // des codes que le serveur n'a pas renvoyés (on ne les redemande pas)
 let triJeton = null;
+function triMaxActif(){ return SIEGE ? 600 : TRI_MAX; }   // patch522 : siege_estimer coûte plus cher que les chances
+// patch522 : l'énergie de toute une liste, par lots de 60 (3 à la fois), puis on retrie
+async function sgEstListe(codes){
+  const jeton = {}; triJeton = jeton;
+  const manque = codes.filter(k => !sgEstLu(k)), total = codes.length;
+  let faits = total - manque.length;
+  const lots = []; for(let i = 0; i < manque.length; i += 60) lots.push(manque.slice(i, i + 60));
+  for(let i = 0; i < lots.length; i += 3){
+    if(triJeton !== jeton) return;
+    const p = document.getElementById('triProgres');
+    if(p) p.textContent = `Calcul de l’énergie… ${faits.toLocaleString('fr-FR')} / ${total.toLocaleString('fr-FR')}`;
+    const rs = await Promise.all(lots.slice(i, i + 3).map(l => sb.rpc('siege_estimer', { p_codes: l }).then(r => ({ l, r }), e => ({ l, r: { error: e } }))));
+    if(triJeton !== jeton) return;
+    const le = Date.now();
+    for(const { l, r } of rs){
+      if(r.error){ console.warn('TERRAFRONT tri par énergie indisponible', r.error); triJeton = null; triChances = false;
+        notifier({ type: 'erreur', titre: 'Tri impossible', texte: 'L’énergie n’a pas pu être calculée. Réessaie dans un instant.' }); renderCombatGrid(); return; }
+      for(const [k, v] of Object.entries(r.data || {})) SG_EST.set(String(k), { ...v, le });
+      for(const k of l) if(!SG_EST.has(String(k)) || !sgEstLu(k)) SG_EST.set(String(k), { e: 9999, le });   // pas assiégeable : à la fin
+      faits += l.length;
+    }
+  }
+  if(triJeton === jeton){ triJeton = null; renderCombatGrid(); }
+}
 function triMajBoutons(trop, total){
+  const bc = document.querySelector('#combatTri [data-tri="chances"]');   // patch522
+  if(bc && SIEGE && bc.textContent !== '⚡ Moins d’énergie') bc.textContent = '⚡ Moins d’énergie';
   document.querySelectorAll('#combatTri [data-tri]').forEach(b => {
     const on = (b.dataset.tri === 'chances') === triChances;
     b.classList.toggle('active', on); b.setAttribute('aria-pressed', String(on));
   });
   const n = document.getElementById('combatTriNote');
   // patch409 : on trie quand même les plus proches
-  if(n){ n.hidden = !trop; n.textContent = trop ? `Trié parmi les ${TRI_MAX.toLocaleString('fr-FR')} cibles les plus proches de ton territoire (sur ${(total || 0).toLocaleString('fr-FR')}). Pour tout trier, choisis une rareté, un département ou « Près de mon territoire ».` : ''; }
+  if(n){ n.hidden = !trop; n.textContent = trop ? `Trié parmi les ${triMaxActif().toLocaleString('fr-FR')} cibles les plus proches de ton territoire (sur ${(total || 0).toLocaleString('fr-FR')}). Pour tout trier, choisis une rareté, un département ou « Près de mon territoire ».` : ''; }
 }
 async function chargerChancesListe(codes){
   const jeton = {}; triJeton = jeton;

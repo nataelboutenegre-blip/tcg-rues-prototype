@@ -9604,6 +9604,23 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .gc-voir:active{ transform:translateY(1px); }
 
 /* patch379 : le volet Bâtiments */
+.bth{ border:1px solid rgba(255,255,255,.1); border-radius:14px; padding:0; background:rgba(255,255,255,.03); }   /* patch513 */
+.bth > summary{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; font-weight:700; list-style:none; }
+.bth > summary::-webkit-details-marker{ display:none; }
+.bth > summary::after{ content:'›'; font-size:1.2rem; color:var(--brume); transition:transform .2s; }
+.bth[open] > summary::after{ transform:rotate(90deg); }
+.bth-n{ margin-left:auto; font-size:.78rem; font-weight:600; color:var(--brume); }
+.bth-c{ padding:0 14px 12px; }
+.bth-vide{ font-size:.82rem; color:var(--brume); margin:0; line-height:1.45; }
+.bth-liste{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+.bth-l{ display:flex; align-items:flex-start; gap:10px; padding:10px; border-radius:10px; background:rgba(255,255,255,.04); }
+.bth-l p{ margin:0 0 3px; font-size:.86rem; line-height:1.35; }
+.bth-l small{ display:flex; align-items:center; gap:6px; font-size:.75rem; color:var(--brume); }
+.bth-l > div{ flex:1; min-width:0; }
+.bth-s{ font-size:.8rem; line-height:1.6; }
+.bth-l.pris .bth-s{ color:#3DD68C; } .bth-l.perdu .bth-s{ color:#FF6369; }
+.bth-p{ font-size:.78rem; font-weight:700; white-space:nowrap; }
+.bth-l.pris .bth-p{ color:#3DD68C; } .bth-l.perdu .bth-p{ color:#FF6369; }
 .btv-galerie{ display:flex; flex-wrap:wrap; gap:8px; margin:4px 0 14px; }
 #panel-batiments .batiments-bloc{ margin-top:0; }
 #panel-batiments .volet{ white-space:nowrap; }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1e60c866be27';
+const VERSION_JEU = '7daca50c4808';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11705,6 +11705,7 @@ function initModes(){
     bt.hidden = true;
     const pBat = document.getElementById('panel-batiments');   // patch379 : son propre volet
     if(pBat) pBat.appendChild(bt); else g.insertAdjacentElement('beforebegin', bt);
+    if(pBat && typeof bthCreer === 'function') pBat.appendChild(bthCreer());   // patch513
     // lot 8/11 : les rébellions qui couvent dans mes villes
     const rbb = document.createElement('div');
     rbb.id = 'rebellionsBloc';
@@ -29835,6 +29836,44 @@ function mfoRendre(){
   const ob = document.getElementById('objBandeau');
   const blocQ = ob && !ob.hidden && ob.innerHTML ? `<button type="button" class="${ob.className} mfo-quetes" data-mfo="quetes" aria-label="${echapperTexte(ob.getAttribute('aria-label') || 'Quêtes du jour')}">${ob.innerHTML}</button>` : '';
   z.innerHTML = blocDanger + (typeof sgaMfo === 'function' ? sgaMfo() : '') + (typeof s3MfoOrdres === 'function' ? s3MfoOrdres() : '') + (typeof objMfo === 'function' ? objMfo() : '') + blocEnergie + blocAtt + mfoBatimentsHtml() + blocCom + blocQ;   // patch366, patch456
+}
+// patch513 : les bâtiments pris et perdus cette saison (idée d'Arkhannou)
+function bthCreer(){
+  const d = document.createElement('details');
+  d.className = 'garnisons-bloc bth'; d.id = 'btHisto';
+  d.innerHTML = '<summary><span>Bâtiments pris et perdus cette saison</span><b class="bth-n"></b></summary><div class="bth-c"><p class="bth-vide">Un instant…</p></div>';
+  d.addEventListener('toggle', () => { if(d.open) bthCharger(); });
+  return d;
+}
+function bthQuoi(x){
+  const nom = { fonderie: 'Fonderie', forteresse: 'Forteresse', banque: 'Banque', centre: 'Centre de recherche', radar: 'Radar', artillerie: 'Artillerie', centrale: 'Centrale de clan' }[x.t] || 'bâtiment';
+  const fem = ['fonderie', 'forteresse', 'banque', 'artillerie', 'centrale'].includes(x.t);
+  return { nom, fem };
+}
+function bthLigne(r){
+  const pris = r.sens === 'pris', autre = echapperTexte(r.autre || 'un joueur');
+  const L = Array.isArray(r.b) ? r.b : [];
+  const noms = L.map(x => { const q = bthQuoi(x); const v = /^[AEIOU]/.test(q.nom); return pris ? `${v ? 'l’' : q.fem ? 'la ' : 'le '}<b>${q.nom}</b>` : `${q.fem && !v ? 'ta' : 'ton'} <b>${q.nom}</b>`; });
+  const quoi = noms.length > 1 ? noms.slice(0, -1).join(', ') + ' et ' + noms[noms.length - 1] : (noms[0] || 'un bâtiment');
+  const pille = L.reduce((s, x) => s + (Number(x.pille) || 0), 0);
+  const bombe = L.some(x => x.t === 'centre' && x.bombe);
+  const plus = [pille > 0 ? `${pris ? '+' : '−'}${pille} lingot${pille > 1 ? 's' : ''}` : '', bombe ? (pris ? 'sa bombe perdue' : 'ta bombe perdue') : ''].filter(Boolean).join(' · ');
+  const quand = new Date(r.le).toLocaleString('fr-FR', { weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const tier = sgTier(r.tier);
+  return `<li class="bth-l ${pris ? 'pris' : 'perdu'}"><span class="bth-s" aria-hidden="true">${pris ? '▲' : '▼'}</span>
+    <div><p>${pris ? `Tu as pris ${quoi} de <b>${autre}</b>` : `<b>${autre}</b> t'a pris ${quoi}`}</p>
+    <small><i class="sg-rar" style="--c:${tier.color}"></i><button type="button" class="btl-nom" data-voir-carte="${echapperTexte(r.code)}">${echapperTexte(r.nom || r.code)}</button> · ${quand}</small></div>
+    ${plus ? `<span class="bth-p">${plus}</span>` : ''}</li>`;
+}
+async function bthCharger(){
+  const d = document.getElementById('btHisto'); if(!d) return;
+  const c = d.querySelector('.bth-c'), n = d.querySelector('.bth-n');
+  const { data, error } = await sb.rpc('batiments_pris_perdus');
+  if(error){ c.innerHTML = `<p class="bth-vide">${fonctionAbsente(error) ? 'Bientôt ici.' : 'Impossible de charger la liste.'}</p>`; return; }
+  const D = data || { pris: 0, perdus: 0, liste: [] };
+  n.textContent = `${D.pris} pris · ${D.perdus} perdu${D.perdus > 1 ? 's' : ''}`;
+  c.innerHTML = (D.liste || []).length ? `<ul class="bth-liste">${D.liste.map(bthLigne).join('')}</ul>`
+    : '<p class="bth-vide">Aucun bâtiment pris ni perdu depuis le début de la saison. Prendre une commune qui porte un bâtiment le détruit, et une Fonderie ou une Banque se pille au passage.</p>';
 }
 // patch379 : la galerie depuis le volet Bâtiments
 document.getElementById('panel-batiments')?.addEventListener('click', (e) => {

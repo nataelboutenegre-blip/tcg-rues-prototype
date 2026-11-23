@@ -8,12 +8,11 @@ Trie le forum des idées du Discord de TerraFront (23 novembre 2026).
    son titre, son auteur, ses étiquettes, son état (ouverte / archivée) et le début de son premier message.
    Claude lit ce fichier et te dit quels numéros sont déjà faits.
 
-2. MARQUER « ✅ Fait » ET ARCHIVER :
+2. MARQUER « 🎉 Faite » ET ARCHIVER :
      python3 _discord/trier-idees.py fait 123456789012345678 234567890123456789 ...
    Sans --go, le script montre seulement ce qu'il ferait. Avec --go, il le fait :
      python3 _discord/trier-idees.py fait 1234... 2345... --go
-   - crée l'étiquette « Fait » (emoji ✅) dans le forum si elle n'existe pas ;
-   - l'ajoute à chaque publication donnée (5 étiquettes au plus, la règle de Discord) ;
+   - met l'étiquette « 🎉 Faite » du forum (elle remplace Proposée / Retenue / En cours / Plus tard) ;
    - archive la publication (elle reste lisible, et revient si quelqu'un y répond).
    Option --message "texte" : poste d'abord ce message dans chaque publication (par exemple
    "✅ C'est en ligne, merci pour l'idée !"). Sans l'option, rien n'est posté.
@@ -116,25 +115,26 @@ if MODE == 'liste':
 
 elif MODE == 'fait':
     if not IDS: sys.exit(u'Donne les numéros des publications : python3 _discord/trier-idees.py fait 1234... 5678...')
-    fait = next((t for t in F.get('available_tags', []) if simple(t['name']) == 'fait'), None)
+    fait = next((t for t in F.get('available_tags', []) if simple(t['name']) in ('faite', 'fait')), None)   # le forum a « 🎉 Faite »
+    ETATS = {t['id'] for t in F.get('available_tags', []) if simple(t['name']) in ('proposee', 'retenue', 'encours', 'plustard')}   # remplacées par « Faite »
     if not fait:
-        print(u'L\'étiquette « ✅ Fait » n\'existe pas encore : elle sera créée.')
+        print(u'L\'étiquette « Faite » n\'existe pas encore : elle sera créée.')
         if GO:
             tags = [{k: t[k] for k in ('id', 'name', 'moderated', 'emoji_id', 'emoji_name') if k in t} for t in F.get('available_tags', [])]
             if len(tags) >= 20: sys.exit(u'Le forum a déjà 20 étiquettes (le maximum) : supprimes-en une ou crée « Fait » à la main.')
-            maj = appel('PATCH', '/channels/%s' % F['id'], {'available_tags': tags + [{'name': 'Fait', 'emoji_name': '✅'}]})
-            fait = next(t for t in maj.get('available_tags', []) if simple(t['name']) == 'fait')
+            maj = appel('PATCH', '/channels/%s' % F['id'], {'available_tags': tags + [{'name': 'Faite', 'emoji_name': '🎉'}]})
+            fait = next(t for t in maj.get('available_tags', []) if simple(t['name']) == 'faite')
     for i in IDS:
         t = appel('GET', '/channels/%s' % i, fatal=False)
         if not t or t.get('parent_id') != F['id']:
             print(u'  ✗ %s : pas une publication de #%s, ignorée' % (i, F['name'])); continue
-        tags = list(t.get('applied_tags', []))
+        tags = [x for x in t.get('applied_tags', []) if x not in ETATS]   # Proposée / Retenue / En cours / Plus tard laissent la place
         deja = fait and fait['id'] in tags
         if fait and not deja:
             if len(tags) >= 5: tags = tags[:4]
             tags.append(fait['id'])
         archivee = (t.get('thread_metadata') or {}).get('archived')
-        print(u'  %s « %s »%s%s' % ('→' if GO else '·', t.get('name'), '' if deja else ' + ✅ Fait', '' if archivee and deja else ' + archivée'))
+        print(u'  %s « %s »%s%s' % ('→' if GO else '·', t.get('name'), '' if deja else ' → 🎉 Faite', '' if archivee and deja else ' + archivée'))
         if not GO: continue
         if archivee: appel('PATCH', '/channels/%s' % i, {'archived': False})
         if MESSAGE: appel('POST', '/channels/%s/messages' % i, {'content': MESSAGE, 'allowed_mentions': {'parse': []}})

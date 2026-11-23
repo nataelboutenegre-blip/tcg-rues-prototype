@@ -9737,6 +9737,10 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .sg-mes-t b{ font-size:.92rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70%; }
 .sg-mes-t small{ flex:1 0 100%; font-size:.72rem; color:var(--brume); }
 .sg-mes-p{ font:800 .95rem/1 var(--titre); text-align:right; }
+.sg-tout{ display:flex; flex-direction:column; align-items:center; gap:1px; width:100%; margin-top:8px; font:inherit; font-size:.9rem; font-weight:800; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.18); background:linear-gradient(180deg, #3a6df0, #2a52c4); color:#fff; cursor:pointer; }   /* patch511 */
+.sg-tout small{ font-size:.72rem; font-weight:500; opacity:.85; }
+.sg-tout.petit{ padding:8px 10px; font-size:.82rem; }
+.sg-tout:disabled{ opacity:.5; cursor:default; }
 .sg-renf-l{ font-size:.8rem; color:var(--brume); align-self:center; margin-right:2px; }
 .sg-def-a .sg-renf{ min-width:58px; }
 .sg-def-b{ display:flex; align-items:center; gap:6px; margin-top:8px; }

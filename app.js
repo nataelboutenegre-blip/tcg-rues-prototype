@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '6750704d4231';
+const VERSION_JEU = '931c0fd2de28';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -32810,6 +32810,14 @@ async function loadMenacesSiege(){
   sgRafraichirFiche();   // patch406
   if(typeof mfoRendre === 'function') mfoRendre();
 }
+// patch511 : « Tout repousser » — assez d'énergie pour ramener la jauge à 0 même au pire tirage (10 × 1,2 × 0,8 par ⚡)
+function sgToutN(deg){ return Math.min(60, Math.max(1, Math.ceil((Number(deg) || 0) / 9.6))); }
+function sgToutHtml(m, petit){
+  const deg = Number(m.degats) || 0; if(deg <= 0) return '';
+  const n = sgToutN(deg), e = sgEnergie(), manque = e !== null && e < n;
+  const txt = n >= 60 && deg / 9.6 > 60 ? `Repousser au maximum · 60 ⚡` : `Tout repousser · ${n} ⚡`;
+  return `<button type="button" class="sg-tout${petit ? ' petit' : ''}" data-sg-renf="${n}" data-code="${echapperTexte(m.commune)}" data-att="${echapperTexte(m.attaquant)}"${manque ? ' disabled' : ''}>🛡️ ${txt}<small>${manque ? `tu as ${e} ⚡` : 'la jauge revient à 0'}</small></button>`;
+}
 function sgLaisses(){ try{ return new Set(JSON.parse(localStorage.getItem('tf-siege-laisses') || '[]')); }catch(e){ return new Set(); } }
 function renderMenacesSiege(){
   const laisses = sgLaisses();
@@ -32838,7 +32846,7 @@ function renderMenacesSiege(){
       ${tombe > 0 ? `<p class="sg-tombe">Sans nouvelle vague, son siège tombe dans ${formatDuree(tombe)}${m.defendu || Number(m.bouclier) > 0 ? ' : défense réussie pour toi' : ''}.</p>` : ''}
       <div class="sg-def-a">
         <span class="sg-renf-l">Renforcer</span>${[2, 5, 10].map(x => `<button type="button" class="sg-renf" data-sg-renf="${x}" data-code="${echapperTexte(m.commune)}" data-att="${echapperTexte(m.attaquant)}">${x} ⚡</button>`).join('')}
-      </div>
+      </div>${sgToutHtml(m)}
       <div class="sg-def-b">
         ${Number(m.garnison) > 0 ? '' : `<button type="button" class="sg-gn" data-sg-gn="${echapperTexte(m.commune)}">Garnison · 5 ⚡</button>`}
         <button type="button" class="sg-laisser" data-sg-laisser="${m.id}">${laisse ? 'Suivre à nouveau' : 'Laisser filer'}</button>
@@ -32868,7 +32876,7 @@ document.addEventListener('click', async (ev) => {
     if(error){ notifier({ type: 'erreur', titre: 'Renfort', texte: messageLisible(error.message) }); t.disabled = false; return; }
     const m = sgMenaces.find(x => x.commune === t.dataset.code && x.attaquant === t.dataset.att);
     const recul = m && data ? Math.max(0, (Number(m.degats) || 0) - (Number(data.degats) || 0)) : 0;
-    notifier({ type: 'succes', titre: 'Renfort envoyé', texte: recul > 0 ? `La jauge recule de ${sgNb(recul)} points. Le siège est long maintenant.` : 'Le siège est long maintenant.' });
+    notifier({ type: 'succes', titre: 'Renfort envoyé', texte: data && Number(data.degats) <= 0 ? 'Le siège est repoussé : sa jauge est à 0. Il est long maintenant.' : recul > 0 ? `La jauge recule de ${sgNb(recul)} points. Le siège est long maintenant.` : 'Le siège est long maintenant.' });   // patch511
     majEnergie();
     await loadMenacesSiege();
   }
@@ -32952,7 +32960,7 @@ function sgFicheMienne(code){
     return `<div class="sg-fiche-l${p >= 66 ? ' chaud' : ''}">
       <div class="sg-fiche-h"><span>Assiégée par <b>${echapperTexte(m.attaquant_pseudo || 'un joueur')}</b></span><span>${p} % · ${m.long ? 'long' : 'éclair'}</span></div>
       ${sgBarre(deg, res, true)}
-      <div class="sg-fiche-a"><span>Renforcer</span>${[2, 5, 10].map(x => `<button type="button" class="sg-renf" data-sg-renf="${x}" data-code="${echapperTexte(m.commune)}" data-att="${echapperTexte(m.attaquant)}">${x} ⚡</button>`).join('')}</div>
+      <div class="sg-fiche-a"><span>Renforcer</span>${[2, 5, 10].map(x => `<button type="button" class="sg-renf" data-sg-renf="${x}" data-code="${echapperTexte(m.commune)}" data-att="${echapperTexte(m.attaquant)}">${x} ⚡</button>`).join('')}</div>${sgToutHtml(m, true)}
     </div>`;
   }).join('') + '</div>';
 }

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'c81b700adb36';
+const VERSION_JEU = 'f2e5d71a92fa';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10475,6 +10475,7 @@ async function loadMenaces(){
 }
 
 function renderMenaces(){
+  if(SIEGE){ renderMenacesSiege(); return; }   // patch519 : en saison 3, la liste des sièges (sinon elle disparaissait toutes les 30 s)
   const enDanger = menaces.filter(m => m.victoires_consecutives > 0);
   const badge = document.getElementById('combatBadge');
   if(badge){

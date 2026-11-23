@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'd1550bb9a40c';
+const VERSION_JEU = 'ec2397ea767e';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -32958,6 +32958,7 @@ async function sgEnvoyer(){
 
 // Défendre : les sièges contre moi
 async function loadMenacesSiege(){
+  await chargerDefPrio();   // patch523
   const { data, error } = await sb.rpc('sieges_contre_moi_v2');
   if(error){ console.error(error); return; }
   sgMenaces = Array.isArray(data) ? data : [];
@@ -32991,9 +32992,30 @@ function sgChuteHtml(m){
   return `<p class="sg-chute">⏱️ ${quand ? `Au plus tôt vers <b>${quand}</b>` : 'Elle peut tomber dès maintenant'}, si l'attaquant envoie encore ≈ <b>${manque} ⚡</b>${Number(c.attente) > 0 ? ` (il en a ${c.attente} en attente)` : ''}.</p>`;
 }
 function sgLaisses(){ try{ return new Set(JSON.parse(localStorage.getItem('tf-siege-laisses') || '[]')); }catch(e){ return new Set(); } }
+// patch523 : hors de « Mes départements », un siège est laissé filer tout seul, sauf si on le suit à nouveau
+function sgSuivis(){ try{ return new Set(JSON.parse(localStorage.getItem('tf-siege-suivis') || '[]')); }catch(e){ return new Set(); } }
+function sgAuto(m){ return Array.isArray(defPrio) && defPrio.length > 0 && !defPrio.includes(String(m.dept)); }
+function sgEstLaisse(m, laisses, suivis){ return laisses.has(m.id) || (sgAuto(m) && !suivis.has(m.id)); }
+function sgPrioHtml(){
+  if(defPrio === null) return '';
+  const chips = (defPrio || []).map(d => `<button type="button" class="df-dep" data-def-dep="${echapperTexte(d)}" title="Retirer">${echapperTexte(d)} <span>${echapperTexte(DEPT_NAMES[d] || '')}</span> ×</button>`).join('');
+  const sugg = defAjoutOuvert ? `<div class="df-sugg">${suggestionsDefPrio().map(([d, n]) =>
+      `<button type="button" class="df-dep ajout" data-def-dep="${echapperTexte(d)}">+ ${echapperTexte(d)} <span>${echapperTexte(DEPT_NAMES[d] || '')} · ${n}</span></button>`).join('') || '<span class="df-aide">Tous tes départements sont déjà choisis.</span>'}
+      <input type="text" id="defDepChamp" maxlength="30" placeholder="Autre : 33 ou Gironde" autocomplete="off"></div>` : '';
+  return `<div class="df-prio"><div class="df-prio-ligne"><span class="df-prio-t">📍 Mes départements</span>${chips}
+      ${(defPrio || []).length < DEF_PRIO_MAX ? `<button type="button" class="df-dep plus" data-def-ajout>${defAjoutOuvert ? 'Fermer' : '+ Ajouter'}</button>` : ''}</div>
+      <p class="df-aide">${(defPrio || []).length ? 'Les sièges hors de ces départements sont laissés filer tout seuls : ils restent en bas, en petit, et ne comptent pas dans la pastille.' : 'Choisis tes départements : les sièges ailleurs seront laissés filer tout seuls.'}</p>${sugg}</div>`;
+}
+function sgMiniHtml(m){
+  const tier = sgTier(m.tier), res = Number(m.resistance) || 0, deg = Number(m.degats) || 0, p = res ? Math.round(100 * deg / res) : 0;
+  return `<div class="sg-mini${p >= 66 ? ' chaud' : ''}"><i class="sg-rar" style="--c:${tier.color}"></i>
+    <button type="button" class="sg-def-nom" data-voir-carte="${echapperTexte(m.commune)}">${echapperTexte(m.nom)}</button>${badgeDept(m.dept)}
+    <span class="sg-mini-p">${p} %</span><span class="sg-mini-q">${echapperTexte(m.attaquant_pseudo || '')}</span>
+    <button type="button" class="sg-laisser" data-sg-laisser="${m.id}"${sgAuto(m) ? ' data-sg-auto="1"' : ''}>Suivre</button></div>`;
+}
 function renderMenacesSiege(){
-  const laisses = sgLaisses();
-  const vus = sgMenaces.filter(m => !laisses.has(m.id));
+  const laisses = sgLaisses(), suivis = sgSuivis();
+  const vus = sgMenaces.filter(m => !sgEstLaisse(m, laisses, suivis));   // patch523
   const nb = vus.length;
   const badge = document.getElementById('combatBadge');
   if(badge){ badge.hidden = nb === 0; badge.textContent = nb; majBadgePlus(); badge.title = nb > 1 ? `${nb} communes assiégées` : 'Une commune assiégée'; }
@@ -33004,10 +33026,11 @@ function renderMenacesSiege(){
   bloc.hidden = sgMenaces.length === 0;
   const h2 = bloc.querySelector('h2'); if(h2) h2.textContent = 'Tes communes assiégées';
   if(bloc.hidden){ liste.innerHTML = ''; return; }
-  liste.innerHTML = sgMenaces.map(m => {
+  const filer = sgMenaces.filter(m => sgEstLaisse(m, laisses, suivis));   // patch523
+  liste.innerHTML = sgPrioHtml() + vus.map(m => {
     const tier = sgTier(m.tier), res = Number(m.resistance) || 0, deg = Number(m.degats) || 0;
     const tombe = m.tombe_le ? new Date(m.tombe_le).getTime() - Date.now() : 0;
-    const laisse = laisses.has(m.id);
+    const laisse = false;
     const p = res ? Math.round(100 * deg / res) : 0;
     const etat = m.long ? `<b class="sg-long">Siège long</b> · ${Number(m.rythme_h) > 0 && res > 0 ? `se remplit en ${sgDuree(Math.round(res / Number(m.rythme_h) * 60))} au plus vite` : 'se remplit lentement'}` : `<b class="sg-eclair">Siège éclair</b> · ${sgEclairTxt(m.tier)}`;   // patch495
     return `<div class="sg-def${laisse ? ' laisse' : ''}${p >= 66 ? ' chaud' : ''}">
@@ -33021,9 +33044,11 @@ function renderMenacesSiege(){
       </div>${sgToutHtml(m)}
       <div class="sg-def-b">
         ${Number(m.garnison) > 0 ? '' : `<button type="button" class="sg-gn" data-sg-gn="${echapperTexte(m.commune)}">Garnison · 5 ⚡</button>`}
-        <button type="button" class="sg-laisser" data-sg-laisser="${m.id}">${laisse ? 'Suivre à nouveau' : 'Laisser filer'}</button>
+        <button type="button" class="sg-laisser" data-sg-laisser="${m.id}"${sgAuto(m) ? ' data-sg-auto="1"' : ''}>Laisser filer</button>
       </div></div>`;
-  }).join('');
+  }).join('')
+    + (vus.length ? '' : '<p class="collection-empty">Rien à défendre dans tes départements.</p>')
+    + (filer.length ? `<details class="sg-filer"${vus.length ? '' : ' open'}><summary>Laissées filer <span>${filer.length}</span></summary>${filer.map(sgMiniHtml).join('')}</details>` : '');   // patch523
 }
 document.addEventListener('click', async (ev) => {
   const t = ev.target.closest('[data-sg-renf],[data-sg-gn],[data-sg-laisser],[data-sg-ouvrir]');
@@ -33031,7 +33056,11 @@ document.addEventListener('click', async (ev) => {
   if(t.dataset.sgOuvrir){ ouvrirSiege(t.dataset.sgOuvrir); return; }
   if(t.dataset.sgLaisser){
     const s = sgLaisses(), id = Number(t.dataset.sgLaisser);
-    if(s.has(id)) s.delete(id); else s.add(id);
+    if(t.dataset.sgAuto){   // patch523 : hors de mes départements
+      const su = sgSuivis(); s.delete(id);
+      if(su.has(id)) su.delete(id); else su.add(id);
+      try{ localStorage.setItem('tf-siege-suivis', JSON.stringify([...su].slice(-60))); }catch(e){}
+    } else if(s.has(id)) s.delete(id); else s.add(id);
     try{ localStorage.setItem('tf-siege-laisses', JSON.stringify([...s].slice(-60))); }catch(e){}
     renderMenacesSiege();
     return;

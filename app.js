@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'f2e5d71a92fa';
+const VERSION_JEU = '7ee9a7332d94';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -32948,6 +32948,21 @@ function sgToutHtml(m, petit){
   const txt = n >= 60 && deg / 9.6 > 60 ? `Repousser au maximum · 60 ⚡` : `Tout repousser · ${n} ⚡`;
   return `<button type="button" class="sg-tout${petit ? ' petit' : ''}" data-sg-renf="${n}" data-code="${echapperTexte(m.commune)}" data-att="${echapperTexte(m.attaquant)}"${manque ? ' disabled' : ''}>🛡️ ${txt}<small>${manque ? `tu as ${e} ⚡` : 'la jauge revient à 0'}</small></button>`;
 }
+// patch520 : quand ma commune peut tomber (s3-62)
+function sgHeure(t){
+  const d = new Date(t), auj = new Date(), dem = new Date(); dem.setDate(auj.getDate() + 1);
+  const h = d.getHours() + ' h ' + String(d.getMinutes()).padStart(2, '0');
+  if(d.toDateString() === auj.toDateString()) return h;
+  if(d.toDateString() === dem.toDateString()) return 'demain ' + h;
+  return d.toLocaleDateString('fr-FR', { weekday: 'short' }) + ' ' + h;
+}
+function sgChuteHtml(m){
+  const c = m && m.chute; if(!c || !c.plus_tot) return '';
+  const quand = c.maintenant ? null : sgHeure(c.plus_tot);
+  const manque = Math.max(0, (Number(c.besoin) || 0) - (Number(c.attente) || 0));
+  if(c.suffit) return `<p class="sg-chute alerte"><b>⚠️ L'énergie déjà envoyée suffit</b> : ${quand ? `elle tombera vers <b>${quand}</b> sans autre vague` : 'elle peut tomber d\'un instant à l\'autre'}. Renforce avant.</p>`;
+  return `<p class="sg-chute">⏱️ ${quand ? `Au plus tôt vers <b>${quand}</b>` : 'Elle peut tomber dès maintenant'}, si l'attaquant envoie encore ≈ <b>${manque} ⚡</b>${Number(c.attente) > 0 ? ` (il en a ${c.attente} en attente)` : ''}.</p>`;
+}
 function sgLaisses(){ try{ return new Set(JSON.parse(localStorage.getItem('tf-siege-laisses') || '[]')); }catch(e){ return new Set(); } }
 function renderMenacesSiege(){
   const laisses = sgLaisses();
@@ -32973,7 +32988,7 @@ function renderMenacesSiege(){
       ${Number(m.bouclier) > 0 ? `<div class="sg-bcl"><span>Ta garnison</span><b>${sgNb(m.bouclier)} points de bouclier</b></div>` : ''}
       ${sgBarre(deg, res)}
       <div class="sg-jl"><span><b>${sgNb(deg)}</b> / ${sgNb(res)} · ${p} %</span><span>${etat}</span></div>
-      ${tombe > 0 ? `<p class="sg-tombe">Sans nouvelle vague, son siège tombe dans ${formatDuree(tombe)}${m.defendu || Number(m.bouclier) > 0 ? ' : défense réussie pour toi' : ''}.</p>` : ''}
+      ${sgChuteHtml(m)}${tombe > 0 ? `<p class="sg-tombe">Sans nouvelle vague, son siège tombe dans ${formatDuree(tombe)}${m.defendu || Number(m.bouclier) > 0 ? ' : défense réussie pour toi' : ''}.</p>` : ''}
       <div class="sg-def-a">
         <span class="sg-renf-l">Renforcer</span>${[2, 5, 10].map(x => `<button type="button" class="sg-renf" data-sg-renf="${x}" data-code="${echapperTexte(m.commune)}" data-att="${echapperTexte(m.attaquant)}">${x} ⚡</button>`).join('')}
       </div>${sgToutHtml(m)}
@@ -33090,7 +33105,7 @@ function sgFicheMienne(code){
     return `<div class="sg-fiche-l${p >= 66 ? ' chaud' : ''}">
       <div class="sg-fiche-h"><span>Assiégée par <b>${echapperTexte(m.attaquant_pseudo || 'un joueur')}</b></span><span>${p} % · ${m.long ? 'long' : 'éclair'}</span></div>
       ${sgBarre(deg, res, true)}
-      <div class="sg-fiche-a"><span>Renforcer</span>${[2, 5, 10].map(x => `<button type="button" class="sg-renf" data-sg-renf="${x}" data-code="${echapperTexte(m.commune)}" data-att="${echapperTexte(m.attaquant)}">${x} ⚡</button>`).join('')}</div>${sgToutHtml(m, true)}
+      <div class="sg-fiche-a"><span>Renforcer</span>${[2, 5, 10].map(x => `<button type="button" class="sg-renf" data-sg-renf="${x}" data-code="${echapperTexte(m.commune)}" data-att="${echapperTexte(m.attaquant)}">${x} ⚡</button>`).join('')}</div>${sgChuteHtml(m)}${sgToutHtml(m, true)}
     </div>`;
   }).join('') + '</div>';
 }

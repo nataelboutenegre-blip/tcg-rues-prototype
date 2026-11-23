@@ -9775,6 +9775,9 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .sg-mes-t b{ font-size:.92rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:70%; }
 .sg-mes-t small{ flex:1 0 100%; font-size:.72rem; color:var(--brume); }
 .sg-mes-p{ font:800 .95rem/1 var(--titre); text-align:right; }
+.sg-chute{ margin:6px 0 0; font-size:.8rem; line-height:1.4; color:var(--brume); }   /* patch520 */
+.sg-chute b{ color:#fff; }
+.sg-chute.alerte{ color:#FFB4B7; background:rgba(229,72,77,.12); border:1px solid rgba(229,72,77,.3); border-radius:10px; padding:7px 10px; }
 .sg-tout{ display:flex; flex-direction:column; align-items:center; gap:1px; width:100%; margin-top:8px; font:inherit; font-size:.9rem; font-weight:800; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.18); background:linear-gradient(180deg, #3a6df0, #2a52c4); color:#fff; cursor:pointer; }   /* patch511 */
 .sg-tout small{ font-size:.72rem; font-weight:500; opacity:.85; }
 .sg-tout.petit{ padding:8px 10px; font-size:.82rem; }

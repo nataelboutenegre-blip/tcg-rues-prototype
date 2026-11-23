@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ec2397ea767e';
+const VERSION_JEU = 'ea6c144aeddb';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -10633,13 +10633,18 @@ document.getElementById('combatMenacesListe').addEventListener('click', (e) => {
   if(e.target.closest('[data-def-ajout]')){ defAjoutOuvert = !defAjoutOuvert; renderMenaces();
     if(defAjoutOuvert){ const c = document.getElementById('defDepChamp'); if(c && !/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) c.focus(); }
     return; }
+  const pa = e.target.closest('[data-def-pays]');   // patch524
+  if(pa){ defPaysBasculer(pa.dataset.defPays, !!pa.dataset.defPaysRetirer); return; }
   const d = e.target.closest('[data-def-dep]');
   if(d){ basculerDefPrio(d.dataset.defDep); return; }
 });
 document.getElementById('combatMenacesListe').addEventListener('keydown', (e) => {
   if(e.key !== 'Enter' || e.target.id !== 'defDepChamp') return;
+  const tp = sansAccents(String(e.target.value || '').trim()).toLowerCase();   // patch524 : un pays entier
+  const pays = defPays().find(p => p.id === tp || sansAccents(p.nom).toLowerCase() === tp);
+  if(pays){ defPaysBasculer(pays.id, false); return; }
   const code = trouverDepartementSaisi(e.target.value);
-  if(!code){ notifier({ type: 'erreur', titre: 'Département inconnu', texte: 'Tape son numéro (16) ou son nom (Charente).' }); return; }
+  if(!code){ notifier({ type: 'erreur', titre: 'Département inconnu', texte: 'Tape son numéro (16), son nom (Charente), un canton (Vaud), ou un pays (Luxembourg, Suisse, Belgique).' }); return; }
   basculerDefPrio(code);
 });
 
@@ -32996,12 +33001,40 @@ function sgLaisses(){ try{ return new Set(JSON.parse(localStorage.getItem('tf-si
 function sgSuivis(){ try{ return new Set(JSON.parse(localStorage.getItem('tf-siege-suivis') || '[]')); }catch(e){ return new Set(); } }
 function sgAuto(m){ return Array.isArray(defPrio) && defPrio.length > 0 && !defPrio.includes(String(m.dept)); }
 function sgEstLaisse(m, laisses, suivis){ return laisses.has(m.id) || (sgAuto(m) && !suivis.has(m.id)); }
+// patch524 : les pays dans « Mes départements »
+function defPays(){
+  const P = [];
+  if(typeof LUXEMBOURG !== 'undefined' && LUXEMBOURG) P.push({ id: 'luxembourg', nom: 'Luxembourg', drapeau: '🇱🇺', codes: Object.keys(CANTONS_LU) });
+  if(typeof SUISSE !== 'undefined' && SUISSE) P.push({ id: 'suisse', nom: 'Suisse', drapeau: '🇨🇭', codes: Object.keys(CANTONS) });
+  if(typeof BELGIQUE !== 'undefined' && BELGIQUE) P.push({ id: 'belgique', nom: 'Belgique', drapeau: '🇧🇪', codes: Object.keys(PROVINCES_BE) });
+  return P;
+}
+async function defPaysBasculer(id, retirer){
+  const p = defPays().find(x => x.id === id); if(!p) return;
+  const prio = defPrio || [];
+  const codes = retirer ? p.codes.filter(c => prio.includes(c)) : p.codes.filter(c => !prio.includes(c));
+  if(!retirer && prio.length + codes.length > DEF_PRIO_MAX){
+    notifier({ type: 'erreur', titre: 'Départements', texte: `${p.nom} compte ${p.codes.length} ${p.id === 'belgique' ? 'provinces' : 'cantons'} : il te reste ${DEF_PRIO_MAX - prio.length} places sur ${DEF_PRIO_MAX}.` }); return;
+  }
+  for(const c of codes){
+    const { data, error } = await sb.rpc('basculer_departement_defense', { p_dep: c });
+    if(error){ notifier({ type: 'erreur', titre: 'Départements', texte: messageLisible(error.message) }); break; }
+    defPrio = (data || []).map(x => x.departement);
+  }
+  if(!(defPrio || []).length) defFiltre = 'tout';
+  renderMenaces();
+}
 function sgPrioHtml(){
   if(defPrio === null) return '';
-  const chips = (defPrio || []).map(d => `<button type="button" class="df-dep" data-def-dep="${echapperTexte(d)}" title="Retirer">${echapperTexte(d)} <span>${echapperTexte(DEPT_NAMES[d] || '')}</span> ×</button>`).join('');
+  const pleins = defPays().filter(p => p.codes.every(c => (defPrio || []).includes(c)));   // patch524 : un pays complet = une pastille
+  const caches = new Set(pleins.flatMap(p => p.codes));
+  const paysSugg = defAjoutOuvert ? defPays().filter(p => !pleins.includes(p)).map(p => [p, [...collectionMap.values()].filter(e => !e.perdue && p.codes.includes(e.dept)).length]).filter(([, n]) => n > 0) : [];
+  const chips = pleins.map(p => `<button type="button" class="df-dep" data-def-pays="${p.id}" data-def-pays-retirer="1" title="Retirer tout le pays">${p.drapeau} ${p.nom} <span>tout le pays</span> ×</button>`).join('')
+    + (defPrio || []).filter(d => !caches.has(d)).map(d => `<button type="button" class="df-dep" data-def-dep="${echapperTexte(d)}" title="Retirer">${echapperTexte(d)} <span>${echapperTexte(DEPT_NAMES[d] || '')}</span> ×</button>`).join('');
   const sugg = defAjoutOuvert ? `<div class="df-sugg">${suggestionsDefPrio().map(([d, n]) =>
       `<button type="button" class="df-dep ajout" data-def-dep="${echapperTexte(d)}">+ ${echapperTexte(d)} <span>${echapperTexte(DEPT_NAMES[d] || '')} · ${n}</span></button>`).join('') || '<span class="df-aide">Tous tes départements sont déjà choisis.</span>'}
-      <input type="text" id="defDepChamp" maxlength="30" placeholder="Autre : 33 ou Gironde" autocomplete="off"></div>` : '';
+      ${paysSugg.map(([p, n]) => `<button type="button" class="df-dep ajout" data-def-pays="${p.id}">+ ${p.drapeau} ${p.nom} <span>tout le pays · ${n}</span></button>`).join('')}
+      <input type="text" id="defDepChamp" maxlength="30" placeholder="Autre : 33, Gironde, Luxembourg, Suisse…" autocomplete="off"></div>` : '';   // patch524
   return `<div class="df-prio"><div class="df-prio-ligne"><span class="df-prio-t">📍 Mes départements</span>${chips}
       ${(defPrio || []).length < DEF_PRIO_MAX ? `<button type="button" class="df-dep plus" data-def-ajout>${defAjoutOuvert ? 'Fermer' : '+ Ajouter'}</button>` : ''}</div>
       <p class="df-aide">${(defPrio || []).length ? 'Les sièges hors de ces départements sont laissés filer tout seuls : ils restent en bas, en petit, et ne comptent pas dans la pastille.' : 'Choisis tes départements : les sièges ailleurs seront laissés filer tout seuls.'}</p>${sugg}</div>`;

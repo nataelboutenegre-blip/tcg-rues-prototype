@@ -2,6 +2,7 @@
   {
     "date": "2026-11-23",
     "nouveautes": [
+      "📍 Mes départements : tu peux ajouter un pays entier (Luxembourg, Suisse, Belgique) d'un coup, ou un canton / une province par son nom. Demande de Maroli.",
       "📍 Défendre : « Mes départements » revient. Les sièges ailleurs sont laissés filer tout seuls, et tous les sièges laissés filer deviennent de petites lignes en bas (« Suivre » pour les remettre en grand). Idée de H34VEN.",
       "⚡ Attaquer : le tri « Moins d'énergie » remplace « Meilleures chances » et met en premier les cibles qui te coûtent le moins (parmi les 600 plus proches de ton territoire). Idée de H34VEN.",
       "⏱️ Défendre : sous chaque siège contre toi, l'heure à laquelle ta commune peut tomber au plus tôt, et une alerte si l'énergie que l'attaquant a déjà envoyée suffit à la prendre sans autre vague. Idée de Cairnan217.",

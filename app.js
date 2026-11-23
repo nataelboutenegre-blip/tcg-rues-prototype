@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'f1b1b7dcc327';
+const VERSION_JEU = '8438667af3fc';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -27520,7 +27520,7 @@ async function atlVitrine(id, cartes){
 // Un motif = jusqu'à 8 calques (formes, lignes, trames, lettres) qui se répètent par-dessus la couleur du joueur.
 // Le serveur vérifie tout (s3-46) ; ici : le chargement, le dessin sur la carte et l'éditeur.
 const MOT_MAX = 8, MOT_MAX_LETTRES = 3, MOT_BROUILLON = 'tf-motif-brouillon';
-const MOT_VIS_DEBUT = 3, MOT_VIS_PLEIN = 8;   // en pixels par kilomètre : en dessous le motif est caché, au-dessus il est entier
+const MOT_VIS_DEBUT = 0, MOT_VIS_PLEIN = 1;   // en pixels par kilomètre ; patch516 : visible presque à tout zoom (avant 3 et 8)
 const MOT_PACKS = { heraldique: 'Formes Héraldique', nature: 'Formes Nature', cartographe: 'Formes Cartographe', tissus: 'Trames Tissus' };
 const MOT_CATS = ['Formes', 'Lignes', 'Symboles', 'Animaux', 'Héraldique', 'Nature', 'Cartographe', 'Lettres'];   // patch505 : Animaux
 const MOT_COULEURS = ['#FFFFFF', '#E8E2D4', '#FFE08A', '#F0B429', '#FF8A3D', '#F0505A', '#9E2B45', '#E85DA8', '#A06CFF', '#7FD4FF', '#3D8BFF', '#2456C8', '#2EC4C4', '#3FCF8E', '#2F7D55', '#0B1424'];
@@ -27828,7 +27828,7 @@ async function motOuvrir(){
         <div class="mot-ligne"><label for="motDensite">Taille du motif</label><input type="range" id="motDensite" min="18" max="90" step="1"><output id="motODensite"></output></div>
         <div class="mot-ligne"><label for="motIntensite">Intensité</label><input type="range" id="motIntensite" min="15" max="100" step="1"><output id="motOIntensite"></output></div>
         <div class="mot-bascule"><span>Rangées décalées (en quinconce)</span><button type="button" class="mot-sw" id="motQuinconce" role="switch" aria-label="Rangées décalées"></button></div>
-        <p class="mot-note">Le fond, c'est <b>ta couleur</b> (elle se change dans « Ma couleur sur la carte »). ${meVoirDore() ? 'Sur ta propre carte tu te vois en doré : ton motif s’y pose sur le doré. ' : ''}De loin, le motif s'efface pour que les raretés, les clans et les bâtiments restent lisibles.</p>
+        <p class="mot-note">Le fond, c'est <b>ta couleur</b> (elle se change dans « Ma couleur sur la carte »). ${meVoirDore() ? 'Sur ta propre carte tu te vois en doré : ton motif s’y pose sur le doré. ' : ''}Il se voit à tous les niveaux de zoom ; de loin, il couvre les départements où tu es en tête.</p>
       </div>
     </div>
     <div class="mot-pied"><button type="button" class="mot-sec" data-mot-e="retirer">Retirer mon motif</button><button type="button" class="mot-ok" data-mot-e="enregistrer">Enregistrer</button></div>

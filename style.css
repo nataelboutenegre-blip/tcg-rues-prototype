@@ -11224,6 +11224,9 @@ html.mot-ouvert{ overflow:hidden; }
 .mot-ligne label{ width:92px; flex:none; font-size:.82rem; color:var(--md); }
 .mot-ligne input[type=range]{ flex:1; min-width:0; accent-color:var(--mor); height:26px; }
 .mot-ligne output{ width:44px; text-align:right; font-family:var(--titre, 'Big Shoulders Display'), Impact, sans-serif; font-weight:700; font-size:1rem; }
+.mot-ligne output{ cursor:text; border-radius:6px; padding:2px 4px; background:rgba(255,255,255,.06); border-bottom:1px dashed rgba(255,255,255,.35); }   /* patch515 : on peut taper la valeur */
+.mot-saisie{ width:52px; flex:none; text-align:right; font:inherit; font-family:var(--titre, 'Big Shoulders Display'), Impact, sans-serif; font-weight:700; font-size:1rem; color:inherit; background:rgba(0,0,0,.35); border:1px solid var(--mor, #F2B92C); border-radius:6px; padding:2px 4px; -moz-appearance:textfield; }
+.mot-saisie::-webkit-outer-spin-button, .mot-saisie::-webkit-inner-spin-button{ -webkit-appearance:none; margin:0; }
 .mot-couleurs{ display:flex; flex-wrap:wrap; gap:7px; margin-top:10px; }
 .mot-couleurs button{ width:30px; height:30px; border-radius:50%; border:2px solid rgba(255,255,255,.15); padding:0; }
 .mot-couleurs button.on{ outline:2.5px solid #fff; outline-offset:2px; }

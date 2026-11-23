@@ -2,6 +2,7 @@
   {
     "date": "2026-11-23",
     "nouveautes": [
+      "🎨 Motifs : touche le chiffre à droite d'un curseur (taille, rotation, opacité, position…) pour taper la valeur exacte. La rotation se règle maintenant au degré près. Idée d'Arkhannou.",
       "🗺️ Territoire : nouveau calque « Vue départements ». Allumé, la carte reste découpée par départements même en zoomant (pratique pour l'Île-de-France) ; toucher un département ouvre sa fiche. Idée d'Arkhannou.",
       "🏚️ QG › Bâtiments : « Bâtiments pris et perdus cette saison », la liste de ceux que tu as détruits ou perdus en conquête, avec les lingots pillés. Idée d'Arkhannou.",
       "🎨 Territoire : de loin, chaque département montre le motif du joueur en tête, comme un drapeau. Plus il domine, plus son motif se voit. Idée d'Arkhannou.",

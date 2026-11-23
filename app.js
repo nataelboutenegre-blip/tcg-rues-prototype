@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'f013c76b1f66';
+const VERSION_JEU = 'f1b1b7dcc327';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -27998,7 +27998,7 @@ function motRendreBloc(){
     <button type="button" class="mot-forme-btn" id="motBForme"><canvas></canvas><span>${echapperTexte(motNomCalque(c))}</span><small>${f && f.pack ? (motPossede(f) ? 'À toi' : MOT_PACKS[f.pack] + ' · ' + motPrixPack(f.pack)) : 'Changer ›'}</small></button>
     <div class="mot-couleurs" id="motCoulCalque">${MOT_COULEURS.map(x => `<button type="button" style="background:${x}" data-c="${x}" class="${x === c.couleur ? 'on' : ''}" aria-label="Couleur ${x}"></button>`).join('')}</div>
     ${ty === 'forme' ? `<div class="mot-ligne"><label>Taille</label><input type="range" id="motST" min="6" max="150" value="${c.t}"><output>${c.t}</output></div>
-      <div class="mot-ligne"><label>Rotation</label><input type="range" id="motSR" min="0" max="355" step="5" value="${c.r}"><output>${c.r}°</output></div>`
+      <div class="mot-ligne"><label>Rotation</label><input type="range" id="motSR" min="0" max="359" step="1" value="${c.r}"><output>${c.r}°</output></div>`
     : `${ty === 'ligne' ? `<div class="mot-ligne"><label>Épaisseur</label><input type="range" id="motST" min="20" max="260" step="5" value="${c.t}"><output>${c.t} %</output></div>` : ''}
       <div class="mot-ligne"><label>Sens</label>${seg('motSSens', ty === 'ligne' ? [[0, 'Horizontal'], [90, 'Vertical']] : [[0, 'Normal'], [90, 'Tourné']], c.r === 90 ? 90 : 0)}</div>`}
     <div class="mot-ligne"><label>Opacité</label><input type="range" id="motSA" min="10" max="100" value="${Math.round(c.a * 100)}"><output>${Math.round(c.a * 100)} %</output></div>
@@ -28012,6 +28012,7 @@ function motRendreBloc(){
     </div>`;
   motVignette(b.querySelector('#motBForme canvas'), (g, s) => motVignetteCalque(g, s, c, motMaCouleur()));
   motEl('motBForme').onclick = () => motOuvrirFormes(ME.sel);
+  b.querySelectorAll('.mot-ligne output').forEach(o => { o.tabIndex = 0; o.title = 'Toucher pour taper une valeur'; });   // patch515
   b.querySelectorAll('#motCoulCalque button').forEach(x => x.onclick = () => { c.couleur = x.dataset.c; motGarder(); motTout(true); });
   const lier = (id, cle, fn, aff) => { const i = motEl(id); if(!i) return; i.oninput = () => { c[cle] = fn(+i.value); i.nextElementSibling.textContent = aff(+i.value); motTout(false); }; i.onchange = () => { motGarder(); motRendreCalques(); }; };
   lier('motST', 't', v => v, v => ty === 'ligne' ? v + ' %' : v); lier('motSR', 'r', v => v, v => v + '°'); lier('motSA', 'a', v => v / 100, v => v + ' %'); lier('motSX', 'x', v => v, v => v); lier('motSY', 'y', v => v, v => v);
@@ -28037,6 +28038,37 @@ function motRendreTerritoire(){
   motEl('motIntensite').value = M.intensite; motEl('motOIntensite').textContent = M.intensite + ' %';
   motEl('motQuinconce').classList.toggle('on', !!M.quinconce); motEl('motQuinconce').setAttribute('aria-checked', String(!!M.quinconce));
 }
+// patch515 : toucher le chiffre d'un curseur pour taper la valeur (idée d'Arkhannou)
+function motSaisieOuvrir(o){
+  const r = o.previousElementSibling;
+  if(!r || r.type !== 'range' || o.hidden) return;
+  const s = document.createElement('input');
+  s.type = 'number'; s.className = 'mot-saisie'; s.inputMode = 'numeric';
+  s.min = r.min; s.max = r.max; s.step = r.step || 1; s.value = r.value;
+  s.setAttribute('aria-label', 'Valeur de ' + ((o.parentElement.querySelector('label') || {}).textContent || 'ce réglage'));
+  o.hidden = true; o.after(s); s.focus(); s.select();
+  let fini = false;
+  const finir = (garder) => {
+    if(fini) return; fini = true;
+    const v = parseFloat(String(s.value).replace(',', '.'));
+    s.remove(); o.hidden = false;
+    if(!garder || !Number.isFinite(v)) return;
+    const min = +r.min || 0, max = r.max === '' ? 100 : +r.max, pas = +r.step || 1;
+    r.value = String(Math.min(max, Math.max(min, Math.round(v / pas) * pas)));
+    r.dispatchEvent(new Event('input', { bubbles: true }));
+    r.dispatchEvent(new Event('change', { bubbles: true }));
+  };
+  s.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); finir(true); } else if(e.key === 'Escape'){ e.preventDefault(); finir(false); } });
+  s.addEventListener('blur', () => finir(true));
+}
+document.addEventListener('click', (e) => {
+  const o = e.target.closest('.mot-ligne output');
+  if(o) motSaisieOuvrir(o);
+});
+document.addEventListener('keydown', (e) => {
+  const o = e.target.closest && e.target.closest('.mot-ligne output');
+  if(o && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); motSaisieOuvrir(o); }
+});
 /* la bibliothèque de formes */
 function motOuvrirFormes(i){ ME.cible = i; motEl('motVFormes').hidden = false; motRendreFormes(); }
 function motRendreFormes(){

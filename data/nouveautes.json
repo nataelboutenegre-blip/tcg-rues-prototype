@@ -2,6 +2,8 @@
   {
     "date": "2026-11-23",
     "nouveautes": [
+      "⚡ Attaquer : le « ≈ N ⚡ » de chaque cible est maintenant le vrai chiffre pour toi (tes communes autour, rempart, Forteresse, garnison, siège déjà commencé), avec une ligne qui dit ce qui le fait monter ou baisser.",
+      "📖 QG › Guide : tout le Front en 5 minutes. Le siège, l'éclair et le long, ce qui change tes dégâts, la défense, la nuit et où trouver de l'énergie.",
       "🎨 Motifs : touche le chiffre à droite d'un curseur (taille, rotation, opacité, position…) pour taper la valeur exacte. La rotation se règle maintenant au degré près. Idée d'Arkhannou.",
       "🗺️ Territoire : nouveau calque « Vue départements ». Allumé, la carte reste découpée par départements même en zoomant (pratique pour l'Île-de-France) ; toucher un département ouvre sa fiche. Idée d'Arkhannou.",
       "🏚️ QG › Bâtiments : « Bâtiments pris et perdus cette saison », la liste de ceux que tu as détruits ou perdus en conquête, avec les lingots pillés. Idée d'Arkhannou.",

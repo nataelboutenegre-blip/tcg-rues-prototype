@@ -28,7 +28,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
 <script src="topo.js?v=1"></script><!-- patch433 : habillage Topo -->
-<link rel="stylesheet" href="style.css?v=8438667af3fc">
+<link rel="stylesheet" href="style.css?v=c81b700adb36">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -403,6 +403,7 @@
         Défense
       </div>
 
+      <div class="tab onglet-fusionne" data-tab="guide" aria-hidden="true"></div><!-- patch517 -->
       <div class="tab onglet-fusionne" data-tab="batiments" aria-hidden="true"><!-- patch379 -->
         <div class="icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round">
@@ -1037,6 +1038,7 @@
         <button type="button" class="volet actif" data-volet="combat" role="tab" aria-selected="true">Attaquer</button>
         <button type="button" class="volet" data-volet="defense" role="tab" aria-selected="false">Défendre<span class="volet-badge" data-badge-defense hidden></span></button>
         <button type="button" class="volet" data-volet="batiments" role="tab" aria-selected="false">Bâtiments</button><!-- patch379 -->
+        <button type="button" class="volet" data-volet="guide" role="tab" aria-selected="false">Guide</button><!-- patch517 -->
       </div>
       <div class="sub">3 victoires pour conquérir une commune, pas forcément d'affilée : une défaite ne te fait rien perdre. Avant d'attaquer, choisis ton engagement : plus tu paies, plus tu as de chances. Un round toutes les 2 min sur une commune, 5 min sur une peu commune, 10 min sur une rare, 1 h sur une épique, 3 h sur une légendaire. Les communes et peu communes s'affichent avec leur filtre ou « Près de mon territoire ».</div>
       <div class="bourse-filters combat-proximite">
@@ -1078,9 +1080,82 @@
         <button type="button" class="volet" data-volet="combat" role="tab" aria-selected="false">Attaquer</button>
         <button type="button" class="volet" data-volet="defense" role="tab" aria-selected="false">Défendre<span class="volet-badge" data-badge-defense hidden></span></button>
         <button type="button" class="volet actif" data-volet="batiments" role="tab" aria-selected="true">Bâtiments</button>
+        <button type="button" class="volet" data-volet="guide" role="tab" aria-selected="false">Guide</button><!-- patch517 -->
       </div>
       <div class="sub">Tes lingots et tes bâtiments. Pour construire, touche une de tes communes sur la carte ; ici, tu les gères, tu les déplaces, et tu prépares ta bombe.</div>
       <div class="btv-galerie"><button type="button" class="filter-pill" data-btv="miens">Mes bâtiments en images ›</button><button type="button" class="filter-pill" data-btv="autres">Les bâtiments des autres ›</button></div>
+    </section>
+
+    <section class="tab-panel" id="panel-guide"><!-- patch517 : le guide du Front -->
+      <h1>Combat</h1>
+      <div class="volets" role="tablist" aria-label="Combat">
+        <button type="button" class="volet" data-volet="monfront" role="tab" aria-selected="false">Mon front</button>
+        <button type="button" class="volet" data-volet="combat" role="tab" aria-selected="false">Attaquer</button>
+        <button type="button" class="volet" data-volet="defense" role="tab" aria-selected="false">Défendre<span class="volet-badge" data-badge-defense hidden></span></button>
+        <button type="button" class="volet" data-volet="batiments" role="tab" aria-selected="false">Bâtiments</button>
+        <button type="button" class="volet actif" data-volet="guide" role="tab" aria-selected="true">Guide</button>
+      </div>
+      <div class="sub">Tout le Front en 5 minutes. Les chiffres exacts d'une commune sont sur sa fiche de siège, sous « Comment c'est calculé ? ».</div>
+      <div class="gd">
+        <details class="gd-b" open>
+          <summary><span class="gd-i">⚔️</span><span><b>Prendre une commune : le siège</b><small>Poser, envoyer des vagues, remplir la jauge</small></span></summary>
+          <ol class="gd-etapes">
+            <li><b>Pose ton siège.</b> Touche une commune sur la carte ou dans Attaquer, puis « Assiéger ». Poser coûte <b>2 ⚡</b>, en plus de ta première vague.</li>
+            <li><b>Envoie des vagues d'énergie.</b> Chaque ⚡ fait environ <b>10 points de dégâts</b> (entre 8 et 12 au hasard), jusqu'à 60 ⚡ par vague.</li>
+            <li><b>Remplis la jauge.</b> Quand les dégâts atteignent la <b>résistance</b> de la commune, elle est à toi.</li>
+          </ol>
+          <div class="gd-tab">
+            <div><span>Commune, peu commune</span><b>55</b></div><div><span>Rare</span><b>65</b></div>
+            <div><span>Épique</span><b>125</b></div><div><span>Légendaire</span><b>250</b></div>
+          </div>
+          <p class="gd-p">Résistance de base. Il faut donc environ <b>6 ⚡</b> pour une commune et <b>25 ⚡</b> pour une légendaire, plus les 2 ⚡ de la pose, avant les bonus et malus ci-dessous. Le chiffre « ≈ N ⚡ » de chaque cible en tient compte.</p>
+        </details>
+        <details class="gd-b">
+          <summary><span class="gd-i">⏱️</span><span><b>Éclair ou long</b><small>Le temps qu'il faut au moins</small></span></summary>
+          <p class="gd-p"><b>Éclair</b> : tant que personne ne défend, la commune peut tomber vite, mais pas avant un délai minimum : <b>5 min</b> (commune), <b>10 min</b> (peu commune), <b>20 min</b> (rare), <b>1 h</b> (épique).</p>
+          <p class="gd-p"><b>Long</b> : dès que le propriétaire défend, ou s'il y a une garnison, un bâtiment visible, ou que c'est une légendaire, le siège devient long. La jauge ne peut alors avancer qu'à un certain rythme : au mieux <b>1 h</b> (commune), <b>1 h 30</b> (peu commune), <b>2 h</b> (rare), <b>6 h</b> (épique), <b>15 h</b> (légendaire). L'énergie en trop attend dans le siège et part toute seule toutes les 5 minutes. Tu as <b>8 places</b> de sièges longs.</p>
+          <p class="gd-p">Un siège sans nouvelle vague pendant <b>24 h</b> s'arrête. Une commune qui vient d'être prise est protégée <b>3 h</b>.</p>
+        </details>
+        <details class="gd-b">
+          <summary><span class="gd-i">📍</span><span><b>Ce qui change tes dégâts</b><small>Tes communes autour de la cible</small></span></summary>
+          <div class="gd-tab">
+            <div><span>Aucune commune à toi à 20 km</span><b class="gd-m">−20 %</b></div>
+            <div><span>1 ou 2</span><b class="gd-m">−10 %</b></div>
+            <div><span>3 à 5</span><b>normal</b></div>
+            <div><span>6 ou plus</span><b class="gd-p2">+10 %</b></div>
+          </div>
+          <p class="gd-p">L'<b>Artillerie</b> évite le −20 % quand tu n'as rien autour. Une <b>bombe</b> sur la zone donne +15 %, une <b>Forteresse</b> à toi tout près +10 %. Attaquer depuis ton territoire coûte donc moins cher que de sauter loin.</p>
+        </details>
+        <details class="gd-b">
+          <summary><span class="gd-i">🏰</span><span><b>Ce qui rend une commune plus dure</b><small>Forteresse, rempart, garnison</small></span></summary>
+          <p class="gd-p"><b>Forteresse</b> sur la commune : résistance ×1,5.</p>
+          <p class="gd-p"><b>Rempart</b> : une commune entourée par son propriétaire résiste mieux, <b>+5 %</b> par commune à lui à moins de 10 km au-delà de 3, jusqu'à <b>+50 %</b>. Le cœur d'un territoire est plus dur que sa frontière.</p>
+          <p class="gd-p"><b>Garnison</b> : un bouclier d'énergie à percer avant que la jauge bouge (1 ⚡ de garnison arrête 10 points de dégâts).</p>
+        </details>
+        <details class="gd-b">
+          <summary><span class="gd-i">🛡️</span><span><b>Défendre ta commune</b><small>Repousser la jauge de l'attaquant</small></span></summary>
+          <ol class="gd-etapes">
+            <li><b>Tu es prévenu</b> quand un siège commence, puis quand la jauge passe les deux tiers (« en danger »). Ton clan aussi.</li>
+            <li><b>Renforce</b> dans Défendre : chaque ⚡ fait reculer la jauge d'environ <b>12 points</b> (×1,2 pour le défenseur). « Tout repousser » met d'un coup ce qu'il faut pour la ramener à 0.</li>
+            <li><b>Ton siège devient long</b> dès ta première défense : l'attaquant ne peut plus finir en quelques minutes.</li>
+          </ol>
+          <p class="gd-p">Un allié de ton clan peut aussi renforcer, jusqu'à 60 ⚡ par siège. Une <b>garnison</b> posée à l'avance protège sans que tu sois là.</p>
+        </details>
+        <details class="gd-b">
+          <summary><span class="gd-i">🌙</span><span><b>La nuit, le Front dort</b><small>De 0 h à 7 h, heure de Paris</small></span></summary>
+          <p class="gd-p">Pas de nouveau siège ni de vague, et aucune commune ne tombe. L'énergie déjà en attente dans un siège part à 7 h. Renforcer reste possible.</p>
+        </details>
+        <details class="gd-b">
+          <summary><span class="gd-i">⚡</span><span><b>Trouver de l'énergie</b><small>Où la gagner</small></span></summary>
+          <ul class="gd-l">
+            <li><b>Recharge</b> : 1 ⚡ toutes les 7 minutes, jusqu'à 120.</li>
+            <li><b>Roue du Front</b> : un jeton toutes les 20 minutes, 50 tours par jour, plus la soirée de 21 h à 23 h.</li>
+            <li><b>Quêtes du jour</b> : jusqu'à 100 ⚡ par jour.</li>
+            <li><b>Mess</b> : ta ration, et les jeux de l'Arcade.</li>
+            <li><b>Récoltes</b> et paquets du Front.</li>
+          </ul>
+        </details>
+      </div>
     </section>
 
     <section class="tab-panel" id="panel-defense">
@@ -1090,6 +1165,7 @@
         <button type="button" class="volet" data-volet="combat" role="tab" aria-selected="false">Attaquer</button>
         <button type="button" class="volet actif" data-volet="defense" role="tab" aria-selected="true">Défendre<span class="volet-badge" data-badge-defense hidden></span></button>
         <button type="button" class="volet" data-volet="batiments" role="tab" aria-selected="false">Bâtiments</button><!-- patch379 -->
+        <button type="button" class="volet" data-volet="guide" role="tab" aria-selected="false">Guide</button><!-- patch517 -->
       </div>
       <div class="reveil" id="reveilDefense" hidden></div>
       <div class="sub">Quand un joueur gagne un round contre toi, tente une défense ou pose un bouclier. Une seule défense par attaque, et un bouclier bloque toute attaque pendant sa durée.</div>
@@ -1863,6 +1939,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=8438667af3fc"></script>
+<script defer src="app.js?v=c81b700adb36"></script>
 </body>
 </html>

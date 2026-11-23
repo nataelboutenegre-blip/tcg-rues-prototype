@@ -6634,6 +6634,9 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
   font-family:var(--texte); font-size:.76rem; font-weight:600; letter-spacing:0; padding:9px 8px; }
 .ca-att.off svg{ width:13px; height:13px; flex:none; }
 .ca-note{ margin:-4px 2px 0; font-size:.68rem; color:#F7B267; }
+.ca-est{ margin:-4px 2px 0; font-size:.68rem; color:var(--brume); min-height:0; }   /* patch518 */
+.ca-est:empty{ display:none; }
+.ca-est .m{ color:#FF8A8F; } .ca-est .p{ color:#3DD68C; }
 #combatGrid .mini.skin .skin-marque{ pointer-events:auto; cursor:pointer; }
 #combatGrid .mini.skin .skin-marque::after{ content:''; position:absolute; inset:-10px -8px; }
 
@@ -8408,7 +8411,7 @@ body.iface-barre .pot-jauge{ height:4px; }
 /* patch288 : Mon front, le premier volet de Combat */
 #panel-combat.vue-front > :not(h1):not(.volets):not(#monFront){ display:none !important; }
 #panel-combat:not(.vue-front) > #monFront{ display:none; }
-#panel-combat .volet, #panel-defense .volet{ white-space:nowrap; }
+#panel-combat .volet, #panel-defense .volet, #panel-guide .volet{ white-space:nowrap; }
 body.iface-barre #panel-combat .volet, body.iface-barre #panel-defense .volet{ padding-left:12px; padding-right:12px; }
 #monFront .menace-defendre{ box-shadow:none; margin:0; }
 #monFront{ display:flex; flex-direction:column; gap:12px; width:100%; max-width:620px; align-self:stretch; margin-bottom:24px; }
@@ -9604,6 +9607,24 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .gc-voir:active{ transform:translateY(1px); }
 
 /* patch379 : le volet Bâtiments */
+.gd{ display:flex; flex-direction:column; gap:10px; }   /* patch517 : le guide */
+.gd-b{ border:1px solid rgba(255,255,255,.1); border-radius:14px; background:rgba(255,255,255,.03); }
+.gd-b > summary{ display:flex; align-items:center; gap:12px; padding:12px 14px; cursor:pointer; list-style:none; }
+.gd-b > summary::-webkit-details-marker{ display:none; }
+.gd-b > summary::after{ content:'›'; margin-left:auto; font-size:1.2rem; color:var(--brume); transition:transform .2s; }
+.gd-b[open] > summary::after{ transform:rotate(90deg); }
+.gd-b > summary > span:nth-child(2){ display:flex; flex-direction:column; gap:2px; }
+.gd-b > summary small{ font-size:.76rem; color:var(--brume); font-weight:500; }
+.gd-i{ font-size:1.3rem; width:28px; text-align:center; }
+.gd-b > :not(summary){ margin-left:14px; margin-right:14px; }
+.gd-b > :last-child{ margin-bottom:14px; }
+.gd-p{ font-size:.86rem; line-height:1.5; margin:0 0 8px; color:var(--texte, #e8e6f0); }
+.gd-etapes, .gd-l{ margin:0 0 10px; padding-left:20px; font-size:.86rem; line-height:1.5; display:flex; flex-direction:column; gap:6px; }
+.gd-tab{ display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:0 0 10px; }
+.gd-tab > div{ display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 10px; border-radius:10px; background:rgba(255,255,255,.05); font-size:.8rem; }
+.gd-tab span{ color:var(--brume); }
+.gd-tab b{ font-family:var(--titre, 'Big Shoulders Display'), Impact, sans-serif; font-size:1rem; white-space:nowrap; }
+.gd-m{ color:#FF6369; } .gd-p2{ color:#3DD68C; }
 .bth{ border:1px solid rgba(255,255,255,.1); border-radius:14px; padding:0; background:rgba(255,255,255,.03); }   /* patch513 */
 .bth > summary{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; font-weight:700; list-style:none; }
 .bth > summary::-webkit-details-marker{ display:none; }
@@ -9623,12 +9644,12 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .bth-l.pris .bth-p{ color:#3DD68C; } .bth-l.perdu .bth-p{ color:#FF6369; }
 .btv-galerie{ display:flex; flex-wrap:wrap; gap:8px; margin:4px 0 14px; }
 #panel-batiments .batiments-bloc{ margin-top:0; }
-#panel-batiments .volet{ white-space:nowrap; }
+#panel-batiments .volet, #panel-guide .volet{ white-space:nowrap; }
 @media (max-width: 720px){
-  #panel-combat .volet, #panel-defense .volet, #panel-batiments .volet{ padding-left:8px; padding-right:8px; }
+  #panel-combat .volet, #panel-defense .volet, #panel-batiments .volet, #panel-guide .volet{ padding-left:8px; padding-right:8px; }
 }
 @media (max-width: 380px){
-  #panel-combat .volet, #panel-defense .volet, #panel-batiments .volet{ padding-left:5px; padding-right:5px; font-size:.86rem; }
+  #panel-combat .volet, #panel-defense .volet, #panel-batiments .volet, #panel-guide .volet{ padding-left:5px; padding-right:5px; font-size:.86rem; }
 }
 
 /* patch380 : la fiche d'attaque allégée */
@@ -9667,11 +9688,11 @@ html.bte-ouvert, html.bte-ouvert body{ overflow:hidden; }
 .map-infobulle .ib-titre small{ display:block; font-weight:500; font-size:.7rem; color:#8FA4BF; margin-top:1px; }
 
 /* patch386 : les volets de Combat tiennent toujours dans l'écran (texte agrandi sur Android) */
-#panel-combat .volets, #panel-defense .volets, #panel-batiments .volets{ max-width:100%; box-sizing:border-box; overflow-x:auto; scrollbar-width:none; }
+#panel-combat .volets, #panel-defense .volets, #panel-batiments .volets, #panel-guide .volets{ max-width:100%; box-sizing:border-box; overflow-x:auto; scrollbar-width:none; }
 #panel-combat .volets::-webkit-scrollbar, #panel-defense .volets::-webkit-scrollbar, #panel-batiments .volets::-webkit-scrollbar{ display:none; }
 @media (max-width: 720px){
-  #panel-combat .volet, #panel-defense .volet, #panel-batiments .volet{ min-width:0; font-size:min(.92rem, 3.7vw); padding-left:min(8px, 1.6vw); padding-right:min(8px, 1.6vw); gap:4px; }
-  #panel-combat .volet-badge, #panel-defense .volet-badge, #panel-batiments .volet-badge{ min-width:min(16px, 4.4vw); height:min(16px, 4.4vw); padding:0 3px; font-size:min(.62rem, 2.6vw); }
+  #panel-combat .volet, #panel-defense .volet, #panel-batiments .volet, #panel-guide .volet{ min-width:0; font-size:min(.92rem, 3.7vw); padding-left:min(8px, 1.6vw); padding-right:min(8px, 1.6vw); gap:4px; }
+  #panel-combat .volet-badge, #panel-defense .volet-badge, #panel-batiments .volet-badge, #panel-guide .volet-badge{ min-width:min(16px, 4.4vw); height:min(16px, 4.4vw); padding:0 3px; font-size:min(.62rem, 2.6vw); }
 }
 
 /* patch388 : la soirée de la roue */

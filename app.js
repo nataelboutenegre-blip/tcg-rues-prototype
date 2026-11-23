@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '8438667af3fc';
+const VERSION_JEU = 'c81b700adb36';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7074,6 +7074,40 @@ function faireLesRendusEnAttente(onglet){
 const LOT_DEFAUT = 60;
 const ETATS_LOTS = new Map();          // id de la grille -> etat
 
+// patch518 : l'énergie qu'il faut vraiment pour chaque cible d'Attaquer (siege_estimer, s3-60)
+const SG_EST = new Map();   // code -> { e, res, mult, rempart, en_cours, le }
+function sgEstLu(code){ const v = SG_EST.get(String(code)); return v && Date.now() - v.le < 120000 ? v : null; }
+function sgEstPourquoi(v){
+  const m = Math.round((Number(v.mult) - 1) * 100), rp = Math.round((Number(v.rempart) - 1) * 100);
+  const L = [];
+  if(m) L.push(`<span class="${m > 0 ? 'p' : 'm'}">tes dégâts ${m > 0 ? '+' : '−'}${Math.abs(m)} %</span>`);
+  if(rp > 0) L.push(`<span class="m">rempart +${rp} %</span>`);
+  if(v.en_cours) L.push('<span>siège en cours</span>');
+  return L.join(' · ');
+}
+let sgEstMinuteur = null;
+function sgEstSuivre(grid){
+  if(!grid || typeof SIEGE === 'undefined' || !SIEGE) return;
+  if(!grid._sgEstObs && 'MutationObserver' in window){
+    grid._sgEstObs = new MutationObserver(() => { clearTimeout(sgEstMinuteur); sgEstMinuteur = setTimeout(() => sgEstCharger(grid), 250); });
+    grid._sgEstObs.observe(grid, { childList: true });
+  }
+  clearTimeout(sgEstMinuteur); sgEstMinuteur = setTimeout(() => sgEstCharger(grid), 250);
+}
+async function sgEstCharger(grid){
+  const codes = [...new Set([...grid.querySelectorAll('[data-sg-est]')].map(e => e.dataset.sgEst).filter(c => !sgEstLu(c)))];
+  for(let i = 0; i < codes.length; i += 60){
+    const { data, error } = await sb.rpc('siege_estimer', { p_codes: codes.slice(i, i + 60) });
+    if(error) return;   // fonction absente : on garde l'ancien chiffre
+    const le = Date.now();
+    for(const [k, v] of Object.entries(data || {})) SG_EST.set(String(k), { ...v, le });
+    for(const k of Object.keys(data || {})){
+      const v = SG_EST.get(String(k));
+      grid.querySelectorAll(`[data-sg-est="${CSS.escape(k)}"]`).forEach(e => { e.innerHTML = `<b>≈ ${v.e} ⚡</b>`; e.title = `Résistance ${v.res}, environ ${v.e} ⚡ pour la prendre`; });
+      grid.querySelectorAll(`[data-sg-pq="${CSS.escape(k)}"]`).forEach(e => { e.innerHTML = sgEstPourquoi(v); });
+    }
+  }
+}
 function afficherParLots(grid, elements, fabriquer, signature, lot){
   lot = lot || LOT_DEFAUT;
   let etat = ETATS_LOTS.get(grid.id);
@@ -11364,7 +11398,9 @@ function renderCombatGrid(){
     let bouton;
     if(etatClasse === 'pret' && SIEGE){   // patch405 : on assiège, l'énergie dépend de la résistance
       const sgEst = { commun: 8, peucommun: 8, rare: 9, epique: 15, legendaire: 27 }[tier ? tier.id : 'commun'] || 8;
-      bouton = `<button class="cible-attaquer ca-att" data-action="assieger" data-code="${c.commune_code}">Assiéger <span class="ca-pastille"><b>≈ ${sgEst} ⚡</b></span></button>`;
+      const vrai = sgEstLu(c.commune_code);   // patch518 : le vrai chiffre, s'il est arrivé
+      bouton = `<button class="cible-attaquer ca-att" data-action="assieger" data-code="${c.commune_code}">${vrai && vrai.en_cours ? 'Continuer' : 'Assiéger'} <span class="ca-pastille" data-sg-est="${c.commune_code}"><b>≈ ${vrai ? vrai.e : sgEst} ⚡</b></span></button>`
+        + `<p class="ca-est" data-sg-pq="${c.commune_code}">${vrai ? sgEstPourquoi(vrai) : ''}</p>`;
     } else if(etatClasse === 'pret'){
       bouton = `<button class="cible-attaquer ca-att" data-action="attaquer" data-code="${c.commune_code}">Attaquer <span class="ca-pastille"><b>${coutTexte(cout)}</b> · <i>${vrai ? vrai.chances + ' %' : '…'}</i></span></button>`;
     } else {
@@ -11419,6 +11455,7 @@ function renderCombatGrid(){
                      combatAutour ? combatAutour.code + '@' + combatAutourKm : ''].join('|');   // patch293, patch483
   combatAffichees = cibles;
   afficherParLots(grid, cibles, carteCible, signature);
+  sgEstSuivre(grid);   // patch518
   demanderChances();
 }
 
@@ -11532,9 +11569,9 @@ function appliquerNomsS3(){
   aria('#panel-combat > .volets, #panel-batiments > .volets, #panel-defense > .volets', 'Combat', 'QG');
 }
 appliquerNomsS3();
-const ONGLETS_FUSIONNES = ['defense', 'batiments', 'succes', 'cdj', 'radar', 'rafale', 'boutiqueeuros', 'atelierbq', 'personnaliser', 'monuments', 'bourse', 'echange'];   // patch502 : le pass n'est plus fusionné   // patch298 : bourse, echange   // patch254 : pass   // patch191 : monuments
+const ONGLETS_FUSIONNES = ['defense', 'batiments', 'guide', 'succes', 'cdj', 'radar', 'rafale', 'boutiqueeuros', 'atelierbq', 'personnaliser', 'monuments', 'bourse', 'echange'];   // patch502 : le pass n'est plus fusionné   // patch298 : bourse, echange   // patch254 : pass   // patch191 : monuments
 // l'onglet qui s'allume quand on ouvre un volet fusionne
-const ONGLET_PARENT = { defense: 'combat', batiments: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg', boutiqueeuros: 'boutique', atelierbq: 'boutique', personnaliser: 'profil', monuments: 'collection', bourse: 'contrat', echange: 'contrat' };   // patch298
+const ONGLET_PARENT = { defense: 'combat', batiments: 'combat', guide: 'combat', succes: 'profil', cdj: 'qg', radar: 'qg', rafale: 'qg', boutiqueeuros: 'boutique', atelierbq: 'boutique', personnaliser: 'profil', monuments: 'collection', bourse: 'contrat', echange: 'contrat' };   // patch298
 
 // ---------- patch89 : saison 2, deux modes ----------
 // SAISON2 = false : la saison 1 tourne comme avant, rien de ce bloc ne
@@ -17052,7 +17089,7 @@ if('serviceWorker' in navigator){
   });
 }
 
-const ONGLETS_CONNUS = ['tirage', 'collection', 'territoire', 'bourse', 'combat', 'defense', 'batiments', 'regles', 'cdj', 'qg', 'radar'];
+const ONGLETS_CONNUS = ['tirage', 'collection', 'territoire', 'bourse', 'combat', 'defense', 'batiments', 'guide', 'regles', 'cdj', 'qg', 'radar'];
 function ouvrirOngletDepuisUrl(url){
   try{
     const onglet = new URL(url, location.href).searchParams.get('onglet');
@@ -33113,6 +33150,7 @@ function sgNuitHtml(){
 }
 // « Comment c'est calculé » (les chiffres viennent de config_jeu 'siege', s3-7)
 function sgCalcHtml(a){
+  if(typeof SG !== 'undefined' && SG && SG.code) SG_EST.delete(String(SG.code));   // patch518 : recalculé au retour dans Attaquer
   const mult = Number(a.mult) || 1;
   const multTxt = Math.abs(mult - 1) < 0.005 ? 'normaux' : '× ' + mult.toFixed(2).replace('.', ',');
   return `<details class="sg-calc"${SG.calc ? ' open' : ''}><summary data-sg="calc">Comment c'est calculé ?</summary>

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '63ffa7c61284';
+const VERSION_JEU = '428e93caf40e';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4322,8 +4322,9 @@ function ouvrirPanneau(code, xCss, yCss){
   if(allie && enFrontClan()){
     const e = clanEch.etat;
     const mb = e && e.par_membre ? (e.membres || []).find(x => x.id === c.joueurId) : null;   // patch327
-    const raison = !e ? '' : e.pret_le ? 'Échanges possibles 48 h après ton arrivée dans le clan'
-      : e.par_membre ? (mb && Number(mb.faits || 0) >= (e.max || 6) ? `Vous avez fait vos ${e.max || 6} échanges du jour ensemble` : '')   // patch493
+    const raison = !e ? '' : e.pret_le ? `Échanges possibles 48 h après ton arrivée dans le clan (${ceDansH(e.pret_le)})`
+      : cePret(mb) ? `${c.pseudo || 'Ton coéquipier'} est arrivé il y a moins de 48 h : échange possible ${ceDansH(mb.pret_le)}`   // patch531
+      : e.par_membre ? (mb && Number(mb.faits || 0) >= (e.max || 6) ? `Vous avez fait vos ${e.max || 6} échanges du jour ensemble · à nouveau ${e.demain_le ? ceDansH(e.demain_le) : 'demain'}` : '')   // patch493
       : Math.max(0, (e.max || 3) - (e.faits || 0)) === 0 ? 'Plus d’échange possible aujourd’hui' : '';
     echClan = `<button class="pc-action pc-ech-clan" data-pc="ech-clan"${raison ? ` disabled title="${echapperHtml(raison)}"` : ''}>🤝 Proposer un échange à ${echapperHtml(c.pseudo || 'ton coéquipier')}</button>${raison ? `<p class="pc-note">${echapperHtml(raison)}.</p>` : ''}`;
   }
@@ -4332,7 +4333,7 @@ function ouvrirPanneau(code, xCss, yCss){
     const e = clanEch.etat, sonClan = clansCarte.get(c.joueurId), monClan = clansCarte.get(window.__monId);
     if(e && e.clan && sonClan && (!monClan || sonClan.tag !== monClan.tag)){
       const dispo = e.inter_dispo_le ? new Date(e.inter_dispo_le) : null;
-      const raison = e.pret_le ? 'Échanges possibles 48 h après ton arrivée dans ton clan'
+      const raison = e.pret_le ? `Échanges possibles 48 h après ton arrivée dans ton clan (${ceDansH(e.pret_le)})`
         : dispo && dispo.getTime() > Date.now() ? `Un échange entre clans par jour : le prochain le ${dispo.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à ${dispo.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : '';
       echInter = `<button class="pc-action pc-ech-inter" data-pc="ech-inter"${raison ? ` disabled title="${echapperHtml(raison)}"` : ''}><span aria-hidden="true">🤝</span>Proposer un échange <small>· 1 par jour</small></button>${raison ? `<p class="pc-note">${echapperHtml(raison)}.</p>` : ''}`;
     }
@@ -21074,6 +21075,12 @@ function ceCommune(c, tier){
   const t = ceTier(tier || c.tier);
   return `<span class="ce-com"><i style="background:var(--c-${t.id})"></i><b>${echapperTexte(c.nom)}</b><small>${t.label} · ${echapperTexte(c.dept || c.departement || '')}</small></span>`;
 }
+function ceDansH(iso){   // patch531
+  const ms = new Date(iso).getTime() - Date.now();
+  if(!(ms > 0)) return 'maintenant';
+  return ms < 3600000 ? `dans ${Math.max(1, Math.ceil(ms / 60000))} min` : `dans ${Math.ceil(ms / 3600000)} h`;
+}
+function cePret(m){ return m && m.pret_le && new Date(m.pret_le).getTime() > Date.now(); }   // patch531 : coéquipier arrivé il y a moins de 48 h
 function ceDans(iso){
   const h = Math.max(0, Math.round((new Date(iso).getTime() - Date.now()) / 3600000));
   return h < 1 ? 'expire dans moins d\'une heure' : `expire dans ${h} h`;
@@ -21124,12 +21131,12 @@ function blocEchangesClan(){
   const pret = e.pret_le ? new Date(e.pret_le) : null;
   const membres = e.membres || [];
   const proposer = pret
-    ? `<p class="clan-note">Tu pourras échanger avec ton clan à partir du ${pret.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à ${pret.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} (48 h après ton arrivée).</p>`
+    ? `<p class="clan-note">Tu pourras échanger avec ton clan à partir du ${pret.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à ${pret.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} (48 h après ton arrivée, ${ceDansH(e.pret_le)}).</p>`
     : !membres.length ? '<p class="clan-note">Il faut au moins un coéquipier pour échanger.</p>'
-    : restant === 0 ? (parMembre ? `<p class="clan-note">Tu as fait tes ${maxEch} échanges du jour avec chaque coéquipier. Reviens demain.</p>`
+    : restant === 0 ? (parMembre ? `<p class="clan-note">Tu as fait tes ${maxEch} échanges du jour avec chaque coéquipier. À nouveau possible ${e.demain_le ? ceDansH(e.demain_le) : 'demain'}.</p>`
                                  : `<p class="clan-note">Tu as fait tes ${maxEch} échanges du jour. Reviens demain.</p>`)
     : `<div class="ce-etape"><div class="ce-attente">1. Avec qui</div>
-        <div class="ce-membres">${membres.map(m => `<button type="button" class="ce-membre" data-ce-qui="${echapperTexte(m.id)}" aria-pressed="${m.id === clanEch.qui}"${parMembre && !resteAvec(m) ? ' disabled' : ''}><span class="av" style="--clan:${(clanCache && clanCache.moi && clanCache.moi.clan || {}).couleur || '#E07A2E'}">${echapperTexte((m.pseudo || '?')[0].toUpperCase())}</span>${echapperTexte(m.pseudo)}${parMembre ? `<span class="ce-reste">· ${resteAvec(m) ? 'encore ' + resteAvec(m) : 'demain'}</span>` : ''}</button>`).join('')}</div></div>
+        <div class="ce-membres">${membres.map(m => `<button type="button" class="ce-membre" data-ce-qui="${echapperTexte(m.id)}" aria-pressed="${m.id === clanEch.qui}"${(parMembre && !resteAvec(m)) || cePret(m) ? ' disabled' : ''}><span class="av" style="--clan:${(clanCache && clanCache.moi && clanCache.moi.clan || {}).couleur || '#E07A2E'}">${echapperTexte((m.pseudo || '?')[0].toUpperCase())}</span>${echapperTexte(m.pseudo)}${cePret(m) ? `<span class="ce-reste" title="Arrivé il y a moins de 48 h">· ${ceDansH(m.pret_le)}</span>` : parMembre ? `<span class="ce-reste">· ${resteAvec(m) ? 'encore ' + resteAvec(m) : e.demain_le ? ceDansH(e.demain_le) : 'demain'}</span>` : ''}</button>`).join('')}</div></div>
       <div class="ce-deux">
         <div><div class="ce-attente">2. Tu donnes</div><input type="search" class="ce-recherche" id="ceR1" placeholder="Commune ou départements : 25, 90…" aria-label="Chercher une de tes communes" value="${echapperTexte(clanEch.r1)}"><div class="ce-liste" id="ceDonne"></div></div>
         <div><div class="ce-attente" id="ceT3">3. Tu reçois · même rareté</div><input type="search" class="ce-recherche" id="ceR2" placeholder="Commune ou départements : 2A, 2B…" aria-label="Chercher une commune du coéquipier" value="${echapperTexte(clanEch.r2)}"><div class="ce-liste" id="ceRecoit"></div></div>

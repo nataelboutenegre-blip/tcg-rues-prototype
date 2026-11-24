@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '50fddea2537e';
+const VERSION_JEU = '50b13a0ac956';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -33268,7 +33268,7 @@ function sgCalcHtml(a){
       ${typeof s3SiegeCalc === 'function' ? s3SiegeCalc() : ''}
       <li><b>Résistance</b> : commune et peu commune 55, rare 65, épique 125, légendaire 250. Forteresse sur place × 1,5. <b>Rempart</b> : +5 % par commune du propriétaire à moins de 10 km au-delà de 3 (+50 % au plus). Une rébellion que tu finances la baisse.</li>
       <li><b>La nuit</b> (0 h – 7 h) : les attaques font moitié moins de dégâts. L'énergie mise en attente avant minuit attend 7 h, sauf si tu relances le siège pendant la nuit.</li>
-      <li><b>Garnison</b> : chaque énergie en garnison fait un bouclier de 10 points, à casser avant la jauge.</li>
+      <li><b>Garnison</b> : chaque énergie en garnison fait un bouclier de 12 points, à casser avant la jauge.</li>
       <li><b>Siège long</b> (garnison, bâtiment, renfort, ou légendaire) : 10 % de la résistance peut partir tout de suite, le reste suit le temps (commune 1 h, peu commune 1 h 30, rare 2 h, épique 6 h, légendaire 15 h). L'énergie en trop attend et part toute seule toutes les 5 minutes.</li>
       <li><b>Rare et épique en éclair</b> : au moins 20 min pour une rare, 1 h pour une épique, même sans défense (10 % tout de suite, le reste suit le temps).</li>
       <li><b>Renfort</b> : chaque énergie du propriétaire fait reculer ta jauge de 12 points en moyenne, et rend le siège long.</li>

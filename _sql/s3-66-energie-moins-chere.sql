@@ -5,3 +5,7 @@
 -- Le bouclier de garnison reste à 10 points par ⚡ (non demandé).
 -- Retour : update config_jeu set valeur = (valeur::jsonb || '{"points_par_energie": 10, "pose": 2}')::text where cle = 'siege';
 update config_jeu set valeur = (valeur::jsonb || '{"points_par_energie": 12, "pose": 1}')::text where cle = 'siege';
+
+-- 3. (09 h 27, ok de Nataël) le bouclier de garnison suit : 12 points par ⚡ (même rapport attaque/garnison qu'avant).
+-- Retour : update config_jeu set valeur = (valeur::jsonb || '{"bouclier_par_energie": 10}')::text where cle = 'siege';
+update config_jeu set valeur = (valeur::jsonb || '{"bouclier_par_energie": 12}')::text where cle = 'siege';

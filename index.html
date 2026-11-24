@@ -28,7 +28,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
 <script src="topo.js?v=1"></script><!-- patch433 : habillage Topo -->
-<link rel="stylesheet" href="style.css?v=50fddea2537e">
+<link rel="stylesheet" href="style.css?v=50b13a0ac956">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -1130,7 +1130,7 @@
           <summary><span class="gd-i">🏰</span><span><b>Ce qui rend une commune plus dure</b><small>Forteresse, rempart, garnison</small></span></summary>
           <p class="gd-p"><b>Forteresse</b> sur la commune : résistance ×1,5.</p>
           <p class="gd-p"><b>Rempart</b> : une commune entourée par son propriétaire résiste mieux, <b>+5 %</b> par commune à lui à moins de 10 km au-delà de 3, jusqu'à <b>+50 %</b>. Le cœur d'un territoire est plus dur que sa frontière.</p>
-          <p class="gd-p"><b>Garnison</b> : un bouclier d'énergie à percer avant que la jauge bouge (1 ⚡ de garnison arrête 10 points de dégâts).</p>
+          <p class="gd-p"><b>Garnison</b> : un bouclier d'énergie à percer avant que la jauge bouge (1 ⚡ de garnison arrête 12 points de dégâts).</p>
         </details>
         <details class="gd-b">
           <summary><span class="gd-i">🛡️</span><span><b>Défendre ta commune</b><small>Repousser la jauge de l'attaquant</small></span></summary>
@@ -1537,7 +1537,7 @@
           <div class="regle-corps">
             <p data-s3="siege"><b>Renforcer</b> : quand une de tes communes est assiégée, la cloche te prévient et Défendre la montre avec la jauge de l'attaquant. Chaque énergie que tu mets fait <b>reculer</b> sa jauge de 12 points, <b>+20 %</b> parce que tu es chez toi (14 en moyenne). Renforcer rend le siège long : il ne peut plus aller plus vite que sa durée minimale. Tu peux aussi <b>laisser filer</b> une commune qui ne t'intéresse pas.</p>
             <p data-s3="siege"><b>Défense réussie</b> : quand le siège finit sans conquête (24 h sans vague ou abandon) et que tu as renforcé, ou que ta garnison a encaissé : <b>+10</b> au classement, <b>10 TP</b>, et elle compte pour la quête de défense du jour.</p>
-            <p data-s3="siege"><b>Garnison</b> : jusqu'à <b>5 communes</b>, où tu déposes de l'énergie (10 au plus par commune). Elle devient un <b>bouclier</b> de <b>10 points par énergie</b> (100 au plus), que l'attaquant doit briser avant de faire monter sa jauge, et elle rend tout siège long. L'énergie entamée est perdue ; retirer une garnison rend les trois quarts de ce qui reste. Une bombe détruit les garnisons de sa zone, et on ne peut plus y en poser pendant 24 h. L'attaquant voit qu'une commune est en garnison, pas combien elle contient.</p>
+            <p data-s3="siege"><b>Garnison</b> : jusqu'à <b>5 communes</b>, où tu déposes de l'énergie (10 au plus par commune). Elle devient un <b>bouclier</b> de <b>12 points par énergie</b> (120 au plus), que l'attaquant doit briser avant de faire monter sa jauge, et elle rend tout siège long. L'énergie entamée est perdue ; retirer une garnison rend les trois quarts de ce qui reste. Une bombe détruit les garnisons de sa zone, et on ne peut plus y en poser pendant 24 h. L'attaquant voit qu'une commune est en garnison, pas combien elle contient.</p>
             <p data-s2="des"><b>Défendre</b> : quand un joueur gagne un round contre toi, tu peux tenter une défense, deux fois par attaque. Tu choisis ton engagement à chaque défense : prudente <b>1 énergie</b> (40 %), normale <b>2</b> (55 %), offensive <b>3</b> (70 %), soit <b>5 points de plus</b> qu'en attaque. Tes communes voisines ne comptent pas en défense. Une défense utilisée revient <b>24 h</b> plus tard (deux au plus). Tes deux défenses utilisées, tu peux encore <b>retenter une fois après chaque round que l'attaquant gagne</b>. Réussie, l'attaquant perd une victoire. Si l'attaquant ne relance pas d'assaut pendant <b>24 h</b>, son siège tombe : sa série repart de zéro et tu retrouves tes deux défenses.</p><!-- patch334, patch338, lot 8/11 -->
             <p data-s2="des"><b>Course à la commune</b> : quand un joueur prend une commune, les sièges des autres attaquants sur cette commune sont effacés. Ils repartent de zéro contre le nouveau propriétaire, et la cloche les prévient.</p><!-- patch326 -->
             <p data-s2="des"><b>Garnison</b> : jusqu'à <b>5 communes</b>, où tu déposes de l'énergie (10 au maximum par commune). Quand un attaquant gagne un round, la garnison tente seule une défense : <b>1 chance sur 2</b>, 1 énergie par tentative. Réussie, la victoire ne compte pas. Une bombe détruit les garnisons de sa zone, et on ne peut plus y en poser pendant 24 h.</p>
@@ -1939,6 +1939,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=50fddea2537e"></script>
+<script defer src="app.js?v=50b13a0ac956"></script>
 </body>
 </html>

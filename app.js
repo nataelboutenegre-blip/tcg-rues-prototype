@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '515a2972042f';
+const VERSION_JEU = '2035e10e6eac';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7077,7 +7077,16 @@ const ETATS_LOTS = new Map();          // id de la grille -> etat
 // patch518 : l'énergie qu'il faut vraiment pour chaque cible d'Attaquer (siege_estimer, s3-60)
 const SG_EST = new Map();   // code -> { e, res, mult, rempart, en_cours, le }
 function sgEstLu(code){ const v = SG_EST.get(String(code)); return v && Date.now() - v.le < 120000 ? v : null; }
+function sgSuffit(v){ return !!(v && v.en_cours && v.suffit); }   // patch528
+function sgSuffitMaj(art, v){   // patch528 : la carte, le bouton et la ligne d'explication suivent
+  if(!art) return;
+  const ok = sgSuffit(v);
+  art.classList.toggle('ca-ok', ok);
+  const lib = art.querySelector('.ca-att[data-action="assieger"] .ca-lib');
+  if(lib) lib.textContent = ok ? 'Énergie suffisante' : (v && v.en_cours ? 'Continuer' : 'Assiéger');
+}
 function sgEstPourquoi(v){
+  if(sgSuffit(v)) return `<span class="p">${Number(v.attente) || 0} ⚡ en attente : ça devrait suffire</span>`;   // patch528
   const m = Math.round((Number(v.mult) - 1) * 100), rp = Math.round((Number(v.rempart) - 1) * 100);
   const L = [];
   if(m) L.push(`<span class="${m > 0 ? 'p' : 'm'}">tes dégâts ${m > 0 ? '+' : '−'}${Math.abs(m)} %${sgNuit() && SG_NUIT_MODE === 'moitie' ? ' (nuit)' : ''}</span>`);   // patch525
@@ -7104,7 +7113,7 @@ async function sgEstCharger(grid){
     for(const k of Object.keys(data || {})){
       const v = SG_EST.get(String(k));
       grid.querySelectorAll(`[data-sg-est="${CSS.escape(k)}"]`).forEach(e => { e.innerHTML = `<b>≈ ${v.e} ⚡</b>`; e.title = `Résistance ${v.res}, environ ${v.e} ⚡ pour la prendre`; });
-      grid.querySelectorAll(`[data-sg-pq="${CSS.escape(k)}"]`).forEach(e => { e.innerHTML = sgEstPourquoi(v); });
+      grid.querySelectorAll(`[data-sg-pq="${CSS.escape(k)}"]`).forEach(e => { e.innerHTML = sgEstPourquoi(v); sgSuffitMaj(e.closest('.ca-cible'), v); });   // patch528
     }
   }
 }
@@ -11405,7 +11414,7 @@ function renderCombatGrid(){
     if(etatClasse === 'pret' && SIEGE){   // patch405 : on assiège, l'énergie dépend de la résistance
       const sgEst = { commun: 8, peucommun: 8, rare: 9, epique: 15, legendaire: 27 }[tier ? tier.id : 'commun'] || 8;
       const vrai = sgEstLu(c.commune_code);   // patch518 : le vrai chiffre, s'il est arrivé
-      bouton = `<button class="cible-attaquer ca-att" data-action="assieger" data-code="${c.commune_code}">${vrai && vrai.en_cours ? 'Continuer' : 'Assiéger'} <span class="ca-pastille" data-sg-est="${c.commune_code}"><b>≈ ${vrai ? vrai.e : sgEst} ⚡</b></span></button>`
+      bouton = `<button class="cible-attaquer ca-att" data-action="assieger" data-code="${c.commune_code}"><span class="ca-lib">${sgSuffit(vrai) ? 'Énergie suffisante' : vrai && vrai.en_cours ? 'Continuer' : 'Assiéger'}</span> <span class="ca-pastille" data-sg-est="${c.commune_code}"><b>≈ ${vrai ? vrai.e : sgEst} ⚡</b></span></button>`
         + `<p class="ca-est" data-sg-pq="${c.commune_code}">${vrai ? sgEstPourquoi(vrai) : ''}</p>`;
     } else if(etatClasse === 'pret'){
       bouton = `<button class="cible-attaquer ca-att" data-action="attaquer" data-code="${c.commune_code}">Attaquer <span class="ca-pastille"><b>${coutTexte(cout)}</b> · <i>${vrai ? vrai.chances + ' %' : '…'}</i></span></button>`;
@@ -11418,7 +11427,8 @@ function renderCombatGrid(){
     const km = dAff != null ? (dAff < 10 ? dAff.toFixed(1).replace('.', ',') : Math.round(dAff)) + ' km' : '';   // patch483
     const titreKm = km ? ` title="À ${km} ${echapperTexte(deCommune(deAff))}"` : '';
     const serie = [0, 1, 2].map(i => `<i class="${i < victoires ? 'plein' : ''}"></i>`).join('');
-    return `<article class="ca-cible">${carte}
+    const okSg = SIEGE && etatClasse === 'pret' && sgSuffit(sgEstLu(c.commune_code));   // patch528
+    return `<article class="ca-cible${okSg ? ' ca-ok' : ''}">${SIEGE ? '<span class="ca-ok-b">✓ ça suffit</span>' : ''}${carte}
       <p class="ca-qui"${titreKm}><i style="background:${colorForPlayer(c.joueur_id)}"></i><b>${echapperTexte(pseudo)}</b>${km ? `<span>· ${km}</span>` : ''}<span class="ca-serie" title="Ta série : ${victoires} / 3">${serie}</span></p>
       ${bouton}${noteAlerte ? `<p class="ca-note">${note}</p>` : ''}</article>`;
   };
@@ -11445,7 +11455,7 @@ function renderCombatGrid(){
         if(SIEGE) sgEstListe(codes); else chargerChancesListe(codes);
         return;
       }
-      const ch = SIEGE ? (c) => { const v = sgEstLu(c.commune_code); return v && v.e < 9999 ? -v.e : -1e6; }   // patch522 : les moins chères d'abord
+      const ch = SIEGE ? (c) => { const v = sgEstLu(c.commune_code); return v && v.e < 9999 ? (sgSuffit(v) ? -5000 : -v.e) : -1e6; }   // patch522 : les moins chères d'abord
         : (c) => { const v = chancesCibles.get(c.commune_code); return v ? v.chances : -1; };
       const rang = (c) => TIERS.findIndex(t => t.id === c.communes.tier);
       const dist = (c) => (c._distKm == null ? 1e9 : c._distKm);

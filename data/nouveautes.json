@@ -2,6 +2,7 @@
   {
     "date": "2026-11-24",
     "nouveautes": [
+      "✅ Front : quand l'énergie déjà en attente suffit pour prendre la commune, la carte passe en vert « Énergie suffisante ». Plus besoin de relancer pour rien (merci Arkhannou).",
       "⚡ Front : conquérir coûte moins cher. Chaque énergie fait 12 points au lieu de 10 (en attaque, en renfort et en garnison), et poser un siège coûte 1 ⚡ au lieu de 2.",
       "🌙 Front : la coupure de nuit est remplacée. Entre 0 h et 7 h, on peut de nouveau attaquer, mais chaque énergie fait moitié moins de dégâts (prendre une commune coûte le double). L'énergie mise en attente avant minuit attend 7 h, sauf si tu relances le siège pendant la nuit."
     ],

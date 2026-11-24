@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '50b13a0ac956';
+const VERSION_JEU = '515a2972042f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -2307,10 +2307,10 @@ async function chargerDepartements(){
     if(!rep.ok) throw new Error('introuvable');
     const deps = await rep.json();
     if(SUISSE){   // patch331
-      try { Object.assign(deps, await (await fetch('data/contours-cantons.json?v=1', { cache: 'force-cache' })).json()); } catch(e){}
+      try { Object.assign(deps, await (await fetch('data/contours-cantons.json?v=2', { cache: 'force-cache' })).json()); } catch(e){}
     }
     if(BELGIQUE){   // patch462 : les provinces
-      try { Object.assign(deps, await (await fetch('data/contours-provinces-be.json?v=1', { cache: 'force-cache' })).json()); } catch(e){}
+      try { Object.assign(deps, await (await fetch('data/contours-provinces-be.json?v=2', { cache: 'force-cache' })).json()); } catch(e){}
     }
     if(LUXEMBOURG){   // patch467 : les cantons luxembourgeois
       try { Object.assign(deps, await (await fetch('data/contours-cantons-lu.json?v=1', { cache: 'force-cache' })).json()); } catch(e){}
@@ -32212,7 +32212,7 @@ function depCheminsTracer(C, carre, pays){
 function depCheminsCharger(pays){
   if(pays === 'CH' || pays === 'BE' || pays === 'LU'){
     if(DEP_PAYS[pays]) return Promise.resolve(DEP_PAYS[pays]);
-    const f = pays === 'BE' ? 'data/contours-provinces-be.json?v=1' : pays === 'LU' ? 'data/contours-cantons-lu.json?v=1' : 'data/contours-cantons.json?v=1';   // patch467
+    const f = pays === 'BE' ? 'data/contours-provinces-be.json?v=2' : pays === 'LU' ? 'data/contours-cantons-lu.json?v=1' : 'data/contours-cantons.json?v=2';   // patch467
     if(!DEP_PAYS_P[pays]) DEP_PAYS_P[pays] = fetch(f, { cache: 'force-cache' }).then(r => r.json())
       .then(C => (DEP_PAYS[pays] = depCheminsTracer(C, false, pays))).catch(() => { DEP_PAYS_P[pays] = null; return null; });
     return DEP_PAYS_P[pays];

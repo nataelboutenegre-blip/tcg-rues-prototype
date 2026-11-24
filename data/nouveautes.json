@@ -1,5 +1,11 @@
 [
   {
+    "date": "2026-11-24",
+    "nouveautes": [
+      "🌙 Front : la coupure de nuit est remplacée. Entre 0 h et 7 h, on peut de nouveau attaquer, mais chaque énergie fait moitié moins de dégâts (prendre une commune coûte le double). L'énergie mise en attente avant minuit attend 7 h, sauf si tu relances le siège pendant la nuit."
+    ]
+  },
+  {
     "date": "2026-11-23",
     "nouveautes": [
       "📍 Mes départements : tu peux ajouter un pays entier (Luxembourg, Suisse, Belgique) d'un coup, ou un canton / une province par son nom. Demande de Maroli.",

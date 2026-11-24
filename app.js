@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ea6c144aeddb';
+const VERSION_JEU = '8bb074a3d523';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7080,7 +7080,7 @@ function sgEstLu(code){ const v = SG_EST.get(String(code)); return v && Date.now
 function sgEstPourquoi(v){
   const m = Math.round((Number(v.mult) - 1) * 100), rp = Math.round((Number(v.rempart) - 1) * 100);
   const L = [];
-  if(m) L.push(`<span class="${m > 0 ? 'p' : 'm'}">tes dégâts ${m > 0 ? '+' : '−'}${Math.abs(m)} %</span>`);
+  if(m) L.push(`<span class="${m > 0 ? 'p' : 'm'}">tes dégâts ${m > 0 ? '+' : '−'}${Math.abs(m)} %${sgNuit() && SG_NUIT_MODE === 'moitie' ? ' (nuit)' : ''}</span>`);   // patch525
   if(rp > 0) L.push(`<span class="m">rempart +${rp} %</span>`);
   if(v.en_cours) L.push('<span>siège en cours</span>');
   return L.join(' · ');
@@ -32788,7 +32788,7 @@ function sgMinuteurInfo(){
     const cible = (Number(s.envoyes_long) || 0) + (suffit ? resteP : att * pts);
     min = Math.max(0, (cible - plafond) / r);
   }
-  const nuit = suffit && sgNuit();   // patch510 : la nuit, elle ne tombe pas avant 7 h
+  const nuit = suffit && sgNuit() && SG_NUIT_MODE !== 'moitie';   // patch510, patch525
   return { fin: nuit ? Math.max(Date.now() + min * 60000, Date.now() + sgFinNuitMs()) : Date.now() + min * 60000, suffit, manque: besoin - att, nuit };
 }
 function sgFinNuitMs(){   // patch510 : temps avant 7 h, heure de Paris
@@ -32825,7 +32825,7 @@ function sgRepartitionHtml(n){
   const r = sgRepartition(n); if(!r) return '';
   if(r.att > 0 && r.besoin <= r.att) return `<p class="sg-repart ok">Tes <b>${r.att} ⚡</b> en attente suffisent pour finir : pas besoin d'en renvoyer. Ce qui sera de trop te reviendra à la fin.</p>`;
   if(!r.attend && !r.trop) return '';
-  const quand = r.minutes >= 1 ? (r.finit ? (sgNuit() ? 'elle pourra tomber à 7 h au plus tôt' : `elle peut tomber dans ≈ <b>${sgDuree(r.minutes)}</b> si personne ne renforce`) : `≈ <b>${sgDuree(r.minutes)}</b> pour qu'elles partent toutes`) : '';
+  const quand = r.minutes >= 1 ? (r.finit ? (sgNuit() && SG_NUIT_MODE !== 'moitie' ? 'elle pourra tomber à 7 h au plus tôt' : `elle peut tomber dans ≈ <b>${sgDuree(r.minutes)}</b> si personne ne renforce`) : `≈ <b>${sgDuree(r.minutes)}</b> pour qu'elles partent toutes`) : '';
   const debut = r.maintenant ? `<b>${r.maintenant}</b> part${r.maintenant > 1 ? 'ent' : ''} tout de suite` : 'aucune ne part tout de suite';
   return `<p class="sg-repart">⏳ Sur ces ${n} ⚡ : ${debut}${r.attend ? `, <b>${r.attend}</b> attendront leur tour et partiront toutes seules` : ''}${quand ? ` (${quand})` : ''}.`
     + `${r.trop ? ` <b>${r.trop}</b> de trop${r.att ? ' avec ce qui attend déjà' : ''} : elles te reviendront à la fin du siège.` : ''}</p>`;
@@ -32896,7 +32896,7 @@ function sgRendre(){
       <div class="sg-vite">${[5, 10, 20].map(x => `<button type="button" data-sg-v="${x}"${x === n ? ' class="on"' : ''}>${x}</button>`).join('')}<button type="button" data-sg-v="fin"${n === Math.max(1, sgResteNet()) ? ' class="on"' : ''}>Juste assez</button></div>
       ${e !== null ? `<small>Tu as <b>${e} ⚡</b></small>` : ''}
     </div>${sgRepartitionHtml(n)}`;   // patch494
-  const bloque = sgNuit() ? '🌙 Le Front dort jusqu\'à 7 h'   // patch510
+  const bloque = sgNuit() && SG_NUIT_MODE !== 'moitie' ? '🌙 Le Front dort jusqu\'à 7 h'   // patch510, patch525
     : a.bouclier_jusqua ? `Protégée par un bouclier · ${formatDuree(new Date(a.bouclier_jusqua).getTime() - Date.now())}`
     : (!s && a.immunite_jusqua) ? `Vient de changer de main · ${formatDuree(new Date(a.immunite_jusqua).getTime() - Date.now())}`
     : (!s && long && Number(a.longs) >= Number(a.places)) ? `Tes ${a.places} sièges longs sont pris`
@@ -33246,11 +33246,13 @@ function sgAnimerVague(b){
   setTimeout(() => j.classList.remove('sg-choc', 'sg-choc-bcl'), 900);
 }
 // patch510 (s3-58) : la nuit (0 h – 7 h, heure de Paris), aucune commune ne tombe
+const SG_NUIT_MODE = 'moitie';   // patch525 : 'moitie' (dégâts ÷ 2 la nuit) ou 'ferme' (la coupure du 23/11)
 function sgNuit(){
   try { const h = Number(new Intl.DateTimeFormat('fr-FR', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Europe/Paris' }).format(new Date())); return h >= 0 && h < 7; }
   catch(e){ return false; }
 }
 function sgNuitHtml(){
+  if(sgNuit() && SG_NUIT_MODE === 'moitie') return '<p class="sg-note sg-nuit"><span class="sg-lune" aria-hidden="true">🌙</span><span><b>C\'est la nuit</b> : entre 0 h et 7 h, tes vagues font <b>moitié moins de dégâts</b> (les chiffres ci-dessus en tiennent compte). L\'énergie mise en attente avant minuit attend 7 h pour garder sa valeur, sauf si tu relances ce siège cette nuit.</span></p>';   // patch525
   return sgNuit() ? '<p class="sg-note sg-nuit"><span class="sg-lune" aria-hidden="true">🌙</span><span><b>Le Front dort</b> : entre 0 h et 7 h, pas de nouveau siège ni de vague, et aucune commune ne tombe. L\'énergie déjà en attente part toute seule à 7 h. Renforcer reste possible.</span></p>' : '';
 }
 // « Comment c'est calculé » (les chiffres viennent de config_jeu 'siege', s3-7)
@@ -33264,7 +33266,7 @@ function sgCalcHtml(a){
       <li><b>Tes dégâts</b> dépendent de tes communes à moins de 20 km (aucune : −20 %, une ou deux : −10 %, trois à cinq : normal, six ou plus : +10 %). Zone bombardée +15 %, ta Forteresse à côté +10 %, débutant +50 % sur les communes jusqu'à rare sans garnison. Ici : <b>${multTxt}</b>.</li>
       ${typeof s3SiegeCalc === 'function' ? s3SiegeCalc() : ''}
       <li><b>Résistance</b> : commune et peu commune 55, rare 65, épique 125, légendaire 250. Forteresse sur place × 1,5. <b>Rempart</b> : +5 % par commune du propriétaire à moins de 10 km au-delà de 3 (+50 % au plus). Une rébellion que tu finances la baisse.</li>
-      <li><b>La nuit</b> (0 h – 7 h) : le Front dort. Pas de nouveau siège ni de vague ; l'énergie en attente part à 7 h.</li>
+      <li><b>La nuit</b> (0 h – 7 h) : les attaques font moitié moins de dégâts. L'énergie mise en attente avant minuit attend 7 h, sauf si tu relances le siège pendant la nuit.</li>
       <li><b>Garnison</b> : chaque énergie en garnison fait un bouclier de 10 points, à casser avant la jauge.</li>
       <li><b>Siège long</b> (garnison, bâtiment, renfort, ou légendaire) : 10 % de la résistance peut partir tout de suite, le reste suit le temps (commune 1 h, peu commune 1 h 30, rare 2 h, épique 6 h, légendaire 15 h). L'énergie en trop attend et part toute seule toutes les 5 minutes.</li>
       <li><b>Rare et épique en éclair</b> : au moins 20 min pour une rare, 1 h pour une épique, même sans défense (10 % tout de suite, le reste suit le temps).</li>

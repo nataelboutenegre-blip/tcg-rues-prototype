@@ -28,7 +28,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
 <script src="topo.js?v=1"></script><!-- patch433 : habillage Topo -->
-<link rel="stylesheet" href="style.css?v=ea6c144aeddb">
+<link rel="stylesheet" href="style.css?v=8bb074a3d523">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -1142,8 +1142,8 @@
           <p class="gd-p">Un allié de ton clan peut aussi renforcer, jusqu'à 60 ⚡ par siège. Une <b>garnison</b> posée à l'avance protège sans que tu sois là.</p>
         </details>
         <details class="gd-b">
-          <summary><span class="gd-i">🌙</span><span><b>La nuit, le Front dort</b><small>De 0 h à 7 h, heure de Paris</small></span></summary>
-          <p class="gd-p">Pas de nouveau siège ni de vague, et aucune commune ne tombe. L'énergie déjà en attente dans un siège part à 7 h. Renforcer reste possible.</p>
+          <summary><span class="gd-i">🌙</span><span><b>La nuit, attaquer coûte le double</b><small>De 0 h à 7 h, heure de Paris</small></span></summary>
+          <p class="gd-p">On peut attaquer à toute heure, mais la nuit chaque énergie fait <b>moitié moins de dégâts</b>. L'énergie mise en attente avant minuit attend 7 h pour garder sa valeur, sauf si tu relances le siège pendant la nuit. Renforcer ne change pas.</p>
         </details>
         <details class="gd-b">
           <summary><span class="gd-i">⚡</span><span><b>Trouver de l'énergie</b><small>Où la gagner</small></span></summary>
@@ -1522,7 +1522,7 @@
             <p><b>Places</b> : tu peux mener <b>8 sièges longs</b> à la fois, plus 1 par type de bâtiment prêt (12 au plus). Les sièges éclair sont illimités. Un siège éclair qui devient long continue, même sans place libre.</p>
             <p><b>Tes dégâts</b> selon tes communes à moins de 20 km : aucune <b>× 0,8</b>, une ou deux <b>× 0,9</b>, trois à cinq <b>× 1</b>, six ou plus <b>× 1,1</b> ;<!-- patch510 --> <b>× 1,1</b> avec une de tes Forteresses à moins de 20 km ; <b>× 1,15</b> dans la zone d'une bombe (24 h). <b>Bonus de débutant</b> : pendant tes 48 premières heures, et jusqu'à ta première conquête, <b>× 1,5</b> (pas contre une épique, une légendaire ou une commune en garnison).</p>
             <p><b>La résistance</b> : <b>× 1,5</b> sur une Forteresse ; <b>rempart</b> : +5 % par commune du propriétaire à moins de 10 km au-delà de 3, jusqu'à <b>+50 %</b> (une commune au cœur d'un territoire est plus dure à prendre qu'une commune isolée) ; une rébellion que tu finances la baisse jusqu'à <b>−15 %</b> face à toi seul.</p>
-            <p><b>La nuit</b> (0 h – 7 h, heure de Paris) : le Front dort. On ne pose pas de siège et on n'envoie pas de vague ; l'énergie déjà en attente dans un siège part toute seule à 7 h. Renforcer ses communes reste possible.</p><!-- patch510 -->
+            <p><b>La nuit</b> (0 h – 7 h, heure de Paris) : on peut attaquer, mais chaque énergie fait <b>moitié moins de dégâts</b> ; prendre une commune coûte donc le double. L'énergie mise en attente dans un siège avant minuit attend 7 h pour garder sa valeur, sauf si tu relances ce siège pendant la nuit. Renforcer ses communes ne change pas.</p><!-- patch525 -->
             <p><b>Plusieurs assiégeants</b> : c'est une course, le premier qui remplit sa jauge prend la commune ; les autres récupèrent l'énergie qui attendait. Une commune prise est <b>protégée 3 h</b> contre les nouveaux sièges.</p>
             <p><b>Fin du siège</b> : sans vague de ta part pendant <b>24 h</b>, ton siège tombe. Tu peux aussi l'<b>abandonner</b> : l'énergie qui attendait t'est rendue. Une conquête rapporte <b>+10</b> au classement, comme une défense réussie.</p>
             <p>Sur la fiche d'un siège, « Comment c'est calculé ? » montre le détail des dégâts et de la résistance de la commune visée.</p>
@@ -1939,6 +1939,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=ea6c144aeddb"></script>
+<script defer src="app.js?v=8bb074a3d523"></script>
 </body>
 </html>

@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '428e93caf40e';
+const VERSION_JEU = 'ee52f8cedccd';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -7189,6 +7189,7 @@ const ETATS_LOTS = new Map();          // id de la grille -> etat
 // patch518 : l'énergie qu'il faut vraiment pour chaque cible d'Attaquer (siege_estimer, s3-60)
 const SG_EST = new Map();   // code -> { e, res, mult, rempart, en_cours, le }
 function sgEstLu(code){ const v = SG_EST.get(String(code)); return v && Date.now() - v.le < 120000 ? v : null; }
+function sgPireRecul(){ return typeof SG_PIRE_RENFORT !== 'undefined' ? SG_PIRE_RENFORT : 11.52; }   // patch532
 function sgSuffit(v){ return !!(v && v.en_cours && v.suffit); }   // patch528
 function sgEnCours(code){   // patch530 : j'ai déjà un siège sur cette commune
   const v = sgEstLu(code);
@@ -33124,7 +33125,17 @@ function sgHeure(t){
   if(d.toDateString() === dem.toDateString()) return 'demain ' + h;
   return d.toLocaleDateString('fr-FR', { weekday: 'short' }) + ' ' + h;
 }
+function sgAssautMin(s){   // patch532 : minutes avant l'assaut final, ou 0
+  const t = s && s.assaut_le ? new Date(s.assaut_le).getTime() - Date.now() : 0;
+  return t > 0 ? Math.max(1, Math.ceil(t / 60000)) : 0;
+}
 function sgChuteHtml(m){
+  const am = sgAssautMin(m);   // patch532
+  if(am){
+    const res = Number(m.resistance) || 0, deg = Number(m.degats) || 0;
+    const n = Math.max(1, Math.ceil((deg - res * 2 / 3 + 1) / sgPireRecul()));
+    return `<p class="sg-chute alerte"><b>🚨 Assaut final</b> : elle tombe à <b>${sgHeure(m.assaut_le)}</b> (dans ${am} min) si tu ne repousses pas la jauge sous les deux tiers, ≈ <b>${n} ⚡</b>${Number(m.attente) > 0 ? `, plus de quoi absorber ses ${m.attente} ⚡ en attente` : ''}.</p>`;
+  }
   const c = m && m.chute; if(!c || !c.plus_tot) return '';
   const quand = c.maintenant ? null : sgHeure(c.plus_tot);
   const manque = Math.max(0, (Number(c.besoin) || 0) - (Number(c.attente) || 0));
@@ -33289,7 +33300,7 @@ function renderMesSieges(){
   el.innerHTML = `<h2>Mes sièges <small>${longs} long${longs > 1 ? 's' : ''} · ${sgMes.length - longs} éclair</small></h2>` + sgMes.map(s => {
     const tier = sgTier(s.tier), res = Number(s.resistance) || 0, deg = Number(s.degats) || 0;
     return `<button type="button" class="sg-mes-l" data-sg-ouvrir="${echapperTexte(s.commune)}">
-      <span class="sg-mes-t"><i class="sg-rar" style="--c:${tier.color}"></i><b>${echapperTexte(s.nom || s.commune)}</b><small>${echapperTexte(s.proprio_pseudo || '')}${s.long ? ' · long' : ' · éclair'}${Number(s.attente) > 0 ? ` · ${s.attente} ⚡ en attente` : ''}</small></span>
+      <span class="sg-mes-t"><i class="sg-rar" style="--c:${tier.color}"></i><b>${echapperTexte(s.nom || s.commune)}</b><small>${echapperTexte(s.proprio_pseudo || '')}${s.long ? ' · long' : ' · éclair'}${sgAssautMin(s) ? ` · 🚨 assaut final dans ${sgAssautMin(s)} min` : Number(s.attente) > 0 ? ` · ${s.attente} ⚡ en attente` : ''}</small></span>
       ${sgBarre(deg, res, true)}<span class="sg-mes-p">${res ? Math.round(100 * deg / res) : 0} %</span></button>`;
   }).join('');
 }
@@ -33303,7 +33314,7 @@ function sgMfoDanger(){
   return `<div class="mfo-t mfo-alerte"><div class="mfo-h"><span>⚠ À défendre maintenant</span><button type="button" class="mfo-lien" data-mfo="defendre">Tout voir${l.length > 3 ? ` (${l.length})` : ''} ›</button></div>`
     + l.slice(0, 3).map(m => {
       const p = Number(m.resistance) ? Math.round(100 * Number(m.degats) / Number(m.resistance)) : 0;
-      return `<div class="mfo-l"><div><b>${echapperTexte(m.nom || m.commune)}</b>${badgeDept(m.dept)} · ${sgTier(m.tier).label.toLowerCase()}<small>${echapperTexte(m.attaquant_pseudo || 'un joueur')} · jauge à ${p} % · ${m.long ? 'siège long' : 'siège éclair'}</small>${sgBarre(Number(m.degats) || 0, Number(m.resistance) || 0, true)}</div>`
+      return `<div class="mfo-l"><div><b>${echapperTexte(m.nom || m.commune)}</b>${badgeDept(m.dept)} · ${sgTier(m.tier).label.toLowerCase()}<small>${echapperTexte(m.attaquant_pseudo || 'un joueur')} · jauge à ${p} % · ${sgAssautMin(m) ? `🚨 tombe dans ${sgAssautMin(m)} min` : m.long ? 'siège long' : 'siège éclair'}</small>${sgBarre(Number(m.degats) || 0, Number(m.resistance) || 0, true)}</div>`
         + `<button type="button" class="mfo-btn mfo-rouge" data-mfo="defendre">Renforcer</button></div>`;
     }).join('') + '</div>';
 }

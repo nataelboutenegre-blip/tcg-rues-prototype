@@ -27,6 +27,9 @@ def http(url, donnees=None, accepte="application/json", essais=4, delai=180):
             if tentative == essais:
                 raise
             attente = 4 * tentative
+            if getattr(e, "code", None) == 429:   # Wikidata demande de ralentir : on attend vraiment
+                try: attente = max(30, int(e.headers.get("Retry-After") or 0))
+                except Exception: attente = 30 * tentative
             print("      ! %s — nouvel essai dans %ds" % (e, attente), file=sys.stderr)
             time.sleep(attente)
 
@@ -175,7 +178,7 @@ def sparql_tranches(gabarit, filtre, tranches, cache, nom):
             with open(f + ".partiel", "w", encoding="utf-8") as fh:
                 json.dump(lot, fh)
             os.replace(f + ".partiel", f)
-            time.sleep(1)
+            time.sleep(3)   # poli avec Wikidata (429 sinon)
         tout.extend(lot)
         if (i + 1) % 10 == 0:
             print("      %s : tranche %d / %d" % (nom, i + 1, len(tranches)))

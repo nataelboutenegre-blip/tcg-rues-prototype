@@ -28,7 +28,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
 <script src="topo.js?v=1"></script><!-- patch433 : habillage Topo -->
-<link rel="stylesheet" href="style.css?v=8bb074a3d523">
+<link rel="stylesheet" href="style.css?v=50fddea2537e">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -1100,15 +1100,15 @@
         <details class="gd-b" open>
           <summary><span class="gd-i">⚔️</span><span><b>Prendre une commune : le siège</b><small>Poser, envoyer des vagues, remplir la jauge</small></span></summary>
           <ol class="gd-etapes">
-            <li><b>Pose ton siège.</b> Touche une commune sur la carte ou dans Attaquer, puis « Assiéger ». Poser coûte <b>2 ⚡</b>, en plus de ta première vague.</li>
-            <li><b>Envoie des vagues d'énergie.</b> Chaque ⚡ fait environ <b>10 points de dégâts</b> (entre 8 et 12 au hasard), jusqu'à 60 ⚡ par vague.</li>
+            <li><b>Pose ton siège.</b> Touche une commune sur la carte ou dans Attaquer, puis « Assiéger ». Poser coûte <b>1 ⚡</b>, en plus de ta première vague.</li>
+            <li><b>Envoie des vagues d'énergie.</b> Chaque ⚡ fait environ <b>12 points de dégâts</b> (entre 10 et 14 au hasard), jusqu'à 60 ⚡ par vague.</li>
             <li><b>Remplis la jauge.</b> Quand les dégâts atteignent la <b>résistance</b> de la commune, elle est à toi.</li>
           </ol>
           <div class="gd-tab">
             <div><span>Commune, peu commune</span><b>55</b></div><div><span>Rare</span><b>65</b></div>
             <div><span>Épique</span><b>125</b></div><div><span>Légendaire</span><b>250</b></div>
           </div>
-          <p class="gd-p">Résistance de base. Il faut donc environ <b>6 ⚡</b> pour une commune et <b>25 ⚡</b> pour une légendaire, plus les 2 ⚡ de la pose, avant les bonus et malus ci-dessous. Le chiffre « ≈ N ⚡ » de chaque cible en tient compte.</p>
+          <p class="gd-p">Résistance de base. Il faut donc environ <b>5 ⚡</b> pour une commune et <b>21 ⚡</b> pour une légendaire, plus 1 ⚡ de pose, avant les bonus et malus ci-dessous. Le chiffre « ≈ N ⚡ » de chaque cible en tient compte.</p>
         </details>
         <details class="gd-b">
           <summary><span class="gd-i">⏱️</span><span><b>Éclair ou long</b><small>Le temps qu'il faut au moins</small></span></summary>
@@ -1136,7 +1136,7 @@
           <summary><span class="gd-i">🛡️</span><span><b>Défendre ta commune</b><small>Repousser la jauge de l'attaquant</small></span></summary>
           <ol class="gd-etapes">
             <li><b>Tu es prévenu</b> quand un siège commence, puis quand la jauge passe les deux tiers (« en danger »). Ton clan aussi.</li>
-            <li><b>Renforce</b> dans Défendre : chaque ⚡ fait reculer la jauge d'environ <b>12 points</b> (×1,2 pour le défenseur). « Tout repousser » met d'un coup ce qu'il faut pour la ramener à 0.</li>
+            <li><b>Renforce</b> dans Défendre : chaque ⚡ fait reculer la jauge d'environ <b>14 points</b> (12 × 1,2 pour le défenseur). « Tout repousser » met d'un coup ce qu'il faut pour la ramener à 0.</li>
             <li><b>Ton siège devient long</b> dès ta première défense : l'attaquant ne peut plus finir en quelques minutes.</li>
           </ol>
           <p class="gd-p">Un allié de ton clan peut aussi renforcer, jusqu'à 60 ⚡ par siège. Une <b>garnison</b> posée à l'avance protège sans que tu sois là.</p>
@@ -1505,7 +1505,7 @@
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
           </summary>
           <div class="regle-corps"><div class="chiffres"><div class="chiffre-bloc"><b>2</b><span>énergie pour poser un siège</span></div><div class="chiffre-bloc"><b>10</b><span>points de dégâts par énergie</span></div><div class="chiffre-bloc"><b>24 h</b><span>sans vague : le siège tombe</span></div></div>
-            <p><b>Assiéger</b> : depuis la fiche d'une commune ou <span class="nom-s2">Combat</span><span class="nom-s3">QG</span> › Attaquer, pose un siège (<b>2 énergie</b>), puis envoie des <b>vagues</b> : tu choisis l'énergie de chaque vague, 60 au plus. Chaque énergie fait <b>10 points de dégâts</b> (entre 8 et 12, au hasard). Quand ta jauge atteint la <b>résistance</b> de la commune, elle est à toi. Le propriétaire est prévenu dès que tu poses le siège.</p>
+            <p><b>Assiéger</b> : depuis la fiche d'une commune ou <span class="nom-s2">Combat</span><span class="nom-s3">QG</span> › Attaquer, pose un siège (<b>1 énergie</b>), puis envoie des <b>vagues</b> : tu choisis l'énergie de chaque vague, 60 au plus. Chaque énergie fait <b>12 points de dégâts</b> (entre 10 et 14, au hasard). Quand ta jauge atteint la <b>résistance</b> de la commune, elle est à toi. Le propriétaire est prévenu dès que tu poses le siège.</p>
             <div class="tableau-defile">
               <table class="tableau">
                 <thead><tr><th>Rareté</th><th>Résistance</th><th>Énergie, environ</th><th>Siège long : au moins</th></tr></thead>
@@ -1535,7 +1535,7 @@
             <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg>
           </summary>
           <div class="regle-corps">
-            <p data-s3="siege"><b>Renforcer</b> : quand une de tes communes est assiégée, la cloche te prévient et Défendre la montre avec la jauge de l'attaquant. Chaque énergie que tu mets fait <b>reculer</b> sa jauge de 10 points, <b>+20 %</b> parce que tu es chez toi (12 en moyenne). Renforcer rend le siège long : il ne peut plus aller plus vite que sa durée minimale. Tu peux aussi <b>laisser filer</b> une commune qui ne t'intéresse pas.</p>
+            <p data-s3="siege"><b>Renforcer</b> : quand une de tes communes est assiégée, la cloche te prévient et Défendre la montre avec la jauge de l'attaquant. Chaque énergie que tu mets fait <b>reculer</b> sa jauge de 12 points, <b>+20 %</b> parce que tu es chez toi (14 en moyenne). Renforcer rend le siège long : il ne peut plus aller plus vite que sa durée minimale. Tu peux aussi <b>laisser filer</b> une commune qui ne t'intéresse pas.</p>
             <p data-s3="siege"><b>Défense réussie</b> : quand le siège finit sans conquête (24 h sans vague ou abandon) et que tu as renforcé, ou que ta garnison a encaissé : <b>+10</b> au classement, <b>10 TP</b>, et elle compte pour la quête de défense du jour.</p>
             <p data-s3="siege"><b>Garnison</b> : jusqu'à <b>5 communes</b>, où tu déposes de l'énergie (10 au plus par commune). Elle devient un <b>bouclier</b> de <b>10 points par énergie</b> (100 au plus), que l'attaquant doit briser avant de faire monter sa jauge, et elle rend tout siège long. L'énergie entamée est perdue ; retirer une garnison rend les trois quarts de ce qui reste. Une bombe détruit les garnisons de sa zone, et on ne peut plus y en poser pendant 24 h. L'attaquant voit qu'une commune est en garnison, pas combien elle contient.</p>
             <p data-s2="des"><b>Défendre</b> : quand un joueur gagne un round contre toi, tu peux tenter une défense, deux fois par attaque. Tu choisis ton engagement à chaque défense : prudente <b>1 énergie</b> (40 %), normale <b>2</b> (55 %), offensive <b>3</b> (70 %), soit <b>5 points de plus</b> qu'en attaque. Tes communes voisines ne comptent pas en défense. Une défense utilisée revient <b>24 h</b> plus tard (deux au plus). Tes deux défenses utilisées, tu peux encore <b>retenter une fois après chaque round que l'attaquant gagne</b>. Réussie, l'attaquant perd une victoire. Si l'attaquant ne relance pas d'assaut pendant <b>24 h</b>, son siège tombe : sa série repart de zéro et tu retrouves tes deux défenses.</p><!-- patch334, patch338, lot 8/11 -->
@@ -1939,6 +1939,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=8bb074a3d523"></script>
+<script defer src="app.js?v=50fddea2537e"></script>
 </body>
 </html>

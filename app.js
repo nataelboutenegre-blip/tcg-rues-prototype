@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '8bb074a3d523';
+const VERSION_JEU = '50fddea2537e';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -32734,7 +32734,7 @@ function sgResteNet(){ return Math.max(0, sgReste() - sgAttente()); }
 function sgSuggestion(){
   const a = SG.ap; if(!a) return 5;
   const e = sgEnergie(), neuf = !a.siege;
-  const max = Math.max(1, Math.min(Number(a.vague_max) || 60, e === null ? 99 : e - (neuf ? Number(a.pose) || 2 : 0)));
+  const max = Math.max(1, Math.min(Number(a.vague_max) || 60, e === null ? 99 : e - (neuf ? Number(a.pose) || 1 : 0)));
   return Math.max(1, Math.min(sgResteNet() || 1, max));
 }
 // patch494 : ce que devient une vague de n énergie (tout de suite, en attente, de trop)
@@ -32853,7 +32853,7 @@ function sgRendre(){
   const dureeLong = Number(a.duree_long_min) || 60;
   const rythmeE = res > 0 ? (res / (dureeLong / 60)) / (10 * mult) : 0;
   const e = sgEnergie();
-  const pose = s ? 0 : (Number(a.pose) || 2);
+  const pose = s ? 0 : (Number(a.pose) || 1);
   const n = Math.max(1, Math.min(Number(a.vague_max) || 60, SG.n));
   const cout = n + pose;
   const manque = e !== null && cout > e;
@@ -32974,11 +32974,12 @@ async function loadMenacesSiege(){
   if(typeof mfoRendre === 'function') mfoRendre();
 }
 // patch511 : « Tout repousser » — assez d'énergie pour ramener la jauge à 0 même au pire tirage (10 × 1,2 × 0,8 par ⚡)
-function sgToutN(deg){ return Math.min(60, Math.max(1, Math.ceil((Number(deg) || 0) / 9.6))); }
+const SG_PIRE_RENFORT = 11.52;   // patch526 : 12 points × 1,2 (défenseur) × 0,8 (pire tirage)
+function sgToutN(deg){ return Math.min(60, Math.max(1, Math.ceil((Number(deg) || 0) / SG_PIRE_RENFORT))); }
 function sgToutHtml(m, petit){
   const deg = Number(m.degats) || 0; if(deg <= 0) return '';
   const n = sgToutN(deg), e = sgEnergie(), manque = e !== null && e < n;
-  const txt = n >= 60 && deg / 9.6 > 60 ? `Repousser au maximum · 60 ⚡` : `Tout repousser · ${n} ⚡`;
+  const txt = n >= 60 && deg / SG_PIRE_RENFORT > 60 ? `Repousser au maximum · 60 ⚡` : `Tout repousser · ${n} ⚡`;
   return `<button type="button" class="sg-tout${petit ? ' petit' : ''}" data-sg-renf="${n}" data-code="${echapperTexte(m.commune)}" data-att="${echapperTexte(m.attaquant)}"${manque ? ' disabled' : ''}>🛡️ ${txt}<small>${manque ? `tu as ${e} ⚡` : 'la jauge revient à 0'}</small></button>`;
 }
 // patch520 : quand ma commune peut tomber (s3-62)
@@ -33262,7 +33263,7 @@ function sgCalcHtml(a){
   const multTxt = Math.abs(mult - 1) < 0.005 ? 'normaux' : '× ' + mult.toFixed(2).replace('.', ',');
   return `<details class="sg-calc"${SG.calc ? ' open' : ''}><summary data-sg="calc">Comment c'est calculé ?</summary>
     <ul>
-      <li><b>Chaque énergie</b> fait 10 points sur la jauge, au hasard entre 8 et 12.</li>
+      <li><b>Chaque énergie</b> fait 12 points sur la jauge, au hasard entre 10 et 14.</li>
       <li><b>Tes dégâts</b> dépendent de tes communes à moins de 20 km (aucune : −20 %, une ou deux : −10 %, trois à cinq : normal, six ou plus : +10 %). Zone bombardée +15 %, ta Forteresse à côté +10 %, débutant +50 % sur les communes jusqu'à rare sans garnison. Ici : <b>${multTxt}</b>.</li>
       ${typeof s3SiegeCalc === 'function' ? s3SiegeCalc() : ''}
       <li><b>Résistance</b> : commune et peu commune 55, rare 65, épique 125, légendaire 250. Forteresse sur place × 1,5. <b>Rempart</b> : +5 % par commune du propriétaire à moins de 10 km au-delà de 3 (+50 % au plus). Une rébellion que tu finances la baisse.</li>

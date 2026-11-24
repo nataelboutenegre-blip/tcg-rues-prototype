@@ -8,7 +8,8 @@ Enlève aux joueurs le droit de mentionner @everyone, @here et tous les rôles (
 
 2. ENLEVER :
      python3 _discord/couper-everyone.py --go
-   - retire le droit de chaque rôle qui l'a (dont @everyone), sauf les rôles administrateur et ceux des bots ;
+   - retire le droit de chaque rôle qui l'a (dont @everyone), sauf les rôles administrateur, ceux des bots
+     et ceux de l'équipe (Fondateur, Modération : liste GARDER) ;
    - retire l'autorisation dans les permissions propres des salons, si un salon la donnait.
    Le propriétaire du serveur et les administrateurs gardent le droit (Discord ne le leur retire jamais).
 
@@ -21,6 +22,8 @@ import json, os, subprocess, sys, time
 API = 'https://discord.com/api/v10'
 JETON_FICHIER = os.path.expanduser('~/.terrafront-bot')
 GO = '--go' in sys.argv[1:]
+# rôles qui gardent le droit (morceau du nom, sans tenir compte des majuscules) : l'équipe
+GARDER = ['fondateur', 'modération', 'moderation']
 MENTION = 1 << 17      # MENTION_EVERYONE
 ADMIN = 1 << 3         # ADMINISTRATOR
 
@@ -57,12 +60,13 @@ roles = appel('GET', '/guilds/%s/roles' % G)
 salons = appel('GET', '/guilds/%s/channels' % G)
 noms_roles = {r['id']: ('@everyone' if r['id'] == G else '@' + r['name']) for r in roles}
 
-a_faire_roles, admins = [], []
+a_faire_roles, admins, gardes = [], [], []
 for r in sorted(roles, key=lambda x: x['position']):
     p = int(r['permissions'])
     if not p & MENTION: continue
     if p & ADMIN: admins.append(noms_roles[r['id']]); continue
     if r.get('managed'): continue      # rôle d'un bot : Discord ne le laisse pas modifier
+    if any(g in r['name'].lower() for g in GARDER): gardes.append(noms_roles[r['id']]); continue
     a_faire_roles.append((r, p))
 
 a_faire_salons = []
@@ -76,6 +80,7 @@ for s in salons:
 print(u'Rôles qui permettent de mentionner tout le monde : %s' % (', '.join(noms_roles[r['id']] for r, _ in a_faire_roles) or 'aucun'))
 print(u'Salons qui le permettent en plus : %s' % (', '.join('#%s (%s)' % (s['name'], q) for s, o, q in a_faire_salons) or 'aucun'))
 if admins: print(u'Rôles administrateur (gardent le droit) : %s' % ', '.join(admins))
+if gardes: print(u'Rôles de l\'équipe (gardent le droit) : %s' % ', '.join(gardes))
 if not GO:
     print(u'\nRien n\'a été changé. Relance avec --go pour enlever le droit.')
     sys.exit(0)

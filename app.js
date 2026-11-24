@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '8d24b9386cd5';
+const VERSION_JEU = '63ffa7c61284';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1549,9 +1549,119 @@ function majEchelle(){
     el.lastChild.style.width = px + 'px';
   }
 }
+// ---------- patch530 : la règle (idée de Saaslil) ----------
+// Les points sont gardés en unités de carte ; la distance se calcule à vol d'oiseau (haversine).
+const RG = { actif: false, pts: [], glisse: null };
+const RG_MAX = 20;
+function rgLatLon(p){
+  return { lon: mapBounds.lonMin + p.x / MAP_W * (mapBounds.lonMax - mapBounds.lonMin),
+           lat: mapBounds.latMax - p.y / MAP_H * (mapBounds.latMax - mapBounds.latMin) };
+}
+function rgKm(a, b){
+  const A = rgLatLon(a), B = rgLatLon(b), r = Math.PI / 180;
+  const h = Math.sin((B.lat - A.lat) * r / 2) ** 2 + Math.cos(A.lat * r) * Math.cos(B.lat * r) * Math.sin((B.lon - A.lon) * r / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+function rgTxt(km){ return (km < 10 ? km.toFixed(1).replace('.', ',') : Math.round(km).toLocaleString('fr-FR')) + ' km'; }
+function rgInit(){
+  const wrap = document.getElementById('mapWrap');
+  if(!wrap || document.getElementById('mapRegle')) return !!wrap;
+  const garder = (el) => ['mousedown', 'touchstart', 'pointerdown', 'wheel'].forEach(t => el.addEventListener(t, (e) => e.stopPropagation(), { passive: true }));
+  const b = document.createElement('button');
+  b.type = 'button'; b.id = 'mapRegleBtn'; b.className = 'map-regle-btn'; b.textContent = '📏 Mesurer';
+  b.setAttribute('aria-pressed', 'false');
+  b.addEventListener('click', (e) => { e.stopPropagation(); rgBasculer(); });
+  garder(b);
+  const bd = document.createElement('div');
+  bd.id = 'mapRegleBandeau'; bd.className = 'map-regle-bandeau'; bd.hidden = true;
+  bd.innerHTML = '<span id="mapRegleTotal"></span><button type="button" data-rg="effacer">Effacer</button><button type="button" data-rg="fermer" aria-label="Fermer la règle">✕</button>';
+  bd.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const q = e.target.closest('[data-rg]');
+    if(!q) return;
+    if(q.dataset.rg === 'effacer'){ RG.pts = []; rgMaj(); } else rgBasculer(false);
+  });
+  garder(bd);
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.id = 'mapRegle'; svg.setAttribute('class', 'map-regle'); svg.setAttribute('aria-hidden', 'true');
+  // un point se glisse pour le déplacer ; touché sans bouger, il s'enlève
+  const surPoint = (e) => e.target.closest && e.target.closest('[data-rg-i]');
+  ['mousedown', 'touchstart'].forEach(t => svg.addEventListener(t, (e) => { if(surPoint(e)) e.stopPropagation(); }, { passive: true }));
+  svg.addEventListener('pointerdown', (e) => {
+    const c = surPoint(e);
+    if(!c) return;
+    e.stopPropagation(); e.preventDefault();
+    RG.glisse = { i: Number(c.dataset.rgI), id: e.pointerId, x0: e.clientX, y0: e.clientY, bouge: false };
+    try { svg.setPointerCapture(e.pointerId); } catch(err){}
+  });
+  svg.addEventListener('pointermove', (e) => {
+    const g = RG.glisse;
+    if(!g || g.id !== e.pointerId) return;
+    if(!g.bouge && Math.hypot(e.clientX - g.x0, e.clientY - g.y0) < 5) return;
+    g.bouge = true;
+    const r = wrap.getBoundingClientRect();
+    RG.pts[g.i] = ecranVersCarte(e.clientX - r.left, e.clientY - r.top);
+    rgMaj();
+  });
+  const fin = (e) => {
+    const g = RG.glisse;
+    if(!g || g.id !== e.pointerId) return;
+    RG.glisse = null;
+    if(!g.bouge && e.type === 'pointerup'){ RG.pts.splice(g.i, 1); rgMaj(); }
+  };
+  svg.addEventListener('pointerup', fin);
+  svg.addEventListener('pointercancel', fin);
+  wrap.append(svg, bd, b);
+  return true;
+}
+function rgBasculer(v){
+  RG.actif = v === undefined ? !RG.actif : !!v;
+  RG.pts = []; RG.glisse = null;
+  const wrap = document.getElementById('mapWrap');
+  if(wrap) wrap.classList.toggle('regle-on', RG.actif);
+  const b = document.getElementById('mapRegleBtn');
+  if(b){ b.classList.toggle('on', RG.actif); b.setAttribute('aria-pressed', String(RG.actif)); }
+  if(RG.actif && typeof fermerPanneau === 'function') fermerPanneau();
+  rgMaj();
+}
+function rgAjouter(x, y){
+  if(RG.pts.length >= RG_MAX) return;
+  RG.pts.push(ecranVersCarte(x, y));
+  rgMaj();
+}
+function rgMaj(){
+  if(!mapBounds || !MAP_W || !rgInit()) return;
+  const b = document.getElementById('mapRegleBtn');
+  const bd = document.getElementById('mapRegleBandeau');
+  const svg = document.getElementById('mapRegle');
+  const dispo = typeof canvasActif === 'function' && !!canvasActif();
+  b.hidden = !dispo;
+  if(!dispo && RG.actif){ RG.actif = false; RG.pts = []; }
+  bd.hidden = !RG.actif;
+  if(!RG.actif){ svg.innerHTML = ''; return; }
+  const s = echelleCarte() * mapZoom;
+  const P = RG.pts.map(p => [mapPanX + p.x * s, mapPanY + p.y * s]);
+  let total = 0, etiquettes = '';
+  for(let i = 1; i < RG.pts.length; i++){
+    const km = rgKm(RG.pts[i - 1], RG.pts[i]); total += km;
+    const [x1, y1] = P[i - 1], [x2, y2] = P[i];
+    if(Math.hypot(x2 - x1, y2 - y1) < 46 || RG.pts.length < 3) continue;   // une seule distance : elle est dans le bandeau
+    const t = rgTxt(km), w = t.length * 6.4 + 14, mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    etiquettes += `<g class="rg-et"><rect x="${(mx - w / 2).toFixed(1)}" y="${(my - 10).toFixed(1)}" width="${w.toFixed(1)}" height="20" rx="10"/><text x="${mx.toFixed(1)}" y="${(my + 4).toFixed(1)}">${t}</text></g>`;
+  }
+  const ligne = P.length > 1 ? `<polyline class="rg-l" points="${P.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')}"/>` : '';
+  const points = P.map(([x, y], i) => `<g data-rg-i="${i}" class="rg-h"><circle class="rg-zone" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="18"/><circle class="rg-p" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7"/></g>`).join('');
+  svg.innerHTML = ligne + etiquettes + points;
+  const tt = document.getElementById('mapRegleTotal');
+  tt.innerHTML = RG.pts.length === 0 ? '📏 Touche la carte pour poser un point'
+    : RG.pts.length === 1 ? '📏 Pose un deuxième point'
+    : `📏 <b>${rgTxt(total)}</b>${RG.pts.length > 2 ? ` <small>· ${RG.pts.length - 1} étapes</small>` : ''}`;
+}
+
 function applyMapTransform(){
   clampMapPan();
   majEchelle();   // patch394
+  rgMaj();   // patch530 : la règle suit la carte
   idfVisibilite();   // patch373
   // en canvas le deplacement est un simple changement de repere : pas de couche
   // promue par le navigateur, donc pas de flou et aucun redessin differe
@@ -5049,6 +5159,7 @@ function brancherSurvolCanvas(){
     if(bouge > 6) return;
     const rect = cv.getBoundingClientRect();
     const x = e.clientX - rect.left, y = e.clientY - rect.top;
+    if(RG.actif){ rgAjouter(x, y); return; }   // patch530 : en mode règle, un toucher pose un point
     if(SAISON2 && bfxToucher(x, y)) return;   // patch377 : rejouer l'impact
     if(vueDepartements()){
       const dep = departementSousLePoint(x, y);
@@ -7078,10 +7189,16 @@ const ETATS_LOTS = new Map();          // id de la grille -> etat
 const SG_EST = new Map();   // code -> { e, res, mult, rempart, en_cours, le }
 function sgEstLu(code){ const v = SG_EST.get(String(code)); return v && Date.now() - v.le < 120000 ? v : null; }
 function sgSuffit(v){ return !!(v && v.en_cours && v.suffit); }   // patch528
+function sgEnCours(code){   // patch530 : j'ai déjà un siège sur cette commune
+  const v = sgEstLu(code);
+  return !!(v && v.en_cours) || (Array.isArray(sgMes) && sgMes.some(s => String(s.commune) === String(code)));
+}
 function sgSuffitMaj(art, v){   // patch528 : la carte, le bouton et la ligne d'explication suivent
   if(!art) return;
   const ok = sgSuffit(v);
   art.classList.toggle('ca-ok', ok);
+  const qui = art.querySelector('.ca-qui');   // patch530 : le badge arrive avec l'estimation
+  if(qui && v && v.en_cours && !qui.querySelector('.ca-encours')) qui.insertAdjacentHTML('beforeend', '<span class="ca-encours">en cours</span>');
   const lib = art.querySelector('.ca-att[data-action="assieger"] .ca-lib');
   if(lib) lib.textContent = ok ? 'Énergie suffisante' : (v && v.en_cours ? 'Continuer' : 'Assiéger');
 }
@@ -11429,7 +11546,7 @@ function renderCombatGrid(){
     const serie = [0, 1, 2].map(i => `<i class="${i < victoires ? 'plein' : ''}"></i>`).join('');
     const okSg = SIEGE && etatClasse === 'pret' && sgSuffit(sgEstLu(c.commune_code));   // patch528
     return `<article class="ca-cible${okSg ? ' ca-ok' : ''}">${SIEGE ? '<span class="ca-ok-b">✓ ça suffit</span>' : ''}${carte}
-      <p class="ca-qui"${titreKm}><i style="background:${colorForPlayer(c.joueur_id)}"></i><b>${echapperTexte(pseudo)}</b>${km ? `<span>· ${km}</span>` : ''}<span class="ca-serie" title="Ta série : ${victoires} / 3">${serie}</span></p>
+      <p class="ca-qui"${titreKm}><i style="background:${colorForPlayer(c.joueur_id)}"></i><b>${echapperTexte(pseudo)}</b>${km ? `<span>· ${km}</span>` : ''}${SIEGE ? (sgEnCours(c.commune_code) ? '<span class="ca-encours">en cours</span>' : '') : `<span class="ca-serie" title="Ta série : ${victoires} / 3">${serie}</span>`}</p>
       ${bouton}${noteAlerte ? `<p class="ca-note">${note}</p>` : ''}</article>`;
   };
 

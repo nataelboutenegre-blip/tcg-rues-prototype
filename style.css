@@ -4531,6 +4531,28 @@ svg.rd-zoom .cdj-fr{ fill:#172D4C; }
 .map-echelle i{ display:block; height:5px; border:2px solid rgba(224,236,250,.92); border-top:0;
   box-shadow:0 1px 2px rgba(7,17,31,.7); }
 .map-echelle[hidden], .map-wrap.outremer .map-echelle, .map-wrap.panneau-ouvert .map-echelle{ display:none; }
+/* patch530 : la règle */
+.map-regle{ position:absolute; left:0; top:0; width:100%; height:100%; z-index:3; pointer-events:none; overflow:visible; }
+.map-regle .rg-l{ fill:none; stroke:#F0B429; stroke-width:2.5; stroke-dasharray:7 5; stroke-linecap:round; filter:drop-shadow(0 1px 1px rgba(7,17,31,.8)); }
+.map-regle .rg-h{ pointer-events:all; cursor:grab; touch-action:none; }
+.map-regle .rg-zone{ fill:transparent; }
+.map-regle .rg-p{ fill:#0B1830; stroke:#F0B429; stroke-width:2.5; }
+.map-regle .rg-et rect{ fill:rgba(11,24,48,.92); stroke:#F0B429; stroke-width:1; }
+.map-regle .rg-et text{ fill:#F6D77A; font:700 11px var(--texte); text-anchor:middle; }
+.map-regle-btn{ position:absolute; z-index:4; right:10px; bottom:10px; background:rgba(11,24,48,.92); color:#F6D77A;
+  border:1px solid rgba(240,180,41,.65); border-radius:9px; padding:6px 10px; font:700 .74rem var(--texte); cursor:pointer; }
+.map-regle-btn.on{ background:#F0B429; color:#13233B; border-color:#F0B429; }
+.map-regle-btn[hidden], .map-wrap.outremer .map-regle-btn{ display:none; }
+.map-wrap.panneau-ouvert:not(.regle-on) .map-regle-btn{ display:none; }
+.map-wrap.plein-ecran .map-regle-btn{ bottom:calc(10px + env(safe-area-inset-bottom, 0px)); }
+.map-regle-bandeau{ position:absolute; z-index:4; top:10px; right:10px; max-width:calc(100% - 20px); display:flex; align-items:center; gap:6px;
+  background:rgba(11,24,48,.95); border:1px solid #F0B429; border-radius:10px; padding:5px 6px 5px 10px; color:#F6D77A; font-size:.8rem; }
+.map-regle-bandeau[hidden]{ display:none; }
+.map-regle-bandeau > span{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.map-regle-bandeau b{ color:#FFE6A0; font-size:.92rem; }
+.map-regle-bandeau small{ color:#C9B67A; }
+.map-regle-bandeau button{ flex:none; background:transparent; border:1px solid rgba(240,180,41,.5); color:#F6D77A; border-radius:7px; padding:3px 8px; font:600 .72rem var(--texte); cursor:pointer; }
+.map-wrap.regle-on #mapCanvas{ cursor:crosshair; }
 .map-wrap.plein-ecran .map-echelle{ bottom:calc(10px + env(safe-area-inset-bottom, 0px)); }
 .fenetre .as-verdict{ position:relative; margin:24px 0 8px; min-height:1.1em; font-family: var(--titre); font-weight:900; font-size:clamp(1.9rem, 8vw, 2.6rem); line-height:1; opacity:0; }
 .as-verdict.ok{ color:#2BD48B; text-shadow:0 0 22px rgba(43,212,139,.5); }
@@ -6640,6 +6662,7 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 /* patch528 : l'énergie en attente suffit */
 .ca-cible{ position:relative; }
 .mfo-l .dep{ margin-left:5px; vertical-align:1px; }   /* patch529 */
+.ca-encours{ margin-left:auto; flex:none; background:var(--c-rouge, #E5484D); color:#fff; font-size:.62rem; font-weight:700; padding:1px 7px; border-radius:999px; }   /* patch530 */
 .ca-ok-b{ display:none; }
 .ca-cible.ca-ok .ca-ok-b{ display:block; position:absolute; z-index:3; top:8px; left:50%; transform:translateX(-50%); background:#3DD68C; color:#0B2A1A;
   font-family:var(--texte); font-size:.66rem; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap; pointer-events:none; }

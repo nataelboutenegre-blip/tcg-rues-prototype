@@ -2,6 +2,8 @@
   {
     "date": "2026-11-24",
     "nouveautes": [
+      "⚔️ Attaquer : les 3 petits ronds de l'ancien système disparaissent. À la place, un badge « en cours » quand tu as déjà un siège sur la commune (merci Arkhannou et Saaslil).",
+      "📏 Carte : un bouton « Mesurer » pour mesurer les distances à vol d'oiseau. Touche la carte pour poser des points, glisse-les pour les déplacer, touche un point pour l'enlever (merci Saaslil).",
       "🔢 QG : le numéro de département s'affiche à côté du nom dans « À défendre maintenant » et « Mes sièges » (merci Arkhannou).",
       "✅ Front : quand l'énergie déjà en attente suffit pour prendre la commune, la carte passe en vert « Énergie suffisante ». Plus besoin de relancer pour rien (merci Arkhannou).",
       "⚡ Front : conquérir coûte moins cher. Chaque énergie fait 12 points au lieu de 10 (en attaque, en renfort et en garnison), et poser un siège coûte 1 ⚡ au lieu de 2.",

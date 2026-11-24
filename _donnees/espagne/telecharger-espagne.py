@@ -97,7 +97,9 @@ def main():
     print("1/3  INE (codes et population)")
     ine(resume, manque)
     print("\n2/3  Wikidata et Commons")
-    resume["wikidata"] = wikidata_pays(BRUT, "ES", FILTRE, ("fr", "es", "ca", "eu", "gl"))
+    # une tranche par province (2 premiers chiffres du code INE, 01 à 52) : en une fois, Wikidata coupait la réponse
+    tranches = ['FILTER(STRSTARTS(?code, "%02d"))' % p for p in range(1, 53)]
+    resume["wikidata"] = wikidata_pays(BRUT, "ES", FILTRE, ("fr", "es", "ca", "eu", "gl"), tranches=tranches)
     resume["wikidata"]["le"] = time.strftime("%Y-%m-%d %H:%M")
     print("\n3/3  IGN : contours (le plus long)")
     contours(resume, manque)

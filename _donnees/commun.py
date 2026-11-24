@@ -31,8 +31,16 @@ def http(url, donnees=None, accepte="application/json", essais=4, delai=180):
             time.sleep(attente)
 
 
-def http_json(url, donnees=None, accepte="application/json"):
-    return json.loads(http(url, donnees, accepte).decode("utf-8"))
+def http_json(url, donnees=None, accepte="application/json", essais=4):
+    # une réponse coupée en route (Wikidata surchargé) arrive en JSON invalide : on la redemande
+    for tentative in range(1, essais + 1):
+        try:
+            return json.loads(http(url, donnees, accepte).decode("utf-8"))
+        except ValueError as e:
+            if tentative == essais:
+                raise
+            print("      ! réponse coupée (%s) — nouvel essai dans %ds" % (str(e)[:60], 10 * tentative), file=sys.stderr)
+            time.sleep(10 * tentative)
 
 
 def telecharger(url, chemin):
@@ -150,18 +158,44 @@ def ogc_tout(base, collection, chemin, filtre="", par_page=1000, max_pages=200):
     return len(entites)
 
 
-def wikidata_pays(dossier, prefixe, filtre, langues, code_var="code"):
+def sparql_tranches(gabarit, filtre, tranches, cache, nom):
+    """Une requête découpée en tranches (une par province, par exemple) : Wikidata coupe les
+    trop grosses réponses. Chaque tranche reçue est gardée dans <cache>/ : relancer reprend."""
+    if not tranches:
+        return sparql(gabarit % filtre)
+    os.makedirs(cache, exist_ok=True)
+    tout = []
+    for i, t in enumerate(tranches):
+        f = os.path.join(cache, "%s-%03d.json" % (nom, i))
+        if os.path.exists(f):
+            with open(f, encoding="utf-8") as fh:
+                lot = json.load(fh)
+        else:
+            lot = sparql(gabarit % (filtre + "\n  " + t))
+            with open(f + ".partiel", "w", encoding="utf-8") as fh:
+                json.dump(lot, fh)
+            os.replace(f + ".partiel", f)
+            time.sleep(1)
+        tout.extend(lot)
+        if (i + 1) % 10 == 0:
+            print("      %s : tranche %d / %d" % (nom, i + 1, len(tranches)))
+    return tout
+
+
+def wikidata_pays(dossier, prefixe, filtre, langues, code_var="code", tranches=None):
     """Communes d'un pays depuis Wikidata : liste (noms, position, article), population, photos.
-    filtre : motif SPARQL qui lie ?c (la commune) et ?code (son code officiel)."""
+    filtre : motif SPARQL qui lie ?c (la commune) et ?code (son code officiel).
+    tranches : morceaux de filtre ajoutés tour à tour (gros pays : Wikidata coupe les grosses réponses)."""
+    cache = os.path.join(dossier, "wikidata-tranches")
     noms = "\n".join('  OPTIONAL { ?c rdfs:label ?n_%s FILTER(LANG(?n_%s) = "%s") }' % (l, l, l) for l in langues)
     req = """SELECT ?code ?c %s ?coord ?article WHERE {
 %s
 %s
   OPTIONAL { ?c wdt:P625 ?coord }
   OPTIONAL { ?article schema:about ?c ; schema:isPartOf <https://fr.wikipedia.org/> }
-}""" % (" ".join("?n_" + l for l in langues), filtre, noms)
+}""" % (" ".join("?n_" + l for l in langues), "%s", noms.replace("%", "%%"))
     lignes = []
-    for b in sparql(req):
+    for b in sparql_tranches(req, filtre, tranches, cache, "communes"):
         lat, lon = point(b["coord"])
         lignes.append([b["code"], b["c"].rsplit("/", 1)[-1]] + [b["n_" + l] for l in langues] + [lat, lon, article(b["article"])])
     lignes.sort(key=lambda l: (l[0], l[1]))
@@ -170,21 +204,21 @@ def wikidata_pays(dossier, prefixe, filtre, langues, code_var="code"):
     print("   %d communes (%d lignes)" % (nb, len(lignes)))
     time.sleep(1)
 
-    pops = sparql("""SELECT ?code ?pop ?date WHERE {
+    pops = sparql_tranches("""SELECT ?code ?pop ?date WHERE {
 %s
   ?c p:P1082 ?st . ?st ps:P1082 ?pop .
   OPTIONAL { ?st pq:P585 ?date }
   ?st wikibase:rank ?rang FILTER(?rang != wikibase:DeprecatedRank)
-}""" % filtre)
+}""", filtre, tranches, cache, "population")
     ecrire_csv(dossier, "wikidata-population.csv", ["code", "population", "date"],
                sorted([p["code"], p["pop"], p["date"][:10]] for p in pops))
     print("   %d chiffres de population" % len(pops))
     time.sleep(1)
 
-    images = sparql("""SELECT ?code (SAMPLE(?img) AS ?image) WHERE {
+    images = sparql_tranches("""SELECT ?code (SAMPLE(?img) AS ?image) WHERE {
 %s
   ?c wdt:P18 ?img
-} GROUP BY ?code""" % filtre)
+} GROUP BY ?code""", filtre, tranches, cache, "photos")
     photos = [(b["code"], urllib.parse.unquote(b["image"].rsplit("/", 1)[-1])) for b in images if b["image"]]
     print("   %d communes avec une photo" % len(photos))
     print("   Commons : auteurs et licences des photos")

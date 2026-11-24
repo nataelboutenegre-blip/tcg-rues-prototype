@@ -6639,6 +6639,7 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .ca-est .m{ color:#FF8A8F; } .ca-est .p{ color:#3DD68C; }
 /* patch528 : l'énergie en attente suffit */
 .ca-cible{ position:relative; }
+.mfo-l .dep{ margin-left:5px; vertical-align:1px; }   /* patch529 */
 .ca-ok-b{ display:none; }
 .ca-cible.ca-ok .ca-ok-b{ display:block; position:absolute; z-index:3; top:8px; left:50%; transform:translateX(-50%); background:#3DD68C; color:#0B2A1A;
   font-family:var(--texte); font-size:.66rem; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap; pointer-events:none; }

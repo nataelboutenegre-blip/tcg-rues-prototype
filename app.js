@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '2035e10e6eac';
+const VERSION_JEU = '8d24b9386cd5';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -33179,7 +33179,7 @@ function sgMfoDanger(){
   return `<div class="mfo-t mfo-alerte"><div class="mfo-h"><span>⚠ À défendre maintenant</span><button type="button" class="mfo-lien" data-mfo="defendre">Tout voir${l.length > 3 ? ` (${l.length})` : ''} ›</button></div>`
     + l.slice(0, 3).map(m => {
       const p = Number(m.resistance) ? Math.round(100 * Number(m.degats) / Number(m.resistance)) : 0;
-      return `<div class="mfo-l"><div><b>${echapperTexte(m.nom || m.commune)}</b> · ${sgTier(m.tier).label.toLowerCase()}<small>${echapperTexte(m.attaquant_pseudo || 'un joueur')} · jauge à ${p} % · ${m.long ? 'siège long' : 'siège éclair'}</small>${sgBarre(Number(m.degats) || 0, Number(m.resistance) || 0, true)}</div>`
+      return `<div class="mfo-l"><div><b>${echapperTexte(m.nom || m.commune)}</b>${badgeDept(m.dept)} · ${sgTier(m.tier).label.toLowerCase()}<small>${echapperTexte(m.attaquant_pseudo || 'un joueur')} · jauge à ${p} % · ${m.long ? 'siège long' : 'siège éclair'}</small>${sgBarre(Number(m.degats) || 0, Number(m.resistance) || 0, true)}</div>`
         + `<button type="button" class="mfo-btn mfo-rouge" data-mfo="defendre">Renforcer</button></div>`;
     }).join('') + '</div>';
 }
@@ -33189,7 +33189,7 @@ function sgMfoAttaques(){
   return `<div class="mfo-t"><div class="mfo-h"><span>⚔ Mes sièges${l.length ? ` · ${longs} long${longs > 1 ? 's' : ''}` : ''}</span><button type="button" class="mfo-lien" data-mfo="attaquer">Assiéger ›</button></div>`
     + (l.length ? l.slice(0, 4).map(s => {
       const p = Number(s.resistance) ? Math.round(100 * Number(s.degats) / Number(s.resistance)) : 0;
-      return `<div class="mfo-l"><div><b>${echapperTexte(s.nom || s.commune)}</b><small>${p} % · ${s.long ? 'long' : 'éclair'}${Number(s.attente) > 0 ? ` · ${s.attente} ⚡ en attente` : ''}</small>${sgBarre(Number(s.degats) || 0, Number(s.resistance) || 0, true)}</div>`
+      return `<div class="mfo-l"><div><b>${echapperTexte(s.nom || s.commune)}</b>${badgeDept(s.dept)}<small>${p} % · ${s.long ? 'long' : 'éclair'}${Number(s.attente) > 0 ? ` · ${s.attente} ⚡ en attente` : ''}</small>${sgBarre(Number(s.degats) || 0, Number(s.resistance) || 0, true)}</div>`
         + `<button type="button" class="mfo-btn mfo-rouge" data-sg-ouvrir="${echapperTexte(s.commune)}">Continuer</button></div>`;
     }).join('') + (l.length > 4 ? `<p class="mfo-p">+ ${l.length - 4} autre${l.length - 4 > 1 ? 's' : ''} dans Attaquer</p>` : '')
       : '<p class="mfo-p">Aucun siège en cours. <button type="button" class="mfo-lien" data-mfo="attaquer">Choisir une cible ›</button></p>') + '</div>';

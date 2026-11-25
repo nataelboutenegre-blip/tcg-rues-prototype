@@ -34,6 +34,21 @@ ISO = {**{c: "FR-" + c for c in FR}, **{c: "CH-" + c for c in CH}, **{c: "BE-" +
 JEU = {v: k for k, v in ISO.items()}
 JEU["FR-75C"] = "75"   # Paris a changé de code ISO en 2023
 
+# 2e passage : pour les codes sans blason sur Wikidata, des noms de fichiers Commons à essayer dans l'ordre
+CANDIDATS = {
+    "13": ["Blason département fr Bouches-du-Rhône.svg", "Blason departement Bouches-du-Rhone.svg"],
+    "64": ["Blason département fr Pyrénées-Atlantiques.svg", "Blason des Pyrénées-Atlantiques.svg"],
+    "74": ["Blason département fr Haute-Savoie.svg", "Haute Savoie blason.svg"],
+    "93": ["Blason département fr Seine-Saint-Denis.svg"],
+    "94": ["Blason département fr Val-de-Marne.svg"],
+    "2A": ["Blason département fr Corse-du-Sud.svg", "Coat of Arms of Corsica.svg"],
+    "2B": ["Blason département fr Haute-Corse.svg", "Coat of Arms of Corsica.svg"],
+}
+# les cantons luxembourgeois n'ont pas d'armoiries : on prend celles de la commune chef-lieu
+CHEF_LIEU_LU = {"LCA": "Mamer", "LCL": "Clervaux", "LDI": "Diekirch", "LEC": "Echternach", "LES": "Esch-sur-Alzette",
+                "LGR": "Grevenmacher", "LLU": "Luxembourg", "LME": "Mersch", "LRE": "Redange", "LRM": "Remich",
+                "LVI": "Vianden", "LWI": "Wiltz"}
+
 # licences libres qu'on accepte (le reste part dans a-verifier.txt, sans image)
 LIBRES = re.compile(r"^(public domain|pd|cc0|cc[ -]by([ -]sa)?|gfdl|attribution|copyrighted free use)", re.I)
 
@@ -60,8 +75,26 @@ def main():
             par_code[code] = {"fichier": fichier, "nom": l["nom"], "wikidata": l["item"].rsplit("/", 1)[-1]}
     print("   %d codes, %d avec un blason" % (len(ISO), sum(1 for v in par_code.values() if v)))
 
+    # cantons luxembourgeois : armoiries de la commune chef-lieu (Wikidata, communes du Luxembourg Q2919801)
+    noms = " ".join('"%s"@fr' % n for n in CHEF_LIEU_LU.values())
+    for l in sparql("""
+      SELECT ?nom ?item ?img WHERE {
+        VALUES ?nom { %s }
+        ?item wdt:P31 wd:Q2919801 ; rdfs:label ?nom ; wdt:P94 ?img .
+      }""" % noms):
+        for code, n in CHEF_LIEU_LU.items():
+            if n == l["nom"] and code != "LRM":   # Remich a ses propres armoiries de canton
+                fichier = urllib.parse.unquote(l["img"].rsplit("/", 1)[-1]).replace("_", " ")
+                par_code[code] = {"fichier": fichier, "nom": "Canton de " + n + " (armoiries de " + n + ")",
+                                  "wikidata": l["item"].rsplit("/", 1)[-1]}
+    # départements sans P94 : on essaie des noms de fichiers connus
+    for code, liste in CANDIDATS.items():
+        if not par_code.get(code):
+            par_code[code] = {"candidats": liste, "nom": code, "wikidata": ""}
+
     print("2/3 Commons : auteurs, licences, vignettes…")
-    fichiers = sorted({v["fichier"] for v in par_code.values() if v})
+    fichiers = sorted({v["fichier"] for v in par_code.values() if v and "fichier" in v}
+                      | {f for v in par_code.values() if v and "candidats" in v for f in v["candidats"]})
     infos = {}
     for i in range(0, len(fichiers), 40):
         paquet = fichiers[i:i + 40]
@@ -90,6 +123,8 @@ def main():
         if not v:
             verifier.append("%-4s %s : pas de blason sur Wikidata" % (code, ISO[code]))
             continue
+        if "candidats" in v:   # le premier candidat qui existe sur Commons
+            v["fichier"] = next((f for f in v["candidats"] if (infos.get(f) or {}).get("vignette")), v["candidats"][0])
         inf = infos.get(v["fichier"]) or {}
         if not inf.get("vignette"):
             verifier.append("%-4s %s : fichier introuvable sur Commons (%s)" % (code, ISO[code], v["fichier"]))

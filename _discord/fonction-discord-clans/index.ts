@@ -46,7 +46,7 @@ const DROITS_MEMBRE = VOIR | ECRIRE | LIENS | FICHIERS | HISTORIQUE | REACTIONS;
 const DROITS_BOT = VOIR | ECRIRE | GERER_MSG | HISTORIQUE;
 const CATEGORIE_DIPLO = "🤝 Diplomatie";
 
-export type Clan = { tag: string; nom: string; couleur?: string | null; chef?: string | null; membres: string[] };
+export type Clan = { tag: string; nom: string; couleur?: string | null; chef?: string | null; membres: string[]; anciens?: string[] };   // s3-75 : anciens sigles
 export type Diplo = { id: number | string; a?: string; b?: string; nom_a?: string; nom_b?: string;
   alliance?: string; clans?: { tag: string; nom: string }[] };   // s2-148 : une alliance a un nom et une liste de clans
 type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
@@ -148,13 +148,19 @@ export async function synchroniser(o: Options): Promise<Rapport> {
 
   // ---------------------------------------------------------------- 2. chaque clan
   const tags = new Set<string>();
+  const tagsActuels = new Set<string>(o.clans.map((c) => c.tag));
   for (const clan of o.clans) {
     const tag = clan.tag; tags.add(tag);
+    // s3-75 : un clan qui change de sigle retrouve son rôle et son salon par ses anciens sigles
+    // (sauf un sigle repris depuis par un autre clan)
+    const anciens = (clan.anciens ?? []).filter((t) => t && t !== tag && !tagsActuels.has(t));
+    for (const t of anciens) tags.add(t);
     const nomRole = `${PREFIXE_ROLE}${tag}] ${clan.nom}`;
     const couleur = parseInt(String(clan.couleur || "#8E9AAF").replace("#", ""), 16);
 
     // le rôle
-    let role = roles.find((r) => String(r.name).startsWith(`${PREFIXE_ROLE}${tag}]`));
+    let role = roles.find((r) => String(r.name).startsWith(`${PREFIXE_ROLE}${tag}]`))
+      ?? anciens.map((t) => roles.find((r) => String(r.name).startsWith(`${PREFIXE_ROLE}${t}]`))).find((r) => r);   // s3-75
     if (role) {
       if (role.name !== nomRole || role.color !== couleur) {
         const id = role.id;
@@ -169,7 +175,12 @@ export async function synchroniser(o: Options): Promise<Rapport> {
     // le salon privé (retrouvé par le sigle écrit dans son sujet)
     const marque = `[${tag}]`;
     const sujet = `Salon privé du clan ${marque} ${clan.nom} : seuls ses membres le voient.`;
-    let salon = salons.find((s) => s.type === 0 && s.parent_id === CAT_ID && String(s.topic ?? "").includes(marque));
+    // s3-75 : par le sigle actuel ou un ancien ; s'il y en a plusieurs, le plus ancien (il a l'historique)
+    const marques = [marque, ...anciens.map((t) => `[${t}]`)];
+    const candidats = salons.filter((s) => s.type === 0 && s.parent_id === CAT_ID && marques.some((m) => String(s.topic ?? "").includes(m)))
+      .sort((a, b) => (big(a.id) < big(b.id) ? -1 : 1));
+    let salon = candidats[0];
+    if (candidats.length > 1) R.avertissements.push(`[${tag}] ${candidats.length} salons pour ce clan : le bot garde ${candidats[0].name} (le plus ancien), supprime à la main ${candidats.slice(1).map((x) => x.name).join(", ")}`);
     const existantes = new Map<string, any>((salon?.permission_overwrites ?? []).map((x: any) => [x.id, x]));
     const base = [
       { id: EVERYONE, type: 0, allow: "0", deny: String(VOIR), quoi: "tout le monde : caché" },

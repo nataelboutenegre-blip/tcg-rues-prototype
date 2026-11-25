@@ -62,6 +62,32 @@ def main():
         print("   %s : %s (%s)" % (e["nom"], nom, e["contour_licence"]))
         time.sleep(0.5)
 
+    # contours manquants : Nominatim (OpenStreetMap, ODbL), une requête par seconde au plus
+    NOMS_OSM = {"AD-04": "La Massana", "AD-06": "Sant Julià de Lòria", "AD-07": "Andorra la Vella", "AD-08": "Escaldes-Engordany"}
+    for e in par.values():
+        if e.get("contour_fichier") and e["iso"] != "AD-08":   # Escaldes : le contour Commons est trop sommaire
+            continue
+        nom_osm = NOMS_OSM.get(e["iso"])
+        if not nom_osm:
+            continue
+        url = "https://nominatim.openstreetmap.org/search?" + urllib.parse.urlencode(
+            {"q": nom_osm, "countrycodes": "ad", "polygon_geojson": 1, "format": "geojson", "limit": 5})
+        try:
+            d = json.loads(http(url, essais=2))
+        except Exception as err:
+            print("   ! %s : Nominatim en échec (%s)" % (e["nom"], err)); time.sleep(1.5); continue
+        polys = [f for f in d.get("features", []) if (f.get("geometry") or {}).get("type") in ("Polygon", "MultiPolygon")
+                 and (f.get("properties") or {}).get("type") in ("administrative", "boundary") or
+                 (f.get("properties") or {}).get("category") == "boundary"]
+        polys = [f for f in polys if (f.get("geometry") or {}).get("type") in ("Polygon", "MultiPolygon")]
+        if not polys:
+            print("   ! %s : pas de polygone chez Nominatim" % e["nom"]); time.sleep(1.5); continue
+        nom = e["iso"].replace("-", "_") + ".geojson"
+        json.dump({"type": "FeatureCollection", "features": polys[:1]}, open(os.path.join(BRUT, nom), "w"))
+        e.update({"contour_fichier": nom, "contour_licence": "ODbL-1.0", "contour_source": "OpenStreetMap (Nominatim)"})
+        print("   %s : %s (OpenStreetMap, ODbL)" % (e["nom"], nom))
+        time.sleep(1.5)
+
     print("3/3 Photos : auteurs et licences…")
     fichiers = [urllib.parse.unquote(e["img"].rsplit("/", 1)[-1]) for e in par.values() if e["img"]]
     if fichiers:

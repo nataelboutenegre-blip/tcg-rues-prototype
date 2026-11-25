@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '5bfc670b30be';
+const VERSION_JEU = '1952b3c557de';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -20700,6 +20700,11 @@ const BL_PARTITIONS = {
   sautoir:   { nom:'Sautoir', d:'M-6 8L8 -6L50 46L92 -6L106 8L58 60L106 112L92 126L50 74L8 126L-6 112L42 60Z' },
   echiquete: { nom:'Échiqueté', d:[...Array(6)].flatMap((_, l) => [...Array(5)].map((_, c) => (l + c) % 2 ? `M${c*20} ${l*20}h20v20h-20z` : '')).join('') },
   fusele:    { nom:'Losangé', d:[...Array(7)].flatMap((_, l) => [...Array(6)].map((_, c) => `M${c*20 - (l%2)*10 + 10} ${l*20 - 10}l10 10l-10 10l-10 -10z`)).join('') },
+  // patch539 : les tiercés, à trois couleurs (d = couleur 2, d3 = couleur 3)
+  tierce_pal:   { nom:'Tiercé en pal', d:'M33.4 0H66.7V120H33.4Z', d3:'M66.7 0H110V130H66.7Z' },
+  tierce_fasce: { nom:'Tiercé en fasce', d:'M-10 40H110V80H-10Z', d3:'M-10 80H110V130H-10Z' },
+  tierce_bande: { nom:'Tiercé en bande', d:'M-10 -52L110 92V172L-10 28Z', d3:'M-10 28L110 172H-10Z' },
+  pairle:       { nom:'Tiercé en pairle', d:'M50 56L-2 -6H-10V130H50Z', d3:'M50 56L102 -6H110V130H50Z' },
   gironne:   { nom:'Gironné', d:[0,2,4,6].map(i => { const a1 = i*Math.PI/4, a2 = (i+1)*Math.PI/4; return `M50 60L${(50+90*Math.cos(a1)).toFixed(1)} ${(60+90*Math.sin(a1)).toFixed(1)}L${(50+90*Math.cos(a2)).toFixed(1)} ${(60+90*Math.sin(a2)).toFixed(1)}Z`; }).join('') },
 };
 const blEtoile = (n, R, r) => 'M' + [...Array(2*n)].map((_, i) => { const a = -Math.PI/2 + i*Math.PI/n, k = i % 2 ? r : R; return `${(20 + k*Math.cos(a)).toFixed(2)} ${(20 + k*Math.sin(a)).toFixed(2)}`; }).join('L') + 'Z';
@@ -20730,13 +20735,13 @@ const BL_MEUBLES = {
   couronne2: { nom:'Couronne royale', rare:3, d:'M7 31H33V36H7ZM7 29L9 14Q20 8 31 14L33 29ZM11.2 22A1.8 1.8 0 1 0 14.8 22A1.8 1.8 0 1 0 11.2 22ZM18.2 20A1.8 1.8 0 1 0 21.8 20A1.8 1.8 0 1 0 18.2 20ZM25.2 22A1.8 1.8 0 1 0 28.8 22A1.8 1.8 0 1 0 25.2 22ZM18.8 2H21.2V4.6H23.6V7H21.2V10.4H18.8V7H16.4V4.6H18.8Z' },
 };
 let blRares = 0;   // patch536 : meubles rares débloqués par mon clan (clan_meubles_rares)
-const BL_DEFAUT = { forme:'francais', partition:'plein', c1:'azur', c2:'or', meuble:'aucun', cm:'or', nombre:1, bordure:'aucune' };
+const BL_DEFAUT = { forme:'francais', partition:'plein', c1:'azur', c2:'or', c3:'gueules', meuble:'aucun', cm:'or', nombre:1, bordure:'aucune' };
 let blCompteur = 0;
 // toute valeur inconnue retombe sur le défaut : rien d'autre que nos dessins n'entre dans le SVG
 function blasonNet(b){
   const x = Object.assign({}, BL_DEFAUT, b || {});
   return { forme: BL_FORMES[x.forme] ? x.forme : 'francais', partition: BL_PARTITIONS[x.partition] ? x.partition : 'plein',
-           c1: BL_E[x.c1] ? x.c1 : 'azur', c2: BL_E[x.c2] ? x.c2 : 'or', meuble: BL_MEUBLES[x.meuble] ? x.meuble : 'aucun',
+           c1: BL_E[x.c1] ? x.c1 : 'azur', c2: BL_E[x.c2] ? x.c2 : 'or', c3: BL_E[x.c3] ? x.c3 : 'gueules', meuble: BL_MEUBLES[x.meuble] ? x.meuble : 'aucun',
            cm: BL_E[x.cm] ? x.cm : 'or', nombre: Number(x.nombre) === 3 ? 3 : 1, bordure: BL_E[x.bordure] ? x.bordure : 'aucune' };
 }
 function blasonSVG(b0){
@@ -20754,7 +20759,7 @@ function blasonSVG(b0){
   const bord = b.bordure !== 'aucune' ? `<path d="${F.d}" fill="none" stroke="${BL_E[b.bordure]}" stroke-width="14"/>` : '';
   return `<defs><clipPath id="${id}"><path d="${F.d}"/></clipPath>
       <linearGradient id="${id}g" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></linearGradient></defs>
-    <g clip-path="url(#${id})"><rect x="-10" y="-10" width="120" height="140" fill="${BL_E[b.c1]}"/>${P.d ? `<path d="${P.d}" fill="${BL_E[b.c2]}"/>` : ''}${meubles}${bord}
+    <g clip-path="url(#${id})"><rect x="-10" y="-10" width="120" height="140" fill="${BL_E[b.c1]}"/>${P.d ? `<path d="${P.d}" fill="${BL_E[b.c2]}"/>` : ''}${P.d3 ? `<path d="${P.d3}" fill="${BL_E[b.c3]}"/>` : ''}${meubles}${bord}
       <rect x="-10" y="-10" width="120" height="140" fill="url(#${id}g)"/></g>
     <path d="${F.d}" fill="none" stroke="#0B1830" stroke-width="3.2" stroke-linejoin="round"/>
     <path d="${F.d}" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1" stroke-linejoin="round" transform="translate(50 60) scale(.955) translate(-50 -60)"/>`;
@@ -20803,8 +20808,9 @@ function editionClanHtml(){
     <h2>Couleur sur la carte</h2><div class="bl-emaux">${CLAN_COULEURS_ED.map(c => bt('carte', c, '', 'Couleur du clan sur la carte', `background:${c}`)).join('')}</div>
     <h2>Forme de l’écu</h2><div class="bl-choix">${Object.entries(BL_FORMES).map(([k, f]) => bt('forme', k, `${ecu({ ...B, forme:k })}<span>${f.nom}</span>`)).join('')}</div>
     <h2>Partition</h2><div class="bl-choix">${Object.entries(BL_PARTITIONS).map(([k, p]) => bt('partition', k, `${ecu({ ...B, partition:k, meuble:'aucun', bordure:'aucune' })}<span>${p.nom}</span>`)).join('')}</div>
-    <div class="bl-deux"><div><h2>Couleur 1</h2><div class="bl-emaux">${pastilles('c1')}</div></div>
-      <div><h2>Couleur 2</h2>${BL_PARTITIONS[B.partition].d ? `<div class="bl-emaux">${pastilles('c2')}</div>` : '<p class="clan-note">Partition « Plein » : une seule couleur.</p>'}</div></div>
+    <div class="bl-deux${BL_PARTITIONS[B.partition].d3 ? ' bl-trois' : ''}"><div><h2>Couleur 1</h2><div class="bl-emaux">${pastilles('c1')}</div></div>
+      <div><h2>Couleur 2</h2>${BL_PARTITIONS[B.partition].d ? `<div class="bl-emaux">${pastilles('c2')}</div>` : '<p class="clan-note">Partition « Plein » : une seule couleur.</p>'}</div>${BL_PARTITIONS[B.partition].d3 ? `
+      <div><h2>Couleur 3</h2><div class="bl-emaux">${pastilles('c3')}</div></div>` : ''}</div>
     <h2>Meuble</h2><div class="bl-choix bl-meubles">${Object.entries(BL_MEUBLES).map(([k, m]) => blVerrou(k, m, B.meuble, bt('meuble', k,
       `<svg viewBox="0 0 40 40" aria-hidden="true">${m.d ? (m.trait ? `<path d="${m.d}" fill="none" stroke="#E6EDF7" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>` : `<path d="${m.d}" fill-rule="evenodd" fill="#E6EDF7"/>`) : '<path d="M10 10L30 30M30 10L10 30" stroke="#5B6E8C" stroke-width="2.5"/>'}</svg><span>${m.nom}</span>`))).join('')}</div>
     ${BL_MEUBLES[B.meuble].d ? `<div class="bl-deux"><div><h2>Couleur du meuble</h2><div class="bl-emaux">${pastilles('cm')}</div></div>
@@ -21721,7 +21727,9 @@ document.getElementById('panel-clan').addEventListener('click', (e) => {
       const tire = (o) => o[Math.floor(Math.random() * o.length)], cles = BL_EMAUX.map(x => x[0]), B = clanEdition.b;
       B.forme = tire(Object.keys(BL_FORMES)); B.partition = tire(Object.keys(BL_PARTITIONS));
       B.c1 = tire(cles); do { B.c2 = tire(cles); } while(B.c2 === B.c1);
-      B.meuble = tire(Object.keys(BL_MEUBLES).slice(1).filter(k => !(BL_MEUBLES[k].rare > blRares)));   // patch536 do { B.cm = tire(cles); } while(B.cm === B.c1);
+      do { B.c3 = tire(cles); } while(B.c3 === B.c1 || B.c3 === B.c2);   // patch539
+      B.meuble = tire(Object.keys(BL_MEUBLES).slice(1).filter(k => !(BL_MEUBLES[k].rare > blRares)));   // patch536
+      do { B.cm = tire(cles); } while(B.cm === B.c1);
       B.nombre = tire([1, 1, 3]); B.bordure = tire(['aucune', 'aucune', 'aucune', ...cles]);
       const y = window.scrollY; renderClan(); window.scrollTo(0, y); return; }
     if(b.hasAttribute('data-bl-enregistrer')){

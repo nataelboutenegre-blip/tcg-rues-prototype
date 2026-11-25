@@ -6803,7 +6803,8 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .bl-emaux button[aria-pressed="true"]{ border-color:#fff; box-shadow:0 0 0 2px var(--nuit), 0 0 0 4px #fff; }
 .bl-emaux button.aucune{ background:repeating-linear-gradient(45deg, #2a3a55 0 4px, #1a2a45 4px 8px); }
 .bl-deux{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:14px; }
-@media (max-width:560px){ .bl-deux{ grid-template-columns:1fr; } .bl-grand{ width:96px; height:115px; } }
+.bl-deux.bl-trois{ grid-template-columns:repeat(3, minmax(0,1fr)); }   /* patch539 */
+@media (max-width:560px){ .bl-deux, .bl-deux.bl-trois{ grid-template-columns:1fr; } .bl-grand{ width:96px; height:115px; } }
 .bl-seg{ display:inline-flex; background:var(--nuit); padding:3px; border-radius:10px; gap:2px; }
 .bl-seg button{ background:none; border:0; color:var(--brume); font:inherit; font-size:.85rem; padding:6px 12px; border-radius:8px; cursor:pointer; }
 .bl-seg button[aria-pressed="true"]{ background:var(--nuit-3); color:#fff; }

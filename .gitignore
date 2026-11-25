@@ -25,3 +25,4 @@ _donnees/__pycache__/
 
 # Discord : salons lus par _discord/lire-salon.py (messages des joueurs, jamais sur GitHub)
 _discord/lectures/
+__pycache__/

@@ -4795,6 +4795,12 @@ body.mode-front #panel-defense .bourse-section{ display:none !important; }
 .mf-bulle{ position:absolute; left:50%; bottom:12px; transform:translateX(-50%); display:flex; gap:10px; align-items:center; max-width:calc(100% - 24px);
   background:#122743; border:1px solid rgba(169,188,212,.25); border-radius:12px; padding:8px 12px 8px 8px; box-shadow:0 10px 30px rgba(0,0,0,.5); color:#fff; }
 .mf-bulle[hidden]{ display:none; }
+.mf-bulle img.mf-bl{ width:44px; height:auto; flex:none; filter:drop-shadow(0 2px 3px rgba(0,0,0,.5)); }   /* patch540 */
+.mf-bulle small{ display:block; font-size:.64rem; color:var(--brume); margin-top:2px; }
+.mf-bulle small a{ color:inherit; }
+.mfl-bl{ width:15px; height:auto; vertical-align:-3px; margin-right:6px; }
+.mfl-cr{ font-size:.7rem; color:var(--brume); margin:8px 4px 2px; }
+.mfl-cr a{ color:inherit; }
 .mf-bulle b{ display:block; font-size:.9rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .mf-bulle span{ font-size:.7rem; color:var(--brume); }
 .mf-bulle div{ min-width:0; }

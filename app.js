@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1952b3c557de';
+const VERSION_JEU = 'b0068b752ab7';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -13801,6 +13801,20 @@ function vuesMonuments(){
 }
 
 // ---------- patch92 : Ma France ----------
+// patch540 : blasons des départements complets (blasons/<code>.webp, crédits dans data/blasons.json)
+let BL_DEP = null, blDepPromesse = null;
+const BL_DEP_IMG = new Map();
+function blDepCharger(){
+  if(!blDepPromesse) blDepPromesse = fetch('data/blasons.json?v=1').then(r => r.ok ? r.json() : {}).catch(() => ({})).then(d => { BL_DEP = d || {}; return BL_DEP; });
+  return blDepPromesse;
+}
+function blDepImg(dep){
+  if(!BL_DEP || !BL_DEP[dep]) return null;
+  let im = BL_DEP_IMG.get(dep);
+  if(!im){ im = new Image(); im.onload = () => mfPlanifier(); im.src = 'blasons/' + encodeURIComponent(dep) + '.webp'; BL_DEP_IMG.set(dep, im); }
+  return im.complete && im.naturalWidth ? im : null;
+}
+function mfComplet(dep){ const t = COMMUNES_PAR_DEPT[dep]; return !!t && (MF.parDep[dep] || 0) >= t; }
 const MF_COMMUNES = 2.5;    // a partir de ce zoom, les communes ; en dessous, les departements
 const MF_NOMS = 6;          // a partir de ce zoom, les noms
 
@@ -13830,6 +13844,12 @@ function renderMaFranceTerra(el, totalFrance){
     <div class="mf-leg" id="mfLeg"></div>
     ${mfListeHtml()}`;
   mfListeArmer(el);   // patch441
+  blDepCharger().then(() => {   // patch540 : la liste reçoit ses blasons
+    const d = el.querySelector('.mfl');
+    if(!d || !document.body.contains(d)) return;
+    const neuf = document.createElement('div'); neuf.innerHTML = mfListeHtml();
+    d.replaceWith(neuf.firstElementChild); mfListeArmer(el); mfPlanifier();
+  });
   MF.cv = document.getElementById('mfCanvas');
   mfArmer(MF.cv);
   mfDimensionner();
@@ -13864,11 +13884,12 @@ function mfListeHtml(){
     <ol class="mfl-l">${l.map(x => {
       const ok = x.manque === 0, p = x.total ? 100 * x.n / x.total : 0;
       return `<li><button type="button" class="${ok ? 'ok' : x.n ? '' : 'vide'}" data-mfld="${x.d}" aria-label="${echapperTexte(x.nom)} : ${x.n} sur ${x.total}${ok ? ', complet' : ', il en manque ' + x.manque}. Voir sur la carte">
-        <span class="mfl-c">${x.d}</span><span class="mfl-nom">${echapperTexte(x.nom)}</span>
+        <span class="mfl-c">${x.d}</span><span class="mfl-nom">${ok && BL_DEP && BL_DEP[x.d] ? `<img class="mfl-bl" src="blasons/${encodeURIComponent(x.d)}.webp" alt="" loading="lazy">` : ''}${echapperTexte(x.nom)}</span>
         <span class="mfl-nb">${fmtNombre(x.n)} / ${fmtNombre(x.total)}</span>
         <span class="mfl-m">${ok ? '✓ complet' : 'il en manque ' + fmtNombre(x.manque)}</span>
         <i class="mfl-b" style="--p:${p.toFixed(1)}%"></i></button></li>`;
     }).join('')}</ol>
+    <p class="mfl-cr">Un département complet affiche son blason sur ta carte · <a href="credits-blasons.html" target="_blank" rel="noopener">crédits des blasons</a></p>
   </details>`;
 }
 function mfListeArmer(el){
@@ -13901,7 +13922,7 @@ function mfAllerDep(dep){
   MF.oy = MF.haut / 2 - (b[1] + h / 2) * S - MF.baseY * MF.k;
   MF.dernierZoom = performance.now();
   mfLimiter();
-  MF.bulle = null; majBulleMF();
+  MF.bulle = BL_DEP && BL_DEP[dep] && mfComplet(dep) ? { blason: dep } : null; majBulleMF();   // patch540
   mfPlanifier();
   const cadre = document.getElementById('mfCadre');
   if(cadre) cadre.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -13929,8 +13950,13 @@ function mfDimensionner(){
 // dessiner que ce qui est a l'ecran
 function mfBoites(){
   if(MF.bbox || !CONTOURS_DEPTS || typeof CONTOURS_DEPTS !== 'object') return;
-  MF.bbox = {};
+  MF.bbox = {}; MF.ctr = {};   // patch540 : MF.ctr, centre pour le blason
   for(const d in CONTOURS_DEPTS){
+    let grand = CONTOURS_DEPTS[d][0] || [];
+    for(const a of CONTOURS_DEPTS[d]) if(a.length > grand.length) grand = a;
+    let sx = 0, sy = 0;
+    for(const [lon, lat] of grand){ const p = project(lat, lon); sx += p.x * MAP_W; sy += p.y * MAP_H; }
+    if(grand.length) MF.ctr[d] = [sx / grand.length, sy / grand.length];
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     for(const anneau of CONTOURS_DEPTS[d]) for(const [lon, lat] of anneau){
       const p = project(lat, lon), x = p.x * MAP_W, y = p.y * MAP_H;
@@ -14014,6 +14040,18 @@ function mfDessiner(){
       ctx.strokeStyle = r >= 1 ? '#F0B429' : 'rgba(169,188,212,0.28)';
       ctx.lineWidth = trait(r >= 1 ? 1.6 : 0.6);
       ctx.stroke(p);
+    }
+    // patch540 : le blason des départements complets, au centre
+    if(BL_DEP) for(const dep in CONTOURS_DEPTS){
+      if(!mfComplet(dep) || !MF.ctr || !MF.ctr[dep]) continue;
+      const im = blDepImg(dep), b = MF.bbox[dep];
+      if(!im || !b) continue;
+      const hpx = Math.max(16, Math.min(46, 0.55 * Math.min(b[2] - b[0], b[3] - b[1]) * S));
+      const h = hpx / S, w = h * im.naturalWidth / im.naturalHeight, [cx, cy] = MF.ctr[dep];
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 4 * d; ctx.shadowOffsetY = d;
+      ctx.drawImage(im, cx - w / 2, cy - h / 2, w, h);
+      ctx.restore();
     }
     if(niveau) niveau.textContent = MF.k <= 1.01 ? 'France entière · par département' : 'Par département · zoome encore';
     if(leg) leg.innerHTML = '<span><i style="background:#14294A"></i>Rien</span><span><i style="background:rgba(53,185,126,.35)"></i>Un peu</span>'
@@ -14118,10 +14156,16 @@ function mfNoms(ctx, visibles){
 }
 
 function mfToucher(px, py){
-  if(MF.k < MF_COMMUNES){ mfZoomer(3, px, py); mfPlanifier(); return; }
   const ctx = MF.cv.getContext('2d');
   const d = MF.dpr, S = mfEchelle();
   ctx.setTransform(d * S, 0, 0, d * S, d * (MF.ox + MF.baseX * MF.k), d * (MF.oy + MF.baseY * MF.k));
+  if(MF.k < MF_COMMUNES){
+    MF.bulle = null;   // patch540
+    if(BL_DEP) for(const dep in CONTOURS_DEPTS)
+      if(mfComplet(dep) && BL_DEP[dep] && ctx.isPointInPath(cheminDeptCanvas(dep, CONTOURS_DEPTS[dep]), px * d, py * d)){ MF.bulle = { blason: dep }; break; }
+    majBulleMF();
+    mfZoomer(3, px, py); mfPlanifier(); return;
+  }
   for(const dep of mfDeptsVisibles()){
     const c = CONTOURS.get(dep);
     if(!c || c === 'erreur') continue;
@@ -14144,6 +14188,14 @@ function majBulleMF(){
   const el = document.getElementById('mfBulle');
   if(!el) return;
   if(!MF.bulle){ el.hidden = true; return; }
+  if(MF.bulle.blason){   // patch540
+    const dep = MF.bulle.blason, c = (BL_DEP && BL_DEP[dep]) || {};
+    el.hidden = false;
+    el.innerHTML = `<img class="mf-bl" src="blasons/${encodeURIComponent(dep)}.webp" alt="Blason : ${echapperTexte(DEPT_NAMES[dep] || dep)}"><div><b>${echapperTexte(DEPT_NAMES[dep] || dep)} · complet ✓</b>`
+      + `<span>${fmtNombre(MF.parDep[dep] || 0)} / ${fmtNombre(COMMUNES_PAR_DEPT[dep] || 0)} communes</span>`
+      + `<small>Blason : ${c.a ? echapperTexte(c.a) + ', ' : ''}${echapperTexte(c.l || '')} · <a href="${echapperTexte(c.p || 'credits-blasons.html')}" target="_blank" rel="noopener">Wikimédia Commons</a></small></div>`;
+    return;
+  }
   const e = terraCollection.get(MF.bulle.code);
   const dep = MF.bulle.dep;
   el.hidden = false;

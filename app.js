@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '816654a872c3';
+const VERSION_JEU = '5bfc670b30be';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -25936,7 +25936,7 @@ function terraVoirSurCarte(code){
 // l'appareil. Les réglages (s2-38) valent pour le compte, et pour le
 // téléphone aussi (seuil de rareté, communes en sourdine).
 const NC_DEFAUT = { jeu: { attaque: true, perdue: true, defense: true, echange: true, alerte: true, quete: true, recolte: true, clan: true, paquet: false },
-                    tel: { attaque: true, paquet: true, defense: true, clan: true }, seuil: 'commun', sourdine: [], sourdine_dep: [], alerte_dep: [] };
+                    tel: { attaque: true, perdue: true, paquet: true, defense: true, clan: true }, seuil: 'commun', sourdine: [], sourdine_dep: [], alerte_dep: [] };
 const NC = { prefs: null, prefsDispo: true, d: {}, items: [], ouvert: false, vue: 'liste', demarre: false };
 const NC_ORDRE = ['commun', 'peucommun', 'rare', 'epique', 'legendaire'];
 const NC_CLOCHE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>';
@@ -26611,7 +26611,7 @@ function ncRendre(){
 
 const NC_LIGNES = [
   ['attaque', 'On assiège ta commune', 'Un siège commence, puis quand sa jauge monte', true],   // patch504
-  ['perdue', 'Commune perdue', 'Un joueur t’a pris une commune', false],
+  ['perdue', 'Commune perdue', 'Un joueur t’a pris une commune · sur le téléphone, une alerte au plus toutes les 15 min', true],   // patch538
   ['defense', 'Mes sièges', 'On t’a défendu, il te manque de l’énergie, ou ton siège est tombé', true],   // patch504
   ['echange', 'Échanges', 'Propositions reçues, échanges conclus', false],
   ['alerte', 'Alertes d’échange', 'Une commune que tu cherches est disponible', false],
@@ -34696,7 +34696,7 @@ function messRecRendre(fen, v, revele){
       <div class="mess-l"><span>Recensement parfait (${messNb(R.parfait || 47500)} à ${messNb(plafond)})</span><span class="mess-lot or">${messLotTexte('parfait', L.parfait) || '1 paquet Terra'}</span></div>
       <div class="mess-l"><span>Au-dessus du plafond, ou pas plus que le Préfet</span><span class="mess-lot gris">rien</span></div></div>
     ${messRationHtml()}
-    <p class="mess-note">Des communes de 3 000 à 60 000 habitants. Tu vois leur nom, pas leur population : connaître la France aide.</p>`;
+    <p class="mess-note">Des communes de 3 000 à 25 000 habitants. Tu vois leur nom, pas leur population : connaître la France aide.</p>`;
 }
 async function messRecAction(fen, rpc){
   if(fen.classList.contains('tourne')) return;

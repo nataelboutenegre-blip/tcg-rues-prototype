@@ -2,6 +2,7 @@
  {
   "date": "2026-11-25",
   "nouveautes": [
+   "🏳️ Notifications : ton téléphone te prévient quand un joueur te prend une commune (au plus une alerte toutes les 15 minutes). Tu peux la couper dans les réglages de la cloche. Merci Bonjean.",
    "⇄ Échanges de clan : une fois par jour, tu peux échanger avec un coéquipier une commune d'un cran de rareté d'écart (légendaire ↔ épique, épique ↔ rare, rare ↔ peu commun, peu commun ↔ commun). Merci Maroli.",
    "⇄ Échanges de clan : les communes déjà dans une proposition envoyée sont grisées avec « ⇄ proposée » (tu peux quand même les proposer ailleurs). Merci Arkhannou.",
    "🛡️ Blasons de clan : 4 nouveaux meubles pour tous (Château, Trèfle, Cloche, Épées croisées) et 3 meubles rares à gagner avec l'or de l'objectif de clan de la semaine (Rose des vents, Aigle bicéphale, Couronne royale). Merci Arkhannou.",
@@ -9,6 +10,7 @@
    "🔎 Échanges du clan : deux menus, Pays et Département / canton, au-dessus de chaque liste. Fini les « Juvigny » quand tu cherches le Jura suisse (merci Arkhannou)."
   ],
   "correctifs": [
+   "🎰 Le Recensement ne tire plus que des communes de 3 000 à 25 000 habitants (avant : jusqu'à 60 000).",
    "🛡️ Quêtes : « Réussis une défense » devient « Repousse un siège » (ramène à zéro la jauge d'un siège contre toi). L'ancienne version était presque impossible à finir dans la journée. Merci Saaslil et H34VEN.",
    "🎁 Pass : ouvrir un paquet du pass depuis le mode Front affichait une erreur. Le jeu passe maintenant en Terra pour l'ouvrir (les cartes allaient bien dans ta collection Terra). Merci Maroli."
   ]

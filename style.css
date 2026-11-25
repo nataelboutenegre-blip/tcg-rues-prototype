@@ -6120,6 +6120,8 @@ body.mode-terra .coll-entete, body.mode-front .coll-entete{
 .ce-membre[aria-pressed="true"]{ border-color: var(--c-legendaire); background: rgba(240,180,41,.12); }
 .ce-deux{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
 @media (max-width: 620px){ .ce-deux{ grid-template-columns:minmax(0,1fr); } }
+.ce-filtres{ display:flex; gap:6px; margin:0 0 6px; }   /* patch534 */
+.ce-filtres select{ flex:1; min-width:0; padding:7px 8px; border-radius:9px; border:1px solid rgba(169,188,212,0.3); background: var(--nuit); color:#fff; font:inherit; font-size:.82rem; }
 .ce-recherche{ width:100%; padding:9px 12px; border-radius:9px; border:1px solid rgba(169,188,212,0.3); background: var(--nuit); color:#fff; font:inherit; }
 .ce-liste{ display:grid; gap:4px; max-height:220px; overflow:auto; padding:6px; margin-top:8px; border-radius:12px; background:rgba(8,19,37,.5); border:1px solid rgba(169,188,212,0.14); }
 .ce-choix{ display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; text-align:left; padding:8px 10px; border-radius:9px; border:1px solid transparent; background:none; color:#fff; font:inherit; cursor:pointer; min-height:40px; }

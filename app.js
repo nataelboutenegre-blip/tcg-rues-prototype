@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '812ae9ac7019';
+const VERSION_JEU = '03bee5896e00';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -20906,7 +20906,7 @@ function tchatHtml(c){
 }
    // patch252 : le membre dont le chef ouvre la gestion
 // patch194 : les echanges entre membres du clan (Front)
-const clanEch = { etat: null, qui: null, donne: null, recoit: null, mes: null, leurs: null, r1: '', r2: '' };
+const clanEch = { etat: null, qui: null, donne: null, recoit: null, mes: null, leurs: null, r1: '', r2: '', p1: '', d1: '', p2: '', d2: '' };   // patch534 : p/d = pays, département
 const enFrontClan = () => SAISON2 && modeJeu === 'front';
 // patch401 : le bandeau Discord (s2-135) : 'trouve', 'introuvable' ou null (on ne sait pas)
 let discordStatut = null;
@@ -21091,10 +21091,25 @@ function ceDans(iso){
   const h = Math.max(0, Math.round((new Date(iso).getTime() - Date.now()) / 3600000));
   return h < 1 ? 'expire dans moins d\'une heure' : `expire dans ${h} h`;
 }
-function ceListeHtml(liste, cle, choisi, filtre){
+// patch534 : pays d'un « département » (canton suisse, province belge, canton luxembourgeois, sinon France)
+const CE_PAYS = { FR: '🇫🇷 France', CH: '🇨🇭 Suisse', BE: '🇧🇪 Belgique', LU: '🇱🇺 Luxembourg' };
+function cePays(dep){ return estCanton(dep) ? 'CH' : estProvinceBe(dep) ? 'BE' : estCantonLu(dep) ? 'LU' : 'FR'; }
+function ceFiltresHtml(liste, cote){
+  if(!liste || !liste.length) return '';
+  const pays = clanEch['p' + cote], dep = clanEch['d' + cote];
+  const lp = [...new Set(liste.map(c => cePays(c.departement)))];
+  const ld = [...new Set(liste.filter(c => !pays || cePays(c.departement) === pays).map(c => String(c.departement)))]
+    .sort((a, b) => a.localeCompare(b, 'fr', { numeric: true }));
+  if(lp.length < 2 && ld.length < 2) return '';
+  return `<div class="ce-filtres"><select data-ce-pays="${cote}" aria-label="Pays"><option value="">Tous les pays</option>${['FR', 'CH', 'BE', 'LU'].filter(p => lp.includes(p)).map(p => `<option value="${p}"${p === pays ? ' selected' : ''}>${CE_PAYS[p]}</option>`).join('')}</select>`
+    + `<select data-ce-dep="${cote}" aria-label="Département ou canton"><option value="">${pays && pays !== 'FR' ? (pays === 'BE' ? 'Toutes les provinces' : 'Tous les cantons') : 'Tous les départements'}</option>${ld.map(d => `<option value="${echapperTexte(d)}"${d === dep ? ' selected' : ''}>${echapperTexte(d)} · ${echapperTexte(DEPT_NAMES[d] || '')}</option>`).join('')}</select></div>`;
+}
+function ceListeHtml(liste, cle, choisi, filtre, cote){
   if(!liste) return '<p class="ce-attente">Chargement…</p>';
   const f = sansAccents((filtre || '').toLowerCase());
-  const l = liste.filter(c => !f || correspondUnTerme(c.nom, c.departement, f));   // patch509 : « 25, 90, 70 »
+  const pays = cote ? clanEch['p' + cote] : '', dep = cote ? clanEch['d' + cote] : '';   // patch534
+  const l = liste.filter(c => (!pays || cePays(c.departement) === pays) && (!dep || String(c.departement) === dep)
+                         && (!f || correspondUnTerme(c.nom, c.departement, f)));   // patch509 : « 25, 90, 70 »
   if(!l.length) return '<p class="ce-attente">Aucune commune.</p>';
   return l.slice(0, 80).map(c => `<button type="button" class="ce-choix" data-${cle}="${echapperTexte(c.code)}" aria-pressed="${c.code === choisi}"${c.raison ? ' disabled' : ''}>${ceCommune(c)}${c.raison ? `<span class="ce-raison">${echapperTexte(c.raison)}</span>` : ''}</button>`).join('');
 }
@@ -21113,10 +21128,13 @@ function ceRecapHtml(){
 }
 function majListesCe(){
   const d = document.getElementById('ceDonne'), r = document.getElementById('ceRecoit'), rc = document.getElementById('ceRecap'), t3 = document.getElementById('ceT3');
-  if(d) d.innerHTML = ceListeHtml(clanEch.mes, 'ce-donne', clanEch.donne, clanEch.r1);
+  if(d) d.innerHTML = ceListeHtml(clanEch.mes, 'ce-donne', clanEch.donne, clanEch.r1, 1);
   const leurs = ceLeursFiltrees();
+  const f1 = document.getElementById('ceF1'), f2 = document.getElementById('ceF2');   // patch534
+  if(f1) f1.innerHTML = ceFiltresHtml(clanEch.mes, 1);
+  if(f2) f2.innerHTML = clanEch.qui ? ceFiltresHtml(leurs, 2) : '';
   if(leurs && clanEch.recoit && !leurs.some(c => c.code === clanEch.recoit)) clanEch.recoit = null;
-  if(r) r.innerHTML = clanEch.qui ? ceListeHtml(leurs, 'ce-recoit', clanEch.recoit, clanEch.r2) : '<p class="ce-attente">Choisis d\'abord un coéquipier.</p>';
+  if(r) r.innerHTML = clanEch.qui ? ceListeHtml(leurs, 'ce-recoit', clanEch.recoit, clanEch.r2, 2) : '<p class="ce-attente">Choisis d\'abord un coéquipier.</p>';
   const mienne = clanEch.mes && clanEch.donne ? clanEch.mes.find(c => c.code === clanEch.donne) : null;
   if(t3) t3.textContent = '3. Tu reçois · ' + (mienne ? ceTier(mienne.tier).label.toLowerCase() : 'même rareté');
   if(rc) rc.innerHTML = ceRecapHtml();
@@ -21144,8 +21162,8 @@ function blocEchangesClan(){
     : `<div class="ce-etape"><div class="ce-attente">1. Avec qui</div>
         <div class="ce-membres">${membres.map(m => `<button type="button" class="ce-membre" data-ce-qui="${echapperTexte(m.id)}" aria-pressed="${m.id === clanEch.qui}"${(parMembre && !resteAvec(m)) || cePret(m) ? ' disabled' : ''}><span class="av" style="--clan:${(clanCache && clanCache.moi && clanCache.moi.clan || {}).couleur || '#E07A2E'}">${echapperTexte((m.pseudo || '?')[0].toUpperCase())}</span>${echapperTexte(m.pseudo)}${cePret(m) ? `<span class="ce-reste" title="Arrivé il y a moins de 48 h">· ${ceDansH(m.pret_le)}</span>` : parMembre ? `<span class="ce-reste">· ${resteAvec(m) ? 'encore ' + resteAvec(m) : e.demain_le ? ceDansH(e.demain_le) : 'demain'}</span>` : ''}</button>`).join('')}</div></div>
       <div class="ce-deux">
-        <div><div class="ce-attente">2. Tu donnes</div><input type="search" class="ce-recherche" id="ceR1" placeholder="Commune ou départements : 25, 90…" aria-label="Chercher une de tes communes" value="${echapperTexte(clanEch.r1)}"><div class="ce-liste" id="ceDonne"></div></div>
-        <div><div class="ce-attente" id="ceT3">3. Tu reçois · même rareté</div><input type="search" class="ce-recherche" id="ceR2" placeholder="Commune ou départements : 2A, 2B…" aria-label="Chercher une commune du coéquipier" value="${echapperTexte(clanEch.r2)}"><div class="ce-liste" id="ceRecoit"></div></div>
+        <div><div class="ce-attente">2. Tu donnes</div><div id="ceF1"></div><input type="search" class="ce-recherche" id="ceR1" placeholder="Commune ou départements : 25, 90…" aria-label="Chercher une de tes communes" value="${echapperTexte(clanEch.r1)}"><div class="ce-liste" id="ceDonne"></div></div>
+        <div><div class="ce-attente" id="ceT3">3. Tu reçois · même rareté</div><div id="ceF2"></div><input type="search" class="ce-recherche" id="ceR2" placeholder="Commune ou départements : 2A, 2B…" aria-label="Chercher une commune du coéquipier" value="${echapperTexte(clanEch.r2)}"><div class="ce-liste" id="ceRecoit"></div></div>
       </div>
       <div class="ce-recap" id="ceRecap"></div>`;
   return `<div class="ce-bloc"><div class="ce-tete"><h2>Échanges du clan</h2><span class="puce">${parMembre ? `<b>${maxEch}</b> par jour avec chaque coéquipier` : restant ? `<b>${restant}</b> échange${restant > 1 ? 's' : ''} possible${restant > 1 ? 's' : ''} aujourd'hui` : 'plus d\'échange aujourd\'hui'}</span></div>
@@ -21686,6 +21704,11 @@ if(CLANS) setTimeout(chargerClanEch, 2500);   // patch194 : la pastille des prop
 document.getElementById('panel-clan').addEventListener('input', (e) => {
   if(e.target.id === 'ceR1'){ clanEch.r1 = e.target.value; majListesCe(); }
   if(e.target.id === 'ceR2'){ clanEch.r2 = e.target.value; majListesCe(); }
+});
+document.getElementById('panel-clan').addEventListener('change', (e) => {   // patch534 : les filtres des échanges
+  const p = e.target.closest('[data-ce-pays]'), d = e.target.closest('[data-ce-dep]');
+  if(p){ clanEch['p' + p.dataset.cePays] = p.value; clanEch['d' + p.dataset.cePays] = ''; majListesCe(); }
+  if(d){ clanEch['d' + d.dataset.ceDep] = d.value; majListesCe(); }
 });
 
 

@@ -49,7 +49,7 @@ ES01061,Zalduondo,E01,Pays basque,195,42.8846,-2.3514,commun,5644,Zalduondo,Zald
 ES01062,Zambrana,E01,Pays basque,452,42.6624,-2.8297,commun,4315,Zambrana,Zambrana,Zanbrana,Zanbrana,Zambrana,Q1113094,Zambrana (Alava),Zanbrana 2007 11 30.JPG
 ES01063,Zuia,E01,Pays basque,2350,42.9871,-2.8291,peucommun,2088,Zuia,Zuya,Zuia,Zuia,Zuia,Q228613,Zuia,Murgiako eliza.jpg
 ES01901,Iruña Oka/Iruña de Oca,E01,Pays basque,3704,42.8242,-2.8188,peucommun,1609,Iruña Oka/Iruña de Oca,Iruña de Oca,Iruña Oka,Iruña Oka,Iruña Oka,Q1382293,Iruña Oka,Santa Catalina Tresponde.jpg
-ES01902,Lantarón,E01,Pays basque,929,42.7457,-2.9818,peucommun,3243,Lantarón,Lantarón,Lantarón,Lantaron,Lantarón,Q1447382,Lantarón,"Comunión, en el municipio de Lantarón (Álava, España).jpg"
+ES01902,Lantarón,E01,Pays basque,929,42.745,-2.9786,peucommun,3243,Lantarón,Lantarón,Lantarón,Lantaron,Lantarón,Q1447382,Lantarón,"Comunión, en el municipio de Lantarón (Álava, España).jpg"
 ES02001,Abengibre,E02,Castille-La Manche,753,39.2125,-1.5386,peucommun,3539,Abengibre,Abengibre,Abengibre,Abengibre,Abengibre,Q559227,Abengibre,Abenjibre (36).jpg
 ES02002,Alatoz,E02,Castille-La Manche,504,39.077,-1.3645,commun,4128,Alatoz,Alatoz,Alatoz,Alatoz,Alatoz,Q559211,Alatoz,Alatoz Torre De La Iglesia.JPG
 ES02003,Albacete,E02,Castille-La Manche,175400,38.9436,-1.9375,legendaire,40,Albacete,Albacete,Albacete,Albacete,Albacete,Q15095,Albacete,Albacete Cathedral 2021 - west façade.jpg
@@ -890,7 +890,7 @@ ES08026,El Brull,E08,Catalogne,296,41.8103,2.324,commun,4959,El Brull,Brull,el B
 ES08027,Les Cabanyes,E08,Catalogne,1060,41.3722,1.6917,peucommun,3056,Les Cabanyes,Les Cabanyes,les Cabanyes,Les Cabanyes,Les Cabanyes,Q1228790,Les Cabanyes,Sant Valentí de Les Cabanyes.jpg
 ES08028,Cabrera d'Anoia,E08,Catalogne,1772,41.4811,1.7173,peucommun,2411,Cabrera d'Anoia,Cabrera de Igualada,Cabrera d'Anoia,Cabrera d'Anoia,Cabrera d'Anoia,Q15939,Cabrera d'Anoia,Castell de Cabrera d'Anoia 3.jpg
 ES08029,Cabrera de Mar,E08,Catalogne,5045,41.5243,2.4041,peucommun,1319,Cabrera de Mar,Cabrera de Mar,Cabrera de Mar,Cabrera de Mar,Cabrera de Mar,Q12824,Cabrera de Mar,Catalonia CabreraDeMar CanBartomeu.JPG
-ES08030,Cabrils,E08,Catalogne,7765,41.5322,2.3671,rare,971,Cabrils,Cabrils,Cabrils,Cabrils,Cabrils,Q12083,Cabrils,Catalonia-Cabrils.jpg
+ES08030,Cabrils,E08,Catalogne,7765,41.5321,2.3677,rare,971,Cabrils,Cabrils,Cabrils,Cabrils,Cabrils,Q12083,Cabrils,Catalonia-Cabrils.jpg
 ES08031,Calaf,E08,Catalogne,3644,41.7247,1.5128,peucommun,1626,Calaf,Calaf,Calaf,Calaf,Calaf,Q15940,Calaf,Calaf.JPG
 ES08032,Caldes d'Estrac,E08,Catalogne,3356,41.5703,2.5244,peucommun,1700,Caldes d'Estrac,Caldetas,Caldes d'Estrac,Caldes d'Estrac,Caldes d'Estrac,Q12102,Caldes d'Estrac,Paisatgecaldetes.jpg
 ES08033,Caldes de Montbui,E08,Catalogne,18567,41.6312,2.176,rare,467,Caldes de Montbui,Caldas de Montbuy,Caldes de Montbui,Caldes de Montbui,Caldas de Montbuy,Q15400,Caldes de Montbui,Caldes-montbui-7003-01.jpg
@@ -1072,7 +1072,7 @@ ES08210,Sant Feliu de Codines,E08,Catalogne,6827,41.6955,2.1596,rare,1069,Sant F
 ES08211,Sant Feliu de Llobregat,E08,Catalogne,46781,41.3909,2.0467,epique,162,Sant Feliu de Llobregat,San Feliú de Llobregat,Sant Feliu de Llobregat,Sant Feliu de Llobregat,Sant Feliu de Llobregat,Q15639,Sant Feliu de Llobregat,Palau Falguera.jpg
 ES08212,Sant Feliu Sasserra,E08,Catalogne,633,41.9404,2.0019,peucommun,3789,Sant Feliu Sasserra,San Felíu Saserra,Sant Feliu Sasserra,Sant Feliu Sasserra,Sant Feliu Sasserra,Q16729,Sant Feliu Sasserra,Sant Feliu Sasserra des de la Glorieta Vilaclara.jpg
 ES08213,Sant Fruitós de Bages,E08,Catalogne,9333,41.7517,1.873,rare,846,Sant Fruitós de Bages,San Fructuoso de Bages,Sant Fruitós de Bages,Sant Fruitós de Bages,Sant Fruitós de Bages,Q16730,Sant Fruitós de Bages,Sant Fruitós de Bages - 001.jpg
-ES08214,Vilassar de Dalt,E08,Catalogne,9404,41.5333,2.3355,rare,839,Vilassar de Dalt,Vilasar de Dalt,Vilassar de Dalt,Vilassar de Dalt,Vilassar de Dalt,Q12075,Vilassar de Dalt,Catalonia-VilassarDeDaltCastle.JPG
+ES08214,Vilassar de Dalt,E08,Catalogne,9404,41.5328,2.334,rare,839,Vilassar de Dalt,Vilasar de Dalt,Vilassar de Dalt,Vilassar de Dalt,Vilassar de Dalt,Q12075,Vilassar de Dalt,Catalonia-VilassarDeDaltCastle.JPG
 ES08215,Sant Hipòlit de Voltregà,E08,Catalogne,3666,42.0146,2.2388,peucommun,1620,Sant Hipòlit de Voltregà,San Hipólito de Voltregá,Sant Hipòlit de Voltregà,Sant Hipòlit de Voltregà,Sant Hipòlit de Voltregà,Q13820,Sant Hipòlit de Voltregà,Sant Hipòlit de Voltregà des de la Torre de la Gleva.jpg
 ES08216,Sant Jaume de Frontanyà,E08,Catalogne,25,42.1963,2.0343,commun,7953,Sant Jaume de Frontanyà,San Jaime de Frontanya,Sant Jaume de Frontanyà,Sant Jaume de Frontanyà,Sant Jaume de Frontanyà,Q15538,Sant Jaume de Frontanyà,Sant-Jaume-de-Frontanya.jpg
 ES08217,Sant Joan Despí,E08,Catalogne,35926,41.3696,2.0553,epique,219,Sant Joan Despí,San Juan Despí,Sant Joan Despí,Sant Joan Despí,Sant Joan Despí,Q15640,Sant Joan Despí,MasMorell-SantJoanDespi-CasesAuriga-5573.jpg
@@ -1096,7 +1096,7 @@ ES08234,Sant Pere de Vilamajor,E08,Catalogne,5074,41.6952,2.3892,peucommun,1316,
 ES08235,Sant Pol de Mar,E08,Catalogne,5793,41.6095,2.6261,peucommun,1188,Sant Pol de Mar,San Pol de Mar,Sant Pol de Mar,Sant Pol de Mar,Sant Pol de Mar,Q12534,Sant Pol de Mar,
 ES08236,Sant Quintí de Mediona,E08,Catalogne,2580,41.4523,1.6624,peucommun,1987,Sant Quintí de Mediona,San Quintín de Mediona,Sant Quintí de Mediona,Sant Quintí de Mediona,Sant Quintí de Mediona,Q648963,Sant Quintí de Mediona,Esglesia sant quinti de mediona.JPG
 ES08237,Sant Quirze de Besora,E08,Catalogne,2164,42.1013,2.2208,peucommun,2189,Sant Quirze de Besora,San Quirico de Besora,Sant Quirze de Besora,Sant Quirze de Besora,Sant Quirze de Besora,Q13830,Sant Quirze de Besora,"075 Sant Quirze de Besora, des de la carretera de Vidrà.jpg"
-ES08238,Sant Quirze del Vallès,E08,Catalogne,20209,41.5263,2.0802,rare,428,Sant Quirze del Vallès,San Quirico del Vallés,Sant Quirze del Vallès,Sant Quirze del Vallès,Sant Quirze del Vallès,Q13935,Sant Quirze del Vallès,San Quirico del Vallés - Rotonda.jpg
+ES08238,Sant Quirze del Vallès,E08,Catalogne,20209,41.5239,2.0787,rare,428,Sant Quirze del Vallès,San Quirico del Vallés,Sant Quirze del Vallès,Sant Quirze del Vallès,Sant Quirze del Vallès,Q13935,Sant Quirze del Vallès,San Quirico del Vallés - Rotonda.jpg
 ES08239,Sant Quirze Safaja,E08,Catalogne,663,41.7293,2.1726,peucommun,3729,Sant Quirze Safaja,San Quirico Safaja,Sant Quirze Safaja,Sant Quirze Safaja,Sant Quirze Safaja,Q15452,Sant Quirze Safaja,StQuirzeSafaja-7905.jpg
 ES08240,Sant Sadurní d'Anoia,E08,Catalogne,12911,41.4354,1.7864,rare,635,Sant Sadurní d'Anoia,San Sadurní de Noya,Sant Sadurní d'Anoia,Sant Sadurní d'Anoia,Sant Sadurní d'Anoia,Q984508,Sant Sadurní d'Anoia,
 ES08241,Sant Sadurní d'Osormort,E08,Catalogne,89,41.9056,2.3816,commun,6882,Sant Sadurní d'Osormort,San Saturnino de Osormot,Sant Sadurní d'Osormort,Sant Sadurní d'Osormort,Sant Sadurní d'Osormort,Q13831,Sant Sadurní d'Osormort,Església Sant Sadurní d'Osormort (Osona) (1).jpg
@@ -1490,7 +1490,7 @@ ES09417,Vallejera,E09,Castille-et-León,38,42.1916,-4.1456,commun,7745,Vallejera
 ES09418,Valles de Palenzuela,E09,Castille-et-León,74,42.1228,-4.0841,commun,7100,Valles de Palenzuela,Valles de Palenzuela,Valles de Palenzuela,Valles de Palenzuela,Valles de Palenzuela,Q1642622,Valles de Palenzuela,Ayuntamiento de Valles de Palenzuela 01.jpg
 ES09419,Valluércanes,E09,Castille-et-León,70,42.5761,-3.1221,commun,7176,Valluércanes,Valluércanes,Valluércanes,Valluércanes,Valluércanes,Q1630713,Valluércanes,Valluércanes -BT- 01.jpg
 ES09421,La Vid y Barrios,E09,Castille-et-León,237,41.6177,-3.4691,commun,5345,La Vid y Barrios,La Vid y Barrios,La Vid y Barrios,La Vid y Barrios,La Vid y Barrios,Q1643567,La Vid y Barrios,"La Vid, monasterio-PM 17526.jpg"
-ES09422,La Vid de Bureba,E09,Castille-et-León,26,42.6338,-3.3007,commun,7946,La Vid de Bureba,La Vid de Bureba,La Vid de Bureba,La Vid de Bureba,La Vid de Bureba,Q1643756,La Vid de Bureba,"Iglesia de San Juan Evangelista, La Vid de Bureba 01.jpg"
+ES09422,La Vid de Bureba,E09,Castille-et-León,26,42.6345,-3.302,commun,7946,La Vid de Bureba,La Vid de Bureba,La Vid de Bureba,La Vid de Bureba,La Vid de Bureba,Q1643756,La Vid de Bureba,"Iglesia de San Juan Evangelista, La Vid de Bureba 01.jpg"
 ES09423,Vileña,E09,Castille-et-León,23,42.6157,-3.3221,commun,7986,Vileña,Vileña,Vileña,Vileña,Vileña,Q1642451,Vileña,Vileña ruinas Monasterio e iglesia 3.JPG
 ES09424,Viloria de Rioja,E09,Castille-et-León,38,42.4308,-3.1061,commun,7746,Viloria de Rioja,Viloria de Rioja,Viloria de Rioja,Viloria de Rioja,Viloria de Rioja,Q956438,Viloria de Rioja,Casona en Viloria de Rioja (Burgos).jpg
 ES09425,Vilviestre del Pinar,E09,Castille-et-León,511,41.9571,-3.0766,peucommun,4108,Vilviestre del Pinar,Vilviestre del Pinar,Vilviestre del Pinar,Vilviestre del Pinar,Vilviestre del Pinar,Q1641339,Vilviestre del Pinar,Escuelas de primaria-centro escolar.JPG
@@ -2177,7 +2177,7 @@ ES15050,Monfero,E15,Galice,1816,43.3589,-8.0373,peucommun,2385,Monfero,Monfero,M
 ES15051,Mugardos,E15,Galice,5203,43.4469,-8.2213,peucommun,1286,Mugardos,Mugardos,Mugardos,Mugardos,Mugardos,Q1442847,Mugardos,Ga-Mugardos 061.JPG
 ES15052,Muxía,E15,Galice,4326,43.0535,-9.2104,peucommun,1459,Muxía,Mugía,Muxía,Muxía,Muxía,Q512940,Muxía,"Muxia, Spain - view from hill.jpg"
 ES15053,Muros,E15,Galice,8173,42.8266,-9.0257,rare,924,Muros,Muros,Muros,Muros,Muros,Q578957,Muros (La Corogne),Muros.Galiza.04-2008.jpg
-ES15054,Narón,E15,Galice,39953,43.5355,-8.1114,epique,187,Narón,Narón,Narón,Narón,Narón,Q1368896,Narón,Casa do Concello de Naron.jpg
+ES15054,Narón,E15,Galice,39953,43.5355,-8.11,epique,187,Narón,Narón,Narón,Narón,Narón,Q1368896,Narón,Casa do Concello de Naron.jpg
 ES15055,Neda,E15,Galice,4925,43.5053,-8.1382,peucommun,1336,Neda,Neda,Neda,Neda,Neda,Q1635664,Neda (La Corogne),Xuvia-Neda.jpg
 ES15056,Negreira,E15,Galice,6969,42.9028,-8.8288,rare,1050,Negreira,Negreira,Negreira,Negreira,Negreira,Q840787,Negreira,Negreira Galiza.jpg
 ES15057,Noia,E15,Galice,14123,42.7979,-8.8806,rare,587,Noia,Noya,Noia,Noia,Noia,Q818601,Noia,"Villa de Noia, Noia.png"
@@ -2200,7 +2200,7 @@ ES15074,Rois,E15,Galice,4358,42.7883,-8.7322,peucommun,1452,Rois,Rois,Rois,Rois,
 ES15075,Sada,E15,Galice,17421,43.3551,-8.2819,rare,500,Sada,Sada,Sada,Sada,Sada,Q1616081,Sada (La Corogne),Pazo de Meirás.jpg
 ES15076,San Sadurniño,E15,Galice,2738,43.5106,-8.0538,peucommun,1922,San Sadurniño,San Saturnino,San Sadurniño,San Sadurniño,San Sadurniño,Q1442511,San Sadurniño,Intasa San Sadurniño.jpg
 ES15077,Santa Comba,E15,Galice,9442,43.0594,-8.7879,rare,833,Santa Comba,Santa Comba,Santa Comba,Santa Comba,Santa Comba,Q1442500,Santa Comba (La Corogne),Casa concello Santa Comba 04.JPG
-ES15078,Saint-Jacques-de-Compostelle,E15,Galice,100965,42.9223,-8.478,legendaire,66,Santiago de Compostela,Santiago de Compostela,Santiago de Compostel·la,,Santiago de Compostela,Q14314,Saint-Jacques-de-Compostelle,"Santiago de Compostela, Galiza (cropped).jpg"
+ES15078,Saint-Jacques-de-Compostelle,E15,Galice,100965,42.9223,-8.4761,legendaire,66,Santiago de Compostela,Santiago de Compostela,Santiago de Compostel·la,,Santiago de Compostela,Q14314,Saint-Jacques-de-Compostelle,"Santiago de Compostela, Galiza (cropped).jpg"
 ES15079,Santiso,E15,Galice,1430,42.8675,-8.1109,peucommun,2679,Santiso,Santiso,Santiso,Santiso,Santiso,Q1442623,Santiso,Casa do Concello de Santiso.jpg
 ES15080,Sobrado,E15,Galice,1830,43.0585,-7.9852,peucommun,2374,Sobrado,Sobrado,Sobrado,Sobrado,Sobrado,Q644626,Sobrado (La Corogne),Mosteiro de Sobrado (2).jpg
 ES15081,As Somozas,E15,Galice,1042,43.5168,-7.938,peucommun,3080,As Somozas,As Somozas,As Somozas,As Somozas,As Somozas,Q1442802,As Somozas,Casa do Concello de As Somozas.JPG
@@ -2496,7 +2496,7 @@ ES17038,Campllong,E17,Catalogne,534,41.8994,2.8314,peucommun,4047,Campllong,Camp
 ES17039,Camprodon,E17,Catalogne,2570,42.3077,2.3904,peucommun,1991,Camprodon,Camprodón,Camprodon,Camprodon,Camprodon,Q6944,Camprodon,"Camprodon, Girona.jpg"
 ES17040,Canet d'Adri,E17,Catalogne,744,42.0488,2.7337,peucommun,3551,Canet d'Adri,Canet de Adri,Canet d'Adri,Canet d'Adri,Canet d'Adri,Q13422,Canet d'Adri,Canet-dAdri.jpg
 ES17041,Cantallops,E17,Catalogne,366,42.4171,2.9291,commun,4641,Cantallops,Cantallops,Cantallops,Cantallops,Cantallops,Q7086,Cantallops,Cantallops 003.jpg
-ES17042,Capmany,E17,Catalogne,680,42.3725,2.9184,peucommun,3691,Capmany,Capmany,Campmany,Capmany,Capmany,Q7106,Capmany,Capmany vue generale.jpg
+ES17042,Capmany,E17,Catalogne,680,42.3733,2.9184,peucommun,3691,Capmany,Capmany,Campmany,Capmany,Capmany,Q7106,Capmany,Capmany vue generale.jpg
 ES17043,Queralbs,E17,Catalogne,202,42.3785,2.1617,commun,5591,Queralbs,Queralbs,Queralbs,Queralbs,Queralbs,Q12327,Queralbs,Queralbs - 51585118719.jpg
 ES17044,Cassà de la Selva,E17,Catalogne,11131,41.8837,2.8755,rare,711,Cassà de la Selva,Cassá de la Selva,Cassà de la Selva,Cassà de la Selva,Cassà de la Selva,Q13424,Cassà de la Selva,Cassà de la Selva 2018 (1).jpg
 ES17046,Castellfollit de la Roca,E17,Catalogne,966,42.2199,2.5473,peucommun,3192,Castellfollit de la Roca,Castellfullit de la Roca,Castellfollit de la Roca,Castellfollit de la Roca,Castellfollit de la Roca,Q12598,Castellfollit de la Roca,2001-09-15 Castellfollit de la Roca 09150023.jpg
@@ -2673,7 +2673,7 @@ ES17228,Vilanant,E17,Catalogne,406,42.2574,2.8777,commun,4480,Vilanant,Vilanant,
 ES17230,Vila-sacra,E17,Catalogne,878,42.2624,3.0218,peucommun,3330,Vila-sacra,Vilasacra,Vila-sacra,Vila-sacra,Vila-sacra,Q1043496,Vila-sacra,Esglesia Parroquial de Sant Esteve Vila-sacra.jpg
 ES17232,Vilopriu,E17,Catalogne,209,42.1057,2.991,commun,5529,Vilopriu,Vilopriu,Vilopriu,Vilopriu,Vilopriu,Q13585,Vilopriu,Vista de Vilopriu.jpg
 ES17233,Vilobí d'Onyar,E17,Catalogne,3297,41.8953,2.742,peucommun,1716,Vilobí d'Onyar,Viloví de Oñar,Vilobí d'Onyar,Vilobí d'Onyar,Vilobí d'Onyar,Q13718,Vilobí d'Onyar,Vilobi-Onyar.jpg
-ES17234,Biure,E17,Catalogne,226,42.3416,2.9038,commun,5416,Biure,Biure,Biure,Biure,Biure,Q11236,Biure,"Viure, en Gerona (España).jpg"
+ES17234,Biure,E17,Catalogne,226,42.3416,2.9049,commun,5416,Biure,Biure,Biure,Biure,Biure,Q11236,Biure,"Viure, en Gerona (España).jpg"
 ES17901,"Cruïlles, Monells i Sant Sadurní de l'Heura",E17,Catalogne,1350,41.9399,2.986,peucommun,2734,"Cruïlles, Monells i Sant Sadurní de l'Heura","Cruilles, Monells y San Sadurní","Cruïlles, Monells i Sant Sadurní de l'Heura","Cruïlles, Monells i Sant Sadurní de l'Heura","Cruïlles, Monells i Sant Sadurní de l'Heura",Q13466,"Cruïlles, Monells i Sant Sadurní de l'Heura","Spain, Catalonia, Cruïlles (1).JPG"
 ES17902,Forallac,E17,Catalogne,1790,41.9515,3.0839,peucommun,2403,Forallac,Forallac,"Vulpellac, Fonteta i Peratallada",Forallac,Forallac,Q13475,Forallac,Vulpellac - Montgrí.JPG
 ES17903,Sant Julià del Llor i Bonmatí,E17,Catalogne,1457,41.976,2.6542,peucommun,2660,Sant Julià del Llor i Bonmatí,Sant Julià del Llor i Bonmatí,Sant Julià del Llor i Bonmatí,Sant Julià del Llor i Bonmatí,Sant Julià del Llor i Bonmatí,Q13640,Sant Julià del Llor i Bonmatí,Sant-Julia-del-Llor.jpg
@@ -3166,7 +3166,7 @@ ES20024,Bidania-Goiatz,E20,Pays basque,530,43.1339,-2.167,peucommun,4055,Bidania
 ES20025,Zegama,E20,Pays basque,1543,42.9666,-2.2963,peucommun,2587,Zegama,Cegama,Zegama,Zegama,Zegama,Q1442954,Zegama,Zegama.jpg
 ES20026,Zerain,E20,Pays basque,284,43.0107,-2.3006,commun,5036,Zerain,Ceráin,Zerain,Zerain,Zerain,Q974930,Zerain,Zeraingo eliza edited.jpg
 ES20027,Zestoa,E20,Pays basque,3933,43.2316,-2.228,peucommun,1553,Zestoa,Cestona,Zestoa,Zestoa,Zestoa,Q1618393,Zestoa,Cestona.JPG
-ES20028,Zizurkil,E20,Pays basque,2976,43.224,-2.0874,peucommun,1824,Zizurkil,Cizúrquil,Zizurkil,Zizurkil,Zizurkil,Q1618316,Zizurkil,Zizurkil 03.jpg
+ES20028,Zizurkil,E20,Pays basque,2976,43.225,-2.0874,peucommun,1824,Zizurkil,Cizúrquil,Zizurkil,Zizurkil,Zizurkil,Q1618316,Zizurkil,Zizurkil 03.jpg
 ES20029,Deba,E20,Pays basque,5362,43.2666,-2.325,peucommun,1255,Deba,Deva,Deba,Deba,Deba,Q1611504,Deba (Guipuscoa),Playa Deba (1).JPG
 ES20030,Eibar,E20,Pays basque,27484,43.1933,-2.4623,epique,304,Eibar,Éibar,Eibar,Eibar,Eibar,Q496567,Eibar,Eibar 2.jpg
 ES20031,Elduain,E20,Pays basque,248,43.1793,-1.9717,commun,5275,Elduain,Elduayen,Elduain,Elduain,Elduain,Q767250,Elduain,Elduain - Ayuntamiento 01.jpg
@@ -3201,7 +3201,7 @@ ES20059,Oñati,E20,Pays basque,11480,43.0162,-2.4077,rare,697,Oñati,Oñate,Oña
 ES20060,Orexa,E20,Pays basque,103,43.0883,-2.0007,commun,6674,Orexa,Oreja,Orexa,Orexa,Orexa,Q598020,Orexa,Orexa 1.jpg
 ES20061,Orio,E20,Pays basque,6184,43.2865,-2.1088,peucommun,1142,Orio,Orio,Orio,Orio,Orio,Q1649616,Orio,Orio airetik.jpg
 ES20062,Ormaiztegi,E20,Pays basque,1293,43.0425,-2.2538,peucommun,2785,Ormaiztegi,Ormáiztegui,Ormaiztegi,Ormaiztegi,Ormaiztegi,Q932808,Ormaiztegi,Ormaiztegi 01.JPG
-ES20063,Oiartzun,E20,Pays basque,10480,43.2752,-1.8229,rare,745,Oiartzun,Oyarzun,Oiartzun,Oiartzun,Oiartzun,Q911092,Oiartzun,Oiartzun 03.JPG
+ES20063,Oiartzun,E20,Pays basque,10480,43.2739,-1.8224,rare,745,Oiartzun,Oyarzun,Oiartzun,Oiartzun,Oiartzun,Q911092,Oiartzun,Oiartzun 03.JPG
 ES20064,Pasaia,E20,Pays basque,15820,43.3493,-1.8713,rare,536,Pasaia,Pasajes,Pasaia,Pasaia,Pasaia,Q847127,Pasaia,"Pasai Donibane, Euskal Herria.jpg"
 ES20065,Soraluze-Placencia de las Armas,E20,Pays basque,3857,43.1811,-2.4235,peucommun,1571,Soraluze-Placencia de las Armas,Placencia de las Armas,Soraluze,Soraluze,Soraluze,Q1633869,Soraluze,Soraluze (Placencia de las Armas) 04.JPG
 ES20066,Errezil,E20,Pays basque,588,43.1742,-2.1797,peucommun,3906,Errezil,Régil,Errezil,Errezil,Errezil,Q964114,Errezil,Errezil.jpg
@@ -3358,7 +3358,7 @@ ES22057,Bielsa,E22,Aragon,479,42.6692,0.1938,commun,4223,Bielsa,Bielsa,Bielsa,Bi
 ES22058,Bierge,E22,Aragon,243,42.2824,-0.0891,commun,5310,Bierge,Bierge,Bierge,Bierge,Bierge,Q1769772,Bierge,Bierge20120422110219P1150358Contraste.jpg
 ES22059,Biescas,E22,Aragon,1640,42.6265,-0.3053,peucommun,2512,Biescas,Biescas,Biescas,Biescas,Biescas,Q876742,Biescas,
 ES22060,Binaced,E22,Aragon,1694,41.8041,0.1995,peucommun,2475,Binaced,Binaced,Binacet,Binaced,Binaced,Q1906763,Binaced,Binaced Huesca (1)-01.jpg
-ES22061,Binéfar,E22,Aragon,10235,41.8408,0.299,rare,766,Binéfar,Binéfar,Binèfar,Binéfar,Binéfar,Q864175,Binéfar,Binefar. Torre de la iglesia y casas. (102205247).jpg
+ES22061,Binéfar,E22,Aragon,10235,41.8394,0.2996,rare,766,Binéfar,Binéfar,Binèfar,Binéfar,Binéfar,Q864175,Binéfar,Binefar. Torre de la iglesia y casas. (102205247).jpg
 ES22062,Bisaurri,E22,Aragon,177,42.4843,0.5194,commun,5808,Bisaurri,Bisaurri,Bissaürri,Bisaurri,Bisaurri,Q866052,Bisaurri,Bissaurri-Gavas-StJaume-3093sh.jpg
 ES22063,Biscarrués,E22,Aragon,188,42.1918,-0.7351,commun,5702,Biscarrués,Biscarrués,Biscarrués,Biscarrués,Biscarrués,Q599094,Biscarrués,"Piedramorrera, Huesca, España, 2015-01-06, DD 01.JPG"
 ES22064,Blecua y Torres,E22,Aragon,175,42.0834,-0.2051,commun,5827,Blecua y Torres,Blecua y Torres,Blecua y Torres,Blecua y Torres,Blecua y Torres,Q1770021,Blecua y Torres,Blecua Huesca -02.jpg
@@ -4480,7 +4480,7 @@ ES29009,Almáchar,E29,Andalousie,1959,36.8007,-4.2192,peucommun,2295,Almáchar,A
 ES29010,Almargen,E29,Andalousie,1876,37.0205,-5.0241,peucommun,2347,Almargen,Almargen,Almargen,Almargen,Almargen,Q1630340,Almargen,Street in Almargen.jpg
 ES29011,Almogía,E29,Andalousie,4269,36.8394,-4.5429,peucommun,1468,Almogía,Almogía,Almogía,Almogía,Almogía,Q1754150,Almogía,Almogía.jpg
 ES29012,Álora,E29,Andalousie,13650,36.8581,-4.7022,rare,604,Álora,Álora,Álora,Álora,Álora,Q250746,Álora (Espagne),"Alora, 2023 (40).jpg"
-ES29013,Alozaina,E29,Andalousie,2127,36.7237,-4.8479,peucommun,2211,Alozaina,Alozaina,Alozaina,Alozaina,Alozaina,Q1630229,Alozaina,Alozaina 013.jpg
+ES29013,Alozaina,E29,Andalousie,2127,36.7239,-4.8491,peucommun,2211,Alozaina,Alozaina,Alozaina,Alozaina,Alozaina,Q1630229,Alozaina,Alozaina 013.jpg
 ES29014,Alpandeire,E29,Andalousie,242,36.6658,-5.2112,commun,5314,Alpandeire,Alpandeire,Alpandeire,Alpandeire,Alpandeire,Q1624182,Alpandeire,View of Alpandeire.jpg
 ES29015,Antequera,E29,Andalousie,41849,37.0314,-4.5488,epique,177,Antequera,Antequera,Antequera,Antequera,Antequera,Q572041,Antequera,
 ES29016,Árchez,E29,Andalousie,441,36.8326,-3.9966,commun,4359,Árchez,Árchez,Árchez,Árchez,Árchez,Q1754145,Árchez,Archez view 01.jpg
@@ -5249,40 +5249,40 @@ ES34901,Osorno la Mayor,E34,Castille-et-León,1180,42.3734,-4.3771,peucommun,289
 ES34902,Valle del Retortillo,E34,Castille-et-León,155,42.2068,-4.7811,commun,6048,Valle del Retortillo,Valle del Retortillo,Valle del Retortillo,Valle del Retortillo,Valle del Retortillo,Q1918785,Valle del Retortillo,Ayuntamiento de Valle de Retortillo 01.jpg
 ES34903,Loma de Ucieza,E34,Castille-et-León,186,42.4608,-4.582,commun,5733,Loma de Ucieza,Loma de Ucieza,Loma de Ucieza,Loma de Ucieza,Loma de Ucieza,Q1918575,Loma de Ucieza,Ayuntamiento de Loma de Ucieza.jpg
 ES34904,La Pernía,E34,Castille-et-León,297,42.9962,-4.5129,commun,4957,La Pernía,La Pernía,La Pernía,La Pernía,La Pernía,Q1918857,La Pernía,Lebanza pueblo 001.jpg
-ES35001,Agaete,E35,Canaries,5683,28.0765,-15.6884,peucommun,1206,Agaete,Agaete,Agaete,Agaete,Agaete,Q390069,Agaete,"Agaete, en Gran Canaria (Las Palmas, España).jpg"
-ES35002,Agüimes,E35,Canaries,33800,27.9026,-15.4843,epique,233,Agüimes,Agüimes,Agüimes,Aguimes,Agüimes,Q399702,Agüimes,"Iglesia de San Sebastián, en Agüimes (Las Palmas, España).jpg"
-ES35003,Antigua,E35,Canaries,14164,28.3792,-13.9358,rare,586,Antigua,Antigua,Antigua,Antigua,Antigua,Q575670,Antigua (Fuerteventura),"Ayuntamiento de Antigua, en Fuerteventura (Las Palmas, España).jpg"
-ES35004,Arrecife,E35,Canaries,70811,28.9754,-13.5657,epique,113,Arrecife,Arrecife,Arrecife,Arrecife,Arrecife,Q647543,Arrecife,"Arrecife, en Lanzarote (Las Palmas, España).jpg"
-ES35005,Artenara,E35,Canaries,1024,28.0178,-15.6933,peucommun,3112,Artenara,Artenara,Artenara,Artenara,Artenara,Q706892,Artenara,"Artenara, en Gran Canaria (Las Palmas, España).jpg"
-ES35006,Arucas,E35,Canaries,39232,28.1235,-15.5191,epique,194,Arucas,Arucas,Arucas,Arucas,Arucas,Q716384,Arucas,An einem Sonntag Vormittag in Arucas. 11.jpg
-ES35007,Betancuria,E35,Canaries,801,28.4286,-14.0896,peucommun,3460,Betancuria,Betancuria,Betancuria,Betancuria,Betancuria,Q830969,Betancuria,"Betancuria, en Fuerteventura (Las Palmas, España).jpg"
-ES35008,Firgas,E35,Canaries,7728,28.1012,-15.5599,rare,978,Firgas,Firgas,Firgas,Firgas,Firgas,Q606753,Firgas,"Firgas, en Gran Canaria (Las Palmas, España).jpg"
-ES35009,Gáldar,E35,Canaries,25108,28.132,-15.6707,rare,332,Gáldar,Gáldar,Gáldar,Gáldar,Gáldar,Q956757,Gáldar,"Gáldar, en Gran Canaria (Las Palmas, España).jpg"
-ES35010,Haría,E35,Canaries,5623,29.1838,-13.4649,peucommun,1219,Haría,Haría,Haría,Haría,Haría,Q1588135,Haría,"Haría, en Lanzarote (Las Palmas, España).jpg"
-ES35011,Ingenio,E35,Canaries,32905,27.9231,-15.4038,epique,242,Ingenio,Ingenio,Ingenio,Ingenio,Ingenio,Q985599,Ingenio,"Ingenio, en Gran Canaria (Las Palmas, España).jpg"
-ES35012,Mogán,E35,Canaries,21172,27.8586,-15.723,rare,401,Mogán,Mogán,Mogán,Mogán,Mogán,Q628446,Mogán,"Puerto de Mogán, en el municipio de Mogán (Las Palmas, España).jpg"
-ES35013,Moya,E35,Canaries,8007,28.1282,-15.5767,rare,941,Moya,Moya,Moya,Moya,Moya,Q985598,Moya (Grande Canarie),"Moya, en Gran Canaria (Las Palmas, España).jpg"
-ES35014,La Oliva,E35,Canaries,30022,28.6595,-13.9226,epique,275,La Oliva,La Oliva,La Oliva,La Oliva,La Oliva,Q594892,La Oliva,"La Oliva, en Las Palmas (España).jpg"
-ES35015,Pájara,E35,Canaries,21570,28.0877,-14.3411,rare,393,Pájara,Pájara,Pájara,Pájara,Pájara,Q661198,Pájara,Pájara D81 7002 (39999889304).jpg
-ES35016,Las Palmas de Gran Canaria,E35,Canaries,381868,28.0885,-15.4551,legendaire,9,Las Palmas de Gran Canaria,Las Palmas de Gran Canaria,Las Palmas de Gran Canaria,Las Palmas Kanaria Handikoa,As Palmas de Gran Canaria,Q11974,Las Palmas de Grande Canarie,Collage Las Palmas de Gran Canaria (new).jpg
-ES35017,Puerto del Rosario,E35,Canaries,46150,28.5108,-13.9218,epique,164,Puerto del Rosario,Puerto del Rosario,Puerto del Rosario,Puerto del Rosario,Puerto del Rosario,Q540185,Puerto del Rosario,"Puerto del Rosario, en Fuerteventura (Las Palmas, España).jpg"
-ES35018,San Bartolomé,E35,Canaries,19551,28.9936,-13.6144,rare,440,San Bartolomé,San Bartolomé,San Bartolomé,San Bartolomé,San Bartolomé,Q962773,San Bartolomé (Lanzarote),"Playa Honda, en San Bartolomé (Lanzarote, Las Palmas, España).jpg"
-ES35019,San Bartolomé de Tirajana,E35,Canaries,54291,27.8244,-15.591,epique,142,San Bartolomé de Tirajana,San Bartolomé de Tirajana,San Bartolomé de Tirajana,San Bartolomé de Tirajana,San Bartolomé de Tirajana,Q693258,San Bartolomé de Tirajana,"Faro de Maspalomas, en el municipio de San Bartolomé de Tirajana (Las Palmas, España).jpg"
-ES35020,La Aldea de San Nicolás,E35,Canaries,7401,27.9468,-15.7858,rare,1015,La Aldea de San Nicolás,La Aldea de San Nicolás,La Aldea de San Nicolás,La Aldea de San Nicolás,La Aldea de San Nicolás,Q986727,La Aldea de San Nicolás,Kirche La Aldea de San Nicolás.jpg
-ES35021,Santa Brígida,E35,Canaries,18766,28.0309,-15.5046,rare,463,Santa Brígida,Santa Brígida,Santa Brígida,Santa Brígida,Santa Brígida,Q984488,Santa Brígida,"Santa Brígida, en Gran Canaria (Las Palmas, España).jpg"
-ES35022,Santa Lucía de Tirajana,E35,Canaries,78584,27.8422,-15.4393,epique,99,Santa Lucía de Tirajana,Santa Lucía de Tirajana,Santa Lucía de Tirajana,Santa Lucía de Tirajana,Santa Lucía de Tirajana,Q738674,Santa Lucía de Tirajana,"Santa Lucía de Tirajana, en Gran Canaria (Las Palmas, España).jpg"
-ES35023,Santa María de Guía de Gran Canaria,E35,Canaries,14311,28.1245,-15.6128,rare,581,Santa María de Guía de Gran Canaria,Santa María de Guía de Gran Canaria,Santa María de Guía de Gran Canària,Santa María de Guía de Gran Canaria,Santa María de Guía de Gran Canaria,Q986359,Santa María de Guía de Gran Canaria,Guia NZ7 0596 (49469082666).jpg
-ES35024,Teguise,E35,Canaries,24027,29.0612,-13.5373,rare,356,Teguise,Teguise,Teguise,Teguise,Teguise,Q737440,Teguise,"Teguise, en Lanzarote (Las Palmas, España).jpg"
-ES35025,Tejeda,E35,Canaries,1806,27.9664,-15.6586,peucommun,2393,Tejeda,Tejeda,Tejeda,Tejeda,Tejeda,Q986361,Tejeda,"Tejeda, en Gran Canaria (Las Palmas, España).jpg"
-ES35026,Telde,E35,Canaries,104168,27.9888,-15.4206,legendaire,63,Telde,Telde,Telde,Telde,Telde,Q55845,Telde,"Ayuntamiento de Telde, en Gran Canaria (Las Palmas, España).jpg"
-ES35027,Teror,E35,Canaries,13211,28.0585,-15.5422,rare,617,Teror,Teror,Teror,Teror,Teror,Q430147,Teror (Grande Canarie),"Teror, en Gran Canaria (Las Palmas, España).jpg"
-ES35028,Tías,E35,Canaries,21613,28.9588,-13.6672,rare,392,Tías,Tías,Tías,Tías,Tías,Q2244278,Tías (Lanzarote),"Playa de Puerto del Carmen, en Tías (Lanzarote, Las Palmas, España).jpg"
-ES35029,Tinajo,E35,Canaries,6939,29.0344,-13.7027,rare,1052,Tinajo,Tinajo,Tinajo,Tinajo,Tinajo,Q638013,Tinajo,"Tinajo, en Las Palmas (España).jpg"
-ES35030,Tuineje,E35,Canaries,16834,28.2793,-14.0337,rare,516,Tuineje,Tuineje,Tuineje,Tuineje,Tuineje,Q985586,Tuineje,"Las Playitas, en el municipio de Tuineje (Fuerteventura, Las Palmas, España).jpg"
-ES35031,Valsequillo de Gran Canaria,E35,Canaries,9869,27.9795,-15.5247,rare,793,Valsequillo de Gran Canaria,Valsequillo de Gran Canaria,Valsequillo de Gran Canària,Valsequillo de Gran Canaria,Valsequillo de Gran Canaria,Q914195,Valsequillo de Gran Canaria,"Valsequillo de Gran Canaria, en Las Palmas (España).jpg"
-ES35032,Valleseco,E35,Canaries,3775,28.0381,-15.5824,peucommun,1588,Valleseco,Valleseco,Valleseco,Valleseco,Valleseco,Q986357,Valleseco,"Valleseco, en Gran Canaria (Las Palmas, España).jpg"
-ES35033,Vega de San Mateo,E35,Canaries,7899,27.9983,-15.5695,rare,950,Vega de San Mateo,Vega de San Mateo,Vega de San Mateo,Vega de San Mateo,Vega de San Mateo,Q986353,Vega de San Mateo,"Vega de San Mateo, en Gran Canaria (Las Palmas, España).jpg"
-ES35034,Yaiza,E35,Canaries,18842,28.9492,-13.7747,rare,462,Yaiza,Yaiza,Yaiza,Yaiza,Yaiza,Q2323549,Yaiza,"Yaiza, en Lanzarote (Las Palmas, España).jpg"
+ES35001,Agaete,E35,Canaries,5683,34.8765,-9.6884,peucommun,1206,Agaete,Agaete,Agaete,Agaete,Agaete,Q390069,Agaete,"Agaete, en Gran Canaria (Las Palmas, España).jpg"
+ES35002,Agüimes,E35,Canaries,33800,34.7026,-9.485,epique,233,Agüimes,Agüimes,Agüimes,Aguimes,Agüimes,Q399702,Agüimes,"Iglesia de San Sebastián, en Agüimes (Las Palmas, España).jpg"
+ES35003,Antigua,E35,Canaries,14164,35.1792,-7.9358,rare,586,Antigua,Antigua,Antigua,Antigua,Antigua,Q575670,Antigua (Fuerteventura),"Ayuntamiento de Antigua, en Fuerteventura (Las Palmas, España).jpg"
+ES35004,Arrecife,E35,Canaries,70811,35.7754,-7.5657,epique,113,Arrecife,Arrecife,Arrecife,Arrecife,Arrecife,Q647543,Arrecife,"Arrecife, en Lanzarote (Las Palmas, España).jpg"
+ES35005,Artenara,E35,Canaries,1024,34.8178,-9.6933,peucommun,3112,Artenara,Artenara,Artenara,Artenara,Artenara,Q706892,Artenara,"Artenara, en Gran Canaria (Las Palmas, España).jpg"
+ES35006,Arucas,E35,Canaries,39232,34.9234,-9.519,epique,194,Arucas,Arucas,Arucas,Arucas,Arucas,Q716384,Arucas,An einem Sonntag Vormittag in Arucas. 11.jpg
+ES35007,Betancuria,E35,Canaries,801,35.2286,-8.0896,peucommun,3460,Betancuria,Betancuria,Betancuria,Betancuria,Betancuria,Q830969,Betancuria,"Betancuria, en Fuerteventura (Las Palmas, España).jpg"
+ES35008,Firgas,E35,Canaries,7728,34.9012,-9.5599,rare,978,Firgas,Firgas,Firgas,Firgas,Firgas,Q606753,Firgas,"Firgas, en Gran Canaria (Las Palmas, España).jpg"
+ES35009,Gáldar,E35,Canaries,25108,34.9322,-9.6698,rare,332,Gáldar,Gáldar,Gáldar,Gáldar,Gáldar,Q956757,Gáldar,"Gáldar, en Gran Canaria (Las Palmas, España).jpg"
+ES35010,Haría,E35,Canaries,5623,35.9826,-7.4661,peucommun,1219,Haría,Haría,Haría,Haría,Haría,Q1588135,Haría,"Haría, en Lanzarote (Las Palmas, España).jpg"
+ES35011,Ingenio,E35,Canaries,32905,34.7231,-9.4038,epique,242,Ingenio,Ingenio,Ingenio,Ingenio,Ingenio,Q985599,Ingenio,"Ingenio, en Gran Canaria (Las Palmas, España).jpg"
+ES35012,Mogán,E35,Canaries,21172,34.6586,-9.723,rare,401,Mogán,Mogán,Mogán,Mogán,Mogán,Q628446,Mogán,"Puerto de Mogán, en el municipio de Mogán (Las Palmas, España).jpg"
+ES35013,Moya,E35,Canaries,8007,34.8594,-9.6094,rare,941,Moya,Moya,Moya,Moya,Moya,Q985598,Moya (Grande Canarie),"Moya, en Gran Canaria (Las Palmas, España).jpg"
+ES35014,La Oliva,E35,Canaries,30022,35.4595,-7.9226,epique,275,La Oliva,La Oliva,La Oliva,La Oliva,La Oliva,Q594892,La Oliva,"La Oliva, en Las Palmas (España).jpg"
+ES35015,Pájara,E35,Canaries,21570,34.8877,-8.3411,rare,393,Pájara,Pájara,Pájara,Pájara,Pájara,Q661198,Pájara,Pájara D81 7002 (39999889304).jpg
+ES35016,Las Palmas de Gran Canaria,E35,Canaries,381868,34.8885,-9.4551,legendaire,9,Las Palmas de Gran Canaria,Las Palmas de Gran Canaria,Las Palmas de Gran Canaria,Las Palmas Kanaria Handikoa,As Palmas de Gran Canaria,Q11974,Las Palmas de Grande Canarie,Collage Las Palmas de Gran Canaria (new).jpg
+ES35017,Puerto del Rosario,E35,Canaries,46150,35.3108,-7.9218,epique,164,Puerto del Rosario,Puerto del Rosario,Puerto del Rosario,Puerto del Rosario,Puerto del Rosario,Q540185,Puerto del Rosario,"Puerto del Rosario, en Fuerteventura (Las Palmas, España).jpg"
+ES35018,San Bartolomé,E35,Canaries,19551,35.7936,-7.6144,rare,440,San Bartolomé,San Bartolomé,San Bartolomé,San Bartolomé,San Bartolomé,Q962773,San Bartolomé (Lanzarote),"Playa Honda, en San Bartolomé (Lanzarote, Las Palmas, España).jpg"
+ES35019,San Bartolomé de Tirajana,E35,Canaries,54291,34.6254,-9.591,epique,142,San Bartolomé de Tirajana,San Bartolomé de Tirajana,San Bartolomé de Tirajana,San Bartolomé de Tirajana,San Bartolomé de Tirajana,Q693258,San Bartolomé de Tirajana,"Faro de Maspalomas, en el municipio de San Bartolomé de Tirajana (Las Palmas, España).jpg"
+ES35020,La Aldea de San Nicolás,E35,Canaries,7401,34.7468,-9.7858,rare,1015,La Aldea de San Nicolás,La Aldea de San Nicolás,La Aldea de San Nicolás,La Aldea de San Nicolás,La Aldea de San Nicolás,Q986727,La Aldea de San Nicolás,Kirche La Aldea de San Nicolás.jpg
+ES35021,Santa Brígida,E35,Canaries,18766,34.833,-9.4971,rare,463,Santa Brígida,Santa Brígida,Santa Brígida,Santa Brígida,Santa Brígida,Q984488,Santa Brígida,"Santa Brígida, en Gran Canaria (Las Palmas, España).jpg"
+ES35022,Santa Lucía de Tirajana,E35,Canaries,78584,34.6425,-9.4391,epique,99,Santa Lucía de Tirajana,Santa Lucía de Tirajana,Santa Lucía de Tirajana,Santa Lucía de Tirajana,Santa Lucía de Tirajana,Q738674,Santa Lucía de Tirajana,"Santa Lucía de Tirajana, en Gran Canaria (Las Palmas, España).jpg"
+ES35023,Santa María de Guía de Gran Canaria,E35,Canaries,14311,34.9245,-9.6127,rare,581,Santa María de Guía de Gran Canaria,Santa María de Guía de Gran Canaria,Santa María de Guía de Gran Canària,Santa María de Guía de Gran Canaria,Santa María de Guía de Gran Canaria,Q986359,Santa María de Guía de Gran Canaria,Guia NZ7 0596 (49469082666).jpg
+ES35024,Teguise,E35,Canaries,24027,35.8612,-7.5373,rare,356,Teguise,Teguise,Teguise,Teguise,Teguise,Q737440,Teguise,"Teguise, en Lanzarote (Las Palmas, España).jpg"
+ES35025,Tejeda,E35,Canaries,1806,34.7664,-9.6586,peucommun,2393,Tejeda,Tejeda,Tejeda,Tejeda,Tejeda,Q986361,Tejeda,"Tejeda, en Gran Canaria (Las Palmas, España).jpg"
+ES35026,Telde,E35,Canaries,104168,34.7911,-9.4179,legendaire,63,Telde,Telde,Telde,Telde,Telde,Q55845,Telde,"Ayuntamiento de Telde, en Gran Canaria (Las Palmas, España).jpg"
+ES35027,Teror,E35,Canaries,13211,34.8585,-9.5422,rare,617,Teror,Teror,Teror,Teror,Teror,Q430147,Teror (Grande Canarie),"Teror, en Gran Canaria (Las Palmas, España).jpg"
+ES35028,Tías,E35,Canaries,21613,35.7588,-7.6672,rare,392,Tías,Tías,Tías,Tías,Tías,Q2244278,Tías (Lanzarote),"Playa de Puerto del Carmen, en Tías (Lanzarote, Las Palmas, España).jpg"
+ES35029,Tinajo,E35,Canaries,6939,35.8343,-7.7034,rare,1052,Tinajo,Tinajo,Tinajo,Tinajo,Tinajo,Q638013,Tinajo,"Tinajo, en Las Palmas (España).jpg"
+ES35030,Tuineje,E35,Canaries,16834,35.0793,-8.0337,rare,516,Tuineje,Tuineje,Tuineje,Tuineje,Tuineje,Q985586,Tuineje,"Las Playitas, en el municipio de Tuineje (Fuerteventura, Las Palmas, España).jpg"
+ES35031,Valsequillo de Gran Canaria,E35,Canaries,9869,34.7805,-9.5229,rare,793,Valsequillo de Gran Canaria,Valsequillo de Gran Canaria,Valsequillo de Gran Canària,Valsequillo de Gran Canaria,Valsequillo de Gran Canaria,Q914195,Valsequillo de Gran Canaria,"Valsequillo de Gran Canaria, en Las Palmas (España).jpg"
+ES35032,Valleseco,E35,Canaries,3775,34.8381,-9.5824,peucommun,1588,Valleseco,Valleseco,Valleseco,Valleseco,Valleseco,Q986357,Valleseco,"Valleseco, en Gran Canaria (Las Palmas, España).jpg"
+ES35033,Vega de San Mateo,E35,Canaries,7899,34.7983,-9.5695,rare,950,Vega de San Mateo,Vega de San Mateo,Vega de San Mateo,Vega de San Mateo,Vega de San Mateo,Q986353,Vega de San Mateo,"Vega de San Mateo, en Gran Canaria (Las Palmas, España).jpg"
+ES35034,Yaiza,E35,Canaries,18842,35.7491,-7.7747,rare,462,Yaiza,Yaiza,Yaiza,Yaiza,Yaiza,Q2323549,Yaiza,"Yaiza, en Lanzarote (Las Palmas, España).jpg"
 ES36001,Arbo,E36,Galice,2603,42.1248,-8.3252,peucommun,1973,Arbo,Arbo,Arbo,Arbo,Arbo,Q630031,Arbo,Concello de Arbo.JPG
 ES36002,Barro,E36,Galice,3674,42.5315,-8.6433,peucommun,1617,Barro,Barro,Barro,Barro,Barro,Q1645010,Barro (Pontevedra),Barro 01-01a.jpg
 ES36003,Baiona,E36,Galice,12361,42.0993,-8.8538,rare,654,Baiona,Bayona,Baiona,Baiona,Baiona,Q748867,Baiona,Vista do porto de Baiona desde Monterreal-cropped.jpg
@@ -5706,60 +5706,60 @@ ES37379,Zamayón,E37,Castille-et-León,192,41.1565,-5.826,commun,5676,Zamayón,Z
 ES37380,Zarapicos,E37,Castille-et-León,50,41.0363,-5.8438,commun,7539,Zarapicos,Zarapicos,Zarapicos,Zarapicos,Zarapicos,Q1767288,Zarapicos,Panorámica de Zarapicos.jpg
 ES37381,La Zarza de Pumareda,E37,Castille-et-León,131,41.1557,-6.6157,commun,6297,La Zarza de Pumareda,La Zarza de Pumareda,La Zarza de Pumareda,La Zarza de Pumareda,La Zarza de Pumareda,Q1755960,La Zarza de Pumareda,Fundación Joaquín Díaz - Baile de la rosca - Zarza de Pomareda (Salamanca).jpg
 ES37382,Zorita de la Frontera,E37,Castille-et-León,140,41.0092,-5.2,commun,6209,Zorita de la Frontera,Zorita de la Frontera,Zorita de la Frontera,Zorita de la Frontera,Zorita de la Frontera,Q1766713,Zorita de la Frontera,Zorita de la Frontera 05.jpg
-ES38001,Adeje,E38,Canaries,50021,28.132,-16.7297,epique,153,Adeje,Adeje,Adeje,Adeje,Adeje,Q353618,Adeje,Adeje.jpg
-ES38002,Agulo,E38,Canaries,1078,28.1859,-17.2136,peucommun,3035,Agulo,Agulo,Agulo,Agulo,Agulo,Q398588,Agulo,"Agulo, en La Gomera (Santa Cruz de Tenerife, España).jpg"
-ES38003,Alajeró,E38,Canaries,2061,28.0541,-17.2455,peucommun,2245,Alajeró,Alajeró,Alajeró,Alajeró,Alajeró,Q932914,Alajeró,"Alajeró, en La Gomera (Santa Cruz de Tenerife, España).jpg"
-ES38004,Arafo,E38,Canaries,5945,28.3567,-16.4447,peucommun,1167,Arafo,Arafo,Arafo,Arafo,Arafo,Q624967,Arafo,Vista panorámica de Arafo.JPG
-ES38005,Arico,E38,Canaries,9505,28.1736,-16.4835,rare,826,Arico,Arico,Arico,Arico,Arico,Q657738,Arico,"Arico, en Santa Cruz de Tenerife (España).jpg"
-ES38006,Arona,E38,Canaries,87793,28.0547,-16.6748,epique,83,Arona,Arona,Arona,Arona (Tenerife),Arona,Q698246,Arona (Tenerife),Arona Church.JPG
-ES38007,Barlovento,E38,Canaries,2108,28.8137,-17.8265,peucommun,2222,Barlovento,Barlovento,Barlovento,Barlovento,Barlovento,Q433918,Barlovento,
-ES38008,Breña Alta,E38,Canaries,7487,28.6564,-17.8044,rare,1005,Breña Alta,Breña Alta,Breña Alta,Breña Alta,Breña Alta,Q433958,Breña Alta,"Breña Alta, en La Palma (Santa Cruz de Tenerife, España).jpg"
-ES38009,Breña Baja,E38,Canaries,6159,28.6447,-17.7679,peucommun,1145,Breña Baja,Breña Baja,Breña Baja,Breña Baja,Breña Baja,Q433986,Breña Baja,"Los Cancajos, en el municipio de Breña Baja (La Palma, Santa Cruz de Tenerife, España).jpg"
-ES38010,Buenavista del Norte,E38,Canaries,4695,28.3407,-16.8654,peucommun,1385,Buenavista del Norte,Buenavista del Norte,Buenavista del Norte,Buenavista del Norte,Buenavista del Norte,Q594961,Buenavista del Norte,"Buenavista del Norte, en Santa Cruz de Tenerife (España).jpg"
-ES38011,Candelaria,E38,Canaries,29023,28.3809,-16.3924,epique,290,Candelaria,Candelaria,Candelaria,Candelaria,Candelaria,Q487268,Candelaria (Tenerife),Vista de Candelaria.jpg
-ES38012,Fasnia,E38,Canaries,3145,28.2257,-16.4301,peucommun,1768,Fasnia,Fasnia,Fasnia,Fasnia,Fasnia,Q524431,Fasnia,"Tenerife, Fasnia (27).jpg"
-ES38013,Frontera,E38,Canaries,4660,27.7396,-18.1277,peucommun,1395,Frontera,La Frontera,La Frontera,La Frontera,La Frontera,Q1798827,La Frontera (El Hierro),"La Frontera, en El Hierro (Santa Cruz de Tenerife, España).jpg"
-ES38014,Fuencaliente de la Palma,E38,Canaries,1965,28.5063,-17.8452,peucommun,2287,Fuencaliente de la Palma,Fuencaliente de La Palma,Fuencaliente de La Palma,Fuencaliente de La Palma,Fuencaliente de La Palma,Q434019,Fuencaliente de la Palma,"Los Canarios, en el municipio de Fuencaliente de La Palma (Santa Cruz de Tenerife, España).jpg"
-ES38015,Garachico,E38,Canaries,4940,28.3243,-16.7523,peucommun,1334,Garachico,Garachico,Garachico,Garachico,Garachico,Q612815,Garachico,"Garachico, en Santa Cruz de Tenerife (España).jpg"
-ES38016,Garafía,E38,Canaries,2015,28.7985,-17.9058,peucommun,2266,Garafía,Garafía,Garafía,Garafía,Garafía,Q434053,Garafía,La Palma - Garafía - Calle Díaz y Suárez - Ayuntamiento 01 ies.jpg
-ES38017,Granadilla de Abona,E38,Canaries,58752,28.094,-16.5511,epique,133,Granadilla de Abona,Granadilla de Abona,Granadilla de Abona,Granadilla de Abona,Granadilla de Abona,Q943431,Granadilla de Abona,"Ayuntamiento de Granadilla de Abona, en Tenerife (España).jpg"
-ES38018,La Guancha,E38,Canaries,5667,28.3889,-16.667,peucommun,1210,La Guancha,La Guancha,La Guancha,La Guancha,La Guancha,Q983556,La Guancha,"Iglesia del Dulce Nombre de Jesús, en La Guancha (Santa Cruz de Tenerife, España).jpg"
-ES38019,Guía de Isora,E38,Canaries,22654,28.2198,-16.7608,rare,375,Guía de Isora,Guía de Isora,Guía de Isora,Guía de Isora,Guía de Isora,Q765879,Guía de Isora,"Guía de Isora, en Santa Cruz de Tenerife (España).jpg"
-ES38020,Güímar,E38,Canaries,22009,28.2905,-16.4256,rare,385,Güímar,Güímar,Güímar,Güímar,Güímar,Q983433,Güímar,"Güímar, en Santa Cruz de Tenerife (España).jpg"
-ES38021,Hermigua,E38,Canaries,1961,28.1525,-17.1967,peucommun,2293,Hermigua,Hermigua,Hermigua,Hermigua,Hermigua,Q1260011,Hermigua,"Hermigua, en La Gomera (Santa Cruz de Tenerife, España).jpg"
-ES38022,Icod de los Vinos,E38,Canaries,24616,28.329,-16.6946,rare,342,Icod de los Vinos,Icod de los Vinos,Icod de los Vinos,Icod de los Vinos,Icod de los Vinos,Q572542,Icod de los Vinos,"Icod de los Vinos, en Santa Cruz de Tenerife (España).jpg"
-ES38023,San Cristóbal de La Laguna,E38,Canaries,161108,28.4805,-16.3109,legendaire,41,San Cristóbal de La Laguna,San Cristóbal de La Laguna,San Cristóbal de La Laguna,San Cristóbal de La Laguna,San Cristóbal de La Laguna,Q54898,San Cristóbal de La Laguna,"San Cristóbal de La Laguna, en Santa Cruz de Tenerife (España).jpg"
-ES38024,Los Llanos de Aridane,E38,Canaries,20582,28.5858,-17.8935,rare,416,Los Llanos de Aridane,Los Llanos de Aridane,Los Llanos de Aridane,Los Llanos de Aridane,Los Llanos de Aridane,Q366948,Los Llanos de Aridane,"Los Llanos de Aridane, en La Palma (Santa Cruz de Tenerife, España).jpg"
-ES38025,La Matanza de Acentejo,E38,Canaries,9089,28.4484,-16.4534,rare,860,La Matanza de Acentejo,La Matanza de Acentejo,La Matanza de Acentejo,La Matanza de Acentejo,La Matanza de Acentejo,Q983577,La Matanza de Acentejo,"La Matanza de Acentejo, en Santa Cruz de Tenerife (España).jpg"
-ES38026,La Orotava,E38,Canaries,42514,28.2558,-16.6328,epique,174,La Orotava,La Orotava,La Orotava,La Orotava,La Orotava,Q920391,La Orotava,Villa de La Orotava panorama.jpg
-ES38027,El Paso,E38,Canaries,8290,28.6537,-17.8619,rare,914,El Paso,El Paso,El Paso,El Paso,El Paso,Q434123,El Paso (La Palma),Caldera de Taburiente MichaD.jpg
-ES38028,Puerto de la Cruz,E38,Canaries,31137,28.4075,-16.5445,epique,258,Puerto de la Cruz,Puerto de la Cruz,Puerto de la Cruz,Puerto de la Cruz,Puerto de la Cruz,Q623549,Puerto de la Cruz,"Puerto de la Cruz (Santa Cruz de Tenerife, España).jpg"
-ES38029,Puntagorda,E38,Canaries,2345,28.7648,-17.9837,peucommun,2093,Puntagorda,Puntagorda,Puntagorda,Puntagorda,Puntagorda,Q434150,Puntagorda,"Puntagorda, en La Palma (Sta. Cruz de Tenerife, España).jpg"
-ES38030,Puntallana,E38,Canaries,2790,28.7461,-17.7596,peucommun,1896,Puntallana,Puntallana,Puntallana,Puntallana,Puntallana,Q434173,Puntallana,"Iglesia de San Juan Bautista, en Puntallana (La Palma, Santa Cruz de Tenerife, España).jpg"
-ES38031,Los Realejos,E38,Canaries,37867,28.3677,-16.5904,epique,204,Los Realejos,Los Realejos,Los Realejos,Los Realejos,Los Realejos,Q953876,Los Realejos,"Los Realejos, en Santa Cruz de Tenerife (España).jpg"
-ES38032,El Rosario,E38,Canaries,17958,28.4339,-16.3669,rare,481,El Rosario,El Rosario,El Rosario,El Rosario,El Rosario,Q176624,El Rosario (Tenerife),"La Esperanza, en el municipio de El Rosario (Santa Cruz de Tenerife, España).jpg"
-ES38033,San Andrés y Sauces,E38,Canaries,4350,28.7755,-17.7983,peucommun,1453,San Andrés y Sauces,San Andrés y Sauces,San Andrés y Sauces,San Andrés y Sauces,San Andrés y Sauces,Q434192,San Andrés y Sauces,"San Andrés y Sauces, en La Palma (Santa Cruz de Tenerife, España).jpg"
-ES38034,San Juan de la Rambla,E38,Canaries,4987,28.3796,-16.6377,peucommun,1328,San Juan de la Rambla,San Juan de la Rambla,San Juan de la Rambla,San Juan de la Rambla,San Juan de la Rambla,Q986364,San Juan de la Rambla,"San Juan de la Rambla, en Santa Cruz de Tenerife (España).jpg"
-ES38035,San Miguel de Abona,E38,Canaries,23960,28.0929,-16.6221,rare,358,San Miguel de Abona,San Miguel de Abona,San Miguel de Abona,San Miguel de Abona,San Miguel de Abona,Q677038,San Miguel de Abona,"Iglesia de San Miguel Arcángel, en San Miguel de Abona (Tenerife, España).jpg"
-ES38036,San Sebastián de la Gomera,E38,Canaries,9574,28.0874,-17.1804,rare,819,San Sebastián de la Gomera,San Sebastián de La Gomera,San Sebastián de La Gomera,San Sebastián de la Gomera,San Sebastián de la Gomera,Q512009,San Sebastián de la Gomera,"San Sebastián de La Gomera, en La Gomera (Santa Cruz de Tenerife, España).jpg"
-ES38037,Santa Cruz de la Palma,E38,Canaries,15690,28.7104,-17.808,rare,539,Santa Cruz de la Palma,Santa Cruz de La Palma,Santa Cruz de La Palma,Santa Cruz de La Palma,Santa Cruz de la Palma,Q433632,Santa Cruz de La Palma,"Santa Cruz de La Palma, en Santa Cruz de Tenerife (España).jpg"
-ES38038,Santa Cruz de Tenerife,E38,Canaries,211957,28.527,-16.2319,legendaire,28,Santa Cruz de Tenerife,Santa Cruz de Tenerife,Santa Cruz de Tenerife,Santa Cruz Tenerifekoa,Santa Cruz de Tenerife,Q14328,Santa Cruz de Tenerife,Vista de Santa Cruz de Tenerife.png
-ES38039,Santa Úrsula,E38,Canaries,15429,28.4084,-16.4768,rare,550,Santa Úrsula,Santa Úrsula,Santa Úrsula,Santa Úrsula,Santa Úrsula,Q657800,Santa Úrsula (Tenerife),Santa Úrsula 01.jpg
-ES38040,Santiago del Teide,E38,Canaries,12582,28.2865,-16.7985,rare,646,Santiago del Teide,Santiago del Teide,Santiago del Teide,Santiago del Teide,Santiago del Teide,Q915283,Santiago del Teide,"Santiago del Teide, en Santa Cruz de Tenerife (España).jpg"
-ES38041,El Sauzal,E38,Canaries,9345,28.4662,-16.4298,rare,845,El Sauzal,El Sauzal,El Sauzal,El Sauzal,El Sauzal,Q782910,El Sauzal (Tenerife),Pedro Sauzal 04.jpg
-ES38042,Los Silos,E38,Canaries,4773,28.3554,-16.8136,peucommun,1372,Los Silos,Los Silos,Los Silos,Los Silos,Los Silos,Q682964,Los Silos,Los Silos - El Casco.jpg
-ES38043,Tacoronte,E38,Canaries,24619,28.4805,-16.3959,rare,341,Tacoronte,Tacoronte,Tacoronte,Tacoronte,Tacoronte,Q944264,Tacoronte,"Tacoronte, en Santa Cruz de Tenerife (España).jpg"
-ES38044,El Tanque,E38,Canaries,2787,28.327,-16.7853,peucommun,1897,El Tanque,El Tanque,El Tanque,El Tanque,El Tanque,Q770882,El Tanque,Teneriffa - El Tanque - panoramio.jpg
-ES38045,Tazacorte,E38,Canaries,4549,28.6247,-17.9215,peucommun,1423,Tazacorte,Tazacorte,Tazacorte,Tazacorte,Tazacorte,Q426350,Tazacorte,"Tazacorte, en La Palma (Santa Cruz de Tenerife, España).jpg"
-ES38046,Tegueste,E38,Canaries,11490,28.5268,-16.3319,rare,695,Tegueste,Tegueste,Tegueste,Tegueste,Tegueste,Q985603,Tegueste,"Tegueste, en Santa Cruz de Tenerife (España).jpg"
-ES38047,Tijarafe,E38,Canaries,2733,28.7164,-17.9445,peucommun,1925,Tijarafe,Tijarafe,Tijarafe,Tijarafe,Tijarafe,Q434286,Tijarafe,"Tijarafe, en La Palma (Sta. Cruz de Tenerife, España).jpg"
-ES38048,Valverde,E38,Canaries,5338,27.8019,-17.94,peucommun,1257,Valverde,Valverde,Valverde,Valverde,Valverde,Q1853429,Valverde (El Hierro),"Valverde, en El Hierro (Santa Cruz de Tenerife, España).jpg"
-ES38049,Valle Gran Rey,E38,Canaries,4830,28.1231,-17.3225,peucommun,1364,Valle Gran Rey,Valle Gran Rey,Valle Gran Rey,Valle Gran Rey,Valle Gran Rey,Q584446,Valle Gran Rey,"Valle Gran Rey, en La Gomera (Sta. Cruz de Tenerife, España).jpg"
-ES38050,Vallehermoso,E38,Canaries,2938,28.1779,-17.2776,peucommun,1841,Vallehermoso,Vallehermoso,Vallehermoso,Vallehermoso,Vallehermoso,Q635308,Vallehermoso (La Gomera),"Vallehermoso, en La Gomera (Santa Cruz de Tenerife, España).jpg"
-ES38051,La Victoria de Acentejo,E38,Canaries,9448,28.4121,-16.438,rare,832,La Victoria de Acentejo,La Victoria de Acentejo,La Victoria de Acentejo,La Victoria de Acentejo,La Victoria de Acentejo,Q985601,La Victoria de Acentejo,Nuestra Señora de la Victoria 03.jpg
-ES38052,Vilaflor de Chasna,E38,Canaries,1930,28.1459,-16.6506,peucommun,2313,Vilaflor de Chasna,Vilaflor de Chasna,Vilaflor de Chasna,Vilaflor,Vilaflor de Chasna,Q985693,Vilaflor de Chasna,"Vilaflor de Chasna, en Santa Cruz de Tenerife (España).jpg"
-ES38053,Villa de Mazo,E38,Canaries,5131,28.5799,-17.7994,peucommun,1302,Villa de Mazo,Villa de Mazo,Villa de Mazo,Villa de Mazo,Villa de Mazo,Q434321,Villa de Mazo,"Villa de Mazo, en La Palma (Santa Cruz de Tenerife, España).jpg"
-ES38901,El Pinar de El Hierro,E38,Canaries,2042,27.6935,-17.9987,peucommun,2254,El Pinar de El Hierro,El Pinar de El Hierro,El Pinar de El Hierro,El Pinar de El Hierro,El Pinar de El Hierro,Q1324548,El Pinar de El Hierro,"El Pinar de El Hierro, en Santa Cruz de Tenerife (España).jpg"
+ES38001,Adeje,E38,Canaries,50021,34.9326,-10.7291,epique,153,Adeje,Adeje,Adeje,Adeje,Adeje,Q353618,Adeje,Adeje.jpg
+ES38002,Agulo,E38,Canaries,1078,34.9859,-11.2136,peucommun,3035,Agulo,Agulo,Agulo,Agulo,Agulo,Q398588,Agulo,"Agulo, en La Gomera (Santa Cruz de Tenerife, España).jpg"
+ES38003,Alajeró,E38,Canaries,2061,34.8541,-11.2455,peucommun,2245,Alajeró,Alajeró,Alajeró,Alajeró,Alajeró,Q932914,Alajeró,"Alajeró, en La Gomera (Santa Cruz de Tenerife, España).jpg"
+ES38004,Arafo,E38,Canaries,5945,35.1567,-10.4447,peucommun,1167,Arafo,Arafo,Arafo,Arafo,Arafo,Q624967,Arafo,Vista panorámica de Arafo.JPG
+ES38005,Arico,E38,Canaries,9505,34.9736,-10.4835,rare,826,Arico,Arico,Arico,Arico,Arico,Q657738,Arico,"Arico, en Santa Cruz de Tenerife (España).jpg"
+ES38006,Arona,E38,Canaries,87793,34.8546,-10.6748,epique,83,Arona,Arona,Arona,Arona (Tenerife),Arona,Q698246,Arona (Tenerife),Arona Church.JPG
+ES38007,Barlovento,E38,Canaries,2108,35.6148,-11.8269,peucommun,2222,Barlovento,Barlovento,Barlovento,Barlovento,Barlovento,Q433918,Barlovento,
+ES38008,Breña Alta,E38,Canaries,7487,35.4564,-11.8044,rare,1005,Breña Alta,Breña Alta,Breña Alta,Breña Alta,Breña Alta,Q433958,Breña Alta,"Breña Alta, en La Palma (Santa Cruz de Tenerife, España).jpg"
+ES38009,Breña Baja,E38,Canaries,6159,35.4447,-11.7679,peucommun,1145,Breña Baja,Breña Baja,Breña Baja,Breña Baja,Breña Baja,Q433986,Breña Baja,"Los Cancajos, en el municipio de Breña Baja (La Palma, Santa Cruz de Tenerife, España).jpg"
+ES38010,Buenavista del Norte,E38,Canaries,4695,35.1407,-10.8654,peucommun,1385,Buenavista del Norte,Buenavista del Norte,Buenavista del Norte,Buenavista del Norte,Buenavista del Norte,Q594961,Buenavista del Norte,"Buenavista del Norte, en Santa Cruz de Tenerife (España).jpg"
+ES38011,Candelaria,E38,Canaries,29023,35.1809,-10.3918,epique,290,Candelaria,Candelaria,Candelaria,Candelaria,Candelaria,Q487268,Candelaria (Tenerife),Vista de Candelaria.jpg
+ES38012,Fasnia,E38,Canaries,3145,35.0257,-10.4301,peucommun,1768,Fasnia,Fasnia,Fasnia,Fasnia,Fasnia,Q524431,Fasnia,"Tenerife, Fasnia (27).jpg"
+ES38013,Frontera,E38,Canaries,4660,34.5396,-12.1277,peucommun,1395,Frontera,La Frontera,La Frontera,La Frontera,La Frontera,Q1798827,La Frontera (El Hierro),"La Frontera, en El Hierro (Santa Cruz de Tenerife, España).jpg"
+ES38014,Fuencaliente de la Palma,E38,Canaries,1965,35.3055,-11.8452,peucommun,2287,Fuencaliente de la Palma,Fuencaliente de La Palma,Fuencaliente de La Palma,Fuencaliente de La Palma,Fuencaliente de La Palma,Q434019,Fuencaliente de la Palma,"Los Canarios, en el municipio de Fuencaliente de La Palma (Santa Cruz de Tenerife, España).jpg"
+ES38015,Garachico,E38,Canaries,4940,35.1243,-10.7523,peucommun,1334,Garachico,Garachico,Garachico,Garachico,Garachico,Q612815,Garachico,"Garachico, en Santa Cruz de Tenerife (España).jpg"
+ES38016,Garafía,E38,Canaries,2015,35.5985,-11.9058,peucommun,2266,Garafía,Garafía,Garafía,Garafía,Garafía,Q434053,Garafía,La Palma - Garafía - Calle Díaz y Suárez - Ayuntamiento 01 ies.jpg
+ES38017,Granadilla de Abona,E38,Canaries,58752,34.894,-10.5511,epique,133,Granadilla de Abona,Granadilla de Abona,Granadilla de Abona,Granadilla de Abona,Granadilla de Abona,Q943431,Granadilla de Abona,"Ayuntamiento de Granadilla de Abona, en Tenerife (España).jpg"
+ES38018,La Guancha,E38,Canaries,5667,35.1889,-10.667,peucommun,1210,La Guancha,La Guancha,La Guancha,La Guancha,La Guancha,Q983556,La Guancha,"Iglesia del Dulce Nombre de Jesús, en La Guancha (Santa Cruz de Tenerife, España).jpg"
+ES38019,Guía de Isora,E38,Canaries,22654,35.0198,-10.7608,rare,375,Guía de Isora,Guía de Isora,Guía de Isora,Guía de Isora,Guía de Isora,Q765879,Guía de Isora,"Guía de Isora, en Santa Cruz de Tenerife (España).jpg"
+ES38020,Güímar,E38,Canaries,22009,35.0905,-10.4256,rare,385,Güímar,Güímar,Güímar,Güímar,Güímar,Q983433,Güímar,"Güímar, en Santa Cruz de Tenerife (España).jpg"
+ES38021,Hermigua,E38,Canaries,1961,34.9525,-11.1967,peucommun,2293,Hermigua,Hermigua,Hermigua,Hermigua,Hermigua,Q1260011,Hermigua,"Hermigua, en La Gomera (Santa Cruz de Tenerife, España).jpg"
+ES38022,Icod de los Vinos,E38,Canaries,24616,35.129,-10.6946,rare,342,Icod de los Vinos,Icod de los Vinos,Icod de los Vinos,Icod de los Vinos,Icod de los Vinos,Q572542,Icod de los Vinos,"Icod de los Vinos, en Santa Cruz de Tenerife (España).jpg"
+ES38023,San Cristóbal de La Laguna,E38,Canaries,161108,35.2805,-10.3109,legendaire,41,San Cristóbal de La Laguna,San Cristóbal de La Laguna,San Cristóbal de La Laguna,San Cristóbal de La Laguna,San Cristóbal de La Laguna,Q54898,San Cristóbal de La Laguna,"San Cristóbal de La Laguna, en Santa Cruz de Tenerife (España).jpg"
+ES38024,Los Llanos de Aridane,E38,Canaries,20582,35.3858,-11.8935,rare,416,Los Llanos de Aridane,Los Llanos de Aridane,Los Llanos de Aridane,Los Llanos de Aridane,Los Llanos de Aridane,Q366948,Los Llanos de Aridane,"Los Llanos de Aridane, en La Palma (Santa Cruz de Tenerife, España).jpg"
+ES38025,La Matanza de Acentejo,E38,Canaries,9089,35.2484,-10.4534,rare,860,La Matanza de Acentejo,La Matanza de Acentejo,La Matanza de Acentejo,La Matanza de Acentejo,La Matanza de Acentejo,Q983577,La Matanza de Acentejo,"La Matanza de Acentejo, en Santa Cruz de Tenerife (España).jpg"
+ES38026,La Orotava,E38,Canaries,42514,35.0558,-10.6328,epique,174,La Orotava,La Orotava,La Orotava,La Orotava,La Orotava,Q920391,La Orotava,Villa de La Orotava panorama.jpg
+ES38027,El Paso,E38,Canaries,8290,35.4537,-11.8619,rare,914,El Paso,El Paso,El Paso,El Paso,El Paso,Q434123,El Paso (La Palma),Caldera de Taburiente MichaD.jpg
+ES38028,Puerto de la Cruz,E38,Canaries,31137,35.2075,-10.5477,epique,258,Puerto de la Cruz,Puerto de la Cruz,Puerto de la Cruz,Puerto de la Cruz,Puerto de la Cruz,Q623549,Puerto de la Cruz,"Puerto de la Cruz (Santa Cruz de Tenerife, España).jpg"
+ES38029,Puntagorda,E38,Canaries,2345,35.5648,-11.9837,peucommun,2093,Puntagorda,Puntagorda,Puntagorda,Puntagorda,Puntagorda,Q434150,Puntagorda,"Puntagorda, en La Palma (Sta. Cruz de Tenerife, España).jpg"
+ES38030,Puntallana,E38,Canaries,2790,35.5461,-11.7596,peucommun,1896,Puntallana,Puntallana,Puntallana,Puntallana,Puntallana,Q434173,Puntallana,"Iglesia de San Juan Bautista, en Puntallana (La Palma, Santa Cruz de Tenerife, España).jpg"
+ES38031,Los Realejos,E38,Canaries,37867,35.1677,-10.5904,epique,204,Los Realejos,Los Realejos,Los Realejos,Los Realejos,Los Realejos,Q953876,Los Realejos,"Los Realejos, en Santa Cruz de Tenerife (España).jpg"
+ES38032,El Rosario,E38,Canaries,17958,35.2339,-10.3669,rare,481,El Rosario,El Rosario,El Rosario,El Rosario,El Rosario,Q176624,El Rosario (Tenerife),"La Esperanza, en el municipio de El Rosario (Santa Cruz de Tenerife, España).jpg"
+ES38033,San Andrés y Sauces,E38,Canaries,4350,35.5771,-11.7983,peucommun,1453,San Andrés y Sauces,San Andrés y Sauces,San Andrés y Sauces,San Andrés y Sauces,San Andrés y Sauces,Q434192,San Andrés y Sauces,"San Andrés y Sauces, en La Palma (Santa Cruz de Tenerife, España).jpg"
+ES38034,San Juan de la Rambla,E38,Canaries,4987,35.1796,-10.6377,peucommun,1328,San Juan de la Rambla,San Juan de la Rambla,San Juan de la Rambla,San Juan de la Rambla,San Juan de la Rambla,Q986364,San Juan de la Rambla,"San Juan de la Rambla, en Santa Cruz de Tenerife (España).jpg"
+ES38035,San Miguel de Abona,E38,Canaries,23960,34.8929,-10.6221,rare,358,San Miguel de Abona,San Miguel de Abona,San Miguel de Abona,San Miguel de Abona,San Miguel de Abona,Q677038,San Miguel de Abona,"Iglesia de San Miguel Arcángel, en San Miguel de Abona (Tenerife, España).jpg"
+ES38036,San Sebastián de la Gomera,E38,Canaries,9574,34.8874,-11.1804,rare,819,San Sebastián de la Gomera,San Sebastián de La Gomera,San Sebastián de La Gomera,San Sebastián de la Gomera,San Sebastián de la Gomera,Q512009,San Sebastián de la Gomera,"San Sebastián de La Gomera, en La Gomera (Santa Cruz de Tenerife, España).jpg"
+ES38037,Santa Cruz de la Palma,E38,Canaries,15690,35.5104,-11.808,rare,539,Santa Cruz de la Palma,Santa Cruz de La Palma,Santa Cruz de La Palma,Santa Cruz de La Palma,Santa Cruz de la Palma,Q433632,Santa Cruz de La Palma,"Santa Cruz de La Palma, en Santa Cruz de Tenerife (España).jpg"
+ES38038,Santa Cruz de Tenerife,E38,Canaries,211957,35.327,-10.2319,legendaire,28,Santa Cruz de Tenerife,Santa Cruz de Tenerife,Santa Cruz de Tenerife,Santa Cruz Tenerifekoa,Santa Cruz de Tenerife,Q14328,Santa Cruz de Tenerife,Vista de Santa Cruz de Tenerife.png
+ES38039,Santa Úrsula,E38,Canaries,15429,35.2084,-10.4768,rare,550,Santa Úrsula,Santa Úrsula,Santa Úrsula,Santa Úrsula,Santa Úrsula,Q657800,Santa Úrsula (Tenerife),Santa Úrsula 01.jpg
+ES38040,Santiago del Teide,E38,Canaries,12582,35.0865,-10.7985,rare,646,Santiago del Teide,Santiago del Teide,Santiago del Teide,Santiago del Teide,Santiago del Teide,Q915283,Santiago del Teide,"Santiago del Teide, en Santa Cruz de Tenerife (España).jpg"
+ES38041,El Sauzal,E38,Canaries,9345,35.2662,-10.4298,rare,845,El Sauzal,El Sauzal,El Sauzal,El Sauzal,El Sauzal,Q782910,El Sauzal (Tenerife),Pedro Sauzal 04.jpg
+ES38042,Los Silos,E38,Canaries,4773,35.1554,-10.8136,peucommun,1372,Los Silos,Los Silos,Los Silos,Los Silos,Los Silos,Q682964,Los Silos,Los Silos - El Casco.jpg
+ES38043,Tacoronte,E38,Canaries,24619,35.2805,-10.3959,rare,341,Tacoronte,Tacoronte,Tacoronte,Tacoronte,Tacoronte,Q944264,Tacoronte,"Tacoronte, en Santa Cruz de Tenerife (España).jpg"
+ES38044,El Tanque,E38,Canaries,2787,35.127,-10.7853,peucommun,1897,El Tanque,El Tanque,El Tanque,El Tanque,El Tanque,Q770882,El Tanque,Teneriffa - El Tanque - panoramio.jpg
+ES38045,Tazacorte,E38,Canaries,4549,35.4247,-11.9215,peucommun,1423,Tazacorte,Tazacorte,Tazacorte,Tazacorte,Tazacorte,Q426350,Tazacorte,"Tazacorte, en La Palma (Santa Cruz de Tenerife, España).jpg"
+ES38046,Tegueste,E38,Canaries,11490,35.3268,-10.3319,rare,695,Tegueste,Tegueste,Tegueste,Tegueste,Tegueste,Q985603,Tegueste,"Tegueste, en Santa Cruz de Tenerife (España).jpg"
+ES38047,Tijarafe,E38,Canaries,2733,35.5164,-11.9445,peucommun,1925,Tijarafe,Tijarafe,Tijarafe,Tijarafe,Tijarafe,Q434286,Tijarafe,"Tijarafe, en La Palma (Sta. Cruz de Tenerife, España).jpg"
+ES38048,Valverde,E38,Canaries,5338,34.6019,-11.94,peucommun,1257,Valverde,Valverde,Valverde,Valverde,Valverde,Q1853429,Valverde (El Hierro),"Valverde, en El Hierro (Santa Cruz de Tenerife, España).jpg"
+ES38049,Valle Gran Rey,E38,Canaries,4830,34.9231,-11.3225,peucommun,1364,Valle Gran Rey,Valle Gran Rey,Valle Gran Rey,Valle Gran Rey,Valle Gran Rey,Q584446,Valle Gran Rey,"Valle Gran Rey, en La Gomera (Sta. Cruz de Tenerife, España).jpg"
+ES38050,Vallehermoso,E38,Canaries,2938,34.9786,-11.2756,peucommun,1841,Vallehermoso,Vallehermoso,Vallehermoso,Vallehermoso,Vallehermoso,Q635308,Vallehermoso (La Gomera),"Vallehermoso, en La Gomera (Santa Cruz de Tenerife, España).jpg"
+ES38051,La Victoria de Acentejo,E38,Canaries,9448,35.2121,-10.438,rare,832,La Victoria de Acentejo,La Victoria de Acentejo,La Victoria de Acentejo,La Victoria de Acentejo,La Victoria de Acentejo,Q985601,La Victoria de Acentejo,Nuestra Señora de la Victoria 03.jpg
+ES38052,Vilaflor de Chasna,E38,Canaries,1930,34.9459,-10.6506,peucommun,2313,Vilaflor de Chasna,Vilaflor de Chasna,Vilaflor de Chasna,Vilaflor,Vilaflor de Chasna,Q985693,Vilaflor de Chasna,"Vilaflor de Chasna, en Santa Cruz de Tenerife (España).jpg"
+ES38053,Villa de Mazo,E38,Canaries,5131,35.3808,-11.7976,peucommun,1302,Villa de Mazo,Villa de Mazo,Villa de Mazo,Villa de Mazo,Villa de Mazo,Q434321,Villa de Mazo,"Villa de Mazo, en La Palma (Santa Cruz de Tenerife, España).jpg"
+ES38901,El Pinar de El Hierro,E38,Canaries,2042,34.4935,-11.9987,peucommun,2254,El Pinar de El Hierro,El Pinar de El Hierro,El Pinar de El Hierro,El Pinar de El Hierro,El Pinar de El Hierro,Q1324548,El Pinar de El Hierro,"El Pinar de El Hierro, en Santa Cruz de Tenerife (España).jpg"
 ES39001,Alfoz de Lloredo,E39,Cantabrie,2500,43.374,-4.1823,peucommun,2015,Alfoz de Lloredo,Alfoz de Lloredo,Alfoz de Lloredo,Alfoz de Lloredo,Alfoz de Lloredo,Q1391437,Alfoz de Lloredo,Alfoz de Lloredo Ayuntamiento.jpg
 ES39002,Ampuero,E39,Cantabrie,4518,43.3429,-3.3906,peucommun,1428,Ampuero,Ampuero,Ampuero,Ampuero,Ampuero,Q1391463,Ampuero,Ampuero desde el aire.jpg
 ES39003,Anievas,E39,Cantabrie,274,43.1998,-4.0026,commun,5109,Anievas,Anievas,Anievas,Anievas,Anievas,Q1443879,Anievas,"Anievas, panoramica.jpg"
@@ -5847,7 +5847,7 @@ ES39084,Solórzano,E39,Cantabrie,1144,43.3628,-3.5922,peucommun,2940,Solórzano,
 ES39085,Suances,E39,Cantabrie,9034,43.4132,-4.052,rare,863,Suances,Suances,Suances,Suances,Suances,Q1615223,Suances,"Localidad de Suances (Cantabria, España) 01.jpg"
 ES39086,Los Tojos,E39,Cantabrie,369,43.1399,-4.2073,commun,4631,Los Tojos,Los Tojos,Los Tojos,Los Tojos,Los Tojos,Q1641160,Los Tojos,Lostojos.jpg
 ES39087,Torrelavega,E39,Cantabrie,51796,43.3276,-4.0362,epique,151,Torrelavega,Torrelavega,Torrelavega,Torrelavega,Torrelavega,Q494693,Torrelavega,Vista de Torrelavega desde el parque empresarial Besaya.JPG
-ES39088,Tresviso,E39,Cantabrie,52,43.2468,-4.7088,commun,7510,Tresviso,Tresviso,Tresviso,Tresviso,Tresviso,Q1623031,Tresviso,Tresviso.jpg
+ES39088,Tresviso,E39,Cantabrie,52,43.2468,-4.7096,commun,7510,Tresviso,Tresviso,Tresviso,Tresviso,Tresviso,Q1623031,Tresviso,Tresviso.jpg
 ES39089,Tudanca,E39,Cantabrie,154,43.1541,-4.3688,commun,6062,Tudanca,Tudanca,Tudanca,Tudanca,Tudanca,Q1984002,,Tudanca - 002 (30709344425).jpg
 ES39090,Udías,E39,Cantabrie,960,43.3374,-4.2473,peucommun,3206,Udías,Udías,Udías,Udías,Udías,Q527241,Udías,Ayuntamiento-Udias-Lateral.JPG
 ES39091,Valdáliga,E39,Cantabrie,2135,43.3173,-4.3415,peucommun,2207,Valdáliga,Valdáliga,Valdáliga,Valdáliga,Valdáliga,Q743849,Valdáliga,Ermita de San Antonio.jpg
@@ -7391,7 +7391,7 @@ ES47143,San Llorente,E47,Castille-et-León,93,41.7038,-4.0743,commun,6830,San Ll
 ES47144,San Martín de Valvení,E47,Castille-et-León,78,41.749,-4.5309,commun,7059,San Martín de Valvení,San Martín de Valvení,San Martín de Valvení,San Martín de Valvení,San Martín de Valvení,Q1770811,San Martín de Valvení,Casa consistorial de San Martín de Valvení.jpg
 ES47145,San Miguel del Arroyo,E47,Castille-et-León,641,41.4363,-4.503,peucommun,3774,San Miguel del Arroyo,San Miguel del Arroyo,San Miguel del Arroyo,San Miguel del Arroyo,San Miguel del Arroyo,Q1907203,San Miguel del Arroyo,Iglesia de San Miguel del Arroyo.jpg
 ES47146,San Miguel del Pino,E47,Castille-et-León,365,41.5165,-4.9144,commun,4645,San Miguel del Pino,San Miguel del Pino,San Miguel del Pino,San Miguel del Pino,San Miguel del Pino,Q1907148,San Miguel del Pino,Iglesia de San Miguel del Pino.jpg
-ES47147,San Pablo de la Moraleja,E47,Castille-et-León,113,41.1618,-4.7698,commun,6519,San Pablo de la Moraleja,San Pablo de la Moraleja,San Pablo de la Moraleja,San Pablo de la Moraleja,San Pablo de la Moraleja,Q1916546,San Pablo de la Moraleja,San Pablo de la Moraleja 17 by-dpc.jpg
+ES47147,San Pablo de la Moraleja,E47,Castille-et-León,113,41.1626,-4.7673,commun,6519,San Pablo de la Moraleja,San Pablo de la Moraleja,San Pablo de la Moraleja,San Pablo de la Moraleja,San Pablo de la Moraleja,Q1916546,San Pablo de la Moraleja,San Pablo de la Moraleja 17 by-dpc.jpg
 ES47148,San Pedro de Latarce,E47,Castille-et-León,429,41.7366,-5.3322,commun,4402,San Pedro de Latarce,San Pedro de Latarce,San Pedro de Latarce,San Pedro de Latarce,San Pedro de Latarce,Q1907310,San Pedro de Latarce,Fundación Joaquín Díaz - Puente sobre el río Sequillo - San Pedro de Latarce (Valladolid).jpg
 ES47149,San Pelayo,E47,Castille-et-León,42,41.6878,-5.0298,commun,7694,San Pelayo,San Pelayo,San Pelayo,San Pelayo,San Pelayo,Q1866943,San Pelayo (Espagne),Iglesia de la Asunción de San Pelayo (Valladolid).jpg
 ES47150,San Román de Hornija,E47,Castille-et-León,295,41.4732,-5.288,commun,4973,San Román de Hornija,San Román de Hornija,San Román de Hornija,San Román de Hornija,San Román de Hornija,Q1907267,San Román de Hornija,Iglesia de San Román de Hornija - Vista general 2.jpg
@@ -7702,7 +7702,7 @@ ES49122,Monfarracinos,E49,Castille-et-León,998,41.5594,-5.7114,peucommun,3155,M
 ES49123,Montamarta,E49,Castille-et-León,549,41.6475,-5.8062,peucommun,4018,Montamarta,Montamarta,Montamarta,Montamarta,Montamarta,Q1765337,Montamarta,"Montamarta, provincia de Zamora.jpg"
 ES49124,Moral de Sayago,E49,Castille-et-León,265,41.472,-6.0907,commun,5155,Moral de Sayago,Moral de Sayago,Moral de Sayago,Moral de Sayago,Moral de Sayago,Q1769041,Moral de Sayago,"Lado norte de la iglesia de San Esteban, Moral de Sayago.jpg"
 ES49125,Moraleja del Vino,E49,Castille-et-León,1796,41.467,-5.6587,peucommun,2399,Moraleja del Vino,Moraleja del Vino,Moraleja del Vino,Moraleja del Vino,Moraleja del Vino,Q1646324,Moraleja del Vino,Ayuntamiento de Moraleja del Vino.jpg
-ES49126,Moraleja de Sayago,E49,Castille-et-León,300,41.1923,-5.9826,commun,4939,Moraleja de Sayago,Moraleja de Sayago,Moraleja de Sayago,Moraleja de Sayago,Moraleja de Sayago,Q1768972,Moraleja de Sayago,Moraleja de Sayago - cartel.jpg
+ES49126,Moraleja de Sayago,E49,Castille-et-León,300,41.1919,-5.9846,commun,4939,Moraleja de Sayago,Moraleja de Sayago,Moraleja de Sayago,Moraleja de Sayago,Moraleja de Sayago,Q1768972,Moraleja de Sayago,Moraleja de Sayago - cartel.jpg
 ES49127,Morales del Vino,E49,Castille-et-León,3040,41.4482,-5.7309,peucommun,1807,Morales del Vino,Morales del Vino,Morales del Vino,Morales del Vino,Morales del Vino,Q1646347,Morales del Vino,Morales del Vino.jpg
 ES49128,Morales de Rey,E49,Castille-et-León,529,42.0611,-5.7863,peucommun,4059,Morales de Rey,Morales de Rey,Morales de Rey,Morales de Rey,Morales del Rey,Q1769060,Morales de Rey,Morales del Rey.jpg
 ES49129,Morales de Toro,E49,Castille-et-León,918,41.5328,-5.2998,peucommun,3260,Morales de Toro,Morales de Toro,Morales de Toro,Morales de Toro,Morales de Toro,Q542269,Morales de Toro,San juan.JPG
@@ -7728,7 +7728,7 @@ ES49150,Peque,E49,Castille-et-León,111,42.0787,-6.2699,commun,6551,Peque,Peque,
 ES49151,El Perdigón,E49,Castille-et-León,673,41.401,-5.792,peucommun,3707,El Perdigón,El Perdigón,El Perdigón,El Perdigón,El Perdigón,Q1646326,El Perdigón,Ayuntamiento de El Perdigón1.JPG
 ES49152,Pereruela,E49,Castille-et-León,499,41.398,-5.8787,commun,4155,Pereruela,Pereruela,Pereruela,Pereruela,Pereruela,Q1769052,Pereruela,Casa consistorial de Pereruela.jpg
 ES49153,Perilla de Castro,E49,Castille-et-León,150,41.7257,-5.8368,commun,6101,Perilla de Castro,Perilla de Castro,Perilla de Castro,Perilla de Castro,Perilla de Castro,Q1768981,Perilla de Castro,Perilla de Castro - Plaza.jpg
-ES49154,Pías,E49,Castille-et-León,91,42.1043,-6.9673,commun,6860,Pías,Pías,Pías,Pías,Pías,Q1752402,Pías,Casa consistorial Pías.jpg
+ES49154,Pías,E49,Castille-et-León,91,42.1033,-6.9673,commun,6860,Pías,Pías,Pías,Pías,Pías,Q1752402,Pías,Casa consistorial Pías.jpg
 ES49155,Piedrahita de Castro,E49,Castille-et-León,104,41.6714,-5.737,commun,6665,Piedrahita de Castro,Piedrahita de Castro,Piedrahita de Castro,Piedrahita de Castro,Piedrahita de Castro,Q1769069,Piedrahita de Castro,"Piedrahíta de Castro, vista de la población, 01.jpg"
 ES49156,Pinilla de Toro,E49,Castille-et-León,186,41.6226,-5.352,commun,5740,Pinilla de Toro,Pinilla de Toro,Pinilla de Toro,Pinilla de Toro,Pinilla de Toro,Q1652324,Pinilla de Toro,Colegio Alfoz de Toro en Pinilla de Toro.jpg
 ES49157,Pino del Oro,E49,Castille-et-León,173,41.5884,-6.1263,commun,5849,Pino del Oro,Pino del Oro,Pino del Oro,Pino del Oro,Pino del Oro,Q373832,Pino del Oro,Parque en Pino del Oro.jpg
@@ -7758,7 +7758,7 @@ ES49181,Rosinos de la Requejada,E49,Castille-et-León,292,42.1393,-6.5284,commun
 ES49183,Salce,E49,Castille-et-León,83,41.2716,-6.2294,commun,6977,Salce,Salce,Salce,Salce,Salce,Q1766821,Salce,Salce - igrexa vella de San Miguel.jpg
 ES49184,Samir de los Caños,E49,Castille-et-León,158,41.6749,-6.1529,commun,6015,Samir de los Caños,Samir de los Caños,Samir de los Caños,Samir de los Caños,Samir de los Caños,Q1766862,Samir de los Caños,Vista general de Samir de los Caños - panoramio.jpg
 ES49185,San Agustín del Pozo,E49,Castille-et-León,163,41.8962,-5.6079,commun,5963,San Agustín del Pozo,San Agustín del Pozo,San Agustín del Pozo,San Agustín del Pozo,San Agustín del Pozo,Q1766839,San Agustín del Pozo,"San Agustín del Pozo, vista población.jpg"
-ES49186,San Cebrián de Castro,E49,Castille-et-León,250,41.713,-5.7699,commun,5265,San Cebrián de Castro,San Cebrián de Castro,San Cebrián de Castro,San Cebrián de Castro,San Cebrián de Castro,Q1766853,San Cebrián de Castro,San Cebrián de Castro Castrotorafe 043.jpg
+ES49186,San Cebrián de Castro,E49,Castille-et-León,250,41.7162,-5.7688,commun,5265,San Cebrián de Castro,San Cebrián de Castro,San Cebrián de Castro,San Cebrián de Castro,San Cebrián de Castro,Q1766853,San Cebrián de Castro,San Cebrián de Castro Castrotorafe 043.jpg
 ES49187,San Cristóbal de Entreviñas,E49,Castille-et-León,1328,42.0513,-5.6409,peucommun,2761,San Cristóbal de Entreviñas,San Cristóbal de Entreviñas,San Cristóbal de Entreviñas,San Cristóbal de Entreviñas,San Cristóbal de Entreviñas,Q1653158,San Cristóbal de Entreviñas,"San Cristóbal de Entreviñas, Zamora, España, 2015-09-26, JD 10.JPG"
 ES49188,San Esteban del Molar,E49,Castille-et-León,117,41.9393,-5.5542,commun,6475,San Esteban del Molar,San Esteban del Molar,San Esteban del Molar,San Esteban del Molar,San Esteban del Molar,Q1766939,San Esteban del Molar,"San Esteban del Molar, Zamora, España, 2015-09-26, JD 13.JPG"
 ES49189,San Justo,E49,Castille-et-León,207,42.1508,-6.6144,commun,5552,San Justo,San Justo,San Justo,San Justo,San Justo,Q1922206,San Justo (Espagne),San Justo concello novo.jpg
@@ -8047,7 +8047,7 @@ ES50215,Pozuel de Ariza,E50,Aragon,15,41.3513,-2.1251,commun,8088,Pozuel de Ariz
 ES50216,Pozuelo de Aragón,E50,Aragon,247,41.7513,-1.3858,commun,5289,Pozuelo de Aragón,Pozuelo de Aragón,Pozuelo de Aragón,Pozuelo de Aragón,Pozuelo de Aragón,Q1641025,Pozuelo de Aragón,"Pozuelo de Aragón, Zaragoza, España, 2016-01-03, DD 25.JPG"
 ES50217,Pradilla de Ebro,E50,Aragon,553,41.8758,-1.1435,peucommun,4008,Pradilla de Ebro,Pradilla de Ebro,Pradilla de Ebro,Pradilla de Ebro,Pradilla de Ebro,Q1650590,Pradilla de Ebro,"Pradilla de Ebro, Zaragoza, España, 2015-12-31, DD 02.JPG"
 ES50218,Puebla de Albortón,E50,Aragon,133,41.3967,-0.8413,commun,6280,Puebla de Albortón,La Puebla de Albortón,Puebla de Albortón,Puebla de Albortón,Puebla de Albortón,Q1639637,Puebla de Albortón,"Ayuntamiento de Puebla de Albortón, Zaragoza 02.jpg"
-ES50219,La Puebla de Alfindén,E50,Aragon,6550,41.6286,-0.7519,rare,1098,La Puebla de Alfindén,La Puebla de Alfindén,La Puebla de Alfindén,La Puebla de Alfindén,La Puebla de Alfindén,Q1640155,La Puebla de Alfindén,La Puebla de Alfindén - Ayuntamiento - Iglesia de Nuestra Señora de la Asunción.JPG
+ES50219,La Puebla de Alfindén,E50,Aragon,6550,41.6302,-0.7546,rare,1098,La Puebla de Alfindén,La Puebla de Alfindén,La Puebla de Alfindén,La Puebla de Alfindén,La Puebla de Alfindén,Q1640155,La Puebla de Alfindén,La Puebla de Alfindén - Ayuntamiento - Iglesia de Nuestra Señora de la Asunción.JPG
 ES50220,Puendeluna,E50,Aragon,42,42.1529,-0.7681,commun,7696,Puendeluna,Puendeluna,Puendeluna,Puendeluna,Puendeluna,Q1641036,Puendeluna,Puendeluna - Iglesia de San Nicolás - Portada 01.jpg
 ES50221,Purujosa,E50,Aragon,29,41.6897,-1.7653,commun,7909,Purujosa,Purujosa,Purujosa,Purujosa,Purujosa,Q1640038,Purujosa,Purujosa Cabezo.jpg
 ES50222,Quinto,E50,Aragon,1882,41.4014,-0.5348,peucommun,2345,Quinto,Quinto,Quinto,Quinto,Quinto,Q1752280,Quinto (Aragon),Panorámica de Quinto.JPG

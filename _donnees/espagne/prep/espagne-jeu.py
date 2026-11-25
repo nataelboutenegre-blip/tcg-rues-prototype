@@ -20,6 +20,10 @@ BRUT, W = sys.argv[1], sys.argv[2]
 ICI = os.path.dirname(os.path.abspath(__file__)); OUT = os.path.join(ICI, '..', 'jeu')
 os.makedirs(W, exist_ok=True); os.makedirs(os.path.join(OUT, 'contours'), exist_ok=True)
 SEUIL_NOM_FR = 20000
+# Canaries : dessinées dans un encart au sud-ouest de l'Espagne, à la façon des cartes espagnoles (décision du 25/11).
+# On déplace leurs coordonnées (contours et positions), toujours du même décalage : les distances entre îles restent justes,
+# mais pas les distances entre les Canaries et le continent (elles n'ont de toute façon aucune voisine).
+CANARIES = ('35', '38'); DECALAGE_CANARIES = (6.0, 6.8)   # (longitude, latitude) ajoutés
 # libellés français de Wikidata qui n'en sont pas (asturien, castillan, traduction forcée) : on garde le nom officiel
 PAS_FRANCAIS = {'Las Palmas de Gran Canaria', 'Langreo', 'Almassora', 'Vila-real', 'Valle de Egüés/Eguesibar',
                 'Las Torres de Cotillas', 'Altea'}
@@ -95,6 +99,10 @@ for f in d['features']:
     if p.get('nationallevelname') != 'Municipio': continue
     code = p['nationalcode'][-5:]
     if code not in dic: ecartes.append((code, p['nameunit'])); continue
+    if dic[code]['prov'] in CANARIES:
+        dx, dy = DECALAGE_CANARIES
+        def dec(c): return [dec(x) for x in c] if isinstance(c[0], list) else [c[0] + dx, c[1] + dy]
+        f['geometry']['coordinates'] = dec(f['geometry']['coordinates'])
     feats.append({'type': 'Feature', 'geometry': f['geometry'],
                   'properties': {'code': 'ES' + code, 'prov': 'E' + dic[code]['prov'], 'ign': p['nameunit']}})
 del d

@@ -45,9 +45,14 @@ def main():
     for e in par.values():
         if not e["forme"]:
             print("   ! pas de contour sur Wikidata :", e["nom"]); continue
-        titre = urllib.parse.unquote(e["forme"].rsplit("/", 1)[-1])
+        # la valeur ressemble à http://commons.wikimedia.org/data/main/Data:Andorra/Canillo.map : le titre peut contenir des « / »
+        f = urllib.parse.unquote(e["forme"])
+        titre = f.split("/data/main/", 1)[1] if "/data/main/" in f else f.rsplit("/", 1)[-1]
         url = "https://commons.wikimedia.org/w/index.php?" + urllib.parse.urlencode({"title": titre, "action": "raw"})
-        brut = http(url)
+        try:
+            brut = http(url, essais=2)
+        except Exception as err:
+            print("   ! %s : contour introuvable (%s, %s)" % (e["nom"], titre, err)); continue
         d = json.loads(brut)
         e["contour_licence"] = d.get("license", "")
         e["contour_source"] = d.get("sources", "")

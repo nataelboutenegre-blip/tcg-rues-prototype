@@ -1994,6 +1994,8 @@
   }
   .obj-btn:active:not(:disabled){ transform: translateY(2px); box-shadow: 0 1px 0 #B7791F; }
   .obj-btn:disabled{ opacity:0.5; cursor:default; }
+  .obj-changer{ background:transparent; color:#C9D6EA; border:1px solid rgba(169,188,212,.4); border-radius:9px; padding:5px 9px; font:inherit; font-size:.78rem; font-weight:600; cursor:pointer; white-space:nowrap; }   /* patch535 */
+  .obj-changer:disabled{ opacity:.45; cursor:default; }
   .obj-fait{ font-size:0.76rem; color: var(--c-peucommun); font-weight:600; white-space:nowrap; }
 
   /* ---------- L'album des monuments ---------- */

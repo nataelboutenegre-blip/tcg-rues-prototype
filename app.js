@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '03bee5896e00';
+const VERSION_JEU = '4d0faee0008a';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -14932,7 +14932,10 @@ let objectifsTout = false;
 
 // patch101 : en saison 2, les quetes du mode affiche
 let quetesTout = [];
+let quetesRelance = null;   // patch535 : { terra: bool, front: bool } — une quête à changer par jour et par mode
+const QUETES_FIXES = ['f_cdj', 'f_conquete', 't_bonus', 'f_bonus'];
 async function loadQuetes(){
+  sb.rpc('quetes_relance_etat').then(({ data, error }) => { quetesRelance = error ? null : data; if(!error) renderObjectifs(); });
   const { data, error } = await sb.rpc('quetes');
   const bloc = document.getElementById('objectifs');
   if(error){ if(bloc) bloc.hidden = true; return; }
@@ -14961,9 +14964,12 @@ function carteObjectif(o){
     : o.recompense === 'points'
     ? `${Number(o.valeur).toLocaleString('fr-FR')} TP`
     : (o.valeur > 1 ? `${o.valeur} paquets` : '1 paquet');
+  const peutChanger = SAISON2 && quetesRelance && quetesRelance[o.mode] && o.categorie === 'jour' && !QUETES_FIXES.includes(o.id)
+    && !o.reclame && !o.reclamable && Number(o.avancement) < Number(o.cible);   // patch535
   const etat = o.reclame
     ? '<span class="obj-fait">Récupéré</span>'
-    : (o.reclamable ? `<button class="obj-btn" data-objectif="${echapperTexte(o.id)}">Récupérer</button>` : '');
+    : (o.reclamable ? `<button class="obj-btn" data-objectif="${echapperTexte(o.id)}">Récupérer</button>`
+       : peutChanger ? `<button type="button" class="obj-changer" data-qrelance="${echapperTexte(o.id)}" title="Changer cette quête (1 par jour en ${o.mode === 'terra' ? 'Terra' : 'Front'})">↻ Changer</button>` : '');
   return `
     <div class="obj ${o.reclamable ? 'pret' : ''} ${o.reclame ? 'fait' : ''}">
       <div class="obj-texte">
@@ -15159,6 +15165,16 @@ document.getElementById('objectifs').addEventListener('click', async (e) => {
   if(e.target.closest('#objPlus')){
     objectifsTout = true;
     renderObjectifs();
+    return;
+  }
+  const rel = e.target.closest('[data-qrelance]');   // patch535
+  if(rel){
+    rel.disabled = true;
+    const { data, error } = await sb.rpc('quete_relancer', { p_quete: rel.dataset.qrelance });
+    if(error){ notifier({ type: 'erreur', titre: 'Impossible', texte: messageLisible(error.message) }); rel.disabled = false; return; }
+    quetesRelance = data;
+    notifier({ type: 'succes', titre: 'Quête changée', texte: 'Une nouvelle quête la remplace. Prochain changement demain.' });
+    await loadQuetes();
     return;
   }
   const btn = e.target.closest('[data-objectif]');

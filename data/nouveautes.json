@@ -3,6 +3,7 @@
     "date": "2026-11-25",
     "nouveautes": [],
     "correctifs": [
+      "🛡️ Quêtes : « Réussis une défense » devient « Repousse un siège » (ramène à zéro la jauge d'un siège contre toi). L'ancienne version était presque impossible à finir dans la journée. Merci Saaslil et H34VEN.",
       "🎁 Pass : ouvrir un paquet du pass depuis le mode Front affichait une erreur. Le jeu passe maintenant en Terra pour l'ouvrir (les cartes allaient bien dans ta collection Terra). Merci Maroli."
     ]
   },

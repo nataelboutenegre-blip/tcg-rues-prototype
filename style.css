@@ -6132,6 +6132,9 @@ body.mode-terra .coll-entete, body.mode-front .coll-entete{
 .ce-choix[aria-pressed="true"]{ border-color: var(--c-legendaire); background: rgba(240,180,41,.1); }
 .ce-choix:disabled{ cursor:not-allowed; opacity:.55; }
 .ce-raison{ font-size:.72rem; color: var(--brume); white-space:nowrap; }
+.ce-choix.ce-pro .ce-com{ opacity:.5; }   /* patch537 : déjà proposée */
+.ce-tag-pro{ font-size:.7rem; color: var(--c-legendaire); border:1px solid rgba(240,180,41,.45); border-radius:6px; padding:1px 6px; white-space:nowrap; }
+.ce-ecart{ display:block; color: var(--brume); font-size:.76rem; margin-top:2px; }
 .ce-recap{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; padding:12px; border-radius:12px; background: rgba(240,180,41,.08); border:1px solid rgba(240,180,41,.35); }
 .ce-membre:focus-visible, .ce-choix:focus-visible{ outline:2px solid var(--c-legendaire); outline-offset:2px; }
 

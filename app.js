@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '1de911647358';
+const VERSION_JEU = '816654a872c3';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -21114,7 +21114,7 @@ function majBadgeClanEch(){
 }
 function ceTier(id){ return TIERS.find(t => t.id === id) || TIERS[TIERS.length - 1]; }
 function ceCommune(c, tier){
-  const t = ceTier(tier || c.tier);
+  const t = ceTier(c.tier || tier);   // patch537 : chaque côté a sa rareté
   return `<span class="ce-com"><i style="background:var(--c-${t.id})"></i><b>${echapperTexte(c.nom)}</b><small>${t.label} · ${echapperTexte(c.dept || c.departement || '')}</small></span>`;
 }
 function ceDansH(iso){   // patch531
@@ -21147,19 +21147,39 @@ function ceListeHtml(liste, cle, choisi, filtre, cote){
   const l = liste.filter(c => (!pays || cePays(c.departement) === pays) && (!dep || String(c.departement) === dep)
                          && (!f || correspondUnTerme(c.nom, c.departement, f)));   // patch509 : « 25, 90, 70 »
   if(!l.length) return '<p class="ce-attente">Aucune commune.</p>';
-  return l.slice(0, 80).map(c => `<button type="button" class="ce-choix" data-${cle}="${echapperTexte(c.code)}" aria-pressed="${c.code === choisi}"${c.raison ? ' disabled' : ''}>${ceCommune(c)}${c.raison ? `<span class="ce-raison">${echapperTexte(c.raison)}</span>` : ''}</button>`).join('');
+  const pro = cePropose(cote);   // patch537
+  return l.slice(0, 80).map(c => { const qui = !c.raison && pro.get(c.code);
+    return `<button type="button" class="ce-choix${qui ? ' ce-pro' : ''}" data-${cle}="${echapperTexte(c.code)}" aria-pressed="${c.code === choisi}"${c.raison ? ' disabled' : ''}${qui ? ` title="Déjà proposée à ${echapperTexte(qui)}"` : ''}>${ceCommune(c)}${c.raison ? `<span class="ce-raison">${echapperTexte(c.raison)}</span>` : qui ? '<span class="ce-tag-pro">⇄ proposée</span>' : ''}</button>`; }).join('');
 }
+// patch537 : communes déjà dans une de mes propositions en attente (côté 1 : les miennes ; côté 2 : celles du coéquipier choisi)
+function cePropose(cote){
+  const m = new Map(), env = (clanEch.etat && clanEch.etat.envoyes) || [];
+  const qui = ((clanEch.etat && clanEch.etat.membres) || []).find(x => x.id === clanEch.qui);
+  for(const x of env){
+    if(cote === 1 && x.donne) m.set(x.donne.code, x.pseudo);
+    if(cote === 2 && x.recoit && qui && x.pseudo === qui.pseudo) m.set(x.recoit.code, x.pseudo);
+  }
+  return m;
+}
+// patch537 : un cran d'écart de rareté permis une fois par jour, si ni moi ni le coéquipier ne l'avons déjà fait
+function ceEcartOk(){
+  const e = clanEch.etat, qui = ((e && e.membres) || []).find(x => x.id === clanEch.qui);
+  return !!(e && 'ecart_fait' in e && !e.ecart_fait && qui && !qui.ecart_fait);
+}
+function ceRang(t){ return ['commun', 'peucommun', 'rare', 'epique', 'legendaire'].indexOf(t); }
 function ceLeursFiltrees(){
   if(!clanEch.leurs) return null;
   const mienne = clanEch.mes && clanEch.donne ? clanEch.mes.find(c => c.code === clanEch.donne) : null;
-  return mienne ? clanEch.leurs.filter(c => c.tier === mienne.tier) : clanEch.leurs;
+  if(!mienne) return clanEch.leurs;
+  const ok = ceEcartOk();   // patch537
+  return clanEch.leurs.filter(c => c.tier === mienne.tier || (ok && Math.abs(ceRang(c.tier) - ceRang(mienne.tier)) === 1));
 }
 function ceRecapHtml(){
   const m = clanEch.mes && clanEch.donne ? clanEch.mes.find(c => c.code === clanEch.donne) : null;
   const s = clanEch.leurs && clanEch.recoit ? clanEch.leurs.find(c => c.code === clanEch.recoit) : null;
   const qui = (clanEch.etat && clanEch.etat.membres || []).find(x => x.id === clanEch.qui);
   return m && s && qui
-    ? `<span>Tu donnes <b>${echapperTexte(m.nom)}</b> à ${echapperTexte(qui.pseudo)} contre <b>${echapperTexte(s.nom)}</b>.</span><button type="button" class="bq-btn" data-ce-proposer>Proposer l'échange</button>`
+    ? `<span>Tu donnes <b>${echapperTexte(m.nom)}</b> à ${echapperTexte(qui.pseudo)} contre <b>${echapperTexte(s.nom)}</b>.${m.tier !== s.tier ? ' <small class="ce-ecart">Rareté différente : ton échange de ce type du jour.</small>' : ''}</span><button type="button" class="bq-btn" data-ce-proposer>Proposer l'échange</button>`
     : `<span class="ce-attente">Choisis une commune de chaque côté.</span><button type="button" class="bq-btn" disabled>Proposer l'échange</button>`;
 }
 function majListesCe(){
@@ -21172,7 +21192,9 @@ function majListesCe(){
   if(leurs && clanEch.recoit && !leurs.some(c => c.code === clanEch.recoit)) clanEch.recoit = null;
   if(r) r.innerHTML = clanEch.qui ? ceListeHtml(leurs, 'ce-recoit', clanEch.recoit, clanEch.r2, 2) : '<p class="ce-attente">Choisis d\'abord un coéquipier.</p>';
   const mienne = clanEch.mes && clanEch.donne ? clanEch.mes.find(c => c.code === clanEch.donne) : null;
-  if(t3) t3.textContent = '3. Tu reçois · ' + (mienne ? ceTier(mienne.tier).label.toLowerCase() : 'même rareté');
+  if(t3) t3.textContent = '3. Tu reçois · ' + (!mienne ? 'même rareté ou un cran d\'écart'   // patch537
+    : ceEcartOk() ? TIERS.filter(t => Math.abs(ceRang(t.id) - ceRang(mienne.tier)) <= 1).map(t => t.label.toLowerCase()).join(', ')
+    : ceTier(mienne.tier).label.toLowerCase() + (clanEch.qui ? ' (écart de rareté déjà utilisé aujourd\'hui)' : ''));
   if(rc) rc.innerHTML = ceRecapHtml();
 }
 function blocEchangesClan(){
@@ -21206,7 +21228,7 @@ function blocEchangesClan(){
     ${(e.recus || []).length ? `<h3 class="ce-h3">Reçus</h3>${e.recus.map(x => prop(x, true)).join('')}` : ''}
     <h3 class="ce-h3">Proposer un échange</h3>${proposer}
     ${(e.envoyes || []).length ? `<h3 class="ce-h3">Envoyés</h3>${e.envoyes.map(x => prop(x, false)).join('')}` : ''}
-    <ul class="clan-regles"><li>Seulement entre membres du clan, une commune contre une commune de même rareté.</li><li>${parMembre ? `<b>${maxEch} échanges par jour avec chaque coéquipier</b>, ${maxEch} propositions en attente par coéquipier` : `${maxEch} échanges par jour et par joueur, ${maxEch} propositions en attente au plus`}. Une proposition expire au bout de 24 h.</li><li>Impossible pour une commune prise il y a moins de 24 h, en garnison, ou échangée il y a moins de 48 h.</li><li>Il faut être dans le clan depuis 48 h. Un échange ne rapporte aucun point de combat.</li><li><b>Entre clans</b> : touche sur la carte une commune d’un joueur d’un autre clan, puis « Proposer un échange ». Mêmes règles, mais <b>un échange par jour</b>${clanEch.etat && clanEch.etat.inter_dispo_le && new Date(clanEch.etat.inter_dispo_le).getTime() > Date.now() ? ` (ton prochain le ${new Date(clanEch.etat.inter_dispo_le).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })})` : ''}.</li></ul></div>`;   // patch398
+    <ul class="clan-regles"><li>Seulement entre membres du clan, une commune contre une commune de même rareté. <b>Une fois par jour</b>, chacun peut aussi faire un échange avec <b>un cran d'écart</b> (légendaire ↔ épique, épique ↔ rare, rare ↔ peu commun, peu commun ↔ commun).</li><li>${parMembre ? `<b>${maxEch} échanges par jour avec chaque coéquipier</b>, ${maxEch} propositions en attente par coéquipier` : `${maxEch} échanges par jour et par joueur, ${maxEch} propositions en attente au plus`}. Une proposition expire au bout de 24 h.</li><li>Impossible pour une commune prise il y a moins de 24 h, en garnison, ou échangée il y a moins de 48 h.</li><li>Il faut être dans le clan depuis 48 h. Un échange ne rapporte aucun point de combat.</li><li><b>Entre clans</b> : touche sur la carte une commune d’un joueur d’un autre clan, puis « Proposer un échange ». Mêmes règles, mais <b>un échange par jour</b>${clanEch.etat && clanEch.etat.inter_dispo_le && new Date(clanEch.etat.inter_dispo_le).getTime() > Date.now() ? ` (ton prochain le ${new Date(clanEch.etat.inter_dispo_le).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })})` : ''}.</li></ul></div>`;   // patch398
 }
 // patch304 : par pages (plus de 1 000 communes chez les gros joueurs), de la plus rare à la plus commune
 async function ceCommunesDe(joueur){

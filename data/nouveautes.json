@@ -1,408 +1,410 @@
 [
-  {
-    "date": "2026-11-25",
-    "nouveautes": [
-      "🛡️ Blasons de clan : 4 nouveaux meubles pour tous (Château, Trèfle, Cloche, Épées croisées) et 3 meubles rares à gagner avec l'or de l'objectif de clan de la semaine (Rose des vents, Aigle bicéphale, Couronne royale). Merci Arkhannou.",
-      "↻ Quêtes : tu peux changer une quête du jour par jour en Terra et une en Front (pas les quêtes fixes ni une quête finie). La nouvelle vient de la même famille. Merci Arkhannou.",
-      "🔎 Échanges du clan : deux menus, Pays et Département / canton, au-dessus de chaque liste. Fini les « Juvigny » quand tu cherches le Jura suisse (merci Arkhannou)."
-    ],
-    "correctifs": [
-      "🛡️ Quêtes : « Réussis une défense » devient « Repousse un siège » (ramène à zéro la jauge d'un siège contre toi). L'ancienne version était presque impossible à finir dans la journée. Merci Saaslil et H34VEN.",
-      "🎁 Pass : ouvrir un paquet du pass depuis le mode Front affichait une erreur. Le jeu passe maintenant en Terra pour l'ouvrir (les cartes allaient bien dans ta collection Terra). Merci Maroli."
-    ]
-  },
-  {
-    "date": "2026-11-24",
-    "nouveautes": [
-      "🔔 Front : une vague qui remplit la moitié de la jauge d'un siège en cours te prévient, et l'alerte « en danger » revient chaque fois que la jauge repasse les deux tiers.",
-      "🚨 Front : assaut final annoncé. Sur un siège long que tu as déjà défendu, une jauge pleine ne prend plus ta commune d'un coup : tu es prévenu et elle tombe 30 min plus tard, sauf si tu repousses la jauge sous les deux tiers.",
-      "⏳ Échanges de clan : le jeu dit maintenant quand ils redeviennent possibles (coéquipier arrivé il y a moins de 48 h, échanges du jour faits, commune prise ou échangée récemment : « dans 6 h »). Merci H34VEN et Saaslil.",
-      "⚔️ Attaquer : les 3 petits ronds de l'ancien système disparaissent. À la place, un badge « en cours » quand tu as déjà un siège sur la commune (merci Arkhannou et Saaslil).",
-      "📏 Carte : un bouton « Mesurer » pour mesurer les distances à vol d'oiseau. Touche la carte pour poser des points, glisse-les pour les déplacer, touche un point pour l'enlever (merci Saaslil).",
-      "🔢 QG : le numéro de département s'affiche à côté du nom dans « À défendre maintenant » et « Mes sièges » (merci Arkhannou).",
-      "✅ Front : quand l'énergie déjà en attente suffit pour prendre la commune, la carte passe en vert « Énergie suffisante ». Plus besoin de relancer pour rien (merci Arkhannou).",
-      "⚡ Front : conquérir coûte moins cher. Chaque énergie fait 12 points au lieu de 10 (en attaque, en renfort et en garnison), et poser un siège coûte 1 ⚡ au lieu de 2.",
-      "🌙 Front : la coupure de nuit est remplacée. Entre 0 h et 7 h, on peut de nouveau attaquer, mais chaque énergie fait moitié moins de dégâts (prendre une commune coûte le double). L'énergie mise en attente avant minuit attend 7 h, sauf si tu relances le siège pendant la nuit."
-    ],
-    "correctifs": [
-      "🛡️ Front : on ne peut plus libérer, vendre au jeu ou mettre sous contrat une commune assiégée. L'énergie perdue par les attaquants a été rendue (merci H34VEN).",
-      "🗺️ Carte : Appenzell (Rhodes-Intérieures et Extérieures) et Bruxelles se survolent et se cliquent enfin. Saint-Gall et le Brabant flamand les recouvraient."
-    ]
-  },
-  {
-    "date": "2026-11-23",
-    "nouveautes": [
-      "📍 Mes départements : tu peux ajouter un pays entier (Luxembourg, Suisse, Belgique) d'un coup, ou un canton / une province par son nom. Demande de Maroli.",
-      "📍 Défendre : « Mes départements » revient. Les sièges ailleurs sont laissés filer tout seuls, et tous les sièges laissés filer deviennent de petites lignes en bas (« Suivre » pour les remettre en grand). Idée de H34VEN.",
-      "⚡ Attaquer : le tri « Moins d'énergie » remplace « Meilleures chances » et met en premier les cibles qui te coûtent le moins (parmi les 600 plus proches de ton territoire). Idée de H34VEN.",
-      "⏱️ Défendre : sous chaque siège contre toi, l'heure à laquelle ta commune peut tomber au plus tôt, et une alerte si l'énergie que l'attaquant a déjà envoyée suffit à la prendre sans autre vague. Idée de Cairnan217.",
-      "⚡ Attaquer : le « ≈ N ⚡ » de chaque cible est maintenant le vrai chiffre pour toi (tes communes autour, rempart, Forteresse, garnison, siège déjà commencé), avec une ligne qui dit ce qui le fait monter ou baisser.",
-      "📖 QG › Guide : tout le Front en 5 minutes. Le siège, l'éclair et le long, ce qui change tes dégâts, la défense, la nuit et où trouver de l'énergie.",
-      "🎨 Motifs : touche le chiffre à droite d'un curseur (taille, rotation, opacité, position…) pour taper la valeur exacte. La rotation se règle maintenant au degré près. Idée d'Arkhannou.",
-      "🗺️ Territoire : nouveau calque « Vue départements ». Allumé, la carte reste découpée par départements même en zoomant (pratique pour l'Île-de-France) ; toucher un département ouvre sa fiche. Idée d'Arkhannou.",
-      "🏚️ QG › Bâtiments : « Bâtiments pris et perdus cette saison », la liste de ceux que tu as détruits ou perdus en conquête, avec les lingots pillés. Idée d'Arkhannou.",
-      "🎨 Territoire : de loin, chaque département montre le motif du joueur en tête, comme un drapeau. Plus il domine, plus son motif se voit. Idée d'Arkhannou.",
-      "🛡️ Défendre : un bouton « Tout repousser » sous chaque siège contre toi. Il met d'un coup l'énergie qu'il faut pour ramener la jauge de l'attaquant à 0 (60 ⚡ au plus).",
-      "🌙 Front : le Front dort la nuit. Entre 0 h et 7 h (heure de Paris), pas de nouveau siège ni de vague, aucune commune ne tombe ; l'énergie déjà en attente part toute seule à 7 h. Renforcer reste possible.",
-      "🏰 Front : une commune entourée par son propriétaire résiste mieux (rempart : +5 % par commune à lui à moins de 10 km au-delà de 3, jusqu'à +50 %). Et le bonus de proximité est plus progressif : une ou deux communes à toi autour de la cible ×0,9, trois à cinq ×1, six ou plus ×1,1."
-    ],
-    "correctifs": [
-      "Défendre : un siège long affiche sa durée (« se remplit en 15 h au plus vite ») au lieu de points par heure, qui faisaient croire qu'une Forteresse accélérait le siège (signalé par Cairnan217).",
-      "Défendre : la liste de tes communes assiégées ne disparaît plus toutes les 30 secondes (signalé par Bonjean).",
-      "Motifs : ils ne s'effacent plus quand on dézoome la carte (signalé par ASMFCB)."
-    ]
-  },
-  {
-    "date": "2026-11-22",
-    "nouveautes": [
-      "🤝 Échanges de clan : la recherche accepte plusieurs départements à la fois (« 25, 90, 70, 39 »), un nom de département ou une région. Idée d'Arkhannou.",
-      "📜 Pages légales mises à jour (conditions d'utilisation, conditions de vente v5, confidentialité, mentions légales) : garanties légales détaillées, données d'achat et Discord décrits, changements des règles annoncés 7 jours à l'avance. Rien ne change pour tes achats déjà faits.",
-      "🦁 Motifs : le « Lion dressé » des blasons rejoint les animaux gratuits (demande d'ASMFCB).",
-      "🦁 Motifs : un onglet « Animaux » gratuit, avec 16 figures de l'héraldique (lion, aigle, griffon, dragon, sanglier, ours, loup, cerf, dauphin, coq, cygne, corbeau, licorne, salamandre, abeille, pégase). Idée d'ASMFCB.",
-      "🔔 La cloche passe à la saison 3 : elle montre les sièges contre tes communes (jauge, temps avant la chute, bouton Renforcer). Dans ses réglages, « Mes sièges » et « Clan » peuvent maintenant être coupés sur le téléphone.",
-      "🎟️ Le pass de saison sort de l'Arcade : il a maintenant son propre onglet, à côté du Profil (dans « Plus » sur téléphone), avec une pastille quand une récompense t'attend (idée de Maroli).",
-      "⏱️ Sièges éclair : une commune ne tombe plus d'un coup. Il faut au moins 5 min pour une commune et 10 min pour une peu commune, le temps pour le propriétaire de défendre.",
-      "🎡 Terra : « Au hasard » sous le choix du pays. La roue choisit le pays de ton paquet (même prix), et une fois sur 10 elle t'offre un paquet gratuit en plus (idée de Maroli et ASMFCB).",
-      "🎮 Duels classés (Plus ou moins, Rafale, Radar) : une égalité ne change plus l'Elo (idée de Maroli).",
-      "🎨 Les skins passent au nouveau design des cartes : grande photo, nom posé dessus, département en haut à droite (signalé par Maroli).",
-      "⏱️ Siège : un minuteur sous la jauge dit quand la commune peut tomber, ou quand ton énergie en attente aura fini de partir et ce qu'il manquera (idée d'Oshannir). La jauge n'affiche plus « 65 / 65 » quand il manque une fraction de point.",
-      "🔔 Siège : si une défense fait que ton énergie en attente ne suffit plus pour finir, tu reçois une notification (« il manque ≈ N ⚡ »), et la cloche le garde (question de Cairnan217).",
-      "⏱️ Siège : une rare demande maintenant au moins 20 min, même si personne ne défend (comme l'épique, 1 h). Le propriétaire prévenu a le temps de renforcer. Tu envoies ta vague une fois, l'énergie part toute seule. Commune et peu commune : inchangées. On regarde vos retours.",
-      "🎨 Nouveau : ton motif de territoire. Dans Boutique › Atelier › Mon territoire, compose ton motif (formes, lignes, symboles, lettres, jusqu'à 8 calques) : il se répète sur ton territoire, par-dessus ta couleur, et tout le monde le voit en zoomant sur la carte. Le calque « Motifs » permet de les cacher.",
-      "🤝 Échanges de clan : 6 par jour avec chaque coéquipier au lieu de 3, pour finir vos départements et vos régions entre vous (idée de H34VEN).",
-      "⚖️ Classement : le bonus de région est maintenant au prorata pour les régions de moins de 500 communes (Luxembourg × 0,2, Corse × 0,7). Avec ses 100 communes, le Luxembourg donnait un bonus de région entier dès les premiers paquets.",
-      "🎨 La boutique a un 3e onglet, l'Atelier : tes effets de cartes (ce qui est à toi, ce qui se gagne en jouant avec ta progression, ce qui est en vente) et la couleur de ton territoire. Dans la fiche d'une carte, l'atelier de la carte se replie sur une ligne.",
-      "📍 « Voir sur la carte » sur la fiche d'une carte Terra (idée d'Arkhannou).",
-      "🔎 Attaquer : tape le nom d'une commune et choisis « Autour de… » pour voir les cibles autour d'elle, de la plus proche à la plus loin (idée d'Oshannir).",
-      "🔥 Clans : le chef peut passer le flambeau à un membre sans quitter le clan (Gérer › Lui passer le flambeau). Il reste bras droit (idée d'Arkhannou).",
-      "🛡️ Quand ton siège est défendu, tu es prévenu (cloche, bandeau bleu et téléphone), et aussi quand il tombe faute de vague (idée d'ASMFCB).",
-      "🔔 Ce que tu as lu dans la cloche et les alertes de bombe est retenu sur ton compte : plus de doublons entre le téléphone et le PC.",
-      "📯 Les clans s'organisent : le chef ou un bras droit pose jusqu'à 3 cibles (viseur rouge sur la carte, et dans Mon front) et lance un appel à l'assaut qui prévient tout le clan.",
-      "⚡ La Centrale du clan : financée par les dons des membres (onglet Clan), elle donne 8 énergie par jour à chacun.",
-      "💥 Nouveau bâtiment, l'Artillerie (20 lingots) : tes sièges à moins de 50 km d'elle n'ont plus le malus de distance. Secrète tant qu'elle ne tire pas.",
-      "⚔️ La saison 3 est lancée ! Le Front repart de zéro, tes 5 communes ★ sont toujours à toi, et tes TP aussi.",
-      "🧭 Les onglets changent de nom : Combat devient le QG (attaquer, défendre, bâtiments), et l'ancien QG des mini-jeux devient l'Arcade (Commune du jour, Radar, Rafale, le Mess et le pass). Les icônes ne bougent pas.",
-      "🏰 Le siège remplace les dés : pose un siège (2 ⚡), envoie des vagues d'énergie et remplis la jauge de la commune avant que son propriétaire la défende. Renforcer, garnison-bouclier, course entre assiégeants : tout est dans Règles › Le siège.",
-      "🇨🇭 La Suisse rejoint la carte : 2 110 communes, 26 cantons qui comptent comme des départements, la région Suisse, et des cartes Aurore suisses.",
-      "🇧🇪 La Belgique aussi : 565 communes, 11 provinces qui comptent comme des départements (dont Bruxelles-Capitale), la région Belgique, et 51 cartes Aurore belges.",
-      "🇱🇺 Et le Luxembourg : 100 communes, 12 cantons qui comptent comme des départements, la région Luxembourg. Une seule légendaire : Luxembourg-Ville.",
-      "🧭 Zone de départ : avant ton premier paquet du Front, choisis une région, la Suisse, la Belgique ou le Luxembourg ; tes 3 premiers paquets y tombent.",
-      "🃏 Paquets Terra suisse, belge et luxembourgeois : au Tirage, choisis France, Suisse, Belgique ou Luxembourg, mêmes jetons et même prix.",
-      "🎡 La roue du Front reste ouverte toute la saison, en plus de tes paquets : elle a ses propres jetons (1 toutes les 20 min, jusqu'à 5 en réserve), jusqu'à 50 tours par jour, et la soirée de 21 h à 23 h.",
-      "🎖️ Le pass de la saison 3 est ouvert (Arcade › Pass de saison) : 20 niveaux jusqu'au 13 décembre, des paquets, des lingots et des titres.",
-      "🍺 Le Mess ouvre ses portes à l'Arcade : la Machine à chiffrer, le Recensement et le 421, avec des tickets gagnés en duel classé.",
-      "🎨 Nouveau look : la carte, les paquets, l'ouverture des cartes et la boutique ont été refaits.",
-      "🏰 Classement des clans : il additionne maintenant les points des 5 meilleurs membres actifs (idée d'Oshannir). Une recrue ne fait jamais baisser son clan.",
-      "🃏 Nouvelles cartes : la photo prend toute la place, le nom est posé dessus, le département en plaque, et le cadre change de matière selon la rareté (métal, reflet irisé, or). Les cartes à skin, Aurore, brillantes et de l'atelier gardent leur look.",
-      "📊 Classement du Front : les bonus de département et de région varient selon leur population (× 0,6 pour les moins peuplés, jusqu'à × 1,6 pour les plus peuplés) ; une légendaire vaut 45 points. Viser une zone dense devient une vraie stratégie.",
-      "✨ Cinq nouvelles collections en boutique, le skin et son dos assorti : Topo, Givre, Kintsugi, Vitrail et Aquarelle. Dans toute la boutique, le skin et le dos d'un thème se vendent maintenant ensemble ; si tu as déjà l'un des deux, tu ne paies que ce qui te manque. Et les onze skins existants ont été redessinés : ils jouent maintenant avec la photo de ta carte. Si tu en as déjà un, il change tout seul, sans rien payer.",
-      "🏆 Les récompenses de la saison 2 sont dans les profils : médailles du podium, titres, seigneuries, clan champion, et un paquet Terra offert à tous les pionniers du Front."
-    ],
-    "correctifs": [
-      "Android : la barre d'onglets ne passe plus à moitié sous la barre du téléphone quand la page défile (Tirage notamment). Signalé par Arkhannou.",
-      "Attaquer se met à jour après une prise par siège, même quand la commune tombe toute seule avec l'énergie en attente (signalé par Oshannir).",
-      "Siège : la fiche dit ce que devient ta vague (ce qui part tout de suite, ce qui attend son tour et combien de temps, ce qui est de trop). L'énergie déjà en attente compte dans « Juste assez » (question d'ASMFCB).",
-      "Sur les nouvelles cartes, le bandeau du monument ne recouvre plus le nom de la commune. Après un duel classé, le jeu annonce les tickets du Mess gagnés."
-    ]
-  },
-  {
-    "date": "2026-11-18",
-    "nouveautes": [
-      "Roue du Front : quand ta réserve de lingots est pleine, les lingots gagnés à la roue ne sont plus perdus. Ils deviennent des TerraPoints, 5 TP par lingot (une case Lingots = +10 TP).",
-      "Quêtes du Front : elles changent chaque jour ! 7 par jour, les mêmes pour tout le monde : la Commune du jour et une conquête tous les jours, plus 5 tirées dans une réserve d'une trentaine (combat, mini-jeux, économie, Mess ou clan). +10 énergie chacune, +15 pour les plus dures, et un bonus de +15 énergie et 1 lingot quand les 7 sont faites. Le plafond passe à 100 énergie de quêtes par jour. Les quêtes Terra piochent maintenant dans 16 quêtes. Merci pour l'idée !"
-    ],
-    "correctifs": [
-      "Boutique : le paquet du département a maintenant un prix selon le département. Paris et la petite couronne sont pleins de légendaires : un paquet y rapportait bien plus qu'il ne coûtait. Paris passe à 3 700 TP, les Hauts-de-Seine et la Seine-Saint-Denis à 3 100, le Val-de-Marne à 2 600, les Bouches-du-Rhône à 1 500 ; tous les autres restent à 800. Le prix s'affiche dans la liste et sur le bouton.",
-      "Règles, « La saison » : à la fin de la saison 2, ta collection Terra reçoit tes 5 communes gardées (★), mais plus les communes des départements tenus à plus de 45 %. Une saison dure de 3 à 4 semaines (la saison 3 en dure 3)."
-    ]
-  },
-  {
-    "date": "2026-11-17",
-    "nouveautes": [
-      "Front : les paquets sont de retour pour tous, tant qu'il reste des communes libres dans le pot. La roue du Front reste ouverte en plus, sous tes paquets, avec ses propres jetons (1 toutes les 20 min, 3 en réserve, 50 tours par jour) : tes tours de roue ne prennent plus tes paquets."
-    ],
-    "correctifs": [
-      "Combat : avec le tri « Meilleures chances », la liste n'était plus toujours dans l'ordre quand un pourcentage changeait (série noire, bombe…). Elle se retrie maintenant toute seule, sans te faire perdre ta place. Merci H34VEN et D.C.A !",
-      "Combat : depuis le correctif de 13 h, avec le tri « Meilleures chances » ou « Près de mon territoire », la liste remontait tout en haut après chaque assaut. C'est réparé : la page reste où tu en étais.",
-      "Combat : le pourcentage affiché sur le bouton « Attaquer » pouvait rester celui du premier calcul (60 % sur le bouton, 45 % dans l'assaut). Il est maintenant recalculé après chaque assaut, après chaque conquête, et au moins toutes les 2 minutes. Les chances de l'assaut, elles, ont toujours été les bonnes. Merci Arkhannou !"
-    ]
-  },
-  {
-    "date": "2026-11-16",
-    "nouveautes": [
-      "Ma France : sous la carte, la liste « Département par département » montre combien de communes il te manque dans chaque département, triée par numéro ou par les plus proches du complet. Touche une ligne pour voir le département sur la carte. Idée d'Arkhannou, merci !",
-      "Clan › Diplomatie : les alliances. Un chef peut créer une alliance et y inviter jusqu'à 4 autres clans. Dès que 2 clans en sont membres, un salon commun s'ouvre sur le Discord, visible de tous leurs membres. Chaque chef peut inviter un clan de plus ou faire sortir le sien."
-    ],
-    "correctifs": [
-      "Rafale : une partie lancée sans aucune réponse ne sert plus d'adversaire, et une partie qui attend depuis plus de 3 jours non plus. Fini les défaites qui tombent des jours après pour une partie pas jouée. L'Elo perdu à cause de ces parties a été rendu aux 7 joueurs touchés (merci Maroli).",
-      "Fiche d'une commune dans une zone bombardée : elle dit jusqu'à quand dure la zone, si la garnison a sauté, et rappelle qu'une bombe ne détruit que les garnisons et les Forteresses. Un Centre de recherche, une Fonderie, un Radar ou une Banque restent debout : pour les faire tomber, il faut prendre la commune (merci Arkhannou)."
-    ]
-  },
-  {
-    "date": "2026-11-15",
-    "nouveautes": [],
-    "correctifs": [
-      "Rafale et Radar : plus de duel classé contre un joueur beaucoup plus fort ou beaucoup plus faible (plus de 300 points d'Elo d'écart) ; ta partie attend alors un adversaire de ton niveau, 12 h au plus (merci Maroli).",
-      "Carte Outre-mer du Front : les bâtiments (Centres de recherche dévoilés compris) et les zones de bombe y apparaissent enfin, comme sur la carte de France (merci Bonjean).",
-      "Cartouche « Paris et petite couronne » : un département choisi ne reste plus en gras quand on en choisit un autre sur la carte (merci Arkhannou)."
-    ]
-  },
-  {
-    "date": "2026-11-13",
-    "nouveautes": [
-      "🏛️ Merveilles plus justes : une équipe envoyée dans les 12 premières heures compte depuis l’ouverture (la cloche te prévient), tous les bâtisseurs (1 000 h et plus) sont gravés, et chaque monument restauré chez toi donne +2 % de rythme à ton équipe, jusqu’à +40 % (merci Oshannir)",
-      "Roue du Front : le paquet Terra repasse à 5 % (il en sortait près de 5 par joueur et par jour) ; le Petit éclair (+4 énergie) passe de 20 à 25 %."
-    ],
-    "correctifs": [
-      "🏗️ Les bâtiments des autres joueurs se mettent à jour pendant la partie : une Fonderie construite après l’ouverture du jeu n’apparaissait ni sur la carte ni sur l’écran de victoire (« Fonderie détruite »), même si le pillage avait bien lieu (merci Oshannir)",
-      "Une zone bombardée ne peut plus recevoir de garnison pendant 24 h : la bombe ne se répare plus en une minute."
-    ]
-  },
-  {
-    "date": "2026-11-12",
-    "nouveautes": [
-      "🛡️ Clans : le clan d’un joueur s’affiche sur son profil ; touche-le pour ouvrir la fiche du clan, ses membres et « Voir son territoire ». Dans le tchat du clan, touche un pseudo pour voir son profil, et tape @ pour citer un joueur (idée d’Oshannir)",
-      "💬 Discussion générale : touche un @pseudo cité ou le pseudo de l’auteur d’un message pour voir son profil (merci Oshannir)",
-      "🤝 Échanges entre clans : un par jour au lieu d’un par semaine. Touche sur la carte une commune d’un joueur d’un autre clan, puis « Proposer un échange » (même rareté, chacun dans son clan depuis 48 h)",
-      "🎡 Roue du Front : moins de « 10 TerraPoints » (12 % au lieu de 22 %), plus de Lingots (15 %) et de Paquets Terra (10 %). Le peuple a parlé (merci Stonirr)",
-      "Zones bombardées : le temps qu'il reste s'affiche sur l'étiquette de la zone, sur la fiche d'attaque, et quand tu touches l'étiquette (idée d'Arkhannou).",
-      "Quand on te prend une commune, la cloche et le Journal disent ce que tu perds avec : Fonderie (lingots pillés, plafond qui baisse), Banque et son contenu, Forteresse, Radar, Centre de recherche et bombe en préparation."
-    ],
-    "correctifs": [
-      "⏱️ Sur la carte, la fiche d’attaque décompte maintenant toute seule le délai avant le prochain assaut, et le bouton revient à zéro sans avoir à quitter la commune (merci Oshannir)"
-    ]
-  },
-  {
-    "date": "2026-11-11",
-    "nouveautes": [
-      "💣 Bombes : les points au classement suivent maintenant le niveau, +150 au niveau 1, +300 au niveau 2, +500 au niveau 3. Les bombes déjà lancées gardent au moins leurs 300 points, celles de niveau 3 passent à 500 (idée d’Oshannir)",
-      "🤝 Échange depuis la carte : seules tes communes de la bonne rareté ressortent, entourées de jaune ; les autres sont voilées (idée d’Arkhannou)",
-      "🔎 « Qui possède ta commune ? » : sur la page d’accueil, n’importe qui (même sans compte) tape une ville et voit qui la tient, depuis quand, et les communes autour. Chaque commune a son lien à partager, par exemple terrafront.fr/?c=cognac-16",
-      "🛡️ Calque Clans : nouveau choix « Contour | Plein » sous « Couleurs ». En « Plein », tout le territoire d’un clan prend la couleur du clan ; un trait sépare ses membres et ton territoire garde un liseré jaune (idée de Cairnan217)",
-      "🧮 « Mes points » : dans le classement du Front, touche ta ligne (ou « Mes points ») pour voir le détail de ton score : cartes par rareté, victoires, chaque département avec son palier, régions, bâtiments, bombes et rébellions (idée d’Oshannir)",
-      "🏆 Les récompenses de la saison 2 sont annoncées : podium et top 10, clan champion, 13 distinctions, seigneurs de territoire, et un cadeau pour tous. Fin de la saison dimanche 22/11 à 10 h ; tout est dans le bandeau sous le titre du classement",
-      "🥇 Les dos de carte du podium sont dévoilés : une couronne de lauriers en or pour le 1er, en argent pour le 2e, en bronze pour le 3e, un seul exemplaire de chaque. Ils sont dans la fiche des récompenses (bandeau sous le titre du classement)",
-      "🌱 Le bonus de débutant dure maintenant 48 h (au lieu de 7 jours), toujours jusqu’à la première conquête : c’est le moment de prendre ta première commune"
-    ],
-    "correctifs": [
-      "Attaquer, « Meilleures chances » : avec plus de 4 000 cibles (« Toutes »), le tri ne se faisait pas du tout. Les 4 000 cibles les plus proches de ton territoire sont maintenant triées par chance, les autres suivent par distance (signalé par Arkhannou)",
-      "🛡️ Calque Clans en « Plein » : le gros contour du clan ne s’affiche plus par-dessus la couleur ; il reste seulement le trait fin entre les membres (merci Cairnan217)",
-      "🛸 Carte : l’animation d’une bombe ne laisse plus d’image figée (garnisons, viseur, ondes) quand on touche la carte pendant l’animation (merci Arkhannou et ASMFCB)"
-    ]
-  },
-  {
-    "date": "2026-11-10",
-    "nouveautes": [
-      "📏 Carte du Front : une échelle de distance en bas à gauche, qui suit le zoom (idée de zintox)",
-      "🛡️ Tes garnisons sur la carte : un bouclier avec son niveau à côté de la commune, vert de 4 à 10, orange de 1 à 3, bleu à 0 (idée d’Arkhannou)",
-      "🎡 Le fil de la roue, sous la roue : le dernier jackpot, les derniers gros lots de tout le monde, et ta journée à copier pour Discord (idée d’Oshannir)",
-      "🏰 Onglet Attaquer : les bâtiments et la garnison d’une commune s’affichent sur sa carte, quand tu peux les voir (idée d’Oshannir)",
-      "🤝 Échanges entre clans : sur la carte, touche une commune d’un joueur d’un autre clan, puis « Proposer un échange ». Une contre une, même rareté, un échange par semaine (idée de zintox)",
-      "🕊️ Diplomatie entre clans : dans l’onglet Clan, le chef propose un salon privé sur le Discord à un autre clan ; si l’autre chef accepte, le salon apparaît dans « 🤝 Diplomatie », visible des deux clans seulement (5 salons au plus par clan)",
-      "💬 Onglet Clan : un bandeau te dit si le bot des clans t’a trouvé sur le Discord. L’idéal : le même pseudo sur le Discord que dans le jeu, pour voir le salon de ton clan et ses salons de diplomatie",
-      "🗺️ Carte : de loin, un territoire d’un seul tenant n’a plus que son tour ; les limites des communes à l’intérieur apparaissent en zoomant, pour voir où taper (idée d’Oshannir)"
-    ],
-    "correctifs": [
-      "Assaut contre une commune en garnison : l’animation affiche la même chance que la fiche (par exemple 43 %, soit 85 % aux dés et une victoire sur deux annulée par la garnison), et l’aiguille s’arrête dans le vert quand la garnison annule ta victoire",
-      "Clans : si leur chargement échouait au retour sur l’appli, ils restaient invisibles toute la partie (coéquipiers parmi les cibles d’Attaquer, calque Clans vide). Le jeu réessaie maintenant tout seul, et les relit toutes les 10 minutes",
-      "Carte : plus de traits noirs au milieu des territoires. Deux communes voisines dont la limite n’avait pas exactement les mêmes points passaient pour un bord de territoire ; un territoire d’un seul tenant n’a plus que son tour (signalé par Oshannir)",
-      "Carte : de loin, les zones bombardées n’ont plus qu’une pastille 💥 au lieu de grandes étiquettes qui couvraient la carte et se chevauchaient ; l’étiquette complète revient en zoomant (signalé par Arkhannou)",
-      "Front, vue outre-mer : avec le calque Clans, le contour du clan entoure son territoire au lieu de chaque commune, et un cercle de bombe de la carte de France ne reste plus par-dessus les territoires (signalé par Arkhannou)"
-    ]
-  },
-  {
-    "date": "2026-11-09",
-    "nouveautes": [
-      "⚡ La réserve d’énergie du Front passe à 120 (au lieu de 90) : en revenant, tu en retrouves plus",
-      "🎡 Roue du Front : 50 tours par jour au lieu de 30 (toujours 1 tour toutes les 20 min), pour retrouver de l’énergie l’après-midi",
-      "🎡 Roue du Front : +50 % d’énergie sur les cases éclair (petit +4, éclair +7, gros +15, jackpot +18, mixte +4)",
-      "⭐ Bonus de débutant : il ne joue plus contre une épique ou une légendaire (chances normales sur ces raretés)"
-    ],
-    "correctifs": [
-      "Roue du Front : le tour en plus de la Relance est un vrai tour offert, hors des 30 tours du jour. Les Relances tirées depuis hier soir sont remboursées en tours offerts (signalé par Maroli)"
-    ]
-  },
-  {
-    "date": "2026-11-08",
-    "nouveautes": [
-      "⚡ L’énergie du Front se recharge plus vite : +1 toutes les 7 minutes (au lieu de 10)",
-      "🌙 La soirée de la roue : chaque soir de 21 h à 23 h, 15 tours offerts, sans jeton et hors des tours du jour",
-      "🏗 Nouveau volet Combat › Bâtiments (idée de Maroli et ASMFCB) : lingots, Fonderies, Forteresses, Centre, Banque et bombe y sont regroupés. Défendre ne garde que la défense",
-      "⚔️ Fiche d’attaque allégée : tes chances en gros, les bonus et malus en pastilles (vert = pour toi, rouge = contre toi), le détail sur « Pourquoi ? ». La rébellion est dans « Plus d’options »",
-      "🏰 Déplacer une forteresse : 10 lingots, 6 h de chantier, vers une de tes communes. Dans Combat › Bâtiments, ou « Déplacer une forteresse ici » sur la fiche d’une commune",
-      "🏭 Déplacer une Fonderie (idée de Maroli) : 10 lingots, 6 h de chantier sans production. Dans Combat › Bâtiments, ou « Déplacer une Fonderie ici » sur la fiche d’une commune",
-      "🏦 Déplacer la Banque : 10 lingots, 6 h, le contenu suit. Les Radars voient maintenant les Banques à moins de 50 km, et le propriétaire est prévenu",
-      "💥 L’impact de la bombe s’anime sur la carte (« Voir › » sur la bannière), et sur la carte en direct",
-      "🗺 Encart « Paris et petite couronne » sur la carte en vue par départements (idée d’Arkhannou)",
-      "🔁 « Rejouer » à la fin d’un duel classé du Radar et de Rafale (idée de Cairnan217)",
-      "🛡 Recharger une garnison : choisis combien tu mets (+1, +2, +5 ou plein), dans Défendre et sur la fiche de la commune",
-      "🎡 Roue du Front : la Relance offre maintenant 2 tours (ton tour est rendu, et un de plus)"
-    ],
-    "correctifs": [
-      "La mallette de la bombe a une touche « - » et trouve les communes à tiret (signalé par Oshannir)",
-      "Moins de chargements quand on zoome vite sur la carte du Radar ou sur Ma France (plantage signalé par Arkhannou sur téléphone)",
-      "Défendre affiche bien les 5 places de garnison : avec 3 ou 4 garnisons, la liste « En garnison » disparaissait",
-      "Sur ordinateur, la bulle d’un département au survol montre aussi le nombre de communes, pas seulement les % (signalé par Oshannir)",
-      "Sur téléphone avec le texte agrandi, les onglets de Combat ne font plus déborder la page (signalé par Arkhannou)"
-    ]
-  },
-  {
-    "date": "2026-11-07",
-    "nouveautes": [
-      "💣 Bombes plus grosses et plus rapides : 15 km de rayon à 24 h, 20 km à 36 h, 25 km à 48 h (au lieu de 10, 15 et 20 km à 24, 48 et 72 h). Le Centre apparaît sur la carte à 36 h de préparation. Pas de 2e bombe à moins de 30 km d’une zone encore active",
-      "📡 Radar (30 lingots, une Fonderie) : il voit les Centres de recherche à moins de 50 km, même secrets, et les montre sur ta carte. Le joueur repéré est prévenu. Visible de tous, +80 au classement",
-      "🧪 Déménager son Centre de recherche (idée d’Arkhannou) : 20 lingots, 6 h de chantier ; la bombe suit, en pause pendant le chantier. Défendre › Bâtiments, ou « Déménager le Centre ici » sur une de tes communes",
-      "🍀 Série noire : après 2 assauts perdus d’affilée sur une même commune, les suivants ont +15 % jusqu’à ta prochaine victoire dessus (90 % au plus, pas contre une garnison)",
-      "🌱 Bonus de débutant : pendant tes 7 premiers jours et jusqu’à ta première conquête, au moins 85 % par assaut, même loin de chez toi (pas contre une garnison). Sans commune, « Choisir sur la carte » te propose une cible près de chez toi",
-      "🏗 Bâtiments en pixel art : une case « Mes bâtiments » dans Mon front, avec ceux des autres joueurs (recherche, région, type). Choisis le style de chaque bâtiment quand tu le construis",
-      "🔎 Recherche par région : « bretagne », « grand est », « idf », « paca »… dans Combat, la Collection, l’Échange et les exclusions"
-    ],
-    "correctifs": [
-      "La recherche « corse » trouve la Corse-du-Sud et la Haute-Corse (Combat ne montrait que le 2A)"
-    ]
-  },
-  {
-    "date": "2026-11-06",
-    "nouveautes": [
-      "👥 Invite un ami : ton lien est maintenant dans les quêtes (et un bandeau au Tirage). Ton ami reçoit 1 paquet Terra et 10 ⚡ en arrivant, puis 1 paquet de plus après 3 jours de jeu. Toi, +10 ⚡ par ami et des paliers chaque saison : 1, 3 et 5 amis actifs pour 1, 2 et 3 paquets Terra. Tu peux inviter dès ton premier jour",
-      "✊ Rébellion : sous la fiche d’attaque, paie des lingots pour baisser la défense d’une ville face à toi (3 lingots par point, jusqu’à −15 %, 24 h). Le propriétaire est prévenu et peut l’étouffer à l’aveugle, dans Défendre (idée de Bonjean)",
-      "⚔ Proximité : sans commune à moins de 20 km de ta cible, −12 % ; avec une, rien ne change ; avec deux ou plus, +5 %. Deux communes groupées suffisent pour être au niveau d’un grand territoire (idée d’Oshannir)",
-      "⏳ Sièges : sans assaut pendant 24 h, un siège tombe ; la série repart de zéro et le défenseur retrouve ses deux défenses (idée d’Oshannir)",
-      "🛡 Défense à parité : 40, 55 ou 70 % (5 points de plus qu’en attaque), et une fois tes deux défenses utilisées, tu peux retenter après chaque round que l’attaquant gagne (idée d’Oshannir)",
-      "⚡ Énergie pour la fin de saison : 90 au maximum au lieu de 50 (toujours +1 toutes les 10 minutes) : une nuit ne fait plus rien perdre (idée d’Oshannir et Stonirr)",
-      "💎 Grosses communes : attaquer une épique coûte 1 énergie de plus par assaut, une légendaire 2 de plus (3, 4 ou 5 selon l’engagement). Les chances ne changent pas, et défendre coûte toujours 1, 2 ou 3",
-      "🏰 Garnisons et Forteresses : 5 au plus au lieu de 3 (demande de Maroli et Bonjean)",
-      "🎯 Quêtes Front : trois quêtes plus dures à +10 énergie : une partie de Radar sous 400 km, 6 communes en Rafale, 7 sur 10 au Plus ou moins du jour (idée de Stonirr)",
-      "💤 Absence : après 10 jours sans ouvrir le jeu, tes communes du Front retournent peu à peu au pot (10 % par jour) ; une notification prévient 2 jours avant. Ta collection Terra n’est jamais touchée",
-      "🗺 Carte : mets plusieurs joueurs en évidence à la fois, dans la légende (idée de Maroli)",
-      "🤝 Échange de clan depuis la carte : touche la commune d’un coéquipier, puis une des tiennes de même rareté, sans passer par l’onglet Clan (idée de Bonjean)",
-      "🏦 La Banque devient une épargne : dépose tes lingots (jusqu'à 60), ils rapportent 10 % chaque nuit, à l'abri du pillage des Fonderies. Retire-les pour les dépenser (Défendre › Bâtiments). Elle se construit sur une de tes communes (20 lingots, une Fonderie demandée) et reste secrète",
-      "🏆 Classement du Front : tes bâtiments comptent maintenant (Fonderie +50, Forteresse +80, Centre +150, Banque +80, acquis même s’ils sont détruits, jusqu’au maximum de chaque type), ainsi que tes bombes lancées (+300) et tes rébellions, financées ou étouffées (+2 par lingot, 60 par jour au plus). Détail dans « Comment c’est calculé ? »"
-    ]
-  },
-  {
-    "date": "2026-11-05",
-    "nouveautes": [
-      "🎡 Roue du Front : 30 tours par jour au lieu de 15, et trois cases nouvelles : TerraPoints (+10 TP), Cagnotte (+50 TP) et Relance (ton tour est rendu). Les cases d'énergie et de lingots sont un peu plus rares, pour qu'une journée de roue rapporte à peu près autant au Front. Les chances sont sous la roue",
-      "⚡ Le classement, les profils et les quêtes s’ouvrent plus vite (ils ramaient en soirée). Le classement se met à jour chaque minute : après une conquête, ton score peut mettre jusqu’à une minute à y apparaître",
-      "🗺 Carte : passer à un autre onglet pendant que la carte était en plein écran la cassait (zoomée, décalée, communes une par une) jusqu’au rechargement. Corrigé : en revenant sur Territoire, tu la retrouves en plein écran, là où tu l’avais laissée (défaut signalé par Oshannir)",
-      "🎡 Roue du Front : les chances sous la roue sont rangées de la plus fréquente à la plus rare (idée d’Arkhannou)",
-      "🃏 Collection Terra : le filtre « Doublons » range les cartes par nombre d’exemplaires, du plus petit au plus grand. Touche-le une deuxième fois pour inverser l’ordre (idée de Maroli)"
-    ],
-    "correctifs": [
-      "Sur iPhone, la barre du bas pouvait rester au milieu de l’écran après avoir fermé le clavier (un défaut de Safari depuis iOS 26, revenu avec iOS 27). Le jeu la remet en place tout seul (signalé par Oshannir)"
-    ]
-  },
-  {
-    "date": "2026-11-04",
-    "nouveautes": [
-      "💬 Discussion : un salon ouvert à tous les joueurs, en haut de Communauté. Touche un message pour le signaler ou masquer son auteur. Chacun y a son avatar et le blason de son clan. Un point bleu sur la cloche quand il y a du neuf, et le compteur quand on te cite avec @pseudo. Tape @ et les premières lettres d’un pseudo : le jeu te le propose",
-      "🎡 Roue du Front : les dernières communes libres restent aux nouveaux joueurs jusqu’à la fin de la saison. Pour les autres, la roue remplace les paquets du Front : un tour toutes les 20 min (3 en réserve), 15 par jour, pour de l’énergie, des lingots ou un paquet Terra. Les chances de chaque case sont affichées sous la roue",
-      "🛡 Défense : tu choisis ton engagement à chaque défense, avec tes chances affichées : prudente 1 énergie (35 %), normale 2 (50 %), offensive 3 (65 %), comme l’attaque. Tes communes voisines ne comptent pas en défense",
-      "🛡 Défense : faire retomber la série d’un attaquant à zéro ne rend plus tes deux défenses ; elles reviennent seulement 24 h après ta dernière défense (défaut signalé par H34VEN)",
-      "🧭 Nouveaux joueurs : on commence maintenant au Front. Le jeu propose une première cible facile, suit la série jusqu’à la conquête, puis présente des clans qui recrutent",
-      "📖 Règles : le bonus de région (+1 200) demande d’être seul en tête avec 10 % ou plus dans plus de la moitié de ses départements ; le texte oubliait « seul en tête ». Le calcul, lui, ne change pas",
-      "🔔 Alertes d’attaque : après une défense réussie, tu ne reçois plus « X a gagné un round » par erreur, et elles ne parlent plus de bouclier (il n’y en a pas au Front)",
-      "🤝 Échanges de clan : une commune attaquée garde son siège quand elle change de main. L’attaquant continue sa série contre le nouveau propriétaire, sans les 3 h de protection (faille signalée par un joueur, merci !)",
-      "📖 Règles : la réserve d’accueil (à 3 000 communes libres, seuls les nouveaux ouvrent encore des paquets du Front) et la libération de communes contre de l’énergie sont maintenant expliquées dans Règles › Front"
-    ]
-  },
-  {
-    "date": "2026-11-03",
-    "nouveautes": [
-      "🗺 Carte : de près, la bordure de chaque territoire passe à l’intérieur de ses communes au lieu de déborder sur les voisines, et les limites de département sont bien plus nettes (retours d’Oshannir)",
-      "🛡 Défense : une défense utilisée revient 24 h après ta dernière défense (deux au plus) ; une attaque laissée en plan peut toujours être repoussée (idée de H34VEN)",
-      "🗺 Commune du jour : la région de la commune est donnée dès le départ, pour que le premier essai ne soit plus au hasard ; les autres indices arrivent ensuite, un par essai",
-      "✨ Terra : les cartes brillantes ! Chaque carte d’un paquet Terra a 1 chance sur 800 de sortir brillante, avec son propre numéro, et elle ne quitte jamais ta collection",
-      "💎 Éclat : sur la fiche d’une carte que tu as en 3 exemplaires, la carte + 2 doublons + 500 TP la font briller pour toujours",
-      "🎨 L’atelier des cartes : finitions, halos, styles et bordures pour tes cartes Terra ; beaucoup se gagnent en jouant (quêtes, départements finis), et chaque carte peut avoir les siens depuis sa fiche",
-      "🗺 La carte se charge bien plus vite, et elle se met à jour toute seule (chaque minute) : plus besoin de recharger le jeu pour voir les conquêtes des autres",
-      "📺 La carte en direct, pour les streams : terrafront.fr/direct/ montre la carte aux couleurs des clans, les conquêtes qui clignotent, le fil du Front et le classement des clans",
-      "⚔ Front : la course à la commune ! Quand un joueur prend une commune, les sièges des autres attaquants sur cette commune sont effacés, et la cloche les prévient (idée d’Oshannir)",
-      "🤝 Échanges de clan : 3 par jour avec chaque coéquipier, au lieu de 3 en tout (idée d’Oshannir et Maroli)",
-      "🛡 Clans : plus d’attente pour rejoindre un clan après en avoir quitté un (les échanges s’ouvrent toujours 48 h après ton arrivée)",
-      "🏗 Grands chantiers : chaque monument dit combien d’autres joueurs le restaurent, et si tu peux encore y graver ton nom le premier",
-      "🌌 Aurore : les cartes Aurore retravaillées, avec le nom, le numéro et la rareté bien lisibles (merci Maroli)",
-      "🗺 Territoire : sur téléphone, la légende montre aussi les raretés et les bâtiments ; touche Fonderie, Forteresse ou Centre pour savoir à quoi ils servent",
-      "📍 Survole ou touche un numéro de département pour le voir sur la carte de France, et propose un échange à un coéquipier depuis la fiche de sa commune (idées d’Arkhannou)",
-      "🧭 Premiers pas : la 1re étape t’emmène ouvrir ton premier paquet du Front"
-    ],
-    "correctifs": [
-      "La chance affichée (fiche et liste Combat) tient compte de la garnison de la commune visée",
-      "Combat : les communes de tes coéquipiers ne restent plus dans la liste des cibles (merci Arkhannou)",
-      "Garnison : près du plafond de 60, le bouton prévient et la notification dit l’énergie vraiment récupérée (merci H34VEN)",
-      "Carte postale : le tampon ne cache plus le nom de la commune",
-      "Aurore : le reflet n’apparaît plus qu’en inclinant la carte, et sur ordinateur l’aurore de la fiche reste immobile",
-      "Premiers pas : le bouton « Ouvrir » montre ton paquet prêt au lieu de dire qu’il arrive bientôt"
-    ]
-  },
-  {
-    "date": "2026-11-02",
-    "nouveautes": [
-      "🏗 Terra : les grands chantiers ! Restaure les monuments de ta collection (Collection › Monuments), récolte leurs visiteurs en TP, grave ton nom sur ceux que tu finis en premier, et aide tout le monde à restaurer Notre-Dame",
-      "🛡 Garnison : la retirer rend maintenant 75 % de son énergie (au lieu de la moitié)",
-      "📰 Journal : les Fonderies et Forteresses construites, et les Fonderies détruites, y apparaissent (jamais le Centre de recherche, qui reste secret)",
-      "🏆 Classement : « Comment c’est calculé ? » détaille le score (cartes, combats, territoires) et la moyenne des clans",
-      "🛡 Clans : tu peux postuler directement depuis le jeu (déplie un clan dans le classement) ; les chefs acceptent ou refusent dans l’onglet Clan",
-      "🧭 Nouveaux joueurs : une carte « Premiers pas » (4 étapes, et 1 paquet Terra + 10 lingots à la clé)",
-      "🏗 Bâtiments : 6 h de construction au lieu de 24 h, et tu peux annuler un bâtiment en construction (ses lingots te sont rendus en entier)"
-    ],
-    "correctifs": [
-      "Notifications : le numéro du département s’affiche à côté de la commune attaquée (merci Arkhannou)"
-    ]
-  },
-  {
-    "date": "2026-11-01",
-    "nouveautes": [
-      "⚔ Front : les combats rapportent des lingots (+2 par conquête, +1 par défense réussie, 10 au plus par jour)"
-    ],
-    "correctifs": [
-      "Échanges de clan : toutes tes communes sont proposées, même au-delà de 1 000 ; et toucher une ville sur la carte n’ajoute plus d’énergie en garnison par erreur",
-      "Sur téléphone, la fiche d’une commune défile de nouveau au doigt (le bas, avec les bâtiments, restait inaccessible)",
-      "Après une défense réussie avec la réserve de lingots pleine, la notification le dit"
-    ]
-  },
-  {
-    "date": "2026-10-31",
-    "nouveautes": [
-      "⚡ Front : la réserve d’énergie passe de 40 à 50 (toujours +1 toutes les 10 minutes)",
-      "🏪 Le Marché : Bourse, Échange et Contrat réunis, avec « Mes doublons » pour voir d’un coup ce que tu peux en faire",
-      "🎃 Le paquet maudit d’Halloween aussi avec le paquet Nacre ; une case dans Profil pour garder ton habillage",
-      "🗺️ Territoire : le bouton « Raretés » colore les communes selon leur rareté, et les bâtiments se voient mieux",
-      "⭐ Attaquer : trie les cibles par meilleures chances ; « Près de mon territoire » les met aussi en premier",
-      "🛍 La boutique à un toucher : le sac à côté de la cloche, et « Soutiens le développement du jeu » dans le menu",
-      "📦 La notification « Un paquet gratuit t’attend » t’emmène au Tirage quand tu la touches",
-      "🎨 Skins : ils s’affichent dans Personnaliser, et « Tout choisir » les pose sur toutes tes cartes d’un coup",
-      "⚔ Combat : le volet « Mon front » résume tout (à défendre, énergie, attaques en cours, communes, protections, quêtes)"
-    ],
-    "correctifs": [
-      "Sur téléphone, la fiche d’une commune ne se fermait plus quand la carte était en plein écran",
-      "« Ta boutique » : les cartes se chevauchaient et débordaient sur la page"
-    ]
-  },
-  {
-    "date": "2026-10-30",
-    "nouveautes": [
-      "📋 Quêtes du jour : un bandeau en haut du Tirage, la liste s’ouvre d’un geste",
-      "📦 Tirage plus léger sur téléphone : le paquet est visible dès l’arrivée, sans défiler",
-      "🎃 Halloween : décor TerreurFront et screamers au choix, jusqu’au 2 novembre à minuit",
-      "👻 Quête des communes hantées : 1 paquet Terra sur 3, et en Front, celui qui en tient une à la fin gagne",
-      "🛒 Ta boutique : une vitrine de communes rien qu’à toi, renouvelée chaque jour et chaque semaine",
-      "👋 Récap d’arrivée après 3 h d’absence, et barre du bas revue sur téléphone",
-      "🗺️ Plus ou moins : la mini-carte de France entre les deux photos",
-      "🏅 Plus ou moins : de nouveaux rangs, plus serrés, et Préfet pour le n°1",
-      "🕊️ Libérer des communes du Front contre de l’énergie",
-      "⚡ Quêtes du Front : jusqu’à 50 d’énergie par jour, et « Joue 2 duels » au lieu de « Gagne un duel »",
-      "🛡️ Le blason de ton clan à côté de ton pseudo (classement, carte, journal)",
-      "🔁 Échange : la pastille « Toutes » pour voir toutes les raretés d’un coup",
-      "📒 Collection Terra : la catégorie « Événements »"
-    ],
-    "correctifs": [
-      "Les paquets Terra qui ne s’ouvraient plus entre 18 h 24 et 18 h 43 (rien n’a été perdu)",
-      "Le jeu qui se rechargeait en boucle vers 20 h 20",
-      "La vitrine qui s’étirait sur iPhone à partir de 5 cartes",
-      "Le sceau « Hantée » qui cachait le monument de la carte",
-      "La pastille « 0 » de la cloche, et le journal qui disait « une rare » pour une épique"
-    ]
-  }
+ {
+  "date": "2026-11-25",
+  "nouveautes": [
+   "⇄ Échanges de clan : une fois par jour, tu peux échanger avec un coéquipier une commune d'un cran de rareté d'écart (légendaire ↔ épique, épique ↔ rare, rare ↔ peu commun, peu commun ↔ commun). Merci Maroli.",
+   "⇄ Échanges de clan : les communes déjà dans une proposition envoyée sont grisées avec « ⇄ proposée » (tu peux quand même les proposer ailleurs). Merci Arkhannou.",
+   "🛡️ Blasons de clan : 4 nouveaux meubles pour tous (Château, Trèfle, Cloche, Épées croisées) et 3 meubles rares à gagner avec l'or de l'objectif de clan de la semaine (Rose des vents, Aigle bicéphale, Couronne royale). Merci Arkhannou.",
+   "↻ Quêtes : tu peux changer une quête du jour par jour en Terra et une en Front (pas les quêtes fixes ni une quête finie). La nouvelle vient de la même famille. Merci Arkhannou.",
+   "🔎 Échanges du clan : deux menus, Pays et Département / canton, au-dessus de chaque liste. Fini les « Juvigny » quand tu cherches le Jura suisse (merci Arkhannou)."
+  ],
+  "correctifs": [
+   "🛡️ Quêtes : « Réussis une défense » devient « Repousse un siège » (ramène à zéro la jauge d'un siège contre toi). L'ancienne version était presque impossible à finir dans la journée. Merci Saaslil et H34VEN.",
+   "🎁 Pass : ouvrir un paquet du pass depuis le mode Front affichait une erreur. Le jeu passe maintenant en Terra pour l'ouvrir (les cartes allaient bien dans ta collection Terra). Merci Maroli."
+  ]
+ },
+ {
+  "date": "2026-11-24",
+  "nouveautes": [
+   "🔔 Front : une vague qui remplit la moitié de la jauge d'un siège en cours te prévient, et l'alerte « en danger » revient chaque fois que la jauge repasse les deux tiers.",
+   "🚨 Front : assaut final annoncé. Sur un siège long que tu as déjà défendu, une jauge pleine ne prend plus ta commune d'un coup : tu es prévenu et elle tombe 30 min plus tard, sauf si tu repousses la jauge sous les deux tiers.",
+   "⏳ Échanges de clan : le jeu dit maintenant quand ils redeviennent possibles (coéquipier arrivé il y a moins de 48 h, échanges du jour faits, commune prise ou échangée récemment : « dans 6 h »). Merci H34VEN et Saaslil.",
+   "⚔️ Attaquer : les 3 petits ronds de l'ancien système disparaissent. À la place, un badge « en cours » quand tu as déjà un siège sur la commune (merci Arkhannou et Saaslil).",
+   "📏 Carte : un bouton « Mesurer » pour mesurer les distances à vol d'oiseau. Touche la carte pour poser des points, glisse-les pour les déplacer, touche un point pour l'enlever (merci Saaslil).",
+   "🔢 QG : le numéro de département s'affiche à côté du nom dans « À défendre maintenant » et « Mes sièges » (merci Arkhannou).",
+   "✅ Front : quand l'énergie déjà en attente suffit pour prendre la commune, la carte passe en vert « Énergie suffisante ». Plus besoin de relancer pour rien (merci Arkhannou).",
+   "⚡ Front : conquérir coûte moins cher. Chaque énergie fait 12 points au lieu de 10 (en attaque, en renfort et en garnison), et poser un siège coûte 1 ⚡ au lieu de 2.",
+   "🌙 Front : la coupure de nuit est remplacée. Entre 0 h et 7 h, on peut de nouveau attaquer, mais chaque énergie fait moitié moins de dégâts (prendre une commune coûte le double). L'énergie mise en attente avant minuit attend 7 h, sauf si tu relances le siège pendant la nuit."
+  ],
+  "correctifs": [
+   "🛡️ Front : on ne peut plus libérer, vendre au jeu ou mettre sous contrat une commune assiégée. L'énergie perdue par les attaquants a été rendue (merci H34VEN).",
+   "🗺️ Carte : Appenzell (Rhodes-Intérieures et Extérieures) et Bruxelles se survolent et se cliquent enfin. Saint-Gall et le Brabant flamand les recouvraient."
+  ]
+ },
+ {
+  "date": "2026-11-23",
+  "nouveautes": [
+   "📍 Mes départements : tu peux ajouter un pays entier (Luxembourg, Suisse, Belgique) d'un coup, ou un canton / une province par son nom. Demande de Maroli.",
+   "📍 Défendre : « Mes départements » revient. Les sièges ailleurs sont laissés filer tout seuls, et tous les sièges laissés filer deviennent de petites lignes en bas (« Suivre » pour les remettre en grand). Idée de H34VEN.",
+   "⚡ Attaquer : le tri « Moins d'énergie » remplace « Meilleures chances » et met en premier les cibles qui te coûtent le moins (parmi les 600 plus proches de ton territoire). Idée de H34VEN.",
+   "⏱️ Défendre : sous chaque siège contre toi, l'heure à laquelle ta commune peut tomber au plus tôt, et une alerte si l'énergie que l'attaquant a déjà envoyée suffit à la prendre sans autre vague. Idée de Cairnan217.",
+   "⚡ Attaquer : le « ≈ N ⚡ » de chaque cible est maintenant le vrai chiffre pour toi (tes communes autour, rempart, Forteresse, garnison, siège déjà commencé), avec une ligne qui dit ce qui le fait monter ou baisser.",
+   "📖 QG › Guide : tout le Front en 5 minutes. Le siège, l'éclair et le long, ce qui change tes dégâts, la défense, la nuit et où trouver de l'énergie.",
+   "🎨 Motifs : touche le chiffre à droite d'un curseur (taille, rotation, opacité, position…) pour taper la valeur exacte. La rotation se règle maintenant au degré près. Idée d'Arkhannou.",
+   "🗺️ Territoire : nouveau calque « Vue départements ». Allumé, la carte reste découpée par départements même en zoomant (pratique pour l'Île-de-France) ; toucher un département ouvre sa fiche. Idée d'Arkhannou.",
+   "🏚️ QG › Bâtiments : « Bâtiments pris et perdus cette saison », la liste de ceux que tu as détruits ou perdus en conquête, avec les lingots pillés. Idée d'Arkhannou.",
+   "🎨 Territoire : de loin, chaque département montre le motif du joueur en tête, comme un drapeau. Plus il domine, plus son motif se voit. Idée d'Arkhannou.",
+   "🛡️ Défendre : un bouton « Tout repousser » sous chaque siège contre toi. Il met d'un coup l'énergie qu'il faut pour ramener la jauge de l'attaquant à 0 (60 ⚡ au plus).",
+   "🌙 Front : le Front dort la nuit. Entre 0 h et 7 h (heure de Paris), pas de nouveau siège ni de vague, aucune commune ne tombe ; l'énergie déjà en attente part toute seule à 7 h. Renforcer reste possible.",
+   "🏰 Front : une commune entourée par son propriétaire résiste mieux (rempart : +5 % par commune à lui à moins de 10 km au-delà de 3, jusqu'à +50 %). Et le bonus de proximité est plus progressif : une ou deux communes à toi autour de la cible ×0,9, trois à cinq ×1, six ou plus ×1,1."
+  ],
+  "correctifs": [
+   "Défendre : un siège long affiche sa durée (« se remplit en 15 h au plus vite ») au lieu de points par heure, qui faisaient croire qu'une Forteresse accélérait le siège (signalé par Cairnan217).",
+   "Défendre : la liste de tes communes assiégées ne disparaît plus toutes les 30 secondes (signalé par Bonjean).",
+   "Motifs : ils ne s'effacent plus quand on dézoome la carte (signalé par ASMFCB)."
+  ]
+ },
+ {
+  "date": "2026-11-22",
+  "nouveautes": [
+   "🤝 Échanges de clan : la recherche accepte plusieurs départements à la fois (« 25, 90, 70, 39 »), un nom de département ou une région. Idée d'Arkhannou.",
+   "📜 Pages légales mises à jour (conditions d'utilisation, conditions de vente v5, confidentialité, mentions légales) : garanties légales détaillées, données d'achat et Discord décrits, changements des règles annoncés 7 jours à l'avance. Rien ne change pour tes achats déjà faits.",
+   "🦁 Motifs : le « Lion dressé » des blasons rejoint les animaux gratuits (demande d'ASMFCB).",
+   "🦁 Motifs : un onglet « Animaux » gratuit, avec 16 figures de l'héraldique (lion, aigle, griffon, dragon, sanglier, ours, loup, cerf, dauphin, coq, cygne, corbeau, licorne, salamandre, abeille, pégase). Idée d'ASMFCB.",
+   "🔔 La cloche passe à la saison 3 : elle montre les sièges contre tes communes (jauge, temps avant la chute, bouton Renforcer). Dans ses réglages, « Mes sièges » et « Clan » peuvent maintenant être coupés sur le téléphone.",
+   "🎟️ Le pass de saison sort de l'Arcade : il a maintenant son propre onglet, à côté du Profil (dans « Plus » sur téléphone), avec une pastille quand une récompense t'attend (idée de Maroli).",
+   "⏱️ Sièges éclair : une commune ne tombe plus d'un coup. Il faut au moins 5 min pour une commune et 10 min pour une peu commune, le temps pour le propriétaire de défendre.",
+   "🎡 Terra : « Au hasard » sous le choix du pays. La roue choisit le pays de ton paquet (même prix), et une fois sur 10 elle t'offre un paquet gratuit en plus (idée de Maroli et ASMFCB).",
+   "🎮 Duels classés (Plus ou moins, Rafale, Radar) : une égalité ne change plus l'Elo (idée de Maroli).",
+   "🎨 Les skins passent au nouveau design des cartes : grande photo, nom posé dessus, département en haut à droite (signalé par Maroli).",
+   "⏱️ Siège : un minuteur sous la jauge dit quand la commune peut tomber, ou quand ton énergie en attente aura fini de partir et ce qu'il manquera (idée d'Oshannir). La jauge n'affiche plus « 65 / 65 » quand il manque une fraction de point.",
+   "🔔 Siège : si une défense fait que ton énergie en attente ne suffit plus pour finir, tu reçois une notification (« il manque ≈ N ⚡ »), et la cloche le garde (question de Cairnan217).",
+   "⏱️ Siège : une rare demande maintenant au moins 20 min, même si personne ne défend (comme l'épique, 1 h). Le propriétaire prévenu a le temps de renforcer. Tu envoies ta vague une fois, l'énergie part toute seule. Commune et peu commune : inchangées. On regarde vos retours.",
+   "🎨 Nouveau : ton motif de territoire. Dans Boutique › Atelier › Mon territoire, compose ton motif (formes, lignes, symboles, lettres, jusqu'à 8 calques) : il se répète sur ton territoire, par-dessus ta couleur, et tout le monde le voit en zoomant sur la carte. Le calque « Motifs » permet de les cacher.",
+   "🤝 Échanges de clan : 6 par jour avec chaque coéquipier au lieu de 3, pour finir vos départements et vos régions entre vous (idée de H34VEN).",
+   "⚖️ Classement : le bonus de région est maintenant au prorata pour les régions de moins de 500 communes (Luxembourg × 0,2, Corse × 0,7). Avec ses 100 communes, le Luxembourg donnait un bonus de région entier dès les premiers paquets.",
+   "🎨 La boutique a un 3e onglet, l'Atelier : tes effets de cartes (ce qui est à toi, ce qui se gagne en jouant avec ta progression, ce qui est en vente) et la couleur de ton territoire. Dans la fiche d'une carte, l'atelier de la carte se replie sur une ligne.",
+   "📍 « Voir sur la carte » sur la fiche d'une carte Terra (idée d'Arkhannou).",
+   "🔎 Attaquer : tape le nom d'une commune et choisis « Autour de… » pour voir les cibles autour d'elle, de la plus proche à la plus loin (idée d'Oshannir).",
+   "🔥 Clans : le chef peut passer le flambeau à un membre sans quitter le clan (Gérer › Lui passer le flambeau). Il reste bras droit (idée d'Arkhannou).",
+   "🛡️ Quand ton siège est défendu, tu es prévenu (cloche, bandeau bleu et téléphone), et aussi quand il tombe faute de vague (idée d'ASMFCB).",
+   "🔔 Ce que tu as lu dans la cloche et les alertes de bombe est retenu sur ton compte : plus de doublons entre le téléphone et le PC.",
+   "📯 Les clans s'organisent : le chef ou un bras droit pose jusqu'à 3 cibles (viseur rouge sur la carte, et dans Mon front) et lance un appel à l'assaut qui prévient tout le clan.",
+   "⚡ La Centrale du clan : financée par les dons des membres (onglet Clan), elle donne 8 énergie par jour à chacun.",
+   "💥 Nouveau bâtiment, l'Artillerie (20 lingots) : tes sièges à moins de 50 km d'elle n'ont plus le malus de distance. Secrète tant qu'elle ne tire pas.",
+   "⚔️ La saison 3 est lancée ! Le Front repart de zéro, tes 5 communes ★ sont toujours à toi, et tes TP aussi.",
+   "🧭 Les onglets changent de nom : Combat devient le QG (attaquer, défendre, bâtiments), et l'ancien QG des mini-jeux devient l'Arcade (Commune du jour, Radar, Rafale, le Mess et le pass). Les icônes ne bougent pas.",
+   "🏰 Le siège remplace les dés : pose un siège (2 ⚡), envoie des vagues d'énergie et remplis la jauge de la commune avant que son propriétaire la défende. Renforcer, garnison-bouclier, course entre assiégeants : tout est dans Règles › Le siège.",
+   "🇨🇭 La Suisse rejoint la carte : 2 110 communes, 26 cantons qui comptent comme des départements, la région Suisse, et des cartes Aurore suisses.",
+   "🇧🇪 La Belgique aussi : 565 communes, 11 provinces qui comptent comme des départements (dont Bruxelles-Capitale), la région Belgique, et 51 cartes Aurore belges.",
+   "🇱🇺 Et le Luxembourg : 100 communes, 12 cantons qui comptent comme des départements, la région Luxembourg. Une seule légendaire : Luxembourg-Ville.",
+   "🧭 Zone de départ : avant ton premier paquet du Front, choisis une région, la Suisse, la Belgique ou le Luxembourg ; tes 3 premiers paquets y tombent.",
+   "🃏 Paquets Terra suisse, belge et luxembourgeois : au Tirage, choisis France, Suisse, Belgique ou Luxembourg, mêmes jetons et même prix.",
+   "🎡 La roue du Front reste ouverte toute la saison, en plus de tes paquets : elle a ses propres jetons (1 toutes les 20 min, jusqu'à 5 en réserve), jusqu'à 50 tours par jour, et la soirée de 21 h à 23 h.",
+   "🎖️ Le pass de la saison 3 est ouvert (Arcade › Pass de saison) : 20 niveaux jusqu'au 13 décembre, des paquets, des lingots et des titres.",
+   "🍺 Le Mess ouvre ses portes à l'Arcade : la Machine à chiffrer, le Recensement et le 421, avec des tickets gagnés en duel classé.",
+   "🎨 Nouveau look : la carte, les paquets, l'ouverture des cartes et la boutique ont été refaits.",
+   "🏰 Classement des clans : il additionne maintenant les points des 5 meilleurs membres actifs (idée d'Oshannir). Une recrue ne fait jamais baisser son clan.",
+   "🃏 Nouvelles cartes : la photo prend toute la place, le nom est posé dessus, le département en plaque, et le cadre change de matière selon la rareté (métal, reflet irisé, or). Les cartes à skin, Aurore, brillantes et de l'atelier gardent leur look.",
+   "📊 Classement du Front : les bonus de département et de région varient selon leur population (× 0,6 pour les moins peuplés, jusqu'à × 1,6 pour les plus peuplés) ; une légendaire vaut 45 points. Viser une zone dense devient une vraie stratégie.",
+   "✨ Cinq nouvelles collections en boutique, le skin et son dos assorti : Topo, Givre, Kintsugi, Vitrail et Aquarelle. Dans toute la boutique, le skin et le dos d'un thème se vendent maintenant ensemble ; si tu as déjà l'un des deux, tu ne paies que ce qui te manque. Et les onze skins existants ont été redessinés : ils jouent maintenant avec la photo de ta carte. Si tu en as déjà un, il change tout seul, sans rien payer.",
+   "🏆 Les récompenses de la saison 2 sont dans les profils : médailles du podium, titres, seigneuries, clan champion, et un paquet Terra offert à tous les pionniers du Front."
+  ],
+  "correctifs": [
+   "Android : la barre d'onglets ne passe plus à moitié sous la barre du téléphone quand la page défile (Tirage notamment). Signalé par Arkhannou.",
+   "Attaquer se met à jour après une prise par siège, même quand la commune tombe toute seule avec l'énergie en attente (signalé par Oshannir).",
+   "Siège : la fiche dit ce que devient ta vague (ce qui part tout de suite, ce qui attend son tour et combien de temps, ce qui est de trop). L'énergie déjà en attente compte dans « Juste assez » (question d'ASMFCB).",
+   "Sur les nouvelles cartes, le bandeau du monument ne recouvre plus le nom de la commune. Après un duel classé, le jeu annonce les tickets du Mess gagnés."
+  ]
+ },
+ {
+  "date": "2026-11-18",
+  "nouveautes": [
+   "Roue du Front : quand ta réserve de lingots est pleine, les lingots gagnés à la roue ne sont plus perdus. Ils deviennent des TerraPoints, 5 TP par lingot (une case Lingots = +10 TP).",
+   "Quêtes du Front : elles changent chaque jour ! 7 par jour, les mêmes pour tout le monde : la Commune du jour et une conquête tous les jours, plus 5 tirées dans une réserve d'une trentaine (combat, mini-jeux, économie, Mess ou clan). +10 énergie chacune, +15 pour les plus dures, et un bonus de +15 énergie et 1 lingot quand les 7 sont faites. Le plafond passe à 100 énergie de quêtes par jour. Les quêtes Terra piochent maintenant dans 16 quêtes. Merci pour l'idée !"
+  ],
+  "correctifs": [
+   "Boutique : le paquet du département a maintenant un prix selon le département. Paris et la petite couronne sont pleins de légendaires : un paquet y rapportait bien plus qu'il ne coûtait. Paris passe à 3 700 TP, les Hauts-de-Seine et la Seine-Saint-Denis à 3 100, le Val-de-Marne à 2 600, les Bouches-du-Rhône à 1 500 ; tous les autres restent à 800. Le prix s'affiche dans la liste et sur le bouton.",
+   "Règles, « La saison » : à la fin de la saison 2, ta collection Terra reçoit tes 5 communes gardées (★), mais plus les communes des départements tenus à plus de 45 %. Une saison dure de 3 à 4 semaines (la saison 3 en dure 3)."
+  ]
+ },
+ {
+  "date": "2026-11-17",
+  "nouveautes": [
+   "Front : les paquets sont de retour pour tous, tant qu'il reste des communes libres dans le pot. La roue du Front reste ouverte en plus, sous tes paquets, avec ses propres jetons (1 toutes les 20 min, 3 en réserve, 50 tours par jour) : tes tours de roue ne prennent plus tes paquets."
+  ],
+  "correctifs": [
+   "Combat : avec le tri « Meilleures chances », la liste n'était plus toujours dans l'ordre quand un pourcentage changeait (série noire, bombe…). Elle se retrie maintenant toute seule, sans te faire perdre ta place. Merci H34VEN et D.C.A !",
+   "Combat : depuis le correctif de 13 h, avec le tri « Meilleures chances » ou « Près de mon territoire », la liste remontait tout en haut après chaque assaut. C'est réparé : la page reste où tu en étais.",
+   "Combat : le pourcentage affiché sur le bouton « Attaquer » pouvait rester celui du premier calcul (60 % sur le bouton, 45 % dans l'assaut). Il est maintenant recalculé après chaque assaut, après chaque conquête, et au moins toutes les 2 minutes. Les chances de l'assaut, elles, ont toujours été les bonnes. Merci Arkhannou !"
+  ]
+ },
+ {
+  "date": "2026-11-16",
+  "nouveautes": [
+   "Ma France : sous la carte, la liste « Département par département » montre combien de communes il te manque dans chaque département, triée par numéro ou par les plus proches du complet. Touche une ligne pour voir le département sur la carte. Idée d'Arkhannou, merci !",
+   "Clan › Diplomatie : les alliances. Un chef peut créer une alliance et y inviter jusqu'à 4 autres clans. Dès que 2 clans en sont membres, un salon commun s'ouvre sur le Discord, visible de tous leurs membres. Chaque chef peut inviter un clan de plus ou faire sortir le sien."
+  ],
+  "correctifs": [
+   "Rafale : une partie lancée sans aucune réponse ne sert plus d'adversaire, et une partie qui attend depuis plus de 3 jours non plus. Fini les défaites qui tombent des jours après pour une partie pas jouée. L'Elo perdu à cause de ces parties a été rendu aux 7 joueurs touchés (merci Maroli).",
+   "Fiche d'une commune dans une zone bombardée : elle dit jusqu'à quand dure la zone, si la garnison a sauté, et rappelle qu'une bombe ne détruit que les garnisons et les Forteresses. Un Centre de recherche, une Fonderie, un Radar ou une Banque restent debout : pour les faire tomber, il faut prendre la commune (merci Arkhannou)."
+  ]
+ },
+ {
+  "date": "2026-11-15",
+  "nouveautes": [],
+  "correctifs": [
+   "Rafale et Radar : plus de duel classé contre un joueur beaucoup plus fort ou beaucoup plus faible (plus de 300 points d'Elo d'écart) ; ta partie attend alors un adversaire de ton niveau, 12 h au plus (merci Maroli).",
+   "Carte Outre-mer du Front : les bâtiments (Centres de recherche dévoilés compris) et les zones de bombe y apparaissent enfin, comme sur la carte de France (merci Bonjean).",
+   "Cartouche « Paris et petite couronne » : un département choisi ne reste plus en gras quand on en choisit un autre sur la carte (merci Arkhannou)."
+  ]
+ },
+ {
+  "date": "2026-11-13",
+  "nouveautes": [
+   "🏛️ Merveilles plus justes : une équipe envoyée dans les 12 premières heures compte depuis l’ouverture (la cloche te prévient), tous les bâtisseurs (1 000 h et plus) sont gravés, et chaque monument restauré chez toi donne +2 % de rythme à ton équipe, jusqu’à +40 % (merci Oshannir)",
+   "Roue du Front : le paquet Terra repasse à 5 % (il en sortait près de 5 par joueur et par jour) ; le Petit éclair (+4 énergie) passe de 20 à 25 %."
+  ],
+  "correctifs": [
+   "🏗️ Les bâtiments des autres joueurs se mettent à jour pendant la partie : une Fonderie construite après l’ouverture du jeu n’apparaissait ni sur la carte ni sur l’écran de victoire (« Fonderie détruite »), même si le pillage avait bien lieu (merci Oshannir)",
+   "Une zone bombardée ne peut plus recevoir de garnison pendant 24 h : la bombe ne se répare plus en une minute."
+  ]
+ },
+ {
+  "date": "2026-11-12",
+  "nouveautes": [
+   "🛡️ Clans : le clan d’un joueur s’affiche sur son profil ; touche-le pour ouvrir la fiche du clan, ses membres et « Voir son territoire ». Dans le tchat du clan, touche un pseudo pour voir son profil, et tape @ pour citer un joueur (idée d’Oshannir)",
+   "💬 Discussion générale : touche un @pseudo cité ou le pseudo de l’auteur d’un message pour voir son profil (merci Oshannir)",
+   "🤝 Échanges entre clans : un par jour au lieu d’un par semaine. Touche sur la carte une commune d’un joueur d’un autre clan, puis « Proposer un échange » (même rareté, chacun dans son clan depuis 48 h)",
+   "🎡 Roue du Front : moins de « 10 TerraPoints » (12 % au lieu de 22 %), plus de Lingots (15 %) et de Paquets Terra (10 %). Le peuple a parlé (merci Stonirr)",
+   "Zones bombardées : le temps qu'il reste s'affiche sur l'étiquette de la zone, sur la fiche d'attaque, et quand tu touches l'étiquette (idée d'Arkhannou).",
+   "Quand on te prend une commune, la cloche et le Journal disent ce que tu perds avec : Fonderie (lingots pillés, plafond qui baisse), Banque et son contenu, Forteresse, Radar, Centre de recherche et bombe en préparation."
+  ],
+  "correctifs": [
+   "⏱️ Sur la carte, la fiche d’attaque décompte maintenant toute seule le délai avant le prochain assaut, et le bouton revient à zéro sans avoir à quitter la commune (merci Oshannir)"
+  ]
+ },
+ {
+  "date": "2026-11-11",
+  "nouveautes": [
+   "💣 Bombes : les points au classement suivent maintenant le niveau, +150 au niveau 1, +300 au niveau 2, +500 au niveau 3. Les bombes déjà lancées gardent au moins leurs 300 points, celles de niveau 3 passent à 500 (idée d’Oshannir)",
+   "🤝 Échange depuis la carte : seules tes communes de la bonne rareté ressortent, entourées de jaune ; les autres sont voilées (idée d’Arkhannou)",
+   "🔎 « Qui possède ta commune ? » : sur la page d’accueil, n’importe qui (même sans compte) tape une ville et voit qui la tient, depuis quand, et les communes autour. Chaque commune a son lien à partager, par exemple terrafront.fr/?c=cognac-16",
+   "🛡️ Calque Clans : nouveau choix « Contour | Plein » sous « Couleurs ». En « Plein », tout le territoire d’un clan prend la couleur du clan ; un trait sépare ses membres et ton territoire garde un liseré jaune (idée de Cairnan217)",
+   "🧮 « Mes points » : dans le classement du Front, touche ta ligne (ou « Mes points ») pour voir le détail de ton score : cartes par rareté, victoires, chaque département avec son palier, régions, bâtiments, bombes et rébellions (idée d’Oshannir)",
+   "🏆 Les récompenses de la saison 2 sont annoncées : podium et top 10, clan champion, 13 distinctions, seigneurs de territoire, et un cadeau pour tous. Fin de la saison dimanche 22/11 à 10 h ; tout est dans le bandeau sous le titre du classement",
+   "🥇 Les dos de carte du podium sont dévoilés : une couronne de lauriers en or pour le 1er, en argent pour le 2e, en bronze pour le 3e, un seul exemplaire de chaque. Ils sont dans la fiche des récompenses (bandeau sous le titre du classement)",
+   "🌱 Le bonus de débutant dure maintenant 48 h (au lieu de 7 jours), toujours jusqu’à la première conquête : c’est le moment de prendre ta première commune"
+  ],
+  "correctifs": [
+   "Attaquer, « Meilleures chances » : avec plus de 4 000 cibles (« Toutes »), le tri ne se faisait pas du tout. Les 4 000 cibles les plus proches de ton territoire sont maintenant triées par chance, les autres suivent par distance (signalé par Arkhannou)",
+   "🛡️ Calque Clans en « Plein » : le gros contour du clan ne s’affiche plus par-dessus la couleur ; il reste seulement le trait fin entre les membres (merci Cairnan217)",
+   "🛸 Carte : l’animation d’une bombe ne laisse plus d’image figée (garnisons, viseur, ondes) quand on touche la carte pendant l’animation (merci Arkhannou et ASMFCB)"
+  ]
+ },
+ {
+  "date": "2026-11-10",
+  "nouveautes": [
+   "📏 Carte du Front : une échelle de distance en bas à gauche, qui suit le zoom (idée de zintox)",
+   "🛡️ Tes garnisons sur la carte : un bouclier avec son niveau à côté de la commune, vert de 4 à 10, orange de 1 à 3, bleu à 0 (idée d’Arkhannou)",
+   "🎡 Le fil de la roue, sous la roue : le dernier jackpot, les derniers gros lots de tout le monde, et ta journée à copier pour Discord (idée d’Oshannir)",
+   "🏰 Onglet Attaquer : les bâtiments et la garnison d’une commune s’affichent sur sa carte, quand tu peux les voir (idée d’Oshannir)",
+   "🤝 Échanges entre clans : sur la carte, touche une commune d’un joueur d’un autre clan, puis « Proposer un échange ». Une contre une, même rareté, un échange par semaine (idée de zintox)",
+   "🕊️ Diplomatie entre clans : dans l’onglet Clan, le chef propose un salon privé sur le Discord à un autre clan ; si l’autre chef accepte, le salon apparaît dans « 🤝 Diplomatie », visible des deux clans seulement (5 salons au plus par clan)",
+   "💬 Onglet Clan : un bandeau te dit si le bot des clans t’a trouvé sur le Discord. L’idéal : le même pseudo sur le Discord que dans le jeu, pour voir le salon de ton clan et ses salons de diplomatie",
+   "🗺️ Carte : de loin, un territoire d’un seul tenant n’a plus que son tour ; les limites des communes à l’intérieur apparaissent en zoomant, pour voir où taper (idée d’Oshannir)"
+  ],
+  "correctifs": [
+   "Assaut contre une commune en garnison : l’animation affiche la même chance que la fiche (par exemple 43 %, soit 85 % aux dés et une victoire sur deux annulée par la garnison), et l’aiguille s’arrête dans le vert quand la garnison annule ta victoire",
+   "Clans : si leur chargement échouait au retour sur l’appli, ils restaient invisibles toute la partie (coéquipiers parmi les cibles d’Attaquer, calque Clans vide). Le jeu réessaie maintenant tout seul, et les relit toutes les 10 minutes",
+   "Carte : plus de traits noirs au milieu des territoires. Deux communes voisines dont la limite n’avait pas exactement les mêmes points passaient pour un bord de territoire ; un territoire d’un seul tenant n’a plus que son tour (signalé par Oshannir)",
+   "Carte : de loin, les zones bombardées n’ont plus qu’une pastille 💥 au lieu de grandes étiquettes qui couvraient la carte et se chevauchaient ; l’étiquette complète revient en zoomant (signalé par Arkhannou)",
+   "Front, vue outre-mer : avec le calque Clans, le contour du clan entoure son territoire au lieu de chaque commune, et un cercle de bombe de la carte de France ne reste plus par-dessus les territoires (signalé par Arkhannou)"
+  ]
+ },
+ {
+  "date": "2026-11-09",
+  "nouveautes": [
+   "⚡ La réserve d’énergie du Front passe à 120 (au lieu de 90) : en revenant, tu en retrouves plus",
+   "🎡 Roue du Front : 50 tours par jour au lieu de 30 (toujours 1 tour toutes les 20 min), pour retrouver de l’énergie l’après-midi",
+   "🎡 Roue du Front : +50 % d’énergie sur les cases éclair (petit +4, éclair +7, gros +15, jackpot +18, mixte +4)",
+   "⭐ Bonus de débutant : il ne joue plus contre une épique ou une légendaire (chances normales sur ces raretés)"
+  ],
+  "correctifs": [
+   "Roue du Front : le tour en plus de la Relance est un vrai tour offert, hors des 30 tours du jour. Les Relances tirées depuis hier soir sont remboursées en tours offerts (signalé par Maroli)"
+  ]
+ },
+ {
+  "date": "2026-11-08",
+  "nouveautes": [
+   "⚡ L’énergie du Front se recharge plus vite : +1 toutes les 7 minutes (au lieu de 10)",
+   "🌙 La soirée de la roue : chaque soir de 21 h à 23 h, 15 tours offerts, sans jeton et hors des tours du jour",
+   "🏗 Nouveau volet Combat › Bâtiments (idée de Maroli et ASMFCB) : lingots, Fonderies, Forteresses, Centre, Banque et bombe y sont regroupés. Défendre ne garde que la défense",
+   "⚔️ Fiche d’attaque allégée : tes chances en gros, les bonus et malus en pastilles (vert = pour toi, rouge = contre toi), le détail sur « Pourquoi ? ». La rébellion est dans « Plus d’options »",
+   "🏰 Déplacer une forteresse : 10 lingots, 6 h de chantier, vers une de tes communes. Dans Combat › Bâtiments, ou « Déplacer une forteresse ici » sur la fiche d’une commune",
+   "🏭 Déplacer une Fonderie (idée de Maroli) : 10 lingots, 6 h de chantier sans production. Dans Combat › Bâtiments, ou « Déplacer une Fonderie ici » sur la fiche d’une commune",
+   "🏦 Déplacer la Banque : 10 lingots, 6 h, le contenu suit. Les Radars voient maintenant les Banques à moins de 50 km, et le propriétaire est prévenu",
+   "💥 L’impact de la bombe s’anime sur la carte (« Voir › » sur la bannière), et sur la carte en direct",
+   "🗺 Encart « Paris et petite couronne » sur la carte en vue par départements (idée d’Arkhannou)",
+   "🔁 « Rejouer » à la fin d’un duel classé du Radar et de Rafale (idée de Cairnan217)",
+   "🛡 Recharger une garnison : choisis combien tu mets (+1, +2, +5 ou plein), dans Défendre et sur la fiche de la commune",
+   "🎡 Roue du Front : la Relance offre maintenant 2 tours (ton tour est rendu, et un de plus)"
+  ],
+  "correctifs": [
+   "La mallette de la bombe a une touche « - » et trouve les communes à tiret (signalé par Oshannir)",
+   "Moins de chargements quand on zoome vite sur la carte du Radar ou sur Ma France (plantage signalé par Arkhannou sur téléphone)",
+   "Défendre affiche bien les 5 places de garnison : avec 3 ou 4 garnisons, la liste « En garnison » disparaissait",
+   "Sur ordinateur, la bulle d’un département au survol montre aussi le nombre de communes, pas seulement les % (signalé par Oshannir)",
+   "Sur téléphone avec le texte agrandi, les onglets de Combat ne font plus déborder la page (signalé par Arkhannou)"
+  ]
+ },
+ {
+  "date": "2026-11-07",
+  "nouveautes": [
+   "💣 Bombes plus grosses et plus rapides : 15 km de rayon à 24 h, 20 km à 36 h, 25 km à 48 h (au lieu de 10, 15 et 20 km à 24, 48 et 72 h). Le Centre apparaît sur la carte à 36 h de préparation. Pas de 2e bombe à moins de 30 km d’une zone encore active",
+   "📡 Radar (30 lingots, une Fonderie) : il voit les Centres de recherche à moins de 50 km, même secrets, et les montre sur ta carte. Le joueur repéré est prévenu. Visible de tous, +80 au classement",
+   "🧪 Déménager son Centre de recherche (idée d’Arkhannou) : 20 lingots, 6 h de chantier ; la bombe suit, en pause pendant le chantier. Défendre › Bâtiments, ou « Déménager le Centre ici » sur une de tes communes",
+   "🍀 Série noire : après 2 assauts perdus d’affilée sur une même commune, les suivants ont +15 % jusqu’à ta prochaine victoire dessus (90 % au plus, pas contre une garnison)",
+   "🌱 Bonus de débutant : pendant tes 7 premiers jours et jusqu’à ta première conquête, au moins 85 % par assaut, même loin de chez toi (pas contre une garnison). Sans commune, « Choisir sur la carte » te propose une cible près de chez toi",
+   "🏗 Bâtiments en pixel art : une case « Mes bâtiments » dans Mon front, avec ceux des autres joueurs (recherche, région, type). Choisis le style de chaque bâtiment quand tu le construis",
+   "🔎 Recherche par région : « bretagne », « grand est », « idf », « paca »… dans Combat, la Collection, l’Échange et les exclusions"
+  ],
+  "correctifs": [
+   "La recherche « corse » trouve la Corse-du-Sud et la Haute-Corse (Combat ne montrait que le 2A)"
+  ]
+ },
+ {
+  "date": "2026-11-06",
+  "nouveautes": [
+   "👥 Invite un ami : ton lien est maintenant dans les quêtes (et un bandeau au Tirage). Ton ami reçoit 1 paquet Terra et 10 ⚡ en arrivant, puis 1 paquet de plus après 3 jours de jeu. Toi, +10 ⚡ par ami et des paliers chaque saison : 1, 3 et 5 amis actifs pour 1, 2 et 3 paquets Terra. Tu peux inviter dès ton premier jour",
+   "✊ Rébellion : sous la fiche d’attaque, paie des lingots pour baisser la défense d’une ville face à toi (3 lingots par point, jusqu’à −15 %, 24 h). Le propriétaire est prévenu et peut l’étouffer à l’aveugle, dans Défendre (idée de Bonjean)",
+   "⚔ Proximité : sans commune à moins de 20 km de ta cible, −12 % ; avec une, rien ne change ; avec deux ou plus, +5 %. Deux communes groupées suffisent pour être au niveau d’un grand territoire (idée d’Oshannir)",
+   "⏳ Sièges : sans assaut pendant 24 h, un siège tombe ; la série repart de zéro et le défenseur retrouve ses deux défenses (idée d’Oshannir)",
+   "🛡 Défense à parité : 40, 55 ou 70 % (5 points de plus qu’en attaque), et une fois tes deux défenses utilisées, tu peux retenter après chaque round que l’attaquant gagne (idée d’Oshannir)",
+   "⚡ Énergie pour la fin de saison : 90 au maximum au lieu de 50 (toujours +1 toutes les 10 minutes) : une nuit ne fait plus rien perdre (idée d’Oshannir et Stonirr)",
+   "💎 Grosses communes : attaquer une épique coûte 1 énergie de plus par assaut, une légendaire 2 de plus (3, 4 ou 5 selon l’engagement). Les chances ne changent pas, et défendre coûte toujours 1, 2 ou 3",
+   "🏰 Garnisons et Forteresses : 5 au plus au lieu de 3 (demande de Maroli et Bonjean)",
+   "🎯 Quêtes Front : trois quêtes plus dures à +10 énergie : une partie de Radar sous 400 km, 6 communes en Rafale, 7 sur 10 au Plus ou moins du jour (idée de Stonirr)",
+   "💤 Absence : après 10 jours sans ouvrir le jeu, tes communes du Front retournent peu à peu au pot (10 % par jour) ; une notification prévient 2 jours avant. Ta collection Terra n’est jamais touchée",
+   "🗺 Carte : mets plusieurs joueurs en évidence à la fois, dans la légende (idée de Maroli)",
+   "🤝 Échange de clan depuis la carte : touche la commune d’un coéquipier, puis une des tiennes de même rareté, sans passer par l’onglet Clan (idée de Bonjean)",
+   "🏦 La Banque devient une épargne : dépose tes lingots (jusqu'à 60), ils rapportent 10 % chaque nuit, à l'abri du pillage des Fonderies. Retire-les pour les dépenser (Défendre › Bâtiments). Elle se construit sur une de tes communes (20 lingots, une Fonderie demandée) et reste secrète",
+   "🏆 Classement du Front : tes bâtiments comptent maintenant (Fonderie +50, Forteresse +80, Centre +150, Banque +80, acquis même s’ils sont détruits, jusqu’au maximum de chaque type), ainsi que tes bombes lancées (+300) et tes rébellions, financées ou étouffées (+2 par lingot, 60 par jour au plus). Détail dans « Comment c’est calculé ? »"
+  ]
+ },
+ {
+  "date": "2026-11-05",
+  "nouveautes": [
+   "🎡 Roue du Front : 30 tours par jour au lieu de 15, et trois cases nouvelles : TerraPoints (+10 TP), Cagnotte (+50 TP) et Relance (ton tour est rendu). Les cases d'énergie et de lingots sont un peu plus rares, pour qu'une journée de roue rapporte à peu près autant au Front. Les chances sont sous la roue",
+   "⚡ Le classement, les profils et les quêtes s’ouvrent plus vite (ils ramaient en soirée). Le classement se met à jour chaque minute : après une conquête, ton score peut mettre jusqu’à une minute à y apparaître",
+   "🗺 Carte : passer à un autre onglet pendant que la carte était en plein écran la cassait (zoomée, décalée, communes une par une) jusqu’au rechargement. Corrigé : en revenant sur Territoire, tu la retrouves en plein écran, là où tu l’avais laissée (défaut signalé par Oshannir)",
+   "🎡 Roue du Front : les chances sous la roue sont rangées de la plus fréquente à la plus rare (idée d’Arkhannou)",
+   "🃏 Collection Terra : le filtre « Doublons » range les cartes par nombre d’exemplaires, du plus petit au plus grand. Touche-le une deuxième fois pour inverser l’ordre (idée de Maroli)"
+  ],
+  "correctifs": [
+   "Sur iPhone, la barre du bas pouvait rester au milieu de l’écran après avoir fermé le clavier (un défaut de Safari depuis iOS 26, revenu avec iOS 27). Le jeu la remet en place tout seul (signalé par Oshannir)"
+  ]
+ },
+ {
+  "date": "2026-11-04",
+  "nouveautes": [
+   "💬 Discussion : un salon ouvert à tous les joueurs, en haut de Communauté. Touche un message pour le signaler ou masquer son auteur. Chacun y a son avatar et le blason de son clan. Un point bleu sur la cloche quand il y a du neuf, et le compteur quand on te cite avec @pseudo. Tape @ et les premières lettres d’un pseudo : le jeu te le propose",
+   "🎡 Roue du Front : les dernières communes libres restent aux nouveaux joueurs jusqu’à la fin de la saison. Pour les autres, la roue remplace les paquets du Front : un tour toutes les 20 min (3 en réserve), 15 par jour, pour de l’énergie, des lingots ou un paquet Terra. Les chances de chaque case sont affichées sous la roue",
+   "🛡 Défense : tu choisis ton engagement à chaque défense, avec tes chances affichées : prudente 1 énergie (35 %), normale 2 (50 %), offensive 3 (65 %), comme l’attaque. Tes communes voisines ne comptent pas en défense",
+   "🛡 Défense : faire retomber la série d’un attaquant à zéro ne rend plus tes deux défenses ; elles reviennent seulement 24 h après ta dernière défense (défaut signalé par H34VEN)",
+   "🧭 Nouveaux joueurs : on commence maintenant au Front. Le jeu propose une première cible facile, suit la série jusqu’à la conquête, puis présente des clans qui recrutent",
+   "📖 Règles : le bonus de région (+1 200) demande d’être seul en tête avec 10 % ou plus dans plus de la moitié de ses départements ; le texte oubliait « seul en tête ». Le calcul, lui, ne change pas",
+   "🔔 Alertes d’attaque : après une défense réussie, tu ne reçois plus « X a gagné un round » par erreur, et elles ne parlent plus de bouclier (il n’y en a pas au Front)",
+   "🤝 Échanges de clan : une commune attaquée garde son siège quand elle change de main. L’attaquant continue sa série contre le nouveau propriétaire, sans les 3 h de protection (faille signalée par un joueur, merci !)",
+   "📖 Règles : la réserve d’accueil (à 3 000 communes libres, seuls les nouveaux ouvrent encore des paquets du Front) et la libération de communes contre de l’énergie sont maintenant expliquées dans Règles › Front"
+  ]
+ },
+ {
+  "date": "2026-11-03",
+  "nouveautes": [
+   "🗺 Carte : de près, la bordure de chaque territoire passe à l’intérieur de ses communes au lieu de déborder sur les voisines, et les limites de département sont bien plus nettes (retours d’Oshannir)",
+   "🛡 Défense : une défense utilisée revient 24 h après ta dernière défense (deux au plus) ; une attaque laissée en plan peut toujours être repoussée (idée de H34VEN)",
+   "🗺 Commune du jour : la région de la commune est donnée dès le départ, pour que le premier essai ne soit plus au hasard ; les autres indices arrivent ensuite, un par essai",
+   "✨ Terra : les cartes brillantes ! Chaque carte d’un paquet Terra a 1 chance sur 800 de sortir brillante, avec son propre numéro, et elle ne quitte jamais ta collection",
+   "💎 Éclat : sur la fiche d’une carte que tu as en 3 exemplaires, la carte + 2 doublons + 500 TP la font briller pour toujours",
+   "🎨 L’atelier des cartes : finitions, halos, styles et bordures pour tes cartes Terra ; beaucoup se gagnent en jouant (quêtes, départements finis), et chaque carte peut avoir les siens depuis sa fiche",
+   "🗺 La carte se charge bien plus vite, et elle se met à jour toute seule (chaque minute) : plus besoin de recharger le jeu pour voir les conquêtes des autres",
+   "📺 La carte en direct, pour les streams : terrafront.fr/direct/ montre la carte aux couleurs des clans, les conquêtes qui clignotent, le fil du Front et le classement des clans",
+   "⚔ Front : la course à la commune ! Quand un joueur prend une commune, les sièges des autres attaquants sur cette commune sont effacés, et la cloche les prévient (idée d’Oshannir)",
+   "🤝 Échanges de clan : 3 par jour avec chaque coéquipier, au lieu de 3 en tout (idée d’Oshannir et Maroli)",
+   "🛡 Clans : plus d’attente pour rejoindre un clan après en avoir quitté un (les échanges s’ouvrent toujours 48 h après ton arrivée)",
+   "🏗 Grands chantiers : chaque monument dit combien d’autres joueurs le restaurent, et si tu peux encore y graver ton nom le premier",
+   "🌌 Aurore : les cartes Aurore retravaillées, avec le nom, le numéro et la rareté bien lisibles (merci Maroli)",
+   "🗺 Territoire : sur téléphone, la légende montre aussi les raretés et les bâtiments ; touche Fonderie, Forteresse ou Centre pour savoir à quoi ils servent",
+   "📍 Survole ou touche un numéro de département pour le voir sur la carte de France, et propose un échange à un coéquipier depuis la fiche de sa commune (idées d’Arkhannou)",
+   "🧭 Premiers pas : la 1re étape t’emmène ouvrir ton premier paquet du Front"
+  ],
+  "correctifs": [
+   "La chance affichée (fiche et liste Combat) tient compte de la garnison de la commune visée",
+   "Combat : les communes de tes coéquipiers ne restent plus dans la liste des cibles (merci Arkhannou)",
+   "Garnison : près du plafond de 60, le bouton prévient et la notification dit l’énergie vraiment récupérée (merci H34VEN)",
+   "Carte postale : le tampon ne cache plus le nom de la commune",
+   "Aurore : le reflet n’apparaît plus qu’en inclinant la carte, et sur ordinateur l’aurore de la fiche reste immobile",
+   "Premiers pas : le bouton « Ouvrir » montre ton paquet prêt au lieu de dire qu’il arrive bientôt"
+  ]
+ },
+ {
+  "date": "2026-11-02",
+  "nouveautes": [
+   "🏗 Terra : les grands chantiers ! Restaure les monuments de ta collection (Collection › Monuments), récolte leurs visiteurs en TP, grave ton nom sur ceux que tu finis en premier, et aide tout le monde à restaurer Notre-Dame",
+   "🛡 Garnison : la retirer rend maintenant 75 % de son énergie (au lieu de la moitié)",
+   "📰 Journal : les Fonderies et Forteresses construites, et les Fonderies détruites, y apparaissent (jamais le Centre de recherche, qui reste secret)",
+   "🏆 Classement : « Comment c’est calculé ? » détaille le score (cartes, combats, territoires) et la moyenne des clans",
+   "🛡 Clans : tu peux postuler directement depuis le jeu (déplie un clan dans le classement) ; les chefs acceptent ou refusent dans l’onglet Clan",
+   "🧭 Nouveaux joueurs : une carte « Premiers pas » (4 étapes, et 1 paquet Terra + 10 lingots à la clé)",
+   "🏗 Bâtiments : 6 h de construction au lieu de 24 h, et tu peux annuler un bâtiment en construction (ses lingots te sont rendus en entier)"
+  ],
+  "correctifs": [
+   "Notifications : le numéro du département s’affiche à côté de la commune attaquée (merci Arkhannou)"
+  ]
+ },
+ {
+  "date": "2026-11-01",
+  "nouveautes": [
+   "⚔ Front : les combats rapportent des lingots (+2 par conquête, +1 par défense réussie, 10 au plus par jour)"
+  ],
+  "correctifs": [
+   "Échanges de clan : toutes tes communes sont proposées, même au-delà de 1 000 ; et toucher une ville sur la carte n’ajoute plus d’énergie en garnison par erreur",
+   "Sur téléphone, la fiche d’une commune défile de nouveau au doigt (le bas, avec les bâtiments, restait inaccessible)",
+   "Après une défense réussie avec la réserve de lingots pleine, la notification le dit"
+  ]
+ },
+ {
+  "date": "2026-10-31",
+  "nouveautes": [
+   "⚡ Front : la réserve d’énergie passe de 40 à 50 (toujours +1 toutes les 10 minutes)",
+   "🏪 Le Marché : Bourse, Échange et Contrat réunis, avec « Mes doublons » pour voir d’un coup ce que tu peux en faire",
+   "🎃 Le paquet maudit d’Halloween aussi avec le paquet Nacre ; une case dans Profil pour garder ton habillage",
+   "🗺️ Territoire : le bouton « Raretés » colore les communes selon leur rareté, et les bâtiments se voient mieux",
+   "⭐ Attaquer : trie les cibles par meilleures chances ; « Près de mon territoire » les met aussi en premier",
+   "🛍 La boutique à un toucher : le sac à côté de la cloche, et « Soutiens le développement du jeu » dans le menu",
+   "📦 La notification « Un paquet gratuit t’attend » t’emmène au Tirage quand tu la touches",
+   "🎨 Skins : ils s’affichent dans Personnaliser, et « Tout choisir » les pose sur toutes tes cartes d’un coup",
+   "⚔ Combat : le volet « Mon front » résume tout (à défendre, énergie, attaques en cours, communes, protections, quêtes)"
+  ],
+  "correctifs": [
+   "Sur téléphone, la fiche d’une commune ne se fermait plus quand la carte était en plein écran",
+   "« Ta boutique » : les cartes se chevauchaient et débordaient sur la page"
+  ]
+ },
+ {
+  "date": "2026-10-30",
+  "nouveautes": [
+   "📋 Quêtes du jour : un bandeau en haut du Tirage, la liste s’ouvre d’un geste",
+   "📦 Tirage plus léger sur téléphone : le paquet est visible dès l’arrivée, sans défiler",
+   "🎃 Halloween : décor TerreurFront et screamers au choix, jusqu’au 2 novembre à minuit",
+   "👻 Quête des communes hantées : 1 paquet Terra sur 3, et en Front, celui qui en tient une à la fin gagne",
+   "🛒 Ta boutique : une vitrine de communes rien qu’à toi, renouvelée chaque jour et chaque semaine",
+   "👋 Récap d’arrivée après 3 h d’absence, et barre du bas revue sur téléphone",
+   "🗺️ Plus ou moins : la mini-carte de France entre les deux photos",
+   "🏅 Plus ou moins : de nouveaux rangs, plus serrés, et Préfet pour le n°1",
+   "🕊️ Libérer des communes du Front contre de l’énergie",
+   "⚡ Quêtes du Front : jusqu’à 50 d’énergie par jour, et « Joue 2 duels » au lieu de « Gagne un duel »",
+   "🛡️ Le blason de ton clan à côté de ton pseudo (classement, carte, journal)",
+   "🔁 Échange : la pastille « Toutes » pour voir toutes les raretés d’un coup",
+   "📒 Collection Terra : la catégorie « Événements »"
+  ],
+  "correctifs": [
+   "Les paquets Terra qui ne s’ouvraient plus entre 18 h 24 et 18 h 43 (rien n’a été perdu)",
+   "Le jeu qui se rechargeait en boucle vers 20 h 20",
+   "La vitrine qui s’étirait sur iPhone à partir de 5 cartes",
+   "Le sceau « Hantée » qui cachait le monument de la carte",
+   "La pastille « 0 » de la cloche, et le journal qui disait « une rare » pour une épique"
+  ]
+ }
 ]

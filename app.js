@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ee52f8cedccd';
+const VERSION_JEU = '812ae9ac7019';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -18666,6 +18666,11 @@ async function passOuvrirPaquet(niveau, sel){
   if(r.valeur === 'paquet-departement'){
     dep = sel ? sel.value : '';
     if(!dep){ notifier({ type: 'erreur', titre: 'Choisis d\'abord un département' }); if(sel) sel.focus(); return; }
+  }
+  if(!enTerra()){   // patch533 : les cartes du pass vont dans la collection Terra
+    const bt = document.querySelector('[data-mode="terra"]');
+    if(bt) bt.click();
+    if(!enTerra()){ notifier({ type: 'erreur', titre: 'Passe en Terra', texte: 'Ce paquet donne des cartes Terra : passe en mode Terra pour l\'ouvrir.' }); return; }
   }
   boutiqueAchat = { pass: Number(niveau), dep };
   boutiqueOuvert = false;

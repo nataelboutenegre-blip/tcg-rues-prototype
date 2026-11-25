@@ -1,5 +1,12 @@
 [
   {
+    "date": "2026-11-25",
+    "nouveautes": [],
+    "correctifs": [
+      "🎁 Pass : ouvrir un paquet du pass depuis le mode Front affichait une erreur. Le jeu passe maintenant en Terra pour l'ouvrir (les cartes allaient bien dans ta collection Terra). Merci Maroli."
+    ]
+  },
+  {
     "date": "2026-11-24",
     "nouveautes": [
       "🔔 Front : une vague qui remplit la moitié de la jauge d'un siège en cours te prévient, et l'alerte « en danger » revient chaque fois que la jauge repasse les deux tiers.",

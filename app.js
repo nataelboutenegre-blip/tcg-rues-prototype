@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '4d0faee0008a';
+const VERSION_JEU = '1de911647358';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -20720,7 +20720,16 @@ const BL_MEUBLES = {
   aigle:    { nom:'Aigle', d:'M20 5C22.5 5 24 7 23.5 9.5L35 4L32 14L38 12.5L32.5 21H25.5L28.5 31H24.5L22 26L20 37L18 26L15.5 31H11.5L14.5 21H7.5L2 12.5L8 14L5 4L16.5 9.5C16 7 17.5 5 20 5Z' },
   soleil:   { nom:'Soleil', d:'M' + [...Array(32)].map((_, i) => { const a = -Math.PI/2 + i*Math.PI/16, k = i % 2 ? 11 : 17.5; return `${(20 + k*Math.cos(a)).toFixed(2)} ${(20 + k*Math.sin(a)).toFixed(2)}`; }).join('L') + 'Z' },
   epis:     { nom:'Épi de blé', d:'M19 14H21V38H19ZM20 2C22.5 4 22.5 7 20 9C17.5 7 17.5 4 20 2ZM20 8C24.5 7.5 26.5 10 25.5 13.5C22 14 19.5 12 20 8ZM20 8C15.5 7.5 13.5 10 14.5 13.5C18 14 20.5 12 20 8ZM20 14C24.5 13.5 26.5 16 25.5 19.5C22 20 19.5 18 20 14ZM20 14C15.5 13.5 13.5 16 14.5 19.5C18 20 20.5 18 20 14ZM20 20C24.5 19.5 26.5 22 25.5 25.5C22 26 19.5 24 20 20ZM20 20C15.5 19.5 13.5 22 14.5 25.5C18 26 20.5 24 20 20Z' },
+  // patch536 : pour tous, puis 3 rares (rare = n-ième semaine d'or de l'objectif de clan)
+  chateau: { nom:'Château', d:'M4 37V6H6V9H8V6H10V9H12V6H14V18H15.5V4H17.3V7H19.1V4H20.9V7H22.7V4H24.5V18H26V6H28V9H30V6H32V9H34V6H36V37ZM16.5 37V30A3.5 3.5 0 0 1 23.5 30V37ZM7.8 13H10.2V18H7.8ZM29.8 13H32.2V18H29.8ZM18.8 9.5H21.2V14.5H18.8Z' },
+  trefle: { nom:'Trèfle', d:'M13.8 10A6.2 6.2 0 1 0 26.2 10A6.2 6.2 0 1 0 13.8 10ZM5.3 19.5A6.2 6.2 0 1 0 17.7 19.5A6.2 6.2 0 1 0 5.3 19.5ZM22.3 19.5A6.2 6.2 0 1 0 34.7 19.5A6.2 6.2 0 1 0 22.3 19.5ZM17 17L20 14.5L23 17L20 22.5ZM19 23.5H21V37H19Z' },
+  cloche: { nom:'Cloche', d:'M20 4C27 4 29 10 29 18C29 24 31 27 34 29H6C9 27 11 24 11 18C11 10 13 4 20 4ZM18.5 1H21.5V4H18.5ZM17 32.6A3 3 0 1 0 23 32.6A3 3 0 1 0 17 32.6Z' },
+  epees: { nom:'Épées croisées', trait:true, d:'M12 28L33 7M28 28L7 7M9 25L15 31M31 25L25 31M12 28L8.5 31.5M28 28L31.5 31.5' },
+  rose: { nom:'Rose des vents', rare:1, d:'M20.00 1.50L21.99 15.20L28.13 11.87L24.80 18.01L38.50 20.00L24.80 21.99L28.13 28.13L21.99 24.80L20.00 38.50L18.01 24.80L11.87 28.13L15.20 21.99L1.50 20.00L15.20 18.01L11.87 11.87L18.01 15.20ZM17.6 20A2.4 2.4 0 1 0 22.4 20A2.4 2.4 0 1 0 17.6 20Z' },
+  aigle2: { nom:'Aigle bicéphale', rare:2, d:'M20 12L22.2 8.2C22.4 5 25.2 3.4 27.6 4.6L30.4 5.2L27.6 6.6C26.9 7.8 25.6 9 24.4 9.6L35 4L32 14L38 12.5L32.5 21H25.5L28.5 31H24.5L22 26L20 37L18 26L15.5 31H11.5L14.5 21H7.5L2 12.5L8 14L5 4L15.6 9.6C14.4 9 13.1 7.8 12.4 6.6L9.6 5.2L12.4 4.6C14.8 3.4 17.6 5 17.8 8.2Z' },
+  couronne2: { nom:'Couronne royale', rare:3, d:'M7 31H33V36H7ZM7 29L9 14Q20 8 31 14L33 29ZM11.2 22A1.8 1.8 0 1 0 14.8 22A1.8 1.8 0 1 0 11.2 22ZM18.2 20A1.8 1.8 0 1 0 21.8 20A1.8 1.8 0 1 0 18.2 20ZM25.2 22A1.8 1.8 0 1 0 28.8 22A1.8 1.8 0 1 0 25.2 22ZM18.8 2H21.2V4.6H23.6V7H21.2V10.4H18.8V7H16.4V4.6H18.8Z' },
 };
+let blRares = 0;   // patch536 : meubles rares débloqués par mon clan (clan_meubles_rares)
 const BL_DEFAUT = { forme:'francais', partition:'plein', c1:'azur', c2:'or', meuble:'aucun', cm:'or', nombre:1, bordure:'aucune' };
 let blCompteur = 0;
 // toute valeur inconnue retombe sur le défaut : rien d'autre que nos dessins n'entre dans le SVG
@@ -20762,9 +20771,19 @@ async function chargerBlasons(){
 // l'éditeur (chef) : null quand il est fermé
 let clanEdition = null;
 function ouvrirEditionClan(c){
+  sb.rpc('clan_meubles_rares').then(({ data, error }) => {   // patch536
+    if(error) return;
+    const n = Number(data) || 0;
+    if(n !== blRares){ blRares = n; if(clanEdition){ const y = window.scrollY; renderClan(); window.scrollTo(0, y); } }
+  });
   const b = BLASONS.get(c.tag);
   clanEdition = { nom: c.nom, tag: c.tag, carte: CLAN_COULEURS_ED.includes(String(c.couleur).toUpperCase()) ? String(c.couleur).toUpperCase() : CLAN_COULEURS_ED[0],
                   b: blasonNet(b && b.blason ? b.blason : null), libre: b && b.libre && b.libre > new Date() ? b.libre : null };
+}
+// patch536 : un meuble rare pas encore gagné reste visible mais grisé (sauf s'il est déjà sur le blason)
+function blVerrou(k, m, actuel, html){
+  if(!(m.rare && m.rare > blRares) || actuel === k) return html;
+  return html.replace('<button', `<button disabled class="bl-lock" title="${m.nom} : ${m.rare === 1 ? '1re' : m.rare + 'e'} semaine d'or de l'objectif de clan"`);
 }
 function editionClanHtml(){
   const E = clanEdition, B = E.b;
@@ -20786,10 +20805,11 @@ function editionClanHtml(){
     <h2>Partition</h2><div class="bl-choix">${Object.entries(BL_PARTITIONS).map(([k, p]) => bt('partition', k, `${ecu({ ...B, partition:k, meuble:'aucun', bordure:'aucune' })}<span>${p.nom}</span>`)).join('')}</div>
     <div class="bl-deux"><div><h2>Couleur 1</h2><div class="bl-emaux">${pastilles('c1')}</div></div>
       <div><h2>Couleur 2</h2>${BL_PARTITIONS[B.partition].d ? `<div class="bl-emaux">${pastilles('c2')}</div>` : '<p class="clan-note">Partition « Plein » : une seule couleur.</p>'}</div></div>
-    <h2>Meuble</h2><div class="bl-choix bl-meubles">${Object.entries(BL_MEUBLES).map(([k, m]) => bt('meuble', k,
-      `<svg viewBox="0 0 40 40" aria-hidden="true">${m.d ? (m.trait ? `<path d="${m.d}" fill="none" stroke="#E6EDF7" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>` : `<path d="${m.d}" fill-rule="evenodd" fill="#E6EDF7"/>`) : '<path d="M10 10L30 30M30 10L10 30" stroke="#5B6E8C" stroke-width="2.5"/>'}</svg><span>${m.nom}</span>`)).join('')}</div>
+    <h2>Meuble</h2><div class="bl-choix bl-meubles">${Object.entries(BL_MEUBLES).map(([k, m]) => blVerrou(k, m, B.meuble, bt('meuble', k,
+      `<svg viewBox="0 0 40 40" aria-hidden="true">${m.d ? (m.trait ? `<path d="${m.d}" fill="none" stroke="#E6EDF7" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>` : `<path d="${m.d}" fill-rule="evenodd" fill="#E6EDF7"/>`) : '<path d="M10 10L30 30M30 10L10 30" stroke="#5B6E8C" stroke-width="2.5"/>'}</svg><span>${m.nom}</span>`))).join('')}</div>
     ${BL_MEUBLES[B.meuble].d ? `<div class="bl-deux"><div><h2>Couleur du meuble</h2><div class="bl-emaux">${pastilles('cm')}</div></div>
       <div><h2>Nombre</h2><div class="bl-seg">${bt('nombre', 1, 'Un seul')}${bt('nombre', 3, 'Trois')}</div></div></div>` : ''}
+    ${blRares < 3 ? `<p class="clan-note">🔒 Meubles rares : la Rose des vents, l'Aigle bicéphale et la Couronne royale se gagnent avec l'or de l'objectif de clan de la semaine (un de plus à chaque semaine d'or), et restent au clan.</p>` : ''}
     <h2>Bordure</h2><div class="bl-emaux">${pastilles('bordure', true)}</div>
     <div class="bl-actions"><button type="button" class="bq-btn secondaire" data-bl-hasard>Au hasard</button>
       <button type="button" class="bq-btn secondaire" data-bl-annuler>Annuler</button><button type="button" class="bq-btn" data-bl-enregistrer>Enregistrer</button></div>
@@ -21679,7 +21699,7 @@ document.getElementById('panel-clan').addEventListener('click', (e) => {
       const tire = (o) => o[Math.floor(Math.random() * o.length)], cles = BL_EMAUX.map(x => x[0]), B = clanEdition.b;
       B.forme = tire(Object.keys(BL_FORMES)); B.partition = tire(Object.keys(BL_PARTITIONS));
       B.c1 = tire(cles); do { B.c2 = tire(cles); } while(B.c2 === B.c1);
-      B.meuble = tire(Object.keys(BL_MEUBLES).slice(1)); do { B.cm = tire(cles); } while(B.cm === B.c1);
+      B.meuble = tire(Object.keys(BL_MEUBLES).slice(1).filter(k => !(BL_MEUBLES[k].rare > blRares)));   // patch536 do { B.cm = tire(cles); } while(B.cm === B.c1);
       B.nombre = tire([1, 1, 3]); B.bordure = tire(['aucune', 'aucune', 'aucune', ...cles]);
       const y = window.scrollY; renderClan(); window.scrollTo(0, y); return; }
     if(b.hasAttribute('data-bl-enregistrer')){

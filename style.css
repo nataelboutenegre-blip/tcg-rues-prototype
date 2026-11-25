@@ -6122,6 +6122,7 @@ body.mode-terra .coll-entete, body.mode-front .coll-entete{
 .ce-membre[aria-pressed="true"]{ border-color: var(--c-legendaire); background: rgba(240,180,41,.12); }
 .ce-deux{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:12px; }
 @media (max-width: 620px){ .ce-deux{ grid-template-columns:minmax(0,1fr); } }
+.bl-meubles .bl-lock{ opacity:.45; border-style:dashed !important; cursor:not-allowed; }   /* patch536 */
 .ce-filtres{ display:flex; gap:6px; margin:0 0 6px; }   /* patch534 */
 .ce-filtres select{ flex:1; min-width:0; padding:7px 8px; border-radius:9px; border:1px solid rgba(169,188,212,0.3); background: var(--nuit); color:#fff; font:inherit; font-size:.82rem; }
 .ce-recherche{ width:100%; padding:9px 12px; border-radius:9px; border:1px solid rgba(169,188,212,0.3); background: var(--nuit); color:#fff; font:inherit; }

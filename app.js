@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '037211c73563';
+const VERSION_JEU = '03d31a5efd2a';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -28166,7 +28166,7 @@ async function motifsCharger(){
     try{ if(typeof rendreCalques === 'function') rendreCalques(); }catch(e){}
   }catch(e){}
 }
-function motFormesCharger(){
+function motFormesCharger(){   // patch554 : motifs-formes.json suit VERSION_JEU (la forme Rectangle arrive avec ce changement)
   if(!MTF.formesP) MTF.formesP = fetch('motifs-formes.json?v=' + VERSION_JEU).then(r => { if(!r.ok) throw new Error('formes'); return r.json(); }).then(l => {
     for(const f of l){ f.p = new Path2D(f.d); MTF.FORME[f.id] = f; }
     MTF.formes = l; return l;

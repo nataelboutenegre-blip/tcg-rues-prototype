@@ -1,0 +1,41 @@
+
+/* patch555 : améliorer les bâtiments */
+.btl.bn-niv{ flex-wrap:wrap; }
+.bn-pied{ flex-basis:100%; display:flex; align-items:center; gap:10px; margin-top:10px; padding-top:10px; border-top:1px solid rgba(169,188,212,.12); }
+.bn-pied.bn-banque{ margin:0 0 10px; padding:10px 0 0; }
+.bn-pts{ display:flex; gap:4px; flex:none; }
+.bn-pts i{ width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,.15); }
+.bn-pts i.p{ background:#F0B429; box-shadow:0 0 6px rgba(240,180,41,.6); }
+.bn-tx{ flex:1; min-width:0; text-align:left; font-size:.8rem; color:var(--brume, #9fb0cc); }
+.bn-tx b{ color:#fff; }
+.bn-am{ flex:none; border:1px solid rgba(240,180,41,.55); background:rgba(240,180,41,.14); color:#F7C948; font:inherit; font-weight:700; font-size:.78rem;
+  padding:6px 11px; border-radius:999px; white-space:nowrap; cursor:pointer; display:inline-flex; align-items:center; gap:5px; }
+.bn-am:hover{ background:rgba(240,180,41,.24); }
+.bn-max{ font-style:normal; font-size:.74rem; font-weight:700; color:#3DD68C; }
+.bn-cours{ font-style:normal; font-size:.74rem; font-weight:700; color:#F7C948; }
+.bn-badge{ display:inline-block; margin-left:6px; font-size:.66rem; font-weight:800; color:#1a1200; background:#F0B429; border-radius:6px; padding:1px 5px; vertical-align:2px; }
+.bn-fond{ position:fixed; inset:0; z-index:1300; }
+.bn-voile{ position:absolute; inset:0; background:rgba(3,8,20,.6); opacity:0; transition:opacity .18s; }
+.bn-f{ position:absolute; left:0; right:0; bottom:0; max-height:86vh; overflow:auto; background:#16264a; border-radius:20px 20px 0 0;
+  padding:10px 18px calc(24px + env(safe-area-inset-bottom)); box-shadow:0 -10px 30px rgba(0,0,0,.45); transform:translateY(100%); transition:transform .18s ease-out; }
+.bn-fond.ouvert .bn-voile{ opacity:1; }
+.bn-fond.ouvert .bn-f{ transform:none; }
+.bn-po{ display:block; width:40px; height:4px; border-radius:4px; background:rgba(255,255,255,.25); margin:0 auto 14px; }
+.bn-x{ position:absolute; top:14px; right:14px; border:none; background:rgba(255,255,255,.08); color:#cfd8e8; width:32px; height:32px; border-radius:50%; cursor:pointer; }
+.bn-f h3{ margin:0 0 4px; font-size:1.15rem; color:#fff; }
+.bn-sous{ color:var(--brume, #9fb0cc); font-size:.85rem; margin:0 0 16px; }
+.bn-trois{ display:flex; gap:8px; margin:0 0 16px; }
+.bn-trois div{ flex:1; border:1px solid rgba(255,255,255,.12); border-radius:12px; padding:10px 6px; text-align:center; font-size:.76rem; color:var(--brume, #9fb0cc); }
+.bn-trois div b{ display:block; font-size:1.2rem; color:#fff; margin:2px 0; }
+.bn-trois div.act{ border-color:rgba(255,255,255,.3); }
+.bn-trois div.vise{ border-color:#F0B429; background:rgba(240,180,41,.1); }
+.bn-trois div.vise b{ color:#F7C948; }
+.bn-f ul{ margin:0 0 18px; padding-left:18px; color:#c5d0e4; font-size:.86rem; line-height:1.5; }
+.bn-go{ width:100%; border:none; background:#F0B429; color:#1a1200; font:inherit; font-weight:800; font-size:1rem; padding:13px; border-radius:14px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:6px; }
+.bn-go:disabled{ background:rgba(255,255,255,.12); color:#9fb0cc; cursor:default; }
+@media (min-width: 900px){
+  .bn-f{ left:50%; right:auto; bottom:auto; top:50%; width:min(480px, 92vw); border-radius:20px; transform:translate(-50%, -46%); opacity:0; transition:transform .18s, opacity .18s; }
+  .bn-fond.ouvert .bn-f{ transform:translate(-50%, -50%); opacity:1; }
+  .bn-po{ display:none; }
+}

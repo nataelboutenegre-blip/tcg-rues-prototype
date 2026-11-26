@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '318e0faaba06';
+const VERSION_JEU = '816ecf5b4af6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -4369,10 +4369,10 @@ function ouvrirPanneau(code, xCss, yCss){
   if(!allie && !mienne && c.joueurId && enFrontClan() && CLANS){
     const e = clanEch.etat, sonClan = clansCarte.get(c.joueurId), monClan = clansCarte.get(window.__monId);
     if(e && e.clan && sonClan && (!monClan || sonClan.tag !== monClan.tag)){
-      const dispo = e.inter_dispo_le ? new Date(e.inter_dispo_le) : null;
+      const dejaFait = (e.inter_faits || []).includes(sonClan.tag);   // patch542 : un échange par jour avec chaque clan
       const raison = e.pret_le ? `Échanges possibles 48 h après ton arrivée dans ton clan (${ceDansH(e.pret_le)})`
-        : dispo && dispo.getTime() > Date.now() ? `Un échange entre clans par jour : le prochain le ${dispo.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} à ${dispo.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}` : '';
-      echInter = `<button class="pc-action pc-ech-inter" data-pc="ech-inter"${raison ? ` disabled title="${echapperHtml(raison)}"` : ''}><span aria-hidden="true">🤝</span>Proposer un échange <small>· 1 par jour</small></button>${raison ? `<p class="pc-note">${echapperHtml(raison)}.</p>` : ''}`;
+        : dejaFait ? `Tu as déjà fait ton échange du jour avec le clan [${sonClan.tag}] · à nouveau ${e.demain_le ? ceDansH(e.demain_le) : 'à minuit'}` : '';
+      echInter = `<button class="pc-action pc-ech-inter" data-pc="ech-inter"${raison ? ` disabled title="${echapperHtml(raison)}"` : ''}><span aria-hidden="true">🤝</span>Proposer un échange <small>· 1 par jour avec chaque clan</small></button>${raison ? `<p class="pc-note">${echapperHtml(raison)}.</p>` : ''}`;
     }
   }
   if(allie && enFrontClan()){}   // la suite des notes, comme avant
@@ -21328,7 +21328,7 @@ function blocEchangesClan(){
     ${(e.recus || []).length ? `<h3 class="ce-h3">Reçus</h3>${e.recus.map(x => prop(x, true)).join('')}` : ''}
     <h3 class="ce-h3">Proposer un échange</h3>${proposer}
     ${(e.envoyes || []).length ? `<h3 class="ce-h3">Envoyés</h3>${e.envoyes.map(x => prop(x, false)).join('')}` : ''}
-    <ul class="clan-regles"><li>Seulement entre membres du clan, une commune contre une commune de même rareté. <b>Une fois par jour</b>, chacun peut aussi faire un échange avec <b>un cran d'écart</b> (légendaire ↔ épique, épique ↔ rare, rare ↔ peu commun, peu commun ↔ commun).</li><li>${parMembre ? `<b>${maxEch} échanges par jour avec chaque coéquipier</b>, ${maxEch} propositions en attente par coéquipier` : `${maxEch} échanges par jour et par joueur, ${maxEch} propositions en attente au plus`}. Une proposition expire au bout de 24 h.</li><li>Impossible pour une commune prise il y a moins de 24 h, en garnison, ou échangée il y a moins de 48 h.</li><li>Il faut être dans le clan depuis 48 h. Un échange ne rapporte aucun point de combat.</li><li><b>Entre clans</b> : touche sur la carte une commune d’un joueur d’un autre clan, puis « Proposer un échange ». Mêmes règles, mais <b>un échange par jour</b>${clanEch.etat && clanEch.etat.inter_dispo_le && new Date(clanEch.etat.inter_dispo_le).getTime() > Date.now() ? ` (ton prochain le ${new Date(clanEch.etat.inter_dispo_le).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })})` : ''}.</li></ul></div>`;   // patch398
+    <ul class="clan-regles"><li>Seulement entre membres du clan, une commune contre une commune de même rareté. <b>Une fois par jour</b>, chacun peut aussi faire un échange avec <b>un cran d'écart</b> (légendaire ↔ épique, épique ↔ rare, rare ↔ peu commun, peu commun ↔ commun).</li><li>${parMembre ? `<b>${maxEch} échanges par jour avec chaque coéquipier</b>, ${maxEch} propositions en attente par coéquipier` : `${maxEch} échanges par jour et par joueur, ${maxEch} propositions en attente au plus`}. Une proposition expire au bout de 24 h.</li><li>Impossible pour une commune prise il y a moins de 24 h, en garnison, ou échangée il y a moins de 48 h.</li><li>Il faut être dans le clan depuis 48 h. Un échange ne rapporte aucun point de combat.</li><li><b>Entre clans</b> : touche sur la carte une commune d’un joueur d’un autre clan, puis « Proposer un échange ». Mêmes règles, mais <b>un échange par jour avec chaque clan</b>, remis à zéro à minuit${clanEch.etat && (clanEch.etat.inter_faits || []).length ? ` (déjà fait aujourd’hui avec ${clanEch.etat.inter_faits.map(t => '[' + echapperHtml(t) + ']').join(', ')})` : ''}.</li></ul></div>`;   // patch398, patch542
 }
 // patch304 : par pages (plus de 1 000 communes chez les gros joueurs), de la plus rare à la plus commune
 async function ceCommunesDe(joueur){
@@ -32940,7 +32940,7 @@ function eccBandeau(){
   if(!echCarte){ if(el) el.remove(); return; }
   if(!el){ el = document.createElement('div'); el.id = 'eccBandeau'; el.className = 'ecc-bandeau'; wrap.appendChild(el); }
   const t = echCarte.tier;
-  el.innerHTML = `<span class="ecc-ic">🤝</span><div class="ecc-txt">${echCarte.inter ? 'Échange entre clans' : 'Échange'} avec <b>${echapperHtml(echCarte.pseudo)}</b> : tu reçois <b>${echapperHtml(echCarte.nom)}</b> (${eccLibelle(t)}).<br><span>Seules tes communes <b class="rarete ${t}">${eccLibelle(t)}s</b> ressortent, entourées de jaune : touches-en une pour la proposer.${echCarte.bloquees && echCarte.bloquees.size ? ' Les autres sont grisées : en garnison, prises il y a moins de 24 h ou échangées il y a moins de 48 h.' : ''}${echCarte.inter ? ' Un échange entre clans par jour.' : ''}</span></div>
+  el.innerHTML = `<span class="ecc-ic">🤝</span><div class="ecc-txt">${echCarte.inter ? 'Échange entre clans' : 'Échange'} avec <b>${echapperHtml(echCarte.pseudo)}</b> : tu reçois <b>${echapperHtml(echCarte.nom)}</b> (${eccLibelle(t)}).<br><span>Seules tes communes <b class="rarete ${t}">${eccLibelle(t)}s</b> ressortent, entourées de jaune : touches-en une pour la proposer.${echCarte.bloquees && echCarte.bloquees.size ? ' Les autres sont grisées : en garnison, prises il y a moins de 24 h ou échangées il y a moins de 48 h.' : ''}${echCarte.inter ? ' Un échange par jour avec chaque clan, remis à zéro à minuit.' : ''}</span></div>
     <div class="ecc-btns">${echCarte.inter ? '' : '<button type="button" data-ecc="clan">Onglet Clan</button>'}<button type="button" data-ecc="annuler">Annuler</button></div>`;   // patch398
 }
 function eccBlocFiche(code, c, mienne){

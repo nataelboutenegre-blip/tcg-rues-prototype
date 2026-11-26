@@ -1,5 +1,12 @@
 [
  {
+  "date": "2026-11-26",
+  "nouveautes": [
+   "🤝 Échanges entre clans : un échange par jour avec chaque clan (et plus un seul en tout), et la limite repart à minuit au lieu de 24 h après le dernier. Merci Arkhannou et Maroli."
+  ],
+  "correctifs": []
+ },
+ {
   "date": "2026-11-25",
   "nouveautes": [
    "🏅 Terra : quand tu complètes un département, son blason s'affiche sur ta carte « Ma France » et dans la liste « Département par département ». Touche-le pour le voir en grand. Merci Arkhannou.",

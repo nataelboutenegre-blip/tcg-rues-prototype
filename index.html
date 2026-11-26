@@ -28,7 +28,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
 <script src="topo.js?v=1"></script><!-- patch433 : habillage Topo -->
-<link rel="stylesheet" href="style.css?v=318e0faaba06">
+<link rel="stylesheet" href="style.css?v=816ecf5b4af6">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -1555,7 +1555,7 @@
           </summary>
           <div class="regle-corps">
             <p><b>Clan</b> : jusqu'à <b>8 joueurs</b>. Le chef invite par pseudo, le joueur accepte. Entre membres d'un même clan, <b>pas d'attaque</b>.</p>
-            <p><b>Échanges de clan</b> (Front) : une commune contre une commune de <b>même rareté</b>, entre membres du clan depuis au moins 48 h. 6 échanges par jour avec chaque coéquipier (et 6 propositions en attente par coéquipier) ; pas une commune prise il y a moins de 24 h, en garnison ou échangée il y a moins de 48 h. Une proposition attend 24 h. Une commune attaquée garde son siège : l'attaquant continue sa série contre le nouveau propriétaire, et les 3 h de protection ne jouent pas contre lui. <b>Entre clans différents</b> : touche sur la carte une commune d'un joueur d'un autre clan, puis « Proposer un échange » ; mêmes règles (chacun dans son clan depuis 48 h), mais <b>un échange par jour</b> par joueur, 2 propositions en attente au plus.</p><!-- patch341, patch398, patch425 -->
+            <p><b>Échanges de clan</b> (Front) : une commune contre une commune de <b>même rareté</b>, entre membres du clan depuis au moins 48 h. 6 échanges par jour avec chaque coéquipier (et 6 propositions en attente par coéquipier) ; pas une commune prise il y a moins de 24 h, en garnison ou échangée il y a moins de 48 h. Une proposition attend 24 h. Une commune attaquée garde son siège : l'attaquant continue sa série contre le nouveau propriétaire, et les 3 h de protection ne jouent pas contre lui. <b>Entre clans différents</b> : touche sur la carte une commune d'un joueur d'un autre clan, puis « Proposer un échange » ; mêmes règles (chacun dans son clan depuis 48 h), mais <b>un échange par jour avec chaque clan</b>, remis à zéro à minuit, et 2 propositions en attente au plus. Une fois par jour, un échange dans ton clan peut aussi se faire avec <b>un cran de rareté d'écart</b> (légendaire contre épique, épique contre rare…).</p><!-- patch341, patch398, patch425, patch542 -->
             <p data-s3="centrale"><b>Centrale du clan</b> (Front) : chaque membre la finance avec ses lingots (onglet Clan) : <b>10 lingots par membre actif</b> (30 au moins). Caisse pleine, le chef ou un bras droit la pose sur une de ses communes (6 h, il faut 3 membres actifs). Ensuite, chaque membre présent depuis 48 h ramasse <b>8 énergie par jour</b> (Mon front ou onglet Clan), sa part à lui. Visible de tous : prise avec sa commune, soufflée par une bombe, détruite si celui qui l'a posée quitte le clan. Les dons ne reviennent pas.</p>
             <p data-s3="allie"><b>Défense alliée</b> (Front) : quand la commune d'un membre de ton clan est assiégée, elle apparaît dans Défendre (« Ton clan est assiégé ») et tout le clan est prévenu quand la jauge passe les deux tiers. Tu la renforces avec ton énergie : <b>× 1</b> par énergie (le propriétaire, lui, × 1,2), <b>60 énergie au plus</b> par siège pour toi. La défense réussie compte pour le propriétaire.</p>
             <p data-s3="objectif"><b>Objectif de la semaine</b> (onglet Clan) : les communes prises par les membres du lundi au dimanche. Trois paliers, fixés le lundi selon le nombre de membres actifs (2, 4 et 7 communes par actif, 3 actifs au moins) : <b>bronze</b> +5 lingots, <b>argent</b> +10 lingots et +10 énergie, <b>or</b> +20 lingots et +20 énergie. Chaque membre qui a pris une commune ou renforcé un allié dans la semaine ramasse sa part, jusqu'à la fin de la semaine suivante.</p>
@@ -1956,6 +1956,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=318e0faaba06"></script>
+<script defer src="app.js?v=816ecf5b4af6"></script>
 </body>
 </html>

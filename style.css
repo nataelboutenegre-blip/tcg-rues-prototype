@@ -6812,6 +6812,34 @@ body[data-dos="gravure"] .face-back:not(.bq-dos-apercu .face-back) .dos-motif pa
 .bl-deux.bl-trois{ grid-template-columns:repeat(3, minmax(0,1fr)); }   /* patch539 */
 @media (max-width:560px){ .bl-deux, .bl-deux.bl-trois{ grid-template-columns:1fr; } .bl-grand{ width:96px; height:115px; } }
 .bl-seg{ display:inline-flex; background:var(--nuit); padding:3px; border-radius:10px; gap:2px; }
+/* patch543 : ornements et atelier */
+.bl-petit{ font-size:.7rem; font-weight:600; color:var(--brume); margin-left:6px; }
+.bl-h3{ font-size:.8rem; color:var(--brume); margin:12px 0 6px; font-weight:700; }
+.bl-marge{ margin-top:8px; }
+.bl-choix.bl-timbres svg{ width:64px; height:26px; }
+.bl-timbres .bl-lock{ opacity:.45; border-style:dashed !important; cursor:not-allowed; }
+.blason.blason-svg.orne{ width:92px; height:107px; }
+.cf-blason .blason.blason-svg.orne{ width:110px; height:128px; }
+.bl-atelier{ display:flex; gap:12px; align-items:flex-start; }
+.bl-at-ecu{ flex:none; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.bl-at-ecu small{ font-size:.66rem; color:var(--brume); max-width:130px; text-align:center; }
+#blApercu{ width:130px; height:156px; touch-action:none; cursor:grab; filter:drop-shadow(0 6px 14px rgba(0,0,0,.4)); }
+.bl-cqs{ flex:1; min-width:0; display:flex; flex-direction:column; gap:5px; max-height:220px; overflow:auto; }
+.bl-cq{ display:flex; align-items:center; gap:4px; background:var(--nuit-2); border-radius:9px; padding:3px; border:1.5px solid transparent; }
+.bl-cq.on{ border-color:var(--c-legendaire, #F0B429); }
+.bl-cq-choisir{ flex:1; min-width:0; display:flex; align-items:center; gap:7px; background:none; border:0; color:#fff; font:inherit; font-size:.8rem; cursor:pointer; padding:3px 4px; text-align:left; }
+.bl-cq-choisir svg{ width:22px; height:22px; flex:none; }
+.bl-cq-choisir b{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:600; }
+.bl-cq-mini{ background:none; border:0; color:var(--brume); font-size:.95rem; width:28px; height:28px; border-radius:7px; cursor:pointer; }
+.bl-cq-mini:disabled{ opacity:.3; }
+.bl-curseur{ display:grid; grid-template-columns:78px minmax(0,1fr) 46px; gap:8px; align-items:center; font-size:.8rem; color:var(--brume); margin:8px 0; }
+.bl-curseur input{ width:100%; accent-color:var(--c-legendaire, #F0B429); }
+.bl-curseur output{ color:#fff; font-variant-numeric:tabular-nums; text-align:right; }
+.bl-at-actions{ display:flex; flex-wrap:wrap; gap:6px; margin:8px 0; }
+.bl-at-actions [aria-pressed="true"]{ border-color:var(--c-legendaire, #F0B429); color:#FFD36B; }
+.bl-vers-atelier{ margin-top:4px; }
+.bl-credits{ font-size:.68rem; opacity:.8; }
+@media (max-width:420px){ #blApercu{ width:112px; height:134px; } }
 .bl-seg button{ background:none; border:0; color:var(--brume); font:inherit; font-size:.85rem; padding:6px 12px; border-radius:8px; cursor:pointer; }
 .bl-seg button[aria-pressed="true"]{ background:var(--nuit-3); color:#fff; }
 .bl-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:18px; }

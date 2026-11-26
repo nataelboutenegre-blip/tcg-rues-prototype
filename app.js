@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'c9ad2123740f';
+const VERSION_JEU = '037211c73563';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -11985,7 +11985,15 @@ function initModes(){
     g.addEventListener('click', (e) => {
       // patch382 : « Recharger » ouvre le choix de la quantité
       const b = e.target.closest('[data-gn-recharger]');
-      if(b){ gnDose = gnDose === b.dataset.gnRecharger ? null : b.dataset.gnRecharger; renderGarnisons(); return; }
+      if(b){ gnRetraitListe = null; gnDose = gnDose === b.dataset.gnRecharger ? null : b.dataset.gnRecharger; renderGarnisons(); return; }
+      const rx = e.target.closest('[data-gn-retirer-l]');   // patch553 : retirer depuis la liste, en deux touches
+      if(rx){
+        const code = rx.dataset.gnRetirerL;
+        if(gnRetraitListe !== code){ gnRetraitListe = code; gnDose = null; renderGarnisons(); clearTimeout(gnRetraitMinuteur); gnRetraitMinuteur = setTimeout(() => { if(gnRetraitListe === code){ gnRetraitListe = null; renderGarnisons(); } }, 5000); return; }
+        gnRetraitListe = null; rx.disabled = true;
+        garnisonAction(code, 'retirer');
+        return;
+      }
       if(e.target.closest('[data-gn-dose-x]')){ gnDose = null; renderGarnisons(); return; }
       const d = e.target.closest('[data-gn-dose]');
       if(d){
@@ -13529,7 +13537,8 @@ function renderGarnisons(){
       return `<div class="gl"><i class="gl-c ${tier.id}"></i><div class="gl-t">
         <div class="gl-nom"><button type="button" class="df-voir" data-voir-carte="${echapperTexte(code)}" title="Voir sur la carte" aria-label="Voir ${echapperTexte(g.nom)} sur la carte"><b>${echapperTexte(g.nom)}</b><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></button>${badgeDept(dep)}</div>
         <span>${tier.label} · ${g.attaquants > 0 ? 'attaquée' : 'calme'} · ${g.energie} / 10</span>${barre(g.energie)}</div>
-        <button class="gl-r${gnDose === code ? ' actif' : ''}" data-gn-recharger="${code}" ${g.energie >= 10 ? 'disabled' : ''}>Recharger</button></div>${gnDose === code ? gnDoseHtml(code, g) : ''}`;
+        <span class="gl-acts"><button class="gl-r${gnDose === code ? ' actif' : ''}" data-gn-recharger="${code}" ${g.energie >= 10 ? 'disabled' : ''}>Recharger</button>
+        <button type="button" class="gl-x${gnRetraitListe === code ? ' arme' : ''}" data-gn-retirer-l="${code}">${gnRetraitListe === code ? `Retirer : +${Math.max(0, Math.min(g.energie, energiePlafond() - Math.floor(Number((energieEtat || {}).energie) || 0)))} ⚡ ?` : 'Retirer'}</button></span></div>${gnDose === code ? gnDoseHtml(code, g) : ''}`;
     }).join('')}
     ${liste.length < garnisonsMax() ? `<p class="gl-vide">${garnisonsMax() - liste.length} place${garnisonsMax() - liste.length > 1 ? 's' : ''} libre${garnisonsMax() - liste.length > 1 ? 's' : ''} : choisis une de tes communes ci-dessous (ou depuis la carte).</p>
       <input type="search" class="bourse-search gn-cherche" id="gnCherche" placeholder="Chercher une de mes communes…" autocomplete="off" value="${echapperTexte(gnRecherche)}">
@@ -13554,6 +13563,7 @@ function gnDoseHtml(code, g){
 
 // patch174 : poser une garnison depuis Defendre
 let gnRecherche = '';
+let gnRetraitListe = null, gnRetraitMinuteur = 0;   // patch553
 function gnChoixHtml(){
   const q = sansAccents(gnRecherche.trim().toLowerCase());
   const rang = (t) => TIERS.findIndex(x => x.id === t.id);
@@ -13585,7 +13595,7 @@ function blocGarnisonFiche(code){
   if(!g) return '';
   const armee = gnRetraitArme === code;
   // patch314 : le remboursement ne fait pas dépasser le plafond des bonus (lot 8/11 : lu au serveur)
-  const rendu = Math.floor(g.energie * 3 / 4);
+  const rendu = g.energie;   // s3-86 : 100 % (avant : 75 %)
   const dispo = energieEtat ? Math.floor(Number(energieEtat.energie) || 0) : 0;
   const recu = Math.max(0, Math.min(rendu, energiePlafond() - dispo));
   return `<div class="gn">

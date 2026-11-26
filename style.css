@@ -11533,3 +11533,9 @@ html.topo:not(.sans-cartes) .mini.skin.legendaire .mini-rarete::before{ backgrou
 .gr-atb-zone > h3{ margin:0 0 10px; font-size:1.05rem; }
 .gr-atb .atb-bloc{ margin-bottom:12px; }
 .gr-terr .atb-bloc{ margin-bottom:12px; }
+
+/* patch553 : « Retirer » dans Mes garnisons */
+.gl-acts{ flex:none; display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+.gl-x{ border:none; background:none; color:var(--brume, #93A4C3); font:inherit; font-size:.74rem; padding:2px 4px; text-decoration:underline; text-underline-offset:2px; cursor:pointer; }
+.gl-x:hover{ color:#fff; }
+.gl-x.arme{ text-decoration:none; color:#fff; background:rgba(229,72,77,.3); border:1px solid rgba(229,72,77,.8); border-radius:999px; padding:4px 10px; }

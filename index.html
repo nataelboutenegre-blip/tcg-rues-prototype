@@ -28,7 +28,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://terrafront.fr/og-terrafront.png?v=2">
 <script src="topo.js?v=1"></script><!-- patch433 : habillage Topo -->
-<link rel="stylesheet" href="style.css?v=c9ad2123740f">
+<link rel="stylesheet" href="style.css?v=037211c73563">
 <script defer src="lib/supabase-js-2.117.2.umd.js"></script>
 <script defer src="lib/d3-7.8.5.min.js"></script>
 </head>
@@ -1543,7 +1543,7 @@
             <p data-s2="des"><b>Défendre</b> : quand un joueur gagne un round contre toi, tu peux tenter une défense, deux fois par attaque. Tu choisis ton engagement à chaque défense : prudente <b>1 énergie</b> (40 %), normale <b>2</b> (55 %), offensive <b>3</b> (70 %), soit <b>5 points de plus</b> qu'en attaque. Tes communes voisines ne comptent pas en défense. Une défense utilisée revient <b>24 h</b> plus tard (deux au plus). Tes deux défenses utilisées, tu peux encore <b>retenter une fois après chaque round que l'attaquant gagne</b>. Réussie, l'attaquant perd une victoire. Si l'attaquant ne relance pas d'assaut pendant <b>24 h</b>, son siège tombe : sa série repart de zéro et tu retrouves tes deux défenses.</p><!-- patch334, patch338, lot 8/11 -->
             <p data-s2="des"><b>Course à la commune</b> : quand un joueur prend une commune, les sièges des autres attaquants sur cette commune sont effacés. Ils repartent de zéro contre le nouveau propriétaire, et la cloche les prévient.</p><!-- patch326 -->
             <p data-s2="des"><b>Garnison</b> : jusqu'à <b>5 communes</b>, où tu déposes de l'énergie (10 au maximum par commune). Quand un attaquant gagne un round, la garnison tente seule une défense : <b>1 chance sur 2</b>, 1 énergie par tentative. Réussie, la victoire ne compte pas. Une bombe détruit les garnisons de sa zone, et on ne peut plus y en poser pendant 24 h.</p>
-            <p data-s2="des">Retirer une garnison rend les trois quarts de son énergie. Une défense que tu réussis toi-même sur une commune en garnison y remet <b>3 énergie</b>. L'attaquant voit qu'une commune est en garnison, pas combien elle contient.</p><!-- patch312 -->
+            <p data-s2="des">Retirer une garnison rend <b>toute</b> son énergie (sans dépasser ton plafond). Une défense que tu réussis toi-même sur une commune en garnison y remet <b>3 énergie</b>. L'attaquant voit qu'une commune est en garnison, pas combien elle contient.</p><!-- patch312 -->
             <p>Dans Défendre, <b>Mes départements</b> fait passer en tête les communes attaquées des départements que tu choisis.</p>
           </div>
         </details>
@@ -1956,6 +1956,6 @@
 <div class="notifs" id="notifs" aria-live="polite"></div>
 <div class="fenetre-fond" id="fenetre" hidden></div>
 
-<script defer src="app.js?v=c9ad2123740f"></script>
+<script defer src="app.js?v=037211c73563"></script>
 </body>
 </html>

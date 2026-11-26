@@ -1,0 +1,46 @@
+
+/* patch548 : la carte du Territoire allégée (barre + panneau du bas) */
+.map-barre{ display:flex; align-items:center; gap:8px; margin:0 0 10px; flex-wrap:nowrap; }
+.map-barre .mb-zone{ flex:none; display:flex; }
+.map-barre .mf-zone{ margin:0 !important; padding:3px; }
+.map-barre .mf-zone button{ padding:6px 12px; font-size:.8rem; }
+.mb-btn{ display:inline-flex; align-items:center; gap:6px; flex:none; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.05);
+  color:var(--texte, #E8EEF8); font:inherit; font-size:.84rem; font-weight:700; padding:7px 11px; border-radius:999px; white-space:nowrap; cursor:pointer; }
+.mb-btn svg{ width:16px; height:16px; }
+.mb-btn b{ background:#F0B429; color:#1a1200; border-radius:999px; font-size:.7rem; line-height:1; padding:3px 6px; }
+.mb-btn.or{ border-color:rgba(240,180,41,.55); background:rgba(240,180,41,.12); color:#F7C948; }
+.mb-btn:hover{ background:rgba(255,255,255,.1); }
+.mb-btn.or:hover{ background:rgba(240,180,41,.2); }
+#panel-territoire .map-outils[hidden]{ display:none !important; }
+.mfe{ position:fixed; inset:0; z-index:1200; }
+.mfe[hidden]{ display:none; }
+.mfe-voile{ position:absolute; inset:0; background:rgba(3,8,20,.55); opacity:0; transition:opacity .18s; }
+.mfe-feuille{ position:absolute; left:0; right:0; bottom:0; max-height:82vh; overflow:auto; overscroll-behavior:contain;
+  background:#16264a; border-radius:20px 20px 0 0; padding:8px 16px calc(24px + env(safe-area-inset-bottom));
+  box-shadow:0 -10px 30px rgba(0,0,0,.45); transform:translateY(100%); transition:transform .18s ease-out; }
+.mfe.ouvert .mfe-voile{ opacity:1; }
+.mfe.ouvert .mfe-feuille{ transform:none; }
+.mfe-tete{ position:sticky; top:-8px; z-index:1; display:flex; align-items:center; gap:10px; padding:16px 0 8px; margin-top:-8px; background:#16264a; }
+.mfe-poignee{ position:absolute; top:6px; left:50%; width:40px; height:4px; margin-left:-20px; border-radius:4px; background:rgba(255,255,255,.25); }
+.mfe-tete h3{ flex:1; margin:0; font-size:1.1rem; color:#fff; }
+.mfe-x{ border:none; background:rgba(255,255,255,.08); color:#cfd8e8; width:32px; height:32px; border-radius:50%; font-size:.9rem; cursor:pointer; }
+.mfe-corps > h4{ margin:16px 0 8px; font-size:.74rem; letter-spacing:.05em; text-transform:uppercase; color:#93A4C3; }
+.mfe-corps > h4:first-child{ margin-top:6px; }
+.mfe .map-calques{ display:flex; flex-wrap:wrap; gap:8px; }
+.mfe .map-couleurs .mc-lib{ display:none; }
+.mfe .map-couleurs .mc-clans .mc-lib{ display:inline; }
+.mfe .toggle-others-btn{ width:100%; margin:0; }
+.mfe #mfeTerr .atb-bloc{ margin-bottom:12px; }
+@media (min-width: 900px){
+  .mfe-feuille{ left:50%; right:auto; bottom:auto; top:50%; width:min(520px, 92vw); max-height:80vh; border-radius:20px; transform:translate(-50%, -46%); opacity:0;
+    transition:transform .18s, opacity .18s; }
+  .mfe.ouvert .mfe-feuille{ transform:translate(-50%, -50%); opacity:1; }
+  .mfe-poignee{ display:none; }
+}
+.pf-terr-lien{ display:flex; align-items:center; gap:12px; width:100%; text-align:left; border:1px solid rgba(240,180,41,.35); background:rgba(240,180,41,.08);
+  color:inherit; font:inherit; padding:14px 16px; border-radius:14px; cursor:pointer; }
+.pf-terr-lien .pt-pastille{ width:28px; height:28px; border-radius:8px; flex:none; box-shadow:inset 0 0 0 2px rgba(255,255,255,.25); }
+.pf-terr-lien span{ flex:1; display:flex; flex-direction:column; gap:2px; }
+.pf-terr-lien small{ color:var(--brume, #93A4C3); font-size:.78rem; }
+.pf-terr-lien i{ font-style:normal; color:#F7C948; font-size:1.2rem; }
+.pf-terr{ margin:0 0 14px; }

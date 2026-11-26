@@ -6,7 +6,8 @@
    "👑 Blason de clan : les ornements, sur la page du clan et sa fiche : manteau, couronne murale ou heaume au-dessus de l'écu, devise avec le nom ou le sigle du clan. Les couronnes comtale et royale se gagnent avec l'or de l'objectif de clan. Merci ASMFCB.",
    "🧩 Blason de clan : l'atelier. Jusqu'à 8 meubles placés librement sur l'écu (taille, rotation, position, retourné, couleur), à faire glisser du doigt. Bouton « Composer librement » dans « Modifier le clan ». Merci H34VEN.",
    "🤝 Échanges entre clans : un échange par jour avec chaque clan (et plus un seul en tout), et la limite repart à minuit au lieu de 24 h après le dernier. Merci Arkhannou et Maroli.",
-   "⚔️ Sièges de légendaires : un défenseur actif gagnait presque à coup sûr (5 % de prises avec garnison). Sur une légendaire, le renfort du propriétaire vaut maintenant 12 par énergie (au lieu de 14), et l'assaut final ne s'annule que si la jauge repasse sous la moitié (au lieu des deux tiers). On suit les chiffres de près et on ajustera."
+   "⚔️ Sièges de légendaires : un défenseur actif gagnait presque à coup sûr (5 % de prises avec garnison). Sur une légendaire, le renfort du propriétaire vaut maintenant 12 par énergie (au lieu de 14), et l'assaut final ne s'annule que si la jauge repasse sous la moitié (au lieu des deux tiers). On suit les chiffres de près et on ajustera.",
+   "🗺️ Carte du Territoire plus dégagée : les options d'affichage passent derrière le bouton ☰, et le nouveau bouton « 🎨 Mon territoire » ouvre directement ta couleur et ton motif."
   ],
   "correctifs": [
    "Les petits lauriers du classement : la feuille du bout de branche ne flotte plus au-dessus du blason."

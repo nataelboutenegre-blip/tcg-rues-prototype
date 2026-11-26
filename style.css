@@ -11074,10 +11074,10 @@ body:not(.top5-on) #panel-regles [data-s3="moyenne"]{ display:inline !important;
 /* patch459 : les lauriers du podium des clans */
 .lr{ position: relative; display: inline-grid; place-items: center; isolation: isolate; flex-shrink: 0; vertical-align: middle; }
 .lr > .laurier-svg{ position: absolute; z-index: -1; left: 50%; top: 50%; width: 150%; height: auto; transform: translate(-50%, -48%); pointer-events: none; filter: drop-shadow(0 1px 2px rgba(0,0,0,.45)); }
-.lr.petit > .laurier-svg{ width: 140%; }
+.lr.petit > .laurier-svg{ width: 175%; transform: translate(-50%, -46%); }   /* patch545 */
 .lr > .blason{ position: relative; }
 .clan-tete > .lr, .cf-tete .lr, .pr-tete .lr{ margin: 8px 16px 8px 12px; }
-.lr.petit{ margin: 0 4px; }
+.lr.petit{ margin: 0 8px; }
 .lr-ed{ display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin: 4px 0 14px; border-radius: 12px; border: 1px solid rgba(240,180,41,.4); background: rgba(240,180,41,.08); }
 .lr-ed2{ border-color: rgba(207,216,228,.4); background: rgba(207,216,228,.07); }
 .lr-ed3{ border-color: rgba(201,138,75,.45); background: rgba(201,138,75,.08); }

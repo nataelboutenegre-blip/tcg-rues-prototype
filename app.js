@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '71226cba3708';
+const VERSION_JEU = 'a5f4ca305793';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -35674,7 +35674,7 @@ function laurierSVG(rang, petit){
   const id = 'lr' + (++LAURIER_N);
   const cx = 50, cy = 64, rx = 64, ry = 70;
   const pt = (t) => [cx - rx * Math.sin(t), cy + ry * Math.cos(t)];
-  const n = petit ? 5 : 10, t0 = 0.32, t1 = 2.55;
+  const n = petit ? 6 : 10, t0 = 0.32, t1 = 2.55;   // patch545 : 6 paires en petit
   let tige = '', feuilles = '';
   const branche = (sens) => {
     const P = [];
@@ -35685,7 +35685,7 @@ function laurierSVG(rang, petit){
       let [x, y] = pt(t); if(sens > 0) x = 100 - x;
       const [x2, y2] = pt(t + 0.01); const dx = (sens > 0 ? 100 - x2 : x2) - x, dy = y2 - y;
       const a = Math.atan2(dy, dx) * 180 / Math.PI;
-      const k = (petit ? 1.75 : 1) * (1.15 - 0.45 * i / (n - 1));
+      const k = (petit ? 1.6 : 1) * (1.15 - 0.45 * i / (n - 1));
       for(const cote of [-1, 1]){
         const ang = a + cote * 38 * (sens > 0 ? -1 : 1);
         feuilles += `<path transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${ang.toFixed(1)}) scale(${k.toFixed(2)})" d="M0 0 C5 -5.2 13 -5.2 19 0 C13 4.4 5 4.4 0 0Z" fill="url(#${id})" stroke="${C[3]}" stroke-width="${petit ? 1.1 : .8}"/>`
@@ -35695,8 +35695,10 @@ function laurierSVG(rang, petit){
       if(!petit && i % 3 === 1){ feuilles += `<circle cx="${(x + (sens > 0 ? 5 : -5)).toFixed(1)}" cy="${(y - 2).toFixed(1)}" r="2.2" fill="${C[1]}" stroke="${C[3]}" stroke-width=".7"/>`; }
     }
     // la pointe
-    const [xe, ye] = pt(t1 + 0.08); const xt = sens > 0 ? 100 - xe : xe;
-    feuilles += `<path transform="translate(${xt.toFixed(1)} ${ye.toFixed(1)}) rotate(${sens > 0 ? -60 : -120}) scale(${petit ? 1.4 : .8})" d="M0 0 C5 -5.2 13 -5.2 19 0 C13 4.4 5 4.4 0 0Z" fill="url(#${id})" stroke="${C[3]}" stroke-width=".8"/>`;
+    // patch545 : en petit, la pointe part du bout de la tige et suit sa direction (elle flottait au-dessus de l'écu)
+    const [xe, ye] = pt(petit ? t1 : t1 + 0.08); const xt = sens > 0 ? 100 - xe : xe;
+    const [xf, yf] = pt(t1 + 0.01); const ap = Math.atan2(yf - ye, (sens > 0 ? 100 - xf : xf) - xt) * 180 / Math.PI;
+    feuilles += `<path transform="translate(${xt.toFixed(1)} ${ye.toFixed(1)}) rotate(${petit ? ap.toFixed(1) : (sens > 0 ? -60 : -120)}) scale(${petit ? 1.3 : .8})" d="M0 0 C5 -5.2 13 -5.2 19 0 C13 4.4 5 4.4 0 0Z" fill="url(#${id})" stroke="${C[3]}" stroke-width=".8"/>`;
   };
   branche(-1); branche(1);
   const noeud = `<g transform="translate(50 ${cy + ry - 1})"><path d="M-3 0 L-12 13 L-7 12 L-5 17 L0 3Z M3 0 L12 13 L7 12 L5 17 L0 3Z" fill="${C[1]}" stroke="${C[3]}" stroke-width="1"/><ellipse rx="5.5" ry="4" fill="${C[1]}" stroke="${C[3]}" stroke-width="1.1"/></g>`;

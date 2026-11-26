@@ -11510,3 +11510,14 @@ html.topo:not(.sans-cartes) .mini.skin.legendaire .mini-rarete::before{ backgrou
 .pf-terr-lien small{ color:var(--brume, #93A4C3); font-size:.78rem; }
 .pf-terr-lien i{ font-style:normal; color:#F7C948; font-size:1.2rem; }
 .pf-terr{ margin:0 0 14px; }
+
+/* patch549 : sur ordinateur, une fine barre montre que ces rangées défilent sur le côté */
+@media (hover: hover) and (pointer: fine){
+  .coll-filtres, .jr-types, .mf-vue, .atl-pk-filtres, .lib-filtres, .bte-types, .mot-cats,
+  #panel-combat .volets, #panel-defense .volets, #panel-batiments .volets, #panel-guide .volets,
+  html.topo :is(#panel-boutique, #panel-boutiqueeuros) .bq-grille-dos{
+    scrollbar-width: thin !important; scrollbar-color: rgba(255,255,255,.28) transparent; padding-bottom: 6px; }
+  :is(.coll-filtres, .jr-types, .mf-vue, .atl-pk-filtres, .lib-filtres, .bte-types, .mot-cats, .volets, .bq-grille-dos)::-webkit-scrollbar{ display: block !important; height: 6px; }
+  :is(.coll-filtres, .jr-types, .mf-vue, .atl-pk-filtres, .lib-filtres, .bte-types, .mot-cats, .volets, .bq-grille-dos)::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.28); border-radius: 6px; }
+  :is(.coll-filtres, .jr-types, .mf-vue, .atl-pk-filtres, .lib-filtres, .bte-types, .mot-cats, .volets, .bq-grille-dos)::-webkit-scrollbar-track{ background: transparent; }
+}

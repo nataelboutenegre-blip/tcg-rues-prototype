@@ -10,7 +10,8 @@
    "🗺️ Carte du Territoire plus dégagée : les options d'affichage passent derrière le bouton ☰, et le nouveau bouton « 🎨 Mon territoire » ouvre directement ta couleur et ton motif."
   ],
   "correctifs": [
-   "Les petits lauriers du classement : la feuille du bout de branche ne flotte plus au-dessus du blason."
+   "Les petits lauriers du classement : la feuille du bout de branche ne flotte plus au-dessus du blason.",
+   "Sur ordinateur avec une souris : la molette fait maintenant défiler les rangées qui glissent sur le côté (catégories du motif, filtres, onglets)."
   ]
  },
  {

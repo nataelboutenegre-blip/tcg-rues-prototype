@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b82cb61a4c7c';
+const VERSION_JEU = '71226cba3708';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1349,11 +1349,11 @@ function loadOutline(){
   return outlineEnCours;
 }
 
-// patch331 : le fond de la saison 3 (Suisse, lacs, frontière, voisins)
+// patch331 : le fond de la saison 3 (Suisse, lacs, frontière, voisins ; patch544 : voisins.json en v2)
 let FOND_S3 = null;
 async function chargerFondSuisse(){
   try {
-    const lire = (f) => fetch('data/' + f + '?v=1', { cache: 'force-cache' }).then(r => { if(!r.ok) throw new Error(f); return r.json(); });
+    const lire = (f) => fetch('data/' + f + (f === 'voisins.json' ? '?v=2' : '?v=1'), { cache: 'force-cache' }).then(r => { if(!r.ok) throw new Error(f); return r.json(); });
     const [terre, frontiere, lacs, voisins] = await Promise.all(
       ['suisse-terre.json', 'suisse-frontiere.json', 'lacs-suisse.json', 'voisins.json'].map(lire));
     FOND_S3 = { terre, frontiere, lacs, voisins, chemins: null };
@@ -2456,7 +2456,7 @@ async function chargerDepartements(){
       try { Object.assign(deps, await (await fetch('data/contours-cantons-lu.json?v=1', { cache: 'force-cache' })).json()); } catch(e){}
     }
     if(ESPAGNE){   // patch541 : les provinces espagnoles, l'Andorre et Monaco
-      try { Object.assign(deps, await (await fetch('data/contours-provinces-es.json?v=1', { cache: 'force-cache' })).json()); } catch(e){}
+      try { Object.assign(deps, await (await fetch('data/contours-provinces-es.json?v=2', { cache: 'force-cache' })).json()); } catch(e){}
     }
     CONTOURS_DEPTS = deps;
   } catch(e){
@@ -32753,7 +32753,7 @@ function depCheminsTracer(C, carre, pays){
 function depCheminsCharger(pays){
   if(pays === 'CH' || pays === 'BE' || pays === 'LU' || pays === 'ES'){
     if(DEP_PAYS[pays]) return Promise.resolve(DEP_PAYS[pays]);
-    const f = pays === 'BE' ? 'data/contours-provinces-be.json?v=2' : pays === 'LU' ? 'data/contours-cantons-lu.json?v=1' : pays === 'ES' ? 'data/contours-provinces-es.json?v=1' : 'data/contours-cantons.json?v=2';   // patch467
+    const f = pays === 'BE' ? 'data/contours-provinces-be.json?v=2' : pays === 'LU' ? 'data/contours-cantons-lu.json?v=1' : pays === 'ES' ? 'data/contours-provinces-es.json?v=2' : 'data/contours-cantons.json?v=2';   // patch467
     if(!DEP_PAYS_P[pays]) DEP_PAYS_P[pays] = fetch(f, { cache: 'force-cache' }).then(r => r.json())
       .then(C => (DEP_PAYS[pays] = depCheminsTracer(C, false, pays))).catch(() => { DEP_PAYS_P[pays] = null; return null; });
     return DEP_PAYS_P[pays];

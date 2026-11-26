@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '3f6be71f2ae6';
+const VERSION_JEU = '1fc2e656e592';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -1353,7 +1353,7 @@ function loadOutline(){
 let FOND_S3 = null;
 async function chargerFondSuisse(){
   try {
-    const lire = (f) => fetch('data/' + f + (f === 'voisins.json' ? '?v=2' : '?v=1'), { cache: 'force-cache' }).then(r => { if(!r.ok) throw new Error(f); return r.json(); });
+    const lire = (f) => fetch('data/' + f + (['voisins.json', 'espagne-terre.json', 'espagne-frontiere.json'].includes(f) ? '?v=2' : '?v=1'), { cache: 'force-cache' })   /* patch547 */.then(r => { if(!r.ok) throw new Error(f); return r.json(); });
     const [terre, frontiere, lacs, voisins] = await Promise.all(
       ['suisse-terre.json', 'suisse-frontiere.json', 'lacs-suisse.json', 'voisins.json'].map(lire));
     FOND_S3 = { terre, frontiere, lacs, voisins, chemins: null };

@@ -8,7 +8,8 @@
    "🤝 Échanges entre clans : un échange par jour avec chaque clan (et plus un seul en tout), et la limite repart à minuit au lieu de 24 h après le dernier. Merci Arkhannou et Maroli.",
    "⚔️ Sièges de légendaires : un défenseur actif gagnait presque à coup sûr (5 % de prises avec garnison). Sur une légendaire, le renfort du propriétaire vaut maintenant 12 par énergie (au lieu de 14), et l'assaut final ne s'annule que si la jauge repasse sous la moitié (au lieu des deux tiers). On suit les chiffres de près et on ajustera.",
    "🗺️ Carte du Territoire plus dégagée : les options d'affichage passent derrière le bouton ☰, et le nouveau bouton « 🎨 Mon territoire » ouvre directement ta couleur et ton motif.",
-   "🎨 Tout ce qui se personnalise est maintenant au même endroit : Profil › Personnaliser, en trois parties (Mes cartes, Mon paquet, Mon territoire). L'atelier y a déménagé depuis la Boutique."
+   "🎨 Tout ce qui se personnalise est maintenant au même endroit : Profil › Personnaliser, en trois parties (Mes cartes, Mon paquet, Mon territoire). L'atelier y a déménagé depuis la Boutique.",
+   "🖌️ Motif de territoire : toutes les formes sont maintenant gratuites, pour tout le monde (Héraldique, Nature, Cartographe, Tissus compris)."
   ],
   "correctifs": [
    "Les petits lauriers du classement : la feuille du bout de branche ne flotte plus au-dessus du blason.",

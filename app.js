@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '00981db9e6ba';
+const VERSION_JEU = 'b6308df9fafb';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -28587,7 +28587,7 @@ function motRendreBloc(){
   const f = MTF.FORME[c.forme], ty = motType(c);
   const seg = (id, opts, val) => `<div class="mot-seg" id="${id}">${opts.map(([v, t]) => `<button type="button" data-v="${v}" class="${String(v) === String(val) ? 'on' : ''}">${t}</button>`).join('')}</div>`;
   b.innerHTML = `<h3>Calque ${ME.sel + 1}</h3>
-    <button type="button" class="mot-forme-btn" id="motBForme"><canvas></canvas><span>${echapperTexte(motNomCalque(c))}</span><small>${f && f.pack ? (motPossede(f) ? 'À toi' : MOT_PACKS[f.pack] + ' · ' + motPrixPack(f.pack)) : 'Changer ›'}</small></button>
+    <button type="button" class="mot-forme-btn" id="motBForme"><canvas></canvas><span>${echapperTexte(motNomCalque(c))}</span><small>${f && f.pack ? (motPossede(f) ? 'Changer ›' : MOT_PACKS[f.pack] + ' · ' + motPrixPack(f.pack)) : 'Changer ›'}</small></button>
     <div class="mot-couleurs" id="motCoulCalque">${MOT_COULEURS.map(x => `<button type="button" style="background:${x}" data-c="${x}" class="${x === c.couleur ? 'on' : ''}" aria-label="Couleur ${x}"></button>`).join('')}</div>
     ${ty === 'forme' ? `<div class="mot-ligne"><label>Taille</label><input type="range" id="motST" min="6" max="150" value="${c.t}"><output>${c.t}</output></div>
       <div class="mot-ligne"><label>Rotation</label><input type="range" id="motSR" min="0" max="359" step="1" value="${c.r}"><output>${c.r}°</output></div>`
@@ -28675,7 +28675,7 @@ function motRendreFormes(){
   }
   const fs = MTF.formes.filter(f => f.cat === ME.cat);
   const packs = [...new Set(fs.map(f => f.pack).filter(Boolean))];
-  pk.innerHTML = packs.length ? packs.map(p => motPossede({ pack: p }) ? `<b>${MOT_PACKS[p]}</b> : à toi` : `<b>${MOT_PACKS[p]} · ${motPrixPack(p)}</b>`).join(' · ')
+  pk.innerHTML = packs.some(p => !motPossede({ pack: p })) ? packs.map(p => motPossede({ pack: p }) ? `<b>${MOT_PACKS[p]}</b> : à toi` : `<b>${MOT_PACKS[p]} · ${motPrixPack(p)}</b>`).join(' · ')
       + (fs.some(f => !f.pack) ? ' · le reste est gratuit' : '') + (packs.some(p => !motPossede({ pack: p })) ? '. Tu peux tout essayer avant d’acheter.' : '.')
     : 'Gratuit pour tous.' + (ME.cat === 'Animaux' ? ' <small class="mot-credit">Dessins : game-icons.net (Lorc, Delapouite et autres), licence CC BY 3.0. Lion dressé : gravure de 1862 (A. Hall), domaine public.</small>' : '');   // patch505
   g.innerHTML = `<div class="mot-grille">${fs.map(f => `<button type="button" data-f="${f.id}"><canvas></canvas><span>${echapperTexte(f.nom)}</span>${motPossede(f) ? '' : '<em>🔒</em>'}</button>`).join('')}</div>`;

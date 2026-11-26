@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'b6308df9fafb';
+const VERSION_JEU = 'c9ad2123740f';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -28617,7 +28617,7 @@ function motRendreBloc(){
     else if(o === 'bas' && ME.sel > 0){ [cs[ME.sel], cs[ME.sel - 1]] = [cs[ME.sel - 1], cs[ME.sel]]; ME.sel--; }
     else if(o === 'dup'){
       if(cs.length >= MOT_MAX) return notifier({ type: 'info', titre: 'Mon motif', texte: `${MOT_MAX} calques au plus.` });
-      if(c.forme === 'lettre' && motNbLettres() >= MOT_MAX_LETTRES) return notifier({ type: 'info', titre: 'Mon motif', texte: `${MOT_MAX_LETTRES} lettres au plus par motif.` });
+      if(c.forme === 'lettre' && motNbLettres() >= MOT_MAX_LETTRES) return notifier({ type: 'info', titre: 'Mon motif', texte: `${MOT_MAX_LETTRES} caractères au plus par motif.` });
       cs.splice(ME.sel + 1, 0, { ...motCopie(c), x: (c.x + 25) % 100 }); ME.sel++;
     }
     else if(o === 'sup'){ cs.splice(ME.sel, 1); ME.sel = Math.max(0, Math.min(ME.sel, cs.length - 1)); }
@@ -28668,8 +28668,8 @@ function motRendreFormes(){
   motEl('motCats').querySelectorAll('button').forEach(b => b.onclick = () => { ME.cat = b.dataset.c; motRendreFormes(); });
   const g = motEl('motGrille'), pk = motEl('motPack');
   if(ME.cat === 'Lettres'){
-    pk.innerHTML = `Gratuit · <b>${MOT_MAX_LETTRES} lettres au plus par motif</b>, pour éviter qu'on écrive des mots.`;
-    g.innerHTML = `<div class="mot-lettres">${'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'.split('').map(l => `<button type="button" data-l="${l}">${l}</button>`).join('')}</div>`;
+    pk.innerHTML = `Gratuit · <b>${MOT_MAX_LETTRES} caractères au plus par motif</b> (lettres, chiffres ou signes), pour éviter qu'on écrive des mots.`;   // patch552
+    g.innerHTML = `<div class="mot-lettres">${[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789', ...'-./#_+&!?\''].map(l => `<button type="button" data-l="${echapperTexte(l)}">${echapperTexte(l)}</button>`).join('')}</div>`;
     g.querySelectorAll('[data-l]').forEach(b => b.onclick = () => motChoisir('lettre', b.dataset.l));
     return;
   }
@@ -28686,7 +28686,7 @@ function motRendreFormes(){
 }
 function motChoisir(forme, lettre){
   const M = ME.M, ancien = ME.cible != null ? M.calques[ME.cible] : null;
-  if(forme === 'lettre' && !(ancien && ancien.forme === 'lettre') && motNbLettres() >= MOT_MAX_LETTRES) return notifier({ type: 'info', titre: 'Mon motif', texte: `${MOT_MAX_LETTRES} lettres au plus par motif.` });
+  if(forme === 'lettre' && !(ancien && ancien.forme === 'lettre') && motNbLettres() >= MOT_MAX_LETTRES) return notifier({ type: 'info', titre: 'Mon motif', texte: `${MOT_MAX_LETTRES} caractères au plus par motif.` });
   if(ancien){ const t0 = motType(ancien); ancien.forme = forme; ancien.lettre = lettre || null; const t1 = motType(ancien); if(t0 !== t1){ ancien.t = t1 === 'forme' ? 50 : 100; ancien.r = 0; } }
   else {
     if(M.calques.length >= MOT_MAX) return notifier({ type: 'info', titre: 'Mon motif', texte: `${MOT_MAX} calques au plus.` });

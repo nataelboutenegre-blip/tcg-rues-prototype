@@ -11521,3 +11521,15 @@ html.topo:not(.sans-cartes) .mini.skin.legendaire .mini-rarete::before{ backgrou
   :is(.coll-filtres, .jr-types, .mf-vue, .atl-pk-filtres, .lib-filtres, .bte-types, .mot-cats, .volets, .bq-grille-dos)::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.28); border-radius: 6px; }
   :is(.coll-filtres, .jr-types, .mf-vue, .atl-pk-filtres, .lib-filtres, .bte-types, .mot-cats, .volets, .bq-grille-dos)::-webkit-scrollbar-track{ background: transparent; }
 }
+
+/* patch550 : Personnaliser en trois parties */
+.gr-seg{ display:flex; width:100%; box-sizing:border-box; background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.1); border-radius:14px; padding:4px; margin:4px 0 16px; }
+.gr-seg button{ flex:1; border:none; background:none; color:var(--brume, #9fb0cc); font:inherit; font-weight:700; font-size:.86rem; padding:9px 4px; border-radius:10px; white-space:nowrap; cursor:pointer; }
+.gr-seg button.on{ background:#F4F6FB; color:#0d1a33; }
+.gr-at-compo{ font-size:.84rem; color:#c5d0e4; margin:8px 0 0; }
+.gr-at-compo b{ font:inherit; font-weight:700; color:#fff; }
+.gr-atb-moi{ margin:12px 0 4px; }
+.gr-atb-zone{ margin-top:22px; }
+.gr-atb-zone > h3{ margin:0 0 10px; font-size:1.05rem; }
+.gr-atb .atb-bloc{ margin-bottom:12px; }
+.gr-terr .atb-bloc{ margin-bottom:12px; }

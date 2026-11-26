@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'eea07ce82efb';
+const VERSION_JEU = '00981db9e6ba';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -24024,7 +24024,7 @@ function bqeApercuSeul(a){
       <button type="button" class="bqe-fermer" aria-label="Fermer">×</button>
       <div class="bqe-apercu">${bqeGrandApercu(a)}</div>
       <div class="bqe-tete-a"><small>${a.apercu ? 'Aperçu · en vente le 22 novembre' : 'Dans ta garde-robe'}</small><h2 id="bqeNomA">${echapperTexte(bqeNomCourt(a))}</h2></div>
-      <p class="bqe-recoit">${echapperTexte(a.description || '')}. ${a.apercu ? euros(a.prix_centimes) + ', à partir du 22 novembre.' : a.type === 'motif' ? 'C\'est déjà à toi, dans Boutique › Atelier › Mon territoire.' : a.type === 'effet' ? 'C\'est déjà à toi, dans l\'atelier (Profil › Personnaliser).' : 'Tu l\'as déjà : équipe-le ou pose-le sur tes cartes dans Profil › Personnaliser.'}</p>
+      <p class="bqe-recoit">${echapperTexte(a.description || '')}. ${a.apercu ? euros(a.prix_centimes) + ', à partir du 22 novembre.' : a.type === 'motif' ? 'C\'est déjà à toi, dans Profil › Personnaliser › Mon territoire.' : a.type === 'effet' ? 'C\'est déjà à toi, dans l\'atelier (Profil › Personnaliser).' : 'Tu l\'as déjà : équipe-le ou pose-le sur tes cartes dans Profil › Personnaliser.'}</p>
     </div>`);
   const f = document.querySelector('#fenetre .bqe-fiche-apercu');
   if(!f) return;
@@ -24205,23 +24205,32 @@ function renderGardeRobe(){
       ${eq ? '<span class="bq-equipe">Équipé</span>' : `<button type="button" class="bq-btn secondaire" data-gr-r="${rangee}" data-gr-id="${echapperTexte(o.id || '')}">Équiper</button>`}</div>`;
   };
   const dos = g.dos_liste || [], habs = g.habillages || [];
-  corps.innerHTML = `
+  // patch550 : trois parties ; la vitrine reste dans Profil
+  const voir = `<div class="gr-voir"><p>D'autres dos et habillages t'attendent : à gagner en jouant ou dans la boutique.</p>
+        <button type="button" class="bq-btn secondaire" data-gr-boutique>Voir la boutique</button></div>`;
+  if(grVue === 'paquet') corps.innerHTML = grSegHtml() + `
     <div class="bourse-section gr-bloc">
-      <h2>Mes cartes</h2>${atlBlocGardeRobe()}
+      <h2>Mon paquet</h2>
+      <div class="gr-titre">Habillage de paquet <span>${habs.length} possédé${habs.length > 1 ? 's' : ''}</span></div>
+      <div class="gr-objets">${habs.map(o => tuile('habillage', o, habVignette(habCle(o.id), 66))).join('')}</div>
+      ${voir}
+    </div>`;
+  else if(grVue === 'territoire') corps.innerHTML = grSegHtml() + `
+    <div class="bourse-section gr-bloc">
+      <h2>Mon territoire</h2>
+      <div class="gr-terr"><div class="atb-bloc atb-terr">${blocCouleur()}</div>${motBlocAtelier()}</div>
+    </div>`;
+  else corps.innerHTML = grSegHtml() + `
+    <div class="bourse-section gr-bloc">
+      <h2>Mes cartes</h2>${atlBlocGardeRobe()}<div class="gr-atb-moi"></div>
       <div class="gr-titre">Dos de carte <span>${dos.length} possédé${dos.length > 1 ? 's' : ''}</span></div>
       <div class="gr-objets">${dos.map(o => tuile('dos', o, dosApercuHtml(o.id))).join('')}</div>
       ${SAISON2 ? blocDosCartesHtml() + blocSkinsHtml() : ''}
-      <div class="gr-titre">Habillage de paquet <span>${habs.length} possédé${habs.length > 1 ? 's' : ''}</span></div>
-      <div class="gr-objets">${habs.map(o => tuile('habillage', o, habVignette(habCle(o.id), 66))).join('')}</div>
-      <div class="gr-voir"><p>D'autres dos et habillages t'attendent : à gagner en jouant ou dans la boutique.</p>
-        <button type="button" class="bq-btn secondaire" data-gr-boutique>Voir la boutique</button></div>
-    </div>
-    <div class="bourse-section gr-bloc">
-      <h2>Ma vitrine</h2>
-      <div class="gr-vitrine"><span>${grVitrine == null ? 'Tes plus belles cartes Terra, sur ton profil' : `<b>${grVitrine} / ${VITRINE_MAX}</b> cartes exposées`}</span>
-        <button type="button" class="bq-btn secondaire" data-gr-vitrine>Modifier</button></div>
+      <div class="gr-atb-zone"><h3>Styles à débloquer</h3><div class="gr-atb"></div></div>
     </div>`;
-  habGl.demarrer();
+  if(grVue === 'cartes') try{ grAtelierRemplir(corps); }catch(e){}
+  if(grVue === 'territoire') try{ grTerrDessiner(corps); }catch(e){}
+  if(grVue === 'paquet') habGl.demarrer();
 }
 document.getElementById('grCorps').addEventListener('click', async (e) => {
   if(e.target.closest('[data-gr-atelier]')){ atlOuvrir(); return; }   // patch270
@@ -28356,9 +28365,7 @@ async function motAcheterPack(pack){
 }
 async function motRetourAchat(){
   await motMoiCharger();
-  const t = document.querySelector('.tab[data-tab="atelierbq"]');
-  if(t) t.click();
-  atbVue = 'territoire'; atbRendre();
+  grOuvrir('territoire');   // patch550
   motOuvrir();
 }
 
@@ -28756,10 +28763,10 @@ function motRetirer(b){
 }
 
 // ---------- patch486 : l'onglet Atelier de la boutique ----------
-let atbVue = 'cartes';
+let atbVue = 'cartes', atbCible = null;   // patch550 : atbCible = rendre ailleurs (Personnaliser)
 function atbMajVolets(){
   const ok = !!(ATL.lu && ATL.ouvert);
-  document.querySelectorAll('.vol-atelier').forEach(b => { b.hidden = !ok; });
+  document.querySelectorAll('.vol-atelier').forEach(b => { b.hidden = true; });   // patch550 : l'atelier est dans Profil › Personnaliser
   const v = document.getElementById('bqVolets');
   if(v && ok) v.hidden = false;
 }
@@ -28773,7 +28780,7 @@ function atbBarre(v, total){
   return `<div class="atb-barre"><i style="width:${p}%"></i></div>`;
 }
 function atbRendre(){
-  const corps = document.getElementById('atbCorps');
+  const corps = atbCible || document.getElementById('atbCorps');
   if(!corps) return;
   document.querySelectorAll('[data-atb-vue]').forEach(b => { const on = b.dataset.atbVue === atbVue; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
   if(atbVue === 'territoire'){
@@ -35880,3 +35887,71 @@ function blocTerrLien(){   // Profil : un lien vers « Mon territoire » au lieu
     }
   }, { passive: false });
 })();
+
+// ---------- patch550 : Personnaliser, le seul endroit (Mes cartes · Mon paquet · Mon territoire) ----------
+// L'atelier quitte la Boutique : ses styles (à toi, à gagner, en vente) passent dans Mes cartes ; la couleur et le motif dans Mon territoire.
+var grVue = 'cartes';   // var : lu avant la fin du fichier
+function grSegHtml(){
+  return `<div class="gr-seg" role="tablist" aria-label="Personnaliser">${[['cartes', 'Mes cartes'], ['paquet', 'Mon paquet'], ['territoire', 'Mon territoire']]
+    .map(([v, l]) => `<button type="button" role="tab" data-gr-vue="${v}" class="${grVue === v ? 'on' : ''}" aria-selected="${grVue === v}">${l}</button>`).join('')}</div>`;
+}
+function grAtelierRemplir(corps){   // les blocs de l'atelier, rendus par atbRendre dans un cadre à part
+  const cible = corps.querySelector('.gr-atb');
+  if(!cible) return;
+  if(!ATL.lu || !ATL.ouvert){ cible.closest('.gr-atb-zone')?.remove(); return; }
+  const tmp = document.createElement('div');
+  const vue = atbVue; atbVue = 'cartes'; atbCible = tmp;
+  try{ atbRendre(); }finally{ atbCible = null; atbVue = vue; }
+  const tete = tmp.querySelector('.atb-tete');
+  const compo = tete && [...tete.querySelectorAll('p')].find(x => /Ta composition/.test(x.textContent));
+  const txt = corps.querySelector('.gr-at-txt');
+  if(compo && txt){
+    const s = txt.querySelector('span'); if(s) s.textContent = ATL.v2 ? 'Styles, finitions, halos et bordures pour tes cartes Terra' : 'Finitions et halos pour tes cartes Terra';
+    compo.className = 'gr-at-compo'; txt.appendChild(compo);
+  }
+  if(tete) tete.remove();
+  const blocs = [...tmp.children];
+  const moi = blocs.find(b => /^À toi/.test((b.querySelector('.atb-h') || {}).textContent || ''));
+  const ici = corps.querySelector('.gr-atb-moi');
+  if(moi && ici){ ici.replaceWith(moi); moi.classList.add('gr-atb-moi'); }
+  [...tmp.children].forEach(b => cible.appendChild(b));
+  if(!cible.querySelector('.atb-l')) cible.closest('.gr-atb-zone')?.remove();
+}
+function grTerrDessiner(corps){
+  const c = corps.querySelector('.gr-terr');
+  if(!c) return;
+  const dessiner = () => { const b = c.querySelector('[data-mot-bande="moi"]'); if(b) motBande(b, MTF.moi, motMaCouleur()); };
+  dessiner();
+  if(!MTF.formes && MTF.ouvert !== false) motFormesCharger().then(dessiner).catch(() => {});
+  if(!MTF.lu && !MTF.lecture){ MTF.lecture = motMoiCharger().then(ok => { MTF.lecture = null; if(ok && grVue === 'territoire') renderGardeRobe(); }); }
+}
+async function grAtbAcheter(id){
+  const o = ATL_TOUTES_FAMILLES.flatMap(f => f.options).find(x => x.id === id);
+  try{ await bqeVerifierAcces(); }catch(err){}
+  const art = o && atlArticle(o);
+  if(!bqeAcces || !art){ notifier({ type: 'erreur', titre: 'Indisponible', texte: 'Cet élément n’est pas en vente pour le moment.' }); return; }
+  bqeOuvrirFiche(art.id, 'atelier');
+}
+document.getElementById('grCorps').addEventListener('click', async (e) => {
+  const v = e.target.closest('[data-gr-vue]');
+  if(v){ grVue = v.dataset.grVue; renderGardeRobe(); return; }
+  if(e.target.closest('[data-atb="ouvrir"]')){ atlOuvrir(); return; }
+  const ach = e.target.closest('[data-atb-acheter]');
+  if(ach){ grAtbAcheter(ach.dataset.atbAcheter); return; }
+  if(!e.target.closest('.gr-terr')) return;
+  if(e.target.closest('[data-mot="ouvrir"]')){ motOuvrir(); return; }
+  const pc = e.target.closest('[data-pf="couleur"]');
+  if(pc){ await choisirCouleur(pc.dataset.couleur); renderGardeRobe(); return; }
+  const dr = e.target.closest('[data-pf="dore"]');
+  if(dr){
+    try{ localStorage.setItem(CLE_DORE, dr.checked ? '1' : '0'); }catch(err){}
+    appliquerCouleurMoi();
+    try{ renderMapOverlay(); }catch(err){}
+  }
+});
+function grOuvrir(vue){   // ouvre Profil › Personnaliser sur une partie
+  grVue = vue || 'cartes';
+  const t = document.querySelector('.tab[data-tab="personnaliser"]');
+  if(t) t.click();
+  try{ if(gardeRobe) renderGardeRobe(); }catch(e){}
+}

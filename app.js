@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'a5f4ca305793';
+const VERSION_JEU = '3f6be71f2ae6';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -33206,7 +33206,7 @@ async function sgChargerActif(){
   document.body.classList.toggle('siege-on', SIEGE);
   if(!SIEGE) return;
   const sub = document.querySelector('#panel-defense > .sub');
-  if(sub) sub.textContent = 'Quand un joueur assiège une de tes communes, renforce-la : chaque énergie fait reculer sa jauge, avec 20 % de bonus à domicile. Une garnison ou un bâtiment rend le siège long.';
+  if(sub) sub.textContent = 'Quand un joueur assiège une de tes communes, renforce-la : chaque énergie fait reculer sa jauge, avec 20 % de bonus à domicile (sauf sur une légendaire). Une garnison ou un bâtiment rend le siège long.';
   loadMenaces();
   sgChargerMes();
 }
@@ -33539,8 +33539,9 @@ function sgChuteHtml(m){
   const am = sgAssautMin(m);   // patch532
   if(am){
     const res = Number(m.resistance) || 0, deg = Number(m.degats) || 0;
-    const n = Math.max(1, Math.ceil((deg - res * 2 / 3 + 1) / sgPireRecul()));
-    return `<p class="sg-chute alerte"><b>🚨 Assaut final</b> : elle tombe à <b>${sgHeure(m.assaut_le)}</b> (dans ${am} min) si tu ne repousses pas la jauge sous les deux tiers, ≈ <b>${n} ⚡</b>${Number(m.attente) > 0 ? `, plus de quoi absorber ses ${m.attente} ⚡ en attente` : ''}.</p>`;
+    const leg = m.tier === 'legendaire';   // patch546 (s3-83) : sur une légendaire, sous la moitié et renfort × 1
+    const n = Math.max(1, Math.ceil((deg - res * (leg ? 1 / 2 : 2 / 3) + 1) / (leg ? 9.6 : sgPireRecul())));
+    return `<p class="sg-chute alerte"><b>🚨 Assaut final</b> : elle tombe à <b>${sgHeure(m.assaut_le)}</b> (dans ${am} min) si tu ne repousses pas la jauge sous ${leg ? 'la moitié' : 'les deux tiers'}, ≈ <b>${n} ⚡</b>${Number(m.attente) > 0 ? `, plus de quoi absorber ses ${m.attente} ⚡ en attente` : ''}.</p>`;
   }
   const c = m && m.chute; if(!c || !c.plus_tot) return '';
   const quand = c.maintenant ? null : sgHeure(c.plus_tot);
@@ -33822,7 +33823,7 @@ function sgCalcHtml(a){
       <li><b>Garnison</b> : chaque énergie en garnison fait un bouclier de 12 points, à casser avant la jauge.</li>
       <li><b>Siège long</b> (garnison, bâtiment, renfort, ou légendaire) : 10 % de la résistance peut partir tout de suite, le reste suit le temps (commune 1 h, peu commune 1 h 30, rare 2 h, épique 6 h, légendaire 15 h). L'énergie en trop attend et part toute seule toutes les 5 minutes.</li>
       <li><b>Rare et épique en éclair</b> : au moins 20 min pour une rare, 1 h pour une épique, même sans défense (10 % tout de suite, le reste suit le temps).</li>
-      <li><b>Renfort</b> : chaque énergie du propriétaire fait reculer ta jauge de 12 points en moyenne, et rend le siège long.</li>
+      <li><b>Renfort</b> : chaque énergie du propriétaire fait reculer ta jauge d'environ 14 points (12 sur une légendaire), et rend le siège long. Sur une légendaire, l'assaut final ne s'annule que si ta jauge repasse sous la moitié.</li>
       <li><b>24 h sans vague</b> : le siège tombe. L'énergie déjà envoyée est perdue, celle en attente te revient.</li>
     </ul></details>`;
 }
@@ -35552,7 +35553,7 @@ function sgaRendre(){
   if(el.hidden){ el.innerHTML = ''; return; }
   const max = Number(SGA.liste[0].allie_max) || 60;
   el.innerHTML = `<h2>Ton clan est assiégé</h2>
-    <p class="sga-note">Renforce la commune d’un membre : chaque énergie fait reculer la jauge de l’attaquant (× 1 pour toi, × 1,2 pour le propriétaire). Au plus <b>${max} ⚡</b> par siège pour toi ; la défense réussie compte pour lui.</p>`
+    <p class="sga-note">Renforce la commune d’un membre : chaque énergie fait reculer la jauge de l’attaquant (× 1 pour toi, × 1,2 pour le propriétaire, × 1 sur une légendaire). Au plus <b>${max} ⚡</b> par siège pour toi ; la défense réussie compte pour lui.</p>`
     + SGA.liste.map(m => {
       const tier = sgTier(m.tier), res = Number(m.resistance) || 0, deg = Number(m.degats) || 0;
       const p = res ? Math.round(100 * deg / res) : 0, reste = sgaReste(m), mon = Number(m.mon_renfort) || 0, tous = Number(m.allies) || 0;

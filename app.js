@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = '34c1d34d8bda';
+const VERSION_JEU = 'ecd5594baaf3';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -13867,6 +13867,7 @@ function blDepImg(dep){
   if(!im){ im = new Image(); im.onload = () => mfPlanifier(); im.src = 'blasons/' + encodeURIComponent(dep) + '.webp'; BL_DEP_IMG.set(dep, im); }
   return im.complete && im.naturalWidth ? im : null;
 }
+function mfVueDep(){ if(MF.figer === undefined){ try{ MF.figer = localStorage.getItem('tf-mf-figer') === '1'; }catch(e){ MF.figer = false; } } return MF.k < MF_COMMUNES || MF.figer; }   // patch556
 function mfComplet(dep){ const t = COMMUNES_PAR_DEPT[dep]; return !!t && (MF.parDep[dep] || 0) >= t; }
 const MF_COMMUNES = 2.5;    // a partir de ce zoom, les communes ; en dessous, les departements
 const MF_NOMS = 6;          // a partir de ce zoom, les noms
@@ -13892,6 +13893,7 @@ function renderMaFranceTerra(el, totalFrance){
       <canvas id="mfCanvas" aria-label="Carte de ta collection : touche un département pour zoomer, une commune pour la voir"></canvas>
       <span class="mf-niveau" id="mfNiveau"></span>
       <div class="mf-zoom"><button data-mf="plus" aria-label="Zoomer">+</button><button data-mf="moins" aria-label="Dézoomer">−</button><button data-mf="centre" aria-label="Recentrer">⌂</button></div>
+      <button type="button" class="mf-figer${mfVueDep() && MF.figer ? ' on' : ''}" data-mf="figer" aria-pressed="${!!MF.figer}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h7v7H3zM3 14h7v7H3zM14 4h7v7h-7zM14 14h7v7h-7z"/></svg>Vue départements</button>
       <div class="mf-bulle" id="mfBulle" hidden></div>
     </div>
     <div class="mf-leg" id="mfLeg"></div>
@@ -14083,7 +14085,7 @@ function mfDessiner(){
   const niveau = document.getElementById('mfNiveau');
   const leg = document.getElementById('mfLeg');
 
-  if(MF.k < MF_COMMUNES){
+  if(mfVueDep()){   // patch556
     for(const dep in CONTOURS_DEPTS){
       const p = cheminDeptCanvas(dep, CONTOURS_DEPTS[dep]);
       const tot = COMMUNES_PAR_DEPT[dep] || 1;
@@ -14099,14 +14101,14 @@ function mfDessiner(){
       if(!mfComplet(dep) || !MF.ctr || !MF.ctr[dep]) continue;
       const im = blDepImg(dep), b = MF.bbox[dep];
       if(!im || !b) continue;
-      const hpx = Math.max(16, Math.min(46, 0.55 * Math.min(b[2] - b[0], b[3] - b[1]) * S));
+      const hpx = Math.max(16, Math.min(MF.figer ? 140 : 46, 0.55 * Math.min(b[2] - b[0], b[3] - b[1]) * S));   // patch556 : en grand si on zoome
       const h = hpx / S, w = h * im.naturalWidth / im.naturalHeight, [cx, cy] = MF.ctr[dep];
       ctx.save();
       ctx.shadowColor = 'rgba(0,0,0,0.55)'; ctx.shadowBlur = 4 * d; ctx.shadowOffsetY = d;
       ctx.drawImage(im, cx - w / 2, cy - h / 2, w, h);
       ctx.restore();
     }
-    if(niveau) niveau.textContent = MF.k <= 1.01 ? 'France entière · par département' : 'Par département · zoome encore';
+    if(niveau) niveau.textContent = MF.figer && MF.k >= MF_COMMUNES ? 'Vue départements' : MF.k <= 1.01 ? 'France entière · par département' : MF.figer ? 'Par département' : 'Par département · zoome encore';
     if(leg) leg.innerHTML = '<span><i style="background:#14294A"></i>Rien</span><span><i style="background:rgba(53,185,126,.35)"></i>Un peu</span>'
       + '<span><i style="background:rgba(53,185,126,.98)"></i>Beaucoup</span><span><i style="background:none;box-shadow:inset 0 0 0 2px #F0B429"></i>Complet</span>';
     return;
@@ -14212,12 +14214,12 @@ function mfToucher(px, py){
   const ctx = MF.cv.getContext('2d');
   const d = MF.dpr, S = mfEchelle();
   ctx.setTransform(d * S, 0, 0, d * S, d * (MF.ox + MF.baseX * MF.k), d * (MF.oy + MF.baseY * MF.k));
-  if(MF.k < MF_COMMUNES){
+  if(mfVueDep()){
     MF.bulle = null;   // patch540
     if(BL_DEP) for(const dep in CONTOURS_DEPTS)
       if(mfComplet(dep) && BL_DEP[dep] && ctx.isPointInPath(cheminDeptCanvas(dep, CONTOURS_DEPTS[dep]), px * d, py * d)){ MF.bulle = { blason: dep }; break; }
     majBulleMF();
-    mfZoomer(3, px, py); mfPlanifier(); return;
+    if(!MF.figer || !MF.bulle) mfZoomer(MF.figer ? 1.8 : 3, px, py); mfPlanifier(); return;   // patch556 : en vue départements, toucher un blason l'ouvre sans zoomer
   }
   for(const dep of mfDeptsVisibles()){
     const c = CONTOURS.get(dep);
@@ -14553,6 +14555,11 @@ function clicCollectionTerra(e){
   if(v){ if(terraVue !== v.dataset.tcv){ terraVue = v.dataset.tcv; renderCollectionTerra(); } return; }
   const z = e.target.closest('[data-mf]');
   if(z){
+    if(z.dataset.mf === 'figer'){   // patch556
+      MF.figer = !MF.figer; try{ localStorage.setItem('tf-mf-figer', MF.figer ? '1' : '0'); }catch(err){}
+      z.classList.toggle('on', MF.figer); z.setAttribute('aria-pressed', String(MF.figer)); MF.bulle = null; majBulleMF();
+      mfPlanifier(); return;
+    }
     if(z.dataset.mf === 'centre'){ MF.k = 1; MF.ox = 0; MF.oy = 0; MF.bulle = null; majBulleMF(); }
     else mfZoomer(z.dataset.mf === 'plus' ? 1.8 : 1 / 1.8, MF.larg / 2, MF.haut / 2);
     mfPlanifier();

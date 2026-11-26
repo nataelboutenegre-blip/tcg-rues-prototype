@@ -13,7 +13,8 @@
    "✏️ Motif de territoire : en plus des lettres et chiffres, tu peux placer - . / # _ + & ! ? ' (3 caractères au plus en tout). Idée d'Arkhannou.",
    "🛡️ Défendre › Mes garnisons : un bouton « Retirer » à côté de « Recharger ». Tu récupères toute l'énergie de la garnison (avant : 75 %) et la place se libère. Question d'ADR_RDM.",
    "▭ Motif de territoire : nouvelle forme « Rectangle » (dans Formes). Tourne-la de 90° pour la mettre debout.",
-   "🏗️ Améliorer ses bâtiments : dans QG › Bâtiments, Fonderie, Forteresse, Banque, Radar et Artillerie montent jusqu'au niveau 3 contre des lingots (6 h de chantier). Plus de réserve, plus de portée, +20 au classement par niveau. Idée de Bonjean."
+   "🏗️ Améliorer ses bâtiments : dans QG › Bâtiments, Fonderie, Forteresse, Banque, Radar et Artillerie montent jusqu'au niveau 3 contre des lingots (6 h de chantier). Plus de réserve, plus de portée, +20 au classement par niveau. Idée de Bonjean.",
+   "🛡️ Terra › Ma France : un bouton « Vue départements » garde la carte par département même en zoomant, pour admirer en grand les blasons de tes départements complets. Idée d'Arkhannou."
   ],
   "correctifs": [
    "Les petits lauriers du classement : la feuille du bout de branche ne flotte plus au-dessus du blason.",

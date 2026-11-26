@@ -11580,3 +11580,9 @@ html.topo:not(.sans-cartes) .mini.skin.legendaire .mini-rarete::before{ backgrou
   .bn-fond.ouvert .bn-f{ transform:translate(-50%, -50%); opacity:1; }
   .bn-po{ display:none; }
 }
+
+/* patch556 : « Vue départements » sur Ma France */
+.mf-figer{ position:absolute; left:8px; bottom:8px; display:inline-flex; align-items:center; gap:6px; border:1px solid rgba(169,188,212,.25); background:rgba(15,31,56,.9);
+  color:#cfd8e8; font:inherit; font-size:.78rem; font-weight:700; padding:7px 11px; border-radius:999px; cursor:pointer; }
+.mf-figer svg{ width:15px; height:15px; }
+.mf-figer.on{ border-color:rgba(240,180,41,.6); background:rgba(240,180,41,.18); color:#F7C948; }

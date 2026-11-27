@@ -11592,3 +11592,32 @@ html.topo:not(.sans-cartes) .mini.skin.legendaire .mini-rarete::before{ backgrou
 .map-barre .mb-btn{ max-width:100%; }
 /* patch557 : pendant une manche du Radar, le navigateur ne recharge plus la page quand on tire la carte vers le bas */
 html:has(#rdManche:not([hidden])), html:has(#rdManche:not([hidden])) body{ overscroll-behavior-y:none; }
+
+/* patch558 : chercher une commune sur les cartes */
+.chc{ position:relative; }
+.chc > svg{ position:absolute; left:13px; top:50%; width:18px; height:18px; margin-top:-9px; color:#93A4C3; pointer-events:none; }
+.chc-champ{ width:100%; box-sizing:border-box; padding:12px 14px 12px 40px; border-radius:12px; border:1px solid rgba(255,255,255,.14);
+  background:#0d1a36; color:#fff; font:inherit; font-size:1rem; -webkit-appearance:none; appearance:none; }
+.chc-champ:focus{ outline:none; border-color:rgba(245,196,81,.6); }
+.chc-res{ list-style:none; margin:6px 0 0; padding:0; border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,.08); }
+.chc-res[hidden]{ display:none; }
+.chc-res li button{ display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px; background:#12224a; border:none;
+  border-top:1px solid rgba(255,255,255,.06); color:#fff; font:inherit; text-align:left; cursor:pointer; }
+.chc-res li:first-child button{ border-top:none; }
+.chc-res li button:hover{ background:#183062; }
+.chc-res b{ flex:1; min-width:0; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.chc-d{ color:#93A4C3; font-size:.82rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:45%; }
+.chc-t{ flex:none; font-size:.7rem; padding:2px 8px; border-radius:10px; background:rgba(255,255,255,.08); color:#aab3c5; }
+.chc-t.legendaire{ color:#F5C451; } .chc-t.epique{ color:#B98CFF; } .chc-t.rare{ color:#6FA8FF; } .chc-t.peucommun{ color:#7DD3A8; }
+.chc-vide{ padding:10px 12px; color:#93A4C3; font-size:.9rem; background:#12224a; }
+.mb-btn .chc-loupe{ margin-right:-2px; }
+/* sur Ma France */
+.mf-zoom button[data-mf="chercher"] svg{ width:17px; height:17px; }
+.chc-mf{ position:absolute; left:8px; right:50px; top:8px; z-index:3; display:flex; flex-wrap:wrap; gap:6px; }
+.chc-mf[hidden]{ display:none; }
+.chc-mf .chc{ flex:1; min-width:0; }
+.chc-mf .chc-champ{ padding:9px 12px 9px 38px; background:rgba(13,26,54,.96); }
+.chc-mf .chc-x{ order:1; flex:none; width:38px; border-radius:10px; border:1px solid rgba(169,188,212,.25); background:rgba(15,31,56,.95); color:#fff; cursor:pointer; }
+.chc-mf .chc-res{ order:2; flex-basis:100%; margin:0; max-height:220px; overflow:auto; box-shadow:0 8px 24px rgba(0,0,0,.45); }
+.chc-champ::-webkit-search-cancel-button{ display:none; -webkit-appearance:none; }
+.mf-cadre:has(.chc-mf:not([hidden])) .mf-niveau{ visibility:hidden; }

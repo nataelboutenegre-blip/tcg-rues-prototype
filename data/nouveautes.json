@@ -18,7 +18,11 @@
   ],
   "correctifs": [
    "Les petits lauriers du classement : la feuille du bout de branche ne flotte plus au-dessus du blason.",
-   "Sur ordinateur avec une souris : la molette fait maintenant défiler les rangées qui glissent sur le côté (catégories du motif, filtres, onglets)."
+   "Sur ordinateur avec une souris : la molette fait maintenant défiler les rangées qui glissent sur le côté (catégories du motif, filtres, onglets).",
+   "Les skins de cartes s'affichent à nouveau (ils avaient disparu depuis le 22 novembre).",
+   "Radar : faire glisser la carte vers le bas ne relance plus la page pendant une manche.",
+   "Sur les petits téléphones, la page ne dépasse plus de l'écran sur la carte du Territoire.",
+   "Classement : le détail de « Mes points » s'ouvre à nouveau pour les grosses collections."
   ]
  },
  {

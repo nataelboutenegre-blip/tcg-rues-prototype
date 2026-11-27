@@ -11586,3 +11586,9 @@ html.topo:not(.sans-cartes) .mini.skin.legendaire .mini-rarete::before{ backgrou
   color:#cfd8e8; font:inherit; font-size:.78rem; font-weight:700; padding:7px 11px; border-radius:999px; cursor:pointer; }
 .mf-figer svg{ width:15px; height:15px; }
 .mf-figer.on{ border-color:rgba(240,180,41,.6); background:rgba(240,180,41,.18); color:#F7C948; }
+
+/* patch557 : la barre au-dessus de la carte passe à la ligne sur les petits écrans (elle élargissait toute la page) */
+.map-barre{ flex-wrap:wrap; row-gap:8px; min-width:0; max-width:100%; }
+.map-barre .mb-btn{ max-width:100%; }
+/* patch557 : pendant une manche du Radar, le navigateur ne recharge plus la page quand on tire la carte vers le bas */
+html:has(#rdManche:not([hidden])), html:has(#rdManche:not([hidden])) body{ overscroll-behavior-y:none; }

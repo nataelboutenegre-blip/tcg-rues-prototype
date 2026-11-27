@@ -7,7 +7,7 @@ const CURRENT_SEASON = 'saison-1';
 // config_jeu 'clans_ouverts' cote serveur).
 const CLANS = true;   // patch173 : ouverts le 25 octobre
 document.documentElement.classList.toggle('clans-ouverts', CLANS);
-const VERSION_JEU = 'ecd5594baaf3';
+const VERSION_JEU = 'fc343ad44a90';
 
 // les taux de tirage ne sont plus ecrits ici : ils suivent le stock restant
 // et se lisent avec taux_actuels(), cote base
@@ -16805,7 +16805,7 @@ setInterval(siVisible(() => verifierVersion()), 30 * 60 * 1000);
   document.addEventListener('touchstart', (e) => {
     if(e.touches.length !== 1) return;
     // seulement si on est deja tout en haut, et pas sur la carte (qui gere ses propres gestes)
-    const surCarte = e.target.closest('#mapWrap');
+    const surCarte = e.target.closest('#mapWrap, .rd-carte, .mf-cadre, #blApercu, .c3d-scene');   // patch557 : + la carte du Radar et les autres zones qui glissent
     depart = (!surCarte && window.scrollY <= 0) ? e.touches[0].clientY : null;
     actif = false;
   }, { passive: true });
@@ -25669,7 +25669,7 @@ const skinGl = (() => {
       if(compilees >= 1) return null;
       compilees++;
       const fs = gl.createShader(gl.FRAGMENT_SHADER);
-      gl.shaderSource(fs, skinCommun() + (v2 ? SKIN_GLSL_V2[k] : SKIN_GLSL[k]) + SKIN_GLSL_FIN);   // patch499 gl.compileShader(fs);
+      gl.shaderSource(fs, skinCommun() + (v2 ? SKIN_GLSL_V2[k] : SKIN_GLSL[k]) + SKIN_GLSL_FIN); gl.compileShader(fs);   // patch499 ; patch557 : la compilation était tombée dans le commentaire
       const p = gl.createProgram(); gl.attachShader(p, vs); gl.attachShader(p, fs);
       gl.bindAttribLocation(p, 0, 'p'); gl.linkProgram(p);
       e = { p, fs, u: {}, pret: false, v2 };

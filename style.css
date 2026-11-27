@@ -11621,3 +11621,29 @@ html:has(#rdManche:not([hidden])), html:has(#rdManche:not([hidden])) body{ overs
 .chc-mf .chc-res{ order:2; flex-basis:100%; margin:0; max-height:220px; overflow:auto; box-shadow:0 8px 24px rgba(0,0,0,.45); }
 .chc-champ::-webkit-search-cancel-button{ display:none; -webkit-appearance:none; }
 .mf-cadre:has(.chc-mf:not([hidden])) .mf-niveau{ visibility:hidden; }
+
+/* patch559 : lingots dans le bouton Front, sauvegardes de motifs, coffre du clan */
+.mode-bascule .mb-sur{ display:none; }
+.mode-bascule .mb-lg{ display:inline-flex; align-items:center; gap:3px; margin-left:7px; }
+.mode-bascule .mb-lg[hidden]{ display:none; }
+.mode-bascule .mb-lg i.lingot{ transform:scale(.8); }
+@media (min-width: 900px){ .mode-bascule .mb-sur{ display:inline; } }
+.msv-t{ margin:2px 0 8px; font-size:.74rem; letter-spacing:.05em; text-transform:uppercase; color:#93A4C3; }
+.msv + .msv-t{ margin-top:16px; }
+.msv .mot-modeles{ margin-bottom:6px; }
+.msv-plus{ border-style:dashed !important; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; color:#F5C451; min-height:96px; }
+.msv-plus span{ font-size:1.4rem; line-height:1; }
+.msv-plus:disabled{ opacity:.45; }
+.msv-x{ position:absolute; top:2px; right:2px; min-width:22px; height:22px; padding:0 5px; box-sizing:border-box; border-radius:11px; background:rgba(0,0,0,.65); color:#fff; font-size:.7rem; line-height:22px; }
+.msv-x.arme{ background:#E5484D; }
+.msv-form{ display:flex; gap:8px; margin:4px 0 8px; }
+.msv-form[hidden]{ display:none; }
+.msv-form input{ flex:1; min-width:0; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.18); background:#0d1a36; color:#fff; font:inherit; }
+.cof .s3c-don.cof-r{ border-color:rgba(169,188,212,.45); background:rgba(169,188,212,.08); color:#DCE6F2; }
+.cof .s3c-don:disabled{ opacity:.4; cursor:default; }
+.cof-chef{ margin:8px 0 2px; font:inherit; font-size:.8rem; font-weight:700; padding:7px 12px; border-radius:999px; border:1px solid rgba(229,72,77,.5); background:rgba(229,72,77,.1); color:#FFB3B5; cursor:pointer; }
+.cof-journal{ margin-top:10px; font-size:.8rem; }
+.cof-journal summary{ cursor:pointer; color:#93A4C3; font-weight:600; }
+.cof-journal ul{ list-style:none; margin:8px 0 0; padding:0; max-height:220px; overflow:auto; }
+.cof-journal li{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; padding:5px 0; border-top:1px solid rgba(255,255,255,.06); color:#DCE6F2; }
+.cof-journal li small{ margin-left:auto; color:#93A4C3; }
